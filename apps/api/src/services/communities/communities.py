@@ -15,11 +15,9 @@ from src.db.communities.communities import (
 )
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
-from src.security.communities_security import (
-    communities_rbac_check,
-    communities_rbac_check_with_lookup,
-)
-from src.security.rbac.rbac import (
+from src.security.rbac import (
+    check_resource_access,
+    AccessAction,
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
     authorization_verify_based_on_roles,
@@ -87,9 +85,15 @@ async def get_community(
     """
     Get a community by UUID.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "read", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.READ)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -193,8 +197,8 @@ async def get_community_by_course(
         return None
 
     # Check if user can read the community
-    await communities_rbac_check(
-        request, community.community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
     return CommunityRead.model_validate(community.model_dump())
@@ -212,9 +216,15 @@ async def update_community(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     # Update fields
     if community_object.name is not None:
@@ -246,9 +256,15 @@ async def delete_community(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "delete", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.DELETE)
 
     db_session.delete(community)
     db_session.commit()
@@ -268,9 +284,15 @@ async def link_community_to_course(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     # Get the course
     course_statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -320,9 +342,15 @@ async def unlink_community_from_course(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     community.course_id = None
     community.update_date = str(datetime.now())

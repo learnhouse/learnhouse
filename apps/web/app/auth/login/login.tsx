@@ -195,11 +195,8 @@ const LoginClient = (props: LoginClientProps) => {
         setShowErrorModal(true);
         setIsSubmitting(false);
       } else {
-        await signIn('credentials', {
-          email: values.email,
-          password: values.password,
-          callbackUrl
-        });
+        // First signIn already authenticated and set cookies — just redirect
+        window.location.href = callbackUrl;
       }
     },
   })

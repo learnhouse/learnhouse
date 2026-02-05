@@ -26,10 +26,14 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
 )
+from src.security.rbac import (
+    AccessAction,
+    check_resource_access,
+)
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
-from src.security.courses_security import courses_rbac_check
 
 
 async def _user_can_view_unpublished_course(
@@ -71,7 +75,7 @@ async def _user_can_view_unpublished_course(
     )
     user_roles = db_session.exec(role_statement).all()
     for role in user_roles:
-        if role.id in [1, 2]:  # Admin or Maintainer role IDs
+        if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin or Maintainer role IDs
             return True
 
     # Check if user is a member of a UserGroup that has access to this course
@@ -109,7 +113,7 @@ async def get_course(
         )
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Check if course is published - unpublished courses require special permission
     if not course.published:
@@ -129,7 +133,7 @@ async def get_course(
         .join(User, ResourceAuthor.user_id == User.id) # type: ignore
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(
-            ResourceAuthor.id.asc() # type: ignore  
+            ResourceAuthor.id.asc() # type: ignore
         )
     )
     author_results = db_session.exec(authors_statement).all()
@@ -167,7 +171,7 @@ async def get_course_by_id(
         )
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Get course authors with their roles
     authors_statement = (
@@ -230,7 +234,7 @@ async def get_course_meta(
     author_results = [(ra, u) for _, ra, u, _ in results if ra is not None and u is not None]
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Check if course is published - unpublished courses require special permission
     if not course.published:
@@ -301,7 +305,7 @@ async def get_courses_orgslug(
         )
         user_roles = db_session.exec(role_statement).all()
         for role in user_roles:
-            if role.id in [1, 2]:  # Admin role IDs
+            if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
                 can_view_unpublished = True
                 break
 
@@ -336,12 +340,16 @@ async def get_courses_orgslug(
                     UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
                     UserGroupUser.user_id == current_user.id
                 ))
-                .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+                .outerjoin(ResourceAuthor, and_(
+                    ResourceAuthor.resource_uuid == Course.course_uuid,
+                    ResourceAuthor.user_id == current_user.id,
+                    ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+                ))  # type: ignore
                 .where(or_(
                     and_(Course.published == True, Course.public == True),  # Published public courses
                     and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
                     UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
-                    ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
+                    ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
                 ))
             )
 
@@ -440,12 +448,16 @@ async def get_courses_count_orgslug(
                 UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
                 UserGroupUser.user_id == current_user.id
             ))
-            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+            .outerjoin(ResourceAuthor, and_(
+                ResourceAuthor.resource_uuid == Course.course_uuid,
+                ResourceAuthor.user_id == current_user.id,
+                ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+            ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
                 and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
                 UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
-                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
+                ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
 
@@ -509,12 +521,16 @@ async def search_courses(
                 UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
                 UserGroupUser.user_id == current_user.id
             ))
-            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+            .outerjoin(ResourceAuthor, and_(
+                ResourceAuthor.resource_uuid == Course.course_uuid,
+                ResourceAuthor.user_id == current_user.id,
+                ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+            ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
                 and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
                 UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
-                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
+                ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
 
@@ -594,7 +610,7 @@ async def create_course(
     # SECURITY: Check if user has permission to create courses in this organization
     # Since this is a new course, we need to check organization-level permissions
     # For now, we'll use the existing RBAC check but with proper organization context
-    await courses_rbac_check(request, "course_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check
     check_limits_with_usage("courses", org_id, db_session)
@@ -703,7 +719,7 @@ async def update_course_thumbnail(
         )
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
@@ -790,7 +806,7 @@ async def update_course(
         )
 
     # SECURITY: Require course ownership or admin role for updating courses
-    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # SECURITY: Additional checks for sensitive access control fields
     sensitive_fields_updated = []
@@ -886,7 +902,7 @@ async def delete_course(
         )
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
     decrease_feature_usage("courses", course.org_id, db_session)
@@ -1023,10 +1039,10 @@ async def clone_course(
         )
 
     # RBAC check - user needs read access to clone
-    await courses_rbac_check(request, original_course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, original_course.course_uuid, AccessAction.READ)
 
     # Also check if user can create courses
-    await courses_rbac_check(request, "course_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check for creating new course
     check_limits_with_usage("courses", original_course.org_id, db_session)

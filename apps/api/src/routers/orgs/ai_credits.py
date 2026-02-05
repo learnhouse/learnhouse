@@ -21,6 +21,7 @@ from src.security.features_utils.usage import (
     get_ai_credits_summary,
     reset_ai_credits_usage,
 )
+from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 
 
 router = APIRouter()
@@ -61,12 +62,11 @@ async def verify_user_is_org_admin(
     db_session: Session,
 ) -> bool:
     """Verify that the user is an admin of the organization."""
-    # Check user organization membership with admin role
-    # Role ID 1 is typically the owner/admin role
+    # Check user organization membership with admin or maintainer role
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user_id,
         UserOrganization.org_id == org_id,
-        UserOrganization.role_id <= 2,  # Owner (1) or Admin (2)
+        UserOrganization.role_id.in_([ADMIN_ROLE_ID, MAINTAINER_ROLE_ID]),
     )
     membership = db_session.exec(statement).first()
     return membership is not None

@@ -33,7 +33,7 @@ from ee.db.scorm import (
 )
 from src.db.organizations import Organization
 from src.db.users import PublicUser
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 
 
 # SCORM namespace definitions
@@ -213,7 +213,7 @@ async def analyze_scorm_package(
     Returns list of SCOs and stores package temporarily.
     """
     # RBAC check
-    await courses_rbac_check_for_activities(request, course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.CREATE)
 
     # Read file content
     content = await scorm_file.read()
@@ -343,7 +343,7 @@ async def import_scorm_package(
     Creates one activity per SCO assignment.
     """
     # RBAC check
-    await courses_rbac_check_for_activities(request, course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.CREATE)
 
     # Verify temp package exists
     temp_dir = os.path.join(TEMP_SCORM_DIR, temp_package_id)

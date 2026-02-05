@@ -1,20 +1,19 @@
 import {
   getLEARNHOUSE_DOMAIN_VAL,
   getLEARNHOUSE_TOP_DOMAIN_VAL,
-  getLEARNHOUSE_HTTP_PROTOCOL_VAL,
   getDefaultOrg,
-  getUriWithOrg,
   isMultiOrgModeEnabled,
   getAPIUrl,
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 
 // Helper function to resolve custom domain to org
 async function resolveCustomDomain(domain: string): Promise<{ slug: string } | null> {
   try {
     const apiUrl = getAPIUrl()
-    const res = await fetch(`${apiUrl}orgs/resolve/domain/${encodeURIComponent(domain)}`, {
+    const res = await fetch(`${apiUrl}orgs/resolve/domain/${encodeURIComponent(stripPort(domain))}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -36,13 +35,8 @@ async function resolveCustomDomain(domain: string): Promise<{ slug: string } | n
 // Check if the host is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
 function isCustomDomain(fullhost: string | null): boolean {
   if (!fullhost) return false
-
-  const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
-  const isSubdomain = fullhost.endsWith(`.${LEARNHOUSE_DOMAIN}`)
-  const isMainDomain = fullhost === LEARNHOUSE_DOMAIN
-  const isLocalhost = fullhost.includes('localhost') || fullhost.includes('127.0.0.1')
-
-  return !isSubdomain && !isMainDomain && !isLocalhost
+  const domain = getLEARNHOUSE_DOMAIN_VAL()
+  return !isSubdomainOf(fullhost, domain) && !isSameHost(fullhost, domain) && !isLocalhostCheck(fullhost)
 }
 
 export const config = {
@@ -99,13 +93,10 @@ export default async function proxy(req: NextRequest) {
     }
 
     // 2. Try to extract from subdomain
-    if (!orgslug && fullhost && fullhost !== LEARNHOUSE_DOMAIN) {
-      if (fullhost.endsWith(`.${LEARNHOUSE_DOMAIN}`)) {
-        const extracted = fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-        // Skip special subdomains like 'auth', 'www', 'api'
-        if (extracted !== 'auth' && extracted !== 'www' && extracted !== 'api') {
-          orgslug = extracted
-        }
+    if (!orgslug && fullhost && !isSameHost(fullhost, LEARNHOUSE_DOMAIN)) {
+      const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
+      if (extracted && extracted !== 'auth' && extracted !== 'www' && extracted !== 'api') {
+        orgslug = extracted
       }
     }
 
@@ -151,8 +142,8 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
-  // SSO Callback - pass through without org rewrite
-  if (pathname.startsWith('/auth/sso/')) {
+  // Auth callbacks - pass through without org rewrite
+  if (pathname.startsWith('/auth/sso/') || pathname.startsWith('/auth/callback/')) {
     return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
 
@@ -189,43 +180,34 @@ export default async function proxy(req: NextRequest) {
 
   // Auth Redirects
   if (pathname == '/redirect_from_auth') {
-    if (cookie_orgslug) {
-      const searchParams = req.nextUrl.searchParams
-      const queryString = searchParams.toString()
-      const redirectPathname = '/'
+    const searchParams = req.nextUrl.searchParams
+    const queryString = searchParams.toString()
+    const redirectPathname = '/'
 
-      // Check if we have a custom domain cookie
-      const customDomain = req.cookies.get('learnhouse_custom_domain')?.value
-      let redirectUrl: URL
+    // Check if we have a custom domain cookie
+    const customDomain = req.cookies.get('learnhouse_custom_domain')?.value
+    let redirectUrl: URL
 
-      if (customDomain) {
-        // Redirect to the custom domain
-        const protocol = getLEARNHOUSE_HTTP_PROTOCOL_VAL()
-        redirectUrl = new URL(`${protocol}${customDomain}${redirectPathname}`)
-      } else {
-        redirectUrl = new URL(
-          getUriWithOrg(cookie_orgslug, redirectPathname),
-          req.url
-        )
-      }
-
-      if (queryString) {
-        redirectUrl.search = queryString
-      }
-      return NextResponse.redirect(redirectUrl)
+    if (customDomain) {
+      // Redirect to the custom domain
+      const protocol = req.nextUrl.protocol + '//'
+      redirectUrl = new URL(`${protocol}${customDomain}${redirectPathname}`)
     } else {
-      return 'Did not find the orgslug in the cookie'
+      // Redirect to root on the same origin the request came from
+      redirectUrl = new URL(redirectPathname, req.url)
     }
+
+    if (queryString) {
+      redirectUrl.search = queryString
+    }
+    return NextResponse.redirect(redirectUrl)
   }
 
   if (pathname.startsWith('/sitemap.xml')) {
     let orgslug: string;
 
-    const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
     if (hosting_mode === 'multi') {
-      orgslug = fullhost
-        ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-        : (default_org as string);
+      orgslug = extractSubdomain(fullhost, getLEARNHOUSE_DOMAIN_VAL()) || (default_org as string);
     } else {
       // Single hosting mode
       orgslug = default_org as string;
@@ -282,19 +264,15 @@ export default async function proxy(req: NextRequest) {
     const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
 
     let orgslug: string;
-    if (fullhost && fullhost !== LEARNHOUSE_DOMAIN) {
-      // Check if it's a subdomain
-      if (fullhost.endsWith(`.${LEARNHOUSE_DOMAIN}`)) {
-        orgslug = fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '');
-      } else if (fullhost.includes('localhost')) {
-        // Development: use default org
-        orgslug = default_org as string;
-      } else {
-        // Auth subdomain or main domain - use cookie or default
-        orgslug = cookie_orgslug || (default_org as string);
-      }
+    const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
+    if (extracted) {
+      orgslug = extracted
+    } else if (isLocalhostCheck(fullhost)) {
+      orgslug = default_org as string
+    } else if (fullhost && !isSameHost(fullhost, LEARNHOUSE_DOMAIN)) {
+      orgslug = cookie_orgslug || (default_org as string)
     } else {
-      orgslug = default_org as string;
+      orgslug = default_org as string
     }
 
     const response = NextResponse.rewrite(

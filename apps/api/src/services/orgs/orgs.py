@@ -28,6 +28,7 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
     authorization_verify_if_user_is_anon,
 )
+from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
@@ -555,7 +556,7 @@ async def get_orgs_by_user_admin(
         .outerjoin(OrganizationConfig)
         .where(
             UserOrganization.user_id == user_id,
-            UserOrganization.role_id == 1,  # Only where the user is admin
+            UserOrganization.role_id == ADMIN_ROLE_ID,  # Only where the user is admin
             UserOrganization.org_id == Organization.id,
             OrganizationConfig.org_id == Organization.id
         )

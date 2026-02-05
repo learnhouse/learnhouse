@@ -13,6 +13,7 @@ import {
   getLEARNHOUSE_TOP_DOMAIN_VAL,
   getLEARNHOUSE_DOMAIN_VAL,
 } from '@services/config/config'
+import { isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
 
 // Types matching NextAuth's session structure
 export interface Session {
@@ -70,7 +71,7 @@ interface SessionCache {
 const SESSION_CACHE_TTL = 10 * 1000 // 10 seconds
 const TOKEN_REFRESH_THRESHOLD = 60 * 1000 // 1 minute before expiry
 const AUTH_BROADCAST_CHANNEL = 'learnhouse_auth_sync'
-const OAUTH_STATE_KEY = 'learnhouse_oauth_state'
+const OAUTH_STATE_COOKIE = 'learnhouse_oauth_state'
 
 // Context
 interface AuthContextValue {
@@ -94,14 +95,9 @@ function generateSecureToken(length: number = 32): string {
 // Check if current hostname is a custom domain
 function isCustomDomain(): boolean {
   if (typeof window === 'undefined') return false
-
   const hostname = window.location.hostname
   const domain = getLEARNHOUSE_DOMAIN_VAL()
-
-  const isSubdomain = hostname.endsWith(`.${domain}`) || hostname === domain
-  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
-
-  return !isSubdomain && !isLocalhost
+  return !isSubdomainOf(hostname, domain) && !isSameHost(hostname, domain) && !isLocalhostCheck(hostname)
 }
 
 // Get cookie attributes based on current domain context
@@ -122,6 +118,35 @@ function getCookieAttributes(): { secureAttr: string; domainAttr: string; sameSi
   const sameSiteAttr = '; SameSite=Lax'
 
   return { secureAttr, domainAttr, sameSiteAttr }
+}
+
+// Store OAuth CSRF state in a cookie (shared across subdomains, unlike sessionStorage)
+// For custom domains, cookie is host-only so it stays on the same origin.
+// For subdomains, cookie is scoped to top domain so callback on main domain can read it.
+function setOAuthStateCookie(csrf: string): void {
+  const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
+  // 5 minute expiry matching the state validation window
+  const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString()
+  const value = JSON.stringify({ csrf, timestamp: Date.now() })
+  document.cookie = `${OAUTH_STATE_COOKIE}=${encodeURIComponent(value)}; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=${expires}`
+}
+
+function getOAuthStateCookie(): { csrf: string; timestamp: number } | null {
+  try {
+    const cookies = document.cookie.split(';')
+    for (const cookie of cookies) {
+      const [name, ...rest] = cookie.trim().split('=')
+      if (name === OAUTH_STATE_COOKIE) {
+        return JSON.parse(decodeURIComponent(rest.join('=')))
+      }
+    }
+  } catch {}
+  return null
+}
+
+function clearOAuthStateCookie(): void {
+  const { secureAttr, domainAttr, sameSiteAttr } = getCookieAttributes()
+  document.cookie = `${OAUTH_STATE_COOKIE}=; path=/${sameSiteAttr}${secureAttr}${domainAttr}; expires=Thu, 01 Jan 1970 00:00:00 GMT`
 }
 
 // Session Provider Component
@@ -204,6 +229,11 @@ export function SessionProvider({
     }
   }, [])
 
+  // Check if a session might exist (marker cookie is set alongside httpOnly auth cookies)
+  const hasSessionMarker = useCallback((): boolean => {
+    return typeof document !== 'undefined' && document.cookie.includes('learnhouse_has_session')
+  }, [])
+
   // Refresh access token using refresh token cookie
   const refreshAccessToken = useCallback(async (): Promise<{ access_token: string; expiry?: number } | null> => {
     // Deduplicate refresh requests within this tab
@@ -214,7 +244,8 @@ export function SessionProvider({
     isRefreshingRef.current = true
     refreshPromiseRef.current = (async () => {
       try {
-        const response = await fetch(`${getAPIUrl()}auth/refresh`, {
+        // Use Next.js API route to ensure cookies are set correctly
+        const response = await fetch('/api/auth/refresh', {
           method: 'GET',
           credentials: 'include',
         })
@@ -342,6 +373,12 @@ export function SessionProvider({
     let isMounted = true
 
     const initSession = async () => {
+      // Skip entirely if no session marker — no httpOnly refresh token exists
+      if (!hasSessionMarker()) {
+        setStatus('unauthenticated')
+        return
+      }
+
       setStatus('loading')
 
       // Try to restore session from refresh token
@@ -437,16 +474,16 @@ export function SessionProvider({
           }
 
           // Regular credentials login
-          const formData = new URLSearchParams()
-          formData.append('username', options.email || '')
-          formData.append('password', options.password || '')
-
-          const response = await fetch(`${getAPIUrl()}auth/login`, {
+          // Use Next.js API route to ensure cookies are set correctly
+          const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: formData,
+            body: new URLSearchParams({
+              username: options.email || '',
+              password: options.password || '',
+            }),
             credentials: 'include',
           })
 
@@ -533,47 +570,47 @@ export function SessionProvider({
             }
           }
 
-          // Build Google OAuth URL
-          const googleClientId = process.env.NEXT_PUBLIC_LEARNHOUSE_GOOGLE_CLIENT_ID
-          if (!googleClientId) {
-            console.error('Google Client ID not configured')
-            return {
-              ok: false,
-              error: 'Google OAuth not configured',
-              url: null,
-              status: 500,
-            }
-          }
-
           // Generate CSRF token for state parameter
           const csrfToken = generateSecureToken()
-          const stateData = {
+          const stateData: Record<string, any> = {
             callbackUrl,
             csrf: csrfToken,
             timestamp: Date.now(),
           }
+
+          // For custom domains, embed returnOrigin so the main domain callback can bounce back
+          if (isCustomDomain()) {
+            stateData.returnOrigin = window.location.origin
+          }
+
           const state = btoa(JSON.stringify(stateData))
 
-          // Store CSRF token in sessionStorage for validation on callback
-          sessionStorage.setItem(OAUTH_STATE_KEY, JSON.stringify({
-            csrf: csrfToken,
-            timestamp: Date.now(),
-          }))
+          // Store CSRF token in cookie for validation on callback
+          setOAuthStateCookie(csrfToken)
 
-          const redirectUri = `${window.location.origin}/auth/callback/google`
-          const scope = 'openid email profile'
+          // Always use main domain for redirect URI — only one URI registered with Google
+          const redirectUri = `${window.location.protocol}//${getLEARNHOUSE_DOMAIN_VAL()}/auth/callback/google`
 
-          const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-          googleAuthUrl.searchParams.set('client_id', googleClientId)
-          googleAuthUrl.searchParams.set('redirect_uri', redirectUri)
-          googleAuthUrl.searchParams.set('response_type', 'code')
-          googleAuthUrl.searchParams.set('scope', scope)
-          googleAuthUrl.searchParams.set('state', state)
-          googleAuthUrl.searchParams.set('access_type', 'offline')
-          googleAuthUrl.searchParams.set('prompt', 'consent')
+          // Get Google OAuth URL from server (client ID lives server-side only)
+          const authResponse = await fetch('/api/auth/google/authorize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ redirect_uri: redirectUri, state, scope: 'openid email profile' }),
+          })
 
-          // Redirect to Google
-          window.location.href = googleAuthUrl.toString()
+          if (!authResponse.ok) {
+            const errorData = await authResponse.json().catch(() => ({}))
+            console.error('Google OAuth initiation failed:', errorData)
+            return {
+              ok: false,
+              error: errorData.error || 'Google OAuth not configured',
+              url: null,
+              status: authResponse.status,
+            }
+          }
+
+          const { url: googleAuthUrl } = await authResponse.json()
+          window.location.href = googleAuthUrl
           return
         }
 
@@ -603,9 +640,9 @@ export function SessionProvider({
 
     let logoutSuccess = false
     try {
-      // Call backend logout
-      const response = await fetch(`${getAPIUrl()}auth/logout`, {
-        method: 'DELETE',
+      // Use Next.js API route to ensure cookies are cleared correctly
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
         credentials: 'include',
       })
       logoutSuccess = response.ok
@@ -631,7 +668,7 @@ export function SessionProvider({
     document.cookie = `learnhouse_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
 
     // Clear OAuth state
-    sessionStorage.removeItem(OAUTH_STATE_KEY)
+    clearOAuthStateCookie()
 
     // Notify other tabs about logout
     broadcastChannelRef.current?.postMessage({ type: 'LOGOUT' })
@@ -686,14 +723,12 @@ export function validateOAuthState(state: string): { valid: boolean; callbackUrl
 
   try {
     const stateData = JSON.parse(atob(state))
-    const storedState = sessionStorage.getItem(OAUTH_STATE_KEY)
+    const stored = getOAuthStateCookie()
 
-    if (!storedState) {
+    if (!stored) {
       console.error('No stored OAuth state found')
       return defaultResult
     }
-
-    const stored = JSON.parse(storedState)
 
     // Validate CSRF token matches
     if (stateData.csrf !== stored.csrf) {
@@ -709,7 +744,7 @@ export function validateOAuthState(state: string): { valid: boolean; callbackUrl
     }
 
     // Clear stored state after successful validation
-    sessionStorage.removeItem(OAUTH_STATE_KEY)
+    clearOAuthStateCookie()
 
     return {
       valid: true,
@@ -736,46 +771,48 @@ export async function signIn(
     // Store org context from cookies if present (for compatibility)
     // The options should contain orgSlug and orgId if needed
 
-    const googleClientId = process.env.NEXT_PUBLIC_LEARNHOUSE_GOOGLE_CLIENT_ID
-    if (!googleClientId) {
-      console.error('Google Client ID not configured')
-      return {
-        ok: false,
-        error: 'Google OAuth not configured',
-        url: null,
-        status: 500,
-      }
-    }
-
     // Generate CSRF token for state parameter
     const csrfToken = generateSecureToken()
     const callbackUrl = options?.callbackUrl || '/'
-    const stateData = {
+    const stateData: Record<string, any> = {
       callbackUrl,
       csrf: csrfToken,
       timestamp: Date.now(),
     }
+
+    // For custom domains, embed returnOrigin so the main domain callback can bounce back
+    if (isCustomDomain()) {
+      stateData.returnOrigin = window.location.origin
+    }
+
     const state = btoa(JSON.stringify(stateData))
 
-    // Store CSRF token in sessionStorage for validation on callback
-    sessionStorage.setItem(OAUTH_STATE_KEY, JSON.stringify({
-      csrf: csrfToken,
-      timestamp: Date.now(),
-    }))
+    // Store CSRF token in cookie for validation on callback
+    setOAuthStateCookie(csrfToken)
 
-    const redirectUri = `${window.location.origin}/auth/callback/google`
-    const scope = 'openid email profile'
+    // Always use main domain for redirect URI — only one URI registered with Google
+    const redirectUri = `${window.location.protocol}//${getLEARNHOUSE_DOMAIN_VAL()}/auth/callback/google`
 
-    const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-    googleAuthUrl.searchParams.set('client_id', googleClientId)
-    googleAuthUrl.searchParams.set('redirect_uri', redirectUri)
-    googleAuthUrl.searchParams.set('response_type', 'code')
-    googleAuthUrl.searchParams.set('scope', scope)
-    googleAuthUrl.searchParams.set('state', state)
-    googleAuthUrl.searchParams.set('access_type', 'offline')
-    googleAuthUrl.searchParams.set('prompt', 'consent')
+    // Get Google OAuth URL from server (client ID lives server-side only)
+    const authResponse = await fetch('/api/auth/google/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ redirect_uri: redirectUri, state, scope: 'openid email profile' }),
+    })
 
-    window.location.href = googleAuthUrl.toString()
+    if (!authResponse.ok) {
+      const errorData = await authResponse.json().catch(() => ({}))
+      console.error('Google OAuth initiation failed:', errorData)
+      return {
+        ok: false,
+        error: errorData.error || 'Google OAuth not configured',
+        url: null,
+        status: authResponse.status,
+      }
+    }
+
+    const { url: googleAuthUrl } = await authResponse.json()
+    window.location.href = googleAuthUrl
     return
   }
 
@@ -794,8 +831,9 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   const { callbackUrl = '/', redirect = true } = options || {}
 
   try {
-    await fetch(`${getAPIUrl()}auth/logout`, {
-      method: 'DELETE',
+    // Use Next.js API route to ensure cookies are cleared correctly
+    await fetch('/api/auth/logout', {
+      method: 'POST',
       credentials: 'include',
     })
   } catch (error) {
@@ -809,7 +847,7 @@ export async function signOut(options?: SignOutOptions): Promise<void> {
   document.cookie = `learnhouse_oauth_org_id=; path=/${expireAttr}${secureAttr}${domainAttr}`
 
   // Clear OAuth state
-  sessionStorage.removeItem(OAUTH_STATE_KEY)
+  clearOAuthStateCookie()
 
   // Try to notify other tabs (if BroadcastChannel is available)
   try {

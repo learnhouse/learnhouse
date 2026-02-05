@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request
 from datetime import datetime
 from typing import List, Optional
 
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_feature_access
 
 # Maximum number of versions to keep per activity
@@ -103,7 +103,7 @@ async def get_activity_versions(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Get versions with user info
     statement = (
@@ -167,7 +167,7 @@ async def get_activity_version(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Get specific version with user info
     statement = (
@@ -240,7 +240,7 @@ async def get_activity_state(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return ActivityStateRead(
         activity_uuid=activity.activity_uuid,
@@ -285,7 +285,7 @@ async def restore_activity_version(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Get the version to restore
     statement = (

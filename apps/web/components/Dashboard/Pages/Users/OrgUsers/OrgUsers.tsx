@@ -1,7 +1,7 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
+import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -9,7 +9,7 @@ import { getAPIUrl } from '@services/config/config'
 import { removeUserFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +31,6 @@ function OrgUsers() {
 
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
-  const [isLoading, setIsLoading] = React.useState(true)
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -44,7 +43,7 @@ function OrgUsers() {
   }
 
   const usersUrl = org && access_token ? `${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}` : null
-  const { data } = useSWR(
+  const { data, isValidating } = useSWR(
     usersUrl,
     (url) => swrFetcher(url, access_token)
   )
@@ -57,6 +56,8 @@ function OrgUsers() {
 
   const orgUsers = data?.items || []
   const total = data?.total || 0
+  const isInitialLoading = !data && isValidating
+  const isPageTransitioning = !!data && isValidating
 
   const handleRoleChange = async (user_id: any, newRoleUuid: string) => {
     const toastId = toast.loading(t('dashboard.users.active_users.actions.updating_role') || 'Updating role...');
@@ -89,23 +90,11 @@ function OrgUsers() {
     setPage(1) // Reset to first page when searching
   }
 
-  useEffect(() => {
-    if (data) {
-      setIsLoading(false)
-    }
-  }, [org, data])
-
   return (
     <div>
-      {isLoading ? (
-        <div>
-          <PageLoading />
-        </div>
-      ) : (
-        <>
-          <Toast></Toast>
-          <div className="h-6"></div>
-          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+      <Toast></Toast>
+      <div className="h-6"></div>
+      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div className="flex-1">
@@ -133,8 +122,12 @@ function OrgUsers() {
             </div>
 
             {/* Content */}
-            <div className="px-0">
-              {orgUsers.length === 0 ? (
+            <div className="px-0 relative">
+              {isInitialLoading ? (
+                <div className="py-20 flex justify-center">
+                  <LearnHouseSpinner size={36} />
+                </div>
+              ) : orgUsers.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="bg-gray-100 p-4 rounded-full">
@@ -149,6 +142,12 @@ function OrgUsers() {
                   </div>
                 </div>
               ) : (
+                <div className="relative">
+                {isPageTransitioning && (
+                  <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-lg">
+                    <LearnHouseSpinner size={28} />
+                  </div>
+                )}
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100">
@@ -290,6 +289,7 @@ function OrgUsers() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
 
@@ -325,8 +325,6 @@ function OrgUsers() {
               </div>
             )}
           </div>
-        </>
-      )}
     </div>
   )
 }

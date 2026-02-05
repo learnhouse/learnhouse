@@ -29,7 +29,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
-from src.security.courses_security import courses_rbac_check
+from src.security.rbac import check_resource_access, AccessAction
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 
 from .models import (
@@ -85,7 +85,7 @@ async def analyze_import_package(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # RBAC check - user needs create permission for courses
-    await courses_rbac_check(request, "course_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Read file content
     content = await zip_file.read()
@@ -260,7 +260,7 @@ async def import_courses(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # RBAC check - user needs create permission for courses
-    await courses_rbac_check(request, "course_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Verify temp package exists
     temp_dir = os.path.join(TEMP_IMPORT_DIR, temp_id)

@@ -20,6 +20,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import PublicUser
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
+from src.security.rbac.constants import ADMIN_ROLE_ID, ADMIN_OR_MAINTAINER_ROLE_IDS, is_admin_or_maintainer
 
 logger = logging.getLogger(__name__)
 
@@ -217,11 +218,11 @@ async def add_custom_domain(
             detail="Your role in this organization could not be determined",
         )
 
-    # Only admins (role_id 1) can manage custom domains
-    if user_role.id != 1:
+    # Only admins and maintainers can manage custom domains
+    if not is_admin_or_maintainer(user_role.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators can manage custom domains",
+            detail="Only organization administrators and maintainers can manage custom domains",
         )
 
     # VERIFICATION 5: Validate domain format
@@ -444,10 +445,10 @@ async def verify_custom_domain(
     statement = select(Role).where(Role.id == user_org.role_id)
     user_role = db_session.exec(statement).first()
 
-    if not user_role or user_role.id != 1:
+    if not user_role or not is_admin_or_maintainer(user_role.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators can verify custom domains",
+            detail="Only organization administrators and maintainers can verify custom domains",
         )
 
     # Get the organization for the slug
@@ -513,10 +514,10 @@ async def delete_custom_domain(
     statement = select(Role).where(Role.id == user_org.role_id)
     user_role = db_session.exec(statement).first()
 
-    if not user_role or user_role.id != 1:
+    if not user_role or not is_admin_or_maintainer(user_role.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators can delete custom domains",
+            detail="Only organization administrators and maintainers can delete custom domains",
         )
 
     # Get the custom domain

@@ -26,10 +26,14 @@ from src.db.podcasts.episodes import PodcastEpisode
 from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
 )
+from src.security.rbac import (
+    check_resource_access,
+    AccessAction,
+)
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.services.podcasts.thumbnails import upload_podcast_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
-from src.security.podcasts_security import podcasts_rbac_check
 from src.db.organization_config import OrganizationConfig
 from config.config import get_learnhouse_config
 
@@ -89,7 +93,7 @@ async def _user_can_view_unpublished_podcast(
     )
     user_roles = db_session.exec(role_statement).all()
     for role in user_roles:
-        if role.id in [1, 2]:  # Admin or Maintainer role IDs
+        if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin or Maintainer role IDs
             return True
 
     # Check if user is a member of a UserGroup that has access to this podcast
@@ -134,7 +138,7 @@ async def get_podcast(
         )
 
     # RBAC check
-    await podcasts_rbac_check(request, podcast.podcast_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.READ)
 
     # Check if podcast is published - unpublished podcasts require special permission
     if not podcast.published:
@@ -210,7 +214,7 @@ async def get_podcast_meta(
         )
 
     # RBAC check
-    await podcasts_rbac_check(request, podcast.podcast_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.READ)
 
     # Check if user can view unpublished content
     can_view_unpublished = await _user_can_view_unpublished_podcast(
@@ -285,7 +289,7 @@ async def get_podcasts_orgslug(
         )
         user_roles = db_session.exec(role_statement).all()
         for role in user_roles:
-            if role.id in [1, 2]:  # Admin role IDs
+            if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
                 can_view_unpublished = True
                 break
 
@@ -448,7 +452,7 @@ async def create_podcast(
     podcast = Podcast.model_validate(podcast_object)
 
     # SECURITY: Check if user has permission to create podcasts
-    await podcasts_rbac_check(request, "podcast_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
 
     # Check plan access (podcasts require standard+ plan)
     check_feature_access("podcasts", org_id, db_session)
@@ -549,7 +553,7 @@ async def update_podcast_thumbnail(
         )
 
     # RBAC check
-    await podcasts_rbac_check(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -622,7 +626,7 @@ async def update_podcast(
         )
 
     # SECURITY: Require podcast ownership or admin role for updating podcasts
-    await podcasts_rbac_check(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # SECURITY: Additional checks for sensitive access control fields
     sensitive_fields_updated = []
@@ -708,7 +712,7 @@ async def delete_podcast(
         )
 
     # RBAC check
-    await podcasts_rbac_check(request, podcast.podcast_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.DELETE)
 
     # Feature usage
     decrease_feature_usage("podcasts", podcast.org_id, db_session)

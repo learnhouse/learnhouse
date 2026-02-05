@@ -12,7 +12,7 @@ from src.db.collections import (
 from src.db.collections_courses import CollectionCourse
 from src.db.courses.courses import Course
 from fastapi import HTTPException, status, Request
-from src.security.courses_security import courses_rbac_check_for_collections
+from src.security.rbac import check_resource_access, AccessAction
 
 
 ####################################################
@@ -35,8 +35,8 @@ async def get_collection(
         )
 
     # RBAC check
-    await courses_rbac_check_for_collections(
-        request, collection.collection_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, collection.collection_uuid, AccessAction.READ
     )
 
     # get courses in collection
@@ -84,7 +84,7 @@ async def create_collection(
     # SECURITY: Check if user has permission to create collections in this organization
     # Since collections are organization-level resources, we need to check org permissions
     # For now, we'll use the existing RBAC check but with proper organization context
-    await courses_rbac_check_for_collections(request, "collection_x", current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, "collection_x", AccessAction.CREATE)
 
     # Complete the collection object
     collection.collection_uuid = f"collection_{uuid4()}"
@@ -106,7 +106,7 @@ async def create_collection(
             if course:
                 # Verify user has read access to the course before adding it to collection
                 try:
-                    await courses_rbac_check_for_collections(request, course.course_uuid, current_user, "read", db_session)
+                    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
                 except HTTPException:
                     raise HTTPException(
                         status_code=403,
@@ -156,8 +156,8 @@ async def update_collection(
         )
 
     # RBAC check
-    await courses_rbac_check_for_collections(
-        request, collection.collection_uuid, current_user, "update", db_session
+    await check_resource_access(
+        request, db_session, current_user, collection.collection_uuid, AccessAction.UPDATE
     )
 
     courses = collection_object.courses
@@ -230,8 +230,8 @@ async def delete_collection(
         )
 
     # RBAC check
-    await courses_rbac_check_for_collections(
-        request, collection.collection_uuid, current_user, "delete", db_session
+    await check_resource_access(
+        request, db_session, current_user, collection.collection_uuid, AccessAction.DELETE
     )
 
     # delete collection from database

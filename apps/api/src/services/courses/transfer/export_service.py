@@ -22,7 +22,7 @@ from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
-from src.security.courses_security import courses_rbac_check
+from src.security.rbac import check_resource_access, AccessAction
 
 from .models import ExportManifest, ExportCourseInfo
 from .storage_utils import read_file_content, list_directory, walk_directory
@@ -77,7 +77,7 @@ async def export_courses_batch(
             )
 
         # RBAC check - user needs read access to export
-        await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
         # Get organization (should be same for all courses in batch)
         if org is None:

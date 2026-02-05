@@ -19,7 +19,7 @@ from src.services.courses.activities.uploads.videos import upload_video
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 
 
 async def create_video_activity(
@@ -64,7 +64,7 @@ async def create_video_activity(
         )
 
     # RBAC check
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
@@ -204,7 +204,7 @@ async def create_external_video_activity(
         )
 
     # RBAC check
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")

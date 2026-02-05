@@ -13,8 +13,14 @@ def _get_sort_expression(salt: str):
     """Helper function to create consistent sort expression"""
     if not salt:
         return Organization.name
-    
+
+    # Sanitize salt to prevent SQL injection - only allow alphanumeric and basic chars
+    import re
+    if not re.match(r'^[a-zA-Z0-9_-]+$', salt):
+        return Organization.name
+
     # Create a deterministic ordering using md5(salt + id)
+    # Note: salt is validated above to only contain safe characters
     return text(
         f"md5('{salt}' || id)"
     )
@@ -27,6 +33,10 @@ async def get_orgs_for_explore(
     label: str = "",
     salt: str = "",
 ) -> list[OrganizationRead]:
+
+    # Enforce maximum limit to prevent data dumping
+    limit = min(limit, 50)
+    page = max(page, 1)
 
     statement = (
         select(Organization)

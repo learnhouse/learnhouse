@@ -4,7 +4,7 @@ from ee.db.payments.payments_courses import PaymentsCourse
 from ee.db.payments.payments_products import PaymentsProduct
 from src.db.courses.courses import Course
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
-from src.security.courses_security import courses_rbac_check
+from src.security.rbac import check_resource_access, AccessAction
 
 async def link_course_to_product(
     request: Request,
@@ -22,7 +22,7 @@ async def link_course_to_product(
         raise HTTPException(status_code=404, detail="Course not found")
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Check if product exists
     statement = select(PaymentsProduct).where(
@@ -71,7 +71,7 @@ async def unlink_course_from_product(
         raise HTTPException(status_code=404, detail="Course not found")
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Find and delete the payment course link
     statement = select(PaymentsCourse).where(
