@@ -51,7 +51,7 @@ export const config = {
      * 5. all root files inside /public (e.g. /favicon.ico)
      * 6. /embed (activity embeds)
      */
-    '/((?!api|_next|fonts|umami|examples|embed|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/sitemap.xml',
     '/payments/stripe/connect/oauth',
   ],

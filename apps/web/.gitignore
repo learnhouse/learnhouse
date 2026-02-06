@@ -46,3 +46,7 @@ next.config.original.js
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Runtime config (generated at startup by server-wrapper.js)
+public/runtime-config.js
+runtime-config.json

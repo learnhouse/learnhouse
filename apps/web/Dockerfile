@@ -49,7 +49,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
@@ -68,8 +68,9 @@ RUN chmod +x server-wrapper.js
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
-# Create runtime-config.json placeholder (will be generated at startup)
-RUN touch runtime-config.json && chown nextjs:nodejs runtime-config.json
+# Create runtime config placeholders (will be generated at startup by server-wrapper.js)
+# Remove stale build-time runtime-config.js to ensure fresh runtime values
+RUN rm -f public/runtime-config.js && touch runtime-config.json && chown nextjs:nodejs runtime-config.json
 
 USER nextjs
 
