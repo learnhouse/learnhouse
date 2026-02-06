@@ -22,7 +22,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.users import PublicUser
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.rbac.constants import ADMIN_ROLE_ID, ADMIN_OR_MAINTAINER_ROLE_IDS, is_admin_or_maintainer
+from src.security.rbac.constants import is_admin_or_maintainer
 
 logger = logging.getLogger(__name__)
 
@@ -624,6 +624,7 @@ async def check_domain_ssl_status(
     # Attempt TLS handshake
     try:
         context = ssl.create_default_context()
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
         with socket.create_connection((domain.domain, 443), timeout=5) as sock:
             with context.wrap_socket(sock, server_hostname=domain.domain) as ssock:
                 cert = ssock.getpeercert()

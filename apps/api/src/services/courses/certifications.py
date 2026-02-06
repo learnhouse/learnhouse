@@ -349,23 +349,26 @@ async def get_user_certificates_for_course(
     if not certification_ids:
         return []
 
-    # Query certificate users for this user and these certifications
+    # Batch fetch all certificate users for this user and these certifications
+    statement = select(CertificateUser).where(
+        CertificateUser.user_id == current_user.id,
+        CertificateUser.certification_id.in_(certification_ids)  # type: ignore
+    )
+    cert_users = db_session.exec(statement).all()
+
+    if not cert_users:
+        return []
+
+    # Build a map of certification_id -> Certifications (already fetched above)
+    cert_map = {cert.id: cert for cert in certifications if cert.id}
+
     result = []
-    for cert_id in certification_ids:
-        statement = select(CertificateUser).where(
-            CertificateUser.user_id == current_user.id,
-            CertificateUser.certification_id == cert_id
-        )
-        cert_user = db_session.exec(statement).first()
-        if cert_user:
-            # Get the associated certification
-            statement = select(Certifications).where(Certifications.id == cert_id)
-            certification = db_session.exec(statement).first()
-            
-            result.append({
-                "certificate_user": CertificateUserRead(**cert_user.model_dump()),
-                "certification": CertificationRead(**certification.model_dump()) if certification else None
-            })
+    for cert_user in cert_users:
+        certification = cert_map.get(cert_user.certification_id)
+        result.append({
+            "certificate_user": CertificateUserRead(**cert_user.model_dump()),
+            "certification": CertificationRead(**certification.model_dump()) if certification else None
+        })
 
     return result
 
@@ -491,26 +494,39 @@ async def get_all_user_certificates(
     if not certificate_users:
         return []
 
+    # Batch fetch all certifications
+    cert_ids = list({cu.certification_id for cu in certificate_users})
+    statement = select(Certifications).where(Certifications.id.in_(cert_ids))  # type: ignore
+    certifications = db_session.exec(statement).all()
+    cert_map = {cert.id: cert for cert in certifications}
+
+    # Batch fetch all courses
+    course_ids = list({cert.course_id for cert in certifications if cert.course_id})
+    if course_ids:
+        statement = select(Course).where(Course.id.in_(course_ids))  # type: ignore
+        courses = db_session.exec(statement).all()
+        course_map = {course.id: course for course in courses}
+    else:
+        course_map = {}
+
+    # Batch fetch user information (all cert_users belong to current_user, but keep generic)
+    from src.db.users import User
+    user_ids = list({cu.user_id for cu in certificate_users})
+    statement = select(User).where(User.id.in_(user_ids))  # type: ignore
+    users = db_session.exec(statement).all()
+    user_map = {user.id: user for user in users}
+
     result = []
     for cert_user in certificate_users:
-        # Get the associated certification
-        statement = select(Certifications).where(Certifications.id == cert_user.certification_id)
-        certification = db_session.exec(statement).first()
-
+        certification = cert_map.get(cert_user.certification_id)
         if not certification:
             continue
 
-        # Get course information
-        statement = select(Course).where(Course.id == certification.course_id)
-        course = db_session.exec(statement).first()
-
+        course = course_map.get(certification.course_id)
         if not course:
             continue
 
-        # Get user information
-        from src.db.users import User
-        statement = select(User).where(User.id == cert_user.user_id)
-        user = db_session.exec(statement).first()
+        user = user_map.get(cert_user.user_id)
 
         result.append({
             "certificate_user": CertificateUserRead(**cert_user.model_dump()),
@@ -532,4 +548,4 @@ async def get_all_user_certificates(
             } if user else None
         })
 
-    return result 
+    return result

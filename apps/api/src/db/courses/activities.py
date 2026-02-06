@@ -47,9 +47,9 @@ class Activity(ActivityBase, table=True):
     )
     course_id: int = Field(
         default=None,
-        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE")),
+        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"), index=True),
     )
-    activity_uuid: str = ""
+    activity_uuid: str = Field(default="", index=True)
     creation_date: str = ""
     update_date: str = ""
     # Versioning fields

@@ -120,7 +120,6 @@ class TestSecurityComprehensive:
             check_resource_access,
             AccessAction,
             AccessContext,
-            AccessDecision,
         )
 
         assert ResourceAccessChecker is not None

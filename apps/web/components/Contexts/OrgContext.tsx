@@ -24,7 +24,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     {
       revalidateOnFocus: true,
       revalidateOnMount: true,
-      dedupingInterval: 0,
+      dedupingInterval: 5000,
     }
   )
   const { data: orgs, error: orgsError } = useSWR(
@@ -33,7 +33,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     {
       revalidateOnFocus: true,
       revalidateOnMount: true,
-      dedupingInterval: 0,
+      dedupingInterval: 5000,
     }
   )
 

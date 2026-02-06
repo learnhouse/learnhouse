@@ -232,26 +232,33 @@ async def get_course_chapters(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)  # type: ignore
 
-    # Get activities for each chapter
-    for chapter in chapters:
-        statement = (
-            select(ChapterActivity)
-            .where(ChapterActivity.chapter_id == chapter.id)
-            .order_by(ChapterActivity.order) # type: ignore
-            .distinct(ChapterActivity.id, ChapterActivity.order) # type: ignore
+    # Get all activities for all chapters in a single query
+    chapter_ids = [chapter.id for chapter in chapters]
+    if chapter_ids:
+        activity_statement = (
+            select(ChapterActivity, Activity)
+            .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
+            .where(ChapterActivity.chapter_id.in_(chapter_ids))  # type: ignore
+            .order_by(ChapterActivity.chapter_id, ChapterActivity.order)  # type: ignore
         )
-        chapter_activities = db_session.exec(statement).all()
+        if not with_unpublished_activities:
+            activity_statement = activity_statement.where(Activity.published == True)
 
-        for chapter_activity in chapter_activities:
-            statement = (
-                select(Activity)
-                .where(Activity.id == chapter_activity.activity_id, with_unpublished_activities or Activity.published == True)
-                .distinct(Activity.id) # type: ignore
-            )
-            activity = db_session.exec(statement).first()
+        activity_results = db_session.exec(activity_statement).all()
 
-            if activity:
-                chapter.activities.append(ActivityRead(**activity.model_dump()))
+        # Group activities by chapter_id
+        chapter_activities_map: dict[int, list[ActivityRead]] = {}
+        seen: set[tuple[int, int]] = set()
+        for chapter_activity, activity in activity_results:
+            key = (chapter_activity.chapter_id, activity.id)
+            if key not in seen:
+                seen.add(key)
+                chapter_activities_map.setdefault(chapter_activity.chapter_id, []).append(
+                    ActivityRead(**activity.model_dump())
+                )
+
+        for chapter in chapters:
+            chapter.activities = chapter_activities_map.get(chapter.id, [])
 
     return chapters
 

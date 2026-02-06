@@ -6,7 +6,7 @@ for the unified RBAC system.
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 
