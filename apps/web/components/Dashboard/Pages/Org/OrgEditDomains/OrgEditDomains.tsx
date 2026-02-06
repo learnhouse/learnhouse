@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
@@ -38,6 +38,10 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  ShieldCheck,
+  ShieldAlert,
+  Shield,
+  Loader2,
 } from 'lucide-react'
 import {
   CustomDomain,
@@ -45,7 +49,9 @@ import {
   verifyCustomDomain,
   deleteCustomDomain,
   getVerificationInfo,
+  checkSSLStatus,
   CustomDomainVerificationInfo,
+  CustomDomainSSLStatus,
 } from '@services/custom_domains/custom_domains'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import { PlanLevel } from '@services/plans/plans'
@@ -64,6 +70,8 @@ const OrgEditDomains: React.FC = () => {
   const [newDomain, setNewDomain] = useState('')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [sslStatuses, setSslStatuses] = useState<Record<string, CustomDomainSSLStatus>>({})
+  const [sslLoading, setSslLoading] = useState<Record<string, boolean>>({})
 
   // Fetch domains
   const domainsUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/domains` : null
@@ -159,25 +167,131 @@ const OrgEditDomains: React.FC = () => {
     setTimeout(() => setCopiedField(null), 2000)
   }
 
+  const handleCheckSSL = useCallback(async (domain: CustomDomain) => {
+    setSslLoading((prev) => ({ ...prev, [domain.domain_uuid]: true }))
+    try {
+      const result = await checkSSLStatus(org.id, domain.domain_uuid, access_token)
+      setSslStatuses((prev) => ({ ...prev, [domain.domain_uuid]: result }))
+    } catch {
+      setSslStatuses((prev) => ({
+        ...prev,
+        [domain.domain_uuid]: {
+          has_ssl: false,
+          status: 'unknown',
+          message: 'Could not check SSL status.',
+        },
+      }))
+    } finally {
+      setSslLoading((prev) => ({ ...prev, [domain.domain_uuid]: false }))
+    }
+  }, [org?.id, access_token])
+
+  // Auto-check SSL for all verified domains on load and every 30s
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (!domains || !access_token || !org?.id) return
+
+    const verifiedDomains = domains.filter((d) => d.status === 'verified')
+    if (verifiedDomains.length === 0) return
+
+    const checkAll = () => {
+      verifiedDomains.forEach((domain) => handleCheckSSL(domain))
+    }
+
+    // Initial check
+    checkAll()
+
+    // Poll every 30s
+    intervalRef.current = setInterval(checkAll, 30000)
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [domains, access_token, org?.id, handleCheckSSL])
+
+  const getSSLBadge = (domain: CustomDomain) => {
+    if (domain.status !== 'verified') {
+      return (
+        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
+          <Shield size={12} className="mr-1" />
+          N/A
+        </Badge>
+      )
+    }
+
+    const sslStatus = sslStatuses[domain.domain_uuid]
+    const loading = sslLoading[domain.domain_uuid]
+
+    if (loading && !sslStatus) {
+      return (
+        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600">
+          <Loader2 size={12} className="mr-1 animate-spin" />
+          Checking...
+        </Badge>
+      )
+    }
+
+    if (!sslStatus) {
+      return (
+        <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
+          <Shield size={12} className="mr-1" />
+          Checking...
+        </Badge>
+      )
+    }
+
+    switch (sslStatus.status) {
+      case 'active':
+        return (
+          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`Issuer: ${sslStatus.issuer || 'Unknown'}\nExpires: ${sslStatus.expires || 'Unknown'}`}>
+            <ShieldCheck size={12} className="mr-1" />
+            SSL Active
+          </Badge>
+        )
+      case 'provisioning':
+        return (
+          <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800" title={sslStatus.message}>
+            <Loader2 size={12} className="mr-1 animate-spin" />
+            Provisioning
+          </Badge>
+        )
+      case 'invalid':
+        return (
+          <Badge variant="outline" className="border-transparent bg-red-100 text-red-800" title={sslStatus.message}>
+            <ShieldAlert size={12} className="mr-1" />
+            Invalid
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600" title={sslStatus.message}>
+            <ShieldAlert size={12} className="mr-1" />
+            Unknown
+          </Badge>
+        )
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified':
         return (
-          <Badge className="bg-green-100 text-green-800">
+          <Badge variant="outline" className="border-transparent bg-green-100 text-green-800">
             <CheckCircle2 size={12} className="mr-1" />
             Verified
           </Badge>
         )
       case 'pending':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800">
+          <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800">
             <Clock size={12} className="mr-1" />
             Pending
           </Badge>
         )
       case 'failed':
         return (
-          <Badge className="bg-red-100 text-red-800">
+          <Badge variant="outline" className="border-transparent bg-red-100 text-red-800">
             <XCircle size={12} className="mr-1" />
             Failed
           </Badge>
@@ -248,6 +362,7 @@ const OrgEditDomains: React.FC = () => {
                     <TableRow>
                       <TableHead>Domain</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>SSL</TableHead>
                       <TableHead>Added</TableHead>
                       <TableHead>Verified</TableHead>
                       <TableHead>Actions</TableHead>
@@ -273,6 +388,7 @@ const OrgEditDomains: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(domain.status)}</TableCell>
+                        <TableCell>{getSSLBadge(domain)}</TableCell>
                         <TableCell className="text-sm text-gray-600">
                           {formatDate(domain.creation_date)}
                         </TableCell>
@@ -460,6 +576,76 @@ const OrgEditDomains: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* SSL Certificate Status */}
+                  {selectedDomain && selectedDomain.status === 'verified' && (
+                    <div className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">SSL Certificate</Badge>
+                          <span className="text-sm text-gray-500">HTTPS status</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCheckSSL(selectedDomain)}
+                          disabled={sslLoading[selectedDomain.domain_uuid]}
+                        >
+                          {sslLoading[selectedDomain.domain_uuid] ? (
+                            <Loader2 size={14} className="mr-1 animate-spin" />
+                          ) : (
+                            <RefreshCw size={14} className="mr-1" />
+                          )}
+                          Check
+                        </Button>
+                      </div>
+                      {sslStatuses[selectedDomain.domain_uuid] ? (
+                        <div className={`rounded-lg p-3 ${
+                          sslStatuses[selectedDomain.domain_uuid].has_ssl
+                            ? 'bg-green-50 border border-green-200'
+                            : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning'
+                            ? 'bg-yellow-50 border border-yellow-200'
+                            : 'bg-red-50 border border-red-200'
+                        }`}>
+                          <div className="flex items-start gap-2">
+                            {sslStatuses[selectedDomain.domain_uuid].has_ssl ? (
+                              <ShieldCheck size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+                            ) : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning' ? (
+                              <Loader2 size={18} className="text-yellow-600 flex-shrink-0 mt-0.5 animate-spin" />
+                            ) : (
+                              <ShieldAlert size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+                            )}
+                            <div>
+                              <p className={`text-sm font-medium ${
+                                sslStatuses[selectedDomain.domain_uuid].has_ssl
+                                  ? 'text-green-800'
+                                  : sslStatuses[selectedDomain.domain_uuid].status === 'provisioning'
+                                  ? 'text-yellow-800'
+                                  : 'text-red-800'
+                              }`}>
+                                {sslStatuses[selectedDomain.domain_uuid].message}
+                              </p>
+                              {sslStatuses[selectedDomain.domain_uuid].has_ssl && (
+                                <div className="text-xs text-green-700 mt-1 space-y-0.5">
+                                  {sslStatuses[selectedDomain.domain_uuid].issuer && (
+                                    <p>Issuer: {sslStatuses[selectedDomain.domain_uuid].issuer}</p>
+                                  )}
+                                  {sslStatuses[selectedDomain.domain_uuid].expires && (
+                                    <p>Expires: {sslStatuses[selectedDomain.domain_uuid].expires}</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Loader2 size={14} className="animate-spin" />
+                          Checking SSL status...
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 

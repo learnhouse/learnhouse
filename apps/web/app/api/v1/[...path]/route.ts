@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Allow large file uploads (videos, SCORM packages) to pass through
+export const maxDuration = 300 // 5 minutes
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 const getBackendUrl = () =>
   (process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338').replace(/\/+$/, '')
 

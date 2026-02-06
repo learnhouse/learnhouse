@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
 from src.core.ee_hooks import register_ee_middlewares
 from src.security.csrf import CSRFProtectionMiddleware
+from src.routers.content_files import router as content_files_router
 
 
 ########################
@@ -71,8 +72,11 @@ app.add_event_handler("startup", startup_app(app))
 app.add_event_handler("shutdown", shutdown_app(app))
 
 
-# Static Files
-app.mount("/content", StaticFiles(directory="content"), name="content")
+# Static Files - use S3-aware router when S3 is enabled, otherwise serve locally
+if learnhouse_config.hosting_config.content_delivery.type == "s3api":
+    app.include_router(content_files_router)
+else:
+    app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Global Routes
 app.include_router(v1_router)

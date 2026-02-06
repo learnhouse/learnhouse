@@ -146,13 +146,10 @@ async def get_element_organization_id(
         statement = select(Activity).where(Activity.activity_uuid == element_uuid)
         activity = db_session.exec(statement).first()
         if activity:
-            # Get org_id from the course via chapter
-            chapter_statement = select(Chapter).where(Chapter.id == activity.chapter_id)
-            chapter = db_session.exec(chapter_statement).first()
-            if chapter:
-                course_statement = select(Course).where(Course.id == chapter.course_id)
-                course = db_session.exec(course_statement).first()
-                return course.org_id if course else None
+            # Get org_id from the course directly
+            course_statement = select(Course).where(Course.id == activity.course_id)
+            course = db_session.exec(course_statement).first()
+            return course.org_id if course else None
         return None
 
     elif element_type == "collections":

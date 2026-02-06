@@ -1,5 +1,7 @@
 import os
 import re
+import ssl
+import socket
 import secrets
 import logging
 from typing import List, Optional, Tuple
@@ -58,23 +60,43 @@ def is_reserved_domain(domain: str) -> bool:
     return False
 
 
+def _get_subdomain_prefix(domain: str) -> str:
+    """
+    Extract the subdomain prefix from a domain.
+    e.g. 'learn.contribhub.com' -> 'learn'
+         'docs.learn.contribhub.com' -> 'docs.learn'
+         'contribhub.com' -> ''
+    """
+    parts = domain.split('.')
+    if len(parts) <= 2:
+        return ''
+    return '.'.join(parts[:-2])
+
+
 def get_verification_instructions(domain: str, token: str, org_slug: str) -> CustomDomainVerificationInfo:
     """Generate DNS verification instructions for a domain."""
-    txt_record_host = f"_learnhouse-verification.{domain}"
+    subdomain = _get_subdomain_prefix(domain)
+
+    if subdomain:
+        txt_record_host = f"_learnhouse-verification.{subdomain}"
+        cname_record_host = subdomain
+    else:
+        txt_record_host = "_learnhouse-verification"
+        cname_record_host = "@"
+
     txt_record_value = f"learnhouse-verify={token}"
-    cname_record_host = domain
     cname_record_value = f"{org_slug}.{LEARNHOUSE_DOMAIN}"
 
     instructions = f"""
 To verify your domain, add the following DNS records at your domain provider:
 
 1. TXT Record (for verification):
-   Host: _learnhouse-verification.{domain}
-   Value: learnhouse-verify={token}
+   Host: {txt_record_host}
+   Value: {txt_record_value}
 
 2. CNAME Record (for routing):
-   Host: {domain}
-   Value: {org_slug}.{LEARNHOUSE_DOMAIN}
+   Host: {cname_record_host}
+   Value: {cname_record_value}
 
 After adding these records, click "Verify" to complete the setup.
 DNS propagation may take up to 48 hours, but usually completes within a few minutes.
@@ -538,6 +560,107 @@ async def delete_custom_domain(
     db_session.commit()
 
     return {"message": "Custom domain deleted successfully"}
+
+
+async def list_all_verified_domains(
+    db_session: Session,
+) -> List[dict]:
+    """
+    List all verified custom domains across all organizations.
+    Used internally by the domain sync controller for Kubernetes ingress provisioning.
+    """
+    statement = select(CustomDomain).where(
+        CustomDomain.status == "verified"
+    )
+    domains = db_session.exec(statement).all()
+    return [{"domain": d.domain, "org_id": d.org_id, "domain_uuid": d.domain_uuid} for d in domains]
+
+
+async def check_domain_ssl_status(
+    request: Request,
+    db_session: Session,
+    org_id: int,
+    domain_uuid: str,
+    current_user: PublicUser,
+) -> dict:
+    """Check SSL certificate status for a custom domain by attempting a TLS handshake."""
+    # VERIFICATION 1: User must be authenticated
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    # VERIFICATION 2: Check if user is a member of the organization
+    statement = select(UserOrganization).where(
+        UserOrganization.user_id == current_user.id,
+        UserOrganization.org_id == org_id
+    )
+    user_org = db_session.exec(statement).first()
+
+    if not user_org:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a member of this organization",
+        )
+
+    # Get the custom domain
+    statement = select(CustomDomain).where(
+        CustomDomain.domain_uuid == domain_uuid,
+        CustomDomain.org_id == org_id
+    )
+    domain = db_session.exec(statement).first()
+
+    if not domain:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Custom domain not found",
+        )
+
+    # Only check SSL for verified domains
+    if domain.status != "verified":
+        return {
+            "has_ssl": False,
+            "status": "pending_verification",
+            "message": "Domain must be verified before SSL can be provisioned.",
+        }
+
+    # Attempt TLS handshake
+    try:
+        context = ssl.create_default_context()
+        with socket.create_connection((domain.domain, 443), timeout=5) as sock:
+            with context.wrap_socket(sock, server_hostname=domain.domain) as ssock:
+                cert = ssock.getpeercert()
+                not_after = cert.get("notAfter", "")
+                issuer_parts = cert.get("issuer", ())
+                issuer_cn = ""
+                for rdn in issuer_parts:
+                    for attr in rdn:
+                        if attr[0] == "commonName":
+                            issuer_cn = attr[1]
+
+                return {
+                    "has_ssl": True,
+                    "status": "active",
+                    "message": "SSL certificate is active.",
+                    "expires": not_after,
+                    "issuer": issuer_cn,
+                }
+    except ssl.SSLCertVerificationError as e:
+        return {
+            "has_ssl": False,
+            "status": "invalid",
+            "message": f"SSL certificate exists but is invalid: {str(e)}",
+        }
+    except (socket.timeout, socket.gaierror, ConnectionRefusedError, OSError):
+        return {
+            "has_ssl": False,
+            "status": "provisioning",
+            "message": "SSL certificate is being provisioned. This usually takes a few minutes after domain verification.",
+        }
+    except Exception as e:
+        logger.error(f"SSL check error for {domain.domain}: {str(e)}")
+        return {
+            "has_ssl": False,
+            "status": "unknown",
+            "message": "Could not determine SSL status.",
+        }
 
 
 async def resolve_org_by_domain(

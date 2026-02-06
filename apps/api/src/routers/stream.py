@@ -56,15 +56,8 @@ async def _verify_course_activity_access(
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Verify course exists and activity belongs to it via chapter
-    from src.db.courses.chapters import Chapter
-    chapter_stmt = select(Chapter).where(Chapter.id == activity.chapter_id)
-    chapter = db_session.exec(chapter_stmt).first()
-
-    if not chapter:
-        raise HTTPException(status_code=404, detail="Chapter not found")
-
-    course_stmt = select(Course).where(Course.id == chapter.course_id)
+    # Verify course exists and activity belongs to it
+    course_stmt = select(Course).where(Course.id == activity.course_id)
     course = db_session.exec(course_stmt).first()
 
     if not course or course.course_uuid != course_uuid:
