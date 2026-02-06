@@ -11,7 +11,6 @@ class CookieConfig(BaseModel):
 
 class SentryConfig(BaseModel):
     dsn: str | None
-    enabled: bool
 
 
 class GeneralConfig(BaseModel):
@@ -19,6 +18,7 @@ class GeneralConfig(BaseModel):
     logfire_enabled: bool
     sentry_config: SentryConfig
     oss_mode: bool
+    env: str
 
 
 class SecurityConfig(BaseModel):
@@ -130,7 +130,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Sentry config
     env_sentry_dsn = os.environ.get("LEARNHOUSE_SENTRY_DSN")
     sentry_dsn = env_sentry_dsn or yaml_config.get("general", {}).get("sentry_dsn")
-    sentry_enabled = sentry_dsn is not None and sentry_dsn != ""
+
+    # Environment (dev or prod)
+    learnhouse_env = os.environ.get("LEARNHOUSE_ENV", "dev")
 
     # OSS Mode (disables plan-based limits for self-hosted deployments)
     env_oss_mode = os.environ.get("LEARNHOUSE_OSS", "None")
@@ -324,8 +326,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         general_config=GeneralConfig(
             development_mode=bool(development_mode),
             logfire_enabled=bool(logfire_enabled),
-            sentry_config=SentryConfig(dsn=sentry_dsn, enabled=sentry_enabled),
+            sentry_config=SentryConfig(dsn=sentry_dsn),
             oss_mode=bool(oss_mode),
+            env=learnhouse_env,
         ),
         hosting_config=hosting_config,
         database_config=database_config,
