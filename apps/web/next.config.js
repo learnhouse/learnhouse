@@ -61,18 +61,21 @@ if (process.env.NODE_ENV === 'development') {
   )
 }
 
-// Only wrap with Sentry if DSN is configured
-const SENTRY_DSN = process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
-
-if (SENTRY_DSN) {
-  module.exports = withSentryConfig(nextConfig, {
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    silent: !process.env.CI,
-    widenClientFileUpload: true,
-    disableLogger: true,
+// Always wrap with Sentry — DSN is resolved at runtime, not build time
+module.exports = withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: true,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  tunnelRoute: "/monitoring",
+  sourcemaps: {
+    disable: !process.env.SENTRY_ORG || !process.env.SENTRY_PROJECT,
+  },
+  webpack: {
     automaticVercelMonitors: true,
-  });
-} else {
-  module.exports = nextConfig;
-}
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});

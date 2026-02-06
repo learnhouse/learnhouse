@@ -35,7 +35,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/nextjs": "^9.4.0",
+    "@sentry/nextjs": "^10.38.0",
     "@stitches/react": "^1.2.8",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.10.1",

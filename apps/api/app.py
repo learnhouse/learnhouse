@@ -23,13 +23,15 @@ from src.routers.content_files import router as content_files_router
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 
 # Initialize Sentry if configured
-if learnhouse_config.general_config.sentry_config.enabled:
+if learnhouse_config.general_config.sentry_config.dsn:
     sentry_sdk.init(
         dsn=learnhouse_config.general_config.sentry_config.dsn,
-        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
-        profiles_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
-        environment="development" if learnhouse_config.general_config.development_mode else "production",
-        send_default_pii=False,
+        environment=learnhouse_config.general_config.env,
+        send_default_pii=True,
+        enable_logs=True,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
+        profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
+        profile_lifecycle="trace",
     )
 
 # Global Config
