@@ -717,6 +717,15 @@ async def delete_podcast(
     # Feature usage
     decrease_feature_usage("podcasts", podcast.org_id, db_session)
 
+    # Clean up content files from storage
+    from src.db.organizations import Organization
+    org_statement = select(Organization).where(Organization.id == podcast.org_id)
+    org = db_session.exec(org_statement).first()
+    if org:
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        content_path = f"content/orgs/{org.org_uuid}/podcasts/{podcast_uuid}"
+        delete_storage_directory(content_path)
+
     db_session.delete(podcast)
     db_session.commit()
 

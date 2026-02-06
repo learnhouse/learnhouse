@@ -907,6 +907,14 @@ async def delete_course(
     # Feature usage
     decrease_feature_usage("courses", course.org_id, db_session)
 
+    # Clean up content files from storage
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+    if org:
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        content_path = f"content/orgs/{org.org_uuid}/courses/{course_uuid}"
+        delete_storage_directory(content_path)
+
     db_session.delete(course)
     db_session.commit()
 
@@ -998,6 +1006,66 @@ async def get_user_courses(
     return result
 
 
+def _copy_storage_file(src_path: str, dst_path: str) -> None:
+    """Copy a file using S3 or local filesystem."""
+    import os
+    import shutil
+    from src.services.courses.transfer.storage_utils import (
+        is_s3_enabled, get_storage_client, get_s3_bucket_name,
+        read_file_content, upload_to_s3,
+    )
+
+    if is_s3_enabled():
+        content = read_file_content(src_path)
+        if content:
+            upload_to_s3(dst_path, content)
+    else:
+        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+        shutil.copy2(src_path, dst_path)
+
+
+def _delete_storage_file(file_path: str) -> None:
+    """Delete a file from S3 or local filesystem."""
+    from src.services.courses.transfer.storage_utils import delete_storage_file
+    delete_storage_file(file_path)
+
+
+def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
+    """Recursively copy a directory using S3 or local filesystem."""
+    import os
+    import shutil
+    from src.services.courses.transfer.storage_utils import (
+        is_s3_enabled, get_storage_client, get_s3_bucket_name,
+        upload_to_s3,
+    )
+
+    if is_s3_enabled():
+        s3_client = get_storage_client()
+        if not s3_client:
+            return
+        bucket = get_s3_bucket_name()
+        prefix = src_dir if src_dir.endswith('/') else src_dir + '/'
+
+        paginator = s3_client.get_paginator('list_objects_v2')
+        try:
+            for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+                for obj in page.get('Contents', []):
+                    old_key = obj['Key']
+                    # Replace src prefix with dst prefix
+                    new_key = dst_dir + old_key[len(src_dir):]
+                    # Copy object within S3
+                    s3_client.copy_object(
+                        Bucket=bucket,
+                        CopySource={'Bucket': bucket, 'Key': old_key},
+                        Key=new_key,
+                    )
+        except Exception as e:
+            print(f"Error copying S3 directory {src_dir} -> {dst_dir}: {e}")
+    else:
+        if os.path.exists(src_dir):
+            shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
+
+
 async def clone_course(
     request: Request,
     course_uuid: str,
@@ -1020,8 +1088,12 @@ async def clone_course(
     - Be set to private (public=False) by default
     - Have the current user as the creator
     """
-    import shutil
     import os
+    from src.services.courses.transfer.storage_utils import (
+        is_s3_enabled,
+        file_exists,
+        list_directory,
+    )
     from src.db.courses.chapters import Chapter
     from src.db.courses.activities import Activity
     from src.db.courses.blocks import Block
@@ -1085,25 +1157,26 @@ async def clone_course(
     original_course_path = f"{content_base}/{org.org_uuid}/courses/{original_course.course_uuid}"
     new_course_path = f"{content_base}/{org.org_uuid}/courses/{new_course_uuid}"
 
-    # Create new course directory and thumbnails subdirectory
-    os.makedirs(f"{new_course_path}/thumbnails", exist_ok=True)
+    # Create new course directory and thumbnails subdirectory (needed for local filesystem)
+    if not is_s3_enabled():
+        os.makedirs(f"{new_course_path}/thumbnails", exist_ok=True)
 
     # Copy thumbnail image if exists (thumbnails are in a subdirectory)
     if original_course.thumbnail_image:
         original_thumbnail_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_image}"
-        if os.path.exists(original_thumbnail_path):
+        if file_exists(original_thumbnail_path):
             new_thumbnail_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_image.split('.')[-1]}"
             new_thumbnail_path = f"{new_course_path}/thumbnails/{new_thumbnail_name}"
-            shutil.copy2(original_thumbnail_path, new_thumbnail_path)
+            _copy_storage_file(original_thumbnail_path, new_thumbnail_path)
             new_course.thumbnail_image = new_thumbnail_name
 
     # Copy thumbnail video if exists (also in thumbnails subdirectory)
     if original_course.thumbnail_video:
         original_video_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_video}"
-        if os.path.exists(original_video_path):
+        if file_exists(original_video_path):
             new_video_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_video.split('.')[-1]}"
             new_video_path = f"{new_course_path}/thumbnails/{new_video_name}"
-            shutil.copy2(original_video_path, new_video_path)
+            _copy_storage_file(original_video_path, new_video_path)
             new_course.thumbnail_video = new_video_name
 
     # Insert new course
@@ -1225,8 +1298,7 @@ async def clone_course(
 
             # Copy entire activity directory structure if it exists
             # This handles all activity types: videos, documents, SCORM, assignments, etc.
-            if os.path.exists(original_activity_path):
-                shutil.copytree(original_activity_path, new_activity_path, dirs_exist_ok=True)
+            _copy_storage_directory(original_activity_path, new_activity_path)
 
             # Clone blocks for dynamic activities
             if original_activity.activity_type.value == "TYPE_DYNAMIC":
@@ -1257,29 +1329,29 @@ async def clone_course(
                         block_type_folder = "pdfBlock"
 
                     if block_type_folder:
-                        # The copytree already copied files with old UUIDs, we need to rename folders
+                        # The copy already copied files with old UUIDs, we need to rename folders
                         old_copied_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block.block_uuid}"
-                        new_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
+                        new_block_path_str = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
 
-                        if os.path.exists(old_copied_block_path):
-                            # Rename the folder to use new block UUID
-                            os.rename(old_copied_block_path, new_block_path)
+                        # Move files from old block path to new block path (rename folder)
+                        block_files = list_directory(old_copied_block_path)
+                        if block_files:
+                            for filename in block_files:
+                                old_file_key = f"{old_copied_block_path}/{filename}"
+                                # Generate new file ID
+                                new_file_id = str(uuid4())
+                                file_ext = filename.split('.')[-1] if '.' in filename else ''
+                                new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
+                                new_file_key = f"{new_block_path_str}/{new_filename}"
 
-                            # Rename files inside the folder and update file references
-                            if os.path.exists(new_block_path):
-                                for filename in os.listdir(new_block_path):
-                                    old_file_path = f"{new_block_path}/{filename}"
-                                    if os.path.isfile(old_file_path):
-                                        # Generate new file ID
-                                        new_file_id = str(uuid4())
-                                        file_ext = filename.split('.')[-1] if '.' in filename else ''
-                                        new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
-                                        new_file_path = f"{new_block_path}/{new_filename}"
-                                        os.rename(old_file_path, new_file_path)
+                                # Copy file to new location
+                                _copy_storage_file(old_file_key, new_file_key)
+                                # Delete old file
+                                _delete_storage_file(old_file_key)
 
-                                        # Update file reference in block content
-                                        if 'file_id' in new_block_content:
-                                            new_block_content['file_id'] = f"block_{new_file_id}"
+                                # Update file reference in block content
+                                if 'file_id' in new_block_content:
+                                    new_block_content['file_id'] = f"block_{new_file_id}"
 
                     new_block = Block(
                         block_type=original_block.block_type,

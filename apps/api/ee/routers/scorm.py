@@ -7,7 +7,7 @@ import mimetypes
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlmodel import select
 
 from src.core.events.database import get_db_session
@@ -287,11 +287,25 @@ async def api_get_scorm_content(
     if content_type == "text/html":
         headers["X-Content-Type-Options"] = "nosniff"
 
-    return FileResponse(
-        path=content_path,
-        media_type=content_type,
-        headers=headers,
-    )
+    from src.services.courses.transfer.storage_utils import is_s3_enabled, read_file_content
+
+    if is_s3_enabled():
+        # Serve from S3
+        file_content = read_file_content(content_path)
+        if not file_content:
+            raise HTTPException(status_code=404, detail="File not found")
+
+        return StreamingResponse(
+            iter([file_content]),
+            media_type=content_type,
+            headers=headers,
+        )
+    else:
+        return FileResponse(
+            path=content_path,
+            media_type=content_type,
+            headers=headers,
+        )
 
 
 # ==================== Runtime API ====================

@@ -35,6 +35,14 @@ export interface CustomDomainVerificationInfo {
   instructions: string
 }
 
+export interface CustomDomainSSLStatus {
+  has_ssl: boolean
+  status: 'active' | 'provisioning' | 'invalid' | 'pending_verification' | 'unknown'
+  message: string
+  expires?: string
+  issuer?: string
+}
+
 export interface CustomDomainResolveResponse {
   org_id: number
   org_slug: string
@@ -122,6 +130,18 @@ export async function deleteCustomDomain(
   )
   const res = await getResponseMetadata(result)
   return res
+}
+
+/**
+ * Check SSL certificate status for a custom domain
+ */
+export async function checkSSLStatus(
+  orgId: number,
+  domainUuid: string,
+  accessToken: string
+): Promise<CustomDomainSSLStatus> {
+  const url = `${getAPIUrl()}orgs/${orgId}/domains/${domainUuid}/ssl-status`
+  return swrFetcher(url, accessToken)
 }
 
 /**

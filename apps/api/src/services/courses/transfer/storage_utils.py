@@ -279,6 +279,84 @@ def upload_to_s3(file_path: str, content: bytes) -> bool:
         return False
 
 
+def delete_storage_directory(dir_path: str) -> bool:
+    """
+    Delete an entire directory from storage (S3 or local filesystem).
+
+    Args:
+        dir_path: Relative path to the directory
+
+    Returns:
+        True if deleted successfully, False otherwise
+    """
+    import shutil
+
+    content_delivery = get_content_delivery_type()
+    success = True
+
+    if content_delivery == "s3api":
+        s3_client = get_storage_client()
+        if s3_client:
+            bucket = get_s3_bucket_name()
+            prefix = dir_path if dir_path.endswith('/') else dir_path + '/'
+            try:
+                paginator = s3_client.get_paginator('list_objects_v2')
+                for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+                    objects = page.get('Contents', [])
+                    if objects:
+                        delete_keys = [{'Key': obj['Key']} for obj in objects]
+                        s3_client.delete_objects(
+                            Bucket=bucket,
+                            Delete={'Objects': delete_keys},
+                        )
+            except Exception as e:
+                print(f"Error deleting S3 directory {dir_path}: {e}")
+                success = False
+
+    # Also clean up local directory if it exists
+    if os.path.exists(dir_path):
+        try:
+            shutil.rmtree(dir_path, ignore_errors=True)
+        except Exception:
+            pass
+
+    return success
+
+
+def delete_storage_file(file_path: str) -> bool:
+    """
+    Delete a single file from storage (S3 or local filesystem).
+
+    Args:
+        file_path: Relative path to the file
+
+    Returns:
+        True if deleted successfully, False otherwise
+    """
+    content_delivery = get_content_delivery_type()
+
+    if content_delivery == "s3api":
+        s3_client = get_storage_client()
+        if s3_client:
+            try:
+                s3_client.delete_object(
+                    Bucket=get_s3_bucket_name(),
+                    Key=file_path,
+                )
+            except Exception as e:
+                print(f"Error deleting S3 file {file_path}: {e}")
+                return False
+
+    # Also clean up local file if it exists
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+
+    return True
+
+
 def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
     """
     Upload an entire directory to S3 if configured.

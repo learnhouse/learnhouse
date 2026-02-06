@@ -39,7 +39,7 @@ from .models import (
     ImportResult,
     ImportCourseResult,
 )
-from .storage_utils import upload_directory_to_s3, upload_to_s3, is_s3_enabled
+from .storage_utils import upload_directory_to_s3, upload_to_s3, is_s3_enabled, delete_storage_file
 
 
 # Temp storage for analyzed packages
@@ -748,10 +748,13 @@ async def _import_block(
                         new_file_path = f"{new_block_path}/{new_filename}"
                         os.rename(old_file_path, new_file_path)
 
-                        # Upload renamed file to S3 if configured
+                        # Upload renamed file to S3 and clean up old key
                         if is_s3_enabled():
                             with open(new_file_path, 'rb') as f:
                                 upload_to_s3(new_file_path, f.read())
+                            # Delete the old S3 key (uploaded with old UUID before rename)
+                            old_s3_key = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block_uuid}/{filename}"
+                            delete_storage_file(old_s3_key)
 
                         # Update file reference in block content
                         if 'file_id' in new_block_content:

@@ -281,6 +281,15 @@ async def delete_activity(
 
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
+    # Clean up content files from storage
+    from src.db.organizations import Organization
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+    if org:
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        content_path = f"content/orgs/{org.org_uuid}/courses/{course.course_uuid}/activities/{activity_uuid}"
+        delete_storage_directory(content_path)
+
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
         ChapterActivity.activity_id == activity.id

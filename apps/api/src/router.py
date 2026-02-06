@@ -78,6 +78,12 @@ v1_router.include_router(
     prefix="/orgs",
     tags=["custom-domains"],
 )
+# Internal domain listing endpoint (protected by internal key)
+v1_router.include_router(
+    custom_domains.internal_router,
+    prefix="/internal",
+    tags=["custom-domains-internal"],
+)
 v1_router.include_router(
     blocks.router,
     prefix="/blocks",
