@@ -199,21 +199,15 @@ async def get_users_linked_to_usergroup(
         db_session=db_session,
     )
 
-    statement = select(UserGroupUser).where(UserGroupUser.usergroup_id == usergroup_id)
-    usergroup_users = db_session.exec(statement).all()
+    # Batch fetch users linked to this usergroup in a single query
+    statement = (
+        select(User)
+        .join(UserGroupUser, UserGroupUser.user_id == User.id)  # type: ignore
+        .where(UserGroupUser.usergroup_id == usergroup_id)
+    )
+    users = db_session.exec(statement).all()
 
-    user_ids = [usergroup_user.user_id for usergroup_user in usergroup_users]
-
-    # get users
-    users = []
-    for user_id in user_ids:
-        statement = select(User).where(User.id == user_id)
-        user = db_session.exec(statement).first()
-        users.append(user)
-
-    users = [UserRead.model_validate(user) for user in users]
-
-    return users
+    return [UserRead.model_validate(user) for user in users]
 
 
 async def read_usergroups_by_org_id(
@@ -223,7 +217,7 @@ async def read_usergroups_by_org_id(
     org_id: int,
 ) -> list[UserGroupRead]:
 
-    statement = select(UserGroup).where(UserGroup.org_id == org_id)
+    statement = select(UserGroup).where(UserGroup.org_id == org_id).order_by(UserGroup.creation_date.desc())
     usergroups = db_session.exec(statement).all()
 
     # RBAC check
@@ -261,18 +255,15 @@ async def get_usergroups_by_resource(
         db_session=db_session,
     )
 
-    usergroup_ids = [usergroup.usergroup_id for usergroup in usergroup_resources]
+    # Batch fetch all usergroups in a single query
+    usergroup_ids = [ug.usergroup_id for ug in usergroup_resources]
+    if not usergroup_ids:
+        return []
 
-    # get usergroups
-    usergroups = []
-    for usergroup_id in usergroup_ids:
-        statement = select(UserGroup).where(UserGroup.id == usergroup_id)
-        usergroup = db_session.exec(statement).first()
-        usergroups.append(usergroup)
+    statement = select(UserGroup).where(UserGroup.id.in_(usergroup_ids))  # type: ignore
+    usergroups = db_session.exec(statement).all()
 
-    usergroups = [UserGroupRead.model_validate(usergroup) for usergroup in usergroups]
-
-    return usergroups
+    return [UserGroupRead.model_validate(ug) for ug in usergroups]
 
 
 async def update_usergroup_by_id(
@@ -403,10 +394,10 @@ async def add_users_to_usergroup(
                 )
 
                 db_session.add(usergroup_obj)
-                db_session.commit()
-                db_session.refresh(usergroup_obj)
         else:
             logging.error(f"User with id {user_id} not found")
+
+    db_session.commit()
 
     return "Users added to UserGroup successfully"
 
@@ -447,9 +438,10 @@ async def remove_users_from_usergroup(
 
         if usergroup_user:
             db_session.delete(usergroup_user)
-            db_session.commit()
         else:
             logging.error(f"User with id {user_id} not found in UserGroup")
+
+    db_session.commit()
 
     return "Users removed from UserGroup successfully"
 
@@ -491,10 +483,7 @@ async def add_resources_to_usergroup(
         usergroup_resource = db_session.exec(statement).first()
 
         if usergroup_resource:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Resource {resource_uuid} already exists in UserGroup",
-            )
+            logging.error(f"Resource {resource_uuid} already exists in UserGroup")
             continue
 
         # Validate that resource exists and belongs to this organization
@@ -511,8 +500,8 @@ async def add_resources_to_usergroup(
         )
 
         db_session.add(usergroup_obj)
-        db_session.commit()
-        db_session.refresh(usergroup_obj)
+
+    db_session.commit()
 
     return "Resources added to UserGroup successfully"
 
@@ -554,9 +543,10 @@ async def remove_resources_from_usergroup(
 
         if usergroup_resource:
             db_session.delete(usergroup_resource)
-            db_session.commit()
         else:
             logging.error(f"resource with uuid {resource_uuid} not found in UserGroup")
+
+    db_session.commit()
 
     return "Resources removed from UserGroup successfully"
 

@@ -12,7 +12,7 @@ import { getAPIUrl } from '@services/config/config'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { PlanLevel } from '@services/plans/plans'
-import { Pencil, SquareUserRound, Users, X, Search } from 'lucide-react'
+import { Pencil, SquareUserRound, Users, X, Search, Calendar } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -161,11 +161,25 @@ function OrgUserGroups() {
                                                 </span>
                                                 <MemberCountBadge usergroup_id={usergroup.id} org_id={org.id} access_token={access_token} />
                                             </div>
-                                            {usergroup.description && (
-                                                <span className="text-xs text-gray-400 truncate">
-                                                    {usergroup.description}
-                                                </span>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {usergroup.description && (
+                                                    <span className="text-xs text-gray-400 truncate">
+                                                        {usergroup.description}
+                                                    </span>
+                                                )}
+                                                {usergroup.creation_date && (
+                                                    <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {(() => {
+                                                            try {
+                                                                const d = new Date(usergroup.creation_date)
+                                                                if (isNaN(d.getTime())) return usergroup.creation_date
+                                                                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                            } catch { return usergroup.creation_date }
+                                                        })()}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 

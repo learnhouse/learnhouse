@@ -6,10 +6,10 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
-import { removeUserFromOrg, updateUserRole } from '@services/organizations/orgs'
+import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users } from 'lucide-react'
-import React, { useState } from 'react'
+import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter } from 'lucide-react'
+import React, { useState, useCallback, useRef, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
@@ -21,7 +21,23 @@ import {
   SelectValue,
 } from '@components/ui/select'
 
-const ITEMS_PER_PAGE = 20
+const ITEMS_PER_PAGE = 10
+
+function formatShortDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return '—'
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  } catch {
+    return '—'
+  }
+}
+
+// Probabilistic revalidateOnFocus — revalidate ~50% of the time
+function shouldRevalidate() {
+  return Math.random() < 0.5
+}
 
 function OrgUsers() {
   const { t } = useTranslation()
@@ -31,13 +47,26 @@ function OrgUsers() {
 
   const [page, setPage] = useState(1)
   const [searchValue, setSearchValue] = useState('')
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [filterRole, setFilterRole] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterGroupId, setFilterGroupId] = useState<string>('')
+
+  // Track whether revalidation on focus is allowed
+  const revalidateRef = useRef(shouldRevalidate)
 
   const buildQuery = () => {
     const params = new URLSearchParams()
     params.append('page', page.toString())
     params.append('limit', ITEMS_PER_PAGE.toString())
-    if (searchValue) {
-      params.append('search', searchValue)
+    params.append('sort_order', sortOrder)
+    if (searchValue) params.append('search', searchValue)
+    if (filterRole) params.append('role_id', filterRole)
+    if (filterStatus) params.append('status', filterStatus)
+    if (filterGroupId) {
+      params.append('usergroup_id', filterGroupId)
+      params.append('usergroup_filter', 'in_group')
     }
     return params.toString()
   }
@@ -45,19 +74,90 @@ function OrgUsers() {
   const usersUrl = org && access_token ? `${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}` : null
   const { data, isValidating } = useSWR(
     usersUrl,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      onSuccess: () => {
+        // Re-roll the dice for next focus
+        revalidateRef.current = shouldRevalidate
+      },
+    }
   )
+
+  // Manual focus-based revalidation at ~50% rate
+  React.useEffect(() => {
+    const handleFocus = () => {
+      if (revalidateRef.current() && usersUrl) {
+        mutate(usersUrl)
+      }
+      revalidateRef.current = shouldRevalidate
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [usersUrl])
 
   // Fetch available roles
   const { data: roles } = useSWR(
     org && access_token ? `${getAPIUrl()}roles/org/${org.id}` : null,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
+  )
+
+  // Fetch available usergroups for filter dropdown
+  const { data: usergroups } = useSWR(
+    org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
   )
 
   const orgUsers = data?.items || []
   const total = data?.total || 0
   const isInitialLoading = !data && isValidating
   const isPageTransitioning = !!data && isValidating
+
+  const visibleUserIds: number[] = orgUsers.map((u: any) => u.user.id)
+  const allVisibleSelected = visibleUserIds.length > 0 && visibleUserIds.every((id: number) => selectedUserIds.has(id))
+
+  const hasActiveFilters = filterRole || filterStatus || filterGroupId
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev)
+      if (allVisibleSelected) {
+        visibleUserIds.forEach((id: number) => next.delete(id))
+      } else {
+        visibleUserIds.forEach((id: number) => next.add(id))
+      }
+      return next
+    })
+  }, [allVisibleSelected, visibleUserIds])
+
+  const toggleSelectUser = useCallback((userId: number) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(userId)) {
+        next.delete(userId)
+      } else {
+        next.add(userId)
+      }
+      return next
+    })
+  }, [])
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => prev === 'desc' ? 'asc' : 'desc')
+    setPage(1)
+    setSelectedUserIds(new Set())
+  }
+
+  const resetFilters = () => {
+    setFilterRole('')
+    setFilterStatus('')
+    setFilterGroupId('')
+    setPage(1)
+    setSelectedUserIds(new Set())
+  }
 
   const handleRoleChange = async (user_id: any, newRoleUuid: string) => {
     const toastId = toast.loading(t('dashboard.users.active_users.actions.updating_role') || 'Updating role...');
@@ -72,7 +172,7 @@ function OrgUsers() {
 
   const handleRemoveUser = async (user_id: any) => {
     const toastId = toast.loading(t('dashboard.users.active_users.actions.removing'));
-    const res = await removeUserFromOrg(org.id, user_id,access_token)
+    const res = await removeUserFromOrg(org.id, user_id, access_token)
     if (res.status === 200) {
       await mutate(usersUrl)
       toast.success(t('dashboard.users.active_users.actions.remove_success'), {id:toastId});
@@ -81,13 +181,34 @@ function OrgUsers() {
     }
   }
 
+  const handleBatchRemove = async () => {
+    const ids = Array.from(selectedUserIds)
+    const toastId = toast.loading(`Removing ${ids.length} user(s)...`);
+    const res = await removeUsersFromOrg(org.id, ids, access_token)
+    if (res.status === 200) {
+      setSelectedUserIds(new Set())
+      await mutate(usersUrl)
+      toast.success(`${ids.length} user(s) removed successfully`, {id:toastId});
+    } else {
+      toast.error('Error removing users', {id:toastId});
+    }
+  }
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
+    setSelectedUserIds(new Set())
   }
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setPage(1) // Reset to first page when searching
+    setPage(1)
+    setSelectedUserIds(new Set())
+  }
+
+  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) => {
+    setter(value === 'all' ? '' : value)
+    setPage(1)
+    setSelectedUserIds(new Set())
   }
 
   return (
@@ -121,6 +242,94 @@ function OrgUsers() {
               </div>
             </div>
 
+            {/* Filter Bar */}
+            <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/30">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
+
+              {/* Role filter */}
+              <Select value={filterRole || 'all'} onValueChange={handleFilterChange(setFilterRole)}>
+                <SelectTrigger className="h-8 w-[140px] text-xs border-gray-200 bg-white">
+                  <SelectValue placeholder="All roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  {roles?.map((role: any) => (
+                    <SelectItem key={role.id} value={role.id.toString()}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Status filter */}
+              <Select value={filterStatus || 'all'} onValueChange={handleFilterChange(setFilterStatus)}>
+                <SelectTrigger className="h-8 w-[140px] text-xs border-gray-200 bg-white">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="unverified">Unverified</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Group filter */}
+              <Select value={filterGroupId || 'all'} onValueChange={handleFilterChange(setFilterGroupId)}>
+                <SelectTrigger className="h-8 w-[160px] text-xs border-gray-200 bg-white">
+                  <SelectValue placeholder="All groups" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All groups</SelectItem>
+                  {usergroups?.map((group: any) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium px-2 py-1 rounded hover:bg-gray-100 transition-all"
+                >
+                  <X className="w-3 h-3" />
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            {/* Selection Action Bar */}
+            {selectedUserIds.size > 0 && (
+              <div className="flex items-center justify-between px-6 py-3 bg-indigo-50 border-b border-indigo-100">
+                <span className="text-sm font-medium text-indigo-700">
+                  {selectedUserIds.size} user{selectedUserIds.size !== 1 ? 's' : ''} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedUserIds(new Set())}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-all"
+                  >
+                    Clear selection
+                  </button>
+                  <ConfirmationModal
+                    confirmationButtonText={`Remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''}`}
+                    confirmationMessage={`Are you sure you want to remove ${selectedUserIds.size} user${selectedUserIds.size !== 1 ? 's' : ''} from the organization? This action cannot be undone.`}
+                    dialogTitle="Remove selected users"
+                    dialogTrigger={
+                      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-md text-xs font-medium transition-all">
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Remove selected</span>
+                      </button>
+                    }
+                    functionToExecute={handleBatchRemove}
+                    status="warning"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Content */}
             <div className="px-0 relative">
               {isInitialLoading ? (
@@ -134,11 +343,19 @@ function OrgUsers() {
                       <User className="w-8 h-8 text-gray-400" />
                     </div>
                     <p className="text-gray-400 text-sm font-medium">
-                      {searchValue
-                        ? t('dashboard.users.active_users.no_results') || 'No users found matching your search'
+                      {searchValue || hasActiveFilters
+                        ? t('dashboard.users.active_users.no_results') || 'No users found matching your filters'
                         : t('dashboard.users.active_users.no_users') || 'No users in this organization yet'
                       }
                     </p>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={resetFilters}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                      >
+                        Clear all filters
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -151,11 +368,35 @@ function OrgUsers() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100">
+                      <th className="text-left px-6 py-3 w-10">
+                        <input
+                          type="checkbox"
+                          checked={allVisibleSelected}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        />
+                      </th>
                       <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.user') || 'User'}
                       </th>
                       <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.groups') || 'Groups'}
+                      </th>
+                      <th
+                        className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3 cursor-pointer select-none hover:text-gray-700 transition-colors"
+                        onClick={toggleSortOrder}
+                      >
+                        <div className="inline-flex items-center gap-1">
+                          Joined
+                          {sortOrder === 'desc' ? (
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                      </th>
+                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                        Status
                       </th>
                       <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
                         {t('dashboard.users.active_users.table.role') || 'Role'}
@@ -169,8 +410,18 @@ function OrgUsers() {
                     {orgUsers?.map((user: any) => (
                       <tr
                         key={user.user.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className={`hover:bg-gray-50 transition-colors ${selectedUserIds.has(user.user.id) ? 'bg-indigo-50/40' : ''}`}
                       >
+                        {/* Checkbox */}
+                        <td className="px-6 py-4 w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.has(user.user.id)}
+                            onChange={() => toggleSelectUser(user.user.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          />
+                        </td>
+
                         {/* User Info */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -216,6 +467,51 @@ function OrgUsers() {
                           ) : (
                             <span className="text-xs text-gray-400">—</span>
                           )}
+                        </td>
+
+                        {/* Joined */}
+                        <td className="px-6 py-4">
+                          <span className="text-xs text-gray-500">
+                            {formatShortDate(user.joined_at)}
+                          </span>
+                        </td>
+
+                        {/* Status (Verified + Sign-up method + Last login) */}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              {user.user.email_verified ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-emerald-600" title="Email verified">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>Verified</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-xs text-amber-600" title="Email not verified">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>Unverified</span>
+                                </span>
+                              )}
+                              {user.user.signup_method && (
+                                <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium ${
+                                  user.user.signup_method !== 'email'
+                                    ? 'bg-purple-50 text-purple-600'
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {user.user.signup_method !== 'email' ? (
+                                    <Globe className="w-3 h-3" />
+                                  ) : (
+                                    <Mail className="w-3 h-3" />
+                                  )}
+                                  {user.user.signup_method === 'email' ? 'Email' : user.user.signup_method === 'google' ? 'Google' : user.user.signup_method.charAt(0).toUpperCase() + user.user.signup_method.slice(1)}
+                                </span>
+                              )}
+                            </div>
+                            {user.user.last_login_at && (
+                              <span className="text-xs text-gray-400">
+                                Last login: {formatShortDate(user.user.last_login_at)}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Role */}

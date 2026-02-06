@@ -144,23 +144,33 @@ async def search_across_org(
     # Apply pagination to collections query
     collections = db_session.exec(collections_query.offset(offset).limit(limit)).all()
 
-    # Convert collections to CollectionRead objects with courses
+    # Batch fetch all courses for all collections in a single query
     collection_reads = []
-    for collection in collections:
-        # Get courses in collection
-        statement = (
-            select(Course)
-            .select_from(Course)
-            .join(CollectionCourse, and_(
-                CollectionCourse.course_id == Course.id,
-                CollectionCourse.collection_id == collection.id,
-                CollectionCourse.org_id == collection.org_id
-            ))
+    if collections:
+        collection_ids = [c.id for c in collections]
+        batch_statement = (
+            select(CollectionCourse, Course)
+            .join(Course, CollectionCourse.course_id == Course.id)  # type: ignore
+            .where(
+                CollectionCourse.collection_id.in_(collection_ids),  # type: ignore
+            )
             .distinct()
         )
-        collection_courses = list(db_session.exec(statement).all())
-        collection_read = CollectionRead(**collection.model_dump(), courses=collection_courses)
-        collection_reads.append(collection_read)
+        batch_results = db_session.exec(batch_statement).all()
+
+        # Group courses by collection_id
+        collection_courses_map: dict[int, list[Course]] = {}
+        seen: set[tuple[int, int]] = set()
+        for cc, course in batch_results:
+            key = (cc.collection_id, course.id)
+            if key not in seen:
+                seen.add(key)
+                collection_courses_map.setdefault(cc.collection_id, []).append(course)
+
+        for collection in collections:
+            courses_list = collection_courses_map.get(collection.id, [])
+            collection_read = CollectionRead(**collection.model_dump(), courses=courses_list)
+            collection_reads.append(collection_read)
 
     # Convert users to UserRead objects
     user_reads = [UserRead.model_validate(user) for user in users]

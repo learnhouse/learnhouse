@@ -12,6 +12,7 @@ from src.services.orgs.users import (
     get_list_of_invited_users,
     get_organization_users,
     invite_batch_users,
+    remove_batch_users_from_org,
     remove_invited_user,
     remove_user_from_org,
     update_user_role,
@@ -116,6 +117,9 @@ async def api_get_org_users(
     search: str = "",
     usergroup_id: Optional[int] = Query(default=None, description="Filter by usergroup membership"),
     usergroup_filter: Optional[Literal["in_group", "not_in_group"]] = Query(default=None, description="Membership filter: 'in_group' or 'not_in_group'"),
+    sort_order: Optional[Literal["asc", "desc"]] = Query(default="desc", description="Sort order for join date"),
+    role_id: Optional[int] = Query(default=None, description="Filter by role ID"),
+    status: Optional[Literal["verified", "unverified"]] = Query(default=None, description="Filter by verification status"),
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
@@ -129,7 +133,7 @@ async def api_get_org_users(
     """
     return await get_organization_users(
         request, org_id, db_session, current_user, page, limit, search,
-        usergroup_id, usergroup_filter,
+        usergroup_id, usergroup_filter, sort_order or "desc", role_id, status,
     )
 
 
@@ -160,6 +164,22 @@ async def api_update_user_role(
     """
     return await update_user_role(
         request, org_id, user_id, role_uuid, db_session, current_user
+    )
+
+
+@router.delete("/{org_id}/users/batch/remove")
+async def api_remove_batch_users_from_org(
+    request: Request,
+    org_id: int,
+    user_ids: List[int] = Query(..., description="List of user IDs to remove"),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Remove multiple users from org in batch
+    """
+    return await remove_batch_users_from_org(
+        request, org_id, user_ids, db_session, current_user
     )
 
 

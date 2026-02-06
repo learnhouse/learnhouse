@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect, useMemo } from 'react'
 import { Podcast, PodcastEpisode } from '@services/podcasts/podcasts'
 
 interface PodcastPlayerState {
@@ -193,7 +193,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     }
   }, [])
 
-  const value: PodcastPlayerContextValue = {
+  const value: PodcastPlayerContextValue = useMemo(() => ({
     state,
     playEpisode,
     play,
@@ -206,7 +206,7 @@ export function PodcastPlayerProvider({ children }: { children: React.ReactNode 
     closePlayer,
     seekTo,
     audioRef,
-  }
+  }), [state, playEpisode, play, pause, togglePlay, setTime, setDuration, setVolume, toggleMinimize, closePlayer, seekTo, audioRef])
 
   return (
     <PodcastPlayerContext.Provider value={value}>

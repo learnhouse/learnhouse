@@ -25,16 +25,16 @@ class TrailRun(SQLModel, table=True):
     status: StatusEnum = StatusEnum.STATUS_IN_PROGRESS
     # foreign keys
     trail_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("trail.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("trail.id", ondelete="CASCADE"), index=True)
     )
     course_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"), index=True)
     )
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
     )
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
     )
     # timestamps
     creation_date: str

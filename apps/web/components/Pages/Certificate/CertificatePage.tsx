@@ -8,9 +8,6 @@ import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCer
 import { ArrowLeft, Download } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
 
 interface CertificatePageProps {
   orgslug: string;
@@ -69,6 +66,11 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     if (!userCertificate) return;
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }, QRCode] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+        import('qrcode'),
+      ]);
       // Create a temporary div for the certificate
       const certificateDiv = document.createElement('div');
       certificateDiv.style.position = 'absolute';
