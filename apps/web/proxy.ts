@@ -65,6 +65,14 @@ export default async function proxy(req: NextRequest) {
   const fullhost = req.headers ? req.headers.get('host') : ''
   // Check both old and new cookie names for backward compatibility
   const cookie_orgslug = req.cookies.get('learnhouse_orgslug')?.value || req.cookies.get('learnhouse_current_orgslug')?.value
+
+  // Cache custom domain resolution within this middleware invocation
+  let _resolvedCustomDomainOrg: { slug: string } | null | undefined = undefined
+  async function getResolvedCustomDomain(host: string): Promise<{ slug: string } | null> {
+    if (_resolvedCustomDomainOrg !== undefined) return _resolvedCustomDomainOrg
+    _resolvedCustomDomainOrg = await resolveCustomDomain(host)
+    return _resolvedCustomDomainOrg
+  }
   
 
   // Out of orgslug paths & rewrite
@@ -85,7 +93,7 @@ export default async function proxy(req: NextRequest) {
 
     // 1. Check for custom domain first
     if (isCustomDomain(fullhost)) {
-      const resolvedOrg = await resolveCustomDomain(fullhost as string)
+      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
       if (resolvedOrg) {
         orgslug = resolvedOrg.slug
         customDomain = fullhost as string
@@ -226,7 +234,7 @@ export default async function proxy(req: NextRequest) {
 
   // Custom Domain Detection - check before multi-org mode
   if (isCustomDomain(fullhost)) {
-    const resolvedOrg = await resolveCustomDomain(fullhost as string)
+    const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
     if (resolvedOrg) {
       const response = NextResponse.rewrite(
         new URL(`/orgs/${resolvedOrg.slug}${pathname}`, req.url)

@@ -539,22 +539,23 @@ async def search_courses(
 
     courses = db_session.exec(query).all()
 
-    # Fetch authors for each course
-    course_reads = []
-    for course in courses:
-        # Get course authors with their roles
-        authors_statement = (
-            select(ResourceAuthor, User)
-            .join(User, ResourceAuthor.user_id == User.id) # type: ignore
-            .where(ResourceAuthor.resource_uuid == course.course_uuid)
-            .order_by(
-                ResourceAuthor.id.asc() # type: ignore
-            )
-        )
-        author_results = db_session.exec(authors_statement).all()
+    if not courses:
+        return []
 
-        # Convert to AuthorWithRole objects
-        authors = [
+    # Fetch all authors for all courses in a single query
+    course_uuids = [course.course_uuid for course in courses]
+    authors_query = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
+        .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
+        .order_by(ResourceAuthor.id.asc())  # type: ignore
+    )
+    author_results = db_session.exec(authors_query).all()
+
+    # Group authors by course_uuid
+    course_authors: dict[str, list[AuthorWithRole]] = {}
+    for resource_author, user in author_results:
+        course_authors.setdefault(resource_author.resource_uuid, []).append(
             AuthorWithRole(
                 user=UserRead.model_validate(user),
                 authorship=resource_author.authorship,
@@ -562,11 +563,12 @@ async def search_courses(
                 creation_date=resource_author.creation_date,
                 update_date=resource_author.update_date
             )
-            for resource_author, user in author_results
-        ]
-        
+        )
+
+    course_reads = []
+    for course in courses:
         course_read = CourseRead.model_validate({
-            "id": course.id or 0,  # Ensure id is never None
+            "id": course.id or 0,
             "org_id": course.org_id,
             "name": course.name,
             "description": course.description or "",
@@ -580,7 +582,7 @@ async def search_courses(
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,
-            "authors": authors
+            "authors": course_authors.get(course.course_uuid, [])
         })
         course_reads.append(course_read)
 
@@ -955,36 +957,36 @@ async def get_user_courses(
     
     courses = db_session.exec(statement).all()
     
-    # Convert to CourseRead objects
+    if not courses:
+        return []
+
+    # Fetch all authors for all courses in a single query
+    course_uuids = [course.course_uuid for course in courses]
+    authors_query = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
+        .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
+        .order_by(ResourceAuthor.id.asc())  # type: ignore
+    )
+    author_results = db_session.exec(authors_query).all()
+
+    # Group authors by course_uuid
+    course_authors: dict[str, list[AuthorWithRole]] = {}
+    for resource_author, user in author_results:
+        course_authors.setdefault(resource_author.resource_uuid, []).append(
+            AuthorWithRole(
+                user=UserRead.model_validate(user),
+                authorship=resource_author.authorship,
+                authorship_status=resource_author.authorship_status,
+                creation_date=resource_author.creation_date,
+                update_date=resource_author.update_date,
+            )
+        )
+
     result = []
     for course in courses:
-        # Get authors for the course
-        authors_statement = select(ResourceAuthor).where(
-            ResourceAuthor.resource_uuid == course.course_uuid
-        )
-        authors = db_session.exec(authors_statement).all()
-        
-        # Convert authors to AuthorWithRole objects
-        authors_with_role = []
-        for author in authors:
-            # Get user for the author
-            user_statement = select(User).where(User.id == author.user_id)
-            user = db_session.exec(user_statement).first()
-            
-            if user:
-                authors_with_role.append(
-                    AuthorWithRole(
-                        user=UserRead.model_validate(user),
-                        authorship=author.authorship,
-                        authorship_status=author.authorship_status,
-                        creation_date=author.creation_date,
-                        update_date=author.update_date,
-                    )
-                )
-        
-        # Create CourseRead object
         course_read = CourseRead.model_validate({
-            "id": course.id or 0,  # Ensure id is never None
+            "id": course.id or 0,
             "org_id": course.org_id,
             "name": course.name,
             "description": course.description or "",
@@ -998,9 +1000,8 @@ async def get_user_courses(
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,
-            "authors": authors_with_role
+            "authors": course_authors.get(course.course_uuid, [])
         })
-
         result.append(course_read)
 
     return result
@@ -1011,8 +1012,7 @@ def _copy_storage_file(src_path: str, dst_path: str) -> None:
     import os
     import shutil
     from src.services.courses.transfer.storage_utils import (
-        is_s3_enabled, get_storage_client, get_s3_bucket_name,
-        read_file_content, upload_to_s3,
+        is_s3_enabled, read_file_content, upload_to_s3,
     )
 
     if is_s3_enabled():
@@ -1036,7 +1036,6 @@ def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
     import shutil
     from src.services.courses.transfer.storage_utils import (
         is_s3_enabled, get_storage_client, get_s3_bucket_name,
-        upload_to_s3,
     )
 
     if is_s3_enabled():
@@ -1181,7 +1180,7 @@ async def clone_course(
 
     # Insert new course
     db_session.add(new_course)
-    db_session.commit()
+    db_session.flush()  # Get new_course.id without committing
     db_session.refresh(new_course)
 
     # Make current user the creator
@@ -1199,7 +1198,7 @@ async def clone_course(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.commit()
+    db_session.flush()
 
     # Get original chapters with order
     statement = (
@@ -1228,8 +1227,7 @@ async def clone_course(
         )
 
         db_session.add(new_chapter)
-        db_session.commit()
-        db_session.refresh(new_chapter)
+        db_session.flush()  # Get new_chapter.id without committing
 
         chapter_id_map[original_chapter.id] = new_chapter.id
 
@@ -1243,7 +1241,6 @@ async def clone_course(
             update_date=str(datetime.now()),
         )
         db_session.add(new_course_chapter)
-        db_session.commit()
 
         # Get activities for this chapter with order
         statement = (
@@ -1276,8 +1273,7 @@ async def clone_course(
             )
 
             db_session.add(new_activity)
-            db_session.commit()
-            db_session.refresh(new_activity)
+            db_session.flush()  # Get new_activity.id without committing
 
             # Create ChapterActivity link
             new_chapter_activity = ChapterActivity(
@@ -1290,7 +1286,6 @@ async def clone_course(
                 update_date=str(datetime.now()),
             )
             db_session.add(new_chapter_activity)
-            db_session.commit()
 
             # Copy all activity files recursively
             original_activity_path = f"{original_course_path}/activities/{original_activity.activity_uuid}"
@@ -1366,7 +1361,6 @@ async def clone_course(
                     )
 
                     db_session.add(new_block)
-                    db_session.commit()
 
                 # Update activity content to reference new block UUIDs
                 if new_content and block_uuid_map:
@@ -1378,9 +1372,11 @@ async def clone_course(
                         import ast
                         new_activity.content = ast.literal_eval(content_str)
                         db_session.add(new_activity)
-                        db_session.commit()
                     except Exception:
                         pass  # Keep original content if parsing fails
+
+    # Single commit for all chapters, activities, blocks, and links
+    db_session.commit()
 
     # Increase feature usage for the new course
     increase_feature_usage("courses", new_course.org_id, db_session)

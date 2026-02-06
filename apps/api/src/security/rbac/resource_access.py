@@ -702,7 +702,7 @@ class ResourceAccessChecker:
         """Check if current user is the author of the resource."""
         user_id = self._get_user_id()
         if user_id == 0:
-            logger.info(f"[IS_AUTHOR] user_id=0, returning False")
+            logger.info("[IS_AUTHOR] user_id=0, returning False")
             return False
 
         statement = select(ResourceAuthor).where(

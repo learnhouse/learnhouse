@@ -269,37 +269,38 @@ async def get_collections(
 
     collections = db_session.exec(statement).all()
 
+    if not collections:
+        return []
+
+    collection_ids = [collection.id for collection in collections]
+
+    # Batch fetch all courses for all collections in a single query
+    batch_statement = (
+        select(CollectionCourse, Course)
+        .join(Course, CollectionCourse.course_id == Course.id)  # type: ignore
+        .where(
+            CollectionCourse.collection_id.in_(collection_ids),  # type: ignore
+            CollectionCourse.org_id == org_id
+        )
+    )
+    if current_user.id == 0:
+        batch_statement = batch_statement.where(Course.public == True)
+
+    batch_results = db_session.exec(batch_statement).all()
+
+    # Group courses by collection_id, deduplicating
+    collection_courses_map: dict[int, list[Course]] = {}
+    seen: set[tuple[int, int]] = set()
+    for cc, course in batch_results:
+        key = (cc.collection_id, course.id)
+        if key not in seen:
+            seen.add(key)
+            collection_courses_map.setdefault(cc.collection_id, []).append(course)
+
     collections_with_courses = []
-
     for collection in collections:
-        statement_all = (
-            select(Course)
-            .join(CollectionCourse)
-            .where(
-                CollectionCourse.collection_id == collection.id,
-                CollectionCourse.org_id == collection.org_id
-            )
-            .distinct()
-        )
-        statement_public = (
-            select(Course)
-            .join(CollectionCourse)
-            .where(
-                CollectionCourse.collection_id == collection.id,
-                CollectionCourse.org_id == org_id,
-                Course.public == True
-            )
-            .distinct()
-        )
-        if current_user.id == 0:
-            statement = statement_public
-        else:
-            # RBAC check
-            statement = statement_all
-
-        courses = db_session.exec(statement).all()
-
-        collection = CollectionRead(**collection.model_dump(), courses=list(courses))
-        collections_with_courses.append(collection)
+        courses = collection_courses_map.get(collection.id, [])
+        collection_read = CollectionRead(**collection.model_dump(), courses=courses)
+        collections_with_courses.append(collection_read)
 
     return collections_with_courses

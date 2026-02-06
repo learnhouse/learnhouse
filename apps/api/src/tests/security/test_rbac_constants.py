@@ -5,7 +5,6 @@ This module tests the role constants and helper functions used throughout
 the RBAC system to ensure consistency and correctness.
 """
 
-import pytest
 from src.security.rbac.constants import (
     ADMIN_ROLE_ID,
     MAINTAINER_ROLE_ID,

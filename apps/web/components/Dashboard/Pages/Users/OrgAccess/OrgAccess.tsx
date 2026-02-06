@@ -230,7 +230,7 @@ function OrgAccess() {
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          {dayjs(invite.expiration_date)
+                          {dayjs(invite.created_at)
                             .add(1, 'year')
                             .format('DD/MM/YYYY')}{' '}
                         </td>
