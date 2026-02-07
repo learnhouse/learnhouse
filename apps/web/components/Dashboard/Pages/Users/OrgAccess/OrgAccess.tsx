@@ -3,7 +3,7 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
+import { Check, Copy, Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
@@ -18,6 +18,26 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = React.useState(false)
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+      title="Copy to clipboard"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  )
+}
 
 function OrgAccess() {
   const { t } = useTranslation()
@@ -72,6 +92,8 @@ function OrgAccess() {
       setIsLoading(false)
     }
   }, [org, invites])
+
+  const inviteCount = invites?.length ?? 0
 
   return (
     <>
@@ -174,31 +196,41 @@ function OrgAccess() {
                         key={invite.invite_code_uuid}
                         className="border-b border-gray-100 text-sm"
                       >
-                        <td className="py-3 px-4">{invite.invite_code}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center space-x-2">
+                            <code className="bg-gray-50 px-2 py-0.5 rounded text-sm font-mono">{invite.invite_code}</code>
+                            <CopyButton text={invite.invite_code} />
+                          </div>
+                        </td>
                         <td className="py-3 px-4 ">
-                          <Link
-                            className="outline bg-gray-50 text-gray-600 px-2 py-1 rounded-md outline-gray-300 outline-dashed outline-1"
-                            target="_blank"
-                            href={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
-                          >
-                            {getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
-                          </Link>
+                          <div className="flex items-center space-x-2">
+                            <Link
+                              className="outline bg-gray-50 text-gray-600 px-2 py-1 rounded-md outline-gray-300 outline-dashed outline-1 text-xs truncate max-w-[300px]"
+                              target="_blank"
+                              href={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
+                            >
+                              {getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
+                            </Link>
+                            <CopyButton text={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)} />
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           {invite.usergroup_id ? (
-                            <div className="flex space-x-2 items-center">
-                              <UserSquare className="w-4 h-4" />
-                              <span>{t('dashboard.users.signups.invite_codes.types.linked_to_usergroup')}</span>
+                            <div className="flex items-center space-x-1.5">
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                <UserSquare className="w-3 h-3" />
+                                <span>{invite.usergroup_name || t('dashboard.users.signups.invite_codes.types.linked_to_usergroup')}</span>
+                              </span>
                             </div>
                           ) : (
                             <div className="flex space-x-2 items-center">
-                              <Users className="w-4 h-4" />
-                              <span>{t('dashboard.users.signups.invite_codes.types.normal')}</span>
+                              <Users className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-500">{t('dashboard.users.signups.invite_codes.types.normal')}</span>
                             </div>
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          {dayjs(invite.expiration_date)
+                          {dayjs(invite.created_at)
                             .add(1, 'year')
                             .format('DD/MM/YYYY')}{' '}
                         </td>
@@ -224,7 +256,10 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <div className='flex flex-row-reverse mt-3 mr-2'>
+              <div className='flex items-center justify-between mt-3 mr-2'>
+                <span className='text-xs text-gray-400 ml-2'>
+                  {inviteCount} / 6 invite codes used
+                </span>
                 <Modal
                   isDialogOpen={
                     invitesModal

@@ -1,8 +1,7 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import PodcastsDashClient from './client'
 
@@ -34,7 +33,7 @@ async function PodcastsDashPage(params: any) {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   let podcasts = []

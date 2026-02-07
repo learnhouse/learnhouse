@@ -20,7 +20,8 @@ from src.services.communities.communities import (
     get_community_user_rights,
 )
 from src.services.communities.thumbnails import upload_community_thumbnail
-from src.security.communities_security import communities_rbac_check_with_lookup
+from src.db.communities.communities import Community
+from src.security.rbac import check_resource_access, AccessAction
 
 
 router = APIRouter()
@@ -200,10 +201,16 @@ async def api_update_community_thumbnail(
 
     Requires admin/maintainer role.
     """
-    # Check permissions and get community
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    community_statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check permissions
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     # Get org UUID for storage path
     org_statement = select(Organization).where(Organization.id == community.org_id)

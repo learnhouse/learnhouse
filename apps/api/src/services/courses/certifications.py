@@ -15,7 +15,7 @@ from src.db.courses.courses import Course
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
 from src.db.users import PublicUser, AnonymousUser
-from src.security.courses_security import courses_rbac_check_for_certifications
+from src.security.rbac import check_resource_access, AccessAction
 
 
 ####################################################
@@ -42,7 +42,7 @@ async def create_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Create certification
     certification = Certifications(
@@ -89,7 +89,7 @@ async def get_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return CertificationRead(**certification.model_dump())
 
@@ -113,7 +113,7 @@ async def get_certifications_by_course(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -151,7 +151,7 @@ async def update_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(certification_object).items():
@@ -196,7 +196,7 @@ async def delete_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     db_session.delete(certification)
     db_session.commit()
@@ -248,7 +248,7 @@ async def create_certificate_user(
             )
 
         # Require course ownership or instructor role for creating certificates
-        await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "create", db_session)
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Check if certificate user already exists
     statement = select(CertificateUser).where(
@@ -335,7 +335,7 @@ async def get_user_certificates_for_course(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -349,23 +349,26 @@ async def get_user_certificates_for_course(
     if not certification_ids:
         return []
 
-    # Query certificate users for this user and these certifications
+    # Batch fetch all certificate users for this user and these certifications
+    statement = select(CertificateUser).where(
+        CertificateUser.user_id == current_user.id,
+        CertificateUser.certification_id.in_(certification_ids)  # type: ignore
+    )
+    cert_users = db_session.exec(statement).all()
+
+    if not cert_users:
+        return []
+
+    # Build a map of certification_id -> Certifications (already fetched above)
+    cert_map = {cert.id: cert for cert in certifications if cert.id}
+
     result = []
-    for cert_id in certification_ids:
-        statement = select(CertificateUser).where(
-            CertificateUser.user_id == current_user.id,
-            CertificateUser.certification_id == cert_id
-        )
-        cert_user = db_session.exec(statement).first()
-        if cert_user:
-            # Get the associated certification
-            statement = select(Certifications).where(Certifications.id == cert_id)
-            certification = db_session.exec(statement).first()
-            
-            result.append({
-                "certificate_user": CertificateUserRead(**cert_user.model_dump()),
-                "certification": CertificationRead(**certification.model_dump()) if certification else None
-            })
+    for cert_user in cert_users:
+        certification = cert_map.get(cert_user.certification_id)
+        result.append({
+            "certificate_user": CertificateUserRead(**cert_user.model_dump()),
+            "certification": CertificationRead(**certification.model_dump()) if certification else None
+        })
 
     return result
 
@@ -491,26 +494,39 @@ async def get_all_user_certificates(
     if not certificate_users:
         return []
 
+    # Batch fetch all certifications
+    cert_ids = list({cu.certification_id for cu in certificate_users})
+    statement = select(Certifications).where(Certifications.id.in_(cert_ids))  # type: ignore
+    certifications = db_session.exec(statement).all()
+    cert_map = {cert.id: cert for cert in certifications}
+
+    # Batch fetch all courses
+    course_ids = list({cert.course_id for cert in certifications if cert.course_id})
+    if course_ids:
+        statement = select(Course).where(Course.id.in_(course_ids))  # type: ignore
+        courses = db_session.exec(statement).all()
+        course_map = {course.id: course for course in courses}
+    else:
+        course_map = {}
+
+    # Batch fetch user information (all cert_users belong to current_user, but keep generic)
+    from src.db.users import User
+    user_ids = list({cu.user_id for cu in certificate_users})
+    statement = select(User).where(User.id.in_(user_ids))  # type: ignore
+    users = db_session.exec(statement).all()
+    user_map = {user.id: user for user in users}
+
     result = []
     for cert_user in certificate_users:
-        # Get the associated certification
-        statement = select(Certifications).where(Certifications.id == cert_user.certification_id)
-        certification = db_session.exec(statement).first()
-
+        certification = cert_map.get(cert_user.certification_id)
         if not certification:
             continue
 
-        # Get course information
-        statement = select(Course).where(Course.id == certification.course_id)
-        course = db_session.exec(statement).first()
-
+        course = course_map.get(certification.course_id)
         if not course:
             continue
 
-        # Get user information
-        from src.db.users import User
-        statement = select(User).where(User.id == cert_user.user_id)
-        user = db_session.exec(statement).first()
+        user = user_map.get(cert_user.user_id)
 
         result.append({
             "certificate_user": CertificateUserRead(**cert_user.model_dump()),
@@ -532,4 +548,4 @@ async def get_all_user_certificates(
             } if user else None
         })
 
-    return result 
+    return result

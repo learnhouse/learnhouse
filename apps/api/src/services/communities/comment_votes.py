@@ -12,8 +12,7 @@ from src.db.communities.discussion_comment_votes import (
     DiscussionCommentVote,
     DiscussionCommentVoteRead,
 )
-from src.security.communities_security import communities_rbac_check
-from src.security.rbac.rbac import authorization_verify_if_user_is_anon
+from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 
 
 async def upvote_comment(
@@ -58,8 +57,8 @@ async def upvote_comment(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
-    await communities_rbac_check(
-        request, community.community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
     # Check if user has already voted

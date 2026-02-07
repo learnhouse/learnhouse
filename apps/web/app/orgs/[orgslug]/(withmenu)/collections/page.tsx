@@ -1,7 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { getOrgCollections } from '@services/courses/collections'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import CollectionsClient from './CollectionsClient'
@@ -50,7 +49,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CollectionsPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
@@ -60,7 +59,7 @@ const CollectionsPage = async (params: any) => {
   const org_id = org.id
   const collections = await getOrgCollections(
     org_id,
-    access_token ? access_token : null,
+    access_token ?? undefined,
     { revalidate: 0, tags: ['collections'] }
   )
 

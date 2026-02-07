@@ -18,7 +18,7 @@ class TrailStep(SQLModel, table=True):
     data: dict = Field(default_factory=dict, sa_column=Column(JSON))
     # foreign keys
     trailrun_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("trailrun.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("trailrun.id", ondelete="CASCADE"), index=True)
     )
     trail_id: int = Field(
         sa_column=Column(Integer, ForeignKey("trail.id", ondelete="CASCADE"))
@@ -27,13 +27,13 @@ class TrailStep(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("activity.id", ondelete="CASCADE"))
     )
     course_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"), index=True)
     )
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
     )
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
     )
     # timestamps
     creation_date: str

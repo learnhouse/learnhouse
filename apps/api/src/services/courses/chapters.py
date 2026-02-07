@@ -15,7 +15,7 @@ from src.db.courses.chapters import (
 )
 from src.db.courses.courses import Course
 from fastapi import HTTPException, status, Request
-from src.security.courses_security import courses_rbac_check_for_chapters
+from src.security.rbac import check_resource_access, AccessAction
 
 
 ####################################################
@@ -37,7 +37,7 @@ async def create_chapter(
     course = db_session.exec(statement).one()
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # complete chapter object
     chapter.course_id = chapter_object.course_id
@@ -117,7 +117,7 @@ async def get_chapter(
         )
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Get activities for this chapter
     statement = (
@@ -153,7 +153,7 @@ async def update_chapter(
         )
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, chapter.chapter_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, chapter.chapter_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(chapter_object).items():
@@ -188,7 +188,7 @@ async def delete_chapter(
         )
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, chapter.chapter_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, chapter.chapter_uuid, AccessAction.DELETE)
 
     # Remove all linked chapter activities
     statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
@@ -230,28 +230,35 @@ async def get_course_chapters(
     chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, course.course_uuid, current_user, "read", db_session)  # type: ignore
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)  # type: ignore
 
-    # Get activities for each chapter
-    for chapter in chapters:
-        statement = (
-            select(ChapterActivity)
-            .where(ChapterActivity.chapter_id == chapter.id)
-            .order_by(ChapterActivity.order) # type: ignore
-            .distinct(ChapterActivity.id, ChapterActivity.order) # type: ignore
+    # Get all activities for all chapters in a single query
+    chapter_ids = [chapter.id for chapter in chapters]
+    if chapter_ids:
+        activity_statement = (
+            select(ChapterActivity, Activity)
+            .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
+            .where(ChapterActivity.chapter_id.in_(chapter_ids))  # type: ignore
+            .order_by(ChapterActivity.chapter_id, ChapterActivity.order)  # type: ignore
         )
-        chapter_activities = db_session.exec(statement).all()
+        if not with_unpublished_activities:
+            activity_statement = activity_statement.where(Activity.published == True)
 
-        for chapter_activity in chapter_activities:
-            statement = (
-                select(Activity)
-                .where(Activity.id == chapter_activity.activity_id, with_unpublished_activities or Activity.published == True)
-                .distinct(Activity.id) # type: ignore
-            )
-            activity = db_session.exec(statement).first()
+        activity_results = db_session.exec(activity_statement).all()
 
-            if activity:
-                chapter.activities.append(ActivityRead(**activity.model_dump()))
+        # Group activities by chapter_id
+        chapter_activities_map: dict[int, list[ActivityRead]] = {}
+        seen: set[tuple[int, int]] = set()
+        for chapter_activity, activity in activity_results:
+            key = (chapter_activity.chapter_id, activity.id)
+            if key not in seen:
+                seen.add(key)
+                chapter_activities_map.setdefault(chapter_activity.chapter_id, []).append(
+                    ActivityRead(**activity.model_dump())
+                )
+
+        for chapter in chapters:
+            chapter.activities = chapter_activities_map.get(chapter.id, [])
 
     return chapters
 
@@ -274,7 +281,7 @@ async def DEPRECEATED_get_course_chapters(
         )
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     chapters_in_db = await get_course_chapters(request, course.id, db_session, current_user)  # type: ignore
 
@@ -356,7 +363,7 @@ async def reorder_chapters_and_activities(
         )
 
     # RBAC check
-    await courses_rbac_check_for_chapters(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     ###########
     # Chapters

@@ -15,13 +15,12 @@ from src.db.communities.communities import (
 )
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
-from src.security.communities_security import (
-    communities_rbac_check,
-    communities_rbac_check_with_lookup,
-)
-from src.security.rbac.rbac import (
+from src.security.rbac import (
+    check_resource_access,
+    AccessAction,
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
+    authorization_verify_based_on_roles,
 )
 
 
@@ -46,15 +45,16 @@ async def create_community(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check if user has admin/maintainer role for the organization
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "create", f"org_{org.org_uuid}", db_session
+    # Check if user has permission to create communities using role-based permissions
+    # This checks the actual database permissions (communities.action_create) instead of hardcoded role IDs
+    has_create_permission = await authorization_verify_based_on_roles(
+        request, current_user.id, "create", f"community_{org.org_uuid}", db_session
     )
 
-    if not is_admin_or_maintainer:
+    if not has_create_permission:
         raise HTTPException(
             status_code=403,
-            detail="You must have admin/maintainer role to create communities",
+            detail="You don't have permission to create communities. Check your role permissions.",
         )
 
     # Create community
@@ -85,9 +85,15 @@ async def get_community(
     """
     Get a community by UUID.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "read", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.READ)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -120,8 +126,12 @@ async def get_communities_by_org(
         communities = db_session.exec(query).all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
-    # Check if user is admin/maintainer
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+    # Check if user has admin-level permissions (can read all communities)
+    # First check role-based permissions, then fall back to org admin status
+    has_admin_read = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", f"community_{org_id}", db_session
+    )
+    is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "read", f"org_{org_id}", db_session
     )
 
@@ -187,8 +197,8 @@ async def get_community_by_course(
         return None
 
     # Check if user can read the community
-    await communities_rbac_check(
-        request, community.community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
     return CommunityRead.model_validate(community.model_dump())
@@ -206,9 +216,15 @@ async def update_community(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     # Update fields
     if community_object.name is not None:
@@ -240,9 +256,15 @@ async def delete_community(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "delete", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.DELETE)
 
     db_session.delete(community)
     db_session.commit()
@@ -262,9 +284,15 @@ async def link_community_to_course(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     # Get the course
     course_statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -314,9 +342,15 @@ async def unlink_community_from_course(
 
     Requires admin/maintainer role.
     """
-    community = await communities_rbac_check_with_lookup(
-        request, community_uuid, current_user, "update", db_session
-    )
+    # Get community
+    statement = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.UPDATE)
 
     community.course_id = None
     community.update_date = str(datetime.now())
@@ -396,8 +430,11 @@ async def get_community_user_rights(
         user_memberships = db_session.exec(membership_stmt).all()
         rights["access"]["via_usergroups"] = [m.usergroup_id for m in user_memberships]
 
-    # Check admin/maintainer role
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+    # Check admin/maintainer role using role-based permissions
+    has_update_permission = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", community_uuid, db_session
+    )
+    is_admin_or_maintainer = has_update_permission or await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "update", community_uuid, db_session
     )
 

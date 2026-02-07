@@ -155,6 +155,26 @@ def check_verification_resend_rate_limit(email: str) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
+    """
+    Check token refresh rate limit: 60 attempts per minute per IP.
+    This prevents brute-force attacks on the refresh endpoint.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    ip = get_client_ip(request)
+    key = f"refresh:{ip}"
+
+    is_allowed, count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=60,
+        window_seconds=60  # 1 minute
+    )
+
+    return is_allowed, retry_after
+
+
 def increment_rate_limit(key: str, window_seconds: int) -> None:
     """
     Increment a rate limit counter for tracking purposes.
