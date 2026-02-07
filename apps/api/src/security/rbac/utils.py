@@ -35,6 +35,14 @@ async def check_element_type(element_uuid):
         return "podcasts"
     elif element_uuid.startswith("episode_"):
         return "episodes"
+    elif element_uuid.startswith("docspace_"):
+        return "docspaces"
+    elif element_uuid.startswith("docsection_"):
+        return "docsections"
+    elif element_uuid.startswith("docgroup_"):
+        return "docgroups"
+    elif element_uuid.startswith("docpage_"):
+        return "docpages"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -221,6 +229,30 @@ async def get_element_organization_id(
             podcast = db_session.exec(podcast_statement).first()
             return podcast.org_id if podcast else None
         return None
+
+    elif element_type == "docspaces":
+        from src.db.docs.docspaces import DocSpace
+        statement = select(DocSpace).where(DocSpace.docspace_uuid == element_uuid)
+        docspace = db_session.exec(statement).first()
+        return docspace.org_id if docspace else None
+
+    elif element_type == "docsections":
+        from src.db.docs.docsections import DocSection
+        statement = select(DocSection).where(DocSection.docsection_uuid == element_uuid)
+        docsection = db_session.exec(statement).first()
+        return docsection.org_id if docsection else None
+
+    elif element_type == "docgroups":
+        from src.db.docs.docgroups import DocGroup
+        statement = select(DocGroup).where(DocGroup.docgroup_uuid == element_uuid)
+        docgroup = db_session.exec(statement).first()
+        return docgroup.org_id if docgroup else None
+
+    elif element_type == "docpages":
+        from src.db.docs.docpages import DocPage
+        statement = select(DocPage).where(DocPage.docpage_uuid == element_uuid)
+        docpage = db_session.exec(statement).first()
+        return docpage.org_id if docpage else None
 
     # Unknown element type
     return None
