@@ -43,6 +43,7 @@ async def create_user(
     user_object: UserCreate,
     org_id: int,
     is_oauth: bool = False,
+    signup_provider: str = "email",
 ):
     # Validate password complexity (skip for OAuth users who have empty passwords)
     if user_object.password and not is_oauth:
@@ -71,9 +72,11 @@ async def create_user(
     if is_oauth:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        user.signup_method = signup_provider
     else:
         user.email_verified = False
         user.email_verified_at = None
+        user.signup_method = "email"
 
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
@@ -207,6 +210,7 @@ async def create_user_without_org(
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     is_oauth: bool = False,
+    signup_provider: str = "email",
 ):
     # Validate password complexity (skip for OAuth users who have empty passwords)
     if user_object.password and not is_oauth:
@@ -235,9 +239,11 @@ async def create_user_without_org(
     if is_oauth:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        user.signup_method = signup_provider
     else:
         user.email_verified = False
         user.email_verified_at = None
+        user.signup_method = "email"
 
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())

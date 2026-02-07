@@ -1,6 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@components/Contexts/AuthContext'
 import {
   House,
   BookOpen,
@@ -138,10 +138,7 @@ function DashLeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
-    if (res) {
-      getUriWithOrg(org.slug, '/')
-    }
+    await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
   }
 
   if (!org || !session) return null

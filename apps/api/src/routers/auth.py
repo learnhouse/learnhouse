@@ -21,6 +21,7 @@ from src.services.auth.utils import signWithGoogle
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
     check_login_rate_limit,
+    check_refresh_rate_limit,
     get_client_ip,
 )
 from src.services.security.account_lockout import (
@@ -47,10 +48,74 @@ def get_token_expiry_ms() -> Optional[int]:
 router = APIRouter()
 
 
-def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
+def get_cookie_domain_for_request(request: Request) -> str | None:
+    """
+    Determine the appropriate cookie domain based on the request origin.
+
+    - For custom domains: Returns None (cookie is host-specific)
+    - For configured domain/subdomains: Returns the configured cookie domain
+    - For localhost: Returns None
+    """
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+    host = request.headers.get("host", "")
+
+    # Get the configured domain
+    config_domain = get_learnhouse_config().hosting_config.domain
+    config_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+
+    # Check origin, referer, or host
+    check_value = origin or referer or host
+    if not check_value:
+        return config_cookie_domain
+
+    # Remove protocol if present
+    check_value = check_value.replace("https://", "").replace("http://", "")
+    # Remove path and port
+    check_value = check_value.split("/")[0].split(":")[0]
+
+    # Localhost always gets no domain
+    if "localhost" in check_value or "127.0.0.1" in check_value:
+        return None
+
+    # Check if it's a subdomain of the configured domain
+    is_subdomain = check_value.endswith(f".{config_domain}") or check_value == config_domain
+
+    if is_subdomain:
+        # Use configured cookie domain for subdomains
+        return config_cookie_domain
+    else:
+        # Custom domain - no domain restriction (host-specific cookie)
+        return None
+
+
+def is_request_secure(request: Request | None) -> bool:
+    """
+    Determine if the request is over HTTPS.
+    Checks X-Forwarded-Proto header (for proxies) and URL scheme.
+    """
+    if not request:
+        return not isDevModeEnabled()
+
+    # Check X-Forwarded-Proto header (common with reverse proxies)
+    forwarded_proto = request.headers.get("x-forwarded-proto", "")
+    if forwarded_proto.lower() == "https":
+        return True
+    if forwarded_proto.lower() == "http":
+        return False
+
+    # Check the URL scheme
+    if request.url.scheme == "https":
+        return True
+
+    # Fall back to dev mode check
+    return not isDevModeEnabled()
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str, request: Request = None):
     """Helper to set authentication cookies."""
-    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
-    is_secure = not isDevModeEnabled()
+    is_secure = is_request_secure(request)
+    cookie_domain = get_cookie_domain_for_request(request) if request else None
 
     response.set_cookie(
         key=JWT_COOKIE_NAME,
@@ -72,9 +137,9 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     )
 
 
-def unset_auth_cookies(response: Response):
+def unset_auth_cookies(response: Response, request: Request = None):
     """Helper to unset authentication cookies."""
-    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+    cookie_domain = get_cookie_domain_for_request(request) if request else None
 
     response.delete_cookie(key=JWT_COOKIE_NAME, domain=cookie_domain)
     response.delete_cookie(key=JWT_REFRESH_COOKIE_NAME, domain=cookie_domain)
@@ -86,6 +151,18 @@ def refresh(request: Request, response: Response):
     Validates the refresh token and issues a new access token.
     The refresh token is read from cookies.
     """
+    # Rate limit refresh endpoint to prevent brute force attacks
+    is_allowed, retry_after = check_refresh_rate_limit(request)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": "Too many refresh attempts. Please try again later.",
+                "retry_after": retry_after,
+            },
+        )
+
     refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
     if not refresh_token:
         raise HTTPException(
@@ -108,8 +185,8 @@ def refresh(request: Request, response: Response):
         expires_delta=JWT_ACCESS_TOKEN_EXPIRES
     )
 
-    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
-    is_secure = not isDevModeEnabled()
+    cookie_domain = get_cookie_domain_for_request(request)
+    is_secure = is_request_secure(request)
     response.set_cookie(
         key=JWT_COOKIE_NAME,
         value=new_access_token,
@@ -210,7 +287,7 @@ async def login(
     )
     refresh_token = create_refresh_token(data={"sub": username})
 
-    set_auth_cookies(response, access_token, refresh_token)
+    set_auth_cookies(response, access_token, refresh_token, request)
 
     user = UserRead.model_validate(user)
 
@@ -260,7 +337,7 @@ async def third_party_login(
     )
     refresh_token = create_refresh_token(data={"sub": user.email})
 
-    set_auth_cookies(response, access_token, refresh_token)
+    set_auth_cookies(response, access_token, refresh_token, request)
 
     user = UserRead.model_validate(user)
 
@@ -290,7 +367,7 @@ def logout(request: Request, response: Response):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    unset_auth_cookies(response)
+    unset_auth_cookies(response, request)
     return {"msg": "Successfully logout"}
 
 

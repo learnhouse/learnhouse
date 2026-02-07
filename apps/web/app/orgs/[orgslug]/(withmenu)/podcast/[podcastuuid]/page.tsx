@@ -1,8 +1,7 @@
 import { Metadata } from 'next'
 import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from '@/lib/auth/server'
 import PodcastClient from './podcast'
 
 type PageParams = Promise<{
@@ -16,7 +15,7 @@ export async function generateMetadata({
   params: PageParams
 }): Promise<Metadata> {
   const { orgslug, podcastuuid } = await params
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   let podcastMeta: PodcastMeta | null = null
@@ -45,7 +44,7 @@ export async function generateMetadata({
 
 export default async function PodcastPage({ params }: { params: PageParams }) {
   const { orgslug, podcastuuid } = await params
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   const org = await getOrganizationContextInfo(orgslug, {

@@ -1,10 +1,9 @@
 from fastapi import HTTPException
-from sqlmodel import Session, select
-from src.db.organizations import Organization
+from sqlmodel import Session
+from sqlalchemy import text
 
 async def check_database_health(db_session: Session) -> bool:
-    statement = select(Organization)
-    result = db_session.exec(statement)
+    result = db_session.exec(text("SELECT 1"))
 
     if not result:
         return False

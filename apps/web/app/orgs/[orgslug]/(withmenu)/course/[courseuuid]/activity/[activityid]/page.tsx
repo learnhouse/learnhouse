@@ -3,8 +3,7 @@ import { getCourseMetadata } from '@services/courses/courses'
 import ActivityClient from './activity'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from '@/lib/auth/server'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -29,7 +28,7 @@ async function fetchCourseMetadata(courseuuid: string, access_token: string | nu
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const session = await getServerSession(nextAuthOptions as any) as Session
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
 
   // Get Org context information
@@ -73,7 +72,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const ActivityPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions as any) as Session
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
   const activityid = (await params.params).activityid
   const courseuuid = (await params.params).courseuuid

@@ -14,11 +14,12 @@ from src.db.communities.discussions import (
     DISCUSSION_LABELS,
 )
 from src.db.communities.discussion_votes import DiscussionVote
-from src.security.communities_security import (
-    communities_rbac_check,
-    discussions_rbac_check_with_lookup,
+from src.security.rbac import (
+    check_resource_access,
+    AccessAction,
+    authorization_verify_if_user_is_anon,
+    authorization_verify_based_on_org_admin_status,
 )
-from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_discussion_content
 
 
@@ -83,8 +84,8 @@ async def create_discussion(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # Check if user can read the community
-    await communities_rbac_check(
-        request, community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community_uuid, AccessAction.READ
     )
 
     # Get the community
@@ -153,9 +154,21 @@ async def get_discussion(
     """
     Get a discussion by UUID.
     """
-    discussion = await discussions_rbac_check_with_lookup(
-        request, discussion_uuid, current_user, "read", db_session
-    )
+    # Get discussion
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = db_session.exec(statement).first()
+
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Get community and check access
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    await check_resource_access(request, db_session, current_user, community.community_uuid, AccessAction.READ)
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
@@ -193,8 +206,8 @@ async def get_discussions_by_community(
     Pinned discussions are always returned first.
     """
     # Check if user can read the community
-    await communities_rbac_check(
-        request, community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community_uuid, AccessAction.READ
     )
 
     # Get the community
@@ -316,9 +329,31 @@ async def update_discussion(
     Requires discussion author or admin role.
     Authors can edit their discussions up to 2 times.
     """
-    discussion = await discussions_rbac_check_with_lookup(
-        request, discussion_uuid, current_user, "update", db_session
+    # Verify user is not anonymous
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    # Get discussion
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = db_session.exec(statement).first()
+
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Get community
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check if user is author or admin
+    is_author = discussion.author_id == current_user.id
+    is_admin = await authorization_verify_based_on_org_admin_status(
+        request, current_user.id, "update", community.community_uuid, db_session
     )
+
+    if not is_author and not is_admin:
+        raise HTTPException(status_code=403, detail="You don't have permission to update this discussion")
 
     # Check edit limit for authors (admins can edit unlimited)
     is_author = discussion.author_id == current_user.id
@@ -391,9 +426,31 @@ async def pin_discussion(
 
     Requires discussion author or admin role.
     """
-    discussion = await discussions_rbac_check_with_lookup(
-        request, discussion_uuid, current_user, "update", db_session
+    # Verify user is not anonymous
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    # Get discussion
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = db_session.exec(statement).first()
+
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Get community
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check if user is author or admin
+    is_author = discussion.author_id == current_user.id
+    is_admin = await authorization_verify_based_on_org_admin_status(
+        request, current_user.id, "update", community.community_uuid, db_session
     )
+
+    if not is_author and not is_admin:
+        raise HTTPException(status_code=403, detail="You don't have permission to pin this discussion")
 
     discussion.is_pinned = is_pinned
     discussion.update_date = str(datetime.now())
@@ -432,9 +489,31 @@ async def lock_discussion(
 
     Requires discussion author or admin role.
     """
-    discussion = await discussions_rbac_check_with_lookup(
-        request, discussion_uuid, current_user, "update", db_session
+    # Verify user is not anonymous
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    # Get discussion
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = db_session.exec(statement).first()
+
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Get community
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check if user is author or admin
+    is_author = discussion.author_id == current_user.id
+    is_admin = await authorization_verify_based_on_org_admin_status(
+        request, current_user.id, "update", community.community_uuid, db_session
     )
+
+    if not is_author and not is_admin:
+        raise HTTPException(status_code=403, detail="You don't have permission to lock this discussion")
 
     discussion.is_locked = is_locked
     discussion.update_date = str(datetime.now())
@@ -472,9 +551,31 @@ async def delete_discussion(
 
     Requires discussion author or admin role.
     """
-    discussion = await discussions_rbac_check_with_lookup(
-        request, discussion_uuid, current_user, "delete", db_session
+    # Verify user is not anonymous
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    # Get discussion
+    statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
+    discussion = db_session.exec(statement).first()
+
+    if not discussion:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+
+    # Get community
+    community_statement = select(Community).where(Community.id == discussion.community_id)
+    community = db_session.exec(community_statement).first()
+
+    if not community:
+        raise HTTPException(status_code=404, detail="Community not found")
+
+    # Check if user is author or admin
+    is_author = discussion.author_id == current_user.id
+    is_admin = await authorization_verify_based_on_org_admin_status(
+        request, current_user.id, "delete", community.community_uuid, db_session
     )
+
+    if not is_author and not is_admin:
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this discussion")
 
     db_session.delete(discussion)
     db_session.commit()

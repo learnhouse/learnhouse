@@ -1,7 +1,7 @@
 from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, Index
 from src.db.roles import RoleRead
 
 if TYPE_CHECKING:
@@ -45,6 +45,8 @@ class UserRead(UserBase):
     id: int
     user_uuid: str
     email_verified: bool = False
+    last_login_at: Optional[str] = None
+    signup_method: Optional[str] = None
 
 
 class PublicUser(UserRead):
@@ -87,16 +89,20 @@ class APITokenUser(SQLModel):
 
 
 class User(UserBase, table=True):
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = (
+        Index("ix_user_email", "email"),
+        {"extend_existing": True},
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     password: str = ""
-    user_uuid: str = ""
+    user_uuid: str = Field(default="", index=True)
     email_verified: bool = False
     email_verified_at: Optional[str] = None
     failed_login_attempts: int = 0
     locked_until: Optional[str] = None
     last_login_at: Optional[str] = None
     last_login_ip: Optional[str] = None
+    signup_method: Optional[str] = None
     creation_date: str = ""
     update_date: str = ""
 

@@ -13,10 +13,9 @@ export const onRequestError = async (
   request: Request,
   context: { routerKind: string; routePath: string; routeType: string; revalidateReason?: string }
 ) => {
-  const SENTRY_DSN = process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
-
-  if (SENTRY_DSN) {
-    const Sentry = await import("@sentry/nextjs");
+  // Sentry is already initialized via sentry.server.config — just capture if active
+  const Sentry = await import("@sentry/nextjs");
+  if (Sentry.isInitialized()) {
     Sentry.captureException(error, {
       extra: {
         routerKind: context.routerKind,

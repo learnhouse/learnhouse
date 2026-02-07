@@ -31,12 +31,25 @@ const CourseClient = (props: any) => {
   const [activeThumbnailType, setActiveThumbnailType] = useState<'image' | 'video'>('image')
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
-  const course = props.course
+  const initialCourse = props.course
   const org = useOrg() as any
   const router = useRouter()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+
+  // Fetch course data client-side if server didn't provide it (e.g., auth failed on server)
+  const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useSWR(
+    // Only fetch if we don't have initial course data AND we have a session token
+    !initialCourse && access_token
+      ? `${getAPIUrl()}courses/course_${courseuuid}/meta`
+      : null,
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
+  );
+
+  // Use server-provided course data, or client-fetched data as fallback
+  const course = initialCourse || clientCourseData;
 
   // Add SWR for trail data
   const { data: trailData } = useSWR(
@@ -44,17 +57,44 @@ const CourseClient = (props: any) => {
     (url) => swrFetcher(url, access_token)
   );
 
+  // Show loading state if fetching course data client-side
+  if (!initialCourse && courseLoading) {
+    return <PageLoading />
+  }
+
+  // Show error if course fetch failed
+  if (!initialCourse && courseError) {
+    console.error('[COURSE_CLIENT] Failed to fetch course:', courseError)
+    return (
+      <GeneralWrapperStyled>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            {t('course.accessDenied', 'Unable to access this course')}
+          </h2>
+          <p className="text-gray-500 mb-4">
+            {courseError?.status === 403
+              ? t('course.noPermission', 'You do not have permission to view this course.')
+              : t('course.loadError', 'There was an error loading this course.')}
+          </p>
+          <Link href={getUriWithOrg(orgslug, '/')} className="text-blue-600 hover:underline">
+            {t('course.backToHome', 'Back to Home')}
+          </Link>
+        </div>
+      </GeneralWrapperStyled>
+    )
+  }
+
   console.log(course)
 
-  function getLearningTags() {
-    if (!course?.learnings) {
+  function getLearningTags(courseData: any) {
+    if (!courseData?.learnings) {
       setLearnings([])
       return
     }
 
     try {
       // Try to parse as JSON (new format)
-      const parsedLearnings = JSON.parse(course.learnings)
+      const parsedLearnings = JSON.parse(courseData.learnings)
       if (Array.isArray(parsedLearnings)) {
         // New format: array of learning items with text and emoji
         setLearnings(parsedLearnings)
@@ -65,17 +105,19 @@ const CourseClient = (props: any) => {
     }
 
     // Legacy format: comma-separated string (changed from pipe-separated)
-    const learningItems = course.learnings.split(',').map((text: string) => ({
+    const learningItems = courseData.learnings.split(',').map((text: string) => ({
       id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
       text: text.trim(), // Trim whitespace that might be present after commas
       emoji: '📝' // Default emoji for legacy items
     }))
-    
+
     setLearnings(learningItems)
   }
 
   useEffect(() => {
-    getLearningTags()
+    if (!course) return
+
+    getLearningTags(course)
 
     // Collapse chapters by default if more than 5 activities in total
     if (course?.chapters) {
@@ -87,7 +129,7 @@ const CourseClient = (props: any) => {
       })
       setExpandedChapters(defaultExpanded)
     }
-  }, [org, course])
+  }, [course])
 
   const getActivityTypeLabel = (activityType: string) => {
     switch (activityType) {

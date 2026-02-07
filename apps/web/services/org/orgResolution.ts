@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers'
 import { getOrganizationContextInfoWithoutCredentials, getOrganizationContextInfoWithUUID } from '@services/organizations/orgs'
 import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
+import { extractSubdomain, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
 
 export interface ResolvedOrg {
   id: number
@@ -64,9 +65,8 @@ async function resolveFromSubdomain(): Promise<ResolvedOrg | null> {
     const domain = getLEARNHOUSE_DOMAIN_VAL()
 
     // Check if it's a subdomain of the main domain
-    if (host.endsWith(`.${domain}`) && host !== domain) {
-      const orgslug = host.replace(`.${domain}`, '')
-
+    const orgslug = extractSubdomain(host, domain)
+    if (orgslug) {
       // Skip special subdomains
       if (orgslug === 'auth' || orgslug === 'www' || orgslug === 'api') {
         return null
@@ -75,9 +75,8 @@ async function resolveFromSubdomain(): Promise<ResolvedOrg | null> {
       return await fetchOrgBySlug(orgslug)
     }
 
-    // For localhost development, check if host matches domain exactly
-    // In this case, org comes from cookie
-    if (host.includes('localhost')) {
+    // For localhost development, org comes from cookie
+    if (isLocalhostCheck(host)) {
       return null
     }
 
@@ -205,11 +204,9 @@ export async function getOrgSlug(): Promise<string | null> {
   const host = headersList.get('host')
   const domain = getLEARNHOUSE_DOMAIN_VAL()
 
-  if (host && host.endsWith(`.${domain}`) && host !== domain) {
-    const orgslug = host.replace(`.${domain}`, '')
-    if (orgslug !== 'auth' && orgslug !== 'www' && orgslug !== 'api') {
-      return orgslug
-    }
+  const sub = extractSubdomain(host, domain)
+  if (sub && sub !== 'auth' && sub !== 'www' && sub !== 'api') {
+    return sub
   }
 
   // Fall back to cookie

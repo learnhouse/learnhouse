@@ -12,7 +12,7 @@ from src.db.courses.course_updates import (
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
-from src.security.courses_security import courses_rbac_check
+from src.security.rbac import check_resource_access, AccessAction
 
 
 async def create_update(
@@ -41,7 +41,7 @@ async def create_update(
         )
 
     # RBAC check
-    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Generate UUID
     courseupdate_uuid = str(f"courseupdate_{uuid4()}")
@@ -81,8 +81,8 @@ async def update_update(
         )
 
     # RBAC check
-    await courses_rbac_check(
-        request, update.courseupdate_uuid, current_user, "update", db_session
+    await check_resource_access(
+        request, db_session, current_user, update.courseupdate_uuid, AccessAction.UPDATE
     )
 
     for key, value in update_object.model_dump().items():
@@ -115,8 +115,8 @@ async def delete_update(
         )
 
     # RBAC check
-    await courses_rbac_check(
-        request, update.courseupdate_uuid, current_user, "delete", db_session
+    await check_resource_access(
+        request, db_session, current_user, update.courseupdate_uuid, AccessAction.DELETE
     )
 
     db_session.delete(update)

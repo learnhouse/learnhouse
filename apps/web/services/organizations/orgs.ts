@@ -144,6 +144,21 @@ export async function removeUserFromOrg(
   return res
 }
 
+export async function removeUsersFromOrg(
+  org_id: any,
+  user_ids: number[],
+  access_token: string
+) {
+  const params = new URLSearchParams()
+  user_ids.forEach((id) => params.append('user_ids', id.toString()))
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/users/batch/remove?${params.toString()}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function joinOrg(
   args: {
     org_id: number

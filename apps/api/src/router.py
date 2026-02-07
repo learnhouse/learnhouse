@@ -6,6 +6,7 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers.ai import ai, magicblocks, courseplanning
 from src.routers.orgs import ai_credits
+from src.routers.orgs import custom_domains
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
@@ -64,6 +65,24 @@ v1_router.include_router(
     prefix="/orgs",
     tags=["api-tokens"],
     dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "API Access"))]
+)
+v1_router.include_router(
+    custom_domains.router,
+    prefix="/orgs",
+    tags=["custom-domains"],
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Custom Domains"))]
+)
+# Public domain resolution endpoint (no auth required)
+v1_router.include_router(
+    custom_domains.public_router,
+    prefix="/orgs",
+    tags=["custom-domains"],
+)
+# Internal domain listing endpoint (protected by internal key)
+v1_router.include_router(
+    custom_domains.internal_router,
+    prefix="/internal",
+    tags=["custom-domains-internal"],
 )
 v1_router.include_router(
     blocks.router,

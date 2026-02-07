@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
 from src.core.ee_hooks import register_ee_middlewares
+from src.security.csrf import CSRFProtectionMiddleware
+from src.routers.content_files import router as content_files_router
 
 
 ########################
@@ -21,13 +23,15 @@ from src.core.ee_hooks import register_ee_middlewares
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 
 # Initialize Sentry if configured
-if learnhouse_config.general_config.sentry_config.enabled:
+if learnhouse_config.general_config.sentry_config.dsn:
     sentry_sdk.init(
         dsn=learnhouse_config.general_config.sentry_config.dsn,
-        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
-        profiles_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
-        environment="development" if learnhouse_config.general_config.development_mode else "production",
-        send_default_pii=False,
+        environment=learnhouse_config.general_config.env,
+        send_default_pii=True,
+        enable_logs=True,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
+        profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
+        profile_lifecycle="trace",
     )
 
 # Global Config
@@ -46,6 +50,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
 )
+
+# CSRF Protection - validates Origin header on state-changing requests
+app.add_middleware(CSRFProtectionMiddleware)
 
 # Only enable logfire if explicitly configured
 if learnhouse_config.general_config.logfire_enabled:
@@ -67,8 +74,11 @@ app.add_event_handler("startup", startup_app(app))
 app.add_event_handler("shutdown", shutdown_app(app))
 
 
-# Static Files
-app.mount("/content", StaticFiles(directory="content"), name="content")
+# Static Files - use S3-aware router when S3 is enabled, otherwise serve locally
+if learnhouse_config.hosting_config.content_delivery.type == "s3api":
+    app.include_router(content_files_router)
+else:
+    app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Global Routes
 app.include_router(v1_router)

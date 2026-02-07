@@ -33,7 +33,7 @@ from ee.db.scorm import (
 )
 from src.db.organizations import Organization
 from src.db.users import PublicUser
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 
 
 # SCORM namespace definitions
@@ -213,7 +213,7 @@ async def analyze_scorm_package(
     Returns list of SCOs and stores package temporarily.
     """
     # RBAC check
-    await courses_rbac_check_for_activities(request, course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.CREATE)
 
     # Read file content
     content = await scorm_file.read()
@@ -343,7 +343,7 @@ async def import_scorm_package(
     Creates one activity per SCO assignment.
     """
     # RBAC check
-    await courses_rbac_check_for_activities(request, course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.CREATE)
 
     # Verify temp package exists
     temp_dir = os.path.join(TEMP_SCORM_DIR, temp_package_id)
@@ -426,6 +426,15 @@ async def import_scorm_package(
         # Copy extracted content
         permanent_extract_dir = os.path.join(permanent_dir, "extracted")
         shutil.copytree(extract_dir, permanent_extract_dir)
+
+        # Upload to S3 if configured
+        from src.services.courses.transfer.storage_utils import is_s3_enabled, upload_directory_to_s3, upload_to_s3
+        if is_s3_enabled():
+            # Upload package.zip
+            with open(os.path.join(permanent_dir, "package.zip"), 'rb') as f:
+                upload_to_s3(f"{permanent_dir}/package.zip", f.read())
+            # Upload extracted content
+            upload_directory_to_s3(permanent_extract_dir, permanent_extract_dir)
 
         # Determine subtype based on version
         activity_sub_type = (
@@ -517,30 +526,43 @@ def get_scorm_content_path(
     file_path: str,
 ) -> Optional[str]:
     """
-    Get the full filesystem path for a SCORM content file.
+    Get the path for a SCORM content file.
+    Returns a local filesystem path or S3 key depending on storage config.
     Returns None if file doesn't exist or path is invalid.
     """
+    from src.services.courses.transfer.storage_utils import is_s3_enabled, file_exists
+
     # Sanitize the file path
     safe_path = sanitize_path(file_path)
     if not safe_path:
         return None
 
-    # Build full path
+    # Build path
     base_dir = f"content/orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/scorm/extracted"
-    full_path = os.path.join(base_dir, safe_path)
 
-    # Verify path is within base directory (prevent traversal)
-    abs_base = os.path.abspath(base_dir)
-    abs_full = os.path.abspath(full_path)
-
-    if not abs_full.startswith(abs_base):
+    if is_s3_enabled():
+        # For S3, validate path parts and return the key
+        if '..' in safe_path:
+            return None
+        s3_key = f"{base_dir}/{safe_path}"
+        if file_exists(s3_key):
+            return s3_key
         return None
+    else:
+        full_path = os.path.join(base_dir, safe_path)
 
-    # Verify file exists
-    if not os.path.isfile(full_path):
-        return None
+        # Verify path is within base directory (prevent traversal)
+        abs_base = os.path.abspath(base_dir)
+        abs_full = os.path.abspath(full_path)
 
-    return full_path
+        if not abs_full.startswith(abs_base):
+            return None
+
+        # Verify file exists
+        if not os.path.isfile(full_path):
+            return None
+
+        return full_path
 
 
 def cleanup_old_temp_packages(max_age_minutes: int = 30):
@@ -830,6 +852,13 @@ async def import_scorm_as_new_course(
                 permanent_extract_dir = os.path.join(permanent_dir, "extracted")
                 print(f"[SCORM Import] Copying extracted content to {permanent_extract_dir}")
                 shutil.copytree(extract_dir, permanent_extract_dir)
+
+                # Upload to S3 if configured
+                from src.services.courses.transfer.storage_utils import is_s3_enabled, upload_directory_to_s3, upload_to_s3
+                if is_s3_enabled():
+                    with open(zip_dst, 'rb') as f:
+                        upload_to_s3(f"{permanent_dir}/package.zip", f.read())
+                    upload_directory_to_s3(permanent_extract_dir, permanent_extract_dir)
 
                 # Determine subtype
                 activity_sub_type = (

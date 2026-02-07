@@ -2,8 +2,7 @@ import { Metadata } from 'next'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from '@/lib/auth/server'
 import PodcastsClient from './podcasts'
 
 type PageParams = Promise<{
@@ -53,7 +52,7 @@ export async function generateMetadata({
 
 export default async function PodcastsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   const org = await getOrganizationContextInfo(orgslug, {

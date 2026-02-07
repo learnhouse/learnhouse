@@ -16,7 +16,8 @@ from src.db.podcasts.episodes import (
 from src.services.podcasts.thumbnails import upload_episode_thumbnail, upload_episode_audio
 from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
-from src.security.podcasts_security import podcasts_rbac_check_for_episodes
+from src.security.rbac import check_resource_access, AccessAction
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 
 async def _user_can_view_unpublished_episode(
@@ -51,7 +52,7 @@ async def _user_can_view_unpublished_episode(
     )
     user_roles = db_session.exec(role_statement).all()
     for role in user_roles:
-        if role.id in [1, 2]:
+        if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
             return True
 
     return False
@@ -83,7 +84,7 @@ async def get_episode(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.READ)
 
     # Check if episode is published
     if not episode.published:
@@ -137,7 +138,7 @@ async def get_episodes_by_podcast(
             )
             user_roles = db_session.exec(role_statement).all()
             for role in user_roles:
-                if role.id in [1, 2]:
+                if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
                     can_view_unpublished = True
                     break
 
@@ -174,7 +175,7 @@ async def create_episode(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.CREATE)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -251,7 +252,7 @@ async def update_episode(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     # Skip empty strings for file fields to prevent accidental clearing
@@ -298,7 +299,16 @@ async def delete_episode(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.DELETE)
+
+    # Clean up content files from storage
+    from src.db.organizations import Organization
+    org_statement = select(Organization).where(Organization.id == podcast.org_id)
+    org = db_session.exec(org_statement).first()
+    if org:
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        content_path = f"content/orgs/{org.org_uuid}/podcasts/{podcast.podcast_uuid}/episodes/{episode_uuid}"
+        delete_storage_directory(content_path)
 
     db_session.delete(episode)
     db_session.commit()
@@ -333,7 +343,7 @@ async def upload_episode_audio_file(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -388,7 +398,7 @@ async def upload_episode_thumbnail_file(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # Get organization
     org_statement = select(Organization).where(Organization.id == podcast.org_id)
@@ -434,7 +444,7 @@ async def reorder_episodes(
         )
 
     # RBAC check
-    await podcasts_rbac_check_for_episodes(request, podcast.podcast_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.UPDATE)
 
     # Update episode orders
     for item in episode_orders:
