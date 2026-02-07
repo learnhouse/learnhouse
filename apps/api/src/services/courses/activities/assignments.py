@@ -1781,17 +1781,9 @@ async def get_assignments_from_course(
             detail="Course not found",
         )
 
-    # Get Activities
-    statement = select(Activity).where(Activity.course_id == course.id)
-    activities = db_session.exec(statement).all()
-
     # Get Assignments
-    assignments = []
-    for activity in activities:
-        statement = select(Assignment).where(Assignment.activity_id == activity.id)
-        assignment = db_session.exec(statement).first()
-        if assignment:
-            assignments.append(assignment)
+    statement = select(Assignment).where(Assignment.course_id == course.id)
+    assignments = db_session.exec(statement).all()
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
