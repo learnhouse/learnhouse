@@ -8,6 +8,8 @@ from src.core.events.database import get_db_session
 from src.db.users import User, UserCreate, UserRead
 from src.security.auth import get_current_user
 from src.services.users.users import create_user, create_user_without_org
+from src.services.security.rate_limiting import get_client_ip
+from src.services.security.account_lockout import update_login_info
 
 
 async def get_google_user_info(access_token: str):
@@ -86,23 +88,36 @@ async def signWithGoogle(
 
         if org_id is not None:
             user = await create_user(
-                request, db_session, current_user, user_object, org_id, is_oauth=True
+                request, db_session, current_user, user_object, org_id, is_oauth=True, signup_provider="google"
             )
 
             return user
         else:
             user = await create_user_without_org(
-                request, db_session, current_user, user_object, is_oauth=True
+                request, db_session, current_user, user_object, is_oauth=True, signup_provider="google"
             )
 
             return user
 
     # For existing users, ensure email is verified (Google already verified it)
+    needs_update = False
     if not user.email_verified:
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        needs_update = True
+
+    # Backfill signup_method for existing users who sign in with Google
+    if not user.signup_method:
+        user.signup_method = "google"
+        needs_update = True
+
+    if needs_update:
         db_session.add(user)
         db_session.commit()
         db_session.refresh(user)
+
+    # Update last login info
+    client_ip = get_client_ip(request)
+    update_login_info(user, client_ip, db_session)
 
     return UserRead.model_validate(user)

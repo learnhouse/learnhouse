@@ -2,8 +2,7 @@ import React from 'react'
 import Courses from './courses'
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { getOrgCourses } from '@services/courses/courses'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 
@@ -57,7 +56,7 @@ const CoursesPage = async (params: any) => {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   let courses: any[] = []
@@ -65,7 +64,7 @@ const CoursesPage = async (params: any) => {
     courses = await getOrgCourses(
       orgslug,
       { revalidate: 0, tags: ['courses'] },
-      access_token ? access_token : null
+      access_token ?? undefined
     )
   } catch (error: any) {
     // If feature is disabled (403), pass empty courses array

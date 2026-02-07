@@ -106,6 +106,10 @@
         "sso": {
           "title": "Enterprise Feature",
           "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider."
+        },
+        "custom_domains": {
+          "title": "Pro Feature",
+          "description": "Custom Domains is a premium feature available only to organizations on our Pro plan or higher. Upgrade to use your own domain for a branded experience."
         }
       }
     },
@@ -1305,6 +1309,7 @@
           "landing": "Landing Page",
           "branding": "Branding",
           "ai": "AI",
+          "domains": "Domains",
           "api": "API Access",
           "sso": "SSO",
           "features": "Features",
@@ -1334,6 +1339,10 @@
           "api": {
             "title": "API Access",
             "subtitle": "Manage API tokens and programmatic access"
+          },
+          "domains": {
+            "title": "Custom Domains",
+            "subtitle": "Configure custom domains for your organization"
           },
           "features": {
             "title": "Features",

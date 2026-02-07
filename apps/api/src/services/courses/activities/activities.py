@@ -9,7 +9,7 @@ from uuid import uuid4
 from datetime import datetime
 
 from src.core.ee_hooks import check_ee_activity_paid_access
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.activities.versioning import create_activity_version
 
 
@@ -45,7 +45,7 @@ async def create_activity(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Create Activity
     activity = Activity(**activity_object.model_dump())
@@ -115,7 +115,7 @@ async def get_activity(
     activity, course, last_modified_user = result
 
     # RBAC check
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # Paid access check (via EE hook with fallback to True if EE not available)
     has_paid_access = await check_ee_activity_paid_access(
@@ -155,7 +155,7 @@ async def get_activityby_id(
     activity, course = result
 
     # RBAC check
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return ActivityRead.model_validate(activity)
 
@@ -190,7 +190,7 @@ async def update_activity(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were explicitly set (not default values)
     # Using model_dump(exclude_unset=True) to get only the fields that were passed in
@@ -279,7 +279,16 @@ async def delete_activity(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+
+    # Clean up content files from storage
+    from src.db.organizations import Organization
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+    if org:
+        from src.services.courses.transfer.storage_utils import delete_storage_directory
+        content_path = f"content/orgs/{org.org_uuid}/courses/{course.course_uuid}/activities/{activity_uuid}"
+        delete_storage_directory(content_path)
 
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
@@ -347,7 +356,7 @@ async def get_activities(
             detail="Course not found",
         )
 
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     activities = [ActivityRead.model_validate(activity) for activity in activities]
 

@@ -13,8 +13,7 @@ from src.db.communities.discussion_comments import (
     DiscussionCommentUpdate,
 )
 from src.services.communities.comment_votes import get_user_votes_for_comments
-from src.security.communities_security import communities_rbac_check
-from src.security.rbac.rbac import authorization_verify_if_user_is_anon
+from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_comment_content
 
 
@@ -58,8 +57,8 @@ async def create_comment(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
-    await communities_rbac_check(
-        request, community.community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
     # Check content moderation
@@ -119,8 +118,8 @@ async def get_comments_by_discussion(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
-    await communities_rbac_check(
-        request, community.community_uuid, current_user, "read", db_session
+    await check_resource_access(
+        request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
 
     offset = (page - 1) * limit
@@ -272,8 +271,8 @@ async def delete_comment(
 
             if community:
                 try:
-                    await communities_rbac_check(
-                        request, community.community_uuid, current_user, "delete", db_session
+                    await check_resource_access(
+                        request, db_session, current_user, community.community_uuid, AccessAction.DELETE
                     )
                 except HTTPException:
                     raise HTTPException(

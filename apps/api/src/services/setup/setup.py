@@ -27,6 +27,7 @@ from src.db.roles import DashboardPermission, Permission, PermissionsWithOwn, Ri
 from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
 from src.security.security import security_hash_password
+from src.security.rbac.constants import ADMIN_ROLE_ID
 
 
 # Install Default roles
@@ -558,7 +559,7 @@ def install_create_organization_user(
     user_organization = UserOrganization(
         user_id=user.id if user.id else 0,
         org_id=org_id or 0,
-        role_id=1,
+        role_id=ADMIN_ROLE_ID,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )

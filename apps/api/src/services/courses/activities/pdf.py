@@ -15,7 +15,7 @@ from src.services.courses.activities.uploads.pdfs import upload_pdf
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
-from src.security.courses_security import courses_rbac_check_for_activities
+from src.security.rbac import check_resource_access, AccessAction
 
 
 async def create_documentpdf_activity(
@@ -56,7 +56,7 @@ async def create_documentpdf_activity(
         )
 
     # RBAC check
-    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # get org_id
     org_id = coursechapter.org_id

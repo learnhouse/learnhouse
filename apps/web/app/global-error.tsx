@@ -13,8 +13,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Capture error to Sentry if configured
-    if (process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN) {
+    // Capture error to Sentry if initialized
+    if (Sentry.isInitialized()) {
       Sentry.captureException(error);
     }
 

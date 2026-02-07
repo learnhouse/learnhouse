@@ -4,8 +4,7 @@ from sqlmodel import Session, select, and_
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.courses_security import courses_rbac_check
+from src.security.rbac import authorization_verify_if_user_is_anon, check_resource_access, AccessAction
 from typing import List
 
 
@@ -92,7 +91,7 @@ async def update_course_contributor(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # SECURITY: Require course ownership or admin role for updating contributors
-    await courses_rbac_check(request, course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -165,7 +164,7 @@ async def get_course_contributors(
         )
 
     # SECURITY: Require read access to the course
-    await courses_rbac_check(request, course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all contributors for this course with user information
     statement = (
@@ -206,7 +205,7 @@ async def add_bulk_course_contributors(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # SECURITY: Require course ownership or admin role for adding contributors
-    await courses_rbac_check(request, course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -303,7 +302,7 @@ async def remove_bulk_course_contributors(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # SECURITY: Require course ownership or admin role for removing contributors
-    await courses_rbac_check(request, course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)

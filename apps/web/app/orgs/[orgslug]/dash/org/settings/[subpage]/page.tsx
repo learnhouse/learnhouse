@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -14,6 +14,7 @@ import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/O
 import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
 import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
+import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -38,6 +39,7 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
+  { id: 'domains', label: t('dashboard.organization.settings.tabs.domains') || 'Domains', icon: Globe, requiredPlan: 'pro' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso') || 'SSO', icon: Shield, requiredPlan: 'enterprise' },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
@@ -99,6 +101,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'ai') {
       setH1Label(t('dashboard.organization.settings.pages.ai.title') || 'AI Features')
       setH2Label(t('dashboard.organization.settings.pages.ai.subtitle') || 'Configure AI capabilities for your organization')
+    } else if (params.subpage == 'domains') {
+      setH1Label(t('dashboard.organization.settings.pages.domains.title') || 'Custom Domains')
+      setH2Label(t('dashboard.organization.settings.pages.domains.subtitle') || 'Configure custom domains for your organization')
     } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title') || 'API Access')
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle') || 'Manage API tokens and access')
@@ -158,6 +163,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}
+        {params.subpage == 'domains' ? <OrgEditDomains /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}

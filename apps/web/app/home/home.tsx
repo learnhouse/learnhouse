@@ -4,7 +4,7 @@ import UserAvatar from '@components/Objects/UserAvatar';
 import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config';
 import { swrFetcher } from '@services/utils/ts/requests';
 import { ArrowRightCircle, Info } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { signOut } from '@components/Contexts/AuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'

@@ -9,9 +9,6 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getUserCertificates } from '@services/courses/certifications';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';
 
 interface CourseEndViewProps {
@@ -122,6 +119,11 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     if (!userCertificate) return;
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }, QRCode] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+        import('qrcode'),
+      ]);
       // Create a temporary div for the certificate
       const certificateDiv = document.createElement('div');
       certificateDiv.style.position = 'absolute';

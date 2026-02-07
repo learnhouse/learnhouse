@@ -1,7 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussion } from '@services/communities/discussions'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
@@ -88,7 +87,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const DiscussionPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   const { orgslug, communityuuid, discussionuuid } = await params.params
   const communityUuid = `community_${communityuuid}`
