@@ -106,20 +106,20 @@ const CoursePage = async (params: any) => {
   const { courseuuid, orgslug } = await params.params
 
   // Fetch course metadata once
-  let course_meta
+  let course_meta = null
+  let fetchError: { status?: number } | null = null
   try {
     course_meta = await getCourseMetadata(
       courseuuid,
       { revalidate: 0, tags: ['courses'] },
       access_token ?? undefined
     )
-  } catch (error) {
-    // If course not found or access denied, show not found
-    notFound()
+  } catch (error: any) {
+    fetchError = { status: error?.status }
   }
 
-  // If no course data returned, show not found
-  if (!course_meta) {
+  // If truly not found (no auth token and no course), show 404
+  if (!course_meta && !fetchError) {
     notFound()
   }
 
@@ -129,6 +129,7 @@ const CoursePage = async (params: any) => {
       orgslug={orgslug}
       course={course_meta}
       access_token={access_token}
+      serverError={fetchError}
     />
   )
 }
