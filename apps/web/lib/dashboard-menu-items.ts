@@ -6,6 +6,7 @@ import {
   CurrencyCircleDollar,
   Buildings,
   ChatsCircle,
+  Book,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -13,6 +14,10 @@ export interface DashboardMenuItem {
   href: string
   icon: typeof House
   labelKey: string
+  /** Feature key used for plan-based gating. If undefined, item is always shown. */
+  featureKey?: string
+  /** If true, the feature defaults to disabled (must be explicitly enabled). */
+  defaultDisabled?: boolean
 }
 
 export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
@@ -39,6 +44,15 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/communities',
     icon: ChatsCircle,
     labelKey: 'communities.title',
+    featureKey: 'communities',
+  },
+  {
+    id: 'docs',
+    href: '/dash/docs',
+    icon: Book,
+    labelKey: 'docs.documentation',
+    featureKey: 'docs',
+    defaultDisabled: true,
   },
   {
     id: 'users',
@@ -51,6 +65,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     href: '/dash/payments/customers',
     icon: CurrencyCircleDollar,
     labelKey: 'common.payments',
+    featureKey: 'payments',
   },
   {
     id: 'organization',

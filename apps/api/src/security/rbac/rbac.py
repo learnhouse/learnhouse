@@ -131,6 +131,22 @@ async def authorization_verify_if_element_is_public(
                 detail="User rights : You don't have the right to perform this action",
             )
 
+    elif element_nature == "docspaces" and action == "read":
+        from src.db.docs.docspaces import DocSpace
+        statement = select(DocSpace).where(
+            DocSpace.public == True,
+            DocSpace.published == True,
+            DocSpace.docspace_uuid == element_uuid
+        )
+        docspace = db_session.exec(statement).first()
+        if docspace:
+            return True
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights : You don't have the right to perform this action",
+            )
+
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -216,8 +232,8 @@ async def authorization_verify_based_on_roles(
             else:
                 element_rights = getattr(rights, element_type, None)
             if element_rights:
-                # Special handling for courses with PermissionsWithOwn
-                if element_type == "courses":
+                # Special handling for resources with PermissionsWithOwn
+                if element_type in ("courses", "docspaces", "discussions", "podcasts"):
                     if await check_course_permissions_with_own(element_rights, action, is_author):
                         return True
                 else:

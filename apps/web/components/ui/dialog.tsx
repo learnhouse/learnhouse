@@ -40,8 +40,16 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         style={{ pointerEvents: 'auto' }}
+        onKeyDown={(e) => {
+          // Prevent Radix from swallowing keystrokes (e.g. "D") inside form inputs
+          const target = e.target as HTMLElement
+          const tag = target.tagName
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
+            e.stopPropagation()
+          }
+        }}
         className={cn(
-          "fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 duration-200 sm:rounded-2xl overflow-hidden",
+          "fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 duration-200 sm:rounded-2xl",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className
         )}

@@ -21,6 +21,7 @@ FeatureName = Literal[
     "collections",
     "communities",
     "podcasts",
+    "docs",
     "ai",
     "payments",
     "usergroups",
@@ -263,4 +264,70 @@ async def require_courses_feature(
 
     # No relevant parameter found, allow the request
     # (for endpoints that don't need the feature check)
+    return True
+
+
+async def require_docs_feature(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+) -> bool:
+    """
+    Router-level dependency that auto-detects the parameter type and checks
+    if the docs feature is enabled.
+
+    Checks in order: docspace_uuid, docsection_uuid, docgroup_uuid, docpage_uuid, org_slug, org_id
+    """
+    path_params = request.path_params
+
+    if "docspace_uuid" in path_params:
+        from src.db.docs.docspaces import DocSpace
+        docspace_uuid = path_params["docspace_uuid"]
+        statement = select(DocSpace).where(DocSpace.docspace_uuid == docspace_uuid)
+        docspace = db_session.exec(statement).first()
+        if not docspace:
+            raise HTTPException(status_code=404, detail="DocSpace not found")
+        return _check_feature_enabled("docs", docspace.org_id, db_session)
+
+    if "docsection_uuid" in path_params:
+        from src.db.docs.docsections import DocSection
+        docsection_uuid = path_params["docsection_uuid"]
+        statement = select(DocSection).where(DocSection.docsection_uuid == docsection_uuid)
+        docsection = db_session.exec(statement).first()
+        if not docsection:
+            raise HTTPException(status_code=404, detail="DocSection not found")
+        return _check_feature_enabled("docs", docsection.org_id, db_session)
+
+    if "docgroup_uuid" in path_params:
+        from src.db.docs.docgroups import DocGroup
+        docgroup_uuid = path_params["docgroup_uuid"]
+        statement = select(DocGroup).where(DocGroup.docgroup_uuid == docgroup_uuid)
+        docgroup = db_session.exec(statement).first()
+        if not docgroup:
+            raise HTTPException(status_code=404, detail="DocGroup not found")
+        return _check_feature_enabled("docs", docgroup.org_id, db_session)
+
+    if "docpage_uuid" in path_params:
+        from src.db.docs.docpages import DocPage
+        docpage_uuid = path_params["docpage_uuid"]
+        statement = select(DocPage).where(DocPage.docpage_uuid == docpage_uuid)
+        docpage = db_session.exec(statement).first()
+        if not docpage:
+            raise HTTPException(status_code=404, detail="DocPage not found")
+        return _check_feature_enabled("docs", docpage.org_id, db_session)
+
+    if "org_slug" in path_params:
+        org_slug = path_params["org_slug"]
+        statement = select(Organization).where(Organization.slug == org_slug)
+        org = db_session.exec(statement).first()
+        if not org:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        return _check_feature_enabled("docs", org.id, db_session)
+
+    if "org_id" in path_params:
+        try:
+            org_id = int(path_params["org_id"])
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid org_id format")
+        return _check_feature_enabled("docs", org_id, db_session)
+
     return True
