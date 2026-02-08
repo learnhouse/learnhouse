@@ -1,0 +1,37 @@
+DESCRIPTION >
+    Completion rate by activity type
+
+NODE content_type_effectiveness_node
+SQL >
+    %
+    WITH views AS (
+        SELECT
+            org_id,
+            JSONExtractString(properties, 'activity_type') AS activity_type,
+            count() AS view_count
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'activity_view'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+        GROUP BY org_id, activity_type
+    ),
+    completions AS (
+        SELECT
+            org_id,
+            JSONExtractString(properties, 'activity_type') AS activity_type,
+            count() AS completion_count
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'activity_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+        GROUP BY org_id, activity_type
+    )
+    SELECT
+        v.org_id,
+        v.activity_type,
+        v.view_count,
+        c.completion_count,
+        if(v.view_count > 0, round(c.completion_count / v.view_count * 100, 1), 0) AS completion_rate
+    FROM views v
+    LEFT JOIN completions c ON v.activity_type = c.activity_type AND v.org_id = c.org_id
+    ORDER BY completion_rate DESC
+
+TYPE endpoint

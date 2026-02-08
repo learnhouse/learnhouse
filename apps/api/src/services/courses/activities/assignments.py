@@ -43,6 +43,8 @@ from src.services.courses.activities.uploads.tasks_ref_files import (
 )
 from src.services.trail.trail import check_trail_presence
 from src.services.courses.certifications import check_course_completion_and_create_certificate
+from src.services.analytics.analytics import track
+from src.services.analytics import events as analytics_events
 
 
 def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
@@ -1242,6 +1244,17 @@ async def create_assignment_submission(
     # Insert Assignment User Submission in DB
     db_session.add(assignment_user_submission)
     db_session.commit()
+
+    # Track assignment submission
+    await track(
+        event_name=analytics_events.ASSIGNMENT_SUBMITTED,
+        org_id=course.org_id,
+        user_id=current_user.id,
+        properties={
+            "assignment_id": assignment_uuid,
+            "course_id": str(course.id),
+        },
+    )
 
     # User
     statement = select(User).where(User.id == current_user.id)

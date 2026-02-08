@@ -23,6 +23,7 @@ import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -50,6 +51,20 @@ const CourseClient = (props: any) => {
 
   // Use server-provided course data, or client-fetched data as fallback
   const course = initialCourse || clientCourseData;
+
+  const { track } = useAnalytics()
+
+  // Track course view
+  useEffect(() => {
+    if (course) {
+      track('course_view', {
+        course_id: String(course.id),
+        course_name: course.name,
+        course_uuid: course.course_uuid,
+        thumbnail_image: course.thumbnail_image || '',
+      })
+    }
+  }, [course?.id])
 
   // Add SWR for trail data
   const { data: trailData } = useSWR(

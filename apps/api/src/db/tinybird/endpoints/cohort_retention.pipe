@@ -1,0 +1,38 @@
+DESCRIPTION >
+    Percentage of users active 1/2/4/8 weeks after signup
+
+NODE cohort_retention_node
+SQL >
+    %
+    WITH signups AS (
+        SELECT
+            org_id,
+            user_id,
+            toStartOfWeek(timestamp) AS cohort_week
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'user_signed_up'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    ),
+    activity AS (
+        SELECT DISTINCT
+            org_id,
+            user_id,
+            toStartOfWeek(timestamp) AS active_week
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    )
+    SELECT
+        s.org_id,
+        s.cohort_week,
+        count(DISTINCT s.user_id) AS cohort_size,
+        countIf(DISTINCT s.user_id, dateDiff('week', s.cohort_week, a.active_week) = 1) AS week_1,
+        countIf(DISTINCT s.user_id, dateDiff('week', s.cohort_week, a.active_week) = 2) AS week_2,
+        countIf(DISTINCT s.user_id, dateDiff('week', s.cohort_week, a.active_week) = 4) AS week_4,
+        countIf(DISTINCT s.user_id, dateDiff('week', s.cohort_week, a.active_week) = 8) AS week_8
+    FROM signups s
+    LEFT JOIN activity a ON s.user_id = a.user_id AND s.org_id = a.org_id
+    GROUP BY s.org_id, s.cohort_week
+    ORDER BY s.cohort_week ASC
+
+TYPE endpoint

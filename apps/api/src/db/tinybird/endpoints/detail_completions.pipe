@@ -1,0 +1,22 @@
+DESCRIPTION >
+    Individual course completion events with course info
+
+NODE detail_completions_node
+SQL >
+    %
+    SELECT
+        user_id,
+        JSONExtractString(properties, 'course_id') AS course_id,
+        JSONExtractString(properties, 'course_name') AS course_name,
+        JSONExtractString(properties, 'course_uuid') AS course_uuid,
+        timestamp
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'course_completed'
+        AND timestamp >= now() - INTERVAL {{Int64(days, 30)}} DAY
+        AND user_id != 0
+    ORDER BY timestamp DESC
+    LIMIT 200
+
+TYPE endpoint

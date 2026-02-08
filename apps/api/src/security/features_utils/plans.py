@@ -26,6 +26,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "certifications": "pro",
     "roles": "pro",
     "api_tokens": "pro",
+    "analytics_advanced": "pro",
     "scorm": "enterprise",
     "audit_logs": "enterprise",
     "sso": "enterprise",

@@ -1,0 +1,67 @@
+DESCRIPTION >
+    Completion rate of discussion participants vs non-participants
+
+NODE community_correlation_node
+SQL >
+    %
+    SELECT
+        org_id,
+        group_name,
+        enrolled_count,
+        completed_count,
+        if(enrolled_count > 0, round(completed_count / enrolled_count * 100, 1), 0) AS completion_rate
+    FROM (
+        SELECT
+            e.org_id AS org_id,
+            'discussors' AS group_name,
+            count(DISTINCT e.user_id) AS enrolled_count,
+            countDistinctIf(e.user_id, e.user_id IN (
+                SELECT DISTINCT user_id FROM events
+                WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                    AND event_name = 'course_completed'
+                    AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+            )) AS completed_count
+        FROM (
+            SELECT DISTINCT org_id, user_id
+            FROM events
+            WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                AND event_name = 'course_enrolled'
+                AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        ) e
+        WHERE e.user_id IN (
+            SELECT DISTINCT user_id FROM events
+            WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                AND event_name = 'discussion_posted'
+                AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        )
+        GROUP BY e.org_id
+
+        UNION ALL
+
+        SELECT
+            e.org_id AS org_id,
+            'non_discussors' AS group_name,
+            count(DISTINCT e.user_id) AS enrolled_count,
+            countDistinctIf(e.user_id, e.user_id IN (
+                SELECT DISTINCT user_id FROM events
+                WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                    AND event_name = 'course_completed'
+                    AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+            )) AS completed_count
+        FROM (
+            SELECT DISTINCT org_id, user_id
+            FROM events
+            WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                AND event_name = 'course_enrolled'
+                AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        ) e
+        WHERE e.user_id NOT IN (
+            SELECT DISTINCT user_id FROM events
+            WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+                AND event_name = 'discussion_posted'
+                AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        )
+        GROUP BY e.org_id
+    )
+
+TYPE endpoint

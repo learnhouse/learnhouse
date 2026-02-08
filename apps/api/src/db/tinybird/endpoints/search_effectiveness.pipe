@@ -1,0 +1,22 @@
+DESCRIPTION >
+    Top search queries, zero-result rate, click-through rate
+
+NODE search_effectiveness_node
+SQL >
+    %
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'query') AS query,
+        count() AS search_count,
+        countIf(JSONExtractInt(properties, 'results_count') = 0) AS zero_results,
+        round(zero_results / search_count * 100, 1) AS zero_result_rate
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'search_query'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, query
+    ORDER BY search_count DESC
+    LIMIT 50
+
+TYPE endpoint

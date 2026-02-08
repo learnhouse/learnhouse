@@ -1,0 +1,25 @@
+DESCRIPTION >
+    Most viewed/enrolled courses per org
+
+NODE top_courses_node
+SQL >
+    %
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'course_id') AS course_id,
+        JSONExtractString(properties, 'course_name') AS course_name,
+        anyIf(JSONExtractString(properties, 'course_uuid'), JSONExtractString(properties, 'course_uuid') != '') AS course_uuid,
+        anyIf(JSONExtractString(properties, 'thumbnail_image'), JSONExtractString(properties, 'thumbnail_image') != '') AS thumbnail_image,
+        countIf(event_name = 'course_view') AS views,
+        countIf(event_name = 'course_enrolled') AS enrollments,
+        countIf(event_name = 'course_completed') AS completions
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name IN ('course_view', 'course_enrolled', 'course_completed')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, course_id, course_name
+    ORDER BY views DESC
+    LIMIT 20
+
+TYPE endpoint

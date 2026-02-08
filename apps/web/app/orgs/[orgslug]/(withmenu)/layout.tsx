@@ -10,6 +10,7 @@ import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext
 import PodcastPlayer from '@components/Objects/Podcasts/PodcastPlayer'
 import Image from 'next/image'
 import Link from 'next/link'
+import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -57,6 +58,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
         backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent'
       }}
     >
+      <PageViewTracker />
       <OrgJoinBanner />
       <OrgMenu orgslug={orgslug}></OrgMenu>
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>

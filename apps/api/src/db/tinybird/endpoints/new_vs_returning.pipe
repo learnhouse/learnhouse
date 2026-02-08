@@ -1,0 +1,29 @@
+DESCRIPTION >
+    Daily count of first-time vs returning users
+
+NODE new_vs_returning_node
+SQL >
+    %
+    WITH first_seen AS (
+        SELECT org_id, user_id, min(toDate(timestamp)) AS first_date
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        GROUP BY org_id, user_id
+    ),
+    daily_users AS (
+        SELECT DISTINCT org_id, user_id, toDate(timestamp) AS date
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    )
+    SELECT
+        d.org_id,
+        d.date,
+        countIf(d.date = f.first_date) AS new_users,
+        countIf(d.date > f.first_date) AS returning_users
+    FROM daily_users d
+    INNER JOIN first_seen f ON d.user_id = f.user_id AND d.org_id = f.org_id
+    GROUP BY d.org_id, d.date
+    ORDER BY d.date ASC
+
+TYPE endpoint

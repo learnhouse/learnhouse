@@ -11,6 +11,8 @@ from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
 from src.db.users import AnonymousUser, PublicUser
 from src.services.courses.certifications import check_course_completion_and_create_certificate
+from src.services.analytics.analytics import track
+from src.services.analytics import events as analytics_events
 
 
 def _build_trail_read(
@@ -262,10 +264,27 @@ async def add_activity_to_trail(
         db_session.commit()
         db_session.refresh(trailstep)
 
+    # Track activity completed
+    await track(
+        event_name=analytics_events.ACTIVITY_COMPLETED,
+        org_id=course.org_id,
+        user_id=user.id,
+        properties={"activity_id": activity_uuid, "course_id": str(course.id)},
+    )
+
     # Check if all activities in the course are completed and create certificate if so
+    course_was_completed = False
     if course and course.id:
-        await check_course_completion_and_create_certificate(
+        course_was_completed = await check_course_completion_and_create_certificate(
             request, user.id, course.id, db_session
+        )
+
+    if course_was_completed:
+        await track(
+            event_name=analytics_events.COURSE_COMPLETED,
+            org_id=course.org_id,
+            user_id=user.id,
+            properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -377,6 +396,14 @@ async def add_course_to_trail(
         db_session.add(trail_run)
         db_session.commit()
         db_session.refresh(trail_run)
+
+    # Track course enrollment
+    await track(
+        event_name=analytics_events.COURSE_ENROLLED,
+        org_id=course.org_id,
+        user_id=user.id,
+        properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
+    )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs_raw = db_session.exec(statement).all()
