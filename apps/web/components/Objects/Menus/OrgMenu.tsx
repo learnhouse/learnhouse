@@ -28,7 +28,8 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
-import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
+import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
+import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
 
 export const OrgMenu = (props: any) => {
@@ -47,6 +48,15 @@ export const OrgMenu = (props: any) => {
 
   // Get primary color from org config
   const primaryColor = org?.config?.config?.general?.color || ''
+  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+
+  // Filter dashboard menu items by feature enabled + plan availability
+  const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {
+    if (!item.featureKey) return true
+    const featureConfig = org?.config?.config?.features?.[item.featureKey]
+    const isEnabled = item.defaultDisabled ? featureConfig?.enabled === true : featureConfig?.enabled !== false
+    return isEnabled && isFeatureAvailable(item.featureKey, plan)
+  })
 
   useEffect(() => {
     // Only check focus mode if we're in an activity page
@@ -148,7 +158,7 @@ export const OrgMenu = (props: any) => {
                       <span>{t('common.dashboard')}</span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {DASHBOARD_MENU_ITEMS.map((item) => {
+                    {visibleDashboardItems.map((item) => {
                       const IconComponent = item.icon
                       return (
                         <DropdownMenuItem key={item.id} asChild>

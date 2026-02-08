@@ -38,6 +38,7 @@ const ConfirmationModal = (params: ModalParams) => {
       <Dialog.Portal>
         <DialogOverlay />
         <DialogContent>
+          <Dialog.Title className="sr-only">{params.dialogTitle}</Dialog.Title>
           <div className="flex space-x-4 tracking-tight">
             <div
               className={`icon p-6 rounded-xl flex items-center align-content-center ${

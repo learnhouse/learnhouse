@@ -2,7 +2,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { Books, Signpost, SquaresFour, ChatsCircle, Headphones } from '@phosphor-icons/react'
+import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,6 +25,11 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const isPodcastsFeatureEnabled = org?.config?.config?.features?.podcasts?.enabled === true
   const canAccessPodcasts = planMeetsRequirement(plan, 'standard')
   const showPodcasts = isPodcastsFeatureEnabled && canAccessPodcasts
+
+  // Docs requires pro+ plan AND feature enabled
+  const isDocsFeatureEnabled = org?.config?.config?.features?.docs?.enabled === true
+  const canAccessDocs = planMeetsRequirement(plan, 'pro')
+  const showDocs = isDocsFeatureEnabled && canAccessDocs
 
   return (
     <div className='pl-1'>
@@ -49,6 +54,14 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           <LinkItem
             link="/podcasts"
             type="podcasts"
+            orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
+          ></LinkItem>
+        )}
+        {showDocs && (
+          <LinkItem
+            link="/docs"
+            type="docs"
             orgslug={props.orgslug}
             primaryColor={props.primaryColor}
           ></LinkItem>
@@ -115,6 +128,13 @@ const LinkItem = (props: any) => {
           <>
             <ChatsCircle size={20} weight="fill" />{' '}
             <span>{t('communities.title')}</span>
+          </>
+        )}
+
+        {props.type == 'docs' && (
+          <>
+            <FileText size={20} weight="fill" />{' '}
+            <span>{t('docs.docs')}</span>
           </>
         )}
       </li>

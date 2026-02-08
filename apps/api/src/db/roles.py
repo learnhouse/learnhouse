@@ -49,6 +49,15 @@ class Rights(BaseModel):
     communities: Permission
     discussions: PermissionsWithOwn  # Own = author can edit/delete their own
     podcasts: PermissionsWithOwn  # Own = author can edit/delete their own podcasts
+    docspaces: PermissionsWithOwn = PermissionsWithOwn(
+        action_create=False,
+        action_read=True,
+        action_read_own=True,
+        action_update=False,
+        action_update_own=False,
+        action_delete=False,
+        action_delete_own=False,
+    )  # Default: read-only for backward compat with existing roles
 
     def __getitem__(self, item):
         return getattr(self, item)

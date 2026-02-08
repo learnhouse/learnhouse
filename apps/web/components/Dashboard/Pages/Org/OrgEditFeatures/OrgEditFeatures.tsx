@@ -11,7 +11,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy } from 'lucide-react'
+import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy, FileText } from 'lucide-react'
 
 interface FeatureToggleProps {
   id: string
@@ -90,6 +90,7 @@ const OrgEditFeatures: React.FC = () => {
   const [paymentsEnabled, setPaymentsEnabled] = useState<boolean>(false)
   const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
   const [podcastsEnabled, setPodcastsEnabled] = useState<boolean>(false)
+  const [docsEnabled, setDocsEnabled] = useState<boolean>(false)
 
   // Loading states
   const [updatingFeature, setUpdatingFeature] = useState<string | null>(null)
@@ -118,6 +119,10 @@ const OrgEditFeatures: React.FC = () => {
       // Podcasts - default to false (disabled by default)
       const podEnabled = features.podcasts?.enabled
       setPodcastsEnabled(podEnabled !== undefined ? podEnabled : false)
+
+      // Docs - default to false (disabled by default)
+      const docEnabled = features.docs?.enabled
+      setDocsEnabled(docEnabled !== undefined ? docEnabled : false)
     }
   }, [org])
 
@@ -205,6 +210,13 @@ const OrgEditFeatures: React.FC = () => {
     const success = await updateFeatureConfig('podcasts', enabled)
     if (success) {
       setPodcastsEnabled(enabled)
+    }
+  }
+
+  const handleDocsToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('docs', enabled)
+    if (success) {
+      setDocsEnabled(enabled)
     }
   }
 
@@ -308,6 +320,21 @@ const OrgEditFeatures: React.FC = () => {
             icon={<Headphones size={20} className="text-gray-600" />}
             onToggle={handlePodcastsToggle}
             upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'standard' })}
+          />
+
+          {/* Documentation Toggle */}
+          <FeatureToggle
+            id="docs"
+            title="Documentation"
+            description="Create documentation spaces with sections, groups, and pages"
+            enabled={docsEnabled}
+            isUpdating={updatingFeature === 'docs'}
+            canEdit={canEditOrgSettings}
+            requiredPlan="pro"
+            currentPlan={currentPlan}
+            icon={<FileText size={20} className="text-gray-600" />}
+            onToggle={handleDocsToggle}
+            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
         </div>
       </div>
