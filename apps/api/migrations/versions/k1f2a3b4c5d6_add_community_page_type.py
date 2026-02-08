@@ -17,7 +17,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TYPE docpagetypeenum ADD VALUE IF NOT EXISTS 'COMMUNITY'")
+    # page_type column uses sa.String(), not a PostgreSQL native enum type,
+    # so no schema change is needed to store a new value like 'COMMUNITY'.
+    pass
 
 
 def downgrade() -> None:
