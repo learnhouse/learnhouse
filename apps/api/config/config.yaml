@@ -47,3 +47,9 @@ payments_config:
 ai_config:
   gemini_api_key: ""
   is_ai_enabled: false
+
+tinybird_config:
+  api_url: "https://api.tinybird.co"
+  # Set both tokens to enable analytics automatically
+  ingest_token: ""
+  read_token: ""

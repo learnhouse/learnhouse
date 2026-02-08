@@ -1,0 +1,39 @@
+DESCRIPTION >
+    Percentage of course completers who claim certificates
+
+NODE certification_rate_node
+SQL >
+    %
+    WITH completers AS (
+        SELECT
+            org_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            JSONExtractString(properties, 'course_name') AS course_name,
+            count(DISTINCT user_id) AS completions
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'course_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY org_id, course_id, course_name
+    ),
+    cert_claims AS (
+        SELECT
+            org_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            count(DISTINCT user_id) AS claims
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'certificate_claimed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY org_id, course_id
+    )
+    SELECT
+        c.org_id,
+        c.course_id,
+        c.course_name,
+        c.completions,
+        coalesce(cc.claims, 0) AS claims,
+        if(c.completions > 0, round(coalesce(cc.claims, 0) / c.completions * 100, 1), 0) AS claim_rate
+    FROM completers c
+    LEFT JOIN cert_claims cc ON c.course_id = cc.course_id AND c.org_id = cc.org_id
+    ORDER BY c.completions DESC
+
+TYPE endpoint

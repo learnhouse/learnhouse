@@ -91,6 +91,7 @@
     "react-markdown": "^10.1.0",
     "react-spinners": "^0.17.0",
     "react-youtube": "^10.1.0",
+    "recharts": "^3.7.0",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
     "require-in-the-middle": "^8.0.1",

@@ -1,0 +1,28 @@
+DESCRIPTION >
+    Per-activity views, completions, avg time spent
+
+NODE activity_engagement_node
+SQL >
+    %
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'activity_id') AS activity_id,
+        JSONExtractString(properties, 'activity_type') AS activity_type,
+        anyIf(JSONExtractString(properties, 'activity_name'), JSONExtractString(properties, 'activity_name') != '') AS activity_name,
+        anyIf(JSONExtractString(properties, 'course_id'), event_name = 'activity_view' AND JSONExtractString(properties, 'course_id') != '') AS course_uuid,
+        countIf(event_name = 'activity_view') AS views,
+        countIf(event_name = 'activity_completed') AS completions,
+        avgIf(
+            JSONExtractFloat(properties, 'seconds_spent'),
+            event_name = 'time_on_activity'
+        ) AS avg_seconds_spent
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name IN ('activity_view', 'activity_completed', 'time_on_activity')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, activity_id, activity_type
+    ORDER BY views DESC
+    LIMIT 50
+
+TYPE endpoint

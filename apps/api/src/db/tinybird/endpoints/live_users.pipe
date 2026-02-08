@@ -1,0 +1,16 @@
+DESCRIPTION >
+    Count of unique users with events in the last 5 minutes (real-time)
+
+NODE live_users_node
+SQL >
+    %
+    SELECT
+        org_id,
+        uniqExact(user_id) AS live_users
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL 5 MINUTE
+    GROUP BY org_id
+
+TYPE endpoint

@@ -13,6 +13,12 @@ class SentryConfig(BaseModel):
     dsn: str | None
 
 
+class TinybirdConfig(BaseModel):
+    api_url: str
+    ingest_token: str
+    read_token: str
+
+
 class GeneralConfig(BaseModel):
     development_mode: bool
     logfire_enabled: bool
@@ -89,6 +95,7 @@ class LearnHouseConfig(BaseModel):
     ai_config: AIConfig
     mailing_config: MailingConfig
     payments_config: InternalPaymentsConfig
+    tinybird_config: TinybirdConfig | None
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
@@ -269,6 +276,29 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "mailing_config", {}
     ).get("system_email_address")
 
+    # Tinybird config — auto-enabled when both tokens are set
+    env_tinybird_api_url = os.environ.get("LEARNHOUSE_TINYBIRD_API_URL")
+    env_tinybird_ingest_token = os.environ.get("LEARNHOUSE_TINYBIRD_INGEST_TOKEN")
+    env_tinybird_read_token = os.environ.get("LEARNHOUSE_TINYBIRD_READ_TOKEN")
+
+    tinybird_api_url = env_tinybird_api_url or yaml_config.get("tinybird_config", {}).get(
+        "api_url", "https://api.tinybird.co"
+    )
+    tinybird_ingest_token = env_tinybird_ingest_token or yaml_config.get("tinybird_config", {}).get(
+        "ingest_token", ""
+    )
+    tinybird_read_token = env_tinybird_read_token or yaml_config.get("tinybird_config", {}).get(
+        "read_token", ""
+    )
+    # Only create TinybirdConfig when both tokens are provided
+    tinybird_config = None
+    if tinybird_ingest_token and tinybird_read_token:
+        tinybird_config = TinybirdConfig(
+            api_url=tinybird_api_url,
+            ingest_token=tinybird_ingest_token,
+            read_token=tinybird_read_token,
+        )
+
     # Payments config
     env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
     env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
@@ -346,7 +376,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
                 stripe_webhook_connect_secret=stripe_webhook_connect_secret,
                 stripe_client_id=stripe_client_id
             )
-        )
+        ),
+        tinybird_config=tinybird_config,
     )
 
     return config

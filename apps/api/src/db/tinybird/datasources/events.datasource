@@ -1,0 +1,17 @@
+DESCRIPTION >
+    Unified analytics events table for LearnHouse
+
+SCHEMA >
+    `event_name` String `json:$.event_name`,
+    `timestamp` DateTime `json:$.timestamp`,
+    `org_id` Int64 `json:$.org_id`,
+    `user_id` Int64 `json:$.user_id`,
+    `session_id` String `json:$.session_id`,
+    `properties` String `json:$.properties`,
+    `source` String `json:$.source`,
+    `ip` String `json:$.ip`
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
+ENGINE_SORTING_KEY "org_id, event_name, timestamp"
+ENGINE_TTL "timestamp + toIntervalMonth(12)"
