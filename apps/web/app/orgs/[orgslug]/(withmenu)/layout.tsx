@@ -10,6 +10,7 @@ import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext
 import PodcastPlayer from '@components/Objects/Podcasts/PodcastPlayer'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -49,20 +50,27 @@ function OrgFooter() {
 function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
   const org = useOrg() as any
   const primaryColor = org?.config?.config?.general?.color || ''
+  const pathname = usePathname()
+
+  // Doc space pages use their own DocOrgMenu — hide the standard OrgMenu and footer
+  // Match /docs/{spaceslug} and deeper, but NOT bare /docs listing page
+  const pathParts = pathname?.split('/').filter(Boolean) || []
+  const docsIndex = pathParts.indexOf('docs')
+  const isDocSpacePage = docsIndex >= 0 && pathParts.length > docsIndex + 1
 
   return (
     <div
       className="flex flex-col min-h-screen"
       style={{
-        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent'
+        backgroundColor: isDocSpacePage ? '#f8f8f8' : (primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent')
       }}
     >
       <OrgJoinBanner />
-      <OrgMenu orgslug={orgslug}></OrgMenu>
+      {!isDocSpacePage && <OrgMenu orgslug={orgslug} />}
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
-      <OrgFooter />
+      {!isDocSpacePage && <OrgFooter />}
       <Watermark />
     </div>
   )

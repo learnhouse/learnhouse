@@ -75,6 +75,11 @@ class PodcastsOrgConfig(BaseModel):
     limit: int = 10
 
 
+class DocsOrgConfig(BaseModel):
+    enabled: bool = False
+    limit: int = 5
+
+
 class OrgFeatureConfig(BaseModel):
     courses: CourseOrgConfig = CourseOrgConfig()
     members: MemberOrgConfig = MemberOrgConfig()
@@ -90,6 +95,7 @@ class OrgFeatureConfig(BaseModel):
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
+    docs: DocsOrgConfig = DocsOrgConfig()
 
 
 # Auth Branding

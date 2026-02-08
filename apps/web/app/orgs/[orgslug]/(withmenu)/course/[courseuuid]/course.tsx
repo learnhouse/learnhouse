@@ -32,6 +32,7 @@ const CourseClient = (props: any) => {
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const initialCourse = props.course
+  const serverError = props.serverError
   const org = useOrg() as any
   const router = useRouter()
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -40,8 +41,8 @@ const CourseClient = (props: any) => {
 
   // Fetch course data client-side if server didn't provide it (e.g., auth failed on server)
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useSWR(
-    // Only fetch if we don't have initial course data AND we have a session token
-    !initialCourse && access_token
+    // Only fetch if we don't have initial course data AND we have a session token AND no server error
+    !initialCourse && !serverError && access_token
       ? `${getAPIUrl()}courses/course_${courseuuid}/meta`
       : null,
     (url) => swrFetcher(url, access_token),
@@ -58,13 +59,15 @@ const CourseClient = (props: any) => {
   );
 
   // Show loading state if fetching course data client-side
-  if (!initialCourse && courseLoading) {
+  if (!initialCourse && !serverError && courseLoading) {
     return <PageLoading />
   }
 
+  // Determine the active error (server-side or client-side)
+  const activeError = serverError || courseError
+
   // Show error if course fetch failed
-  if (!initialCourse && courseError) {
-    console.error('[COURSE_CLIENT] Failed to fetch course:', courseError)
+  if (!course && activeError) {
     return (
       <GeneralWrapperStyled>
         <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
@@ -72,19 +75,17 @@ const CourseClient = (props: any) => {
             {t('course.accessDenied', 'Unable to access this course')}
           </h2>
           <p className="text-gray-500 mb-4">
-            {courseError?.status === 403
+            {activeError?.status === 403
               ? t('course.noPermission', 'You do not have permission to view this course.')
-              : t('course.loadError', 'There was an error loading this course.')}
+              : t('course.loadError', 'This course could not be found or there was an error loading it.')}
           </p>
-          <Link href={getUriWithOrg(orgslug, '/')} className="text-blue-600 hover:underline">
-            {t('course.backToHome', 'Back to Home')}
+          <Link href={getUriWithOrg(orgslug, '/courses')} className="text-blue-600 hover:underline">
+            {t('course.backToCourses', 'Back to Courses')}
           </Link>
         </div>
       </GeneralWrapperStyled>
     )
   }
-
-  console.log(course)
 
   function getLearningTags(courseData: any) {
     if (!courseData?.learnings) {
