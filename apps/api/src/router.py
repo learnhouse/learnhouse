@@ -14,12 +14,16 @@ from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
 from src.routers.podcasts import podcasts as podcasts_router_module
 from src.routers.podcasts import episodes as episodes_router_module
+from src.routers.docs import docspaces as docspaces_router_module
+from src.routers.docs import docsections as docsections_router_module
+from src.routers.docs import docgroups as docgroups_router_module
+from src.routers.docs import docpages as docpages_router_module
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
 from src.security.api_token_utils import require_non_api_token_user
-from src.security.features_utils.plan_check import require_plan, require_plan_for_community
+from src.security.features_utils.plan_check import require_plan, require_plan_for_community, require_plan_for_docs
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -71,7 +75,7 @@ v1_router.include_router(
     custom_domains.router,
     prefix="/orgs",
     tags=["custom-domains"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Custom Domains"))]
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("standard", "Custom Domains"))]
 )
 # Public domain resolution endpoint (no auth required)
 v1_router.include_router(
@@ -124,6 +128,30 @@ v1_router.include_router(
     episodes_router_module.router,
     prefix="/podcasts",
     tags=["podcasts", "episodes"]
+)
+v1_router.include_router(
+    docspaces_router_module.router,
+    prefix="/docs",
+    tags=["docs"],
+    dependencies=[Depends(require_plan_for_docs("pro", "Documentation"))]
+)
+v1_router.include_router(
+    docsections_router_module.router,
+    prefix="/docs",
+    tags=["docs", "docsections"],
+    dependencies=[Depends(require_plan_for_docs("pro", "Documentation"))]
+)
+v1_router.include_router(
+    docgroups_router_module.router,
+    prefix="/docs",
+    tags=["docs", "docgroups"],
+    dependencies=[Depends(require_plan_for_docs("pro", "Documentation"))]
+)
+v1_router.include_router(
+    docpages_router_module.router,
+    prefix="/docs",
+    tags=["docs", "docpages"],
+    dependencies=[Depends(require_plan_for_docs("pro", "Documentation"))]
 )
 v1_router.include_router(
     certifications.router,

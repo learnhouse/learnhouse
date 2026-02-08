@@ -3,27 +3,23 @@ import logging
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from sqlmodel import Session
-
-logger = logging.getLogger(__name__)
-
+from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, User
 from src.security.auth import get_current_user
 from src.security.rbac.rbac import authorization_verify_based_on_roles
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.analytics.analytics import track
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
-from sqlmodel import select
-from src.db.users import User
 from src.services.analytics.queries import (
     ALL_QUERIES,
-    CORE_QUERIES,
     ADVANCED_QUERIES,
     DETAIL_QUERIES,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
