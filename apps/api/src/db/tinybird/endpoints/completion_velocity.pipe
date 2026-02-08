@@ -1,0 +1,31 @@
+DESCRIPTION >
+    Average days between sequential activity completions
+
+NODE completion_velocity_node
+SQL >
+    %
+    WITH ordered AS (
+        SELECT
+            org_id,
+            user_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            timestamp,
+            lagInFrame(timestamp) OVER (
+                PARTITION BY org_id, user_id, JSONExtractString(properties, 'course_id')
+                ORDER BY timestamp
+            ) AS prev_ts
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'activity_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    )
+    SELECT
+        org_id,
+        course_id,
+        avg(dateDiff('day', prev_ts, timestamp)) AS avg_days_between,
+        count() AS transitions
+    FROM ordered
+    WHERE prev_ts IS NOT NULL
+    GROUP BY org_id, course_id
+    ORDER BY avg_days_between ASC
+
+TYPE endpoint

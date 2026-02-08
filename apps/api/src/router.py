@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from src.routers import analytics as analytics_router_module
 from src.routers import health
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
@@ -153,6 +154,13 @@ v1_router.include_router(
     prefix="/ai",
     tags=["ai", "courseplanning"],
     dependencies=[Depends(get_non_api_token_user)]
+)
+
+v1_router.include_router(
+    analytics_router_module.router,
+    prefix="/analytics",
+    tags=["analytics"],
+    dependencies=[Depends(get_non_api_token_user)],
 )
 
 # Register EE Routers if available

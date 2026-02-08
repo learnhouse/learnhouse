@@ -1,0 +1,14 @@
+{
+    "host": "https://api.europe-west2.gcp.tinybird.co",
+    "id": "93e91e2f-8749-4168-9d2d-e10eb5bb166f",
+    "name": "learnhouse",
+    "scope": "user",
+    "token": "p.eyJ1IjogIjkzZTkxZTJmLTg3NDktNDE2OC05ZDJkLWUxMGViNWJiMTY2ZiIsICJpZCI6ICIwZmNiZjNhMi01NDdkLTQyYWUtYTE3YS03NjQ0MmZhNTgzNGEiLCAiaG9zdCI6ICJnY3AtZXVyb3BlLXdlc3QyIn0.g8UGHTDhlfuocCXjRL412ktfsWx_0EVIm7XOwY8W9jM",
+    "tokens": {
+        "https://api.europe-west2.gcp.tinybird.co": "p.eyJ1IjogIjkzZTkxZTJmLTg3NDktNDE2OC05ZDJkLWUxMGViNWJiMTY2ZiIsICJpZCI6ICIwZmNiZjNhMi01NDdkLTQyYWUtYTE3YS03NjQ0MmZhNTgzNGEiLCAiaG9zdCI6ICJnY3AtZXVyb3BlLXdlc3QyIn0.g8UGHTDhlfuocCXjRL412ktfsWx_0EVIm7XOwY8W9jM"
+    },
+    "user_email": "badr@learnhouse.app",
+    "user_id": "fb03254e-c880-48d2-8081-230bb8ba82a5",
+    "user_token": "p.eyJ1IjogImZiMDMyNTRlLWM4ODAtNDhkMi04MDgxLTIzMGJiOGJhODJhNSIsICJpZCI6ICI4ODZiZjc2Yi1jMjg0LTQ2YjMtYjZiMi04Y2QzMDk0NWIwMDEiLCAiaG9zdCI6ICJnY3AtZXVyb3BlLXdlc3QyIn0.B6ic4GIWDpr4dGAq_qS2lzlwoUt_pGlTb_NBcA7RiL4",
+    "version": "3.2.0"
+}

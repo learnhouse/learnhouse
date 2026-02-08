@@ -34,6 +34,8 @@ from src.db.users import (
 from src.db.user_organizations import UserOrganization
 from src.security.security import security_hash_password, security_verify_password
 from src.services.security.password_validation import validate_password_complexity
+from src.services.analytics.analytics import track
+from src.services.analytics import events as analytics_events
 
 
 async def create_user(
@@ -142,6 +144,14 @@ async def create_user(
     user_read = UserRead.model_validate(user)
 
     increase_feature_usage("members", org_id, db_session)
+
+    # Track user signup
+    await track(
+        event_name=analytics_events.USER_SIGNED_UP,
+        org_id=org_id,
+        user_id=user.id if user.id else 0,
+        properties={"signup_method": signup_provider},
+    )
 
     # Send verification email for non-OAuth users, account creation email for OAuth users
     if is_oauth:

@@ -21,6 +21,7 @@ import {
   Book,
   ChatCircleDots,
   Headphones,
+  ChartBar,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -350,6 +351,12 @@ function DashLeftMenu() {
               href="/dash/org/settings/general"
               icon={<Buildings size={20} weight="fill" />}
               label={t('common.organization')}
+              isCollapsed={isCollapsed}
+            />
+            <MenuLink
+              href="/dash/analytics"
+              icon={<ChartBar size={20} weight="fill" />}
+              label="Analytics"
               isCollapsed={isCollapsed}
             />
           </div>
