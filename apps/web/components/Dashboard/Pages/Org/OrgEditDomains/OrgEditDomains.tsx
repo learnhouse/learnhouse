@@ -323,7 +323,7 @@ const OrgEditDomains: React.FC = () => {
   return (
     <PlanRestrictedFeature
       currentPlan={currentPlan}
-      requiredPlan="pro"
+      requiredPlan="standard"
       icon={Globe}
       titleKey="common.plans.feature_restricted.custom_domains.title"
       descriptionKey="common.plans.feature_restricted.custom_domains.description"

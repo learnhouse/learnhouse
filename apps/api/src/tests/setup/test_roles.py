@@ -51,6 +51,7 @@ class TestRightsModel:
             "communities": self.get_valid_permission(),
             "discussions": self.get_valid_permission_with_own(),
             "podcasts": self.get_valid_permission_with_own(),
+            "docspaces": self.get_valid_permission_with_own(),
         }
 
     def test_rights_model_with_all_fields(self):
@@ -187,7 +188,7 @@ class TestRightsModel:
         assert "communities" in dumped
         assert "discussions" in dumped
         assert "podcasts" in dumped
-        assert len(dumped) == 12  # All 12 fields
+        assert len(dumped) == 13  # All 13 fields
 
 
 class TestPermissionModels:
@@ -251,6 +252,7 @@ class TestDefaultRolesValidation:
         "communities",
         "discussions",
         "podcasts",
+        "docspaces",
     ]
 
     def test_rights_model_has_expected_fields(self):
@@ -557,6 +559,7 @@ class TestRightsFieldConsistency:
             "communities",
             "discussions",
             "podcasts",
+            "docspaces",
         }
 
         actual_fields = set(fields.keys())
