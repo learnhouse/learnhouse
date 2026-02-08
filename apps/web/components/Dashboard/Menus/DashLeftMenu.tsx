@@ -51,6 +51,7 @@ import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
+import { planMeetsRequirement, isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 
 function DashLeftMenu() {
   const org = useOrg() as any
@@ -143,7 +144,13 @@ function DashLeftMenu() {
 
   if (!org || !session) return null
 
-  const plan = org?.config?.config?.cloud?.plan || 'free'
+  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+
+  // Feature visibility: enabled by org AND allowed by plan
+  const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
+  const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
+  const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
+  const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -322,30 +329,44 @@ function DashLeftMenu() {
                 )}
               </button>
             </HoverMenu>
-            <MenuLink
-              href="/dash/communities"
-              icon={<ChatsCircle size={20} weight="fill" />}
-              label={t('communities.title')}
-              isCollapsed={isCollapsed}
-            />
-            <MenuLink
-              href="/dash/podcasts"
-              icon={<Headphones size={20} weight="fill" />}
-              label={t('podcasts.podcasts')}
-              isCollapsed={isCollapsed}
-            />
+            {showCommunities && (
+              <MenuLink
+                href="/dash/communities"
+                icon={<ChatsCircle size={20} weight="fill" />}
+                label={t('communities.title')}
+                isCollapsed={isCollapsed}
+              />
+            )}
+            {showPodcasts && (
+              <MenuLink
+                href="/dash/podcasts"
+                icon={<Headphones size={20} weight="fill" />}
+                label={t('podcasts.podcasts')}
+                isCollapsed={isCollapsed}
+              />
+            )}
+            {showDocs && (
+              <MenuLink
+                href="/dash/docs"
+                icon={<Book size={20} weight="fill" />}
+                label="Documentation"
+                isCollapsed={isCollapsed}
+              />
+            )}
             <MenuLink
               href="/dash/users/settings/users"
               icon={<Users size={20} weight="fill" />}
               label={t('common.users')}
               isCollapsed={isCollapsed}
             />
-            <MenuLink
-              href="/dash/payments/customers"
-              icon={<CurrencyCircleDollar size={20} weight="fill" />}
-              label={t('common.payments')}
-              isCollapsed={isCollapsed}
-            />
+            {showPayments && (
+              <MenuLink
+                href="/dash/payments/customers"
+                icon={<CurrencyCircleDollar size={20} weight="fill" />}
+                label={t('common.payments')}
+                isCollapsed={isCollapsed}
+              />
+            )}
             <MenuLink
               href="/dash/org/settings/general"
               icon={<Buildings size={20} weight="fill" />}
