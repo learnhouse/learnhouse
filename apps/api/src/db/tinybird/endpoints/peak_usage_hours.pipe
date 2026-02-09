@@ -1,0 +1,19 @@
+DESCRIPTION >
+    Event volume heatmap by hour-of-day x day-of-week
+
+NODE peak_usage_hours_node
+SQL >
+    %
+    SELECT
+        org_id,
+        toDayOfWeek(timestamp) AS day_of_week,
+        toHour(timestamp) AS hour_of_day,
+        count() AS event_count
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, day_of_week, hour_of_day
+    ORDER BY day_of_week, hour_of_day
+
+TYPE endpoint

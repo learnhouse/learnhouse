@@ -1,0 +1,22 @@
+DESCRIPTION >
+    Top countries by page view count
+
+NODE visitors_by_country_node
+SQL >
+    %
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'country_code') AS country_code,
+        count() AS visits,
+        uniqExact(user_id) AS unique_users
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'page_view'
+        AND JSONExtractString(properties, 'country_code') != ''
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, country_code
+    ORDER BY visits DESC
+    LIMIT 20
+
+TYPE endpoint

@@ -1,0 +1,22 @@
+DESCRIPTION >
+    Top referrer domains by page view count
+
+NODE visitors_by_referrer_node
+SQL >
+    %
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'referrer_domain') AS referrer_domain,
+        count() AS visits,
+        uniqExact(user_id) AS unique_users
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'page_view'
+        AND JSONExtractString(properties, 'referrer_domain') != ''
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, referrer_domain
+    ORDER BY visits DESC
+    LIMIT 20
+
+TYPE endpoint

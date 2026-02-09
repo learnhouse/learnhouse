@@ -1,0 +1,23 @@
+DESCRIPTION >
+    Individual live users with last page, device, country (last 5 min)
+
+NODE detail_live_users_node
+SQL >
+    %
+    SELECT
+        user_id,
+        anyLast(JSONExtractString(properties, 'path')) AS path,
+        anyLast(JSONExtractString(properties, 'device_type')) AS device_type,
+        anyLast(JSONExtractString(properties, 'country_code')) AS country_code,
+        max(timestamp) AS last_seen
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'page_view'
+        AND timestamp >= now() - INTERVAL 5 MINUTE
+        AND user_id != 0
+    GROUP BY user_id
+    ORDER BY last_seen DESC
+    LIMIT 200
+
+TYPE endpoint

@@ -16,6 +16,8 @@ from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
 from src.db.users import PublicUser, AnonymousUser
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.analytics.analytics import track
+from src.services.analytics import events as analytics_events
 
 
 ####################################################
@@ -312,6 +314,25 @@ async def create_certificate_user(
     db_session.add(certificate_user)
     db_session.commit()
     db_session.refresh(certificate_user)
+
+    # Track certificate_claimed event for analytics
+    try:
+        course = db_session.exec(
+            select(Course).where(Course.id == certification.course_id)
+        ).first()
+        if course:
+            await track(
+                event_name=analytics_events.CERTIFICATE_CLAIMED,
+                org_id=course.org_id,
+                user_id=user_id,
+                properties={
+                    "course_id": str(course.id),
+                    "course_name": course.name,
+                    "course_uuid": course.course_uuid,
+                },
+            )
+    except Exception:
+        pass  # Don't fail certificate creation if tracking fails
 
     return CertificateUserRead(**certificate_user.model_dump())
 

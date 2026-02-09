@@ -1,0 +1,40 @@
+DESCRIPTION >
+    Learner retention curve after first activity in a single course
+
+NODE course_learner_retention_node
+SQL >
+    %
+    WITH first_activity AS (
+        SELECT
+            user_id,
+            min(toDate(timestamp)) AS first_day
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name IN ('activity_view', 'activity_completed')
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY user_id
+    ),
+    daily_activity AS (
+        SELECT DISTINCT
+            user_id,
+            toDate(timestamp) AS active_day
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name IN ('activity_view', 'activity_completed')
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    )
+    SELECT
+        dateDiff('day', f.first_day, d.active_day) AS days_since_start,
+        uniqExact(d.user_id) AS active_users,
+        (SELECT uniqExact(user_id) FROM first_activity) AS cohort_size
+    FROM first_activity f
+    INNER JOIN daily_activity d ON f.user_id = d.user_id
+    WHERE dateDiff('day', f.first_day, d.active_day) <= 30
+    GROUP BY days_since_start
+    ORDER BY days_since_start
+
+TYPE endpoint

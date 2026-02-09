@@ -3608,5 +3608,301 @@
     "no_usergroups": "لم يتم العثور على مجموعات مستخدمين",
     "create_usergroup": "إنشاء مجموعة مستخدمين",
     "link": "ربط"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "subtitle": "رؤى حول المتعلمين والمحتوى",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "advanced": "متقدم"
+    },
+    "not_configured": {
+      "title": "التحليلات غير مهيأة",
+      "description": "تتطلب التحليلات اتصال Tinybird. قم بتعيين متغيرات البيئة <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> و <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> لتفعيلها."
+    },
+    "advanced_gate": {
+      "requires": "يتطلب",
+      "upgrade_description": "قم بالترقية لفتح التحليلات المتقدمة"
+    },
+    "common": {
+      "loading": "جار التحميل...",
+      "no_data": "لا توجد بيانات بعد",
+      "users": "المستخدمون",
+      "views": "المشاهدات",
+      "enrollments": "التسجيلات",
+      "completions": "الإكمالات",
+      "course": "الدورة",
+      "date": "التاريخ",
+      "user": "المستخدم",
+      "type": "النوع",
+      "expand": "توسيع",
+      "days": "أيام",
+      "score": "النقاط",
+      "unique_users": "مستخدمون فريدون"
+    },
+    "overview": {
+      "live_now": "مباشر الآن",
+      "last_5_minutes": "آخر 5 دقائق",
+      "signups": "التسجيلات",
+      "submissions": "التقديمات",
+      "daily_active_users": "المستخدمون النشطون يومياً",
+      "active_users": "المستخدمون النشطون",
+      "countries": "الدول",
+      "top_countries": "أهم الدول",
+      "devices": "الأجهزة",
+      "desktop": "سطح المكتب",
+      "mobile": "الجوال",
+      "tablet": "الجهاز اللوحي",
+      "top_referrers": "أهم المحيلين",
+      "top_referrer": "أهم محيل",
+      "enrollment_funnel": "قمع التسجيل",
+      "page_views": "مشاهدات الصفحة",
+      "course_views": "مشاهدات الدورة",
+      "view_to_enroll": "مشاهدة ← تسجيل",
+      "enroll_to_complete": "تسجيل ← إكمال",
+      "page_to_complete": "صفحة ← إكمال",
+      "conv_rate": "معدل التحويل",
+      "top_courses": "أهم الدورات",
+      "activity_engagement": "تفاعل الأنشطة",
+      "activity": "النشاط",
+      "avg_time": "متوسط الوقت",
+      "activities": "الأنشطة",
+      "courses": "الدورات",
+      "enrollments": "التسجيلات",
+      "completions": "الإكمالات"
+    },
+    "modals": {
+      "live_users": {
+        "title": "المستخدمون المباشرون",
+        "description": "المستخدمون النشطون في آخر 5 دقائق"
+      },
+      "signups": {
+        "title": "التسجيلات",
+        "description": "تسجيلات المستخدمين الجدد في آخر {{days}} يوم"
+      },
+      "enrollments": {
+        "title": "التسجيلات",
+        "description": "تسجيلات الدورات في آخر {{days}} يوم"
+      },
+      "completions": {
+        "title": "الإكمالات",
+        "description": "إكمالات الدورات في آخر {{days}} يوم"
+      },
+      "live_users_table": {
+        "current_page": "الصفحة الحالية",
+        "device": "الجهاز",
+        "country": "الدولة",
+        "last_seen": "آخر ظهور"
+      },
+      "signups_table": {
+        "email": "البريد الإلكتروني",
+        "method": "الطريقة"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "اتجاه نمو المنظمة",
+        "description": "التسجيلات والالتحاقات والإكمالات الأسبوعية"
+      },
+      "new_vs_returning": {
+        "title": "مستخدمون جدد مقابل عائدون",
+        "description": "صحة النمو مقابل الاحتفاظ"
+      },
+      "cohort_retention": {
+        "title": "احتفاظ المجموعة",
+        "description": "% المستخدمون النشطون بعد أسبوع التسجيل",
+        "cohort": "المجموعة",
+        "size": "الحجم"
+      },
+      "peak_usage": {
+        "title": "ساعات الذروة",
+        "description": "حجم الأحداث حسب اليوم والساعة",
+        "days": {
+          "mon": "اثن",
+          "tue": "ثلا",
+          "wed": "أرب",
+          "thu": "خمي",
+          "fri": "جمع",
+          "sat": "سبت",
+          "sun": "أحد"
+        },
+        "events": "أحداث"
+      },
+      "course_dropoff": {
+        "title": "انسحاب الدورة",
+        "description": "أين يتوقف المستخدمون لكل دورة"
+      },
+      "time_to_completion": {
+        "title": "وقت الإكمال",
+        "description": "متوسط الأيام لإكمال كل دورة"
+      },
+      "completion_velocity": {
+        "title": "سرعة الإكمال",
+        "description": "متوسط الأيام بين إكمالات الأنشطة"
+      },
+      "content_type_effectiveness": {
+        "title": "فعالية نوع المحتوى",
+        "description": "معدل الإكمال حسب نوع النشاط"
+      },
+      "course_effectiveness_matrix": {
+        "title": "مصفوفة فعالية الدورة",
+        "description": "عدد الأنشطة مقابل معدل الإكمال"
+      },
+      "community_correlation": {
+        "title": "ارتباط المجتمع",
+        "description": "معدل الإكمال: المناقشون مقابل غير المناقشين",
+        "discussion_users": "مستخدمو المناقشة",
+        "non_discussion_users": "مستخدمون بدون مناقشة"
+      },
+      "learner_engagement_score": {
+        "title": "نقاط تفاعل المتعلم",
+        "description": "أفضل المتعلمين حسب التفاعل",
+        "user_id": "معرف المستخدم"
+      },
+      "user_progress_snapshot": {
+        "title": "لقطة تقدم المستخدم",
+        "description": "المستخدمون في كل شريحة إكمال لكل دورة"
+      },
+      "grade_distribution": {
+        "title": "توزيع الدرجات",
+        "description": "رسم بياني لدرجات الواجبات"
+      },
+      "search_effectiveness": {
+        "title": "فعالية البحث",
+        "description": "أهم الاستعلامات ومعدل النتائج الصفرية",
+        "query": "استعلام",
+        "searches": "عمليات بحث",
+        "zero_results": "% نتائج صفرية"
+      },
+      "certification_rate": {
+        "title": "معدل الشهادات",
+        "description": "% من المكملين الذين يطالبون بالشهادات"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "التحليلات غير مُهيأة",
+      "not_configured_desc": "تتطلب التحليلات تهيئة Tinybird. يُرجى التواصل مع المسؤول.",
+      "common": {
+        "loading": "جاري التحميل...",
+        "no_data": "لا توجد بيانات بعد",
+        "no_enrollments": "لا توجد تسجيلات بعد",
+        "total": "الإجمالي",
+        "daily_avg": "المتوسط اليومي",
+        "latest_day": "آخر يوم",
+        "peak": "الذروة",
+        "peak_day": "يوم الذروة",
+        "type": "النوع",
+        "rate": "المعدل",
+        "views": "المشاهدات",
+        "enrollments": "التسجيلات",
+        "completions": "الإنجازات",
+        "completion_rate": "معدل الإنجاز",
+        "conversion": "التحويل",
+        "avg_time": "متوسط الوقت",
+        "total_views": "إجمالي المشاهدات",
+        "total_completions": "إجمالي الإنجازات",
+        "avg_rate": "متوسط المعدل",
+        "needs_attention": "يحتاج انتباه",
+        "total_samples": "إجمالي العينات",
+        "more_expand": "+{{count}} المزيد — انقر للتوسيع",
+        "activities_count": "{{count}} أنشطة",
+        "pct_of_total": "% من الإجمالي",
+        "bar_width_hint": "عرض الشريط = المشاهدات النسبية",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "تحويل منخفض",
+        "avg_completion": "متوسط الإنجاز",
+        "avg_prefix": "متوسط {{value}}",
+        "unknown_activity": "نشاط غير معروف"
+      },
+      "units": {
+        "done": "مُنجز",
+        "views": "مشاهدات",
+        "enrolled": "مسجّل",
+        "learner": "متعلم",
+        "learners": "متعلمون",
+        "events": "أحداث",
+        "total": "إجمالي",
+        "total_views": "إجمالي المشاهدات",
+        "total_completions": "إجمالي الإنجازات",
+        "total_dropoffs": "إجمالي حالات التوقف",
+        "peak_active": "ذروة النشاط",
+        "conversion": "تحويل",
+        "retention": "الاحتفاظ",
+        "in_cohort": "في المجموعة",
+        "active_learners": "متعلمون نشطون",
+        "recent_enrollments": "التسجيلات الأخيرة",
+        "transitions": "انتقالات",
+        "median_days": "متوسط الأيام",
+        "claim_rate": "معدل المطالبة",
+        "claimed": "تمت المطالبة",
+        "completed": "مكتمل",
+        "unique": "فريد",
+        "time": "الوقت",
+        "avg_per_day": "متوسط / يوم",
+        "busiest_time": "أكثر الأوقات ازدحاماً",
+        "minutes": "دقائق",
+        "hours": "ساعات",
+        "days": "أيام",
+        "done_before": "أُنجز قبل",
+        "sample": "عينة",
+        "samples": "عينات",
+        "min": "دقيقة",
+        "avg_per_learner": "متوسط لكل متعلم"
+      },
+      "type_labels": {
+        "video": "فيديو",
+        "document": "مستند",
+        "quiz": "اختبار",
+        "assignment": "واجب",
+        "dynamic": "ديناميكي"
+      },
+      "overview_stats": {
+        "views": "المشاهدات",
+        "enrollments": "التسجيلات",
+        "completions": "الإنجازات",
+        "completion_rate": "معدل الإنجاز"
+      },
+      "activity_type_breakdown": {
+        "title": "توزيع أنواع الأنشطة",
+        "subtitle": "التوزيع ومعدلات الإنجاز حسب نوع المحتوى"
+      },
+      "engagement_by_type": {
+        "title": "التفاعل حسب نوع المحتوى",
+        "subtitle": "مقاييس تفاعل المتعلمين لكل نوع نشاط",
+        "total_events": "إجمالي الأحداث",
+        "total_learners": "إجمالي المتعلمين"
+      },
+      "peak_hours": {
+        "title": "ساعات الذروة للتعلم",
+        "subtitle": "أوقات نشاط المتعلمين الأعلى في هذه الدورة",
+        "peak_time": "وقت الذروة",
+        "peak_events": "أحداث الذروة",
+        "less": "أقل",
+        "more": "أكثر",
+        "days": {
+          "mon": "إثن", "tue": "ثلا", "wed": "أرب", "thu": "خمي", "fri": "جمع", "sat": "سبت", "sun": "أحد"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} أحداث"
+      },
+      "enrollment_trend": { "title": "اتجاه التسجيل", "subtitle": "التسجيلات اليومية الجديدة بمرور الوقت" },
+      "active_learners": { "title": "المتعلمون النشطون", "subtitle": "المتعلمون النشطون الفريدون يومياً في هذه الدورة" },
+      "unique_viewers": { "title": "مشاهدو الدورة", "subtitle": "الزوار الفريدون يومياً لصفحة هذه الدورة", "total_views": "إجمالي المشاهدات", "peak_viewers": "ذروة المشاهدين" },
+      "view_to_enrollment": { "title": "مشاهدة ← تسجيل", "subtitle": "كم من المشاهدين يصبحون متعلمين مسجلين" },
+      "daily_completions": { "title": "الإنجازات اليومية", "subtitle": "إنجازات الأنشطة لكل يوم" },
+      "activity_funnel": { "title": "قمع إنجاز الأنشطة", "subtitle": "المشاهدات مقابل الإنجازات لكل نشاط" },
+      "time_per_activity": { "title": "الوقت المستغرق لكل نشاط", "subtitle": "متوسط الوقت الذي يقضيه المتعلمون في كل نشاط" },
+      "activity_dropoff": { "title": "نقاط التوقف", "subtitle": "أين يتوقف المتعلمون عن التقدم — آخر نشاط مكتمل", "total_dropoffs": "إجمالي حالات التوقف", "dropoff_points": "نقاط التوقف" },
+      "avg_session_duration": { "title": "الوقت اليومي لكل متعلم", "subtitle": "متوسط الوقت الذي يقضيه كل متعلم يومياً", "total_time": "الوقت الإجمالي", "avg_per_day": "المتوسط اليومي", "minutes_label": "دقائق" },
+      "learner_progress": { "title": "تقدم المتعلمين", "subtitle": "كم عدد الأنشطة التي أنجزها المتعلمون", "total_across_brackets": "{{count}} إجمالي المتعلمين عبر جميع فئات التقدم" },
+      "learner_retention": { "title": "الاحتفاظ بالمتعلمين", "subtitle": "% من المتعلمين العائدين بعد أول نشاط", "cohort_size": "حجم المجموعة", "current_retention": "الاحتفاظ الحالي", "days_since_first": "أيام منذ أول نشاط", "day_label": "اليوم {{day}}" },
+      "completion_velocity": { "title": "سرعة الإنجاز", "subtitle": "متوسط الوقت بين إنجازات الأنشطة", "not_enough_data": "لا توجد بيانات كافية بعد", "need_transitions": "تحتاج إلى 3 انتقالات نشاط على الأقل لحساب السرعة", "not_enough_data_short": "بيانات غير كافية", "need_transitions_short": "تحتاج 3+ انتقالات", "avg_between": "متوسط {{unit}} بين الإنجازات", "transitions_tracked": "انتقالات متتبعة", "raw_hours_avg": "متوسط الساعات الخام", "description": "يقيس مدى سرعة تقدم المتعلمين من نشاط إلى آخر. الأقل أفضل — يعني أن المتعلمين يتنقلون عبر المحتوى بشكل أسرع." },
+      "time_to_completion": { "title": "الوقت حتى الإنجاز", "subtitle": "كم يستغرق المتعلمون لإنهاء هذه الدورة", "median_days_to_complete": "متوسط الأيام للإنجاز", "fast_p25": "سريع (P25)", "top_25_finish": "أفضل 25% ينهون بحلول", "median": "المتوسط", "half_finish": "نصفهم ينهون بحلول", "slow_p75": "بطيء (P75)", "pct_75_finish": "75% ينهون بحلول", "based_on": "بناءً على {{count}} إنجاز(ات) للدورة", "days_unit": "أيام" },
+      "certification_rate": { "title": "معدل الشهادات", "subtitle": "% من المُنجزين الذين طالبوا بشهادتهم", "of_completers_claimed": "من المُنجزين طالبوا بشهادة", "certificates_claimed": "شهادات تمت المطالبة بها", "course_completions": "إنجازات الدورة" },
+      "top_learners": { "title": "أفضل المتعلمين", "subtitle": "أكثر المتعلمين نشاطاً حسب الإنجازات", "user_fallback": "المستخدم #{{id}}" },
+      "recent_enrollments": { "title": "التسجيلات الأخيرة", "subtitle": "أحدث المتعلمين المسجلين في هذه الدورة", "count_in_period": "{{count}} تسجيلات في هذه الفترة" },
+      "pagination": { "range": "{{from}}–{{to}} من {{total}}" }
+    }
   }
 }

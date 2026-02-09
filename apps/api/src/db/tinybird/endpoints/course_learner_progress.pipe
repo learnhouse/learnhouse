@@ -1,0 +1,32 @@
+DESCRIPTION >
+    Distribution of learner progress (activity completions) for a single course
+
+NODE course_learner_progress_node
+SQL >
+    %
+    WITH user_completions AS (
+        SELECT
+            user_id,
+            count() AS completed_activities
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name = 'activity_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY user_id
+    )
+    SELECT
+        multiIf(
+            completed_activities = 0, '0',
+            completed_activities <= 2, '1-2',
+            completed_activities <= 5, '3-5',
+            completed_activities <= 10, '6-10',
+            '11+'
+        ) AS bracket,
+        count() AS user_count
+    FROM user_completions
+    GROUP BY bracket
+    ORDER BY bracket
+
+TYPE endpoint

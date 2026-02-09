@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'framer-motion'
 import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
+import { ChartBar } from '@phosphor-icons/react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
@@ -20,6 +21,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature';
+import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -88,6 +90,14 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       icon: Award,
       href: `/dash/courses/course/${params.courseuuid}/certification`,
       requiredPermission: 'create_certifications' as const,
+      requiresPlan: 'pro' as PlanLevel
+    },
+    {
+      key: 'analytics',
+      label: t('dashboard.courses.settings.tabs.analytics'),
+      icon: ChartBar,
+      href: `/dash/courses/course/${params.courseuuid}/analytics`,
+      requiredPermission: 'update' as const,
       requiresPlan: 'pro' as PlanLevel
     }
   ]
@@ -233,6 +243,17 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
                 descriptionKey="common.plans.feature_restricted.certifications.description"
               >
                 <EditCourseCertification orgslug={params.orgslug} />
+              </PlanRestrictedFeature>
+            ) : null}
+            {params.subpage == 'analytics' && hasPermission('update') ? (
+              <PlanRestrictedFeature
+                currentPlan={currentPlan}
+                requiredPlan="pro"
+                icon={ChartBar}
+                titleKey="common.plans.feature_restricted.course_analytics.title"
+                descriptionKey="common.plans.feature_restricted.course_analytics.description"
+              >
+                <CourseAnalyticsTab courseUUID={courseuuid} />
               </PlanRestrictedFeature>
             ) : null}
           </div>

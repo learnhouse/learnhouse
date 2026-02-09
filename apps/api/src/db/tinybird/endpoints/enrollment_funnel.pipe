@@ -1,0 +1,19 @@
+DESCRIPTION >
+    View -> enroll -> complete funnel per org
+
+NODE enrollment_funnel_node
+SQL >
+    %
+    SELECT
+        org_id,
+        countIf(event_name = 'page_view') AS page_views,
+        countIf(event_name = 'course_view') AS course_views,
+        countIf(event_name = 'course_enrolled') AS enrollments,
+        countIf(event_name = 'course_completed') AS completions
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id
+
+TYPE endpoint

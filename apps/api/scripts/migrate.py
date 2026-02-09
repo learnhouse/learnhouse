@@ -6,6 +6,7 @@ This script handles all migrations:
 1. Communities and discussions permissions for roles
 2. Podcasts permissions for roles
 3. Podcasts feature for organization configs
+4. Reset orgconfig colors to empty string
 
 Run this script from the apps/api directory:
     python scripts/migrate.py
@@ -254,6 +255,53 @@ def migrate_org_configs_podcasts(session):
 
 
 # =============================================================================
+# Org Config Colors Migration
+# =============================================================================
+
+def migrate_org_configs_colors(session):
+    """Reset general.color to empty string for all organization configs."""
+    print("\n" + "=" * 60)
+    print("Migrating Organization Configs: Reset Colors")
+    print("=" * 60)
+
+    result = session.execute(text("SELECT id, org_id, config FROM organizationconfig"))
+    configs = result.fetchall()
+
+    print(f"Found {len(configs)} organization configs to check")
+    updated_count = 0
+
+    for config_id, org_id, config in configs:
+        if config is None:
+            config = {}
+        elif isinstance(config, str):
+            config = json.loads(config)
+
+        if 'general' not in config:
+            config['general'] = {}
+
+        current_color = config.get('general', {}).get('color', '')
+
+        # Skip if already empty
+        if current_color == '':
+            print(f"  - Org config (id={config_id}, org_id={org_id}): Color already empty, skipping")
+            continue
+
+        # Reset color to empty string
+        config['general']['color'] = ''
+
+        session.execute(
+            text("UPDATE organizationconfig SET config = :config WHERE id = :id"),
+            {'config': json.dumps(config), 'id': config_id}
+        )
+
+        print(f"  - Org config (id={config_id}, org_id={org_id}): Reset color from '{current_color}' to ''")
+        updated_count += 1
+
+    print(f"\nOrg config colors migration complete! Updated {updated_count} configs.")
+    return updated_count
+
+
+# =============================================================================
 # Display Functions
 # =============================================================================
 
@@ -416,6 +464,7 @@ def run_all_migrations():
             'communities_roles': migrate_roles_communities(session),
             'podcasts_roles': migrate_roles_podcasts(session),
             'podcasts_configs': migrate_org_configs_podcasts(session),
+            'colors_configs': migrate_org_configs_colors(session),
         }
 
         session.commit()
@@ -426,6 +475,7 @@ def run_all_migrations():
         print(f"  Roles updated with communities/discussions: {results['communities_roles']}")
         print(f"  Roles updated with podcasts: {results['podcasts_roles']}")
         print(f"  Org configs updated with podcasts: {results['podcasts_configs']}")
+        print(f"  Org configs reset colors: {results['colors_configs']}")
         print("\nAll migrations completed successfully!")
 
     except Exception as e:
@@ -471,6 +521,23 @@ def run_podcasts_migration():
         session.close()
 
 
+def run_colors_migration():
+    """Run only colors migration."""
+    print("Connecting to database...")
+    session = get_session()
+
+    try:
+        configs_updated = migrate_org_configs_colors(session)
+        session.commit()
+        print(f"\nColors migration completed! Updated {configs_updated} configs.")
+    except Exception as e:
+        session.rollback()
+        print(f"\nError during migration: {e}")
+        raise
+    finally:
+        session.close()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='LearnHouse Database Migration Script',
@@ -482,9 +549,10 @@ Examples:
   python scripts/migrate.py --dry-run    Preview changes without applying
   python scripts/migrate.py communities  Run only communities migration
   python scripts/migrate.py podcasts     Run only podcasts migration
+  python scripts/migrate.py colors       Run only colors reset migration
         """
     )
-    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts'],
+    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts', 'colors'],
                         help='Specific migration to run (default: all)')
     parser.add_argument('--show', action='store_true',
                         help='Show current state without migrating')
@@ -506,6 +574,9 @@ Examples:
         show_current_state()
     elif args.migration == 'podcasts':
         run_podcasts_migration()
+        show_current_state()
+    elif args.migration == 'colors':
+        run_colors_migration()
         show_current_state()
     else:
         run_all_migrations()
