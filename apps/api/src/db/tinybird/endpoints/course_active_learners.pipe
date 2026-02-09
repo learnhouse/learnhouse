@@ -1,0 +1,18 @@
+DESCRIPTION >
+    Daily unique active learners for a single course
+
+NODE course_active_learners_node
+SQL >
+    %
+    SELECT
+        toDate(timestamp) AS date,
+        uniqExact(user_id) AS active_learners
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY date
+    ORDER BY date ASC
+
+TYPE endpoint

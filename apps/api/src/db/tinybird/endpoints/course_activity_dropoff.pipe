@@ -1,0 +1,38 @@
+DESCRIPTION >
+    Where learners stop progressing in a single course
+
+NODE course_activity_dropoff_node
+SQL >
+    %
+    WITH user_activities AS (
+        SELECT
+            user_id,
+            replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+            min(timestamp) AS first_completed_at
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name = 'activity_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY user_id, activity_id
+    ),
+    user_max_activity AS (
+        SELECT
+            user_id,
+            max(first_completed_at) AS last_activity_at,
+            argMax(activity_id, first_completed_at) AS last_activity_id,
+            count() AS total_completed
+        FROM user_activities
+        GROUP BY user_id
+    )
+    SELECT
+        last_activity_id AS activity_id,
+        count() AS users_stopped_here,
+        avg(total_completed) AS avg_completed_before_stop
+    FROM user_max_activity
+    GROUP BY last_activity_id
+    ORDER BY users_stopped_here DESC
+    LIMIT 20
+
+TYPE endpoint

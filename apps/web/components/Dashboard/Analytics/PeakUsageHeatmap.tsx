@@ -27,7 +27,7 @@ export default function PeakUsageHeatmap({ days = '30' }: { days?: string }) {
   }
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Peak Usage Hours</h3>
       <p className="text-xs text-gray-400 mb-4">Event volume by day and hour</p>
       {isLoading ? (

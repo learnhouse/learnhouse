@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Daily unique viewers and total views for a single course
+
+NODE course_unique_viewers_node
+SQL >
+    %
+    SELECT
+        toDate(timestamp) AS date,
+        uniqExact(user_id) AS unique_viewers,
+        count() AS total_views
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name = 'course_view'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY date
+    ORDER BY date ASC
+
+TYPE endpoint

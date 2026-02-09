@@ -14,17 +14,28 @@ import {
   GraduationCap,
   CheckCircle,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
 
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
+function getAvatarUrl(user: any): string | null {
+  if (!user?.avatar_image) return null
+  const url = user.avatar_image
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (user.user_uuid) return getUserAvatarMediaDirectory(user.user_uuid, url)
+  return null
+}
+
 function UserAvatar({ user }: { user?: any }) {
   if (!user) return <div className="w-7 h-7 rounded-full bg-gray-200 flex-shrink-0" />
-  if (user.avatar_image) {
+  const avatarUrl = getAvatarUrl(user)
+  if (avatarUrl) {
     return (
       <img
-        src={user.avatar_image}
+        src={avatarUrl}
         alt=""
         className="w-7 h-7 rounded-full object-cover flex-shrink-0"
       />
@@ -71,17 +82,19 @@ function stripCoursePrefix(uuid: string): string {
 }
 
 function LoadingState() {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
-      Loading...
+      {t('analytics.common.loading')}
     </div>
   )
 }
 
 function EmptyState() {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
-      No data yet
+      {t('analytics.common.no_data')}
     </div>
   )
 }
@@ -107,15 +120,15 @@ export function AnalyticsDetailModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             {icon}
             {title}
           </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto flex-1 -mx-6 px-6 pb-6">{children}</div>
+        <div className="overflow-y-auto flex-1 px-6 pb-6">{children}</div>
       </DialogContent>
     </Dialog>
   )
@@ -126,7 +139,8 @@ export function AnalyticsDetailModal({
 // ---------------------------------------------------------------------------
 
 export function LiveUsersDetail({ days }: { days: string }) {
-  const { data, isLoading } = useAnalyticsDetail('detail_live_users', {}, 30000)
+  const { t } = useTranslation()
+  const { data, isLoading } = useAnalyticsDetail('detail_live_users', {}, 120000)
   const rows = data?.data ?? []
   const users = data?.users ?? {}
 
@@ -137,11 +151,11 @@ export function LiveUsersDetail({ days }: { days: string }) {
     <table className="w-full text-sm">
       <thead>
         <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-          <th className="pb-2 font-medium">User</th>
-          <th className="pb-2 font-medium">Current Page</th>
-          <th className="pb-2 font-medium">Device</th>
-          <th className="pb-2 font-medium">Country</th>
-          <th className="pb-2 font-medium text-right">Last Seen</th>
+          <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
+          <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.current_page')}</th>
+          <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.device')}</th>
+          <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.country')}</th>
+          <th className="pb-2 font-medium text-right">{t('analytics.modals.live_users_table.last_seen')}</th>
         </tr>
       </thead>
       <tbody>
@@ -200,6 +214,7 @@ export function LiveUsersDetail({ days }: { days: string }) {
 // ---------------------------------------------------------------------------
 
 export function SignupsDetail({ days }: { days: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsDetail('detail_signups', { days })
   const rows = data?.data ?? []
   const users = data?.users ?? {}
@@ -211,10 +226,10 @@ export function SignupsDetail({ days }: { days: string }) {
     <table className="w-full text-sm">
       <thead>
         <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-          <th className="pb-2 font-medium">User</th>
-          <th className="pb-2 font-medium">Email</th>
-          <th className="pb-2 font-medium">Method</th>
-          <th className="pb-2 font-medium text-right">Date</th>
+          <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
+          <th className="pb-2 font-medium">{t('analytics.modals.signups_table.email')}</th>
+          <th className="pb-2 font-medium">{t('analytics.modals.signups_table.method')}</th>
+          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -261,6 +276,7 @@ export function SignupsDetail({ days }: { days: string }) {
 // ---------------------------------------------------------------------------
 
 export function EnrollmentsDetail({ days }: { days: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsDetail('detail_enrollments', { days })
   const rows = data?.data ?? []
   const users = data?.users ?? {}
@@ -272,9 +288,9 @@ export function EnrollmentsDetail({ days }: { days: string }) {
     <table className="w-full text-sm">
       <thead>
         <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-          <th className="pb-2 font-medium">User</th>
-          <th className="pb-2 font-medium">Course</th>
-          <th className="pb-2 font-medium text-right">Date</th>
+          <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
+          <th className="pb-2 font-medium">{t('analytics.common.course')}</th>
+          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -321,6 +337,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
 // ---------------------------------------------------------------------------
 
 export function CompletionsDetail({ days }: { days: string }) {
+  const { t } = useTranslation()
   const { data, isLoading } = useAnalyticsDetail('detail_completions', { days })
   const rows = data?.data ?? []
   const users = data?.users ?? {}
@@ -332,9 +349,9 @@ export function CompletionsDetail({ days }: { days: string }) {
     <table className="w-full text-sm">
       <thead>
         <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-          <th className="pb-2 font-medium">User</th>
-          <th className="pb-2 font-medium">Course</th>
-          <th className="pb-2 font-medium text-right">Date</th>
+          <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
+          <th className="pb-2 font-medium">{t('analytics.common.course')}</th>
+          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>

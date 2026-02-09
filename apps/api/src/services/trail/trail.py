@@ -269,7 +269,11 @@ async def add_activity_to_trail(
         event_name=analytics_events.ACTIVITY_COMPLETED,
         org_id=course.org_id,
         user_id=user.id,
-        properties={"activity_id": activity_uuid, "course_id": str(course.id)},
+        properties={
+            "activity_id": activity_uuid,
+            "course_id": str(course.id),
+            "activity_name": activity.name if activity else "",
+        },
     )
 
     # Check if all activities in the course are completed and create certificate if so

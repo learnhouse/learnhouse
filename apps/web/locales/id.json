@@ -367,7 +367,7 @@
       "package_file": "File Paket (.zip)",
       "click_to_upload": "Klik untuk mengunggah atau seret dan lepas",
       "supported_versions": "Paket SCORM 1.2 atau SCORM 2004",
-      "import_info": "Unggah paket SCORM Anda untuk menganalisis kontennya. Anda akan dapat mengonfigurasi kursus dan menetapkan aktivitas ke bab.",
+      "import_info": "Unggah paket SCORM Anda untuk menganalisis isinya. Anda dapat mengkonfigurasi kursus dan menetapkan aktivitas ke bab.",
       "analyze_package": "Analisis Paket",
       "package_analyzed": "Paket Berhasil Dianalisis",
       "assign_scos": "Tetapkan Aktivitas ke Bab",
@@ -456,24 +456,6 @@
       "import_summary": "{{successful}} dari {{total}} kursus berhasil diimpor",
       "created": "Dibuat",
       "done": "Selesai"
-    },
-    "scorm": {
-      "upload_package": "Unggah Paket SCORM",
-      "package_file": "File Paket (.zip)",
-      "click_to_upload": "Klik untuk mengunggah atau seret dan lepas",
-      "supported_versions": "Paket SCORM 1.2 atau SCORM 2004",
-      "import_info": "Unggah paket SCORM Anda untuk menganalisis isinya. Anda dapat mengkonfigurasi kursus dan menetapkan aktivitas ke bab.",
-      "analyze_package": "Analisis Paket",
-      "package_analyzed": "Paket Berhasil Dianalisis",
-      "assign_scos": "Tetapkan Aktivitas ke Bab",
-      "activity_name": "Aktivitas",
-      "chapter_name": "Bab",
-      "upload_different": "Unggah paket berbeda",
-      "selected": "dipilih",
-      "create_course": "Buat Kursus",
-      "configure": "Konfigurasi",
-      "ready_to_analyze": "Siap untuk dianalisis",
-      "course_details": "Detail Kursus"
     },
     "create": {
       "choose_type": "Buat Kursus Baru",
@@ -3166,5 +3148,391 @@
     "no_usergroups": "Tidak ada grup pengguna ditemukan",
     "create_usergroup": "Buat grup pengguna",
     "link": "Tautkan"
+  },
+  "analytics": {
+    "title": "Analitik",
+    "subtitle": "Wawasan tentang pelajar dan konten Anda",
+    "tabs": {
+      "overview": "Ringkasan",
+      "advanced": "Lanjutan"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "Memerlukan",
+      "upgrade_description": "Tingkatkan untuk membuka analitik lanjutan"
+    },
+    "common": {
+      "loading": "Memuat...",
+      "no_data": "Belum ada data",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "Pendaftaran",
+      "completions": "Penyelesaian"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analitik Belum Dikonfigurasi",
+      "not_configured_desc": "Analitik memerlukan konfigurasi Tinybird. Silakan hubungi administrator Anda.",
+      "common": {
+        "loading": "Memuat...",
+        "no_data": "Belum ada data",
+        "no_enrollments": "Belum ada pendaftaran",
+        "total": "Total",
+        "daily_avg": "Rata-rata Harian",
+        "latest_day": "Hari Terakhir",
+        "peak": "Puncak",
+        "peak_day": "Hari Puncak",
+        "type": "Tipe",
+        "rate": "Rasio",
+        "views": "Tampilan",
+        "enrollments": "Pendaftaran",
+        "completions": "Penyelesaian",
+        "completion_rate": "Rasio Penyelesaian",
+        "conversion": "Konversi",
+        "avg_time": "Waktu Rata-rata",
+        "total_views": "Total Tampilan",
+        "total_completions": "Total Penyelesaian",
+        "avg_rate": "Rasio Rata-rata",
+        "needs_attention": "Perlu Perhatian",
+        "total_samples": "Total Sampel",
+        "more_expand": "+{{count}} lagi \u2014 klik untuk memperluas",
+        "activities_count": "{{count}} aktivitas",
+        "pct_of_total": "% dari Total",
+        "bar_width_hint": "Lebar bar = tampilan relatif",
+        "rate_high": ">70%",
+        "rate_mid": "40\u201370%",
+        "rate_low": "<40%",
+        "low_conversion": "konversi rendah",
+        "avg_completion": "penyelesaian rata-rata",
+        "avg_prefix": "rata-rata {{value}}",
+        "unknown_activity": "Aktivitas tidak dikenal"
+      },
+      "units": {
+        "done": "selesai",
+        "views": "tampilan",
+        "enrolled": "terdaftar",
+        "learner": "pelajar",
+        "learners": "pelajar",
+        "events": "peristiwa",
+        "total": "total",
+        "total_views": "total tampilan",
+        "total_completions": "total penyelesaian",
+        "total_dropoffs": "total putus",
+        "peak_active": "puncak aktif",
+        "conversion": "konversi",
+        "retention": "retensi",
+        "in_cohort": "dalam kohort",
+        "active_learners": "pelajar aktif",
+        "recent_enrollments": "pendaftaran terbaru",
+        "transitions": "transisi",
+        "median_days": "median hari",
+        "claim_rate": "rasio klaim",
+        "claimed": "diklaim",
+        "completed": "diselesaikan",
+        "unique": "unik",
+        "time": "waktu",
+        "avg_per_day": "rata-rata / hari",
+        "busiest_time": "waktu tersibuk",
+        "minutes": "menit",
+        "hours": "jam",
+        "days": "hari",
+        "done_before": "selesai sebelumnya",
+        "sample": "sampel",
+        "samples": "sampel",
+        "min": "menit",
+        "avg_per_learner": "Rata-rata per pelajar"
+      },
+      "type_labels": {
+        "video": "Video",
+        "document": "Dokumen",
+        "quiz": "Kuis",
+        "assignment": "Tugas",
+        "dynamic": "Dinamis"
+      },
+      "overview_stats": {
+        "views": "Tampilan",
+        "enrollments": "Pendaftaran",
+        "completions": "Penyelesaian",
+        "completion_rate": "Rasio Penyelesaian"
+      },
+      "activity_type_breakdown": {
+        "title": "Distribusi Tipe Aktivitas",
+        "subtitle": "Distribusi dan rasio penyelesaian berdasarkan tipe konten"
+      },
+      "engagement_by_type": {
+        "title": "Keterlibatan per Tipe Konten",
+        "subtitle": "Metrik keterlibatan pelajar per tipe aktivitas",
+        "total_events": "Total peristiwa",
+        "total_learners": "Total pelajar"
+      },
+      "peak_hours": {
+        "title": "Jam Belajar Puncak",
+        "subtitle": "Kapan pelajar paling aktif dalam kursus ini",
+        "peak_time": "Waktu puncak",
+        "peak_events": "Peristiwa puncak",
+        "less": "Sedikit",
+        "more": "Banyak",
+        "days": {
+          "mon": "Sen",
+          "tue": "Sel",
+          "wed": "Rab",
+          "thu": "Kam",
+          "fri": "Jum",
+          "sat": "Sab",
+          "sun": "Min"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} peristiwa"
+      },
+      "enrollment_trend": {
+        "title": "Tren Pendaftaran",
+        "subtitle": "Pendaftaran baru harian dari waktu ke waktu"
+      },
+      "active_learners": {
+        "title": "Pelajar Aktif",
+        "subtitle": "Pelajar unik aktif harian dalam kursus ini"
+      },
+      "unique_viewers": {
+        "title": "Pengunjung Kursus",
+        "subtitle": "Pengunjung unik harian ke halaman kursus ini",
+        "total_views": "Total Tampilan",
+        "peak_viewers": "Pengunjung Puncak"
+      },
+      "view_to_enrollment": {
+        "title": "Lihat \u2192 Daftar",
+        "subtitle": "Berapa banyak pengunjung yang menjadi pelajar terdaftar"
+      },
+      "daily_completions": {
+        "title": "Penyelesaian Harian",
+        "subtitle": "Penyelesaian aktivitas per hari"
+      },
+      "activity_funnel": {
+        "title": "Corong Penyelesaian Aktivitas",
+        "subtitle": "Tampilan vs penyelesaian per aktivitas"
+      },
+      "time_per_activity": {
+        "title": "Waktu per Aktivitas",
+        "subtitle": "Rata-rata waktu yang dihabiskan pelajar untuk setiap aktivitas"
+      },
+      "activity_dropoff": {
+        "title": "Titik Putus",
+        "subtitle": "Di mana pelajar berhenti berkembang \u2014 aktivitas terakhir yang diselesaikan",
+        "total_dropoffs": "Total Putus",
+        "dropoff_points": "Titik Putus"
+      },
+      "avg_session_duration": {
+        "title": "Waktu Harian per Pelajar",
+        "subtitle": "Rata-rata waktu yang dihabiskan setiap pelajar per hari",
+        "total_time": "Total Waktu",
+        "avg_per_day": "Rata-rata per Hari",
+        "minutes_label": "Menit"
+      },
+      "learner_progress": {
+        "title": "Progres Pelajar",
+        "subtitle": "Berapa banyak aktivitas yang telah diselesaikan pelajar",
+        "total_across_brackets": "{{count}} total pelajar di semua rentang progres"
+      },
+      "learner_retention": {
+        "title": "Retensi Pelajar",
+        "subtitle": "% pelajar yang kembali setelah aktivitas pertama",
+        "cohort_size": "Ukuran Kohort",
+        "current_retention": "Retensi Saat Ini",
+        "days_since_first": "Hari sejak aktivitas pertama",
+        "day_label": "Hari {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Kecepatan Penyelesaian",
+        "subtitle": "Rata-rata waktu antara penyelesaian aktivitas",
+        "not_enough_data": "Data belum cukup",
+        "need_transitions": "Memerlukan minimal 3 transisi aktivitas untuk menghitung kecepatan",
+        "not_enough_data_short": "Data belum cukup",
+        "need_transitions_short": "Perlu 3+ transisi",
+        "avg_between": "rata-rata {{unit}} antar penyelesaian",
+        "transitions_tracked": "transisi terlacak",
+        "raw_hours_avg": "rata-rata jam mentah",
+        "description": "Mengukur seberapa cepat pelajar berpindah dari satu aktivitas ke aktivitas berikutnya. Semakin rendah semakin baik \u2014 artinya pelajar lebih cepat melalui konten."
+      },
+      "time_to_completion": {
+        "title": "Waktu Penyelesaian",
+        "subtitle": "Berapa lama pelajar menyelesaikan kursus ini",
+        "median_days_to_complete": "median hari untuk menyelesaikan",
+        "fast_p25": "Cepat (P25)",
+        "top_25_finish": "25% teratas selesai pada",
+        "median": "Median",
+        "half_finish": "Setengah selesai pada",
+        "slow_p75": "Lambat (P75)",
+        "pct_75_finish": "75% selesai pada",
+        "based_on": "Berdasarkan {{count}} penyelesaian kursus",
+        "days_unit": "hari"
+      },
+      "certification_rate": {
+        "title": "Rasio Sertifikasi",
+        "subtitle": "% penyelesai yang mengklaim sertifikat",
+        "of_completers_claimed": "penyelesai mengklaim sertifikat",
+        "certificates_claimed": "sertifikat diklaim",
+        "course_completions": "penyelesaian kursus"
+      },
+      "top_learners": {
+        "title": "Pelajar Teratas",
+        "subtitle": "Pelajar paling aktif berdasarkan penyelesaian",
+        "user_fallback": "Pengguna #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Pendaftaran Terbaru",
+        "subtitle": "Pelajar terbaru yang mendaftar di kursus ini",
+        "count_in_period": "{{count}} pendaftaran dalam periode ini"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} dari {{total}}"
+      }
+    }
   }
 }

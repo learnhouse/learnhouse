@@ -19,7 +19,7 @@ export default function UserProgressSnapshot({ days = '90' }: { days?: string })
   const COLORS = ['#e5e7eb', '#c4b5fd', '#a78bfa', '#8b5cf6', '#6d28d9']
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">User Progress Snapshot</h3>
       <p className="text-xs text-gray-400 mb-4">Users at each completion bracket per course</p>
       {isLoading ? (

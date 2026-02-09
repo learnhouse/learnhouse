@@ -1,0 +1,30 @@
+DESCRIPTION >
+    Top learners by activity completions for a single course
+
+NODE course_top_learners_node
+SQL >
+    %
+    SELECT
+        user_id,
+        countIf(event_name = 'activity_completed') AS completions,
+        countIf(event_name = 'activity_view') AS views,
+        uniqExactIf(
+            JSONExtractString(properties, 'activity_id'),
+            event_name = 'activity_completed'
+        ) AS unique_activities_completed,
+        sumIf(
+            JSONExtractFloat(properties, 'seconds_spent'),
+            event_name = 'time_on_activity'
+        ) AS total_seconds_spent
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name IN ('activity_completed', 'activity_view', 'time_on_activity')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        AND user_id != 0
+    GROUP BY user_id
+    ORDER BY completions DESC, views DESC
+    LIMIT 20
+
+TYPE endpoint

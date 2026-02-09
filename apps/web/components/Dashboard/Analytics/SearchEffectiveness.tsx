@@ -7,13 +7,13 @@ export default function SearchEffectiveness({ days = '30' }: { days?: string }) 
   const rows = data?.data ?? []
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Search Effectiveness</h3>
       <p className="text-xs text-gray-400 mb-4">Top queries and zero-result rate</p>
       {isLoading ? (
-        <div className="h-32 flex items-center justify-center text-gray-300">Loading...</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">Loading...</div>
       ) : rows.length === 0 ? (
-        <div className="h-32 flex items-center justify-center text-gray-300">No data yet</div>
+        <div className="h-48 flex items-center justify-center text-gray-300">No data yet</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

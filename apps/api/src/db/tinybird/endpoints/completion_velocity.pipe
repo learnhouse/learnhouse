@@ -1,5 +1,5 @@
 DESCRIPTION >
-    Average days between sequential activity completions
+    Average hours between sequential activity completions
 
 NODE completion_velocity_node
 SQL >
@@ -21,11 +21,11 @@ SQL >
     SELECT
         org_id,
         course_id,
-        avg(dateDiff('day', prev_ts, timestamp)) AS avg_days_between,
+        round(avg(dateDiff('hour', prev_ts, timestamp)), 1) AS avg_hours_between,
         count() AS transitions
     FROM ordered
-    WHERE prev_ts IS NOT NULL
+    WHERE prev_ts > toDateTime('2020-01-01 00:00:00')
     GROUP BY org_id, course_id
-    ORDER BY avg_days_between ASC
+    ORDER BY avg_hours_between ASC
 
 TYPE endpoint
