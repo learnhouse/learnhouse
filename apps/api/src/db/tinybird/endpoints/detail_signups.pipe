@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Individual signup events with method and timestamp
+
+NODE detail_signups_node
+SQL >
+    %
+    SELECT
+        user_id,
+        JSONExtractString(properties, 'signup_method') AS signup_method,
+        timestamp
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'user_signed_up'
+        AND timestamp >= now() - INTERVAL {{Int64(days, 30)}} DAY
+        AND user_id != 0
+    ORDER BY timestamp DESC
+    LIMIT 200
+
+TYPE endpoint

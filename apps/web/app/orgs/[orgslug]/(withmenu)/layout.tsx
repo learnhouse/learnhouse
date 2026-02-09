@@ -10,6 +10,7 @@ import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext
 import PodcastPlayer from '@components/Objects/Podcasts/PodcastPlayer'
 import Image from 'next/image'
 import Link from 'next/link'
+import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname } from 'next/navigation'
 
 // Helper to convert hex to rgba
@@ -65,6 +66,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
         backgroundColor: isDocSpacePage ? '#f8f8f8' : (primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent')
       }}
     >
+      <PageViewTracker />
       <OrgJoinBanner />
       {!isDocSpacePage && <OrgMenu orgslug={orgslug} />}
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>

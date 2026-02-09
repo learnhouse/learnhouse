@@ -1,0 +1,42 @@
+DESCRIPTION >
+    Last completed activity for users who didn't finish a course
+
+NODE course_dropoff_node
+SQL >
+    %
+    WITH enrolled AS (
+        SELECT DISTINCT org_id, user_id, JSONExtractString(properties, 'course_id') AS course_id
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'course_enrolled'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    ),
+    completed AS (
+        SELECT DISTINCT org_id, user_id, JSONExtractString(properties, 'course_id') AS course_id
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'course_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    ),
+    last_activity AS (
+        SELECT
+            org_id,
+            user_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            JSONExtractString(properties, 'activity_id') AS last_activity_id,
+            max(timestamp) AS last_ts
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}}) AND event_name = 'activity_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY org_id, user_id, course_id, last_activity_id
+    )
+    SELECT
+        la.org_id,
+        la.course_id,
+        la.last_activity_id,
+        count() AS dropoff_count
+    FROM enrolled e
+    LEFT ANTI JOIN completed c ON e.user_id = c.user_id AND e.course_id = c.course_id AND e.org_id = c.org_id
+    INNER JOIN last_activity la ON e.user_id = la.user_id AND e.course_id = la.course_id AND e.org_id = la.org_id
+    GROUP BY la.org_id, la.course_id, la.last_activity_id
+    ORDER BY dropoff_count DESC
+
+TYPE endpoint

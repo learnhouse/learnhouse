@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Recent enrollment events for a single course (for user enrichment)
+
+NODE course_recent_enrollments_node
+SQL >
+    %
+    SELECT
+        user_id,
+        timestamp
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name = 'course_enrolled'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+        AND user_id != 0
+    ORDER BY timestamp DESC
+    LIMIT 50
+
+TYPE endpoint

@@ -1,0 +1,33 @@
+DESCRIPTION >
+    Correlate completion rates with course metadata (enrollment count, activity count)
+
+NODE course_rating_by_completion_node
+SQL >
+    %
+    WITH course_stats AS (
+        SELECT
+            org_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            JSONExtractString(properties, 'course_name') AS course_name,
+            countIf(event_name = 'course_enrolled') AS enrollments,
+            countIf(event_name = 'course_completed') AS completions,
+            uniqExactIf(JSONExtractString(properties, 'activity_id'), event_name = 'activity_view') AS activity_count
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND event_name IN ('course_enrolled', 'course_completed', 'activity_view')
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY org_id, course_id, course_name
+    )
+    SELECT
+        org_id,
+        course_id,
+        course_name,
+        enrollments,
+        completions,
+        activity_count,
+        if(enrollments > 0, round(completions / enrollments * 100, 1), 0) AS completion_rate
+    FROM course_stats
+    WHERE enrollments >= 5
+    ORDER BY enrollments DESC
+
+TYPE endpoint

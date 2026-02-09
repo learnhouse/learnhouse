@@ -369,21 +369,21 @@
     "contributor_application_error": "Kon je aanvraag niet verzenden. Probeer het later opnieuw.",
     "contribute": "Bijdragen",
     "scorm": {
-      "upload_package": "SCORM-pakket uploaden",
+      "upload_package": "SCORM Pakket Uploaden",
       "package_file": "Pakketbestand (.zip)",
       "click_to_upload": "Klik om te uploaden of sleep en zet neer",
       "supported_versions": "SCORM 1.2 of SCORM 2004 pakket",
-      "import_info": "Upload je SCORM-pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
-      "analyze_package": "Pakket analyseren",
-      "package_analyzed": "Pakket succesvol geanalyseerd",
-      "assign_scos": "Activiteiten aan hoofdstukken toewijzen",
+      "import_info": "Upload je SCORM pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
+      "analyze_package": "Pakket Analyseren",
+      "package_analyzed": "Pakket Succesvol Geanalyseerd",
+      "assign_scos": "Activiteiten aan Hoofdstukken Toewijzen",
       "activity_name": "Activiteit",
       "chapter_name": "Hoofdstuk",
       "upload_different": "Ander pakket uploaden",
       "selected": "geselecteerd",
-      "create_course": "Cursus aanmaken",
+      "create_course": "Cursus Aanmaken",
       "configure": "Configureren",
-      "ready_to_analyze": "Klaar voor analyse",
+      "ready_to_analyze": "Klaar om te analyseren",
       "course_details": "Cursusdetails"
     },
     "clone_course": "Cursus klonen",
@@ -462,24 +462,6 @@
       "import_summary": "{{successful}} van {{total}} cursus(sen) succesvol geïmporteerd",
       "created": "Aangemaakt",
       "done": "Klaar"
-    },
-    "scorm": {
-      "upload_package": "SCORM Pakket Uploaden",
-      "package_file": "Pakketbestand (.zip)",
-      "click_to_upload": "Klik om te uploaden of sleep en zet neer",
-      "supported_versions": "SCORM 1.2 of SCORM 2004 pakket",
-      "import_info": "Upload je SCORM pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
-      "analyze_package": "Pakket Analyseren",
-      "package_analyzed": "Pakket Succesvol Geanalyseerd",
-      "assign_scos": "Activiteiten aan Hoofdstukken Toewijzen",
-      "activity_name": "Activiteit",
-      "chapter_name": "Hoofdstuk",
-      "upload_different": "Ander pakket uploaden",
-      "selected": "geselecteerd",
-      "create_course": "Cursus Aanmaken",
-      "configure": "Configureren",
-      "ready_to_analyze": "Klaar om te analyseren",
-      "course_details": "Cursusdetails"
     },
     "create": {
       "choose_type": "Nieuwe cursus maken",
@@ -3172,5 +3154,391 @@
     "no_usergroups": "Geen gebruikersgroepen gevonden",
     "create_usergroup": "Gebruikersgroep aanmaken",
     "link": "Koppelen"
+  },
+  "analytics": {
+    "title": "Analyse",
+    "subtitle": "Inzichten over uw leerlingen en inhoud",
+    "tabs": {
+      "overview": "Overzicht",
+      "advanced": "Geavanceerd"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "Vereist",
+      "upgrade_description": "Upgrade om geavanceerde analyse te ontgrendelen"
+    },
+    "common": {
+      "loading": "Laden...",
+      "no_data": "Nog geen gegevens",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "Inschrijvingen",
+      "completions": "Voltooiingen"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analytics niet geconfigureerd",
+      "not_configured_desc": "Analytics vereist dat Tinybird geconfigureerd is. Neem contact op met uw beheerder.",
+      "common": {
+        "loading": "Laden...",
+        "no_data": "Nog geen gegevens",
+        "no_enrollments": "Nog geen inschrijvingen",
+        "total": "Totaal",
+        "daily_avg": "Dagelijks gem.",
+        "latest_day": "Laatste dag",
+        "peak": "Piek",
+        "peak_day": "Piekdag",
+        "type": "Type",
+        "rate": "Percentage",
+        "views": "Weergaven",
+        "enrollments": "Inschrijvingen",
+        "completions": "Voltooiingen",
+        "completion_rate": "Voltooiingspercentage",
+        "conversion": "Conversie",
+        "avg_time": "Gem. tijd",
+        "total_views": "Totaal weergaven",
+        "total_completions": "Totaal voltooiingen",
+        "avg_rate": "Gem. percentage",
+        "needs_attention": "Aandacht nodig",
+        "total_samples": "Totaal monsters",
+        "more_expand": "+{{count}} meer — klik om uit te vouwen",
+        "activities_count": "{{count}} activiteiten",
+        "pct_of_total": "% van totaal",
+        "bar_width_hint": "Balkbreedte = relatieve weergaven",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "lage conversie",
+        "avg_completion": "gem. voltooiing",
+        "avg_prefix": "gem. {{value}}",
+        "unknown_activity": "Onbekende activiteit"
+      },
+      "units": {
+        "done": "voltooid",
+        "views": "weergaven",
+        "enrolled": "ingeschreven",
+        "learner": "leerling",
+        "learners": "leerlingen",
+        "events": "evenementen",
+        "total": "totaal",
+        "total_views": "totaal weergaven",
+        "total_completions": "totaal voltooiingen",
+        "total_dropoffs": "totaal afhakingen",
+        "peak_active": "piek actief",
+        "conversion": "conversie",
+        "retention": "retentie",
+        "in_cohort": "in cohort",
+        "active_learners": "actieve leerlingen",
+        "recent_enrollments": "recente inschrijvingen",
+        "transitions": "overgangen",
+        "median_days": "mediaan dagen",
+        "claim_rate": "claimpercentage",
+        "claimed": "geclaimd",
+        "completed": "voltooid",
+        "unique": "uniek",
+        "time": "tijd",
+        "avg_per_day": "gem. / dag",
+        "busiest_time": "drukste tijd",
+        "minutes": "minuten",
+        "hours": "uren",
+        "days": "dagen",
+        "done_before": "eerder voltooid",
+        "sample": "monster",
+        "samples": "monsters",
+        "min": "min",
+        "avg_per_learner": "Gem. per leerling"
+      },
+      "type_labels": {
+        "video": "Video",
+        "document": "Document",
+        "quiz": "Quiz",
+        "assignment": "Opdracht",
+        "dynamic": "Dynamisch"
+      },
+      "overview_stats": {
+        "views": "Weergaven",
+        "enrollments": "Inschrijvingen",
+        "completions": "Voltooiingen",
+        "completion_rate": "Voltooiingspercentage"
+      },
+      "activity_type_breakdown": {
+        "title": "Activiteitstype-verdeling",
+        "subtitle": "Verdeling en voltooiingspercentages per inhoudstype"
+      },
+      "engagement_by_type": {
+        "title": "Betrokkenheid per inhoudstype",
+        "subtitle": "Betrokkenheidsstatistieken per activiteitstype",
+        "total_events": "Totaal evenementen",
+        "total_learners": "Totaal leerlingen"
+      },
+      "peak_hours": {
+        "title": "Piekuren leren",
+        "subtitle": "Wanneer leerlingen het meest actief zijn in deze cursus",
+        "peak_time": "Piektijd",
+        "peak_events": "Piek evenementen",
+        "less": "Minder",
+        "more": "Meer",
+        "days": {
+          "mon": "Ma",
+          "tue": "Di",
+          "wed": "Wo",
+          "thu": "Do",
+          "fri": "Vr",
+          "sat": "Za",
+          "sun": "Zo"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} evenementen"
+      },
+      "enrollment_trend": {
+        "title": "Inschrijvingstrend",
+        "subtitle": "Dagelijkse nieuwe inschrijvingen in de loop der tijd"
+      },
+      "active_learners": {
+        "title": "Actieve leerlingen",
+        "subtitle": "Dagelijks unieke actieve leerlingen in deze cursus"
+      },
+      "unique_viewers": {
+        "title": "Cursusbezoekers",
+        "subtitle": "Dagelijks unieke bezoekers van deze cursuspagina",
+        "total_views": "Totaal weergaven",
+        "peak_viewers": "Piek bezoekers"
+      },
+      "view_to_enrollment": {
+        "title": "Weergave \u2192 Inschrijving",
+        "subtitle": "Hoeveel bezoekers zich inschrijven"
+      },
+      "daily_completions": {
+        "title": "Dagelijkse voltooiingen",
+        "subtitle": "Activiteitsvoltooiingen per dag"
+      },
+      "activity_funnel": {
+        "title": "Activiteitsvoltooiingstrechter",
+        "subtitle": "Weergaven vs voltooiingen per activiteit"
+      },
+      "time_per_activity": {
+        "title": "Tijd per activiteit",
+        "subtitle": "Gemiddelde tijd die leerlingen aan elke activiteit besteden"
+      },
+      "activity_dropoff": {
+        "title": "Afhaakmomenten",
+        "subtitle": "Waar leerlingen stoppen met voortgang — laatst voltooide activiteit",
+        "total_dropoffs": "Totaal afhakingen",
+        "dropoff_points": "Afhaakmomenten"
+      },
+      "avg_session_duration": {
+        "title": "Dagelijkse tijd per leerling",
+        "subtitle": "Gemiddelde tijd die elke leerling per dag besteedt",
+        "total_time": "Totale tijd",
+        "avg_per_day": "Gem. per dag",
+        "minutes_label": "Minuten"
+      },
+      "learner_progress": {
+        "title": "Voortgang leerlingen",
+        "subtitle": "Hoeveel activiteiten leerlingen hebben voltooid",
+        "total_across_brackets": "{{count}} totaal leerlingen over alle voortgangscategorieën"
+      },
+      "learner_retention": {
+        "title": "Leerlingretentie",
+        "subtitle": "% van leerlingen die terugkeren na eerste activiteit",
+        "cohort_size": "Cohortgrootte",
+        "current_retention": "Huidige retentie",
+        "days_since_first": "Dagen sinds eerste activiteit",
+        "day_label": "Dag {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Voltooiingssnelheid",
+        "subtitle": "Gemiddelde tijd tussen activiteitsvoltooiingen",
+        "not_enough_data": "Nog niet genoeg gegevens",
+        "need_transitions": "Minimaal 3 activiteitsovergangen nodig om snelheid te berekenen",
+        "not_enough_data_short": "Niet genoeg gegevens",
+        "need_transitions_short": "3+ overgangen nodig",
+        "avg_between": "gem. {{unit}} tussen voltooiingen",
+        "transitions_tracked": "overgangen bijgehouden",
+        "raw_hours_avg": "ruwe uren gem.",
+        "description": "Meet hoe snel leerlingen van de ene activiteit naar de volgende gaan. Lager is beter — het betekent dat leerlingen sneller door de inhoud gaan."
+      },
+      "time_to_completion": {
+        "title": "Tijd tot voltooiing",
+        "subtitle": "Hoe lang het duurt voordat leerlingen deze cursus afronden",
+        "median_days_to_complete": "mediaan dagen tot voltooiing",
+        "fast_p25": "Snel (P25)",
+        "top_25_finish": "Top 25% eindigt voor",
+        "median": "Mediaan",
+        "half_finish": "Helft eindigt voor",
+        "slow_p75": "Langzaam (P75)",
+        "pct_75_finish": "75% eindigt voor",
+        "based_on": "Gebaseerd op {{count}} cursusvoltooiing(en)",
+        "days_unit": "dagen"
+      },
+      "certification_rate": {
+        "title": "Certificeringspercentage",
+        "subtitle": "% van voltooiers die hun certificaat hebben geclaimd",
+        "of_completers_claimed": "van voltooiers claimde een certificaat",
+        "certificates_claimed": "certificaten geclaimd",
+        "course_completions": "cursusvoltooiingen"
+      },
+      "top_learners": {
+        "title": "Topleerlingen",
+        "subtitle": "Meest actieve leerlingen op basis van voltooiingen",
+        "user_fallback": "Gebruiker #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Recente inschrijvingen",
+        "subtitle": "Laatste leerlingen die zich voor deze cursus hebben ingeschreven",
+        "count_in_period": "{{count}} inschrijvingen in deze periode"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} van {{total}}"
+      }
+    }
   }
 }

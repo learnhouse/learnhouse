@@ -1,0 +1,18 @@
+DESCRIPTION >
+    Daily active users per org
+
+NODE daily_active_users_node
+SQL >
+    %
+    SELECT
+        org_id,
+        toDate(timestamp) AS date,
+        uniqExact(user_id) AS dau
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, date
+    ORDER BY date ASC
+
+TYPE endpoint

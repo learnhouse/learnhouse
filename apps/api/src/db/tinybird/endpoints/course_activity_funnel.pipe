@@ -1,0 +1,24 @@
+DESCRIPTION >
+    Activity-level view-to-completion funnel for a single course
+
+NODE course_activity_funnel_node
+SQL >
+    %
+    SELECT
+        replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+        anyIf(JSONExtractString(properties, 'activity_name'), JSONExtractString(properties, 'activity_name') != '') AS activity_name,
+        countIf(event_name = 'activity_view') AS views,
+        countIf(event_name = 'activity_completed') AS completions,
+        if(countIf(event_name = 'activity_view') > 0,
+           round(countIf(event_name = 'activity_completed') / countIf(event_name = 'activity_view') * 100, 1),
+           0) AS completion_rate
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name IN ('activity_view', 'activity_completed')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY activity_id
+    ORDER BY views DESC
+
+TYPE endpoint

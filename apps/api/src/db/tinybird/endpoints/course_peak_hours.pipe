@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Learning activity by hour of day and day of week for a single course
+
+NODE course_peak_hours_node
+SQL >
+    %
+    SELECT
+        toHour(timestamp) AS hour,
+        toDayOfWeek(timestamp) AS day_of_week,
+        count() AS event_count
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name IN ('activity_view', 'activity_completed', 'time_on_activity')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY hour, day_of_week
+    ORDER BY day_of_week, hour
+
+TYPE endpoint
