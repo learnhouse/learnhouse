@@ -22,6 +22,20 @@ import {
   ChatCircleDots,
   Headphones,
   ChartBar,
+  DotsThree,
+  UsersThree,
+  Shield,
+  UserPlus,
+  ClipboardText,
+  Palette,
+  Rocket,
+  Robot,
+  LinkSimple,
+  Key,
+  Lock,
+  ToggleRight,
+  Wrench,
+  ChartLine,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -51,8 +65,8 @@ import { cn } from '@/lib/utils'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
-import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
-import { planMeetsRequirement, isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import {  isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 
 function DashLeftMenu() {
   const org = useOrg() as any
@@ -354,12 +368,66 @@ function DashLeftMenu() {
                 isCollapsed={isCollapsed}
               />
             )}
-            <MenuLink
-              href="/dash/users/settings/users"
-              icon={<Users size={20} weight="fill" />}
-              label={t('common.users')}
-              isCollapsed={isCollapsed}
-            />
+            {/* Users with hover menu */}
+            <HoverMenu
+              content={
+                <HoverMenuContent className="w-64">
+                  <HoverMenuLabel className="text-white/70 font-medium">{t('common.users')}</HoverMenuLabel>
+                  <HoverMenuSeparator />
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/users/settings/users" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Users size={16} weight="fill" />
+                      <span>{t('dashboard.users.settings.tabs.users')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/users/settings/usergroups" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <UsersThree size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.users.settings.tabs.usergroups')}<PlanBadge currentPlan={plan} requiredPlan="standard" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/users/settings/roles" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Shield size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.users.settings.tabs.roles')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/users/settings/signups" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <ClipboardText size={16} weight="fill" />
+                      <span>{t('dashboard.users.settings.tabs.signups')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/users/settings/add" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <UserPlus size={16} weight="fill" />
+                      <span>{t('dashboard.users.settings.tabs.add')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                </HoverMenuContent>
+              }
+            >
+              <button
+                className={cn(
+                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                )}
+              >
+                <span className="relative flex items-center justify-center">
+                  <Users size={20} weight="fill" />
+                  {isCollapsed && (
+                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">{t('common.users')}</span>
+                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                  </>
+                )}
+              </button>
+            </HoverMenu>
+
             {showPayments && (
               <MenuLink
                 href="/dash/payments/customers"
@@ -368,18 +436,201 @@ function DashLeftMenu() {
                 isCollapsed={isCollapsed}
               />
             )}
-            <MenuLink
-              href="/dash/org/settings/general"
-              icon={<Buildings size={20} weight="fill" />}
-              label={t('common.organization')}
-              isCollapsed={isCollapsed}
-            />
-            <MenuLink
-              href="/dash/analytics"
-              icon={<ChartBar size={20} weight="fill" />}
-              label="Analytics"
-              isCollapsed={isCollapsed}
-            />
+
+            {/* Organization with hover menu */}
+            <HoverMenu
+              content={
+                <HoverMenuContent className="w-64">
+                  <HoverMenuLabel className="text-white/70 font-medium">{t('common.organization')}</HoverMenuLabel>
+                  <HoverMenuSeparator />
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/general" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Gear size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.general')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/branding" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Palette size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.branding')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/features" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <ToggleRight size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.features')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/landing" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Rocket size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.landing')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/ai" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Robot size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.ai')}<PlanBadge currentPlan={plan} requiredPlan="standard" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/domains" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <LinkSimple size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.domains')}<PlanBadge currentPlan={plan} requiredPlan="standard" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/api" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Key size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.api')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/sso" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Lock size={16} weight="fill" />
+                      <span className="flex items-center">{t('dashboard.organization.settings.tabs.sso')}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/other" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Wrench size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.other')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                </HoverMenuContent>
+              }
+            >
+              <button
+                className={cn(
+                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                )}
+              >
+                <span className="relative flex items-center justify-center">
+                  <Buildings size={20} weight="fill" />
+                  {isCollapsed && (
+                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">{t('common.organization')}</span>
+                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                  </>
+                )}
+              </button>
+            </HoverMenu>
+
+            {/* Analytics with hover menu */}
+            <HoverMenu
+              content={
+                <HoverMenuContent className="w-64">
+                  <HoverMenuLabel className="text-white/70 font-medium">Analytics</HoverMenuLabel>
+                  <HoverMenuSeparator />
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/analytics" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <ChartBar size={16} weight="fill" />
+                      <span>{t('analytics.tabs.overview')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/analytics" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <ChartLine size={16} weight="fill" />
+                      <span className="flex items-center">{t('analytics.tabs.advanced')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                </HoverMenuContent>
+              }
+            >
+              <button
+                className={cn(
+                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                )}
+              >
+                <span className="relative flex items-center justify-center">
+                  <ChartBar size={20} weight="fill" />
+                  {isCollapsed && (
+                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">Analytics</span>
+                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                  </>
+                )}
+              </button>
+            </HoverMenu>
+
+            {/* Disabled features shown in an "Other" hover menu */}
+            {(!showCommunities || !showPodcasts || !showDocs || !showPayments) && (
+              <HoverMenu
+                content={
+                  <HoverMenuContent className="w-64">
+                    <HoverMenuLabel className="flex items-center justify-between text-white/70 font-medium">
+                      <span>Other</span>
+                      <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/[0.06] text-white/25">
+                        Disabled
+                      </span>
+                    </HoverMenuLabel>
+                    <HoverMenuSeparator />
+                    {!showCommunities && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/communities" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <ChatsCircle size={16} weight="fill" />
+                          <span>{t('communities.title')}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showPodcasts && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/podcasts" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <Headphones size={16} weight="fill" />
+                          <span>{t('podcasts.podcasts')}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showDocs && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/docs" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <Book size={16} weight="fill" />
+                          <span>Documentation</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showPayments && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/payments/customers" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <CurrencyCircleDollar size={16} weight="fill" />
+                          <span>{t('common.payments')}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                  </HoverMenuContent>
+                }
+              >
+                <button
+                  className={cn(
+                    "flex items-center w-full rounded-lg text-white/30 hover:text-white/50 hover:bg-white/[0.05] transition-all",
+                    isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                  )}
+                >
+                  <span className="relative flex items-center justify-center">
+                    <DotsThree size={20} weight="bold" />
+                    {isCollapsed && (
+                      <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/20" />
+                    )}
+                  </span>
+                  {!isCollapsed && (
+                    <>
+                      <span className="text-sm font-medium flex-1 text-left">Other</span>
+                      <CaretDown size={14} weight="bold" className="text-white/20" />
+                    </>
+                  )}
+                </button>
+              </HoverMenu>
+            )}
           </div>
         </AdminAuthorization>
       </div>
