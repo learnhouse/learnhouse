@@ -7,7 +7,6 @@ Create Date: 2026-02-07 18:10:00.000000
 """
 from typing import Sequence, Union
 
-from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'k1f2a3b4c5d6'
@@ -17,7 +16,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TYPE docpagetypeenum ADD VALUE IF NOT EXISTS 'COMMUNITY'")
+    # page_type column uses sa.String(), not a PostgreSQL native enum type,
+    # so no schema change is needed to store a new value like 'COMMUNITY'.
+    pass
 
 
 def downgrade() -> None:

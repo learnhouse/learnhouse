@@ -1,0 +1,21 @@
+DESCRIPTION >
+    Average daily time spent per user for a single course
+
+NODE course_avg_session_duration_node
+SQL >
+    %
+    SELECT
+        toDate(timestamp) AS date,
+        round(sum(JSONExtractFloat(properties, 'seconds_spent')) / greatest(uniqExact(user_id), 1), 0) AS avg_seconds_per_user,
+        sum(JSONExtractFloat(properties, 'seconds_spent')) AS total_seconds,
+        uniqExact(user_id) AS unique_users
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name = 'time_on_activity'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY date
+    ORDER BY date ASC
+
+TYPE endpoint

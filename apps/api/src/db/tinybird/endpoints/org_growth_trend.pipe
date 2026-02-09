@@ -1,0 +1,21 @@
+DESCRIPTION >
+    Weekly new signups, enrollments, completions trend line
+
+NODE org_growth_trend_node
+SQL >
+    %
+    SELECT
+        org_id,
+        toStartOfWeek(timestamp) AS week,
+        countIf(event_name = 'user_signed_up') AS signups,
+        countIf(event_name = 'course_enrolled') AS enrollments,
+        countIf(event_name = 'course_completed') AS completions
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        AND event_name IN ('user_signed_up', 'course_enrolled', 'course_completed')
+    GROUP BY org_id, week
+    ORDER BY week ASC
+
+TYPE endpoint

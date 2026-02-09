@@ -1,0 +1,24 @@
+DESCRIPTION >
+    Daily breakdown of visitors by device, country, and referrer for tooltip
+
+NODE daily_visitor_breakdown_node
+SQL >
+    %
+    SELECT
+        org_id,
+        toDate(timestamp) AS date,
+        uniqExact(user_id) AS dau,
+        countIf(JSONExtractString(properties, 'device_type') = 'desktop') AS desktop,
+        countIf(JSONExtractString(properties, 'device_type') = 'mobile') AS mobile,
+        countIf(JSONExtractString(properties, 'device_type') = 'tablet') AS tablet,
+        topK(3)(JSONExtractString(properties, 'country_code')) AS top_countries,
+        topK(1)(JSONExtractString(properties, 'referrer_domain')) AS top_referrer
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND event_name = 'page_view'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, date
+    ORDER BY date ASC
+
+TYPE endpoint

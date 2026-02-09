@@ -1,0 +1,28 @@
+DESCRIPTION >
+    Composite engagement score per user (page views + completions + time spent)
+
+NODE learner_engagement_score_node
+SQL >
+    %
+    SELECT
+        org_id,
+        user_id,
+        countIf(event_name = 'page_view') AS page_views,
+        countIf(event_name = 'activity_completed') AS activities_completed,
+        countIf(event_name = 'course_completed') AS courses_completed,
+        sumIf(JSONExtractFloat(properties, 'seconds_spent'), event_name = 'time_on_activity') AS total_time_spent,
+        (
+            countIf(event_name = 'page_view') * 1
+            + countIf(event_name = 'activity_completed') * 10
+            + countIf(event_name = 'course_completed') * 50
+            + least(sumIf(JSONExtractFloat(properties, 'seconds_spent'), event_name = 'time_on_activity') / 3600, 100) * 5
+        ) AS engagement_score
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, user_id
+    ORDER BY engagement_score DESC
+    LIMIT 100
+
+TYPE endpoint

@@ -35,6 +35,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 // Lazy load heavy components
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
@@ -190,6 +191,35 @@ function ActivityClient(props: ActivityClientProps) {
   const isInitialRender = useRef(true);
   const { contributorStatus } = useContributorStatus(courseuuid);
   const router = useRouter();
+
+  const { track } = useAnalytics()
+  const activityStartTime = useRef(Date.now())
+
+  // Track activity view on mount, time_on_activity on unmount
+  useEffect(() => {
+    if (activity) {
+      activityStartTime.current = Date.now()
+      track('activity_view', {
+        activity_id: activityid,
+        course_id: String(course.id),
+        course_uuid: courseuuid,
+        activity_type: activity.activity_type,
+        activity_name: activity.name,
+      })
+    }
+    return () => {
+      if (activity) {
+        const seconds = Math.round((Date.now() - activityStartTime.current) / 1000)
+        if (seconds > 0) {
+          track('time_on_activity', {
+            activity_id: activityid,
+            course_id: String(course.id),
+            seconds_spent: seconds,
+          })
+        }
+      }
+    }
+  }, [activityid])
 
   // Add SWR for trail data
   const { data: trailData, error: error } = useSWR(

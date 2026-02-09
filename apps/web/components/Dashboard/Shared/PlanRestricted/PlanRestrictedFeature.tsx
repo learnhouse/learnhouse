@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from './PlanBadge'
 
@@ -11,8 +11,8 @@ interface PlanRestrictedFeatureProps {
   currentPlan: PlanLevel
   /** The minimum required plan to access this feature */
   requiredPlan: PlanLevel
-  /** Lucide icon to display in the upgrade screen */
-  icon?: LucideIcon
+  /** Icon component to display in the upgrade screen */
+  icon?: LucideIcon | React.ComponentType<{ className?: string; size?: number }>
   /** Custom icon element (used when not a LucideIcon, e.g., Image) */
   customIcon?: React.ReactNode
   /** i18n key for the title (e.g., "Pro Feature") */

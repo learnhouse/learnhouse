@@ -367,10 +367,10 @@
       "package_file": "প্যাকেজ ফাইল (.zip)",
       "click_to_upload": "আপলোড করতে ক্লিক করুন বা টেনে আনুন",
       "supported_versions": "SCORM 1.2 বা SCORM 2004 প্যাকেজ",
-      "import_info": "বিষয়বস্তু বিশ্লেষণ করতে আপনার SCORM প্যাকেজ আপলোড করুন। আপনি কোর্স কনফিগার করতে এবং অধ্যায়গুলিতে কার্যক্রম বরাদ্দ করতে পারবেন।",
+      "import_info": "আপনার SCORM প্যাকেজ আপলোড করে এর বিষয়বস্তু বিশ্লেষণ করুন। আপনি কোর্স কনফিগার করতে এবং অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করতে পারবেন।",
       "analyze_package": "প্যাকেজ বিশ্লেষণ করুন",
       "package_analyzed": "প্যাকেজ সফলভাবে বিশ্লেষণ করা হয়েছে",
-      "assign_scos": "অধ্যায়গুলিতে কার্যক্রম বরাদ্দ করুন",
+      "assign_scos": "অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করুন",
       "activity_name": "কার্যক্রম",
       "chapter_name": "অধ্যায়",
       "upload_different": "অন্য প্যাকেজ আপলোড করুন",
@@ -456,24 +456,6 @@
       "import_summary": "{{total}}টির মধ্যে {{successful}}টি কোর্স সফলভাবে আমদানি করা হয়েছে",
       "created": "তৈরি হয়েছে",
       "done": "সম্পন্ন"
-    },
-    "scorm": {
-      "upload_package": "SCORM প্যাকেজ আপলোড করুন",
-      "package_file": "প্যাকেজ ফাইল (.zip)",
-      "click_to_upload": "আপলোড করতে ক্লিক করুন বা টেনে আনুন",
-      "supported_versions": "SCORM 1.2 বা SCORM 2004 প্যাকেজ",
-      "import_info": "আপনার SCORM প্যাকেজ আপলোড করে এর বিষয়বস্তু বিশ্লেষণ করুন। আপনি কোর্স কনফিগার করতে এবং অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করতে পারবেন।",
-      "analyze_package": "প্যাকেজ বিশ্লেষণ করুন",
-      "package_analyzed": "প্যাকেজ সফলভাবে বিশ্লেষণ করা হয়েছে",
-      "assign_scos": "অধ্যায়গুলিতে কার্যক্রম নির্ধারণ করুন",
-      "activity_name": "কার্যক্রম",
-      "chapter_name": "অধ্যায়",
-      "upload_different": "অন্য প্যাকেজ আপলোড করুন",
-      "selected": "নির্বাচিত",
-      "create_course": "কোর্স তৈরি করুন",
-      "configure": "কনফিগার করুন",
-      "ready_to_analyze": "বিশ্লেষণের জন্য প্রস্তুত",
-      "course_details": "কোর্সের বিবরণ"
     },
     "create": {
       "choose_type": "নতুন কোর্স তৈরি করুন",
@@ -3166,5 +3148,301 @@
     "no_usergroups": "কোনো ব্যবহারকারী গ্রুপ পাওয়া যায়নি",
     "create_usergroup": "ব্যবহারকারী গ্রুপ তৈরি করুন",
     "link": "লিঙ্ক"
+  },
+  "analytics": {
+    "title": "বিশ্লেষণ",
+    "subtitle": "আপনার শিক্ষার্থী এবং বিষয়বস্তু সম্পর্কে অন্তর্দৃষ্টি",
+    "tabs": {
+      "overview": "সংক্ষিপ্ত বিবরণ",
+      "advanced": "উন্নত"
+    },
+    "not_configured": {
+      "title": "বিশ্লেষণ কনফিগার করা হয়নি",
+      "description": "বিশ্লেষণের জন্য Tinybird সংযোগ প্রয়োজন। এটি সক্ষম করতে <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> এবং <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> এনভায়রনমেন্ট ভেরিয়েবল সেট করুন।"
+    },
+    "advanced_gate": {
+      "requires": "প্রয়োজন",
+      "upgrade_description": "উন্নত বিশ্লেষণ আনলক করতে আপগ্রেড করুন"
+    },
+    "common": {
+      "loading": "লোড হচ্ছে...",
+      "no_data": "এখনও কোনো ডেটা নেই",
+      "users": "ব্যবহারকারী",
+      "views": "ভিউ",
+      "enrollments": "তালিকাভুক্তি",
+      "completions": "সম্পন্ন",
+      "course": "কোর্স",
+      "date": "তারিখ",
+      "user": "ব্যবহারকারী",
+      "type": "ধরন",
+      "expand": "প্রসারিত",
+      "days": "দিন",
+      "score": "স্কোর",
+      "unique_users": "অনন্য ব্যবহারকারী"
+    },
+    "overview": {
+      "live_now": "এখন লাইভ",
+      "last_5_minutes": "শেষ ৫ মিনিট",
+      "signups": "সাইনআপ",
+      "submissions": "জমাদান",
+      "daily_active_users": "দৈনিক সক্রিয় ব্যবহারকারী",
+      "active_users": "সক্রিয় ব্যবহারকারী",
+      "countries": "দেশ",
+      "top_countries": "শীর্ষ দেশ",
+      "devices": "ডিভাইস",
+      "desktop": "ডেস্কটপ",
+      "mobile": "মোবাইল",
+      "tablet": "ট্যাবলেট",
+      "top_referrers": "শীর্ষ রেফারার",
+      "top_referrer": "শীর্ষ রেফারার",
+      "enrollment_funnel": "তালিকাভুক্তি ফানেল",
+      "page_views": "পৃষ্ঠা ভিউ",
+      "course_views": "কোর্স ভিউ",
+      "view_to_enroll": "ভিউ → তালিকাভুক্তি",
+      "enroll_to_complete": "তালিকাভুক্তি → সম্পন্ন",
+      "page_to_complete": "পৃষ্ঠা → সম্পন্ন",
+      "conv_rate": "রূপান্তর হার",
+      "top_courses": "শীর্ষ কোর্স",
+      "activity_engagement": "কার্যকলাপ সম্পৃক্ততা",
+      "activity": "কার্যকলাপ",
+      "avg_time": "গড় সময়",
+      "activities": "কার্যকলাপ",
+      "courses": "কোর্স",
+      "enrollments": "তালিকাভুক্তি",
+      "completions": "সম্পন্ন"
+    },
+    "modals": {
+      "live_users": {
+        "title": "লাইভ ব্যবহারকারী",
+        "description": "শেষ ৫ মিনিটে সক্রিয় ব্যবহারকারী"
+      },
+      "signups": {
+        "title": "সাইনআপ",
+        "description": "শেষ {{days}} দিনে নতুন ব্যবহারকারী নিবন্ধন"
+      },
+      "enrollments": {
+        "title": "তালিকাভুক্তি",
+        "description": "শেষ {{days}} দিনে কোর্স তালিকাভুক্তি"
+      },
+      "completions": {
+        "title": "সম্পন্ন",
+        "description": "শেষ {{days}} দিনে কোর্স সম্পন্ন"
+      },
+      "live_users_table": {
+        "current_page": "বর্তমান পৃষ্ঠা",
+        "device": "ডিভাইস",
+        "country": "দেশ",
+        "last_seen": "সর্বশেষ দেখা"
+      },
+      "signups_table": {
+        "email": "ইমেইল",
+        "method": "পদ্ধতি"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "প্রতিষ্ঠান বৃদ্ধির প্রবণতা",
+        "description": "সাপ্তাহিক সাইনআপ, তালিকাভুক্তি, সম্পন্ন"
+      },
+      "new_vs_returning": {
+        "title": "নতুন বনাম ফিরে আসা ব্যবহারকারী",
+        "description": "বৃদ্ধি বনাম ধরে রাখার স্বাস্থ্য"
+      },
+      "cohort_retention": {
+        "title": "কোহর্ট ধরে রাখা",
+        "description": "সাইনআপ সপ্তাহের পরে % সক্রিয় ব্যবহারকারী",
+        "cohort": "কোহর্ট",
+        "size": "আকার"
+      },
+      "peak_usage": {
+        "title": "শীর্ষ ব্যবহারের সময়",
+        "description": "দিন এবং ঘণ্টা অনুসারে ইভেন্টের পরিমাণ",
+        "days": {
+          "mon": "সোম",
+          "tue": "মঙ্গল",
+          "wed": "বুধ",
+          "thu": "বৃহ",
+          "fri": "শুক্র",
+          "sat": "শনি",
+          "sun": "রবি"
+        },
+        "events": "ইভেন্ট"
+      },
+      "course_dropoff": {
+        "title": "কোর্স ড্রপঅফ",
+        "description": "প্রতি কোর্সে ব্যবহারকারীরা কোথায় থামে"
+      },
+      "time_to_completion": {
+        "title": "সম্পন্ন করার সময়",
+        "description": "প্রতিটি কোর্স সম্পন্ন করতে মধ্যমা দিন"
+      },
+      "completion_velocity": {
+        "title": "সম্পন্নতার গতি",
+        "description": "কার্যকলাপ সম্পন্নের মধ্যে গড় দিন"
+      },
+      "content_type_effectiveness": {
+        "title": "বিষয়বস্তু ধরনের কার্যকারিতা",
+        "description": "কার্যকলাপ ধরন অনুসারে সম্পন্নতার হার"
+      },
+      "course_effectiveness_matrix": {
+        "title": "কোর্স কার্যকারিতা ম্যাট্রিক্স",
+        "description": "কার্যকলাপ সংখ্যা বনাম সম্পন্নতার হার"
+      },
+      "community_correlation": {
+        "title": "সম্প্রদায় সম্পর্ক",
+        "description": "সম্পন্নতার হার: আলোচনাকারী বনাম অ-আলোচনাকারী",
+        "discussion_users": "আলোচনা ব্যবহারকারী",
+        "non_discussion_users": "অ-আলোচনা ব্যবহারকারী"
+      },
+      "learner_engagement_score": {
+        "title": "শিক্ষার্থী সম্পৃক্ততা স্কোর",
+        "description": "সম্পৃক্ততা অনুসারে শীর্ষ শিক্ষার্থী",
+        "user_id": "ব্যবহারকারী আইডি"
+      },
+      "user_progress_snapshot": {
+        "title": "ব্যবহারকারী অগ্রগতি স্ন্যাপশট",
+        "description": "প্রতি কোর্সে প্রতিটি সম্পন্নতা ব্র্যাকেটে ব্যবহারকারী"
+      },
+      "grade_distribution": {
+        "title": "গ্রেড বিতরণ",
+        "description": "অ্যাসাইনমেন্ট গ্রেড হিস্টোগ্রাম"
+      },
+      "search_effectiveness": {
+        "title": "অনুসন্ধান কার্যকারিতা",
+        "description": "শীর্ষ প্রশ্ন এবং শূন্য ফলাফলের হার",
+        "query": "প্রশ্ন",
+        "searches": "অনুসন্ধান",
+        "zero_results": "শূন্য ফলাফল %"
+      },
+      "certification_rate": {
+        "title": "সার্টিফিকেশন হার",
+        "description": "সার্টিফিকেট দাবিকারী সম্পন্নকারীদের %"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "অ্যানালিটিক্স কনফিগার করা হয়নি",
+      "not_configured_desc": "অ্যানালিটিক্সের জন্য Tinybird কনফিগার করা প্রয়োজন। অনুগ্রহ করে আপনার প্রশাসকের সাথে যোগাযোগ করুন।",
+      "common": {
+        "loading": "লোড হচ্ছে...",
+        "no_data": "এখনও কোনো ডেটা নেই",
+        "no_enrollments": "এখনও কোনো তালিকাভুক্তি নেই",
+        "total": "মোট",
+        "daily_avg": "দৈনিক গড়",
+        "latest_day": "সর্বশেষ দিন",
+        "peak": "শীর্ষ",
+        "peak_day": "শীর্ষ দিন",
+        "type": "ধরন",
+        "rate": "হার",
+        "views": "দর্শন",
+        "enrollments": "তালিকাভুক্তি",
+        "completions": "সম্পন্নতা",
+        "completion_rate": "সম্পন্নতার হার",
+        "conversion": "রূপান্তর",
+        "avg_time": "গড় সময়",
+        "total_views": "মোট দর্শন",
+        "total_completions": "মোট সম্পন্নতা",
+        "avg_rate": "গড় হার",
+        "needs_attention": "মনোযোগ প্রয়োজন",
+        "total_samples": "মোট নমুনা",
+        "more_expand": "+{{count}} আরও — প্রসারিত করতে ক্লিক করুন",
+        "activities_count": "{{count}} কার্যক্রম",
+        "pct_of_total": "মোটের %",
+        "bar_width_hint": "বারের প্রস্থ = আপেক্ষিক দর্শন",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "কম রূপান্তর",
+        "avg_completion": "গড় সম্পন্নতা",
+        "avg_prefix": "গড় {{value}}",
+        "unknown_activity": "অজানা কার্যক্রম"
+      },
+      "units": {
+        "done": "সম্পন্ন",
+        "views": "দর্শন",
+        "enrolled": "তালিকাভুক্ত",
+        "learner": "শিক্ষার্থী",
+        "learners": "শিক্ষার্থীরা",
+        "events": "ইভেন্ট",
+        "total": "মোট",
+        "total_views": "মোট দর্শন",
+        "total_completions": "মোট সম্পন্নতা",
+        "total_dropoffs": "মোট ঝরে পড়া",
+        "peak_active": "শীর্ষ সক্রিয়",
+        "conversion": "রূপান্তর",
+        "retention": "ধরে রাখা",
+        "in_cohort": "দলে",
+        "active_learners": "সক্রিয় শিক্ষার্থী",
+        "recent_enrollments": "সাম্প্রতিক তালিকাভুক্তি",
+        "transitions": "রূপান্তর",
+        "median_days": "মধ্যমা দিন",
+        "claim_rate": "দাবির হার",
+        "claimed": "দাবি করা হয়েছে",
+        "completed": "সম্পন্ন",
+        "unique": "অনন্য",
+        "time": "সময়",
+        "avg_per_day": "গড় / দিন",
+        "busiest_time": "সবচেয়ে ব্যস্ত সময়",
+        "minutes": "মিনিট",
+        "hours": "ঘণ্টা",
+        "days": "দিন",
+        "done_before": "আগে সম্পন্ন",
+        "sample": "নমুনা",
+        "samples": "নমুনা",
+        "min": "মিনিট",
+        "avg_per_learner": "শিক্ষার্থী প্রতি গড়"
+      },
+      "type_labels": {
+        "video": "ভিডিও",
+        "document": "নথি",
+        "quiz": "কুইজ",
+        "assignment": "অ্যাসাইনমেন্ট",
+        "dynamic": "ডাইনামিক"
+      },
+      "overview_stats": {
+        "views": "দর্শন",
+        "enrollments": "তালিকাভুক্তি",
+        "completions": "সম্পন্নতা",
+        "completion_rate": "সম্পন্নতার হার"
+      },
+      "activity_type_breakdown": {
+        "title": "কার্যক্রমের ধরন বিভাজন",
+        "subtitle": "বিষয়বস্তুর ধরন অনুসারে বিতরণ এবং সম্পন্নতার হার"
+      },
+      "engagement_by_type": {
+        "title": "বিষয়বস্তুর ধরন অনুসারে সংযুক্তি",
+        "subtitle": "প্রতিটি কার্যক্রম ধরনে শিক্ষার্থীদের সংযুক্তি পরিমাপ",
+        "total_events": "মোট ইভেন্ট",
+        "total_learners": "মোট শিক্ষার্থী"
+      },
+      "peak_hours": {
+        "title": "শীর্ষ শেখার সময়",
+        "subtitle": "এই কোর্সে শিক্ষার্থীরা কখন সবচেয়ে বেশি সক্রিয়",
+        "peak_time": "শীর্ষ সময়",
+        "peak_events": "শীর্ষ ইভেন্ট",
+        "less": "কম",
+        "more": "বেশি",
+        "days": {
+          "mon": "সোম", "tue": "মঙ্গল", "wed": "বুধ", "thu": "বৃহ", "fri": "শুক্র", "sat": "শনি", "sun": "রবি"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} ইভেন্ট"
+      },
+      "enrollment_trend": { "title": "তালিকাভুক্তির প্রবণতা", "subtitle": "সময়ের সাথে দৈনিক নতুন তালিকাভুক্তি" },
+      "active_learners": { "title": "সক্রিয় শিক্ষার্থী", "subtitle": "এই কোর্সে দৈনিক অনন্য সক্রিয় শিক্ষার্থী" },
+      "unique_viewers": { "title": "কোর্স দর্শক", "subtitle": "এই কোর্সের পৃষ্ঠায় দৈনিক অনন্য দর্শক", "total_views": "মোট দর্শন", "peak_viewers": "শীর্ষ দর্শক" },
+      "view_to_enrollment": { "title": "দর্শন → তালিকাভুক্তি", "subtitle": "কতজন দর্শক তালিকাভুক্ত শিক্ষার্থী হন" },
+      "daily_completions": { "title": "দৈনিক সম্পন্নতা", "subtitle": "প্রতিদিনের কার্যক্রম সম্পন্নতা" },
+      "activity_funnel": { "title": "কার্যক্রম সম্পন্নতা ফানেল", "subtitle": "প্রতিটি কার্যক্রমে দর্শন বনাম সম্পন্নতা" },
+      "time_per_activity": { "title": "প্রতিটি কার্যক্রমে ব্যয়িত সময়", "subtitle": "শিক্ষার্থীরা প্রতিটি কার্যক্রমে গড়ে কত সময় ব্যয় করেন" },
+      "activity_dropoff": { "title": "ঝরে পড়ার স্থান", "subtitle": "শিক্ষার্থীরা কোথায় অগ্রগতি বন্ধ করেন — শেষ সম্পন্ন কার্যক্রম", "total_dropoffs": "মোট ঝরে পড়া", "dropoff_points": "ঝরে পড়ার স্থান" },
+      "avg_session_duration": { "title": "প্রতি শিক্ষার্থীর দৈনিক সময়", "subtitle": "প্রতিটি শিক্ষার্থী প্রতিদিন গড়ে কত সময় ব্যয় করেন", "total_time": "মোট সময়", "avg_per_day": "দৈনিক গড়", "minutes_label": "মিনিট" },
+      "learner_progress": { "title": "শিক্ষার্থীর অগ্রগতি", "subtitle": "শিক্ষার্থীরা কতগুলো কার্যক্রম সম্পন্ন করেছেন", "total_across_brackets": "সমস্ত অগ্রগতি শ্রেণীতে {{count}} জন মোট শিক্ষার্থী" },
+      "learner_retention": { "title": "শিক্ষার্থী ধরে রাখা", "subtitle": "প্রথম কার্যক্রমের পরে ফিরে আসা শিক্ষার্থীদের %", "cohort_size": "দলের আকার", "current_retention": "বর্তমান ধরে রাখা", "days_since_first": "প্রথম কার্যক্রমের পর থেকে দিন", "day_label": "দিন {{day}}" },
+      "completion_velocity": { "title": "সম্পন্নতার গতি", "subtitle": "কার্যক্রম সম্পন্নতার মধ্যে গড় সময়", "not_enough_data": "এখনও পর্যাপ্ত ডেটা নেই", "need_transitions": "গতি গণনার জন্য কমপক্ষে ৩টি কার্যক্রম রূপান্তর প্রয়োজন", "not_enough_data_short": "পর্যাপ্ত ডেটা নেই", "need_transitions_short": "৩+ রূপান্তর প্রয়োজন", "avg_between": "সম্পন্নতার মধ্যে গড় {{unit}}", "transitions_tracked": "রূপান্তর ট্র্যাক করা হয়েছে", "raw_hours_avg": "কাঁচা ঘণ্টার গড়", "description": "শিক্ষার্থীরা কত দ্রুত এক কার্যক্রম থেকে পরেরটিতে যান তা পরিমাপ করে। কম ভালো — এর অর্থ শিক্ষার্থীরা দ্রুত বিষয়বস্তুর মধ্য দিয়ে এগোচ্ছেন।" },
+      "time_to_completion": { "title": "সম্পন্নতার সময়", "subtitle": "শিক্ষার্থীদের এই কোর্স শেষ করতে কত সময় লাগে", "median_days_to_complete": "সম্পন্নতার মধ্যমা দিন", "fast_p25": "দ্রুত (P25)", "top_25_finish": "শীর্ষ ২৫% শেষ করেন", "median": "মধ্যমা", "half_finish": "অর্ধেক শেষ করেন", "slow_p75": "ধীর (P75)", "pct_75_finish": "৭৫% শেষ করেন", "based_on": "{{count}} কোর্স সম্পন্নতার ভিত্তিতে", "days_unit": "দিন" },
+      "certification_rate": { "title": "সার্টিফিকেশন হার", "subtitle": "সম্পন্নকারীদের মধ্যে যারা সার্টিফিকেট দাবি করেছেন তাদের %", "of_completers_claimed": "সম্পন্নকারীদের মধ্যে সার্টিফিকেট দাবি করেছেন", "certificates_claimed": "সার্টিফিকেট দাবি করা হয়েছে", "course_completions": "কোর্স সম্পন্নতা" },
+      "top_learners": { "title": "শীর্ষ শিক্ষার্থী", "subtitle": "সম্পন্নতা অনুসারে সবচেয়ে সক্রিয় শিক্ষার্থী", "user_fallback": "ব্যবহারকারী #{{id}}" },
+      "recent_enrollments": { "title": "সাম্প্রতিক তালিকাভুক্তি", "subtitle": "এই কোর্সে সাম্প্রতিক তালিকাভুক্ত শিক্ষার্থী", "count_in_period": "এই সময়ে {{count}} তালিকাভুক্তি" },
+      "pagination": { "range": "{{from}}–{{to}} এর মধ্যে {{total}}" }
+    }
   }
 }

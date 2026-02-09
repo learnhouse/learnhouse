@@ -1,0 +1,19 @@
+DESCRIPTION >
+    Overview of all event counts per org
+
+NODE event_counts_node
+SQL >
+    %
+    SELECT
+        org_id,
+        event_name,
+        count() AS total,
+        uniqExact(user_id) AS unique_users
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY org_id, event_name
+    ORDER BY total DESC
+
+TYPE endpoint

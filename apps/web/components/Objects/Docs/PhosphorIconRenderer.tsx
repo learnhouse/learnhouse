@@ -11,17 +11,20 @@ interface PhosphorIconRendererProps {
 }
 
 // Lazy-load the entire phosphor icons module and pick the icon by name
-const iconCache = new Map<string, React.LazyExoticComponent<any>>()
+type IconProps = { size?: number; weight?: string; className?: string }
+type LazyIconType = React.LazyExoticComponent<React.ComponentType<IconProps>>
 
-function getLazyIcon(name: string) {
+const iconCache = new Map<string, LazyIconType>()
+
+function getLazyIcon(name: string): LazyIconType {
   if (iconCache.has(name)) return iconCache.get(name)!
-  const LazyIcon = lazy(() =>
+  const LazyIcon: LazyIconType = lazy(() =>
     import('@phosphor-icons/react').then((mod) => {
       const Icon = (mod as any)[name]
       if (!Icon) {
-        return { default: () => null }
+        return { default: ((_props: IconProps) => null) as React.ComponentType<IconProps> }
       }
-      return { default: Icon }
+      return { default: Icon as React.ComponentType<IconProps> }
     })
   )
   iconCache.set(name, LazyIcon)

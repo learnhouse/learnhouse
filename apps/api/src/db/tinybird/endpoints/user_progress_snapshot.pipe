@@ -1,0 +1,34 @@
+DESCRIPTION >
+    Distribution of enrolled users by completion percentage bracket
+
+NODE user_progress_snapshot_node
+SQL >
+    %
+    WITH user_activities AS (
+        SELECT
+            org_id,
+            user_id,
+            JSONExtractString(properties, 'course_id') AS course_id,
+            countIf(event_name = 'activity_completed') AS completed_activities
+        FROM events
+        WHERE ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND event_name IN ('course_enrolled', 'activity_completed')
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+        GROUP BY org_id, user_id, course_id
+    )
+    SELECT
+        org_id,
+        course_id,
+        multiIf(
+            completed_activities = 0, '0%',
+            completed_activities <= 2, '1-25%',
+            completed_activities <= 5, '26-50%',
+            completed_activities <= 8, '51-75%',
+            '76-100%'
+        ) AS bracket,
+        count() AS user_count
+    FROM user_activities
+    GROUP BY org_id, course_id, bracket
+    ORDER BY course_id, bracket
+
+TYPE endpoint

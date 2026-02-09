@@ -370,18 +370,18 @@
     "contributor_application_error": "Erreur lors de l'envoi",
     "contribute": "Contribuer",
     "scorm": {
-      "upload_package": "Télécharger le package SCORM",
-      "package_file": "Fichier du package (.zip)",
-      "click_to_upload": "Cliquez pour télécharger ou glissez-déposez",
+      "upload_package": "Téléverser le package SCORM",
+      "package_file": "Fichier de package (.zip)",
+      "click_to_upload": "Cliquez pour téléverser ou glissez-déposez",
       "supported_versions": "Package SCORM 1.2 ou SCORM 2004",
-      "import_info": "Téléchargez votre package SCORM pour analyser son contenu. Vous pourrez configurer le cours et assigner des activités aux chapitres.",
+      "import_info": "Téléversez votre package SCORM pour analyser son contenu. Vous pourrez configurer le cours et assigner les activités aux chapitres.",
       "analyze_package": "Analyser le package",
       "package_analyzed": "Package analysé avec succès",
       "assign_scos": "Assigner les activités aux chapitres",
       "activity_name": "Activité",
       "chapter_name": "Chapitre",
-      "upload_different": "Télécharger un autre package",
-      "selected": "sélectionné",
+      "upload_different": "Téléverser un autre package",
+      "selected": "sélectionné(s)",
       "create_course": "Créer le cours",
       "configure": "Configurer",
       "ready_to_analyze": "Prêt à analyser",
@@ -463,24 +463,6 @@
       "import_summary": "{{successful}} cours sur {{total}} importé(s) avec succès",
       "created": "Créé",
       "done": "Terminé"
-    },
-    "scorm": {
-      "upload_package": "Téléverser le package SCORM",
-      "package_file": "Fichier de package (.zip)",
-      "click_to_upload": "Cliquez pour téléverser ou glissez-déposez",
-      "supported_versions": "Package SCORM 1.2 ou SCORM 2004",
-      "import_info": "Téléversez votre package SCORM pour analyser son contenu. Vous pourrez configurer le cours et assigner les activités aux chapitres.",
-      "analyze_package": "Analyser le package",
-      "package_analyzed": "Package analysé avec succès",
-      "assign_scos": "Assigner les activités aux chapitres",
-      "activity_name": "Activité",
-      "chapter_name": "Chapitre",
-      "upload_different": "Téléverser un autre package",
-      "selected": "sélectionné(s)",
-      "create_course": "Créer le cours",
-      "configure": "Configurer",
-      "ready_to_analyze": "Prêt à analyser",
-      "course_details": "Détails du cours"
     },
     "create": {
       "choose_type": "Créer un nouveau cours",
@@ -3234,5 +3216,391 @@
     "no_usergroups": "Aucun groupe d'utilisateurs trouvé",
     "create_usergroup": "Créer un groupe d'utilisateurs",
     "link": "Lier"
+  },
+  "analytics": {
+    "title": "Analytique",
+    "subtitle": "Informations sur vos apprenants et votre contenu",
+    "tabs": {
+      "overview": "Aperçu",
+      "advanced": "Avancé"
+    },
+    "not_configured": {
+      "title": "Analytique non configurée",
+      "description": "L'analytique nécessite une connexion Tinybird. Définissez les variables d'environnement <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> et <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> pour l'activer."
+    },
+    "advanced_gate": {
+      "requires": "Nécessite",
+      "upgrade_description": "Mettez à niveau pour débloquer l'analytique avancée"
+    },
+    "common": {
+      "loading": "Chargement...",
+      "no_data": "Pas encore de données",
+      "users": "Utilisateurs",
+      "views": "Vues",
+      "enrollments": "Inscriptions",
+      "completions": "Achèvements",
+      "course": "Cours",
+      "date": "Date",
+      "user": "Utilisateur",
+      "type": "Type",
+      "expand": "Développer",
+      "days": "Jours",
+      "score": "Score",
+      "unique_users": "utilisateurs uniques"
+    },
+    "overview": {
+      "live_now": "En direct",
+      "last_5_minutes": "5 dernières minutes",
+      "signups": "Inscriptions",
+      "submissions": "Soumissions",
+      "daily_active_users": "Utilisateurs actifs quotidiens",
+      "active_users": "Utilisateurs actifs",
+      "countries": "Pays",
+      "top_countries": "Principaux pays",
+      "devices": "Appareils",
+      "desktop": "Bureau",
+      "mobile": "Mobile",
+      "tablet": "Tablette",
+      "top_referrers": "Principaux référents",
+      "top_referrer": "Principal référent",
+      "enrollment_funnel": "Entonnoir d'inscription",
+      "page_views": "Pages vues",
+      "course_views": "Vues de cours",
+      "view_to_enroll": "Vue → Inscription",
+      "enroll_to_complete": "Inscription → Achèvement",
+      "page_to_complete": "Page → Achèvement",
+      "conv_rate": "Taux conv.",
+      "top_courses": "Meilleurs cours",
+      "activity_engagement": "Engagement d'activité",
+      "activity": "Activité",
+      "avg_time": "Temps moy.",
+      "activities": "Activités",
+      "courses": "Cours",
+      "enrollments": "Inscriptions",
+      "completions": "Achèvements"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Utilisateurs en direct",
+        "description": "Utilisateurs actifs ces 5 dernières minutes"
+      },
+      "signups": {
+        "title": "Inscriptions",
+        "description": "Nouvelles inscriptions des {{days}} derniers jours"
+      },
+      "enrollments": {
+        "title": "Inscriptions",
+        "description": "Inscriptions aux cours des {{days}} derniers jours"
+      },
+      "completions": {
+        "title": "Achèvements",
+        "description": "Cours terminés des {{days}} derniers jours"
+      },
+      "live_users_table": {
+        "current_page": "Page actuelle",
+        "device": "Appareil",
+        "country": "Pays",
+        "last_seen": "Dernière visite"
+      },
+      "signups_table": {
+        "email": "E-mail",
+        "method": "Méthode"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Tendance de croissance",
+        "description": "Inscriptions, enrôlements, achèvements hebdomadaires"
+      },
+      "new_vs_returning": {
+        "title": "Nouveaux vs récurrents",
+        "description": "Santé croissance vs rétention"
+      },
+      "cohort_retention": {
+        "title": "Rétention par cohorte",
+        "description": "% utilisateurs actifs après la semaine d'inscription",
+        "cohort": "Cohorte",
+        "size": "Taille"
+      },
+      "peak_usage": {
+        "title": "Heures de pointe",
+        "description": "Volume d'événements par jour et heure",
+        "days": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Jeu",
+          "fri": "Ven",
+          "sat": "Sam",
+          "sun": "Dim"
+        },
+        "events": "événements"
+      },
+      "course_dropoff": {
+        "title": "Abandon de cours",
+        "description": "Où les utilisateurs s'arrêtent par cours"
+      },
+      "time_to_completion": {
+        "title": "Temps d'achèvement",
+        "description": "Jours médians pour terminer chaque cours"
+      },
+      "completion_velocity": {
+        "title": "Vitesse d'achèvement",
+        "description": "Jours moyens entre les achèvements"
+      },
+      "content_type_effectiveness": {
+        "title": "Efficacité par type de contenu",
+        "description": "Taux d'achèvement par type d'activité"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Matrice d'efficacité des cours",
+        "description": "Nombre d'activités vs taux d'achèvement"
+      },
+      "community_correlation": {
+        "title": "Corrélation communautaire",
+        "description": "Taux d'achèvement : participants vs non-participants",
+        "discussion_users": "Utilisateurs en discussion",
+        "non_discussion_users": "Utilisateurs sans discussion"
+      },
+      "learner_engagement_score": {
+        "title": "Score d'engagement",
+        "description": "Meilleurs apprenants par engagement",
+        "user_id": "ID utilisateur"
+      },
+      "user_progress_snapshot": {
+        "title": "Progression des utilisateurs",
+        "description": "Utilisateurs par tranche d'achèvement par cours"
+      },
+      "grade_distribution": {
+        "title": "Distribution des notes",
+        "description": "Histogramme des notes"
+      },
+      "search_effectiveness": {
+        "title": "Efficacité de recherche",
+        "description": "Requêtes principales et taux sans résultat",
+        "query": "Requête",
+        "searches": "Recherches",
+        "zero_results": "Sans résultat %"
+      },
+      "certification_rate": {
+        "title": "Taux de certification",
+        "description": "% des acheveurs réclamant un certificat"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analytique non configurée",
+      "not_configured_desc": "L\u2019analytique nécessite la configuration de Tinybird. Veuillez contacter votre administrateur.",
+      "common": {
+        "loading": "Chargement...",
+        "no_data": "Pas encore de données",
+        "no_enrollments": "Pas encore d\u2019inscriptions",
+        "total": "Total",
+        "daily_avg": "Moy. journalière",
+        "latest_day": "Dernier jour",
+        "peak": "Pic",
+        "peak_day": "Jour de pic",
+        "type": "Type",
+        "rate": "Taux",
+        "views": "Vues",
+        "enrollments": "Inscriptions",
+        "completions": "Achèvements",
+        "completion_rate": "Taux d\u2019achèvement",
+        "conversion": "Conversion",
+        "avg_time": "Temps moy.",
+        "total_views": "Vues totales",
+        "total_completions": "Achèvements totaux",
+        "avg_rate": "Taux moy.",
+        "needs_attention": "Attention requise",
+        "total_samples": "Échantillons totaux",
+        "more_expand": "+{{count}} de plus \u2014 cliquez pour développer",
+        "activities_count": "{{count}} activités",
+        "pct_of_total": "% du total",
+        "bar_width_hint": "Largeur de barre = vues relatives",
+        "rate_high": ">70%",
+        "rate_mid": "40\u201370%",
+        "rate_low": "<40%",
+        "low_conversion": "faible conversion",
+        "avg_completion": "achèvement moy.",
+        "avg_prefix": "moy. {{value}}",
+        "unknown_activity": "Activité inconnue"
+      },
+      "units": {
+        "done": "terminé",
+        "views": "vues",
+        "enrolled": "inscrit(s)",
+        "learner": "apprenant",
+        "learners": "apprenants",
+        "events": "événements",
+        "total": "total",
+        "total_views": "vues totales",
+        "total_completions": "achèvements totaux",
+        "total_dropoffs": "abandons totaux",
+        "peak_active": "pic d\u2019activité",
+        "conversion": "conversion",
+        "retention": "rétention",
+        "in_cohort": "dans la cohorte",
+        "active_learners": "apprenants actifs",
+        "recent_enrollments": "inscriptions récentes",
+        "transitions": "transitions",
+        "median_days": "jours médians",
+        "claim_rate": "taux de réclamation",
+        "claimed": "réclamés",
+        "completed": "terminés",
+        "unique": "uniques",
+        "time": "temps",
+        "avg_per_day": "moy. / jour",
+        "busiest_time": "heure de pointe",
+        "minutes": "minutes",
+        "hours": "heures",
+        "days": "jours",
+        "done_before": "terminé avant",
+        "sample": "échantillon",
+        "samples": "échantillons",
+        "min": "min",
+        "avg_per_learner": "Moy. par apprenant"
+      },
+      "type_labels": {
+        "video": "Vidéo",
+        "document": "Document",
+        "quiz": "Quiz",
+        "assignment": "Devoir",
+        "dynamic": "Dynamique"
+      },
+      "overview_stats": {
+        "views": "Vues",
+        "enrollments": "Inscriptions",
+        "completions": "Achèvements",
+        "completion_rate": "Taux d\u2019achèvement"
+      },
+      "activity_type_breakdown": {
+        "title": "Répartition par type d\u2019activité",
+        "subtitle": "Distribution et taux d\u2019achèvement par type de contenu"
+      },
+      "engagement_by_type": {
+        "title": "Engagement par type de contenu",
+        "subtitle": "Métriques d\u2019engagement des apprenants par type d\u2019activité",
+        "total_events": "Événements totaux",
+        "total_learners": "Apprenants totaux"
+      },
+      "peak_hours": {
+        "title": "Heures de pointe d\u2019apprentissage",
+        "subtitle": "Quand les apprenants sont les plus actifs dans ce cours",
+        "peak_time": "Heure de pointe",
+        "peak_events": "Événements au pic",
+        "less": "Moins",
+        "more": "Plus",
+        "days": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Jeu",
+          "fri": "Ven",
+          "sat": "Sam",
+          "sun": "Dim"
+        },
+        "events_tooltip": "{{day}} {{hour}} : {{count}} événements"
+      },
+      "enrollment_trend": {
+        "title": "Tendance des inscriptions",
+        "subtitle": "Nouvelles inscriptions journalières au fil du temps"
+      },
+      "active_learners": {
+        "title": "Apprenants actifs",
+        "subtitle": "Apprenants actifs uniques par jour dans ce cours"
+      },
+      "unique_viewers": {
+        "title": "Visiteurs du cours",
+        "subtitle": "Visiteurs uniques quotidiens de la page de ce cours",
+        "total_views": "Vues totales",
+        "peak_viewers": "Pic de visiteurs"
+      },
+      "view_to_enrollment": {
+        "title": "Vue \u2192 Inscription",
+        "subtitle": "Combien de visiteurs deviennent des apprenants inscrits"
+      },
+      "daily_completions": {
+        "title": "Achèvements quotidiens",
+        "subtitle": "Achèvements d\u2019activités par jour"
+      },
+      "activity_funnel": {
+        "title": "Entonnoir d\u2019achèvement des activités",
+        "subtitle": "Vues vs achèvements par activité"
+      },
+      "time_per_activity": {
+        "title": "Temps par activité",
+        "subtitle": "Temps moyen passé par les apprenants sur chaque activité"
+      },
+      "activity_dropoff": {
+        "title": "Points d\u2019abandon",
+        "subtitle": "Où les apprenants arrêtent de progresser \u2014 dernière activité complétée",
+        "total_dropoffs": "Abandons totaux",
+        "dropoff_points": "Points d\u2019abandon"
+      },
+      "avg_session_duration": {
+        "title": "Temps quotidien par apprenant",
+        "subtitle": "Temps moyen que chaque apprenant passe par jour",
+        "total_time": "Temps total",
+        "avg_per_day": "Moy. par jour",
+        "minutes_label": "Minutes"
+      },
+      "learner_progress": {
+        "title": "Progression des apprenants",
+        "subtitle": "Combien d\u2019activités les apprenants ont terminées",
+        "total_across_brackets": "{{count}} apprenants au total dans toutes les tranches de progression"
+      },
+      "learner_retention": {
+        "title": "Rétention des apprenants",
+        "subtitle": "% d\u2019apprenants revenant après la première activité",
+        "cohort_size": "Taille de la cohorte",
+        "current_retention": "Rétention actuelle",
+        "days_since_first": "Jours depuis la première activité",
+        "day_label": "Jour {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Vitesse d\u2019achèvement",
+        "subtitle": "Temps moyen entre les achèvements d\u2019activités",
+        "not_enough_data": "Pas assez de données",
+        "need_transitions": "Il faut au moins 3 transitions d\u2019activité pour calculer la vitesse",
+        "not_enough_data_short": "Données insuffisantes",
+        "need_transitions_short": "3+ transitions nécessaires",
+        "avg_between": "moy. {{unit}} entre les achèvements",
+        "transitions_tracked": "transitions suivies",
+        "raw_hours_avg": "moy. heures brutes",
+        "description": "Mesure la rapidité avec laquelle les apprenants progressent d\u2019une activité à la suivante. Plus bas est mieux \u2014 cela signifie que les apprenants avancent plus vite dans le contenu."
+      },
+      "time_to_completion": {
+        "title": "Temps jusqu\u2019à l\u2019achèvement",
+        "subtitle": "Combien de temps il faut aux apprenants pour terminer ce cours",
+        "median_days_to_complete": "jours médians pour terminer",
+        "fast_p25": "Rapide (P25)",
+        "top_25_finish": "Les 25% les plus rapides terminent avant",
+        "median": "Médiane",
+        "half_finish": "La moitié termine avant",
+        "slow_p75": "Lent (P75)",
+        "pct_75_finish": "75% terminent avant",
+        "based_on": "Basé sur {{count}} achèvement(s) de cours",
+        "days_unit": "jours"
+      },
+      "certification_rate": {
+        "title": "Taux de certification",
+        "subtitle": "% des acheveurs ayant réclamé leur certificat",
+        "of_completers_claimed": "des acheveurs ont réclamé un certificat",
+        "certificates_claimed": "certificats réclamés",
+        "course_completions": "achèvements de cours"
+      },
+      "top_learners": {
+        "title": "Meilleurs apprenants",
+        "subtitle": "Apprenants les plus actifs par achèvements",
+        "user_fallback": "Utilisateur #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Inscriptions récentes",
+        "subtitle": "Derniers apprenants inscrits à ce cours",
+        "count_in_period": "{{count}} inscriptions sur cette période"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} sur {{total}}"
+      }
+    }
   }
 }

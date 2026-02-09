@@ -381,10 +381,10 @@
       "upload_package": "SCORMパッケージをアップロード",
       "package_file": "パッケージファイル (.zip)",
       "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
-      "supported_versions": "SCORM 1.2またはSCORM 2004パッケージ",
+      "supported_versions": "SCORM 1.2 または SCORM 2004 パッケージ",
       "import_info": "SCORMパッケージをアップロードして内容を分析します。コースを設定し、アクティビティをチャプターに割り当てることができます。",
       "analyze_package": "パッケージを分析",
-      "package_analyzed": "パッケージの分析が完了しました",
+      "package_analyzed": "パッケージの分析に成功しました",
       "assign_scos": "アクティビティをチャプターに割り当て",
       "activity_name": "アクティビティ",
       "chapter_name": "チャプター",
@@ -471,24 +471,6 @@
       "import_summary": "{{total}} 件中 {{successful}} 件のコースをインポートしました",
       "created": "作成済み",
       "done": "完了"
-    },
-    "scorm": {
-      "upload_package": "SCORMパッケージをアップロード",
-      "package_file": "パッケージファイル (.zip)",
-      "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
-      "supported_versions": "SCORM 1.2 または SCORM 2004 パッケージ",
-      "import_info": "SCORMパッケージをアップロードして内容を分析します。コースを設定し、アクティビティをチャプターに割り当てることができます。",
-      "analyze_package": "パッケージを分析",
-      "package_analyzed": "パッケージの分析に成功しました",
-      "assign_scos": "アクティビティをチャプターに割り当て",
-      "activity_name": "アクティビティ",
-      "chapter_name": "チャプター",
-      "upload_different": "別のパッケージをアップロード",
-      "selected": "選択済み",
-      "create_course": "コースを作成",
-      "configure": "設定",
-      "ready_to_analyze": "分析準備完了",
-      "course_details": "コース詳細"
     },
     "create": {
       "choose_type": "新しいコースを作成",
@@ -3235,5 +3217,230 @@
     "no_usergroups": "ユーザーグループが見つかりません",
     "create_usergroup": "ユーザーグループを作成",
     "link": "リンク"
+  },
+  "analytics": {
+    "title": "アナリティクス",
+    "subtitle": "学習者とコンテンツに関するインサイト",
+    "tabs": {
+      "overview": "概要",
+      "advanced": "高度"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "必要",
+      "upgrade_description": "高度な分析を解除するにはアップグレードしてください"
+    },
+    "common": {
+      "loading": "読み込み中...",
+      "no_data": "データがありません",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "登録",
+      "completions": "完了"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "認定率",
+        "description": "証明書を申請した修了者の割合"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "アナリティクス未設定",
+      "not_configured_desc": "アナリティクスにはTinybirdの設定が必要です。管理者にお問い合わせください。",
+      "common": {
+        "loading": "読み込み中...", "no_data": "データがまだありません", "no_enrollments": "登録がまだありません",
+        "total": "合計", "daily_avg": "日平均", "latest_day": "最新日",
+        "peak": "ピーク", "peak_day": "ピーク日", "type": "種類", "rate": "率",
+        "views": "閲覧数", "enrollments": "登録数", "completions": "完了数",
+        "completion_rate": "完了率", "conversion": "コンバージョン", "avg_time": "平均時間",
+        "total_views": "総閲覧数", "total_completions": "総完了数",
+        "avg_rate": "平均率", "needs_attention": "要注意", "total_samples": "総サンプル数",
+        "more_expand": "+{{count}}件 — クリックして展開", "activities_count": "{{count}}個のアクティビティ",
+        "pct_of_total": "全体の%", "bar_width_hint": "バーの幅 = 相対的な閲覧数",
+        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
+        "low_conversion": "低コンバージョン", "avg_completion": "平均完了",
+        "avg_prefix": "平均 {{value}}", "unknown_activity": "不明なアクティビティ"
+      },
+      "units": {
+        "done": "完了", "views": "閲覧", "enrolled": "登録済み",
+        "learner": "学習者", "learners": "学習者", "events": "イベント",
+        "total": "合計", "total_views": "総閲覧数", "total_completions": "総完了数",
+        "total_dropoffs": "総離脱数", "peak_active": "ピークアクティブ",
+        "conversion": "コンバージョン", "retention": "リテンション", "in_cohort": "コホート内",
+        "active_learners": "アクティブ学習者", "recent_enrollments": "最近の登録",
+        "transitions": "遷移", "median_days": "中央値日数",
+        "claim_rate": "申請率", "claimed": "申請済み", "completed": "完了済み",
+        "unique": "ユニーク", "time": "時間", "avg_per_day": "日平均",
+        "busiest_time": "最も忙しい時間", "minutes": "分", "hours": "時間",
+        "days": "日", "done_before": "以前に完了", "sample": "サンプル",
+        "samples": "サンプル", "min": "分", "avg_per_learner": "学習者あたり平均"
+      },
+      "type_labels": { "video": "動画", "document": "ドキュメント", "quiz": "クイズ", "assignment": "課題", "dynamic": "ダイナミック" },
+      "overview_stats": { "views": "閲覧数", "enrollments": "登録数", "completions": "完了数", "completion_rate": "完了率" },
+      "activity_type_breakdown": { "title": "アクティビティタイプ内訳", "subtitle": "コンテンツタイプ別の分布と完了率" },
+      "engagement_by_type": { "title": "コンテンツタイプ別エンゲージメント", "subtitle": "アクティビティタイプ別の学習者エンゲージメント指標", "total_events": "総イベント数", "total_learners": "総学習者数" },
+      "peak_hours": { "title": "学習ピーク時間", "subtitle": "このコースで学習者が最もアクティブな時間帯", "peak_time": "ピーク時間", "peak_events": "ピークイベント", "less": "少ない", "more": "多い", "days": { "mon": "月", "tue": "火", "wed": "水", "thu": "木", "fri": "金", "sat": "土", "sun": "日" }, "events_tooltip": "{{day}} {{hour}}: {{count}}イベント" },
+      "enrollment_trend": { "title": "登録トレンド", "subtitle": "日別の新規登録推移" },
+      "active_learners": { "title": "アクティブ学習者", "subtitle": "このコースの日別ユニークアクティブ学習者数" },
+      "unique_viewers": { "title": "コース閲覧者", "subtitle": "コースページの日別ユニーク訪問者数", "total_views": "総閲覧数", "peak_viewers": "ピーク閲覧者数" },
+      "view_to_enrollment": { "title": "閲覧 → 登録", "subtitle": "閲覧者のうち何人が登録学習者になったか" },
+      "daily_completions": { "title": "日別完了数", "subtitle": "1日あたりのアクティビティ完了数" },
+      "activity_funnel": { "title": "アクティビティ完了ファネル", "subtitle": "アクティビティ別の閲覧数 vs 完了数" },
+      "time_per_activity": { "title": "アクティビティ別所要時間", "subtitle": "各アクティビティに学習者が費やす平均時間" },
+      "activity_dropoff": { "title": "離脱ポイント", "subtitle": "学習者が進行を停止する場所 — 最後に完了したアクティビティ", "total_dropoffs": "総離脱数", "dropoff_points": "離脱ポイント" },
+      "avg_session_duration": { "title": "学習者あたりの日別時間", "subtitle": "各学習者が1日に費やす平均時間", "total_time": "総時間", "avg_per_day": "日平均", "minutes_label": "分" },
+      "learner_progress": { "title": "学習者の進捗", "subtitle": "学習者が完了したアクティビティ数", "total_across_brackets": "全進捗区分で合計{{count}}人の学習者" },
+      "learner_retention": { "title": "学習者リテンション", "subtitle": "最初のアクティビティ後に戻ってくる学習者の割合", "cohort_size": "コホートサイズ", "current_retention": "現在のリテンション", "days_since_first": "最初のアクティビティからの日数", "day_label": "{{day}}日目" },
+      "completion_velocity": { "title": "完了速度", "subtitle": "アクティビティ完了間の平均時間", "not_enough_data": "データが不足しています", "need_transitions": "速度を計算するには少なくとも3つのアクティビティ遷移が必要です", "not_enough_data_short": "データ不足", "need_transitions_short": "3つ以上の遷移が必要", "avg_between": "完了間の平均 {{unit}}", "transitions_tracked": "追跡された遷移", "raw_hours_avg": "生の時間平均", "description": "学習者が次のアクティビティにどれだけ速く進むかを測定します。低いほど良い — 学習者がコンテンツをより速く進めていることを意味します。" },
+      "time_to_completion": { "title": "完了までの時間", "subtitle": "学習者がこのコースを終えるまでにかかる時間", "median_days_to_complete": "完了までの中央値日数", "fast_p25": "速い (P25)", "top_25_finish": "上位25%の完了", "median": "中央値", "half_finish": "半数の完了", "slow_p75": "遅い (P75)", "pct_75_finish": "75%の完了", "based_on": "{{count}}件のコース完了に基づく", "days_unit": "日" },
+      "certification_rate": { "title": "認定率", "subtitle": "証明書を申請した修了者の割合", "of_completers_claimed": "の修了者が証明書を申請", "certificates_claimed": "申請された証明書", "course_completions": "コース完了数" },
+      "top_learners": { "title": "トップ学習者", "subtitle": "完了数による最もアクティブな学習者", "user_fallback": "ユーザー #{{id}}" },
+      "recent_enrollments": { "title": "最近の登録", "subtitle": "このコースに最近登録した学習者", "count_in_period": "この期間の登録数 {{count}}件" },
+      "pagination": { "range": "{{from}}–{{to}} / {{total}}" }
+    }
   }
 }
