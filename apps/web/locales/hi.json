@@ -366,10 +366,10 @@
       "package_file": "पैकेज फ़ाइल (.zip)",
       "click_to_upload": "अपलोड करने के लिए क्लिक करें या ड्रैग और ड्रॉप करें",
       "supported_versions": "SCORM 1.2 या SCORM 2004 पैकेज",
-      "import_info": "सामग्री का विश्लेषण करने के लिए अपना SCORM पैकेज अपलोड करें। आप कोर्स कॉन्फ़िगर कर सकेंगे और गतिविधियों को अध्यायों में असाइन कर सकेंगे।",
+      "import_info": "अपने SCORM पैकेज को अपलोड करके उसकी सामग्री का विश्लेषण करें। आप कोर्स को कॉन्फ़िगर कर सकते हैं और गतिविधियों को अध्यायों में असाइन कर सकते हैं।",
       "analyze_package": "पैकेज का विश्लेषण करें",
-      "package_analyzed": "पैकेज सफलतापूर्वक विश्लेषित",
-      "assign_scos": "अध्यायों को गतिविधियाँ असाइन करें",
+      "package_analyzed": "पैकेज का सफलतापूर्वक विश्लेषण किया गया",
+      "assign_scos": "गतिविधियां अध्यायों को असाइन करें",
       "activity_name": "गतिविधि",
       "chapter_name": "अध्याय",
       "upload_different": "अलग पैकेज अपलोड करें",
@@ -455,24 +455,6 @@
       "import_summary": "{{total}} में से {{successful}} कोर्स सफलतापूर्वक आयात किए गए",
       "created": "बनाया गया",
       "done": "पूर्ण"
-    },
-    "scorm": {
-      "upload_package": "SCORM पैकेज अपलोड करें",
-      "package_file": "पैकेज फ़ाइल (.zip)",
-      "click_to_upload": "अपलोड करने के लिए क्लिक करें या ड्रैग और ड्रॉप करें",
-      "supported_versions": "SCORM 1.2 या SCORM 2004 पैकेज",
-      "import_info": "अपने SCORM पैकेज को अपलोड करके उसकी सामग्री का विश्लेषण करें। आप कोर्स को कॉन्फ़िगर कर सकते हैं और गतिविधियों को अध्यायों में असाइन कर सकते हैं।",
-      "analyze_package": "पैकेज का विश्लेषण करें",
-      "package_analyzed": "पैकेज का सफलतापूर्वक विश्लेषण किया गया",
-      "assign_scos": "गतिविधियां अध्यायों को असाइन करें",
-      "activity_name": "गतिविधि",
-      "chapter_name": "अध्याय",
-      "upload_different": "अलग पैकेज अपलोड करें",
-      "selected": "चयनित",
-      "create_course": "कोर्स बनाएं",
-      "configure": "कॉन्फ़िगर करें",
-      "ready_to_analyze": "विश्लेषण के लिए तैयार",
-      "course_details": "कोर्स विवरण"
     },
     "create": {
       "choose_type": "नया कोर्स बनाएं",
@@ -3165,5 +3147,301 @@
     "no_usergroups": "कोई उपयोगकर्ता समूह नहीं मिला",
     "create_usergroup": "उपयोगकर्ता समूह बनाएं",
     "link": "लिंक"
+  },
+  "analytics": {
+    "title": "विश्लेषण",
+    "subtitle": "अपने शिक्षार्थियों और सामग्री के बारे में जानकारी",
+    "tabs": {
+      "overview": "अवलोकन",
+      "advanced": "उन्नत"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "आवश्यक",
+      "upgrade_description": "उन्नत विश्लेषण अनलॉक करने के लिए अपग्रेड करें"
+    },
+    "common": {
+      "loading": "लोड हो रहा है...",
+      "no_data": "अभी तक कोई डेटा नहीं",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "नामांकन",
+      "completions": "पूर्णता"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "एनालिटिक्स कॉन्फ़िगर नहीं है",
+      "not_configured_desc": "एनालिटिक्स के लिए Tinybird कॉन्फ़िगर करना आवश्यक है। कृपया अपने व्यवस्थापक से संपर्क करें।",
+      "common": {
+        "loading": "लोड हो रहा है...",
+        "no_data": "अभी तक कोई डेटा नहीं",
+        "no_enrollments": "अभी तक कोई नामांकन नहीं",
+        "total": "कुल",
+        "daily_avg": "दैनिक औसत",
+        "latest_day": "नवीनतम दिन",
+        "peak": "शीर्ष",
+        "peak_day": "शीर्ष दिन",
+        "type": "प्रकार",
+        "rate": "दर",
+        "views": "दृश्य",
+        "enrollments": "नामांकन",
+        "completions": "पूर्णता",
+        "completion_rate": "पूर्णता दर",
+        "conversion": "रूपांतरण",
+        "avg_time": "औसत समय",
+        "total_views": "कुल दृश्य",
+        "total_completions": "कुल पूर्णता",
+        "avg_rate": "औसत दर",
+        "needs_attention": "ध्यान आवश्यक",
+        "total_samples": "कुल नमूने",
+        "more_expand": "+{{count}} और — विस्तार करने के लिए क्लिक करें",
+        "activities_count": "{{count}} गतिविधियाँ",
+        "pct_of_total": "कुल का %",
+        "bar_width_hint": "बार की चौड़ाई = सापेक्ष दृश्य",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "कम रूपांतरण",
+        "avg_completion": "औसत पूर्णता",
+        "avg_prefix": "औसत {{value}}",
+        "unknown_activity": "अज्ञात गतिविधि"
+      },
+      "units": {
+        "done": "पूर्ण",
+        "views": "दृश्य",
+        "enrolled": "नामांकित",
+        "learner": "शिक्षार्थी",
+        "learners": "शिक्षार्थी",
+        "events": "इवेंट",
+        "total": "कुल",
+        "total_views": "कुल दृश्य",
+        "total_completions": "कुल पूर्णता",
+        "total_dropoffs": "कुल ड्रॉप-ऑफ़",
+        "peak_active": "शीर्ष सक्रिय",
+        "conversion": "रूपांतरण",
+        "retention": "प्रतिधारण",
+        "in_cohort": "समूह में",
+        "active_learners": "सक्रिय शिक्षार्थी",
+        "recent_enrollments": "हाल के नामांकन",
+        "transitions": "संक्रमण",
+        "median_days": "मध्य दिन",
+        "claim_rate": "दावा दर",
+        "claimed": "दावा किया गया",
+        "completed": "पूर्ण",
+        "unique": "अद्वितीय",
+        "time": "समय",
+        "avg_per_day": "औसत / दिन",
+        "busiest_time": "सबसे व्यस्त समय",
+        "minutes": "मिनट",
+        "hours": "घंटे",
+        "days": "दिन",
+        "done_before": "पहले पूर्ण",
+        "sample": "नमूना",
+        "samples": "नमूने",
+        "min": "मिनट",
+        "avg_per_learner": "प्रति शिक्षार्थी औसत"
+      },
+      "type_labels": {
+        "video": "वीडियो",
+        "document": "दस्तावेज़",
+        "quiz": "क्विज़",
+        "assignment": "असाइनमेंट",
+        "dynamic": "डायनामिक"
+      },
+      "overview_stats": {
+        "views": "दृश्य",
+        "enrollments": "नामांकन",
+        "completions": "पूर्णता",
+        "completion_rate": "पूर्णता दर"
+      },
+      "activity_type_breakdown": {
+        "title": "गतिविधि प्रकार विभाजन",
+        "subtitle": "सामग्री प्रकार के अनुसार वितरण और पूर्णता दर"
+      },
+      "engagement_by_type": {
+        "title": "सामग्री प्रकार के अनुसार सहभागिता",
+        "subtitle": "प्रत्येक गतिविधि प्रकार में शिक्षार्थी सहभागिता मापदंड",
+        "total_events": "कुल इवेंट",
+        "total_learners": "कुल शिक्षार्थी"
+      },
+      "peak_hours": {
+        "title": "शीर्ष सीखने के घंटे",
+        "subtitle": "इस कोर्स में शिक्षार्थी कब सबसे अधिक सक्रिय हैं",
+        "peak_time": "शीर्ष समय",
+        "peak_events": "शीर्ष इवेंट",
+        "less": "कम",
+        "more": "अधिक",
+        "days": {
+          "mon": "सोम", "tue": "मंगल", "wed": "बुध", "thu": "गुरु", "fri": "शुक्र", "sat": "शनि", "sun": "रवि"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} इवेंट"
+      },
+      "enrollment_trend": { "title": "नामांकन प्रवृत्ति", "subtitle": "समय के साथ दैनिक नए नामांकन" },
+      "active_learners": { "title": "सक्रिय शिक्षार्थी", "subtitle": "इस कोर्स में दैनिक अद्वितीय सक्रिय शिक्षार्थी" },
+      "unique_viewers": { "title": "कोर्स दर्शक", "subtitle": "इस कोर्स पृष्ठ पर दैनिक अद्वितीय आगंतुक", "total_views": "कुल दृश्य", "peak_viewers": "शीर्ष दर्शक" },
+      "view_to_enrollment": { "title": "दृश्य → नामांकन", "subtitle": "कितने दर्शक नामांकित शिक्षार्थी बनते हैं" },
+      "daily_completions": { "title": "दैनिक पूर्णता", "subtitle": "प्रतिदिन गतिविधि पूर्णता" },
+      "activity_funnel": { "title": "गतिविधि पूर्णता फ़नल", "subtitle": "प्रत्येक गतिविधि में दृश्य बनाम पूर्णता" },
+      "time_per_activity": { "title": "प्रति गतिविधि समय", "subtitle": "शिक्षार्थी प्रत्येक गतिविधि पर औसतन कितना समय बिताते हैं" },
+      "activity_dropoff": { "title": "ड्रॉप-ऑफ़ बिंदु", "subtitle": "शिक्षार्थी कहाँ प्रगति रोकते हैं — अंतिम पूर्ण गतिविधि", "total_dropoffs": "कुल ड्रॉप-ऑफ़", "dropoff_points": "ड्रॉप-ऑफ़ बिंदु" },
+      "avg_session_duration": { "title": "प्रति शिक्षार्थी दैनिक समय", "subtitle": "प्रत्येक शिक्षार्थी प्रतिदिन औसतन कितना समय बिताता है", "total_time": "कुल समय", "avg_per_day": "प्रति दिन औसत", "minutes_label": "मिनट" },
+      "learner_progress": { "title": "शिक्षार्थी प्रगति", "subtitle": "शिक्षार्थियों ने कितनी गतिविधियाँ पूर्ण की हैं", "total_across_brackets": "सभी प्रगति वर्गों में {{count}} कुल शिक्षार्थी" },
+      "learner_retention": { "title": "शिक्षार्थी प्रतिधारण", "subtitle": "पहली गतिविधि के बाद लौटने वाले शिक्षार्थियों का %", "cohort_size": "समूह का आकार", "current_retention": "वर्तमान प्रतिधारण", "days_since_first": "पहली गतिविधि के बाद के दिन", "day_label": "दिन {{day}}" },
+      "completion_velocity": { "title": "पूर्णता गति", "subtitle": "गतिविधि पूर्णता के बीच औसत समय", "not_enough_data": "अभी तक पर्याप्त डेटा नहीं", "need_transitions": "गति गणना के लिए कम से कम 3 गतिविधि संक्रमण आवश्यक", "not_enough_data_short": "पर्याप्त डेटा नहीं", "need_transitions_short": "3+ संक्रमण आवश्यक", "avg_between": "पूर्णता के बीच औसत {{unit}}", "transitions_tracked": "संक्रमण ट्रैक किए गए", "raw_hours_avg": "कच्चे घंटों का औसत", "description": "यह मापता है कि शिक्षार्थी कितनी तेज़ी से एक गतिविधि से अगली में जाते हैं। कम बेहतर है — इसका मतलब है कि शिक्षार्थी सामग्री में तेज़ी से आगे बढ़ रहे हैं।" },
+      "time_to_completion": { "title": "पूर्णता का समय", "subtitle": "शिक्षार्थियों को यह कोर्स पूरा करने में कितना समय लगता है", "median_days_to_complete": "पूर्णता के लिए मध्य दिन", "fast_p25": "तेज़ (P25)", "top_25_finish": "शीर्ष 25% तक पूर्ण", "median": "मध्य", "half_finish": "आधे तक पूर्ण", "slow_p75": "धीमा (P75)", "pct_75_finish": "75% तक पूर्ण", "based_on": "{{count}} कोर्स पूर्णता के आधार पर", "days_unit": "दिन" },
+      "certification_rate": { "title": "प्रमाणन दर", "subtitle": "पूर्ण करने वालों में से जिन्होंने प्रमाणपत्र का दावा किया उनका %", "of_completers_claimed": "पूर्ण करने वालों ने प्रमाणपत्र का दावा किया", "certificates_claimed": "प्रमाणपत्र दावा किए गए", "course_completions": "कोर्स पूर्णता" },
+      "top_learners": { "title": "शीर्ष शिक्षार्थी", "subtitle": "पूर्णता के अनुसार सबसे सक्रिय शिक्षार्थी", "user_fallback": "उपयोगकर्ता #{{id}}" },
+      "recent_enrollments": { "title": "हाल के नामांकन", "subtitle": "इस कोर्स में नवीनतम नामांकित शिक्षार्थी", "count_in_period": "इस अवधि में {{count}} नामांकन" },
+      "pagination": { "range": "{{from}}–{{to}} में से {{total}}" }
+    }
   }
 }

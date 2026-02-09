@@ -79,8 +79,6 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     isSaving,
   } = useCourseFieldSync('editCourseGeneral');
 
-  // Track if we should sync (to avoid syncing on initial load)
-  const hasInitializedRef = useRef(false);
   const previousValuesRef = useRef<any>(null);
 
   // Initialize learnings as a JSON array if it's not already
@@ -140,46 +138,34 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     enableReinitialize: true,
   }) as any;
 
-  // Sync form changes to context using the new system
+  // Sync form changes to context — compare against formik.initialValues
+  // so that reinitialization from server data is never treated as a user edit
   useEffect(() => {
-    // Skip if loading or saving
     if (isLoading || isSaving) return;
 
-    // Skip initial mount
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      previousValuesRef.current = formik.values;
-      return;
-    }
+    // Compare current values against formik's own initialValues.
+    // When enableReinitialize triggers, both update together → no false diff.
+    const changes: any = {};
+    Object.keys(formik.values).forEach(key => {
+      if (formik.values[key] !== formik.initialValues[key]) {
+        changes[key] = formik.values[key];
+      }
+    });
 
-    // Check if values actually changed from previous
-    const prevValues = previousValuesRef.current;
-    if (!prevValues) {
-      previousValuesRef.current = formik.values;
-      return;
-    }
+    const hasChanges = Object.keys(changes).length > 0;
 
-    // Compare current values with previous
-    const hasChanges = Object.keys(formik.values).some(
-      key => formik.values[key] !== prevValues[key]
-    );
-
+    // Only sync when there are actual user changes AND values changed since last sync
     if (hasChanges) {
-      // Build only the changed fields
-      const changes: any = {};
-      Object.keys(formik.values).forEach(key => {
-        if (formik.values[key] !== prevValues[key]) {
-          changes[key] = formik.values[key];
-        }
-      });
-
-      // Sync changes with debounce
-      syncChanges(changes);
-
-      // Update previous values ref
-      previousValuesRef.current = { ...formik.values };
+      const changesStr = JSON.stringify(changes);
+      const prevStr = JSON.stringify(previousValuesRef.current);
+      if (changesStr !== prevStr) {
+        previousValuesRef.current = changes;
+        syncChanges(changes);
+      }
+    } else {
+      previousValuesRef.current = null;
     }
-  }, [formik.values, isLoading, isSaving, syncChanges]);
+  }, [formik.values, formik.initialValues, isLoading, isSaving, syncChanges]);
 
   // Cleanup on unmount
   useEffect(() => {

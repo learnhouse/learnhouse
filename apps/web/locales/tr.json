@@ -367,11 +367,11 @@
       "package_file": "Paket Dosyası (.zip)",
       "click_to_upload": "Yüklemek için tıklayın veya sürükleyip bırakın",
       "supported_versions": "SCORM 1.2 veya SCORM 2004 paketi",
-      "import_info": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Kursu yapılandırabilir ve etkinlikleri bölümlere atayabilirsiniz.",
+      "import_info": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Kursu yapılandırabilir ve aktiviteleri bölümlere atayabilirsiniz.",
       "analyze_package": "Paketi Analiz Et",
       "package_analyzed": "Paket Başarıyla Analiz Edildi",
-      "assign_scos": "Etkinlikleri Bölümlere Ata",
-      "activity_name": "Etkinlik",
+      "assign_scos": "Aktiviteleri Bölümlere Ata",
+      "activity_name": "Aktivite",
       "chapter_name": "Bölüm",
       "upload_different": "Farklı paket yükle",
       "selected": "seçildi",
@@ -456,24 +456,6 @@
       "import_summary": "{{total}} kursun {{successful}} tanesi başarıyla içe aktarıldı",
       "created": "Oluşturuldu",
       "done": "Bitti"
-    },
-    "scorm": {
-      "upload_package": "SCORM Paketi Yükle",
-      "package_file": "Paket Dosyası (.zip)",
-      "click_to_upload": "Yüklemek için tıklayın veya sürükleyip bırakın",
-      "supported_versions": "SCORM 1.2 veya SCORM 2004 paketi",
-      "import_info": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Kursu yapılandırabilir ve aktiviteleri bölümlere atayabilirsiniz.",
-      "analyze_package": "Paketi Analiz Et",
-      "package_analyzed": "Paket Başarıyla Analiz Edildi",
-      "assign_scos": "Aktiviteleri Bölümlere Ata",
-      "activity_name": "Aktivite",
-      "chapter_name": "Bölüm",
-      "upload_different": "Farklı paket yükle",
-      "selected": "seçildi",
-      "create_course": "Kurs Oluştur",
-      "configure": "Yapılandır",
-      "ready_to_analyze": "Analiz için hazır",
-      "course_details": "Kurs Detayları"
     },
     "create": {
       "choose_type": "Yeni Kurs Oluştur",
@@ -2930,6 +2912,231 @@
         "suggestion_timeline": "Zaman cizelgesi",
         "suggestion_timeline_prompt": "Genisletilebilir ayrintilarla onemli tarihi olaylari gosteren etkilesimli bir zaman cizelgesi olusturun"
       }
+    }
+  },
+  "analytics": {
+    "title": "Analitik",
+    "subtitle": "Öğrencileriniz ve içerikleriniz hakkında bilgiler",
+    "tabs": {
+      "overview": "Genel Bakış",
+      "advanced": "Gelişmiş"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "Gerektirir",
+      "upgrade_description": "Gelişmiş analitikleri açmak için yükseltin"
+    },
+    "common": {
+      "loading": "Yükleniyor...",
+      "no_data": "Henüz veri yok",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "Kayıtlar",
+      "completions": "Tamamlananlar"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analitik Yapılandırılmadı",
+      "not_configured_desc": "Analitik için Tinybird yapılandırılması gerekir. Lütfen yöneticinize başvurun.",
+      "common": {
+        "loading": "Yükleniyor...", "no_data": "Henüz veri yok", "no_enrollments": "Henüz kayıt yok",
+        "total": "Toplam", "daily_avg": "Günlük Ort.", "latest_day": "Son Gün",
+        "peak": "Zirve", "peak_day": "Zirve Günü", "type": "Tür", "rate": "Oran",
+        "views": "Görüntüleme", "enrollments": "Kayıtlar", "completions": "Tamamlamalar",
+        "completion_rate": "Tamamlama Oranı", "conversion": "Dönüşüm", "avg_time": "Ort. Süre",
+        "total_views": "Toplam Görüntüleme", "total_completions": "Toplam Tamamlama",
+        "avg_rate": "Ort. Oran", "needs_attention": "Dikkat Gerekli", "total_samples": "Toplam Örnek",
+        "more_expand": "+{{count}} daha — genişletmek için tıklayın", "activities_count": "{{count}} etkinlik",
+        "pct_of_total": "Toplam %", "bar_width_hint": "Çubuk genişliği = göreli görüntüleme",
+        "rate_high": ">%70", "rate_mid": "%40–70", "rate_low": "<%40",
+        "low_conversion": "düşük dönüşüm", "avg_completion": "ort. tamamlama",
+        "avg_prefix": "ort. {{value}}", "unknown_activity": "Bilinmeyen etkinlik"
+      },
+      "units": {
+        "done": "tamamlandı", "views": "görüntüleme", "enrolled": "kayıtlı",
+        "learner": "öğrenci", "learners": "öğrenciler", "events": "etkinlikler",
+        "total": "toplam", "total_views": "toplam görüntüleme", "total_completions": "toplam tamamlama",
+        "total_dropoffs": "toplam ayrılma", "peak_active": "zirve aktif",
+        "conversion": "dönüşüm", "retention": "elde tutma", "in_cohort": "kohortta",
+        "active_learners": "aktif öğrenciler", "recent_enrollments": "son kayıtlar",
+        "transitions": "geçişler", "median_days": "ortanca gün",
+        "claim_rate": "talep oranı", "claimed": "talep edildi", "completed": "tamamlandı",
+        "unique": "benzersiz", "time": "süre", "avg_per_day": "ort. / gün",
+        "busiest_time": "en yoğun zaman", "minutes": "dakika", "hours": "saat",
+        "days": "gün", "done_before": "önce tamamlandı", "sample": "örnek",
+        "samples": "örnekler", "min": "dk", "avg_per_learner": "Öğrenci başına ort."
+      },
+      "type_labels": { "video": "Video", "document": "Belge", "quiz": "Sınav", "assignment": "Ödev", "dynamic": "Dinamik" },
+      "overview_stats": { "views": "Görüntüleme", "enrollments": "Kayıtlar", "completions": "Tamamlamalar", "completion_rate": "Tamamlama Oranı" },
+      "activity_type_breakdown": { "title": "Etkinlik Türü Dağılımı", "subtitle": "İçerik türüne göre dağılım ve tamamlama oranları" },
+      "engagement_by_type": { "title": "İçerik Türüne Göre Etkileşim", "subtitle": "Etkinlik türüne göre öğrenci etkileşim metrikleri", "total_events": "Toplam etkinlik", "total_learners": "Toplam öğrenci" },
+      "peak_hours": { "title": "Yoğun Öğrenme Saatleri", "subtitle": "Öğrencilerin bu kursta en aktif olduğu zamanlar", "peak_time": "Zirve saati", "peak_events": "Zirve etkinlikleri", "less": "Az", "more": "Çok", "days": { "mon": "Pzt", "tue": "Sal", "wed": "Çar", "thu": "Per", "fri": "Cum", "sat": "Cmt", "sun": "Paz" }, "events_tooltip": "{{day}} {{hour}}: {{count}} etkinlik" },
+      "enrollment_trend": { "title": "Kayıt Trendi", "subtitle": "Günlük yeni kayıtlar" },
+      "active_learners": { "title": "Aktif Öğrenciler", "subtitle": "Bu kurstaki günlük benzersiz aktif öğrenciler" },
+      "unique_viewers": { "title": "Kurs İzleyicileri", "subtitle": "Bu kurs sayfasının günlük benzersiz ziyaretçileri", "total_views": "Toplam Görüntüleme", "peak_viewers": "Zirve İzleyiciler" },
+      "view_to_enrollment": { "title": "Görüntüleme → Kayıt", "subtitle": "Kaç izleyici kayıtlı öğrenci oluyor" },
+      "daily_completions": { "title": "Günlük Tamamlamalar", "subtitle": "Günlük etkinlik tamamlamaları" },
+      "activity_funnel": { "title": "Etkinlik Tamamlama Hunisi", "subtitle": "Etkinlik başına görüntüleme ve tamamlama" },
+      "time_per_activity": { "title": "Etkinlik Başına Süre", "subtitle": "Öğrencilerin her etkinlikte harcadığı ortalama süre" },
+      "activity_dropoff": { "title": "Ayrılma Noktaları", "subtitle": "Öğrencilerin ilerlemeyi bıraktığı yerler — son tamamlanan etkinlik", "total_dropoffs": "Toplam Ayrılma", "dropoff_points": "Ayrılma Noktaları" },
+      "avg_session_duration": { "title": "Öğrenci Başına Günlük Süre", "subtitle": "Her öğrencinin günde harcadığı ortalama süre", "total_time": "Toplam Süre", "avg_per_day": "Günlük Ort.", "minutes_label": "Dakika" },
+      "learner_progress": { "title": "Öğrenci İlerlemesi", "subtitle": "Öğrencilerin kaç etkinliği tamamladığı", "total_across_brackets": "Tüm ilerleme gruplarında toplam {{count}} öğrenci" },
+      "learner_retention": { "title": "Öğrenci Elde Tutma", "subtitle": "İlk etkinlikten sonra geri dönen öğrencilerin %'si", "cohort_size": "Kohort Boyutu", "current_retention": "Mevcut Elde Tutma", "days_since_first": "İlk etkinlikten bu yana gün", "day_label": "Gün {{day}}" },
+      "completion_velocity": { "title": "Tamamlama Hızı", "subtitle": "Etkinlik tamamlamaları arasındaki ortalama süre", "not_enough_data": "Henüz yeterli veri yok", "need_transitions": "Hız hesaplamak için en az 3 etkinlik geçişi gerekli", "not_enough_data_short": "Yeterli veri yok", "need_transitions_short": "3+ geçiş gerekli", "avg_between": "tamamlamalar arası ort. {{unit}}", "transitions_tracked": "izlenen geçişler", "raw_hours_avg": "ham saat ortalaması", "description": "Öğrencilerin bir etkinlikten diğerine ne kadar hızlı ilerlediğini ölçer. Düşük daha iyidir — öğrencilerin içerikten daha hızlı geçtiği anlamına gelir." },
+      "time_to_completion": { "title": "Tamamlama Süresi", "subtitle": "Öğrencilerin bu kursu bitirmesi ne kadar sürer", "median_days_to_complete": "tamamlamaya kadar ortanca gün", "fast_p25": "Hızlı (P25)", "top_25_finish": "İlk %25 şu zamana kadar bitirir", "median": "Ortanca", "half_finish": "Yarısı şu zamana kadar bitirir", "slow_p75": "Yavaş (P75)", "pct_75_finish": "%75 şu zamana kadar bitirir", "based_on": "{{count}} kurs tamamlamasına dayalı", "days_unit": "gün" },
+      "certification_rate": { "title": "Sertifika Oranı", "subtitle": "Sertifikasını alan tamamlayanların %'si", "of_completers_claimed": "tamamlayanların sertifika aldığı", "certificates_claimed": "alınan sertifika", "course_completions": "kurs tamamlama" },
+      "top_learners": { "title": "En İyi Öğrenciler", "subtitle": "Tamamlamalara göre en aktif öğrenciler", "user_fallback": "Kullanıcı #{{id}}" },
+      "recent_enrollments": { "title": "Son Kayıtlar", "subtitle": "Bu kursa en son kaydolan öğrenciler", "count_in_period": "Bu dönemde {{count}} kayıt" },
+      "pagination": { "range": "{{from}}–{{to}} / {{total}}" }
     }
   }
 }

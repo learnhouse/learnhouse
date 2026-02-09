@@ -8,7 +8,7 @@ export default function CourseDropoffMap({ days = '90' }: { days?: string }) {
   const rows = (data?.data ?? []).slice(0, 15)
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Course Dropoff</h3>
       <p className="text-xs text-gray-400 mb-4">Where users stop per course</p>
       {isLoading ? (

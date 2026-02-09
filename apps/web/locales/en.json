@@ -114,6 +114,14 @@
         "docs": {
           "title": "Pro Feature",
           "description": "Documentation is a premium feature available only to organizations on our Pro plan or higher. Upgrade to create documentation spaces with sections, groups, and pages."
+        },
+        "analytics": {
+          "title": "Standard Feature",
+          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content."
+        },
+        "course_analytics": {
+          "title": "Pro Feature",
+          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses."
         }
       }
     },
@@ -2478,7 +2486,8 @@
           "access": "Access",
           "contributors": "Contributors",
           "seo": "SEO",
-          "certification": "Certification"
+          "certification": "Certification",
+          "analytics": "Analytics"
         },
         "access_denied": {
           "title": "Access Denied",
@@ -3652,5 +3661,397 @@
     "no_usergroups": "No UserGroups found",
     "create_usergroup": "Create UserGroup",
     "link": "Link"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Insights about your learners and content",
+    "tabs": {
+      "overview": "Overview",
+      "advanced": "Advanced"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "Requires",
+      "upgrade_description": "Upgrade to unlock advanced analytics"
+    },
+    "common": {
+      "loading": "Loading...",
+      "no_data": "No data yet",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "export": {
+      "button": "Export",
+      "json": "Download JSON",
+      "csv": "Download CSV",
+      "downloading": "Exporting..."
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analytics Not Configured",
+      "not_configured_desc": "Analytics requires Tinybird to be configured. Please contact your administrator.",
+      "common": {
+        "loading": "Loading...",
+        "no_data": "No data yet",
+        "no_enrollments": "No enrollments yet",
+        "total": "Total",
+        "daily_avg": "Daily Avg",
+        "latest_day": "Latest Day",
+        "peak": "Peak",
+        "peak_day": "Peak Day",
+        "type": "Type",
+        "rate": "Rate",
+        "views": "Views",
+        "enrollments": "Enrollments",
+        "completions": "Completions",
+        "completion_rate": "Completion Rate",
+        "conversion": "Conversion",
+        "avg_time": "Avg Time",
+        "total_views": "Total Views",
+        "total_completions": "Total Completions",
+        "avg_rate": "Avg Rate",
+        "needs_attention": "Needs Attention",
+        "total_samples": "Total Samples",
+        "more_expand": "+{{count}} more — click to expand",
+        "activities_count": "{{count}} activities",
+        "pct_of_total": "% of Total",
+        "bar_width_hint": "Bar width = relative views",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "low conversion",
+        "avg_completion": "avg completion",
+        "avg_prefix": "avg {{value}}",
+        "unknown_activity": "Unknown activity"
+      },
+      "units": {
+        "done": "done",
+        "views": "views",
+        "enrolled": "enrolled",
+        "learner": "learner",
+        "learners": "learners",
+        "events": "events",
+        "total": "total",
+        "total_views": "total views",
+        "total_completions": "total completions",
+        "total_dropoffs": "total drop-offs",
+        "peak_active": "peak active",
+        "conversion": "conversion",
+        "retention": "retention",
+        "in_cohort": "in cohort",
+        "active_learners": "active learners",
+        "recent_enrollments": "recent enrollments",
+        "transitions": "transitions",
+        "median_days": "median days",
+        "claim_rate": "claim rate",
+        "claimed": "claimed",
+        "completed": "completed",
+        "unique": "unique",
+        "time": "time",
+        "avg_per_day": "avg / day",
+        "busiest_time": "busiest time",
+        "minutes": "minutes",
+        "hours": "hours",
+        "days": "days",
+        "done_before": "done before",
+        "sample": "sample",
+        "samples": "samples",
+        "min": "min",
+        "avg_per_learner": "Avg per learner"
+      },
+      "type_labels": {
+        "video": "Video",
+        "document": "Document",
+        "quiz": "Quiz",
+        "assignment": "Assignment",
+        "dynamic": "Dynamic"
+      },
+      "overview_stats": {
+        "views": "Views",
+        "enrollments": "Enrollments",
+        "completions": "Completions",
+        "completion_rate": "Completion Rate"
+      },
+      "activity_type_breakdown": {
+        "title": "Activity Type Breakdown",
+        "subtitle": "Distribution and completion rates by content type"
+      },
+      "engagement_by_type": {
+        "title": "Engagement by Content Type",
+        "subtitle": "Learner engagement metrics per activity type",
+        "total_events": "Total events",
+        "total_learners": "Total learners"
+      },
+      "peak_hours": {
+        "title": "Peak Learning Hours",
+        "subtitle": "When learners are most active in this course",
+        "peak_time": "Peak time",
+        "peak_events": "Peak events",
+        "less": "Less",
+        "more": "More",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} events"
+      },
+      "enrollment_trend": {
+        "title": "Enrollment Trend",
+        "subtitle": "Daily new enrollments over time"
+      },
+      "active_learners": {
+        "title": "Active Learners",
+        "subtitle": "Daily unique active learners in this course"
+      },
+      "unique_viewers": {
+        "title": "Course Viewers",
+        "subtitle": "Daily unique visitors to this course page",
+        "total_views": "Total Views",
+        "peak_viewers": "Peak Viewers"
+      },
+      "view_to_enrollment": {
+        "title": "View \u2192 Enrollment",
+        "subtitle": "How many viewers become enrolled learners"
+      },
+      "daily_completions": {
+        "title": "Daily Completions",
+        "subtitle": "Activity completions per day"
+      },
+      "activity_funnel": {
+        "title": "Activity Completion Funnel",
+        "subtitle": "Views vs completions per activity"
+      },
+      "time_per_activity": {
+        "title": "Time Spent per Activity",
+        "subtitle": "Average time learners spend on each activity"
+      },
+      "activity_dropoff": {
+        "title": "Drop-off Points",
+        "subtitle": "Where learners stop progressing \u2014 last completed activity",
+        "total_dropoffs": "Total Drop-offs",
+        "dropoff_points": "Drop-off Points"
+      },
+      "avg_session_duration": {
+        "title": "Daily Time per Learner",
+        "subtitle": "Average time each learner spends per day",
+        "total_time": "Total Time",
+        "avg_per_day": "Avg per Day",
+        "minutes_label": "Minutes"
+      },
+      "learner_progress": {
+        "title": "Learner Progress",
+        "subtitle": "How many activities learners have completed",
+        "total_across_brackets": "{{count}} total learners across all progress brackets"
+      },
+      "learner_retention": {
+        "title": "Learner Retention",
+        "subtitle": "% of learners returning after first activity",
+        "cohort_size": "Cohort Size",
+        "current_retention": "Current Retention",
+        "days_since_first": "Days since first activity",
+        "day_label": "Day {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "subtitle": "Average time between activity completions",
+        "not_enough_data": "Not enough data yet",
+        "need_transitions": "Need at least 3 activity transitions to calculate velocity",
+        "not_enough_data_short": "Not enough data",
+        "need_transitions_short": "Need 3+ transitions",
+        "avg_between": "avg {{unit}} between completions",
+        "transitions_tracked": "transitions tracked",
+        "raw_hours_avg": "raw hours avg",
+        "description": "Measures how quickly learners progress from one activity to the next. Lower is better \u2014 it means learners are moving through content faster."
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "subtitle": "How long it takes learners to finish this course",
+        "median_days_to_complete": "median days to complete",
+        "fast_p25": "Fast (P25)",
+        "top_25_finish": "Top 25% finish by",
+        "median": "Median",
+        "half_finish": "Half finish by",
+        "slow_p75": "Slow (P75)",
+        "pct_75_finish": "75% finish by",
+        "based_on": "Based on {{count}} course completion(s)",
+        "days_unit": "days"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "subtitle": "% of completers who claimed their certificate",
+        "of_completers_claimed": "of completers claimed a certificate",
+        "certificates_claimed": "certificates claimed",
+        "course_completions": "course completions"
+      },
+      "top_learners": {
+        "title": "Top Learners",
+        "subtitle": "Most active learners by completions",
+        "user_fallback": "User #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Recent Enrollments",
+        "subtitle": "Latest learners who enrolled in this course",
+        "count_in_period": "{{count}} enrollments in this period"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} of {{total}}"
+      }
+    }
   }
 }

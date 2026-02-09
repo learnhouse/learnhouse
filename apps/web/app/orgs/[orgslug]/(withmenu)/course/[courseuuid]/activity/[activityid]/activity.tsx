@@ -201,7 +201,8 @@ function ActivityClient(props: ActivityClientProps) {
       activityStartTime.current = Date.now()
       track('activity_view', {
         activity_id: activityid,
-        course_id: courseuuid,
+        course_id: String(course.id),
+        course_uuid: courseuuid,
         activity_type: activity.activity_type,
         activity_name: activity.name,
       })
@@ -212,6 +213,7 @@ function ActivityClient(props: ActivityClientProps) {
         if (seconds > 0) {
           track('time_on_activity', {
             activity_id: activityid,
+            course_id: String(course.id),
             seconds_spent: seconds,
           })
         }
