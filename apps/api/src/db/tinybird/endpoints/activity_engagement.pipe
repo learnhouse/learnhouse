@@ -6,10 +6,10 @@ SQL >
     %
     SELECT
         org_id,
-        JSONExtractString(properties, 'activity_id') AS activity_id,
+        replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
         JSONExtractString(properties, 'activity_type') AS activity_type,
         anyIf(JSONExtractString(properties, 'activity_name'), JSONExtractString(properties, 'activity_name') != '') AS activity_name,
-        anyIf(JSONExtractString(properties, 'course_id'), event_name = 'activity_view' AND JSONExtractString(properties, 'course_id') != '') AS course_uuid,
+        anyIf(JSONExtractString(properties, 'course_uuid'), event_name = 'activity_view' AND JSONExtractString(properties, 'course_uuid') != '') AS course_uuid,
         countIf(event_name = 'activity_view') AS views,
         countIf(event_name = 'activity_completed') AS completions,
         avgIf(

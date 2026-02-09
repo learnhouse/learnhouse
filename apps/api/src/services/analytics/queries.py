@@ -167,10 +167,10 @@ FORMAT JSON
 ACTIVITY_ENGAGEMENT = """
 SELECT
     org_id,
-    JSONExtractString(properties, 'activity_id') AS activity_id,
+    replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
     JSONExtractString(properties, 'activity_type') AS activity_type,
     anyIf(JSONExtractString(properties, 'activity_name'), JSONExtractString(properties, 'activity_name') != '') AS activity_name,
-    anyIf(JSONExtractString(properties, 'course_id'), event_name = 'activity_view' AND JSONExtractString(properties, 'course_id') != '') AS course_uuid,
+    anyIf(JSONExtractString(properties, 'course_uuid'), event_name = 'activity_view' AND JSONExtractString(properties, 'course_uuid') != '') AS course_uuid,
     countIf(event_name = 'activity_view') AS views,
     countIf(event_name = 'activity_completed') AS completions,
     avgIf(
@@ -392,12 +392,12 @@ WITH ordered AS (
 SELECT
     org_id,
     course_id,
-    avg(dateDiff('day', prev_ts, timestamp)) AS avg_days_between,
+    round(avg(dateDiff('hour', prev_ts, timestamp)), 1) AS avg_hours_between,
     count() AS transitions
 FROM ordered
-WHERE prev_ts IS NOT NULL
+WHERE prev_ts > toDateTime('2020-01-01 00:00:00')
 GROUP BY org_id, course_id
-ORDER BY avg_days_between ASC
+ORDER BY avg_hours_between ASC
 FORMAT JSON
 """
 
@@ -711,6 +711,475 @@ ADVANCED_QUERIES: dict[str, tuple[str, int]] = {
     "org_growth_trend": (ORG_GROWTH_TREND, 90),
     "learner_engagement_score": (LEARNER_ENGAGEMENT_SCORE, 30),
     "course_rating_by_completion": (COURSE_RATING_BY_COMPLETION, 90),
+}
+
+# ---------------------------------------------------------------------------
+# Course-level queries (Pro only — filtered by course_id)
+# ---------------------------------------------------------------------------
+
+COURSE_OVERVIEW_STATS = """
+SELECT
+    countIf(event_name = 'course_view') AS views,
+    countIf(event_name = 'course_enrolled') AS enrollments,
+    countIf(event_name = 'course_completed') AS completions,
+    if(countIf(event_name = 'course_enrolled') > 0,
+       round(countIf(event_name = 'course_completed') / countIf(event_name = 'course_enrolled') * 100, 1),
+       0) AS completion_rate
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('course_view', 'course_enrolled', 'course_completed')
+    AND timestamp >= now() - INTERVAL {days} DAY
+FORMAT JSON
+"""
+
+COURSE_ENROLLMENT_TREND = """
+SELECT
+    toDate(timestamp) AS date,
+    count() AS enrollments
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'course_enrolled'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+COURSE_ACTIVITY_FUNNEL = """
+SELECT
+    replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+    anyIf(JSONExtractString(properties, 'activity_name'), JSONExtractString(properties, 'activity_name') != '') AS activity_name,
+    countIf(event_name = 'activity_view') AS views,
+    countIf(event_name = 'activity_completed') AS completions,
+    if(countIf(event_name = 'activity_view') > 0,
+       round(countIf(event_name = 'activity_completed') / countIf(event_name = 'activity_view') * 100, 1),
+       0) AS completion_rate
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('activity_view', 'activity_completed')
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY activity_id
+ORDER BY views DESC
+FORMAT JSON
+"""
+
+COURSE_LEARNER_PROGRESS = """
+WITH user_completions AS (
+    SELECT
+        user_id,
+        count() AS completed_activities
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'activity_completed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY user_id
+)
+SELECT
+    multiIf(
+        completed_activities = 0, '0',
+        completed_activities <= 2, '1-2',
+        completed_activities <= 5, '3-5',
+        completed_activities <= 10, '6-10',
+        '11+'
+    ) AS bracket,
+    count() AS user_count
+FROM user_completions
+GROUP BY bracket
+ORDER BY bracket
+FORMAT JSON
+"""
+
+COURSE_TIME_PER_ACTIVITY = """
+SELECT
+    replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+    round(avg(JSONExtractFloat(properties, 'seconds_spent')), 1) AS avg_seconds_spent,
+    count() AS samples
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'time_on_activity'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY activity_id
+ORDER BY avg_seconds_spent DESC
+FORMAT JSON
+"""
+
+COURSE_COMPLETION_VELOCITY = """
+WITH ordered AS (
+    SELECT
+        user_id,
+        timestamp,
+        lagInFrame(timestamp) OVER (
+            PARTITION BY user_id
+            ORDER BY timestamp
+        ) AS prev_ts
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'activity_completed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+)
+SELECT
+    round(avg(dateDiff('hour', prev_ts, timestamp)), 1) AS avg_hours_between,
+    count() AS transitions
+FROM ordered
+WHERE prev_ts > toDateTime('2020-01-01 00:00:00')
+FORMAT JSON
+"""
+
+COURSE_ACTIVE_LEARNERS = """
+SELECT
+    toDate(timestamp) AS date,
+    uniqExact(user_id) AS active_learners
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+COURSE_TIME_TO_COMPLETION = """
+WITH enrollments AS (
+    SELECT
+        user_id,
+        min(timestamp) AS enrolled_at
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'course_enrolled'
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY user_id
+),
+completions AS (
+    SELECT
+        user_id,
+        min(timestamp) AS completed_at
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'course_completed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY user_id
+)
+SELECT
+    median(dateDiff('day', e.enrolled_at, c.completed_at)) AS median_days,
+    count() AS completions_count,
+    quantile(0.25)(dateDiff('day', e.enrolled_at, c.completed_at)) AS p25_days,
+    quantile(0.75)(dateDiff('day', e.enrolled_at, c.completed_at)) AS p75_days
+FROM enrollments e
+INNER JOIN completions c ON e.user_id = c.user_id
+FORMAT JSON
+"""
+
+COURSE_CERTIFICATION_RATE = """
+WITH completers AS (
+    SELECT count(DISTINCT user_id) AS completions
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'course_completed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+),
+cert_claims AS (
+    SELECT count(DISTINCT user_id) AS claims
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'certificate_claimed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+)
+SELECT
+    completers.completions,
+    cert_claims.claims,
+    if(completers.completions > 0, round(cert_claims.claims / completers.completions * 100, 1), 0) AS claim_rate
+FROM completers, cert_claims
+FORMAT JSON
+"""
+
+# ---------------------------------------------------------------------------
+# Course-level queries — batch 2 (10 additional visuals)
+# ---------------------------------------------------------------------------
+
+COURSE_VIEW_TO_ENROLLMENT = """
+SELECT
+    toDate(timestamp) AS date,
+    countIf(event_name = 'course_view') AS views,
+    countIf(event_name = 'course_enrolled') AS enrollments,
+    if(countIf(event_name = 'course_view') > 0,
+       round(countIf(event_name = 'course_enrolled') / countIf(event_name = 'course_view') * 100, 1),
+       0) AS conversion_rate
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('course_view', 'course_enrolled')
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+COURSE_ACTIVITY_TYPE_BREAKDOWN = """
+SELECT
+    JSONExtractString(properties, 'activity_type') AS activity_type,
+    countIf(event_name = 'activity_view') AS views,
+    countIf(event_name = 'activity_completed') AS completions,
+    if(countIf(event_name = 'activity_view') > 0,
+       round(countIf(event_name = 'activity_completed') / countIf(event_name = 'activity_view') * 100, 1),
+       0) AS completion_rate
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('activity_view', 'activity_completed')
+    AND JSONExtractString(properties, 'activity_type') != ''
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY activity_type
+ORDER BY views DESC
+FORMAT JSON
+"""
+
+COURSE_PEAK_HOURS = """
+SELECT
+    toHour(timestamp) AS hour,
+    toDayOfWeek(timestamp) AS day_of_week,
+    count() AS event_count
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('activity_view', 'activity_completed', 'time_on_activity')
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY hour, day_of_week
+ORDER BY day_of_week, hour
+FORMAT JSON
+"""
+
+COURSE_LEARNER_RETENTION = """
+WITH first_activity AS (
+    SELECT
+        user_id,
+        min(toDate(timestamp)) AS first_day
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name IN ('activity_view', 'activity_completed')
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY user_id
+),
+daily_activity AS (
+    SELECT DISTINCT
+        user_id,
+        toDate(timestamp) AS active_day
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name IN ('activity_view', 'activity_completed')
+        AND timestamp >= now() - INTERVAL {days} DAY
+)
+SELECT
+    dateDiff('day', f.first_day, d.active_day) AS days_since_start,
+    uniqExact(d.user_id) AS active_users,
+    (SELECT uniqExact(user_id) FROM first_activity) AS cohort_size
+FROM first_activity f
+INNER JOIN daily_activity d ON f.user_id = d.user_id
+WHERE dateDiff('day', f.first_day, d.active_day) <= 30
+GROUP BY days_since_start
+ORDER BY days_since_start
+FORMAT JSON
+"""
+
+COURSE_TOP_LEARNERS = """
+SELECT
+    user_id,
+    countIf(event_name = 'activity_completed') AS completions,
+    countIf(event_name = 'activity_view') AS views,
+    uniqExactIf(
+        JSONExtractString(properties, 'activity_id'),
+        event_name = 'activity_completed'
+    ) AS unique_activities_completed,
+    sumIf(
+        JSONExtractFloat(properties, 'seconds_spent'),
+        event_name = 'time_on_activity'
+    ) AS total_seconds_spent
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('activity_completed', 'activity_view', 'time_on_activity')
+    AND timestamp >= now() - INTERVAL {days} DAY
+    AND user_id != 0
+GROUP BY user_id
+ORDER BY completions DESC, views DESC
+LIMIT 20
+FORMAT JSON
+"""
+
+COURSE_ACTIVITY_DROPOFF = """
+WITH user_activities AS (
+    SELECT
+        user_id,
+        replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+        min(timestamp) AS first_completed_at
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND JSONExtractString(properties, 'course_id') = '{course_id}'
+        AND event_name = 'activity_completed'
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY user_id, activity_id
+),
+user_max_activity AS (
+    SELECT
+        user_id,
+        max(first_completed_at) AS last_activity_at,
+        argMax(activity_id, first_completed_at) AS last_activity_id,
+        count() AS total_completed
+    FROM user_activities
+    GROUP BY user_id
+)
+SELECT
+    last_activity_id AS activity_id,
+    count() AS users_stopped_here,
+    avg(total_completed) AS avg_completed_before_stop
+FROM user_max_activity
+GROUP BY last_activity_id
+ORDER BY users_stopped_here DESC
+LIMIT 20
+FORMAT JSON
+"""
+
+COURSE_ENGAGEMENT_BY_TYPE = """
+SELECT
+    JSONExtractString(properties, 'activity_type') AS activity_type,
+    uniqExact(user_id) AS unique_learners,
+    count() AS total_events,
+    countIf(event_name = 'activity_completed') AS completions,
+    avgIf(
+        JSONExtractFloat(properties, 'seconds_spent'),
+        event_name = 'time_on_activity'
+    ) AS avg_seconds_spent
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name IN ('activity_view', 'activity_completed', 'time_on_activity')
+    AND JSONExtractString(properties, 'activity_type') != ''
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY activity_type
+ORDER BY total_events DESC
+FORMAT JSON
+"""
+
+COURSE_DAILY_COMPLETIONS = """
+SELECT
+    toDate(timestamp) AS date,
+    count() AS completions,
+    uniqExact(user_id) AS unique_completers
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'activity_completed'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+COURSE_AVG_SESSION_DURATION = """
+SELECT
+    toDate(timestamp) AS date,
+    round(sum(JSONExtractFloat(properties, 'seconds_spent')) / greatest(uniqExact(user_id), 1), 0) AS avg_seconds_per_user,
+    sum(JSONExtractFloat(properties, 'seconds_spent')) AS total_seconds,
+    uniqExact(user_id) AS unique_users
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'time_on_activity'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+COURSE_UNIQUE_VIEWERS = """
+SELECT
+    toDate(timestamp) AS date,
+    uniqExact(user_id) AS unique_viewers,
+    count() AS total_views
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'course_view'
+    AND timestamp >= now() - INTERVAL {days} DAY
+GROUP BY date
+ORDER BY date ASC
+FORMAT JSON
+"""
+
+# Course-level detail queries (return individual rows for PostgreSQL enrichment)
+COURSE_RECENT_ENROLLMENTS = """
+SELECT
+    user_id,
+    timestamp
+FROM events
+WHERE
+    ({org_id} = 0 OR org_id = {org_id})
+    AND JSONExtractString(properties, 'course_id') = '{course_id}'
+    AND event_name = 'course_enrolled'
+    AND timestamp >= now() - INTERVAL {days} DAY
+    AND user_id != 0
+ORDER BY timestamp DESC
+LIMIT 50
+FORMAT JSON
+"""
+
+COURSE_QUERIES: dict[str, tuple[str, int]] = {
+    "course_overview_stats": (COURSE_OVERVIEW_STATS, 30),
+    "course_enrollment_trend": (COURSE_ENROLLMENT_TREND, 30),
+    "course_activity_funnel": (COURSE_ACTIVITY_FUNNEL, 30),
+    "course_learner_progress": (COURSE_LEARNER_PROGRESS, 90),
+    "course_time_per_activity": (COURSE_TIME_PER_ACTIVITY, 30),
+    "course_completion_velocity": (COURSE_COMPLETION_VELOCITY, 90),
+    "course_active_learners": (COURSE_ACTIVE_LEARNERS, 30),
+    "course_time_to_completion": (COURSE_TIME_TO_COMPLETION, 180),
+    "course_certification_rate": (COURSE_CERTIFICATION_RATE, 90),
+    "course_view_to_enrollment": (COURSE_VIEW_TO_ENROLLMENT, 30),
+    "course_activity_type_breakdown": (COURSE_ACTIVITY_TYPE_BREAKDOWN, 30),
+    "course_peak_hours": (COURSE_PEAK_HOURS, 30),
+    "course_learner_retention": (COURSE_LEARNER_RETENTION, 90),
+    "course_activity_dropoff": (COURSE_ACTIVITY_DROPOFF, 90),
+    "course_engagement_by_type": (COURSE_ENGAGEMENT_BY_TYPE, 30),
+    "course_daily_completions": (COURSE_DAILY_COMPLETIONS, 30),
+    "course_avg_session_duration": (COURSE_AVG_SESSION_DURATION, 30),
+    "course_unique_viewers": (COURSE_UNIQUE_VIEWERS, 30),
+}
+
+COURSE_DETAIL_QUERIES: dict[str, tuple[str, int]] = {
+    "course_recent_enrollments": (COURSE_RECENT_ENROLLMENTS, 30),
+    "course_top_learners": (COURSE_TOP_LEARNERS, 90),
 }
 
 ALL_QUERIES = {**CORE_QUERIES, **ADVANCED_QUERIES, **DETAIL_QUERIES}

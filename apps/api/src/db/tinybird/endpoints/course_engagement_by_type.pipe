@@ -1,0 +1,26 @@
+DESCRIPTION >
+    Engagement metrics broken down by activity type for a single course
+
+NODE course_engagement_by_type_node
+SQL >
+    %
+    SELECT
+        JSONExtractString(properties, 'activity_type') AS activity_type,
+        uniqExact(user_id) AS unique_learners,
+        count() AS total_events,
+        countIf(event_name = 'activity_completed') AS completions,
+        avgIf(
+            JSONExtractFloat(properties, 'seconds_spent'),
+            event_name = 'time_on_activity'
+        ) AS avg_seconds_spent
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name IN ('activity_view', 'activity_completed', 'time_on_activity')
+        AND JSONExtractString(properties, 'activity_type') != ''
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY activity_type
+    ORDER BY total_events DESC
+
+TYPE endpoint

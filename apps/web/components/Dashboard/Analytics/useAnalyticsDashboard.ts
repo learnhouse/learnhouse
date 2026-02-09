@@ -13,6 +13,11 @@ function fetcher(url: string, token: string) {
   })
 }
 
+const SWR_DEFAULTS = {
+  revalidateOnFocus: false,
+  dedupingInterval: 60000,
+}
+
 export function useAnalyticsPipe(
   pipeName: string,
   extraParams: Record<string, string> = {},
@@ -27,8 +32,8 @@ export function useAnalyticsPipe(
   const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/${pipeName}?${params}` : null
 
   return useSWR(url, (u) => fetcher(u, token), {
+    ...SWR_DEFAULTS,
     refreshInterval,
-    revalidateOnFocus: false,
   })
 }
 
@@ -46,8 +51,8 @@ export function useAnalyticsDetail(
   const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/detail/${queryName}?${params}` : null
 
   return useSWR(url, (u) => fetcher(u, token), {
+    ...SWR_DEFAULTS,
     refreshInterval,
-    revalidateOnFocus: false,
   })
 }
 
@@ -63,7 +68,7 @@ export function useAnalyticsDbQuery(
   const params = new URLSearchParams({ org_id: String(orgId ?? ''), ...extraParams })
   const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/db/${queryName}?${params}` : null
 
-  return useSWR(url, (u) => fetcher(u, token), { revalidateOnFocus: false })
+  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
 }
 
 export function usePlanInfo() {
@@ -74,7 +79,7 @@ export function usePlanInfo() {
 
   const url = orgId && token ? `${getAPIUrl()}analytics/plan-info?org_id=${orgId}` : null
 
-  return useSWR(url, (u) => fetcher(u, token), { revalidateOnFocus: false })
+  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
 }
 
 export function useAnalyticsStatus() {
@@ -83,5 +88,59 @@ export function useAnalyticsStatus() {
 
   const url = token ? `${getAPIUrl()}analytics/status` : null
 
-  return useSWR(url, (u) => fetcher(u, token), { revalidateOnFocus: false })
+  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
+}
+
+export function useCoursePipe(
+  pipeName: string,
+  courseId: string | number,
+  extraParams: Record<string, string> = {},
+  refreshInterval = 0
+) {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const token = session?.data?.tokens?.access_token
+  const orgId = org?.id
+
+  const params = new URLSearchParams({
+    org_id: String(orgId ?? ''),
+    course_id: String(courseId),
+    ...extraParams,
+  })
+  const url =
+    orgId && token && courseId
+      ? `${getAPIUrl()}analytics/dashboard/course/${pipeName}?${params}`
+      : null
+
+  return useSWR(url, (u) => fetcher(u, token), {
+    ...SWR_DEFAULTS,
+    refreshInterval,
+  })
+}
+
+export function useCourseAnalyticsDetail(
+  queryName: string,
+  courseId: string | number,
+  extraParams: Record<string, string> = {},
+  refreshInterval = 0
+) {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const token = session?.data?.tokens?.access_token
+  const orgId = org?.id
+
+  const params = new URLSearchParams({
+    org_id: String(orgId ?? ''),
+    course_id: String(courseId),
+    ...extraParams,
+  })
+  const url =
+    orgId && token && courseId
+      ? `${getAPIUrl()}analytics/dashboard/course/detail/${queryName}?${params}`
+      : null
+
+  return useSWR(url, (u) => fetcher(u, token), {
+    ...SWR_DEFAULTS,
+    refreshInterval,
+  })
 }

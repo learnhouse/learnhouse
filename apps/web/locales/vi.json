@@ -362,22 +362,22 @@
     "contributor_application_error": "Gửi đơn đăng ký thất bại. Vui lòng thử lại sau.",
     "contribute": "Đóng góp",
     "scorm": {
-      "upload_package": "Tải lên gói SCORM",
-      "package_file": "Tệp gói (.zip)",
+      "upload_package": "Tải lên Gói SCORM",
+      "package_file": "Tệp Gói (.zip)",
       "click_to_upload": "Nhấp để tải lên hoặc kéo và thả",
       "supported_versions": "Gói SCORM 1.2 hoặc SCORM 2004",
-      "import_info": "Tải lên gói SCORM của bạn để phân tích nội dung. Bạn sẽ có thể cấu hình khóa học và gán hoạt động cho các chương.",
-      "analyze_package": "Phân tích gói",
-      "package_analyzed": "Phân tích gói thành công",
-      "assign_scos": "Gán hoạt động cho các chương",
+      "import_info": "Tải lên gói SCORM của bạn để phân tích nội dung. Bạn có thể cấu hình khóa học và gán hoạt động cho các chương.",
+      "analyze_package": "Phân tích Gói",
+      "package_analyzed": "Phân tích Gói Thành công",
+      "assign_scos": "Gán Hoạt động cho Chương",
       "activity_name": "Hoạt động",
       "chapter_name": "Chương",
       "upload_different": "Tải lên gói khác",
       "selected": "đã chọn",
-      "create_course": "Tạo khóa học",
+      "create_course": "Tạo Khóa học",
       "configure": "Cấu hình",
       "ready_to_analyze": "Sẵn sàng phân tích",
-      "course_details": "Chi tiết khóa học"
+      "course_details": "Chi tiết Khóa học"
     },
     "clone_course": "Sao chép khóa học",
     "clone_course_title": "Sao chép \"{{name}}\"",
@@ -455,24 +455,6 @@
       "import_summary": "Nhập thành công {{successful}} trong số {{total}} khóa học",
       "created": "Đã tạo",
       "done": "Xong"
-    },
-    "scorm": {
-      "upload_package": "Tải lên Gói SCORM",
-      "package_file": "Tệp Gói (.zip)",
-      "click_to_upload": "Nhấp để tải lên hoặc kéo và thả",
-      "supported_versions": "Gói SCORM 1.2 hoặc SCORM 2004",
-      "import_info": "Tải lên gói SCORM của bạn để phân tích nội dung. Bạn có thể cấu hình khóa học và gán hoạt động cho các chương.",
-      "analyze_package": "Phân tích Gói",
-      "package_analyzed": "Phân tích Gói Thành công",
-      "assign_scos": "Gán Hoạt động cho Chương",
-      "activity_name": "Hoạt động",
-      "chapter_name": "Chương",
-      "upload_different": "Tải lên gói khác",
-      "selected": "đã chọn",
-      "create_course": "Tạo Khóa học",
-      "configure": "Cấu hình",
-      "ready_to_analyze": "Sẵn sàng phân tích",
-      "course_details": "Chi tiết Khóa học"
     },
     "create": {
       "choose_type": "Tạo khóa học mới",
@@ -3165,5 +3147,391 @@
     "no_usergroups": "Không tìm thấy nhóm người dùng",
     "create_usergroup": "Tạo nhóm người dùng",
     "link": "Liên kết"
+  },
+  "analytics": {
+    "title": "Phân tích",
+    "subtitle": "Thông tin chi tiết về người học và nội dung của bạn",
+    "tabs": {
+      "overview": "Tổng quan",
+      "advanced": "Nâng cao"
+    },
+    "not_configured": {
+      "title": "Analytics not configured",
+      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+    },
+    "advanced_gate": {
+      "requires": "Yêu cầu",
+      "upgrade_description": "Nâng cấp để mở khóa phân tích nâng cao"
+    },
+    "common": {
+      "loading": "Đang tải...",
+      "no_data": "Chưa có dữ liệu",
+      "users": "Users",
+      "views": "Views",
+      "enrollments": "Enrollments",
+      "completions": "Completions",
+      "course": "Course",
+      "date": "Date",
+      "user": "User",
+      "type": "Type",
+      "expand": "Expand",
+      "days": "Days",
+      "score": "Score",
+      "unique_users": "unique users"
+    },
+    "overview": {
+      "live_now": "Live Now",
+      "last_5_minutes": "Last 5 minutes",
+      "signups": "Signups",
+      "submissions": "Submissions",
+      "daily_active_users": "Daily Active Users",
+      "active_users": "Active Users",
+      "countries": "Countries",
+      "top_countries": "Top Countries",
+      "devices": "Devices",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "tablet": "Tablet",
+      "top_referrers": "Top Referrers",
+      "top_referrer": "Top Referrer",
+      "enrollment_funnel": "Enrollment Funnel",
+      "page_views": "Page Views",
+      "course_views": "Course Views",
+      "view_to_enroll": "View → Enroll",
+      "enroll_to_complete": "Enroll → Complete",
+      "page_to_complete": "Page → Complete",
+      "conv_rate": "Conv. Rate",
+      "top_courses": "Top Courses",
+      "activity_engagement": "Activity Engagement",
+      "activity": "Activity",
+      "avg_time": "Avg Time",
+      "activities": "Activities",
+      "courses": "Courses",
+      "enrollments": "Đăng ký",
+      "completions": "Hoàn thành"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live Users",
+        "description": "Users active in the last 5 minutes"
+      },
+      "signups": {
+        "title": "Signups",
+        "description": "New user registrations in the last {{days}} days"
+      },
+      "enrollments": {
+        "title": "Enrollments",
+        "description": "Course enrollments in the last {{days}} days"
+      },
+      "completions": {
+        "title": "Completions",
+        "description": "Course completions in the last {{days}} days"
+      },
+      "live_users_table": {
+        "current_page": "Current Page",
+        "device": "Device",
+        "country": "Country",
+        "last_seen": "Last Seen"
+      },
+      "signups_table": {
+        "email": "Email",
+        "method": "Method"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Org Growth Trend",
+        "description": "Weekly signups, enrollments, completions"
+      },
+      "new_vs_returning": {
+        "title": "New vs Returning Users",
+        "description": "Growth vs retention health"
+      },
+      "cohort_retention": {
+        "title": "Cohort Retention",
+        "description": "% users active after signup week",
+        "cohort": "Cohort",
+        "size": "Size"
+      },
+      "peak_usage": {
+        "title": "Peak Usage Hours",
+        "description": "Event volume by day and hour",
+        "days": {
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
+        },
+        "events": "events"
+      },
+      "course_dropoff": {
+        "title": "Course Dropoff",
+        "description": "Where users stop per course"
+      },
+      "time_to_completion": {
+        "title": "Time to Completion",
+        "description": "Median days to complete each course"
+      },
+      "completion_velocity": {
+        "title": "Completion Velocity",
+        "description": "Avg days between activity completions"
+      },
+      "content_type_effectiveness": {
+        "title": "Content Type Effectiveness",
+        "description": "Completion rate by activity type"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Course Effectiveness Matrix",
+        "description": "Activity count vs completion rate (sized by enrollments)"
+      },
+      "community_correlation": {
+        "title": "Community Correlation",
+        "description": "Completion rate: discussors vs non-discussors",
+        "discussion_users": "Discussion Users",
+        "non_discussion_users": "Non-Discussion Users"
+      },
+      "learner_engagement_score": {
+        "title": "Learner Engagement Score",
+        "description": "Top learners by composite engagement",
+        "user_id": "User ID"
+      },
+      "user_progress_snapshot": {
+        "title": "User Progress Snapshot",
+        "description": "Users at each completion bracket per course"
+      },
+      "grade_distribution": {
+        "title": "Grade Distribution",
+        "description": "Assignment grade histogram"
+      },
+      "search_effectiveness": {
+        "title": "Search Effectiveness",
+        "description": "Top queries and zero-result rate",
+        "query": "Query",
+        "searches": "Searches",
+        "zero_results": "Zero Results %"
+      },
+      "certification_rate": {
+        "title": "Certification Rate",
+        "description": "% of completers who claim certificates"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Ch\u01b0a c\u1ea5u h\u00ecnh ph\u00e2n t\u00edch",
+      "not_configured_desc": "Ph\u00e2n t\u00edch y\u00eau c\u1ea7u c\u1ea5u h\u00ecnh Tinybird. Vui l\u00f2ng li\u00ean h\u1ec7 qu\u1ea3n tr\u1ecb vi\u00ean.",
+      "common": {
+        "loading": "\u0110ang t\u1ea3i...",
+        "no_data": "Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u",
+        "no_enrollments": "Ch\u01b0a c\u00f3 \u0111\u0103ng k\u00fd",
+        "total": "T\u1ed5ng",
+        "daily_avg": "TB ng\u00e0y",
+        "latest_day": "Ng\u00e0y g\u1ea7n nh\u1ea5t",
+        "peak": "Cao \u0111i\u1ec3m",
+        "peak_day": "Ng\u00e0y cao \u0111i\u1ec3m",
+        "type": "Lo\u1ea1i",
+        "rate": "T\u1ef7 l\u1ec7",
+        "views": "L\u01b0\u1ee3t xem",
+        "enrollments": "\u0110\u0103ng k\u00fd",
+        "completions": "Ho\u00e0n th\u00e0nh",
+        "completion_rate": "T\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh",
+        "conversion": "Chuy\u1ec3n \u0111\u1ed5i",
+        "avg_time": "Th\u1eddi gian TB",
+        "total_views": "T\u1ed5ng l\u01b0\u1ee3t xem",
+        "total_completions": "T\u1ed5ng ho\u00e0n th\u00e0nh",
+        "avg_rate": "T\u1ef7 l\u1ec7 TB",
+        "needs_attention": "C\u1ea7n ch\u00fa \u00fd",
+        "total_samples": "T\u1ed5ng m\u1eabu",
+        "more_expand": "+{{count}} n\u1eefa \u2014 nh\u1ea5p \u0111\u1ec3 m\u1edf r\u1ed9ng",
+        "activities_count": "{{count}} ho\u1ea1t \u0111\u1ed9ng",
+        "pct_of_total": "% t\u1ed5ng",
+        "bar_width_hint": "\u0110\u1ed9 r\u1ed9ng thanh = l\u01b0\u1ee3t xem t\u01b0\u01a1ng \u0111\u1ed1i",
+        "rate_high": ">70%",
+        "rate_mid": "40\u201370%",
+        "rate_low": "<40%",
+        "low_conversion": "chuy\u1ec3n \u0111\u1ed5i th\u1ea5p",
+        "avg_completion": "ho\u00e0n th\u00e0nh TB",
+        "avg_prefix": "TB {{value}}",
+        "unknown_activity": "Ho\u1ea1t \u0111\u1ed9ng kh\u00f4ng x\u00e1c \u0111\u1ecbnh"
+      },
+      "units": {
+        "done": "xong",
+        "views": "l\u01b0\u1ee3t xem",
+        "enrolled": "\u0111\u00e3 \u0111\u0103ng k\u00fd",
+        "learner": "h\u1ecdc vi\u00ean",
+        "learners": "h\u1ecdc vi\u00ean",
+        "events": "s\u1ef1 ki\u1ec7n",
+        "total": "t\u1ed5ng",
+        "total_views": "t\u1ed5ng l\u01b0\u1ee3t xem",
+        "total_completions": "t\u1ed5ng ho\u00e0n th\u00e0nh",
+        "total_dropoffs": "t\u1ed5ng b\u1ecf ngang",
+        "peak_active": "cao \u0111i\u1ec3m ho\u1ea1t \u0111\u1ed9ng",
+        "conversion": "chuy\u1ec3n \u0111\u1ed5i",
+        "retention": "gi\u1eef ch\u00e2n",
+        "in_cohort": "trong nh\u00f3m",
+        "active_learners": "h\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng",
+        "recent_enrollments": "\u0111\u0103ng k\u00fd g\u1ea7n \u0111\u00e2y",
+        "transitions": "chuy\u1ec3n ti\u1ebfp",
+        "median_days": "ng\u00e0y trung v\u1ecb",
+        "claim_rate": "t\u1ef7 l\u1ec7 nh\u1eadn",
+        "claimed": "\u0111\u00e3 nh\u1eadn",
+        "completed": "\u0111\u00e3 ho\u00e0n th\u00e0nh",
+        "unique": "duy nh\u1ea5t",
+        "time": "th\u1eddi gian",
+        "avg_per_day": "TB / ng\u00e0y",
+        "busiest_time": "gi\u1edd b\u1eadn nh\u1ea5t",
+        "minutes": "ph\u00fat",
+        "hours": "gi\u1edd",
+        "days": "ng\u00e0y",
+        "done_before": "xong tr\u01b0\u1edbc",
+        "sample": "m\u1eabu",
+        "samples": "m\u1eabu",
+        "min": "ph\u00fat",
+        "avg_per_learner": "TB m\u1ed7i h\u1ecdc vi\u00ean"
+      },
+      "type_labels": {
+        "video": "Video",
+        "document": "T\u00e0i li\u1ec7u",
+        "quiz": "B\u00e0i ki\u1ec3m tra",
+        "assignment": "B\u00e0i t\u1eadp",
+        "dynamic": "\u0110\u1ed9ng"
+      },
+      "overview_stats": {
+        "views": "L\u01b0\u1ee3t xem",
+        "enrollments": "\u0110\u0103ng k\u00fd",
+        "completions": "Ho\u00e0n th\u00e0nh",
+        "completion_rate": "T\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh"
+      },
+      "activity_type_breakdown": {
+        "title": "Ph\u00e2n lo\u1ea1i ho\u1ea1t \u0111\u1ed9ng",
+        "subtitle": "Ph\u00e2n b\u1ed1 v\u00e0 t\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh theo lo\u1ea1i n\u1ed9i dung"
+      },
+      "engagement_by_type": {
+        "title": "T\u01b0\u01a1ng t\u00e1c theo lo\u1ea1i n\u1ed9i dung",
+        "subtitle": "Ch\u1ec9 s\u1ed1 t\u01b0\u01a1ng t\u00e1c c\u1ee7a h\u1ecdc vi\u00ean theo t\u1eebng lo\u1ea1i ho\u1ea1t \u0111\u1ed9ng",
+        "total_events": "T\u1ed5ng s\u1ef1 ki\u1ec7n",
+        "total_learners": "T\u1ed5ng h\u1ecdc vi\u00ean"
+      },
+      "peak_hours": {
+        "title": "Gi\u1edd h\u1ecdc cao \u0111i\u1ec3m",
+        "subtitle": "Th\u1eddi \u0111i\u1ec3m h\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng nhi\u1ec1u nh\u1ea5t",
+        "peak_time": "Gi\u1edd cao \u0111i\u1ec3m",
+        "peak_events": "S\u1ef1 ki\u1ec7n cao \u0111i\u1ec3m",
+        "less": "\u00cdt h\u01a1n",
+        "more": "Nhi\u1ec1u h\u01a1n",
+        "days": {
+          "mon": "T2",
+          "tue": "T3",
+          "wed": "T4",
+          "thu": "T5",
+          "fri": "T6",
+          "sat": "T7",
+          "sun": "CN"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} s\u1ef1 ki\u1ec7n"
+      },
+      "enrollment_trend": {
+        "title": "Xu h\u01b0\u1edbng \u0111\u0103ng k\u00fd",
+        "subtitle": "\u0110\u0103ng k\u00fd m\u1edbi h\u00e0ng ng\u00e0y theo th\u1eddi gian"
+      },
+      "active_learners": {
+        "title": "H\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng",
+        "subtitle": "H\u1ecdc vi\u00ean duy nh\u1ea5t ho\u1ea1t \u0111\u1ed9ng h\u00e0ng ng\u00e0y"
+      },
+      "unique_viewers": {
+        "title": "Ng\u01b0\u1eddi xem kh\u00f3a h\u1ecdc",
+        "subtitle": "Kh\u00e1ch truy c\u1eadp duy nh\u1ea5t h\u00e0ng ng\u00e0y",
+        "total_views": "T\u1ed5ng l\u01b0\u1ee3t xem",
+        "peak_viewers": "Ng\u01b0\u1eddi xem cao \u0111i\u1ec3m"
+      },
+      "view_to_enrollment": {
+        "title": "Xem \u2192 \u0110\u0103ng k\u00fd",
+        "subtitle": "Bao nhi\u00eau ng\u01b0\u1eddi xem tr\u1edf th\u00e0nh h\u1ecdc vi\u00ean"
+      },
+      "daily_completions": {
+        "title": "Ho\u00e0n th\u00e0nh h\u00e0ng ng\u00e0y",
+        "subtitle": "Ho\u00e0n th\u00e0nh ho\u1ea1t \u0111\u1ed9ng m\u1ed7i ng\u00e0y"
+      },
+      "activity_funnel": {
+        "title": "Ph\u1ec5u ho\u00e0n th\u00e0nh ho\u1ea1t \u0111\u1ed9ng",
+        "subtitle": "L\u01b0\u1ee3t xem so v\u1edbi ho\u00e0n th\u00e0nh t\u1eebng ho\u1ea1t \u0111\u1ed9ng"
+      },
+      "time_per_activity": {
+        "title": "Th\u1eddi gian m\u1ed7i ho\u1ea1t \u0111\u1ed9ng",
+        "subtitle": "Th\u1eddi gian trung b\u00ecnh h\u1ecdc vi\u00ean d\u00e0nh cho m\u1ed7i ho\u1ea1t \u0111\u1ed9ng"
+      },
+      "activity_dropoff": {
+        "title": "\u0110i\u1ec3m b\u1ecf ngang",
+        "subtitle": "N\u01a1i h\u1ecdc vi\u00ean d\u1eebng ti\u1ebfn \u0111\u1ed9 \u2014 ho\u1ea1t \u0111\u1ed9ng ho\u00e0n th\u00e0nh cu\u1ed1i c\u00f9ng",
+        "total_dropoffs": "T\u1ed5ng b\u1ecf ngang",
+        "dropoff_points": "\u0110i\u1ec3m b\u1ecf ngang"
+      },
+      "avg_session_duration": {
+        "title": "Th\u1eddi gian h\u1ecdc h\u00e0ng ng\u00e0y",
+        "subtitle": "Th\u1eddi gian trung b\u00ecnh m\u1ed7i h\u1ecdc vi\u00ean d\u00e0nh m\u1ed7i ng\u00e0y",
+        "total_time": "T\u1ed5ng th\u1eddi gian",
+        "avg_per_day": "TB m\u1ed7i ng\u00e0y",
+        "minutes_label": "Ph\u00fat"
+      },
+      "learner_progress": {
+        "title": "Ti\u1ebfn \u0111\u1ed9 h\u1ecdc vi\u00ean",
+        "subtitle": "S\u1ed1 ho\u1ea1t \u0111\u1ed9ng h\u1ecdc vi\u00ean \u0111\u00e3 ho\u00e0n th\u00e0nh",
+        "total_across_brackets": "{{count}} t\u1ed5ng h\u1ecdc vi\u00ean tr\u00ean t\u1ea5t c\u1ea3 m\u1ee9c ti\u1ebfn \u0111\u1ed9"
+      },
+      "learner_retention": {
+        "title": "Gi\u1eef ch\u00e2n h\u1ecdc vi\u00ean",
+        "subtitle": "% h\u1ecdc vi\u00ean quay l\u1ea1i sau ho\u1ea1t \u0111\u1ed9ng \u0111\u1ea7u ti\u00ean",
+        "cohort_size": "K\u00edch th\u01b0\u1edbc nh\u00f3m",
+        "current_retention": "Gi\u1eef ch\u00e2n hi\u1ec7n t\u1ea1i",
+        "days_since_first": "Ng\u00e0y k\u1ec3 t\u1eeb ho\u1ea1t \u0111\u1ed9ng \u0111\u1ea7u ti\u00ean",
+        "day_label": "Ng\u00e0y {{day}}"
+      },
+      "completion_velocity": {
+        "title": "T\u1ed1c \u0111\u1ed9 ho\u00e0n th\u00e0nh",
+        "subtitle": "Th\u1eddi gian trung b\u00ecnh gi\u1eefa c\u00e1c ho\u00e0n th\u00e0nh",
+        "not_enough_data": "Ch\u01b0a \u0111\u1ee7 d\u1eef li\u1ec7u",
+        "need_transitions": "C\u1ea7n \u00edt nh\u1ea5t 3 chuy\u1ec3n ti\u1ebfp ho\u1ea1t \u0111\u1ed9ng \u0111\u1ec3 t\u00ednh t\u1ed1c \u0111\u1ed9",
+        "not_enough_data_short": "Ch\u01b0a \u0111\u1ee7 d\u1eef li\u1ec7u",
+        "need_transitions_short": "C\u1ea7n 3+ chuy\u1ec3n ti\u1ebfp",
+        "avg_between": "TB {{unit}} gi\u1eefa c\u00e1c ho\u00e0n th\u00e0nh",
+        "transitions_tracked": "chuy\u1ec3n ti\u1ebfp \u0111\u01b0\u1ee3c theo d\u00f5i",
+        "raw_hours_avg": "TB gi\u1edd th\u00f4",
+        "description": "\u0110o t\u1ed1c \u0111\u1ed9 h\u1ecdc vi\u00ean ti\u1ebfn t\u1eeb ho\u1ea1t \u0111\u1ed9ng n\u00e0y sang ho\u1ea1t \u0111\u1ed9ng kh\u00e1c. C\u00e0ng th\u1ea5p c\u00e0ng t\u1ed1t \u2014 ngh\u0129a l\u00e0 h\u1ecdc vi\u00ean \u0111ang ti\u1ebfn nhanh h\u01a1n qua n\u1ed9i dung."
+      },
+      "time_to_completion": {
+        "title": "Th\u1eddi gian ho\u00e0n th\u00e0nh",
+        "subtitle": "M\u1ea5t bao l\u00e2u \u0111\u1ec3 h\u1ecdc vi\u00ean ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc",
+        "median_days_to_complete": "ng\u00e0y trung v\u1ecb \u0111\u1ec3 ho\u00e0n th\u00e0nh",
+        "fast_p25": "Nhanh (P25)",
+        "top_25_finish": "Top 25% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
+        "median": "Trung v\u1ecb",
+        "half_finish": "50% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
+        "slow_p75": "Ch\u1eadm (P75)",
+        "pct_75_finish": "75% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
+        "based_on": "D\u1ef1a tr\u00ean {{count}} l\u01b0\u1ee3t ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc",
+        "days_unit": "ng\u00e0y"
+      },
+      "certification_rate": {
+        "title": "T\u1ef7 l\u1ec7 ch\u1ee9ng ch\u1ec9",
+        "subtitle": "% ng\u01b0\u1eddi ho\u00e0n th\u00e0nh \u0111\u00e3 nh\u1eadn ch\u1ee9ng ch\u1ec9",
+        "of_completers_claimed": "ng\u01b0\u1eddi ho\u00e0n th\u00e0nh \u0111\u00e3 nh\u1eadn ch\u1ee9ng ch\u1ec9",
+        "certificates_claimed": "ch\u1ee9ng ch\u1ec9 \u0111\u00e3 nh\u1eadn",
+        "course_completions": "ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc"
+      },
+      "top_learners": {
+        "title": "H\u1ecdc vi\u00ean xu\u1ea5t s\u1eafc",
+        "subtitle": "H\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng nhi\u1ec1u nh\u1ea5t theo ho\u00e0n th\u00e0nh",
+        "user_fallback": "Ng\u01b0\u1eddi d\u00f9ng #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "\u0110\u0103ng k\u00fd g\u1ea7n \u0111\u00e2y",
+        "subtitle": "H\u1ecdc vi\u00ean m\u1edbi nh\u1ea5t \u0111\u0103ng k\u00fd kh\u00f3a h\u1ecdc",
+        "count_in_period": "{{count}} \u0111\u0103ng k\u00fd trong giai \u0111o\u1ea1n n\u00e0y"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} / {{total}}"
+      }
+    }
   }
 }

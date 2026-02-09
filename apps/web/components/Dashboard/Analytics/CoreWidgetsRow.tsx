@@ -26,6 +26,7 @@ import {
   Cell,
 } from 'recharts'
 import AnalyticsDetailModal from './AnalyticsDetailModal'
+import { useTranslation } from 'react-i18next'
 
 const COLORS = ['#6b8de3', '#818cf8', '#a78bfa', '#c4b5fd']
 
@@ -54,6 +55,7 @@ function ExpandButton({ onClick }: { onClick: () => void }) {
 }
 
 export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const { data: funnelData, isLoading: funnelLoading } = useAnalyticsPipe(
     'enrollment_funnel',
@@ -75,10 +77,10 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
   const funnelRow = funnelData?.data?.[0]
   const chartData = funnelRow
     ? [
-        { name: 'Page Views', value: funnelRow.page_views },
-        { name: 'Course Views', value: funnelRow.course_views },
-        { name: 'Enrollments', value: funnelRow.enrollments },
-        { name: 'Completions', value: funnelRow.completions },
+        { name: t('analytics.overview.page_views'), value: funnelRow.page_views },
+        { name: t('analytics.overview.course_views'), value: funnelRow.course_views },
+        { name: t('analytics.common.enrollments'), value: funnelRow.enrollments },
+        { name: t('analytics.common.completions'), value: funnelRow.completions },
       ]
     : []
 
@@ -88,12 +90,12 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
   return (
     <>
       <div className="bg-white nice-shadow rounded-xl overflow-hidden flex divide-x divide-gray-100">
-        {/* Enrollment Funnel */}
+        {/* {t('analytics.overview.enrollment_funnel')} */}
         <div className="flex-1 p-5 min-w-0">
           <div className="flex items-center gap-2 mb-4">
             <Funnel size={16} weight="duotone" className="text-indigo-400" />
             <h3 className="text-sm font-semibold text-gray-700">
-              Enrollment Funnel
+              {t('analytics.overview.enrollment_funnel')}
             </h3>
             <div className="ml-auto">
               <ExpandButton onClick={() => setFunnelOpen(true)} />
@@ -101,11 +103,11 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           </div>
           {funnelLoading ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              Loading...
+              {t('analytics.common.loading')}
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              No data yet
+              {t('analytics.common.no_data')}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
@@ -145,21 +147,21 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
         <div className="flex-1 p-5 min-w-0">
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={16} weight="duotone" className="text-amber-400" />
-            <h3 className="text-sm font-semibold text-gray-700">Top Courses</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('analytics.overview.top_courses')}</h3>
             <div className="ml-auto">
               <ExpandButton onClick={() => setCoursesOpen(true)} />
             </div>
           </div>
           {coursesLoading ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              Loading...
+              {t('analytics.common.loading')}
             </div>
           ) : courseRows.length === 0 ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              No data yet
+              {t('analytics.common.no_data')}
             </div>
           ) : (
-            <div className="overflow-y-auto max-h-[220px] space-y-1.5">
+            <div className="overflow-y-auto h-[220px] space-y-1.5">
               {courseRows.slice(0, 8).map((row: any, i: number) => (
                 <CourseRow key={i} row={row} org={org} />
               ))}
@@ -167,12 +169,12 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           )}
         </div>
 
-        {/* Activity Engagement */}
+        {/* {t('analytics.overview.activity_engagement')} */}
         <div className="flex-1 p-5 min-w-0">
           <div className="flex items-center gap-2 mb-4">
             <Lightning size={16} weight="duotone" className="text-green-400" />
             <h3 className="text-sm font-semibold text-gray-700">
-              Activity Engagement
+              {t('analytics.overview.activity_engagement')}
             </h3>
             <div className="ml-auto">
               <ExpandButton onClick={() => setActivityOpen(true)} />
@@ -180,14 +182,14 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           </div>
           {activityLoading ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              Loading...
+              {t('analytics.common.loading')}
             </div>
           ) : activityRows.length === 0 ? (
             <div className="h-[220px] flex items-center justify-center text-gray-300">
-              No data yet
+              {t('analytics.common.no_data')}
             </div>
           ) : (
-            <div className="overflow-y-auto max-h-[220px] space-y-1.5">
+            <div className="overflow-y-auto h-[220px] space-y-1.5">
               {activityRows.slice(0, 10).map((row: any, i: number) => (
                 <ActivityRow key={i} row={row} />
               ))}
@@ -202,11 +204,11 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
       <AnalyticsDetailModal
         open={funnelOpen}
         onClose={() => setFunnelOpen(false)}
-        title="Enrollment Funnel"
+        title="{t('analytics.overview.enrollment_funnel')}"
         icon={<Funnel size={20} weight="duotone" className="text-indigo-400" />}
       >
         {chartData.length === 0 ? (
-          <div className="text-center text-gray-300 py-12">No data yet</div>
+          <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
         ) : (
           <div className="space-y-6">
             <ResponsiveContainer width="100%" height={300}>
@@ -241,17 +243,17 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             <div className="grid grid-cols-3 gap-4">
               {[
                 {
-                  label: 'View → Enroll',
+                  label: t('analytics.overview.view_to_enroll'),
                   from: funnelRow?.course_views,
                   to: funnelRow?.enrollments,
                 },
                 {
-                  label: 'Enroll → Complete',
+                  label: t('analytics.overview.enroll_to_complete'),
                   from: funnelRow?.enrollments,
                   to: funnelRow?.completions,
                 },
                 {
-                  label: 'Page → Complete',
+                  label: t('analytics.overview.page_to_complete'),
                   from: funnelRow?.page_views,
                   to: funnelRow?.completions,
                 },
@@ -286,16 +288,16 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
         icon={<Trophy size={20} weight="duotone" className="text-amber-400" />}
       >
         {courseRows.length === 0 ? (
-          <div className="text-center text-gray-300 py-12">No data yet</div>
+          <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
         ) : (
           <div className="space-y-1">
             {/* Header */}
             <div className="grid grid-cols-[1fr_80px_80px_80px_100px] gap-2 px-3 py-2 text-[11px] text-gray-400 font-medium uppercase tracking-wider">
-              <span>Course</span>
-              <span className="text-right">Views</span>
-              <span className="text-right">Enrollments</span>
-              <span className="text-right">Completions</span>
-              <span className="text-right">Conv. Rate</span>
+              <span>{t('analytics.common.course')}</span>
+              <span className="text-right">{t('analytics.common.views')}</span>
+              <span className="text-right">{t('analytics.common.enrollments')}</span>
+              <span className="text-right">{t('analytics.common.completions')}</span>
+              <span className="text-right">{t('analytics.overview.conv_rate')}</span>
             </div>
             {courseRows.map((row: any, i: number) => {
               const thumbnail =
@@ -365,26 +367,26 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
         )}
       </AnalyticsDetailModal>
 
-      {/* Activity Engagement Detail */}
+      {/* {t('analytics.overview.activity_engagement')} Detail */}
       <AnalyticsDetailModal
         open={activityOpen}
         onClose={() => setActivityOpen(false)}
-        title="Activity Engagement"
+        title="{t('analytics.overview.activity_engagement')}"
         icon={
           <Lightning size={20} weight="duotone" className="text-green-400" />
         }
       >
         {activityRows.length === 0 ? (
-          <div className="text-center text-gray-300 py-12">No data yet</div>
+          <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
         ) : (
           <div className="space-y-1">
             {/* Header */}
             <div className="grid grid-cols-[1fr_60px_70px_80px_90px] gap-2 px-3 py-2 text-[11px] text-gray-400 font-medium uppercase tracking-wider">
-              <span>Activity</span>
-              <span className="text-right">Type</span>
-              <span className="text-right">Views</span>
-              <span className="text-right">Completions</span>
-              <span className="text-right">Avg Time</span>
+              <span>{t('analytics.overview.activity')}</span>
+              <span className="text-right">{t('analytics.common.type')}</span>
+              <span className="text-right">{t('analytics.common.views')}</span>
+              <span className="text-right">{t('analytics.common.completions')}</span>
+              <span className="text-right">{t('analytics.overview.avg_time')}</span>
             </div>
             {activityRows.map((row: any, i: number) => {
               const typeIcon =

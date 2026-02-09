@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Average time spent per activity for a single course
+
+NODE course_time_per_activity_node
+SQL >
+    %
+    SELECT
+        replaceOne(JSONExtractString(properties, 'activity_id'), 'activity_', '') AS activity_id,
+        round(avg(JSONExtractFloat(properties, 'seconds_spent')), 1) AS avg_seconds_spent,
+        count() AS samples
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name = 'time_on_activity'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY activity_id
+    ORDER BY avg_seconds_spent DESC
+
+TYPE endpoint

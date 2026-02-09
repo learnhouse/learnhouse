@@ -13,6 +13,7 @@ COURSE_COMPLETED = "course_completed"
 ACTIVITY_COMPLETED = "activity_completed"
 ASSIGNMENT_SUBMITTED = "assignment_submitted"
 USER_SIGNED_UP = "user_signed_up"
+CERTIFICATE_CLAIMED = "certificate_claimed"
 
 # Allowed frontend event names (whitelist for the proxy endpoint)
 ALLOWED_FRONTEND_EVENTS = {

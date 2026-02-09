@@ -13,7 +13,7 @@ export default function CourseEffectivenessMatrix({ days = '90' }: { days?: stri
   }))
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Course Effectiveness Matrix</h3>
       <p className="text-xs text-gray-400 mb-4">Activity count vs completion rate (sized by enrollments)</p>
       {isLoading ? (

@@ -3598,5 +3598,391 @@
     "no_usergroups": "Keine Benutzergruppen gefunden",
     "create_usergroup": "Benutzergruppe erstellen",
     "link": "Verknüpfen"
+  },
+  "analytics": {
+    "title": "Analytik",
+    "subtitle": "Einblicke in Ihre Lernenden und Inhalte",
+    "tabs": {
+      "overview": "Übersicht",
+      "advanced": "Erweitert"
+    },
+    "not_configured": {
+      "title": "Analytik nicht konfiguriert",
+      "description": "Analytik erfordert eine Tinybird-Verbindung. Setzen Sie die Umgebungsvariablen <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> und <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code>, um sie zu aktivieren."
+    },
+    "advanced_gate": {
+      "requires": "Erfordert",
+      "upgrade_description": "Upgraden Sie, um erweiterte Analytik freizuschalten"
+    },
+    "common": {
+      "loading": "Laden...",
+      "no_data": "Noch keine Daten",
+      "users": "Benutzer",
+      "views": "Aufrufe",
+      "enrollments": "Einschreibungen",
+      "completions": "Abschlüsse",
+      "course": "Kurs",
+      "date": "Datum",
+      "user": "Benutzer",
+      "type": "Typ",
+      "expand": "Erweitern",
+      "days": "Tage",
+      "score": "Punktzahl",
+      "unique_users": "eindeutige Benutzer"
+    },
+    "overview": {
+      "live_now": "Jetzt live",
+      "last_5_minutes": "Letzte 5 Minuten",
+      "signups": "Anmeldungen",
+      "submissions": "Einreichungen",
+      "daily_active_users": "Täglich aktive Benutzer",
+      "active_users": "Aktive Benutzer",
+      "countries": "Länder",
+      "top_countries": "Top-Länder",
+      "devices": "Geräte",
+      "desktop": "Desktop",
+      "mobile": "Mobil",
+      "tablet": "Tablet",
+      "top_referrers": "Top-Verweiser",
+      "top_referrer": "Top-Verweiser",
+      "enrollment_funnel": "Einschreibungstrichter",
+      "page_views": "Seitenaufrufe",
+      "course_views": "Kursaufrufe",
+      "view_to_enroll": "Ansicht → Einschreibung",
+      "enroll_to_complete": "Einschreibung → Abschluss",
+      "page_to_complete": "Seite → Abschluss",
+      "conv_rate": "Konv.-Rate",
+      "top_courses": "Top-Kurse",
+      "activity_engagement": "Aktivitätsengagement",
+      "activity": "Aktivität",
+      "avg_time": "Ø Zeit",
+      "activities": "Aktivitäten",
+      "courses": "Kurse",
+      "enrollments": "Einschreibungen",
+      "completions": "Abschlüsse"
+    },
+    "modals": {
+      "live_users": {
+        "title": "Live-Benutzer",
+        "description": "In den letzten 5 Minuten aktive Benutzer"
+      },
+      "signups": {
+        "title": "Anmeldungen",
+        "description": "Neue Registrierungen in den letzten {{days}} Tagen"
+      },
+      "enrollments": {
+        "title": "Einschreibungen",
+        "description": "Kurseinschreibungen in den letzten {{days}} Tagen"
+      },
+      "completions": {
+        "title": "Abschlüsse",
+        "description": "Kursabschlüsse in den letzten {{days}} Tagen"
+      },
+      "live_users_table": {
+        "current_page": "Aktuelle Seite",
+        "device": "Gerät",
+        "country": "Land",
+        "last_seen": "Zuletzt gesehen"
+      },
+      "signups_table": {
+        "email": "E-Mail",
+        "method": "Methode"
+      }
+    },
+    "advanced_widgets": {
+      "org_growth_trend": {
+        "title": "Wachstumstrend",
+        "description": "Wöchentliche Anmeldungen, Einschreibungen, Abschlüsse"
+      },
+      "new_vs_returning": {
+        "title": "Neue vs. wiederkehrende Benutzer",
+        "description": "Wachstum vs. Bindung"
+      },
+      "cohort_retention": {
+        "title": "Kohortenretention",
+        "description": "% aktive Benutzer nach Anmeldewoche",
+        "cohort": "Kohorte",
+        "size": "Größe"
+      },
+      "peak_usage": {
+        "title": "Spitzennutzungszeiten",
+        "description": "Ereignisvolumen nach Tag und Stunde",
+        "days": {
+          "mon": "Mo",
+          "tue": "Di",
+          "wed": "Mi",
+          "thu": "Do",
+          "fri": "Fr",
+          "sat": "Sa",
+          "sun": "So"
+        },
+        "events": "Ereignisse"
+      },
+      "course_dropoff": {
+        "title": "Kursabbruch",
+        "description": "Wo Benutzer pro Kurs aufhören"
+      },
+      "time_to_completion": {
+        "title": "Zeit bis zum Abschluss",
+        "description": "Median-Tage bis zum Kursabschluss"
+      },
+      "completion_velocity": {
+        "title": "Abschlussgeschwindigkeit",
+        "description": "Ø Tage zwischen Aktivitätsabschlüssen"
+      },
+      "content_type_effectiveness": {
+        "title": "Inhaltstyp-Effektivität",
+        "description": "Abschlussrate nach Aktivitätstyp"
+      },
+      "course_effectiveness_matrix": {
+        "title": "Kurseffektivitätsmatrix",
+        "description": "Aktivitätenanzahl vs. Abschlussrate"
+      },
+      "community_correlation": {
+        "title": "Community-Korrelation",
+        "description": "Abschlussrate: Diskutierende vs. Nicht-Diskutierende",
+        "discussion_users": "Diskussionsbenutzer",
+        "non_discussion_users": "Nicht-Diskussionsbenutzer"
+      },
+      "learner_engagement_score": {
+        "title": "Lernenden-Engagement-Score",
+        "description": "Top-Lernende nach Engagement",
+        "user_id": "Benutzer-ID"
+      },
+      "user_progress_snapshot": {
+        "title": "Benutzerfortschritt",
+        "description": "Benutzer in jedem Abschlussbereich pro Kurs"
+      },
+      "grade_distribution": {
+        "title": "Notenverteilung",
+        "description": "Aufgaben-Notenhistogramm"
+      },
+      "search_effectiveness": {
+        "title": "Sucheffektivität",
+        "description": "Top-Suchanfragen und Null-Ergebnis-Rate",
+        "query": "Anfrage",
+        "searches": "Suchen",
+        "zero_results": "Null-Ergebnis %"
+      },
+      "certification_rate": {
+        "title": "Zertifizierungsrate",
+        "description": "% der Absolventen mit Zertifikat"
+      }
+    },
+    "course_analytics": {
+      "not_configured_title": "Analytik nicht konfiguriert",
+      "not_configured_desc": "Analytik erfordert die Konfiguration von Tinybird. Bitte kontaktieren Sie Ihren Administrator.",
+      "common": {
+        "loading": "Laden...",
+        "no_data": "Noch keine Daten",
+        "no_enrollments": "Noch keine Einschreibungen",
+        "total": "Gesamt",
+        "daily_avg": "Tagesdurchschn.",
+        "latest_day": "Letzter Tag",
+        "peak": "Spitze",
+        "peak_day": "Spitzentag",
+        "type": "Typ",
+        "rate": "Rate",
+        "views": "Aufrufe",
+        "enrollments": "Einschreibungen",
+        "completions": "Abschlüsse",
+        "completion_rate": "Abschlussrate",
+        "conversion": "Konversion",
+        "avg_time": "Durchschn. Zeit",
+        "total_views": "Aufrufe gesamt",
+        "total_completions": "Abschlüsse gesamt",
+        "avg_rate": "Durchschn. Rate",
+        "needs_attention": "Aufmerksamkeit erforderlich",
+        "total_samples": "Stichproben gesamt",
+        "more_expand": "+{{count}} weitere \u2014 klicken zum Aufklappen",
+        "activities_count": "{{count}} Aktivitäten",
+        "pct_of_total": "% vom Gesamt",
+        "bar_width_hint": "Balkenbreite = relative Aufrufe",
+        "rate_high": ">70%",
+        "rate_mid": "40\u201370%",
+        "rate_low": "<40%",
+        "low_conversion": "niedrige Konversion",
+        "avg_completion": "durchschn. Abschluss",
+        "avg_prefix": "durchschn. {{value}}",
+        "unknown_activity": "Unbekannte Aktivität"
+      },
+      "units": {
+        "done": "erledigt",
+        "views": "Aufrufe",
+        "enrolled": "eingeschrieben",
+        "learner": "Lernende(r)",
+        "learners": "Lernende",
+        "events": "Ereignisse",
+        "total": "gesamt",
+        "total_views": "Aufrufe gesamt",
+        "total_completions": "Abschlüsse gesamt",
+        "total_dropoffs": "Abbrüche gesamt",
+        "peak_active": "Spitze aktiv",
+        "conversion": "Konversion",
+        "retention": "Bindung",
+        "in_cohort": "in Kohorte",
+        "active_learners": "aktive Lernende",
+        "recent_enrollments": "aktuelle Einschreibungen",
+        "transitions": "Übergänge",
+        "median_days": "Mediantage",
+        "claim_rate": "Einlösungsrate",
+        "claimed": "eingelöst",
+        "completed": "abgeschlossen",
+        "unique": "eindeutig",
+        "time": "Zeit",
+        "avg_per_day": "Durchschn. / Tag",
+        "busiest_time": "aktivste Zeit",
+        "minutes": "Minuten",
+        "hours": "Stunden",
+        "days": "Tage",
+        "done_before": "erledigt vor",
+        "sample": "Stichprobe",
+        "samples": "Stichproben",
+        "min": "Min.",
+        "avg_per_learner": "Durchschn. pro Lernendem"
+      },
+      "type_labels": {
+        "video": "Video",
+        "document": "Dokument",
+        "quiz": "Quiz",
+        "assignment": "Aufgabe",
+        "dynamic": "Dynamisch"
+      },
+      "overview_stats": {
+        "views": "Aufrufe",
+        "enrollments": "Einschreibungen",
+        "completions": "Abschlüsse",
+        "completion_rate": "Abschlussrate"
+      },
+      "activity_type_breakdown": {
+        "title": "Aufschlüsselung nach Aktivitätstyp",
+        "subtitle": "Verteilung und Abschlussraten nach Inhaltstyp"
+      },
+      "engagement_by_type": {
+        "title": "Engagement nach Inhaltstyp",
+        "subtitle": "Engagement-Metriken der Lernenden pro Aktivitätstyp",
+        "total_events": "Ereignisse gesamt",
+        "total_learners": "Lernende gesamt"
+      },
+      "peak_hours": {
+        "title": "Lern-Spitzenzeiten",
+        "subtitle": "Wann Lernende in diesem Kurs am aktivsten sind",
+        "peak_time": "Spitzenzeit",
+        "peak_events": "Spitzenereignisse",
+        "less": "Weniger",
+        "more": "Mehr",
+        "days": {
+          "mon": "Mo",
+          "tue": "Di",
+          "wed": "Mi",
+          "thu": "Do",
+          "fri": "Fr",
+          "sat": "Sa",
+          "sun": "So"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} Ereignisse"
+      },
+      "enrollment_trend": {
+        "title": "Einschreibungstrend",
+        "subtitle": "Tägliche neue Einschreibungen im Zeitverlauf"
+      },
+      "active_learners": {
+        "title": "Aktive Lernende",
+        "subtitle": "Tägliche eindeutige aktive Lernende in diesem Kurs"
+      },
+      "unique_viewers": {
+        "title": "Kursbesucher",
+        "subtitle": "Tägliche eindeutige Besucher dieser Kursseite",
+        "total_views": "Aufrufe gesamt",
+        "peak_viewers": "Spitze Besucher"
+      },
+      "view_to_enrollment": {
+        "title": "Aufruf \u2192 Einschreibung",
+        "subtitle": "Wie viele Besucher zu eingeschriebenen Lernenden werden"
+      },
+      "daily_completions": {
+        "title": "Tägliche Abschlüsse",
+        "subtitle": "Aktivitätsabschlüsse pro Tag"
+      },
+      "activity_funnel": {
+        "title": "Aktivitäts-Abschlusstrichter",
+        "subtitle": "Aufrufe vs. Abschlüsse pro Aktivität"
+      },
+      "time_per_activity": {
+        "title": "Zeit pro Aktivität",
+        "subtitle": "Durchschnittliche Zeit, die Lernende für jede Aktivität aufwenden"
+      },
+      "activity_dropoff": {
+        "title": "Abbruchpunkte",
+        "subtitle": "Wo Lernende aufhören weiterzumachen \u2014 letzte abgeschlossene Aktivität",
+        "total_dropoffs": "Abbrüche gesamt",
+        "dropoff_points": "Abbruchpunkte"
+      },
+      "avg_session_duration": {
+        "title": "Tägliche Zeit pro Lernendem",
+        "subtitle": "Durchschnittliche Zeit, die jeder Lernende pro Tag verbringt",
+        "total_time": "Gesamtzeit",
+        "avg_per_day": "Durchschn. pro Tag",
+        "minutes_label": "Minuten"
+      },
+      "learner_progress": {
+        "title": "Lernfortschritt",
+        "subtitle": "Wie viele Aktivitäten Lernende abgeschlossen haben",
+        "total_across_brackets": "{{count}} Lernende insgesamt über alle Fortschrittsstufen"
+      },
+      "learner_retention": {
+        "title": "Lernenden-Bindung",
+        "subtitle": "% der Lernenden, die nach der ersten Aktivität zurückkehren",
+        "cohort_size": "Kohortengröße",
+        "current_retention": "Aktuelle Bindung",
+        "days_since_first": "Tage seit erster Aktivität",
+        "day_label": "Tag {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Abschlussgeschwindigkeit",
+        "subtitle": "Durchschnittliche Zeit zwischen Aktivitätsabschlüssen",
+        "not_enough_data": "Noch nicht genug Daten",
+        "need_transitions": "Mindestens 3 Aktivitätsübergänge erforderlich, um die Geschwindigkeit zu berechnen",
+        "not_enough_data_short": "Nicht genug Daten",
+        "need_transitions_short": "3+ Übergänge nötig",
+        "avg_between": "durchschn. {{unit}} zwischen Abschlüssen",
+        "transitions_tracked": "Übergänge erfasst",
+        "raw_hours_avg": "Rohstunden-Durchschn.",
+        "description": "Misst, wie schnell Lernende von einer Aktivität zur nächsten fortschreiten. Niedriger ist besser \u2014 das bedeutet, dass Lernende schneller durch den Inhalt kommen."
+      },
+      "time_to_completion": {
+        "title": "Zeit bis zum Abschluss",
+        "subtitle": "Wie lange Lernende brauchen, um diesen Kurs abzuschließen",
+        "median_days_to_complete": "Mediantage bis Abschluss",
+        "fast_p25": "Schnell (P25)",
+        "top_25_finish": "Die schnellsten 25% schließen ab bis",
+        "median": "Median",
+        "half_finish": "Die Hälfte schließt ab bis",
+        "slow_p75": "Langsam (P75)",
+        "pct_75_finish": "75% schließen ab bis",
+        "based_on": "Basierend auf {{count}} Kursabschluss/-abschlüssen",
+        "days_unit": "Tage"
+      },
+      "certification_rate": {
+        "title": "Zertifizierungsrate",
+        "subtitle": "% der Absolventen, die ihr Zertifikat eingelöst haben",
+        "of_completers_claimed": "der Absolventen haben ein Zertifikat eingelöst",
+        "certificates_claimed": "Zertifikate eingelöst",
+        "course_completions": "Kursabschlüsse"
+      },
+      "top_learners": {
+        "title": "Top-Lernende",
+        "subtitle": "Aktivste Lernende nach Abschlüssen",
+        "user_fallback": "Benutzer #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Aktuelle Einschreibungen",
+        "subtitle": "Neueste Lernende, die sich in diesen Kurs eingeschrieben haben",
+        "count_in_period": "{{count}} Einschreibungen in diesem Zeitraum"
+      },
+      "pagination": {
+        "range": "{{from}}\u2013{{to}} von {{total}}"
+      }
+    }
   }
 }

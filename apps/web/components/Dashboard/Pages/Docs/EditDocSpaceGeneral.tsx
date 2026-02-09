@@ -28,8 +28,7 @@ const EditDocSpaceGeneral = ({ spaceuuid }: EditDocSpaceGeneralProps) => {
   const access_token = session?.data?.tokens?.access_token
   const [isSettingDefault, setIsSettingDefault] = useState(false)
 
-  const hasInitializedRef = useRef(false)
-  const previousValuesRef = useRef<any>(null)
+  const previousChangesRef = useRef<any>(null)
 
   const formik = useFormik({
     initialValues: {
@@ -52,36 +51,31 @@ const EditDocSpaceGeneral = ({ spaceuuid }: EditDocSpaceGeneralProps) => {
     onSubmit: async () => {},
   })
 
+  // Sync form changes — compare against formik.initialValues
+  // so that reinitialization from server data is never treated as a user edit
   useEffect(() => {
     if (isLoading || isSaving) return
 
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true
-      previousValuesRef.current = formik.values
-      return
-    }
+    const changes: any = {}
+    Object.keys(formik.values).forEach((key) => {
+      if ((formik.values as any)[key] !== (formik.initialValues as any)[key]) {
+        changes[key] = (formik.values as any)[key]
+      }
+    })
 
-    const prevValues = previousValuesRef.current
-    if (!prevValues) {
-      previousValuesRef.current = formik.values
-      return
-    }
-
-    const hasChanges = Object.keys(formik.values).some(
-      (key) => (formik.values as any)[key] !== prevValues[key]
-    )
+    const hasChanges = Object.keys(changes).length > 0
 
     if (hasChanges) {
-      const changes: any = {}
-      Object.keys(formik.values).forEach((key) => {
-        if ((formik.values as any)[key] !== prevValues[key]) {
-          changes[key] = (formik.values as any)[key]
-        }
-      })
-      dispatch({ type: 'MERGE_CHANGES', payload: changes })
-      previousValuesRef.current = { ...formik.values }
+      const changesStr = JSON.stringify(changes)
+      const prevStr = JSON.stringify(previousChangesRef.current)
+      if (changesStr !== prevStr) {
+        previousChangesRef.current = changes
+        dispatch({ type: 'MERGE_CHANGES', payload: changes })
+      }
+    } else {
+      previousChangesRef.current = null
     }
-  }, [formik.values, isLoading, isSaving, dispatch])
+  }, [formik.values, formik.initialValues, isLoading, isSaving, dispatch])
 
   if (isLoading || !docSpaceStructure) {
     return (

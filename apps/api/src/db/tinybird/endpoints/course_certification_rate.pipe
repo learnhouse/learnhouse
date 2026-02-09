@@ -1,0 +1,31 @@
+DESCRIPTION >
+    Certificate claim rate for a single course
+
+NODE course_certification_rate_node
+SQL >
+    %
+    WITH completers AS (
+        SELECT count(DISTINCT user_id) AS completions
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name = 'course_completed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    ),
+    cert_claims AS (
+        SELECT count(DISTINCT user_id) AS claims
+        FROM events
+        WHERE
+            ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+            AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+            AND event_name = 'certificate_claimed'
+            AND timestamp >= now() - INTERVAL {{Int32(days, 90)}} DAY
+    )
+    SELECT
+        completers.completions,
+        cert_claims.claims,
+        if(completers.completions > 0, round(cert_claims.claims / completers.completions * 100, 1), 0) AS claim_rate
+    FROM completers, cert_claims
+
+TYPE endpoint

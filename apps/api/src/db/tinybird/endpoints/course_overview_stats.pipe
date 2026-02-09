@@ -1,0 +1,21 @@
+DESCRIPTION >
+    Overview KPIs for a single course: views, enrollments, completions, completion rate
+
+NODE course_overview_stats_node
+SQL >
+    %
+    SELECT
+        countIf(event_name = 'course_view') AS views,
+        countIf(event_name = 'course_enrolled') AS enrollments,
+        countIf(event_name = 'course_completed') AS completions,
+        if(countIf(event_name = 'course_enrolled') > 0,
+           round(countIf(event_name = 'course_completed') / countIf(event_name = 'course_enrolled') * 100, 1),
+           0) AS completion_rate
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name IN ('course_view', 'course_enrolled', 'course_completed')
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+
+TYPE endpoint

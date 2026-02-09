@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Daily activity completion counts for a single course
+
+NODE course_daily_completions_node
+SQL >
+    %
+    SELECT
+        toDate(timestamp) AS date,
+        count() AS completions,
+        uniqExact(user_id) AS unique_completers
+    FROM events
+    WHERE
+        ({{Int64(org_id, 0)}} = 0 OR org_id = {{Int64(org_id, 0)}})
+        AND JSONExtractString(properties, 'course_id') = {{String(course_id, '')}}
+        AND event_name = 'activity_completed'
+        AND timestamp >= now() - INTERVAL {{Int32(days, 30)}} DAY
+    GROUP BY date
+    ORDER BY date ASC
+
+TYPE endpoint
