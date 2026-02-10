@@ -51,7 +51,7 @@ export default function ExportAnalyticsButton({
         format,
         queries: queries.join(','),
       })
-      if (courseId) params.set('course_id', courseId)
+      if (courseId) params.set('course_uuid', courseId)
 
       const resp = await fetch(`${getAPIUrl()}analytics/export?${params}`, {
         headers: { Authorization: `Bearer ${token}` },

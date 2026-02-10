@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import ReactConfetti from 'react-confetti';
+import dynamic from 'next/dynamic';
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 import { Trophy, ArrowLeft, BookOpen, Target, Download, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';

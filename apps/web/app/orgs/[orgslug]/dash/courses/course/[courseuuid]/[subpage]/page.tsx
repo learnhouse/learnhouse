@@ -202,7 +202,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-          className="h-full overflow-y-auto"
+          className="h-full overflow-y-auto overflow-x-hidden"
         >
           <div>
             {params.subpage == 'content' && hasPermission('update_content') ? (

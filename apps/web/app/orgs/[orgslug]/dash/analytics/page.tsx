@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { ChartBar, ChartLine, SquaresFour } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
@@ -8,29 +9,29 @@ import { usePlanInfo, useAnalyticsStatus } from '@components/Dashboard/Analytics
 import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-
-// Core widgets
-import EventOverview from '@components/Dashboard/Analytics/EventOverview'
-import CoreWidgetsRow from '@components/Dashboard/Analytics/CoreWidgetsRow'
-
-// Advanced widgets
-import { AdvancedGate } from '@components/Dashboard/Analytics/AdvancedGate'
-import CourseDropoffMap from '@components/Dashboard/Analytics/CourseDropoffMap'
-import CohortRetention from '@components/Dashboard/Analytics/CohortRetention'
-import TimeToCompletion from '@components/Dashboard/Analytics/TimeToCompletion'
-import PeakUsageHeatmap from '@components/Dashboard/Analytics/PeakUsageHeatmap'
-import ContentTypeEffectiveness from '@components/Dashboard/Analytics/ContentTypeEffectiveness'
-import NewVsReturning from '@components/Dashboard/Analytics/NewVsReturning'
-import CompletionVelocity from '@components/Dashboard/Analytics/CompletionVelocity'
-import CommunityCorrelation from '@components/Dashboard/Analytics/CommunityCorrelation'
-import UserProgressSnapshot from '@components/Dashboard/Analytics/UserProgressSnapshot'
-import GradeDistribution from '@components/Dashboard/Analytics/GradeDistribution'
-import SearchEffectiveness from '@components/Dashboard/Analytics/SearchEffectiveness'
-import CertificationRate from '@components/Dashboard/Analytics/CertificationRate'
-import OrgGrowthTrend from '@components/Dashboard/Analytics/OrgGrowthTrend'
-import LearnerEngagementScore from '@components/Dashboard/Analytics/LearnerEngagementScore'
-import CourseEffectivenessMatrix from '@components/Dashboard/Analytics/CourseEffectivenessMatrix'
 import ExportAnalyticsButton from '@components/Dashboard/Analytics/AnalyticsExport'
+
+// Core widgets — dynamic to code-split recharts
+const EventOverview = dynamic(() => import('@components/Dashboard/Analytics/EventOverview'))
+const CoreWidgetsRow = dynamic(() => import('@components/Dashboard/Analytics/CoreWidgetsRow'))
+
+// Advanced widgets — only loaded when user clicks the Advanced tab
+const AdvancedGate = dynamic(() => import('@components/Dashboard/Analytics/AdvancedGate').then(m => ({ default: m.AdvancedGate })))
+const CourseDropoffMap = dynamic(() => import('@components/Dashboard/Analytics/CourseDropoffMap'))
+const CohortRetention = dynamic(() => import('@components/Dashboard/Analytics/CohortRetention'))
+const TimeToCompletion = dynamic(() => import('@components/Dashboard/Analytics/TimeToCompletion'))
+const PeakUsageHeatmap = dynamic(() => import('@components/Dashboard/Analytics/PeakUsageHeatmap'))
+const ContentTypeEffectiveness = dynamic(() => import('@components/Dashboard/Analytics/ContentTypeEffectiveness'))
+const NewVsReturning = dynamic(() => import('@components/Dashboard/Analytics/NewVsReturning'))
+const CompletionVelocity = dynamic(() => import('@components/Dashboard/Analytics/CompletionVelocity'))
+const CommunityCorrelation = dynamic(() => import('@components/Dashboard/Analytics/CommunityCorrelation'))
+const UserProgressSnapshot = dynamic(() => import('@components/Dashboard/Analytics/UserProgressSnapshot'))
+const GradeDistribution = dynamic(() => import('@components/Dashboard/Analytics/GradeDistribution'))
+const SearchEffectiveness = dynamic(() => import('@components/Dashboard/Analytics/SearchEffectiveness'))
+const CertificationRate = dynamic(() => import('@components/Dashboard/Analytics/CertificationRate'))
+const OrgGrowthTrend = dynamic(() => import('@components/Dashboard/Analytics/OrgGrowthTrend'))
+const LearnerEngagementScore = dynamic(() => import('@components/Dashboard/Analytics/LearnerEngagementScore'))
+const CourseEffectivenessMatrix = dynamic(() => import('@components/Dashboard/Analytics/CourseEffectivenessMatrix'))
 
 const OVERVIEW_QUERIES = [
   'live_users', 'daily_active_users', 'top_courses', 'enrollment_funnel',
@@ -165,7 +166,7 @@ export default function AnalyticsDashboard() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="flex-1 overflow-y-auto px-10 pb-10"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-10 pb-10"
       >
         {analyticsStatus && !isConfigured ? (
           <div className="flex flex-col items-center justify-center h-96 text-center">
@@ -178,12 +179,12 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         ) : tab === 'overview' ? (
-          <div className="space-y-6 max-w-[1600px]">
+          <div className="space-y-6 max-w-[1600px] mx-auto w-full">
             <EventOverview days={days} />
             <CoreWidgetsRow days={days} />
           </div>
         ) : (
-          <div className="space-y-6 max-w-[1600px]">
+          <div className="space-y-6 max-w-[1600px] mx-auto w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AdvancedGate isAdvanced={isAdvanced} currentPlan={plan}>
                 <OrgGrowthTrend days={days} />

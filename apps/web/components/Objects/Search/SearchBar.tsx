@@ -10,6 +10,7 @@ import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '../Thumbnails/CourseThumbnail';
 import UserAvatar from '../UserAvatar';
 import { useTranslation } from 'react-i18next';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface User {
   username: string;
@@ -101,6 +102,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const { t } = useTranslation();
   const org = useOrg() as any;
+  const { track } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults>({
     courses: [],
@@ -146,11 +148,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           session?.data?.tokens?.access_token
         );
         
-        console.log('Search API Response:', response); // Debug log
-
         // Type assertion and safe access
         const typedResponse = response.data as any;
-        
+
         // Ensure we have the correct structure and handle potential undefined values
         const processedResults: SearchResults = {
           courses: Array.isArray(typedResponse?.courses) ? typedResponse.courses : [],
@@ -158,9 +158,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           users: Array.isArray(typedResponse?.users) ? typedResponse.users : []
         };
 
-        console.log('Processed Results:', processedResults); // Debug log
-        
         setSearchResults(processedResults);
+
+        const totalResults = processedResults.courses.length + processedResults.collections.length + processedResults.users.length;
+        track('search_query', {
+          query: debouncedSearch,
+          results_count: totalResults,
+        });
       } catch (error) {
         console.error('Error searching content:', error);
         setSearchResults({ courses: [], collections: [], users: [] });
