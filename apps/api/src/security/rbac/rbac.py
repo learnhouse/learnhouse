@@ -17,6 +17,7 @@ from src.security.rbac.utils import (
     get_element_organization_id,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 
 logger = logging.getLogger(__name__)
 
@@ -201,6 +202,10 @@ async def authorization_verify_based_on_roles(
     element_uuid: str,
     db_session: Session,
 ):
+    # Superadmin bypass - full access to all resources
+    if is_user_superadmin(user_id, db_session):
+        return True
+
     element_type = await check_element_type(element_uuid)
 
     # Get user roles bound to an organization and standard roles
@@ -269,6 +274,10 @@ async def authorization_verify_based_on_org_admin_status(
     Returns:
         bool: True if user is admin in the target organization, False otherwise
     """
+    # Superadmin bypass - full access to all organizations
+    if is_user_superadmin(user_id, db_session):
+        return True
+
     # Get the target organization's ID from the element UUID
     target_org_id = await get_element_organization_id(element_uuid, db_session)
 
@@ -299,6 +308,11 @@ async def authorization_verify_based_on_roles_and_authorship(
     db_session: Session,
 ):
     logger.info(f"[RBAC] authorization_verify_based_on_roles_and_authorship: user_id={user_id}, action={action}, element_uuid={element_uuid}")
+
+    # Superadmin bypass - full access to all resources
+    if is_user_superadmin(user_id, db_session):
+        logger.info(f"[RBAC] Superadmin bypass for user_id={user_id}")
+        return True
 
     isAuthor = await authorization_verify_if_user_is_author(
         request, user_id, action, element_uuid, db_session
@@ -460,6 +474,10 @@ async def authorization_verify_based_on_roles_and_authorship_or_api_token(
         return await authorization_verify_api_token_permissions(
             request, current_user, action, element_uuid, db_session
         )
+
+    # Superadmin bypass - full access to all resources
+    if is_user_superadmin(current_user.id, db_session):
+        return True
 
     # Regular user path: use existing logic
     return await authorization_verify_based_on_roles_and_authorship(

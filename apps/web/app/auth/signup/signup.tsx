@@ -1,7 +1,7 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle, Loader2, Ticket, UserPlus, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Loader2, Mail, Ticket, UserPlus, X } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
@@ -163,21 +163,29 @@ const LoggedInJoinScreen = ({ inviteCode, org }: JoinScreenProps) => {
                 <p className="font-semibold text-gray-900 text-lg">{activeOrg?.name}</p>
               </div>
 
-              {/* Join Button */}
-              <button
-                onClick={join}
-                disabled={isSubmitting}
-                className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <>
-                    <UserPlus size={18} />
-                    {t('auth.join_organization')}
-                  </>
-                )}
-              </button>
+              {/* Join Button or Verification Warning */}
+              {session.data?.user?.email_verified === false ? (
+                <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                  <Mail size={24} className="mx-auto mb-2 text-amber-600" />
+                  <p className="font-semibold text-amber-800 mb-1">{t('auth.email_verification_required')}</p>
+                  <p className="text-sm text-amber-700">{t('auth.email_verification_required_join')}</p>
+                </div>
+              ) : (
+                <button
+                  onClick={join}
+                  disabled={isSubmitting}
+                  className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <>
+                      <UserPlus size={18} />
+                      {t('auth.join_organization')}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

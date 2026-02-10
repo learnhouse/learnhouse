@@ -292,6 +292,8 @@
     },
     "login_failed": "Login Failed",
     "try_again_in": "try again in {{minutes}} min",
+    "email_verification_required": "Email Verification Required",
+    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
     "join_organization": "Join Organization",
     "join_organization_desc": "You're about to join this organization",
     "join_organization_success": "Successfully joined the organization",

@@ -34,7 +34,7 @@ export default function RootLayout({
                                 src="/umami/script.js"
                             />
         }
-        <SessionProvider refetchInterval={60000}>
+        <SessionProvider refetchInterval={600000}>
           <LHSessionProvider>
             <I18nProvider>
               <main className="animate-fade-in">

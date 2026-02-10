@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { isSubdomainOf, isSameHost, isLocalhost, stripPort } from '@services/utils/ts/hostUtils'
+import { getConfig } from '@services/config/config'
 
-const BACKEND_URL = (process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338').replace(/\/+$/, '')
+const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
 
 // Cookie configuration
 const ACCESS_TOKEN_COOKIE = 'access_token_cookie'
@@ -18,6 +19,36 @@ function shouldExtractTokens(path: string): boolean {
 }
 
 /**
+ * Read the frontend domain config. Server-side route handlers can't use
+ * getCookieValue (client-only), so we read from the request cookies that
+ * the middleware set, falling back to env var / config getter, then default.
+ */
+function getDomainFromRequest(request: NextRequest): { domain: string; topDomain: string } {
+  // 1. Env var (always works if set — backward compat)
+  const envDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
+  const envTopDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN')
+  if (envDomain) {
+    return {
+      domain: envDomain,
+      topDomain: stripPort(envTopDomain || envDomain),
+    }
+  }
+
+  // 2. Request cookies (set by middleware from backend instance info)
+  const cookieDomain = request.cookies.get('learnhouse_frontend_domain')?.value
+  const cookieTopDomain = request.cookies.get('learnhouse_top_domain')?.value
+  if (cookieDomain) {
+    return {
+      domain: cookieDomain,
+      topDomain: stripPort(cookieTopDomain || cookieDomain),
+    }
+  }
+
+  // 3. Default (localhost — gives host-only cookies, correct for dev)
+  return { domain: 'localhost', topDomain: 'localhost' }
+}
+
+/**
  * Determine the cookie domain for auth tokens.
  * - Subdomains of LEARNHOUSE_DOMAIN or the bare domain itself → `.TOP_DOMAIN`
  *   (enables SSO across all org subdomains)
@@ -26,10 +57,11 @@ function shouldExtractTokens(path: string): boolean {
  */
 function getCookieDomain(request: NextRequest): string | undefined {
   const host = request.headers.get('host')
-  const domain = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN || 'localhost'
-  const topDomain = stripPort(process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN || 'localhost')
+  const { domain, topDomain } = getDomainFromRequest(request)
 
   if (isLocalhost(host)) return undefined
+  // Browsers reject Domain=.localhost (public suffix), so use host-only cookies
+  if (topDomain === 'localhost') return undefined
   if (isSubdomainOf(host, domain) || isSameHost(host, domain)) {
     return `.${topDomain}`
   }

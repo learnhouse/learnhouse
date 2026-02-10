@@ -18,6 +18,7 @@ from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 
 
 async def _user_can_view_unpublished_episode(
@@ -32,6 +33,10 @@ async def _user_can_view_unpublished_episode(
     """
     if isinstance(current_user, AnonymousUser):
         return False
+
+    # Superadmins can view everything
+    if is_user_superadmin(current_user.id, db_session):
+        return True
 
     # Check if user is a resource author of this podcast
     author_statement = select(ResourceAuthor).where(

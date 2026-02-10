@@ -56,6 +56,13 @@ async def join_org(
             detail="User not found",
         )
 
+    # Check if user's email is verified
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Please verify your email address before joining an organization.",
+        )
+
     # Check if User isn't already part of the org
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user.id, UserOrganization.org_id == args.org_id

@@ -23,6 +23,7 @@ from src.db.docs.docgroups import DocGroup, DocGroupRead
 from src.db.docs.docpages import DocPage, DocPageRead, DocPageSearchResult
 from src.security.rbac import AccessAction, check_resource_access
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     decrease_feature_usage,
@@ -217,17 +218,21 @@ async def get_docspaces_by_org(
 
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
-        role_statement = (
-            select(Role)
-            .join(UserOrganization)
-            .where(UserOrganization.org_id == org.id)
-            .where(UserOrganization.user_id == current_user.id)
-        )
-        user_roles = db_session.exec(role_statement).all()
-        for role in user_roles:
-            if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
-                can_view_unpublished = True
-                break
+        # Superadmins can always view unpublished docspaces
+        if is_user_superadmin(current_user.id, db_session):
+            can_view_unpublished = True
+        else:
+            role_statement = (
+                select(Role)
+                .join(UserOrganization)
+                .where(UserOrganization.org_id == org.id)
+                .where(UserOrganization.user_id == current_user.id)
+            )
+            user_roles = db_session.exec(role_statement).all()
+            for role in user_roles:
+                if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:
+                    can_view_unpublished = True
+                    break
 
     query = (
         select(DocSpace)
@@ -518,6 +523,10 @@ async def _user_can_view_unpublished(
 ) -> bool:
     if isinstance(current_user, AnonymousUser):
         return False
+
+    # Superadmins can always view unpublished docspaces
+    if is_user_superadmin(current_user.id, db_session):
+        return True
 
     # Check if user is a resource author
     author_statement = select(ResourceAuthor).where(

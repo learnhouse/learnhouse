@@ -14,13 +14,16 @@ from src.db.api_tokens import (
     APITokenUpdate,
 )
 from src.db.organizations import Organization
-from src.db.user_organizations import UserOrganization
-from src.db.roles import Role, Rights
 from src.db.users import PublicUser
+from src.db.roles import Rights
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
-from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.org_auth import (
+    require_org_membership,
+    require_org_role_permission,
+    get_user_org_role,
+)
 
 
 # Token generation constants
@@ -104,44 +107,8 @@ async def create_api_token(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 4: Check if user has permission to create API tokens (via roles permission)
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    # Check if user has role creation/management permissions (using roles as proxy for token management)
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_create', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to create API tokens in this organization",
-            )
-    else:
-        # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to create API tokens. Admin or Maintainer role required.",
-            )
+    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_create")
 
     # VERIFICATION 5: Validate token name
     if not token_data.name or token_data.name.strip() == "":
@@ -172,7 +139,9 @@ async def create_api_token(
 
     # VERIFICATION 7: Validate rights structure if provided
     if token_data.rights:
-        await validate_rights_structure(token_data.rights, user_role.rights)
+        user_role = get_user_org_role(current_user.id, org_id, db_session)
+        user_rights = user_role.rights if user_role else None
+        await validate_rights_structure(token_data.rights, user_rights)
 
     # Generate the token
     full_token, token_prefix, token_hash = generate_api_token()
@@ -233,43 +202,8 @@ async def list_api_tokens(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 4: Check permissions
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    # Check if user has role reading permissions
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_read', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to view API tokens in this organization",
-            )
-    else:
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to view API tokens. Admin or Maintainer role required.",
-            )
+    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
 
     # Get all tokens for the organization
     statement = select(APIToken).where(
@@ -292,18 +226,8 @@ async def get_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
+    # VERIFICATION 2: Membership (superadmins bypass)
+    require_org_membership(current_user.id, org_id, db_session)
 
     # VERIFICATION 3: Get the token
     statement = select(APIToken).where(
@@ -333,42 +257,8 @@ async def update_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 3: Check permissions
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_update', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to update API tokens in this organization",
-            )
-    else:
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to update API tokens. Admin or Maintainer role required.",
-            )
+    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
@@ -385,7 +275,9 @@ async def update_api_token(
 
     # VERIFICATION 5: Validate rights if being updated
     if token_data.rights:
-        await validate_rights_structure(token_data.rights, user_role.rights)
+        user_role = get_user_org_role(current_user.id, org_id, db_session)
+        user_rights = user_role.rights if user_role else None
+        await validate_rights_structure(token_data.rights, user_rights)
 
     # Update fields
     update_data = token_data.model_dump(exclude_unset=True)
@@ -415,42 +307,8 @@ async def revoke_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 3: Check permissions
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_delete', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to revoke API tokens in this organization",
-            )
-    else:
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to revoke API tokens. Admin or Maintainer role required.",
-            )
+    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_delete")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
@@ -489,42 +347,8 @@ async def regenerate_api_token(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 3: Check permissions
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_update', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to regenerate API tokens in this organization",
-            )
-    else:
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to regenerate API tokens. Admin or Maintainer role required.",
-            )
+    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
