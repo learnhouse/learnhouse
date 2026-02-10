@@ -1,13 +1,50 @@
 import {
-  getLEARNHOUSE_DOMAIN_VAL,
-  getLEARNHOUSE_TOP_DOMAIN_VAL,
-  getDefaultOrg,
-  isMultiOrgModeEnabled,
   getAPIUrl,
+  getConfig,
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
+
+// Cached instance info from backend (1-hour TTL)
+interface InstanceInfo {
+  multi_org_enabled: boolean
+  default_org_slug: string
+  ee_enabled: boolean
+  frontend_domain: string
+  top_domain: string
+}
+let _instanceCache: { data: InstanceInfo; ts: number } | null = null
+const INSTANCE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+async function getInstanceInfo(): Promise<InstanceInfo> {
+  if (_instanceCache && Date.now() - _instanceCache.ts < INSTANCE_CACHE_TTL) {
+    return _instanceCache.data
+  }
+
+  // Use the same getAPIUrl() that resolveCustomDomain() uses — it already works
+  // in production via runtime env vars injected by server-wrapper.js.
+  try {
+    const apiUrl = getAPIUrl()
+    const res = await fetch(`${apiUrl}instance/info`, { signal: AbortSignal.timeout(3000) })
+    if (res.ok) {
+      _instanceCache = { data: await res.json(), ts: Date.now() }
+      return _instanceCache.data
+    }
+  } catch {
+    // Backend unavailable — use defaults
+  }
+  return { multi_org_enabled: false, default_org_slug: 'default', ee_enabled: false, frontend_domain: 'localhost:3000', top_domain: 'localhost' }
+}
+
+// Set instance info cookies on a response so client-side can read them synchronously
+function setInstanceCookies(response: NextResponse, info: InstanceInfo) {
+  response.cookies.set({ name: 'learnhouse_multi_org', value: String(info.multi_org_enabled), path: '/' })
+  response.cookies.set({ name: 'learnhouse_default_org', value: info.default_org_slug, path: '/' })
+  response.cookies.set({ name: 'learnhouse_frontend_domain', value: info.frontend_domain, path: '/' })
+  response.cookies.set({ name: 'learnhouse_top_domain', value: info.top_domain, path: '/' })
+  return response
+}
 
 // Helper function to resolve custom domain to org
 async function resolveCustomDomain(domain: string): Promise<{ slug: string } | null> {
@@ -33,9 +70,8 @@ async function resolveCustomDomain(domain: string): Promise<{ slug: string } | n
 }
 
 // Check if the host is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
-function isCustomDomain(fullhost: string | null): boolean {
+function isCustomDomain(fullhost: string | null, domain: string): boolean {
   if (!fullhost) return false
-  const domain = getLEARNHOUSE_DOMAIN_VAL()
   return !isSubdomainOf(fullhost, domain) && !isSameHost(fullhost, domain) && !isLocalhostCheck(fullhost)
 }
 
@@ -58,9 +94,10 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
-  // Get initial data
-  const hosting_mode = isMultiOrgModeEnabled() ? 'multi' : 'single'
-  const default_org = getDefaultOrg()
+  // Fetch instance config from backend (cached 10 min)
+  const instanceInfo = await getInstanceInfo()
+  const hosting_mode = instanceInfo.multi_org_enabled ? 'multi' : 'single'
+  const default_org = instanceInfo.default_org_slug
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
   // Check both old and new cookie names for backward compatibility
@@ -78,21 +115,34 @@ export default async function proxy(req: NextRequest) {
   // Out of orgslug paths & rewrite
   const standard_paths = ['/home']
   const auth_paths = ['/login', '/signup', '/reset', '/forgot', '/verify-email']
+
+  // Admin subdomain detection — rewrite to /admin route group
+  // Use prefix check as primary (works even when backend fetch fails in Edge Runtime
+  // where NEXT_PUBLIC_ env vars are inlined at build time and may be localhost defaults).
+  // Fall back to extractSubdomain for correctness when instanceInfo is available.
+  const hostbare = stripPort(fullhost)
+  const isAdminSubdomain = hostbare?.startsWith('admin.') ||
+    (fullhost ? extractSubdomain(fullhost, instanceInfo.frontend_domain) === 'admin' : false)
+  if (isAdminSubdomain) {
+    const response = NextResponse.rewrite(new URL(`/admin${pathname}${search}`, req.url))
+    setInstanceCookies(response, instanceInfo)
+    return response
+  }
   if (standard_paths.includes(pathname)) {
     // Redirect to the same pathname with the original search params
     return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
 
   if (auth_paths.includes(pathname)) {
-    const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
-    const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
+    const LEARNHOUSE_DOMAIN = instanceInfo.frontend_domain
+    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
 
     // Resolve orgslug: custom domain > subdomain > cookie
     let orgslug: string | undefined
     let customDomain: string | undefined
 
     // 1. Check for custom domain first
-    if (isCustomDomain(fullhost)) {
+    if (isCustomDomain(fullhost, LEARNHOUSE_DOMAIN)) {
       const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
       if (resolvedOrg) {
         orgslug = resolvedOrg.slug
@@ -103,7 +153,7 @@ export default async function proxy(req: NextRequest) {
     // 2. Try to extract from subdomain
     if (!orgslug && fullhost && !isSameHost(fullhost, LEARNHOUSE_DOMAIN)) {
       const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
-      if (extracted && extracted !== 'auth' && extracted !== 'www' && extracted !== 'api') {
+      if (extracted && extracted !== 'auth' && extracted !== 'www' && extracted !== 'api' && extracted !== 'admin') {
         orgslug = extracted
       }
     }
@@ -147,6 +197,7 @@ export default async function proxy(req: NextRequest) {
       }
     }
 
+    setInstanceCookies(response, instanceInfo)
     return response
   }
 
@@ -215,7 +266,7 @@ export default async function proxy(req: NextRequest) {
     let orgslug: string;
 
     if (hosting_mode === 'multi') {
-      orgslug = extractSubdomain(fullhost, getLEARNHOUSE_DOMAIN_VAL()) || (default_org as string);
+      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
     } else {
       // Single hosting mode
       orgslug = default_org as string;
@@ -233,7 +284,7 @@ export default async function proxy(req: NextRequest) {
   }
 
   // Custom Domain Detection - check before multi-org mode
-  if (isCustomDomain(fullhost)) {
+  if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
     const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
     if (resolvedOrg) {
       const response = NextResponse.rewrite(
@@ -260,6 +311,7 @@ export default async function proxy(req: NextRequest) {
       // Set header for server components
       response.headers.set('x-custom-domain', fullhost as string)
 
+      setInstanceCookies(response, instanceInfo)
       return response
     }
     // If custom domain not found, fall through to default behavior
@@ -268,8 +320,8 @@ export default async function proxy(req: NextRequest) {
   // Multi Organization Mode
   if (hosting_mode === 'multi') {
     // Get the organization slug from the URL
-    const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
-    const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
+    const LEARNHOUSE_DOMAIN = instanceInfo.frontend_domain
+    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
 
     let orgslug: string;
     const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
@@ -301,13 +353,14 @@ export default async function proxy(req: NextRequest) {
       path: '/',
     })
 
+    setInstanceCookies(response, instanceInfo)
     return response
   }
 
   // Single Organization Mode
   if (hosting_mode === 'single') {
     // Get the default organization slug
-    const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
+    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
     const orgslug = default_org as string
     const response = NextResponse.rewrite(
       new URL(`/orgs/${orgslug}${pathname}`, req.url)
@@ -327,6 +380,7 @@ export default async function proxy(req: NextRequest) {
       path: '/',
     })
 
+    setInstanceCookies(response, instanceInfo)
     return response
   }
 }

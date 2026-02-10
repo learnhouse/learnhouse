@@ -6,11 +6,11 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
-from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.org_auth import require_org_role_permission, get_user_org_role
+from src.security.superadmin import is_user_superadmin
 from src.db.users import AnonymousUser, PublicUser
 from src.db.roles import Role, RoleCreate, RoleRead, RoleUpdate, RoleTypeEnum
 from src.db.organizations import Organization
-from src.db.user_organizations import UserOrganization
 from fastapi import HTTPException, Request
 from datetime import datetime
 
@@ -51,48 +51,9 @@ async def create_role(
         )
 
     # ============================================================================
-    # VERIFICATION 3: Check if the current user is a member of the organization
+    # VERIFICATION 3+4: Membership + permission (superadmins bypass)
     # ============================================================================
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == role.org_id
-    )
-    user_org = db_session.exec(statement).first()
-    
-    if not user_org:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not a member of this organization",
-        )
-
-    # ============================================================================
-    # VERIFICATION 4: Check if the user has permission to create roles in this organization
-    # ============================================================================
-    # Get the user's role in this organization
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-    
-    if not user_role:
-        raise HTTPException(
-            status_code=403,
-            detail="Your role in this organization could not be determined",
-        )
-
-    # Check if the user has role creation permissions
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_create', False):
-            raise HTTPException(
-                status_code=403,
-                detail="You don't have permission to create roles in this organization",
-            )
-    else:
-        # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin and Maintainer roles
-            raise HTTPException(
-                status_code=403,
-                detail="You don't have permission to create roles in this organization. Admin or Maintainer role required.",
-            )
+    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_create")
 
     # ============================================================================
     # VERIFICATION 5: Check if a role with the same name already exists in this organization
@@ -211,28 +172,28 @@ async def create_role(
 
     # ============================================================================
     # VERIFICATION 8: Ensure user cannot create a role with higher permissions than they have
+    # (superadmins skip this check — they can grant any permission)
     # ============================================================================
-    if role.rights and isinstance(role.rights, dict) and user_role.rights and isinstance(user_role.rights, dict):
-        # Check if the new role has any permissions that the user doesn't have
-        for right_key, right_permissions in role.rights.items():
-            if right_key in user_role.rights:
-                user_right_permissions = user_role.rights[right_key]
-                
-                # Check each permission in the right
-                for perm_key, perm_value in right_permissions.items():
-                    if isinstance(perm_value, bool) and perm_value:  # If the new role has this permission enabled
-                        if isinstance(user_right_permissions, dict) and perm_key in user_right_permissions:
-                            user_has_perm = user_right_permissions[perm_key]
-                            if not user_has_perm:
+    if not is_user_superadmin(current_user.id, db_session):
+        user_role = get_user_org_role(current_user.id, role.org_id, db_session)
+        if role.rights and isinstance(role.rights, dict) and user_role and user_role.rights and isinstance(user_role.rights, dict):
+            for right_key, right_permissions in role.rights.items():
+                if right_key in user_role.rights:
+                    user_right_permissions = user_role.rights[right_key]
+                    for perm_key, perm_value in right_permissions.items():
+                        if isinstance(perm_value, bool) and perm_value:
+                            if isinstance(user_right_permissions, dict) and perm_key in user_right_permissions:
+                                user_has_perm = user_right_permissions[perm_key]
+                                if not user_has_perm:
+                                    raise HTTPException(
+                                        status_code=403,
+                                        detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
+                                    )
+                            else:
                                 raise HTTPException(
                                     status_code=403,
                                     detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
                                 )
-                        else:
-                            raise HTTPException(
-                                status_code=403,
-                                detail=f"You cannot create a role with '{perm_key}' permission for '{right_key}' as you don't have this permission yourself",
-                            )
 
     # Complete the role object
     role.role_uuid = f"role_{uuid4()}"
@@ -322,48 +283,9 @@ async def get_roles_by_organization(
         )
 
     # ============================================================================
-    # VERIFICATION 2: Check if the current user is a member of the organization
+    # VERIFICATION 2+3: Membership + permission (superadmins bypass)
     # ============================================================================
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-    
-    if not user_org:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not a member of this organization",
-        )
-
-    # ============================================================================
-    # VERIFICATION 3: Check if the user has permission to read roles in this organization
-    # ============================================================================
-    # Get the user's role in this organization
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-    
-    if not user_role:
-        raise HTTPException(
-            status_code=403,
-            detail="Your role in this organization could not be determined",
-        )
-
-    # Check if the user has role reading permissions
-    if user_role.rights and isinstance(user_role.rights, dict):
-        roles_rights = user_role.rights.get('roles', {})
-        if not roles_rights.get('action_read', False):
-            raise HTTPException(
-                status_code=403,
-                detail="You don't have permission to read roles in this organization",
-            )
-    else:
-        # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin and Maintainer roles
-            raise HTTPException(
-                status_code=403,
-                detail="You don't have permission to read roles in this organization. Admin or Maintainer role required.",
-            )
+    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
 
     # ============================================================================
     # GET ROLES: Fetch all roles for the organization AND global roles

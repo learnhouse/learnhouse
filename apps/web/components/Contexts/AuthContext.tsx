@@ -68,7 +68,7 @@ interface SessionCache {
   timestamp: number
 }
 
-const SESSION_CACHE_TTL = 10 * 1000 // 10 seconds
+const SESSION_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 const TOKEN_REFRESH_THRESHOLD = 60 * 1000 // 1 minute before expiry
 const AUTH_BROADCAST_CHANNEL = 'learnhouse_auth_sync'
 const OAUTH_STATE_COOKIE = 'learnhouse_oauth_state'

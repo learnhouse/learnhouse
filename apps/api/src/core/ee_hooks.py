@@ -47,6 +47,11 @@ def run_ee_startup(app):
     if hooks and hasattr(hooks, "on_startup"):
         hooks.on_startup(app)
 
+def is_multi_org_allowed() -> bool:
+    """Check if multi-org mode is allowed (requires EE)."""
+    return is_ee_available()
+
+
 async def check_ee_activity_paid_access(request, activity_id, user, db_session) -> bool:
     """
     Check if a user has paid access to an activity via EE.

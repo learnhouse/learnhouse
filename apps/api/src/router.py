@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.routers import analytics as analytics_router_module
 from src.routers import health
+from src.routers import instance
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
@@ -190,6 +191,9 @@ v1_router.include_router(
     tags=["analytics"],
     dependencies=[Depends(get_non_api_token_user)],
 )
+
+# Instance info (public, no auth)
+v1_router.include_router(instance.router, prefix="/instance", tags=["instance"])
 
 # Register EE Routers if available
 register_ee_routers(v1_router)

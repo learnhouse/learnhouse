@@ -31,6 +31,7 @@ from src.security.rbac import (
     AccessAction,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 from src.services.podcasts.thumbnails import upload_podcast_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -73,6 +74,10 @@ async def _user_can_view_unpublished_podcast(
     # Anonymous users cannot view unpublished podcasts
     if isinstance(current_user, AnonymousUser):
         return False
+
+    # Superadmins can always view unpublished podcasts
+    if is_user_superadmin(current_user.id, db_session):
+        return True
 
     # Check if user is a resource author of this podcast
     author_statement = select(ResourceAuthor).where(
@@ -281,17 +286,21 @@ async def get_podcasts_orgslug(
     # Check if user can view unpublished podcasts (must be admin/editor in org)
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
-        role_statement = (
-            select(Role)
-            .join(UserOrganization)
-            .where(UserOrganization.org_id == org.id)
-            .where(UserOrganization.user_id == current_user.id)
-        )
-        user_roles = db_session.exec(role_statement).all()
-        for role in user_roles:
-            if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
-                can_view_unpublished = True
-                break
+        # Superadmins can always view unpublished podcasts
+        if is_user_superadmin(current_user.id, db_session):
+            can_view_unpublished = True
+        else:
+            role_statement = (
+                select(Role)
+                .join(UserOrganization)
+                .where(UserOrganization.org_id == org.id)
+                .where(UserOrganization.user_id == current_user.id)
+            )
+            user_roles = db_session.exec(role_statement).all()
+            for role in user_roles:
+                if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
+                    can_view_unpublished = True
+                    break
 
     # Base query
     query = (
@@ -414,6 +423,9 @@ async def get_podcasts_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
+    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(current_user.id, db_session):
+        # Superadmins see all podcasts (no additional filter)
+        pass
     else:
         # For authenticated users, count:
         # 1. Published AND public podcasts

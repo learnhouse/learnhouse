@@ -118,10 +118,12 @@ async def create_user(
             detail="Email already exists",
         )
 
-    # Exclude unset values
+    # Exclude unset values; strip protected fields to prevent privilege escalation
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
-        setattr(user, key, value)
+        if key not in _PROTECTED_FIELDS:
+            setattr(user, key, value)
 
     # Add user to database
     db_session.add(user)
@@ -280,10 +282,12 @@ async def create_user_without_org(
             detail="Email already exists",
         )
 
-    # Exclude unset values
+    # Exclude unset values; strip protected fields to prevent privilege escalation
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
     user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
-        setattr(user, key, value)
+        if key not in _PROTECTED_FIELDS:
+            setattr(user, key, value)
 
     # Add user to database
     db_session.add(user)
@@ -349,10 +353,12 @@ async def update_user(
                 detail="Email already exists",
             )
 
-    # Update user
+    # Update user; strip protected fields to prevent privilege escalation
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
     user_data = user_object.model_dump(exclude_unset=True)
     for key, value in user_data.items():
-        setattr(user, key, value)
+        if key not in _PROTECTED_FIELDS:
+            setattr(user, key, value)
 
     user.update_date = str(datetime.now())
 
@@ -567,25 +573,18 @@ async def get_user_session(
 
     user = UserRead.model_validate(user)
 
-    # Get roles and orgs
+    # Get roles and orgs in a single JOIN query (avoids N+1)
     statement = (
-        select(UserOrganization)
+        select(Role, Organization)
+        .join(UserOrganization, UserOrganization.role_id == Role.id)
+        .join(Organization, Organization.id == UserOrganization.org_id)
         .where(UserOrganization.user_id == user.id)
-        .join(Organization)
     )
-    user_organizations = db_session.exec(statement).all()
+    results = db_session.exec(statement).all()
 
     roles = []
 
-    for user_organization in user_organizations:
-        role_statement = select(Role).where(Role.id == user_organization.role_id)
-        role = db_session.exec(role_statement).first()
-
-        org_statement = select(Organization).where(
-            Organization.id == user_organization.org_id
-        )
-        org = db_session.exec(org_statement).first()
-
+    for role, org in results:
         roles.append(
             UserRoleWithOrg(
                 role=RoleRead.model_validate(role),
