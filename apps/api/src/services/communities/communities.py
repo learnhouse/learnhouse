@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
+from src.security.superadmin import is_user_superadmin
 from src.db.communities.communities import (
     Community,
     CommunityCreate,
@@ -122,6 +123,13 @@ async def get_communities_by_org(
             Community.org_id == org_id,
             Community.public == True
         )
+        query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
+        communities = db_session.exec(query).all()
+        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+
+    # Superadmins bypass admin check — they can see all communities
+    if is_user_superadmin(current_user.id, db_session):
+        query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = db_session.exec(query).all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]

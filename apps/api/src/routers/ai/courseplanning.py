@@ -13,10 +13,10 @@ from src.db.courses.chapters import Chapter
 from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.user_organizations import UserOrganization
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
+from src.security.org_auth import is_org_member
 from src.security.features_utils.usage import (
     check_ai_credits,
     deduct_ai_credit,
@@ -88,13 +88,8 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 
 
 async def verify_user_org_membership(user_id: int, org_id: int, db_session: Session) -> bool:
-    """Verify that the user is a member of the organization"""
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == user_id,
-        UserOrganization.org_id == org_id
-    )
-    membership = db_session.exec(statement).first()
-    return membership is not None
+    """Verify that the user is a member of the organization (superadmins bypass)."""
+    return is_org_member(user_id, org_id, db_session)
 
 
 @router.post("/courseplanning/start")

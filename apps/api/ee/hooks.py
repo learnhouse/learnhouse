@@ -13,6 +13,7 @@ from ee.routers import info
 from ee.routers import audit_logs
 from ee.routers import scorm
 from ee.routers import sso
+from ee.routers import superadmin
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,13 @@ def register_routers(v1_router: APIRouter):
         sso.router,
         prefix="/auth/sso",
         tags=["sso", "auth"],
+    )
+
+    # Superadmin
+    v1_router.include_router(
+        superadmin.router,
+        prefix="/ee/superadmin",
+        tags=["ee", "superadmin"],
     )
 
     logger.info("EE Routers registered")

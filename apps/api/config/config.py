@@ -48,6 +48,7 @@ class ContentDeliveryConfig(BaseModel):
 
 class HostingConfig(BaseModel):
     domain: str
+    frontend_domain: str
     ssl: bool
     port: int
     use_default_org: bool
@@ -179,6 +180,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_use_default_org = os.environ.get("LEARNHOUSE_USE_DEFAULT_ORG")
     env_allowed_origins = os.environ.get("LEARNHOUSE_ALLOWED_ORIGINS")
     env_cookie_domain = os.environ.get("LEARNHOUSE_COOKIE_DOMAIN")
+    env_frontend_domain = os.environ.get("LEARNHOUSE_FRONTEND_DOMAIN")
 
     # Allowed origins should be a comma separated string
     if env_allowed_origins:
@@ -214,6 +216,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "cookies_config", {}
     ).get("domain")
     cookie_config = CookieConfig(domain=cookies_domain)
+
+    frontend_domain = env_frontend_domain or yaml_config.get("hosting_config", {}).get(
+        "frontend_domain", "localhost:3000"
+    )
 
     env_content_delivery_type = os.environ.get("LEARNHOUSE_CONTENT_DELIVERY_TYPE")
     content_delivery_type: str = env_content_delivery_type or (
@@ -323,6 +329,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
         domain=domain,
+        frontend_domain=frontend_domain,
         ssl=bool(ssl),
         port=int(port),
         use_default_org=bool(use_default_org),

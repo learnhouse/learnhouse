@@ -1,7 +1,11 @@
-from typing import Literal, List, Union
+import json
+import logging
+from typing import Literal, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
 from pydantic import EmailStr
 from sqlmodel import Session
+import redis
+from config.config import get_learnhouse_config
 from src.services.users.password_reset import (
     change_password_with_reset_code,
     send_reset_password_code,
@@ -37,7 +41,48 @@ from src.services.users.users import (
 from src.services.courses.courses import get_user_courses
 
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+SESSION_CACHE_TTL = 600  # 10 minutes
+
+
+def _get_redis_client() -> Optional[redis.Redis]:
+    """Return a Redis client or None if unavailable."""
+    try:
+        config = get_learnhouse_config()
+        conn_string = config.redis_config.redis_connection_string
+        if not conn_string:
+            return None
+        return redis.Redis.from_url(conn_string, socket_connect_timeout=2)
+    except Exception:
+        return None
+
+
+def _get_session_cache(user_id: int) -> Optional[dict]:
+    """Get cached session data for a user."""
+    r = _get_redis_client()
+    if r is None:
+        return None
+    try:
+        raw = r.get(f"session:{user_id}")
+        if raw:
+            return json.loads(raw)
+    except Exception:
+        logger.debug("Session cache read failed for user %s", user_id, exc_info=True)
+    return None
+
+
+def _set_session_cache(user_id: int, session_data: dict) -> None:
+    """Cache session data for a user."""
+    r = _get_redis_client()
+    if r is None:
+        return
+    try:
+        r.setex(f"session:{user_id}", SESSION_CACHE_TTL, json.dumps(session_data))
+    except Exception:
+        logger.debug("Session cache write failed for user %s", user_id, exc_info=True)
 
 
 @router.get("/profile")
@@ -57,9 +102,19 @@ async def api_get_current_user_session(
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
 ) -> UserSession:
     """
-    Get current user
+    Get current user session (cached for 10 minutes).
     """
-    return await get_user_session(request, db_session, current_user)
+    if not isinstance(current_user, AnonymousUser):
+        cached = _get_session_cache(current_user.id)
+        if cached:
+            return UserSession(**cached)
+
+    session = await get_user_session(request, db_session, current_user)
+
+    if not isinstance(current_user, AnonymousUser):
+        _set_session_cache(current_user.id, session.model_dump())
+
+    return session
 
 
 @router.get("/authorize/ressource/{ressource_uuid}/action/{action}")

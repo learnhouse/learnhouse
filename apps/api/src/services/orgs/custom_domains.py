@@ -18,11 +18,9 @@ from src.db.custom_domains import (
     CustomDomainResolveResponse,
 )
 from src.db.organizations import Organization
-from src.db.user_organizations import UserOrganization
-from src.db.roles import Role
 from src.db.users import PublicUser
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
-from src.security.rbac.constants import is_admin_or_maintainer
+from src.security.org_auth import require_org_membership, require_org_admin
 
 logger = logging.getLogger(__name__)
 
@@ -217,35 +215,8 @@ async def add_custom_domain(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 4: Check if user has admin permissions
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your role in this organization could not be determined",
-        )
-
-    # Only admins and maintainers can manage custom domains
-    if not is_admin_or_maintainer(user_role.id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators and maintainers can manage custom domains",
-        )
+    # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
+    require_org_admin(current_user.id, org_id, db_session)
 
     # VERIFICATION 5: Validate domain format
     domain = domain_data.domain.lower().strip()
@@ -324,18 +295,8 @@ async def list_custom_domains(
             detail="Organization not found",
         )
 
-    # VERIFICATION 3: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
+    # VERIFICATION 3: Membership (superadmins bypass)
+    require_org_membership(current_user.id, org_id, db_session)
 
     # Get all custom domains for the organization
     statement = select(CustomDomain).where(
@@ -358,18 +319,8 @@ async def get_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
+    # VERIFICATION 2: Membership (superadmins bypass)
+    require_org_membership(current_user.id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -398,18 +349,8 @@ async def get_domain_verification_info(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
+    # VERIFICATION 2: Membership (superadmins bypass)
+    require_org_membership(current_user.id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -450,28 +391,8 @@ async def verify_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 3: Check admin permission
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role or not is_admin_or_maintainer(user_role.id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators and maintainers can verify custom domains",
-        )
+    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
+    require_org_admin(current_user.id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -519,28 +440,8 @@ async def delete_custom_domain(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
-
-    # VERIFICATION 3: Check admin permission
-    statement = select(Role).where(Role.id == user_org.role_id)
-    user_role = db_session.exec(statement).first()
-
-    if not user_role or not is_admin_or_maintainer(user_role.id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only organization administrators and maintainers can delete custom domains",
-        )
+    # VERIFICATION 2: Membership + admin permission (superadmins bypass)
+    require_org_admin(current_user.id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -587,18 +488,8 @@ async def check_domain_ssl_status(
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # VERIFICATION 2: Check if user is a member of the organization
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org_id
-    )
-    user_org = db_session.exec(statement).first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this organization",
-        )
+    # VERIFICATION 2: Membership (superadmins bypass)
+    require_org_membership(current_user.id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(

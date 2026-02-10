@@ -13,6 +13,7 @@ security:
 
 hosting_config:
   domain: localhost:3000
+  frontend_domain: localhost:3000
   ssl: false
   port: 1338
   allowed_origins:

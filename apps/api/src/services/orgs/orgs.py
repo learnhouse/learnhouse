@@ -41,6 +41,7 @@ from fastapi import HTTPException, UploadFile, status, Request
 
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background
 from src.db.organization_config import AuthBrandingConfig
+from src.core.ee_hooks import is_multi_org_allowed
 
 
 async def get_organization_by_uuid(
@@ -123,6 +124,14 @@ async def create_org(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    # EE gating: only allow multiple orgs with Enterprise Edition
+    existing_org_count = db_session.exec(select(Organization)).all()
+    if len(existing_org_count) > 0 and not is_multi_org_allowed():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Multi-organization mode requires Enterprise Edition",
+        )
+
     statement = select(Organization).where(Organization.slug == org_object.slug)
     result = db_session.exec(statement)
 
@@ -228,6 +237,14 @@ async def create_org_with_config(
     db_session: Session,
     submitted_config: OrganizationConfigBase,
 ):
+    # EE gating: only allow multiple orgs with Enterprise Edition
+    existing_org_count = db_session.exec(select(Organization)).all()
+    if len(existing_org_count) > 0 and not is_multi_org_allowed():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Multi-organization mode requires Enterprise Edition",
+        )
+
     statement = select(Organization).where(Organization.slug == org_object.slug)
     result = db_session.exec(statement)
 

@@ -1,11 +1,11 @@
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 
 interface Role {
     org: { id: number; org_uuid: string };
-    role: { 
-        id: number; 
+    role: {
+        id: number;
         role_uuid: string;
         rights?: {
             [key: string]: {
@@ -79,115 +79,125 @@ interface UseAdminStatusReturn {
     rights: Rights | null;
 }
 
+function extractRightsFromRoles(userRoles: Role[], orgId: number): Rights | null {
+    if (!userRoles || userRoles.length === 0) return null;
+
+    const orgRoles = userRoles.filter((role: Role) => role.org.id === orgId);
+    if (orgRoles.length === 0) return null;
+
+    const mergedRights: Rights = {
+        courses: {
+            action_create: false,
+            action_read: false,
+            action_read_own: false,
+            action_update: false,
+            action_update_own: false,
+            action_delete: false,
+            action_delete_own: false
+        },
+        users: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        usergroups: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        collections: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        organizations: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        coursechapters: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        activities: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        roles: {
+            action_create: false,
+            action_read: false,
+            action_update: false,
+            action_delete: false
+        },
+        dashboard: {
+            action_access: false
+        }
+    };
+
+    orgRoles.forEach((role: Role) => {
+        if (role.role.rights) {
+            Object.keys(role.role.rights).forEach((resourceType) => {
+                if (mergedRights[resourceType as keyof Rights]) {
+                    Object.keys(role.role.rights![resourceType]).forEach((action) => {
+                        if (role.role.rights![resourceType][action] === true) {
+                            (mergedRights[resourceType as keyof Rights] as any)[action] = true;
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    return mergedRights;
+}
+
+// Full-access rights object for superadmins
+const SUPERADMIN_RIGHTS: Rights = {
+    courses: { action_create: true, action_read: true, action_read_own: true, action_update: true, action_update_own: true, action_delete: true, action_delete_own: true },
+    users: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    usergroups: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    collections: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    organizations: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    coursechapters: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    activities: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    roles: { action_create: true, action_read: true, action_update: true, action_delete: true },
+    dashboard: { action_access: true },
+};
+
 function useAdminStatus(): UseAdminStatusReturn {
     const session = useLHSession() as any;
     const org = useOrg() as any;
-    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [rights, setRights] = useState<Rights | null>(null);
 
-    const userRoles = useMemo(() => session?.data?.roles || [], [session?.data?.roles]);
+    const roles = session.data?.roles;
+    const userRoles: Role[] = useMemo(() => roles || [], [roles]);
+    const orgId = org?.id;
+    const isAuthenticated = session.status === 'authenticated';
+    const isSuperadmin = session.data?.user?.is_superadmin === true;
 
-    useEffect(() => {
-        if (session.status === 'authenticated' && org?.id) {
-            // Extract rights from the backend session data
-            const extractRightsFromRoles = (): Rights | null => {
-                if (!userRoles || userRoles.length === 0) return null;
-                
-                // Find roles for the current organization
-                const orgRoles = userRoles.filter((role: Role) => role.org.id === org.id);
-                if (orgRoles.length === 0) return null;
-                
-                // Merge rights from all roles for this organization
-                const mergedRights: Rights = {
-                    courses: {
-                        action_create: false,
-                        action_read: false,
-                        action_read_own: false,
-                        action_update: false,
-                        action_update_own: false,
-                        action_delete: false,
-                        action_delete_own: false
-                    },
-                    users: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    usergroups: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    collections: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    organizations: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    coursechapters: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    activities: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    roles: {
-                        action_create: false,
-                        action_read: false,
-                        action_update: false,
-                        action_delete: false
-                    },
-                    dashboard: {
-                        action_access: false
-                    }
-                };
-                
-                // Merge rights from all roles
-                orgRoles.forEach((role: Role) => {
-                    if (role.role.rights) {
-                        Object.keys(role.role.rights).forEach((resourceType) => {
-                            if (mergedRights[resourceType as keyof Rights]) {
-                                Object.keys(role.role.rights![resourceType]).forEach((action) => {
-                                    if (role.role.rights![resourceType][action] === true) {
-                                        (mergedRights[resourceType as keyof Rights] as any)[action] = true;
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-                
-                return mergedRights;
-            };
-            
-            const extractedRights = extractRightsFromRoles();
-            setRights(extractedRights);
-            
-            // User is admin only if they have dashboard access
-            const isAdminVar = extractedRights?.dashboard?.action_access === true;
-            setIsAdmin(isAdminVar);
-            
-            setLoading(false);
-        } else {
-            setIsAdmin(false);
-            setRights(null);
-            setLoading(false);
-        }
-    }, [session.status, userRoles, org.id]);
+    const rights = useMemo(
+        () => {
+            if (!isAuthenticated || !orgId) return null;
+            // Superadmins get full access to all orgs without needing a role entry
+            if (isSuperadmin) return SUPERADMIN_RIGHTS;
+            return extractRightsFromRoles(userRoles, orgId);
+        },
+        [isAuthenticated, userRoles, orgId, isSuperadmin]
+    );
+
+    const isAdmin = useMemo(
+        () => (isAuthenticated && orgId ? isSuperadmin || rights?.dashboard?.action_access === true : false),
+        [isAuthenticated, orgId, isSuperadmin, rights]
+    );
+
+    const loading = !isAuthenticated && session.status !== 'unauthenticated';
 
     return { isAdmin, loading, userRoles, rights };
 }

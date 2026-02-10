@@ -10,6 +10,7 @@ from src.db.collections_courses import CollectionCourse
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.services.courses.courses import search_courses
+from src.security.org_auth import is_org_member
 
 T = TypeVar('T')
 
@@ -127,14 +128,8 @@ async def search_across_org(
         )
 
         # SECURITY: Only allow user search if the authenticated user is a member of this org
-        # This prevents users from enumerating members of orgs they don't belong to
-        membership_check = select(UserOrganization).where(
-            UserOrganization.user_id == current_user.id,
-            UserOrganization.org_id == org.id
-        )
-        user_membership = db_session.exec(membership_check).first()
-
-        if user_membership:
+        # (superadmins bypass this check)
+        if is_org_member(current_user.id, org.id, db_session):
             # User is a member of this org - allow user search
             users = db_session.exec(users_query.offset(offset).limit(limit)).all()
         else:

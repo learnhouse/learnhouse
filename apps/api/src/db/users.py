@@ -47,6 +47,7 @@ class UserRead(UserBase):
     email_verified: bool = False
     last_login_at: Optional[str] = None
     signup_method: Optional[str] = None
+    is_superadmin: bool = False
 
 
 class PublicUser(UserRead):
@@ -103,6 +104,7 @@ class User(UserBase, table=True):
     last_login_at: Optional[str] = None
     last_login_ip: Optional[str] = None
     signup_method: Optional[str] = None
+    is_superadmin: bool = Field(default=False)
     creation_date: str = ""
     update_date: str = ""
 
