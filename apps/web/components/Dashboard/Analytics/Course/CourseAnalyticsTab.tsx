@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { useTranslation } from 'react-i18next'
 import { ChartBar } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -7,27 +8,28 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import { useAnalyticsStatus } from '../useAnalyticsDashboard'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import CourseOverviewStats from './CourseOverviewStats'
-import CourseEnrollmentTrend from './CourseEnrollmentTrend'
-import CourseActivityFunnel from './CourseActivityFunnel'
-import CourseLearnerProgress from './CourseLearnerProgress'
-import CourseTimePerActivity from './CourseTimePerActivity'
-import CourseCompletionVelocity from './CourseCompletionVelocity'
-import CourseActiveLearners from './CourseActiveLearners'
-import CourseTimeToCompletion from './CourseTimeToCompletion'
-import CourseRecentEnrollments from './CourseRecentEnrollments'
-import CourseCertificationRate from './CourseCertificationRate'
-import CourseViewToEnrollment from './CourseViewToEnrollment'
-import CourseActivityTypeBreakdown from './CourseActivityTypeBreakdown'
-import CoursePeakHours from './CoursePeakHours'
-import CourseLearnerRetention from './CourseLearnerRetention'
-import CourseTopLearners from './CourseTopLearners'
-import CourseActivityDropoff from './CourseActivityDropoff'
-import CourseEngagementByType from './CourseEngagementByType'
-import CourseDailyCompletions from './CourseDailyCompletions'
-import CourseAvgSessionDuration from './CourseAvgSessionDuration'
-import CourseUniqueViewers from './CourseUniqueViewers'
 import ExportAnalyticsButton from '../AnalyticsExport'
+
+const CourseOverviewStats = dynamic(() => import('./CourseOverviewStats'))
+const CourseEnrollmentTrend = dynamic(() => import('./CourseEnrollmentTrend'))
+const CourseActivityFunnel = dynamic(() => import('./CourseActivityFunnel'))
+const CourseLearnerProgress = dynamic(() => import('./CourseLearnerProgress'))
+const CourseTimePerActivity = dynamic(() => import('./CourseTimePerActivity'))
+const CourseCompletionVelocity = dynamic(() => import('./CourseCompletionVelocity'))
+const CourseActiveLearners = dynamic(() => import('./CourseActiveLearners'))
+const CourseTimeToCompletion = dynamic(() => import('./CourseTimeToCompletion'))
+const CourseRecentEnrollments = dynamic(() => import('./CourseRecentEnrollments'))
+const CourseCertificationRate = dynamic(() => import('./CourseCertificationRate'))
+const CourseViewToEnrollment = dynamic(() => import('./CourseViewToEnrollment'))
+const CourseActivityTypeBreakdown = dynamic(() => import('./CourseActivityTypeBreakdown'))
+const CoursePeakHours = dynamic(() => import('./CoursePeakHours'))
+const CourseLearnerRetention = dynamic(() => import('./CourseLearnerRetention'))
+const CourseTopLearners = dynamic(() => import('./CourseTopLearners'))
+const CourseActivityDropoff = dynamic(() => import('./CourseActivityDropoff'))
+const CourseEngagementByType = dynamic(() => import('./CourseEngagementByType'))
+const CourseDailyCompletions = dynamic(() => import('./CourseDailyCompletions'))
+const CourseAvgSessionDuration = dynamic(() => import('./CourseAvgSessionDuration'))
+const CourseUniqueViewers = dynamic(() => import('./CourseUniqueViewers'))
 
 const COURSE_QUERY_NAMES = [
   'course_overview_stats', 'course_enrollment_trend', 'course_activity_funnel',
@@ -66,24 +68,26 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const isConfigured = analyticsStatus?.configured === true
   const orgslug = org?.slug || ''
 
-  // Get the numeric course ID from the course context
+  // Get the course UUID from the course context
   const [courseId, setCourseId] = useState<string | null>(null)
   useEffect(() => {
-    if (courseContext?.courseStructure?.id) {
-      setCourseId(String(courseContext.courseStructure.id))
+    if (courseContext?.courseStructure?.course_uuid) {
+      setCourseId(courseContext.courseStructure.course_uuid)
     }
-  }, [courseContext?.courseStructure?.id])
+  }, [courseContext?.courseStructure?.course_uuid])
 
   // Build activity name map from course structure
+  // Keys are the FULL activity_uuid (with prefix) since that's how ClickHouse stores them
   const activityMap: ActivityMap = useMemo(() => {
     const map: ActivityMap = {}
     const course = courseContext?.courseStructure
     if (!course?.chapters) return map
     for (const chapter of course.chapters) {
       for (const activity of chapter.activities || []) {
-        const cleanUuid = activity.activity_uuid?.replace('activity_', '') || ''
-        if (cleanUuid) {
-          map[cleanUuid] = {
+        const uuid = activity.activity_uuid || ''
+        if (uuid) {
+          const cleanUuid = uuid.replace('activity_', '')
+          map[uuid] = {
             name: activity.name || 'Untitled',
             type: activity.activity_type || '',
             chapterName: chapter.name || '',
@@ -135,7 +139,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const cleanCourseUuid = courseUUID.replace('course_', '')
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px]">
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
       {/* Date range selector */}
       <div className="flex justify-end items-center gap-2">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">

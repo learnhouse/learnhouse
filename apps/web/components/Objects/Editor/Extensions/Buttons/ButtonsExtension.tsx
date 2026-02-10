@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
-import Picker from '@emoji-mart/react'
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
+const Picker = lazy(() => import('@emoji-mart/react'))
 import { ArrowRight, ChevronDown, Link, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -137,7 +137,9 @@ const ButtonsExtension: React.FC = (props: any) => {
       </div>
       {isEditable && showEmojiPicker && (
         <div ref={pickerRef}>
-          <Picker onEmojiSelect={handleEmojiSelect} />
+          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+            <Picker onEmojiSelect={handleEmojiSelect} />
+          </Suspense>
         </div>
       )}
       {isEditable && showLinkInput && (

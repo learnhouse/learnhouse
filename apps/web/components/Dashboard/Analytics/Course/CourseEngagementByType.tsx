@@ -18,11 +18,15 @@ export default function CourseEngagementByType({
   courseId,
   days = '30',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()
-  const getTypeLabel = (type: string) => t('analytics.course_analytics.type_labels.' + type) || type
+  const getTypeLabel = (type: string) => {
+    const key = type.replace(/^TYPE_/, '').toLowerCase()
+    const label = t('analytics.course_analytics.type_labels.' + key)
+    return label.startsWith('analytics.') ? key.charAt(0).toUpperCase() + key.slice(1) : label
+  }
   const { data, isLoading } = useCoursePipe('course_engagement_by_type', courseId, { days })
   const rows = data?.data ?? []
 

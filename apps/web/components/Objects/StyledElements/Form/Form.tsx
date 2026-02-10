@@ -1,7 +1,5 @@
 import React from 'react'
 import * as Form from '@radix-ui/react-form'
-import { styled } from '@stitches/react'
-import { blackA } from '@radix-ui/colors'
 import { Info } from 'lucide-react'
 
 interface FormLayoutProps {
@@ -33,85 +31,74 @@ export const FormLabelAndMessage = (props: {
   </div>
 )
 
-export const FormRoot = styled(Form.Root, {
-  margin: 7,
-})
+export const FormRoot = React.forwardRef<HTMLFormElement, React.ComponentPropsWithoutRef<typeof Form.Root>>(
+  ({ className, ...props }, ref) => (
+    <Form.Root ref={ref} className={`m-[7px] ${className || ''}`} {...props} />
+  )
+)
+FormRoot.displayName = 'FormRoot'
 
-export const FormField = styled(Form.Field, {
-  display: 'grid',
-  marginBottom: 10,
-})
+export const FormField = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof Form.Field>>(
+  ({ className, ...props }, ref) => (
+    <Form.Field ref={ref} className={`grid mb-2.5 ${className || ''}`} {...props} />
+  )
+)
+FormField.displayName = 'FormField'
 
-export const FormLabel = styled(Form.Label, {
-  fontWeight: 500,
-  lineHeight: '35px',
-  color: 'black',
-})
+export const FormLabel = React.forwardRef<HTMLLabelElement, React.ComponentPropsWithoutRef<typeof Form.Label>>(
+  ({ className, ...props }, ref) => (
+    <Form.Label ref={ref} className={`font-medium leading-[35px] text-black ${className || ''}`} {...props} />
+  )
+)
+FormLabel.displayName = 'FormLabel'
 
-export const FormMessage = styled(Form.Message, {
-  fontSize: 13,
-  color: 'white',
-  opacity: 0.8,
-})
+export const FormMessage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWithoutRef<typeof Form.Message>>(
+  ({ className, ...props }, ref) => (
+    <Form.Message ref={ref} className={`text-[13px] text-white opacity-80 ${className || ''}`} {...props} />
+  )
+)
+FormMessage.displayName = 'FormMessage'
 
-export const Flex = styled('div', { display: 'flex' })
+export const Flex = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={`flex ${className || ''}`} {...props} />
+  )
+)
+Flex.displayName = 'Flex'
 
-export const inputStyles = {
-  all: 'unset',
-  boxSizing: 'border-box',
-  width: '100%',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 4,
-  fontSize: 15,
-  color: '#7c7c7c',
-  background: '#fbfdff',
-  boxShadow: `0 0 0 1px #edeeef`,
-  '&:hover': { boxShadow: `0 0 0 1px #edeeef` },
-  '&:focus': { boxShadow: `0 0 0 2px #edeeef` },
-  '&::selection': { backgroundColor: blackA.blackA9, color: 'white' },
-}
+export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <input
+      ref={ref}
+      className={`box-border w-full inline-flex items-center justify-center rounded h-[35px] leading-none px-2.5 text-[15px] text-[#7c7c7c] bg-[#fbfdff] shadow-[0_0_0_1px_#edeeef] hover:shadow-[0_0_0_1px_#edeeef] focus:shadow-[0_0_0_2px_#edeeef] selection:bg-black selection:text-white border-none outline-none ${className || ''}`}
+      {...props}
+    />
+  )
+)
+Input.displayName = 'Input'
 
-export const Input = styled('input', {
-  ...inputStyles,
-  height: 35,
-  lineHeight: 1,
-  padding: '0 10px',
-  border: 'none',
-})
+export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, ...props }, ref) => (
+    <textarea
+      ref={ref}
+      className={`box-border w-full inline-flex items-center justify-center rounded resize-none p-2.5 text-[15px] text-[#7c7c7c] bg-[#fbfdff] shadow-[0_0_0_1px_#edeeef] hover:shadow-[0_0_0_1px_#edeeef] focus:shadow-[0_0_0_2px_#edeeef] selection:bg-black selection:text-white border-none outline-none ${className || ''}`}
+      {...props}
+    />
+  )
+)
+Textarea.displayName = 'Textarea'
 
-export const Textarea = styled('textarea', {
-  ...inputStyles,
-  resize: 'none',
-  padding: 10,
-})
-
-export const ButtonBlack = styled('button', {
-  variants: {
-    state: {
-      loading: {
-        pointerEvents: 'none',
-        backgroundColor: '#808080',
-      },
-      none: {},
-    },
-  },
-  all: 'unset',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 8,
-  padding: '0 15px',
-  fontSize: 15,
-  lineHeight: 1,
-  fontWeight: 500,
-  height: 35,
-
-  background: '#000000',
-  color: '#FFFFFF',
-  '&:hover': { backgroundColor: '#181818', cursor: 'pointer' },
-  '&:focus': { boxShadow: `0 0 0 2px black` },
-})
+export const ButtonBlack = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { state?: 'loading' | 'none' }>(
+  ({ className, state, ...props }, ref) => (
+    <button
+      ref={ref}
+      className={`inline-flex items-center justify-center rounded-lg px-[15px] text-[15px] leading-none font-medium h-[35px] bg-black text-white hover:bg-[#181818] hover:cursor-pointer focus:shadow-[0_0_0_2px_black] outline-none border-none ${
+        state === 'loading' ? 'pointer-events-none bg-[#808080]' : ''
+      } ${className || ''}`}
+      {...props}
+    />
+  )
+)
+ButtonBlack.displayName = 'ButtonBlack'
 
 export default FormLayout

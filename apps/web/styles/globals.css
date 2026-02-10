@@ -8,6 +8,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Root layout fade-in (replaces framer-motion) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
 @theme {
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -285,7 +294,28 @@
   }
 }
 
-    /* Flipcard 3D Animation Styles */
+    /* Confirmation Modal Animations */
+@keyframes overlayShow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlayClose {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes contentShow {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes contentClose {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -52%) scale(.96); }
+}
+
+/* Flipcard 3D Animation Styles */
 .flipcard-container {
   perspective: 1000px;
 }
@@ -1467,4 +1497,1002 @@
 
 .doc-tiptap-rendered td {
   color: #4b5563;
+}
+
+/* ─── Table of Contents ─── */
+.toc-item .toc-check {
+  display: flex;
+  align-items: center;
+  color: #23272f;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.toc-item .toc-link {
+  color: #23272f;
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  transition: none;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.toc-item .toc-link:hover {
+  color: #007acc;
+}
+
+.toc-item .toc-link-h1 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.toc-item .toc-link-h2 {
+  font-size: 0.97rem;
+  font-weight: 400;
+}
+
+.toc-item .toc-link-h3,
+.toc-item .toc-link-h4,
+.toc-item .toc-link-h5,
+.toc-item .toc-link-h6 {
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+/* ─── Editor Toolbar Buttons ─── */
+.editor-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 6px;
+  min-width: 25px;
+  height: 25px;
+  padding: 5px;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+  color: #6b7280;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25),
+    0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+.editor-tool-btn svg {
+  padding: 1px;
+}
+
+.editor-tool-btn.is-active {
+  background: #f3f4f6;
+  color: #1f2937;
+  outline: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.editor-tool-btn.is-active:hover {
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.editor-tool-btn:hover {
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .editor-tool-btn {
+    min-width: 24px;
+    height: 24px;
+    padding: 4px;
+  }
+}
+
+/* Tool button color variants */
+.editor-tool-btn-info {
+  background: rgba(59, 130, 246, 0.06);
+  color: rgb(59, 130, 246);
+  outline: 1px solid rgba(59, 130, 246, 0.1);
+}
+.editor-tool-btn-info:hover { background: rgba(59, 130, 246, 0.12); }
+
+.editor-tool-btn-warning {
+  background: rgba(245, 158, 11, 0.06);
+  color: rgb(217, 119, 6);
+  outline: 1px solid rgba(245, 158, 11, 0.12);
+}
+.editor-tool-btn-warning:hover { background: rgba(245, 158, 11, 0.12); }
+
+.editor-tool-btn-success {
+  background: rgba(34, 197, 94, 0.06);
+  color: rgb(22, 163, 74);
+  outline: 1px solid rgba(34, 197, 94, 0.1);
+}
+.editor-tool-btn-success:hover { background: rgba(34, 197, 94, 0.12); }
+
+.editor-tool-btn-tip {
+  background: rgba(139, 92, 246, 0.06);
+  color: rgb(124, 58, 237);
+  outline: 1px solid rgba(139, 92, 246, 0.1);
+}
+.editor-tool-btn-tip:hover { background: rgba(139, 92, 246, 0.12); }
+
+.editor-tool-btn-link {
+  background: rgba(59, 130, 246, 0.06);
+  color: rgb(59, 130, 246);
+  outline: 1px solid rgba(59, 130, 246, 0.1);
+}
+.editor-tool-btn-link:hover { background: rgba(59, 130, 246, 0.12); }
+.editor-tool-btn-link.is-active {
+  background: rgba(59, 130, 246, 0.18);
+  color: rgb(37, 99, 235);
+  outline: 1px solid rgba(59, 130, 246, 0.25);
+}
+.editor-tool-btn-link.is-active:hover { background: rgba(59, 130, 246, 0.24); }
+
+.editor-tool-btn-media {
+  background: rgba(139, 92, 246, 0.06);
+  color: rgb(124, 58, 237);
+  outline: 1px solid rgba(139, 92, 246, 0.1);
+}
+.editor-tool-btn-media:hover { background: rgba(139, 92, 246, 0.12); }
+
+.editor-tool-btn-math {
+  background: rgba(251, 146, 60, 0.06);
+  color: rgb(234, 88, 12);
+  outline: 1px solid rgba(251, 146, 60, 0.12);
+}
+.editor-tool-btn-math:hover { background: rgba(251, 146, 60, 0.12); }
+
+.editor-tool-btn-document {
+  background: rgba(244, 63, 94, 0.06);
+  color: rgb(244, 63, 94);
+  outline: 1px solid rgba(244, 63, 94, 0.1);
+}
+.editor-tool-btn-document:hover { background: rgba(244, 63, 94, 0.12); }
+
+.editor-tool-btn-interactive {
+  background: rgba(34, 197, 94, 0.06);
+  color: rgb(22, 163, 74);
+  outline: 1px solid rgba(34, 197, 94, 0.1);
+}
+.editor-tool-btn-interactive:hover { background: rgba(34, 197, 94, 0.12); }
+
+.editor-tool-btn-code {
+  background: rgba(100, 116, 139, 0.06);
+  color: rgb(71, 85, 105);
+  outline: 1px solid rgba(100, 116, 139, 0.1);
+}
+.editor-tool-btn-code:hover { background: rgba(100, 116, 139, 0.12); }
+.editor-tool-btn-code.is-active {
+  background: rgba(100, 116, 139, 0.18);
+  color: rgb(51, 65, 85);
+  outline: 1px solid rgba(100, 116, 139, 0.25);
+}
+.editor-tool-btn-code.is-active:hover { background: rgba(100, 116, 139, 0.24); }
+
+.editor-tool-btn-embed {
+  background: rgba(20, 184, 166, 0.06);
+  color: rgb(13, 148, 136);
+  outline: 1px solid rgba(20, 184, 166, 0.1);
+}
+.editor-tool-btn-embed:hover { background: rgba(20, 184, 166, 0.12); }
+
+.editor-tool-btn-badge {
+  background: rgba(236, 72, 153, 0.06);
+  color: rgb(219, 39, 119);
+  outline: 1px solid rgba(236, 72, 153, 0.1);
+}
+.editor-tool-btn-badge:hover { background: rgba(236, 72, 153, 0.12); }
+
+.editor-tool-btn-user {
+  background: rgba(99, 102, 241, 0.06);
+  color: rgb(79, 70, 229);
+  outline: 1px solid rgba(99, 102, 241, 0.1);
+}
+.editor-tool-btn-user:hover { background: rgba(99, 102, 241, 0.12); }
+
+.editor-tool-btn-web {
+  background: rgba(14, 165, 233, 0.06);
+  color: rgb(2, 132, 199);
+  outline: 1px solid rgba(14, 165, 233, 0.1);
+}
+.editor-tool-btn-web:hover { background: rgba(14, 165, 233, 0.12); }
+
+/* Magic Block button - uses rotating gradient from globals */
+.editor-tool-btn-magic {
+  position: relative;
+  background: conic-gradient(from var(--gradient-angle) at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg);
+  color: white;
+  outline: none;
+  border-radius: 6px;
+  animation: rotateGradientAngle 20s linear infinite;
+  box-shadow: 0 2px 8px -2px rgba(164, 45, 238, 0.4);
+  padding: 6px;
+}
+
+.editor-tool-btn-magic:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px -2px rgba(164, 45, 238, 0.5);
+  cursor: pointer;
+}
+
+.editor-tool-btn-magic img {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.editor-tool-btn-magic-disabled {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editor-tool-btn-magic-disabled:hover {
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* Editor toolbar select */
+.editor-tool-select {
+  display: flex;
+  background-color: white;
+  border-radius: 6px;
+  width: 120px;
+  border: none;
+  height: 25px;
+  padding: 2px 5px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  color: #6b7280;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  background-size: 12px;
+  padding-right: 20px;
+  flex-shrink: 0;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25),
+    0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+.editor-tool-select:hover { background-color: #f9fafb; }
+.editor-tool-select:focus { outline: 1px solid rgba(107, 114, 128, 0.3); }
+
+@media (max-width: 1200px) {
+  .editor-tool-select {
+    width: 100px;
+    height: 24px;
+    font-size: 10px;
+  }
+}
+
+/* Editor toolbar dropdown menu */
+.editor-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border-radius: 6px;
+  z-index: var(--z-tooltip);
+  min-width: 180px;
+  margin-top: 4px;
+  padding: 4px;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25),
+    0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+/* Editor toolbar menu item */
+.editor-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 4px;
+  color: #4b5563;
+}
+
+.editor-menu-item:hover { background: rgba(243, 244, 246, 1); }
+
+.editor-menu-item.is-active {
+  background: rgba(243, 244, 246, 1);
+  color: #111827;
+  font-weight: 500;
+}
+
+.editor-menu-item .icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+}
+
+.editor-menu-item.is-active .icon { color: #374151; }
+
+.editor-menu-item .label {
+  font-size: 12px;
+  font-family: inherit;
+}
+
+/* ─── Activity Editor Layout (styled-components migration) ─── */
+
+.activity-editor-page {
+  height: 100vh;
+  width: 100%;
+  padding-top: 30px;
+  position: relative;
+  background-image: radial-gradient(#4744446b 1px, transparent 1px),
+    radial-gradient(#4744446b 1px, transparent 1px);
+  background-position: 0 0, 25px 25px;
+  background-size: 50px 50px;
+  background-attachment: fixed;
+  background-repeat: repeat;
+}
+
+@media (max-width: 1200px) {
+  .activity-editor-page { padding-top: 20px; }
+}
+
+@media (max-width: 900px) {
+  .activity-editor-page { padding-top: 15px; }
+}
+
+.activity-editor-top {
+  border-radius: 15px;
+  margin: 40px;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.5);
+  position: fixed;
+  z-index: var(--z-editor-toolbar);
+  width: -webkit-fill-available;
+  width: -moz-available;
+  gap: 10px;
+}
+
+@media (max-width: 1200px) {
+  .activity-editor-top {
+    margin: 20px;
+    margin-top: 0px;
+    margin-bottom: 15px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 900px) {
+  .activity-editor-top {
+    margin: 15px;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.activity-editor-doc-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.activity-editor-users-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .activity-editor-users-section {
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid rgba(217, 217, 217, 0.5);
+  }
+}
+
+.activity-editor-left-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.activity-editor-info-wrapper {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.activity-editor-buttons-wrapper {
+  overflow: visible;
+}
+
+.activity-editor-user-profile {
+  padding-right: 8px;
+}
+
+.activity-editor-user-profile svg {
+  border-radius: 7px;
+}
+
+.activity-editor-doc-name {
+  font-size: 16px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  margin-left: 10px;
+  color: #494949;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-editor-doc-name b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.activity-editor-doc-name svg {
+  margin-left: 4px;
+  margin-right: 4px;
+  padding: 3px;
+  color: #353535;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .activity-editor-doc-name { font-size: 14px; }
+  .activity-editor-doc-name b { max-width: 150px; }
+}
+
+@media (max-width: 900px) {
+  .activity-editor-doc-name b { max-width: 120px; }
+}
+
+.activity-editor-info-thumbnail {
+  height: 25px;
+  width: 56px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 7px;
+  margin-left: 6px;
+}
+
+.activity-editor-info-thumbnail:hover {
+  cursor: pointer;
+}
+
+/* Activity Editor Content Wrapper with ProseMirror styles */
+.activity-editor-content-wrapper {
+  margin: 40px;
+  margin-top: 97px;
+  background-color: white;
+  border-radius: 10px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+@media (max-width: 1200px) {
+  .activity-editor-content-wrapper {
+    margin: 20px;
+    margin-top: 91px;
+  }
+}
+
+@media (max-width: 900px) {
+  .activity-editor-content-wrapper {
+    margin: 15px;
+    margin-top: 157px;
+  }
+}
+
+.activity-editor-content-wrapper .ProseMirror {
+  padding: 20px;
+}
+
+.activity-editor-content-wrapper .ProseMirror h1 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.activity-editor-content-wrapper .ProseMirror h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.activity-editor-content-wrapper .ProseMirror h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.activity-editor-content-wrapper .ProseMirror h4 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.activity-editor-content-wrapper .ProseMirror h5 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.activity-editor-content-wrapper .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.activity-editor-content-wrapper .ProseMirror a:hover {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.activity-editor-content-wrapper .ProseMirror:focus {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+
+.activity-editor-content-wrapper .ProseMirror pre {
+  background: #0d0d0d;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
+}
+
+.activity-editor-content-wrapper .ProseMirror pre code {
+  background: none;
+  color: inherit;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-comment,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-quote { color: #616161; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-variable,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-template-variable,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-attribute,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-tag,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-name,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-regexp,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-link,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-selector-id,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-selector-class { color: #f98181; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-number,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-meta,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-built_in,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-builtin-name,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-literal,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-type,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-params { color: #fbbc88; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-string,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-symbol,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-bullet { color: #b9f18d; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-title,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-section { color: #faf594; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-keyword,
+.activity-editor-content-wrapper .ProseMirror pre .hljs-selector-tag { color: #70cff8; }
+
+.activity-editor-content-wrapper .ProseMirror pre .hljs-emphasis { font-style: italic; }
+.activity-editor-content-wrapper .ProseMirror pre .hljs-strong { font-weight: 700; }
+
+.activity-editor-content-wrapper .ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+
+.activity-editor-content-wrapper .ProseMirror .tableWrapper {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.activity-editor-content-wrapper iframe {
+  border-radius: 6px;
+  border: none;
+  min-width: 200px;
+  width: 100%;
+  height: 440px;
+  min-height: 200px;
+  display: block;
+  outline: 0px solid transparent;
+}
+
+.activity-editor-content-wrapper ul,
+.activity-editor-content-wrapper ol {
+  padding: 0 1rem;
+  padding-left: 20px;
+}
+
+.activity-editor-content-wrapper ul {
+  list-style-type: disc;
+}
+
+.activity-editor-content-wrapper ol {
+  list-style-type: decimal;
+}
+
+.activity-editor-content-wrapper table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.activity-editor-content-wrapper table td,
+.activity-editor-content-wrapper table th {
+  border: 1px solid rgba(139, 139, 139, 0.4);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.activity-editor-content-wrapper table td > *,
+.activity-editor-content-wrapper table th > * {
+  margin-bottom: 0;
+}
+
+.activity-editor-content-wrapper table th {
+  background-color: rgba(217, 217, 217, 0.4);
+  font-weight: bold;
+  text-align: left;
+}
+
+.activity-editor-content-wrapper table .selectedCell:after {
+  background: rgba(139, 139, 139, 0.2);
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.activity-editor-content-wrapper table .column-resize-handle {
+  background-color: #8d78eb;
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+}
+
+/* Remove selection outline from blocks */
+.activity-editor-content-wrapper .ProseMirror-selectednode {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.activity-editor-content-wrapper [data-node-view-wrapper] {
+  outline: none !important;
+}
+
+.activity-editor-content-wrapper [data-node-view-wrapper]:focus,
+.activity-editor-content-wrapper [data-node-view-wrapper]:focus-within,
+.activity-editor-content-wrapper [data-node-view-wrapper]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* AI Selection Highlight */
+.activity-editor-content-wrapper .ai-selection-highlight {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 51, 234, 0.25) 0%,
+    rgba(139, 92, 246, 0.25) 50%,
+    rgba(167, 139, 250, 0.25) 100%
+  );
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(147, 51, 234, 0.3);
+  padding: 0 1px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ─── DynamicCanva (Activity Viewer) ProseMirror Styles ─── */
+
+.canva-content-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.canva-content-wrapper > div:first-child {
+  width: 20%;
+  padding-right: 1rem;
+}
+
+.canva-content-wrapper > div:last-child {
+  width: 80%;
+}
+
+.canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:first-child {
+  width: 20%;
+  padding-right: 1rem;
+}
+
+.canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:last-child {
+  width: 80%;
+}
+
+.canva-content-wrapper:has(> div:first-child:last-child) > div:first-child {
+  width: 100%;
+  padding-right: 0;
+}
+
+.canva-content-wrapper .ProseMirror {
+  flex: 1;
+  padding: 1rem;
+  caret-color: transparent;
+}
+
+.canva-content-wrapper .ProseMirror h1 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.canva-content-wrapper .ProseMirror h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.canva-content-wrapper .ProseMirror h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.canva-content-wrapper .ProseMirror h4 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.canva-content-wrapper .ProseMirror h5 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.canva-content-wrapper .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.canva-content-wrapper .ProseMirror a:hover {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.canva-content-wrapper .ProseMirror ul,
+.canva-content-wrapper .ProseMirror ol {
+  padding: 0 1rem;
+  padding-left: 20px;
+}
+
+.canva-content-wrapper .ProseMirror ul {
+  list-style-type: disc;
+}
+
+.canva-content-wrapper .ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.canva-content-wrapper .ProseMirror table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.canva-content-wrapper .ProseMirror table td,
+.canva-content-wrapper .ProseMirror table th {
+  border: 1px solid rgba(139, 139, 139, 0.4);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.canva-content-wrapper .ProseMirror table td > *,
+.canva-content-wrapper .ProseMirror table th > * {
+  margin-bottom: 0;
+}
+
+.canva-content-wrapper .ProseMirror table th {
+  background-color: rgba(217, 217, 217, 0.4);
+  font-weight: bold;
+  text-align: left;
+}
+
+.canva-content-wrapper .ProseMirror table .selectedCell:after {
+  background: rgba(139, 139, 139, 0.2);
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.canva-content-wrapper .ProseMirror table .column-resize-handle {
+  background-color: #8d78eb;
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+}
+
+.canva-content-wrapper .ProseMirror:focus {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+
+.canva-content-wrapper .ProseMirror pre {
+  background: #0d0d0d;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
+}
+
+.canva-content-wrapper .ProseMirror pre code {
+  background: none;
+  color: inherit;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.canva-content-wrapper .ProseMirror pre .hljs-comment,
+.canva-content-wrapper .ProseMirror pre .hljs-quote { color: #616161; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-variable,
+.canva-content-wrapper .ProseMirror pre .hljs-template-variable,
+.canva-content-wrapper .ProseMirror pre .hljs-attribute,
+.canva-content-wrapper .ProseMirror pre .hljs-tag,
+.canva-content-wrapper .ProseMirror pre .hljs-name,
+.canva-content-wrapper .ProseMirror pre .hljs-regexp,
+.canva-content-wrapper .ProseMirror pre .hljs-link,
+.canva-content-wrapper .ProseMirror pre .hljs-selector-id,
+.canva-content-wrapper .ProseMirror pre .hljs-selector-class { color: #f98181; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-number,
+.canva-content-wrapper .ProseMirror pre .hljs-meta,
+.canva-content-wrapper .ProseMirror pre .hljs-built_in,
+.canva-content-wrapper .ProseMirror pre .hljs-builtin-name,
+.canva-content-wrapper .ProseMirror pre .hljs-literal,
+.canva-content-wrapper .ProseMirror pre .hljs-type,
+.canva-content-wrapper .ProseMirror pre .hljs-params { color: #fbbc88; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-string,
+.canva-content-wrapper .ProseMirror pre .hljs-symbol,
+.canva-content-wrapper .ProseMirror pre .hljs-bullet { color: #b9f18d; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-title,
+.canva-content-wrapper .ProseMirror pre .hljs-section { color: #faf594; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-keyword,
+.canva-content-wrapper .ProseMirror pre .hljs-selector-tag { color: #70cff8; }
+
+.canva-content-wrapper .ProseMirror pre .hljs-emphasis { font-style: italic; }
+.canva-content-wrapper .ProseMirror pre .hljs-strong { font-weight: 700; }
+
+/* ─── EditorPreview ProseMirror Styles ─── */
+
+.editor-preview-wrapper .ProseMirror h1 { font-size: 28px; font-weight: 600; margin-bottom: 16px; }
+.editor-preview-wrapper .ProseMirror h2 { font-size: 24px; font-weight: 600; margin-bottom: 16px; }
+.editor-preview-wrapper .ProseMirror h3 { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
+.editor-preview-wrapper .ProseMirror h4 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.editor-preview-wrapper .ProseMirror h5 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+.editor-preview-wrapper .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-preview-wrapper .ProseMirror p { margin-bottom: 8px; }
+
+.editor-preview-wrapper .ProseMirror:focus { outline: none !important; }
+
+.editor-preview-wrapper .ProseMirror pre {
+  background: #0d0d0d;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+}
+
+.editor-preview-wrapper .ProseMirror pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.editor-preview-wrapper .ProseMirror ul,
+.editor-preview-wrapper .ProseMirror ol {
+  padding: 0 1rem;
+  padding-left: 20px;
+}
+
+.editor-preview-wrapper .ProseMirror ul { list-style-type: disc; }
+.editor-preview-wrapper .ProseMirror ol { list-style-type: decimal; }
+
+.editor-preview-wrapper .ProseMirror table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.editor-preview-wrapper .ProseMirror table td,
+.editor-preview-wrapper .ProseMirror table th {
+  border: 1px solid rgba(139, 139, 139, 0.4);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.editor-preview-wrapper .ProseMirror table th {
+  background-color: rgba(217, 217, 217, 0.4);
+  font-weight: bold;
+  text-align: left;
+}
+
+.editor-preview-wrapper iframe {
+  border-radius: 6px;
+  border: none;
+  min-width: 200px;
+  width: 100%;
+  height: 300px;
+  min-height: 200px;
+  display: block;
 }

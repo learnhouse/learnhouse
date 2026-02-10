@@ -196,30 +196,31 @@ function ActivityClient(props: ActivityClientProps) {
   const activityStartTime = useRef(Date.now())
 
   // Track activity view on mount, time_on_activity on unmount
+  const activityUuidForTracking = activity?.activity_uuid
+  const courseUuidForTracking = course?.course_uuid
+  const activityTypeForTracking = activity?.activity_type
   useEffect(() => {
-    if (activity) {
+    if (activityUuidForTracking && courseUuidForTracking) {
       activityStartTime.current = Date.now()
       track('activity_view', {
-        activity_id: activityid,
-        course_id: String(course.id),
-        course_uuid: courseuuid,
-        activity_type: activity.activity_type,
-        activity_name: activity.name,
+        activity_uuid: activityUuidForTracking,
+        course_uuid: courseUuidForTracking,
+        activity_type: activityTypeForTracking,
       })
     }
     return () => {
-      if (activity) {
+      if (activityUuidForTracking && courseUuidForTracking) {
         const seconds = Math.round((Date.now() - activityStartTime.current) / 1000)
         if (seconds > 0) {
           track('time_on_activity', {
-            activity_id: activityid,
-            course_id: String(course.id),
+            activity_uuid: activityUuidForTracking,
+            course_uuid: courseUuidForTracking,
             seconds_spent: seconds,
           })
         }
       }
     }
-  }, [activityid])
+  }, [activityid, activityUuidForTracking, courseUuidForTracking, activityTypeForTracking, track])
 
   // Add SWR for trail data
   const { data: trailData, error: error } = useSWR(

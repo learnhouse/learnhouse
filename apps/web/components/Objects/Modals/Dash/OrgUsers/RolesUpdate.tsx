@@ -74,9 +74,7 @@ function RolesUpdate(props: Props) {
           ) : (
             ''
           )}
-          <Flex
-            css={{ alignItems: 'baseline', justifyContent: 'space-between' }}
-          >
+          <Flex className="items-baseline justify-between">
             <FormLabel>Roles</FormLabel>
             <FormMessage match="valueMissing">
               Please choose a role for the user
@@ -106,9 +104,9 @@ function RolesUpdate(props: Props) {
           </Form.Control>
         </FormField>
         <div className="h-full"></div>
-        <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+        <Flex className="mt-6 justify-end">
           <Form.Submit asChild>
-            <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+            <ButtonBlack type="submit" className="mt-2.5">
               {isSubmitting ? (
                 <BarLoader
                   cssOverride={{ borderRadius: 60 }}

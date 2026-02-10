@@ -93,7 +93,7 @@ export function useAnalyticsStatus() {
 
 export function useCoursePipe(
   pipeName: string,
-  courseId: string | number,
+  courseUuid: string,
   extraParams: Record<string, string> = {},
   refreshInterval = 0
 ) {
@@ -104,11 +104,11 @@ export function useCoursePipe(
 
   const params = new URLSearchParams({
     org_id: String(orgId ?? ''),
-    course_id: String(courseId),
+    course_uuid: courseUuid,
     ...extraParams,
   })
   const url =
-    orgId && token && courseId
+    orgId && token && courseUuid
       ? `${getAPIUrl()}analytics/dashboard/course/${pipeName}?${params}`
       : null
 
@@ -120,7 +120,7 @@ export function useCoursePipe(
 
 export function useCourseAnalyticsDetail(
   queryName: string,
-  courseId: string | number,
+  courseUuid: string,
   extraParams: Record<string, string> = {},
   refreshInterval = 0
 ) {
@@ -131,11 +131,11 @@ export function useCourseAnalyticsDetail(
 
   const params = new URLSearchParams({
     org_id: String(orgId ?? ''),
-    course_id: String(courseId),
+    course_uuid: courseUuid,
     ...extraParams,
   })
   const url =
-    orgId && token && courseId
+    orgId && token && courseUuid
       ? `${getAPIUrl()}analytics/dashboard/course/detail/${queryName}?${params}`
       : null
 

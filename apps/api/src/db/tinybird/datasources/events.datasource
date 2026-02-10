@@ -14,4 +14,4 @@ SCHEMA >
 ENGINE "MergeTree"
 ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
 ENGINE_SORTING_KEY "org_id, event_name, timestamp"
-ENGINE_TTL "timestamp + toIntervalDay(90)"
+ENGINE_TTL "timestamp + toIntervalDay(365)"

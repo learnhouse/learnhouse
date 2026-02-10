@@ -14,9 +14,9 @@ class SentryConfig(BaseModel):
 
 
 class TinybirdConfig(BaseModel):
-    api_url: str
-    ingest_token: str
-    read_token: str
+    api_url: str        # e.g., "https://api.europe-west2.gcp.tinybird.co"
+    ingest_token: str   # Token with DATASOURCE:APPEND scope
+    read_token: str     # Token with PIPE:READ or SQL:READ scope
 
 
 class GeneralConfig(BaseModel):
@@ -276,25 +276,19 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "mailing_config", {}
     ).get("system_email_address")
 
-    # Tinybird config — auto-enabled when both tokens are set
+    # Tinybird config — auto-enabled when API URL is set
     env_tinybird_api_url = os.environ.get("LEARNHOUSE_TINYBIRD_API_URL")
     env_tinybird_ingest_token = os.environ.get("LEARNHOUSE_TINYBIRD_INGEST_TOKEN")
     env_tinybird_read_token = os.environ.get("LEARNHOUSE_TINYBIRD_READ_TOKEN")
 
-    tinybird_api_url = env_tinybird_api_url or yaml_config.get("tinybird_config", {}).get(
-        "api_url", "https://api.tinybird.co"
-    )
-    tinybird_ingest_token = env_tinybird_ingest_token or yaml_config.get("tinybird_config", {}).get(
-        "ingest_token", ""
-    )
-    tinybird_read_token = env_tinybird_read_token or yaml_config.get("tinybird_config", {}).get(
-        "read_token", ""
-    )
-    # Only create TinybirdConfig when both tokens are provided
+    tinybird_api_url = env_tinybird_api_url or yaml_config.get("tinybird_config", {}).get("api_url", "")
+    tinybird_ingest_token = env_tinybird_ingest_token or yaml_config.get("tinybird_config", {}).get("ingest_token", "")
+    tinybird_read_token = env_tinybird_read_token or yaml_config.get("tinybird_config", {}).get("read_token", "")
+
     tinybird_config = None
-    if tinybird_ingest_token and tinybird_read_token:
+    if tinybird_api_url:
         tinybird_config = TinybirdConfig(
-            api_url=tinybird_api_url,
+            api_url=tinybird_api_url.rstrip("/"),
             ingest_token=tinybird_ingest_token,
             read_token=tinybird_read_token,
         )

@@ -276,7 +276,7 @@ const EditStripeConfigModal: React.FC<EditStripeConfigModalProps> = ({ orgId, co
                             placeholder="acct_..."
                         />
                     </FormField>
-                    <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+                    <Flex className="mt-6 justify-end">
                         <ButtonBlack type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
                             Save
                         </ButtonBlack>

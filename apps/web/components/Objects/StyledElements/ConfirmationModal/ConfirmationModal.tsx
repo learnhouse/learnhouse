@@ -1,8 +1,6 @@
 'use client'
 import React from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { styled, keyframes } from '@stitches/react'
-import { blackA } from '@radix-ui/colors'
 import { AlertTriangle, Info } from 'lucide-react'
 
 type ModalParams = {
@@ -36,8 +34,8 @@ const ConfirmationModal = (params: ModalParams) => {
       ) : null}
 
       <Dialog.Portal>
-        <DialogOverlay />
-        <DialogContent>
+        <Dialog.Overlay className="fixed inset-0 bg-black/70 z-[var(--z-modal-backdrop)] data-[state=open]:animate-[overlayShow_150ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[overlayClose_150ms_cubic-bezier(0.16,1,0.3,1)]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[var(--z-modal)] bg-white rounded-[18px] shadow-[hsl(206_22%_7%/35%)_0px_10px_38px_-10px,hsl(206_22%_7%/20%)_0px_10px_20px_-15px] w-auto min-w-[500px] max-w-[600px] max-h-[85vh] p-6 overflow-visible outline-none transition-[max-height] duration-300 ease-out data-[state=open]:animate-[contentShow_150ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[contentClose_150ms_cubic-bezier(0.16,1,0.3,1)]">
           <Dialog.Title className="sr-only">{params.dialogTitle}</Dialog.Title>
           <div className="flex space-x-4 tracking-tight">
             <div
@@ -78,67 +76,10 @@ const ConfirmationModal = (params: ModalParams) => {
               </div>
             </div>
           </div>
-        </DialogContent>
+        </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   )
 }
-
-const overlayShow = keyframes({
-  '0%': { opacity: 0 },
-  '100%': { opacity: 1 },
-})
-
-const overlayClose = keyframes({
-  '0%': { opacity: 1 },
-  '100%': { opacity: 0 },
-})
-
-const contentShow = keyframes({
-  '0%': { opacity: 0, transform: 'translate(-50%, -50%) scale(.96)' },
-  '100%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-})
-
-const contentClose = keyframes({
-  '0%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-  '100%': { opacity: 0, transform: 'translate(-50%, -52%) scale(.96)' },
-})
-
-const DialogOverlay = styled(Dialog.Overlay, {
-  backgroundColor: blackA.blackA9,
-  position: 'fixed',
-  zIndex: 'var(--z-modal-backdrop)',
-  inset: 0,
-  animation: `${overlayShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  '&[data-state="closed"]': {
-    animation: `${overlayClose} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  },
-})
-
-const DialogContent = styled(Dialog.Content, {
-  backgroundColor: 'white',
-  borderRadius: 18,
-  zIndex: 'var(--z-modal)',
-  boxShadow:
-    'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 'auto',
-  minWidth: '500px',
-  maxWidth: '600px',
-  overflow: 'visible',
-  height: 'auto',
-  maxHeight: '85vh',
-  padding: '24px',
-  animation: `${contentShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  '&:focus': { outline: 'none' },
-
-  '&[data-state="closed"]': {
-    animation: `${contentClose} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  },
-  transition: 'max-height 0.3s ease-out',
-})
 
 export default ConfirmationModal

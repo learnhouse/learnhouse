@@ -246,7 +246,8 @@ async def add_activity_to_trail(
     )
     trailstep = db_session.exec(statement).first()
 
-    if not trailstep:
+    is_new_completion = trailstep is None
+    if is_new_completion:
         trailstep = TrailStep(
             trailrun_id=trailrun.id if trailrun.id is not None else 0,
             activity_id=activity.id if activity.id is not None else 0,
@@ -264,17 +265,18 @@ async def add_activity_to_trail(
         db_session.commit()
         db_session.refresh(trailstep)
 
-    # Track activity completed
-    await track(
-        event_name=analytics_events.ACTIVITY_COMPLETED,
-        org_id=course.org_id,
-        user_id=user.id,
-        properties={
-            "activity_id": activity_uuid,
-            "course_id": str(course.id),
-            "activity_name": activity.name if activity else "",
-        },
-    )
+    # Only track on first completion — avoid duplicates on re-visits
+    if is_new_completion:
+        await track(
+            event_name=analytics_events.ACTIVITY_COMPLETED,
+            org_id=course.org_id,
+            user_id=user.id,
+            properties={
+                "activity_uuid": activity_uuid,
+                "course_uuid": course.course_uuid,
+                "activity_type": activity.activity_type if activity.activity_type else "",
+            },
+        )
 
     # Check if all activities in the course are completed and create certificate if so
     course_was_completed = False
@@ -288,7 +290,7 @@ async def add_activity_to_trail(
             event_name=analytics_events.COURSE_COMPLETED,
             org_id=course.org_id,
             user_id=user.id,
-            properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
+            properties={"course_uuid": course.course_uuid},
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -406,7 +408,7 @@ async def add_course_to_trail(
         event_name=analytics_events.COURSE_ENROLLED,
         org_id=course.org_id,
         user_id=user.id,
-        properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
+        properties={"course_uuid": course.course_uuid},
     )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)

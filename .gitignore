@@ -50,3 +50,6 @@ fly.toml
 # Generated runtime config
 apps/web/public/runtime-config.js
 apps/web/runtime-config.json
+
+# Tinybird CLI local state (contains tokens)
+.tinyb

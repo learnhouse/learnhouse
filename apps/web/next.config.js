@@ -33,6 +33,9 @@ const nextConfig = {
   },
   reactStrictMode: false,
   output: 'standalone',
+  experimental: {
+    optimizePackageImports: ['@phosphor-icons/react', 'framer-motion', 'lucide-react', '@emoji-mart/react', '@emoji-mart/data', 'dayjs', 'highlight.js', 'recharts', '@radix-ui/react-icons', '@hello-pangea/dnd', 'react-i18next'],
+  },
   // Ensure consistent build IDs across multiple pods in Kubernetes
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'learnhouse-production'
@@ -66,16 +69,14 @@ module.exports = withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: true,
-  widenClientFileUpload: true,
   disableLogger: true,
   tunnelRoute: "/monitoring",
   sourcemaps: {
     disable: !process.env.SENTRY_ORG || !process.env.SENTRY_PROJECT,
   },
-  webpack: {
-    automaticVercelMonitors: true,
-    treeshake: {
-      removeDebugLogging: true,
-    },
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
   },
 });

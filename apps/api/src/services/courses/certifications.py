@@ -326,8 +326,6 @@ async def create_certificate_user(
                 org_id=course.org_id,
                 user_id=user_id,
                 properties={
-                    "course_id": str(course.id),
-                    "course_name": course.name,
                     "course_uuid": course.course_uuid,
                 },
             )
@@ -435,11 +433,11 @@ async def check_course_completion_and_create_certificate(
             # This is called from mark_activity_as_done_for_user which already has proper RBAC checks
             try:
                 await create_certificate_user(request, user_id, certification.id, db_session)
-                return True
+                return True  # Newly completed
             except HTTPException as e:
                 if e.status_code == 400 and "already has a certificate" in e.detail:
-                    # Certificate already exists, which is fine
-                    return True
+                    # Certificate already exists — course was completed before
+                    return False
                 else:
                     raise e
         

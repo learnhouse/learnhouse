@@ -49,7 +49,7 @@ ai_config:
   is_ai_enabled: false
 
 tinybird_config:
-  api_url: "https://api.tinybird.co"
-  # Set both tokens to enable analytics automatically
+  # Set api_url to enable analytics automatically
+  api_url: ""
   ingest_token: ""
   read_token: ""

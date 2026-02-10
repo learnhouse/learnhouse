@@ -5,7 +5,6 @@ import StarterKit from '@tiptap/starter-kit'
 import { ToolbarButtons } from './Toolbar/ToolbarButtons'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import styled from 'styled-components'
 import { DividerVerticalIcon, SlashIcon } from '@radix-ui/react-icons'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import {
@@ -35,16 +34,10 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 
-// Lowlight
+// Lowlight — `common` already includes css, javascript, typescript, xml, python, java
 import { common, createLowlight } from 'lowlight'
 const lowlight = createLowlight(common)
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import css from 'highlight.js/lib/languages/css'
-import js from 'highlight.js/lib/languages/javascript'
-import ts from 'highlight.js/lib/languages/typescript'
-import html from 'highlight.js/lib/languages/xml'
-import python from 'highlight.js/lib/languages/python'
-import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import AIEditorSidePanel from './AI/AIEditorSidePanel'
@@ -128,14 +121,6 @@ function Editor(props: Editor) {
 
   // remove activity_ from activity_uuid
   const activity_uuid = props.activity.activity_uuid.substring(9)
-
-  // Code Block Languages for Lowlight
-  lowlight.register('html', html)
-  lowlight.register('css', css)
-  lowlight.register('js', js)
-  lowlight.register('ts', ts)
-  lowlight.register('python', python)
-  lowlight.register('java', java)
 
   const editor: any = useEditor({
     editable: true,
@@ -335,7 +320,7 @@ function Editor(props: Editor) {
   }
 
   return (
-    <Page>
+    <div className="activity-editor-page">
       {/* Version History Panel */}
       {canUseVersioning && (
         <VersionHistoryPanel
@@ -365,32 +350,33 @@ function Editor(props: Editor) {
       )}
 
       <CourseProvider courseuuid={props.course.course_uuid}>
-          <EditorTop>
-            <EditorDocSection>
-              <EditorInfoWrapper>
+          <div className="activity-editor-top">
+            <div className="activity-editor-doc-section">
+              <div className="activity-editor-info-wrapper">
                 <Link href="/">
                   <EditorLearnHouseLogo />
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
-                  <EditorInfoThumbnail
+                  <img
+                    className="activity-editor-info-thumbnail"
                     src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
                       props.org?.org_uuid,
                       props.course.course_uuid,
                       props.course.thumbnail_image
                     ) : getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')}`}
                     alt=""
-                  ></EditorInfoThumbnail>
+                  />
                 </Link>
-                <EditorInfoDocName>
+                <div className="activity-editor-doc-name">
                   {' '}
                   <b>{props.course.name}</b> <SlashIcon /> {props.activity.name}{' '}
-                </EditorInfoDocName>
-              </EditorInfoWrapper>
-              <EditorButtonsWrapper>
+                </div>
+              </div>
+              <div className="activity-editor-buttons-wrapper">
                 <ToolbarButtons editor={editor} />
-              </EditorButtonsWrapper>
-            </EditorDocSection>
-            <EditorUsersSection className="space-x-2">
+              </div>
+            </div>
+            <div className="activity-editor-users-section space-x-2">
               <div>
                 <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
                   {isButtonAvailable && canUseAI && (
@@ -446,7 +432,7 @@ function Editor(props: Editor) {
                   opacity: '0.5',
                 }}
               />
-              <EditorLeftOptionsSection className="space-x-2 ">
+              <div className="activity-editor-left-options space-x-2 ">
                 {/* Version History Button */}
                 {canUseVersioning ? (
                   <ToolTip content={t('editor.versioning.version_history')}>
@@ -537,7 +523,7 @@ function Editor(props: Editor) {
                     </div>
                   </Link>
                 </ToolTip>
-              </EditorLeftOptionsSection>
+              </div>
               <DividerVerticalIcon
                 style={{
                   marginTop: 'auto',
@@ -547,11 +533,11 @@ function Editor(props: Editor) {
                 }}
               />
 
-              <EditorUserProfileWrapper>
+              <div className="activity-editor-user-profile">
                 <UserAvatar border="border-4" use_with_session={true} width={45} />
-              </EditorUserProfileWrapper>
-            </EditorUsersSection>
-          </EditorTop>
+              </div>
+            </div>
+          </div>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -565,10 +551,10 @@ function Editor(props: Editor) {
           className="flex gap-5"
           style={{ position: 'relative', margin: '0 40px' }}
         >
-          <EditorContentWrapper style={{ flex: 1, margin: 0, marginTop: '97px' }}>
+          <div className="activity-editor-content-wrapper" style={{ flex: 1, margin: 0, marginTop: '97px' }}>
             <AIEditorToolkit activity={props.activity} editor={editor} />
             <EditorContent editor={editor} />
-          </EditorContentWrapper>
+          </div>
 
           {/* AI Editor Side Panel */}
           {editorReady && canUseAI && (
@@ -580,429 +566,9 @@ function Editor(props: Editor) {
           )}
         </motion.div>
       </CourseProvider>
-    </Page>
+    </div>
   )
 }
-
-const Page = styled.div`
-  height: 100vh;
-  width: 100%;
-  padding-top: 30px;
-  position: relative;
-
-  // dots background
-  background-image: radial-gradient(#4744446b 1px, transparent 1px),
-    radial-gradient(#4744446b 1px, transparent 1px);
-  background-position:
-    0 0,
-    25px 25px;
-  background-size: 50px 50px;
-  background-attachment: fixed;
-  background-repeat: repeat;
-
-  @media (max-width: 1200px) {
-    padding-top: 20px;
-  }
-
-  @media (max-width: 900px) {
-    padding-top: 15px;
-  }
-`
-
-const EditorTop = styled.div`
-  border-radius: 15px;
-  margin: 40px;
-  margin-top: 0px;
-  margin-bottom: 20px;
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
-  outline: 1px solid rgba(229, 231, 235, 0.5);
-  position: fixed;
-  z-index: var(--z-editor-toolbar);
-  width: -webkit-fill-available;
-  width: -moz-available;
-  gap: 10px;
-
-  @media (max-width: 1200px) {
-    margin: 20px;
-    margin-top: 0px;
-    margin-bottom: 15px;
-    padding: 10px;
-  }
-
-  @media (max-width: 900px) {
-    margin: 15px;
-    margin-top: 0px;
-    margin-bottom: 10px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-`
-
-// Inside EditorTop
-const EditorDocSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-`
-const EditorUsersSection = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  flex-shrink: 0;
-
-  @media (max-width: 900px) {
-    justify-content: flex-end;
-    padding-top: 8px;
-    border-top: 1px solid rgba(217, 217, 217, 0.5);
-  }
-`
-
-const EditorLeftOptionsSection = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-`
-
-// Inside EditorDocSection
-const EditorInfoWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  margin-bottom: 8px;
-  align-items: center;
-  min-width: 0;
-`
-const EditorButtonsWrapper = styled.div`
-  overflow: visible;
-`
-
-// Inside EditorUsersSection
-const EditorUserProfileWrapper = styled.div`
-  padding-right: 8px;
-  svg {
-    border-radius: 7px;
-  }
-`
-
-const EditorInfoDocName = styled.div`
-  font-size: 16px;
-  justify-content: center;
-  align-items: center;
-  display: flex;
-  margin-left: 10px;
-  color: #494949;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  b {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
-
-    @media (max-width: 1200px) {
-      max-width: 150px;
-    }
-
-    @media (max-width: 900px) {
-      max-width: 120px;
-    }
-  }
-
-  svg {
-    margin-left: 4px;
-    margin-right: 4px;
-    padding: 3px;
-    color: #353535;
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 1200px) {
-    font-size: 14px;
-  }
-`
-
-const EditorInfoThumbnail = styled.img`
-  height: 25px;
-  width: 56px;
-  object-fit: cover;
-  object-position: top;
-  border-radius: 7px;
-  margin-left: 6px;
-
-  &:hover {
-    cursor: pointer;
-  }
-`
-
-export const EditorContentWrapper = styled.div`
-  margin: 40px;
-  margin-top: 97px;
-  background-color: white;
-  border-radius: 10px;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
-  outline: 1px solid rgba(229, 231, 235, 0.4);
-
-  @media (max-width: 1200px) {
-    margin: 20px;
-    margin-top: 91px;
-  }
-
-  @media (max-width: 900px) {
-    margin: 15px;
-    margin-top: 157px;
-  }
-
-  // disable chrome outline
-
-  .ProseMirror {
-    h1 {
-      font-size: 32px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    h2 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    h3 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    h4 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    h5 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    // Link styling
-    a {
-      color: #2563eb;
-      text-decoration: underline;
-      cursor: pointer;
-      transition: color 0.2s ease;
-
-      &:hover {
-        color: #1d4ed8;
-        text-decoration: none;
-      }
-    }
-
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 20px;
-    padding-top: 20px;
-
-    &:focus {
-      outline: none !important;
-      outline-style: none !important;
-      box-shadow: none !important;
-    }
-
-    // Code Block
-    pre {
-      background: #0d0d0d;
-      border-radius: 0.5rem;
-      color: #fff;
-      font-family: 'JetBrainsMono', monospace;
-      padding: 0.75rem 1rem;
-
-      code {
-        background: none;
-        color: inherit;
-        font-size: 0.8rem;
-        padding: 0;
-      }
-
-      .hljs-comment,
-      .hljs-quote {
-        color: #616161;
-      }
-
-      .hljs-variable,
-      .hljs-template-variable,
-      .hljs-attribute,
-      .hljs-tag,
-      .hljs-name,
-      .hljs-regexp,
-      .hljs-link,
-      .hljs-name,
-      .hljs-selector-id,
-      .hljs-selector-class {
-        color: #f98181;
-      }
-
-      .hljs-number,
-      .hljs-meta,
-      .hljs-built_in,
-      .hljs-builtin-name,
-      .hljs-literal,
-      .hljs-type,
-      .hljs-params {
-        color: #fbbc88;
-      }
-
-      .hljs-string,
-      .hljs-symbol,
-      .hljs-bullet {
-        color: #b9f18d;
-      }
-
-      .hljs-title,
-      .hljs-section {
-        color: #faf594;
-      }
-
-      .hljs-keyword,
-      .hljs-selector-tag {
-        color: #70cff8;
-      }
-
-      .hljs-emphasis {
-        font-style: italic;
-      }
-
-      .hljs-strong {
-        font-weight: 700;
-      }
-    }
-
-    &.resize-cursor {
-      cursor: ew-resize;
-      cursor: col-resize;
-    }
-
-    .tableWrapper {
-      margin: 1.5rem 0;
-      overflow-x: auto;
-    }
-  }
-
-  iframe {
-    border-radius: 6px;
-    border: none;
-    min-width: 200px;
-    width: 100%;
-    height: 440px;
-    min-height: 200px;
-    display: block;
-    outline: 0px solid transparent;
-  }
-
-  ul,
-  ol {
-    padding: 0 1rem;
-    padding-left: 20px;
-  }
-
-  ul {
-    list-style-type: disc;
-  }
-
-  ol {
-    list-style-type: decimal;
-  }
-
-  table {
-    border-collapse: collapse;
-    margin: 0;
-    overflow: hidden;
-    table-layout: fixed;
-    width: 100%;
-
-    td,
-    th {
-      border: 1px solid rgba(139, 139, 139, 0.4);
-      box-sizing: border-box;
-      min-width: 1em;
-      padding: 6px 8px;
-      position: relative;
-      vertical-align: top;
-
-      > * {
-        margin-bottom: 0;
-      }
-    }
-
-    th {
-      background-color: rgba(217, 217, 217, 0.4);
-      font-weight: bold;
-      text-align: left;
-    }
-
-    .selectedCell:after {
-      background: rgba(139, 139, 139, 0.2);
-      content: "";
-      left: 0; right: 0; top: 0; bottom: 0;
-      pointer-events: none;
-      position: absolute;
-      z-index: 2;
-    }
-
-    .column-resize-handle {
-      background-color: #8d78eb;
-      bottom: -2px;
-      pointer-events: none;
-      position: absolute;
-      right: -2px;
-      top: 0;
-      width: 4px;
-    }
-  }
-
-  // Remove selection outline from blocks
-  .ProseMirror-selectednode {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  [data-node-view-wrapper] {
-    outline: none !important;
-
-    &:focus,
-    &:focus-within,
-    &:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
-    }
-  }
-
-  // AI Selection Highlight - persistent purple highlight for selected text
-  .ai-selection-highlight {
-    background: linear-gradient(
-      135deg,
-      rgba(147, 51, 234, 0.25) 0%,
-      rgba(139, 92, 246, 0.25) 50%,
-      rgba(167, 139, 250, 0.25) 100%
-    );
-    border-radius: 2px;
-    box-shadow: 0 0 0 1px rgba(147, 51, 234, 0.3);
-    padding: 0 1px;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-  }
-`
 
 const logoAnimations = [
   // Slide up from bottom
