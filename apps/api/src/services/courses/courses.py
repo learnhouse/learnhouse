@@ -31,6 +31,7 @@ from src.security.rbac import (
     check_resource_access,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -55,6 +56,10 @@ async def _user_can_view_unpublished_course(
     # Anonymous users cannot view unpublished courses
     if isinstance(current_user, AnonymousUser):
         return False
+
+    # Superadmins can always view unpublished courses
+    if is_user_superadmin(current_user.id, db_session):
+        return True
 
     # Check if user is a resource author of this course
     author_statement = select(ResourceAuthor).where(
@@ -296,18 +301,22 @@ async def get_courses_orgslug(
     # Check if user can view unpublished courses (must be admin/editor in org)
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
-        # Check if user has admin/editor role in this organization
-        role_statement = (
-            select(Role)
-            .join(UserOrganization)
-            .where(UserOrganization.org_id == org.id)
-            .where(UserOrganization.user_id == current_user.id)
-        )
-        user_roles = db_session.exec(role_statement).all()
-        for role in user_roles:
-            if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
-                can_view_unpublished = True
-                break
+        # Superadmins can always view unpublished courses
+        if is_user_superadmin(current_user.id, db_session):
+            can_view_unpublished = True
+        else:
+            # Check if user has admin/editor role in this organization
+            role_statement = (
+                select(Role)
+                .join(UserOrganization)
+                .where(UserOrganization.org_id == org.id)
+                .where(UserOrganization.user_id == current_user.id)
+            )
+            user_roles = db_session.exec(role_statement).all()
+            for role in user_roles:
+                if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin role IDs
+                    can_view_unpublished = True
+                    break
 
     # Base query
     query = (
@@ -435,6 +444,9 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(current_user.id, db_session):
+        # Superadmins see all courses (no additional filter)
+        pass
     else:
         # For authenticated users, count:
         # 1. Published AND public courses
@@ -508,6 +520,9 @@ async def search_courses(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
+    elif is_user_superadmin(current_user.id, db_session):
+        # Superadmins see all courses (no additional filter)
+        pass
     else:
         # For authenticated users, show:
         # 1. Published AND public courses

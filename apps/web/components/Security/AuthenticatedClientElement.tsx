@@ -63,6 +63,10 @@ export const AuthenticatedClientElement = (
       if (props.checkMethod === 'authentication') {
         setIsAllowed(session.status == 'authenticated')
       } else if (props.checkMethod === 'roles' ) {
+        // Superadmins bypass all role checks
+        if (session?.data?.user?.is_superadmin === true) {
+          return setIsAllowed(true)
+        }
         return setIsAllowed(
           isUserAllowed(
             session?.data?.roles,

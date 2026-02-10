@@ -12,6 +12,7 @@ from src.services.email.utils import get_base_url_from_request
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.org_auth import is_org_member
 from src.db.roles import Role, RoleRead
 from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.db.user_organizations import UserOrganization
@@ -69,20 +70,17 @@ async def get_organization_users(
             detail="Authentication required",
         )
 
-    membership_check = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org.id
-    )
-    user_membership = db_session.exec(membership_check).first()
-
-    if not user_membership:
+    # Membership check (superadmins bypass)
+    if not is_org_member(current_user.id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You must be a member of this organization to view its members",
         )
 
-    # RBAC check (for additional permission verification)
-    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+    # RBAC check (for additional permission verification) — skip for superadmins
+    from src.security.superadmin import is_user_superadmin
+    if not is_user_superadmin(current_user.id, db_session):
+        await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Base query for users in the organization
     base_statement = (

@@ -1,7 +1,24 @@
 import { cookies, headers } from 'next/headers'
 import { getOrganizationContextInfoWithoutCredentials, getOrganizationContextInfoWithUUID } from '@services/organizations/orgs'
-import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
+import { getConfig } from '@services/config/config'
 import { extractSubdomain, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+
+/**
+ * Read the frontend domain on the server side.
+ * Priority: env var > cookie (set by middleware) > default
+ */
+async function getServerDomain(): Promise<string> {
+  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
+  if (envVal) return envVal
+  try {
+    const cookieStore = await cookies()
+    const cookieVal = cookieStore.get('learnhouse_frontend_domain')?.value
+    if (cookieVal) return cookieVal
+  } catch {
+    // cookies() may throw outside of a request context
+  }
+  return 'localhost'
+}
 
 export interface ResolvedOrg {
   id: number
@@ -62,13 +79,13 @@ async function resolveFromSubdomain(): Promise<ResolvedOrg | null> {
 
     if (!host) return null
 
-    const domain = getLEARNHOUSE_DOMAIN_VAL()
+    const domain = await getServerDomain()
 
     // Check if it's a subdomain of the main domain
     const orgslug = extractSubdomain(host, domain)
     if (orgslug) {
       // Skip special subdomains
-      if (orgslug === 'auth' || orgslug === 'www' || orgslug === 'api') {
+      if (orgslug === 'auth' || orgslug === 'www' || orgslug === 'api' || orgslug === 'admin') {
         return null
       }
 
@@ -202,10 +219,10 @@ export async function getOrgSlug(): Promise<string | null> {
   // Try subdomain first
   const headersList = await headers()
   const host = headersList.get('host')
-  const domain = getLEARNHOUSE_DOMAIN_VAL()
+  const domain = await getServerDomain()
 
   const sub = extractSubdomain(host, domain)
-  if (sub && sub !== 'auth' && sub !== 'www' && sub !== 'api') {
+  if (sub && sub !== 'auth' && sub !== 'www' && sub !== 'api' && sub !== 'admin') {
     return sub
   }
 

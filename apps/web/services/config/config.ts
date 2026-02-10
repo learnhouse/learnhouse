@@ -68,13 +68,42 @@ export const getConfig = (key: string, defaultValue: string = ''): string => {
   return process.env[key] || defaultValue;
 };
 
+// Helper to read a cookie value by name (client-side only)
+const getCookieValue = (name: string): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
+    return match ? decodeURIComponent(match[1]) : null
+  } catch {
+    return null
+  }
+}
+
 // Dynamic config getters - these are functions to ensure runtime values are used
 const getLEARNHOUSE_HTTP_PROTOCOL = () =>
   (getConfig('NEXT_PUBLIC_LEARNHOUSE_HTTPS') === 'true') ? 'https://' : 'http://'
-const getLEARNHOUSE_API_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL', 'http://localhost/api/v1/')
 const getLEARNHOUSE_BACKEND_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL', 'http://localhost/')
-const getLEARNHOUSE_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN', 'localhost')
-const getLEARNHOUSE_TOP_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN', 'localhost')
+const getLEARNHOUSE_DOMAIN = () => {
+  // 1. Env var (backward compat for existing deploys)
+  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
+  if (envVal) return envVal
+  // 2. Cookie set by middleware from backend instance info
+  const cookieVal = getCookieValue('learnhouse_frontend_domain')
+  if (cookieVal) return cookieVal
+  // 3. Default
+  return 'localhost'
+}
+const getLEARNHOUSE_TOP_DOMAIN = () => {
+  // 1. Env var (backward compat for existing deploys)
+  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN')
+  if (envVal) return envVal
+  // 2. Cookie set by middleware from backend instance info
+  const cookieVal = getCookieValue('learnhouse_top_domain')
+  if (cookieVal) return cookieVal
+  // 3. Derive from DOMAIN by stripping port
+  const domain = getLEARNHOUSE_DOMAIN()
+  return domain.split(':')[0]
+}
 const getLEARNHOUSE_TELEMETRY_DISABLED = () => getConfig('NEXT_TELEMETRY_DISABLED', 'true').toLowerCase();
 
 // Export getter functions for dynamic runtime configuration
@@ -100,29 +129,45 @@ const isOnCustomDomain = (): boolean => {
   return !isSubdomainOf(hostname, domain) && !isSameHost(hostname, domain) && !isLocalhostCheck(hostname)
 }
 
+// Derive API URL from backend URL (with backward compat for NEXT_PUBLIC_LEARNHOUSE_API_URL)
+const deriveAPIUrl = (): string => {
+  // Backward compat: if explicit API URL is set, use it
+  const explicitApiUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL')
+  if (explicitApiUrl) return explicitApiUrl
+  // Derive from backend URL
+  const backendUrl = getLEARNHOUSE_BACKEND_URL().replace(/\/+$/, '')
+  return `${backendUrl}/api/v1/`
+}
+
 // For direct usage, these call the getters
 export const getAPIUrl = () => {
   // On custom domains (client-side), use relative path to go through Next.js proxy
   // This ensures cookies work correctly (same-origin)
   if (isOnCustomDomain()) {
-    // Use relative path - Next.js will proxy to the actual backend
     return '/api/v1/'
   }
-  return getLEARNHOUSE_API_URL()
+  return deriveAPIUrl()
 }
 
 // Server-side only - always returns full URL (never relative path)
 // Use this in Server Components, API routes, and server-side data fetching
 export const getServerAPIUrl = () => {
-  // Server-side fetch doesn't go through Next.js rewrites, so always use full URL
-  return getLEARNHOUSE_API_URL()
+  return deriveAPIUrl()
 }
 
 export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 
 // Multi Organization Mode
-export const isMultiOrgModeEnabled = () =>
-  getConfig('NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG') === 'true' ? true : false
+export const isMultiOrgModeEnabled = () => {
+  // 1. Env var (backward compat for existing deploys)
+  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG')
+  if (envVal) return envVal === 'true'
+  // 2. Client-side: read cookie set by middleware
+  const cookieVal = getCookieValue('learnhouse_multi_org')
+  if (cookieVal !== null) return cookieVal === 'true'
+  // 3. Default
+  return false
+}
 
 /**
  * Get custom domain from context (client-side only)
@@ -219,7 +264,14 @@ export const getUriWithoutOrg = (path: string) => {
 }
 
 export const getDefaultOrg = () => {
-  return getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG', 'default')
+  // 1. Env var (backward compat)
+  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG')
+  if (envVal) return envVal
+  // 2. Client-side: read cookie set by middleware
+  const cookieVal = getCookieValue('learnhouse_default_org')
+  if (cookieVal) return cookieVal
+  // 3. Default
+  return 'default'
 }
 
 

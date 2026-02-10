@@ -30,6 +30,7 @@ Before starting the application, you need to configure the environment variables
 | `LEARNHOUSE_PORT` | Port for the API server | `8000` |
 | `LEARNHOUSE_INITIAL_ADMIN_EMAIL` | Default admin email for installation | `admin@school.dev` |
 | `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | Default admin password (Required for install) | - |
+| `LEARNHOUSE_FRONTEND_DOMAIN` | Frontend domain (served to frontend via `/api/v1/instance/info`) | `localhost:3000` |
 | `LEARNHOUSE_IS_AI_ENABLED` | Enable AI features | `false` |
 | `LEARNHOUSE_GEMINI_API_KEY` | Gemini API key (if AI enabled) | - |
 
@@ -45,6 +46,7 @@ LEARNHOUSE_ALLOWED_REGEXP=.*localhost.*
 LEARNHOUSE_PORT=8000
 LEARNHOUSE_INITIAL_ADMIN_EMAIL=admin@school.dev
 LEARNHOUSE_INITIAL_ADMIN_PASSWORD=change_this_password
+LEARNHOUSE_FRONTEND_DOMAIN=localhost:3000
 LEARNHOUSE_IS_AI_ENABLED=false
 ```
 
@@ -52,21 +54,15 @@ LEARNHOUSE_IS_AI_ENABLED=false
 
 | Variable | Description | Default (Dev) |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_LEARNHOUSE_API_URL` | URL of the LearnHouse API | `http://localhost:8000/api/v1/` |
-| `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL` | Base URL for the backend | `http://localhost:8000/` |
-| `NEXT_PUBLIC_LEARNHOUSE_DOMAIN` | Base domain for the frontend | `localhost:3000` |
+| `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL` | Base URL for the backend (API URL is derived automatically) | `http://localhost:8000/` |
 | `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | Use HTTPS for links | `false` |
-| `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` | Enable multi-organization mode | `false` |
-| `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG` | Default organization slug | `default` |
+
+> **Note:** Multi-org mode, default org, and domain configuration are now served automatically from the backend via `/api/v1/instance/info`. The env vars `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG`, `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG`, `NEXT_PUBLIC_LEARNHOUSE_DOMAIN`, `NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN`, and `NEXT_PUBLIC_LEARNHOUSE_API_URL` are still supported for backward compatibility but no longer required.
 
 #### Example `apps/web/.env.local`
 ```env
-NEXT_PUBLIC_LEARNHOUSE_API_URL=http://localhost:8000/api/v1/
 NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL=http://localhost:8000/
-NEXT_PUBLIC_LEARNHOUSE_DOMAIN=localhost:3000
 NEXT_PUBLIC_LEARNHOUSE_HTTPS=false
-NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG=false
-NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default
 ```
 
 ---
