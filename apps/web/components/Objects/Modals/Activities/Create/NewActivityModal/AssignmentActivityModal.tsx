@@ -92,7 +92,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
     return (
         <FormLayout onSubmit={handleSubmit}>
             <FormField name="assignment-activity-title">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.create.form.title_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.create.form.title_required')}
@@ -105,7 +105,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
 
             {/* Description  */}
             <FormField name="assignment-activity-description">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.create.form.description_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.create.form.description_required')}
@@ -118,7 +118,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
 
             {/* Due date  */}
             <FormField name="assignment-activity-due-date">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.create.form.due_date_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.create.form.due_date_required')}
@@ -131,7 +131,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
 
             {/* Grading type  */}
             <FormField name="assignment-activity-grading-type">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.create.form.grading_type_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.create.form.grading_type_required')}
@@ -146,9 +146,9 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
                 </Form.Control>
             </FormField>
 
-            <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+            <Flex className="mt-6 justify-end">
                 <Form.Submit asChild>
-                    <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+                    <ButtonBlack type="submit" className="mt-2.5">
                         {isSubmitting ? (
                             <BarLoader
                                 cssOverride={{ borderRadius: 60 }}

@@ -2,7 +2,6 @@
 import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import styled from 'styled-components'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 
@@ -29,16 +28,10 @@ import Scenarios from './Extensions/Scenarios/Scenarios'
 import UserBlock from './Extensions/Users/UserBlock'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 
-// Lowlight
+// Lowlight — `common` already includes css, javascript, typescript, xml, python, java
 import { common, createLowlight } from 'lowlight'
 const lowlight = createLowlight(common)
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import css from 'highlight.js/lib/languages/css'
-import js from 'highlight.js/lib/languages/javascript'
-import ts from 'highlight.js/lib/languages/typescript'
-import html from 'highlight.js/lib/languages/xml'
-import python from 'highlight.js/lib/languages/python'
-import java from 'highlight.js/lib/languages/java'
 
 interface EditorPreviewProps {
   content: any
@@ -47,14 +40,6 @@ interface EditorPreviewProps {
 
 function EditorPreview({ content, activity }: EditorPreviewProps) {
   const { t } = useTranslation()
-
-  // Register lowlight languages
-  lowlight.register('html', html)
-  lowlight.register('css', css)
-  lowlight.register('js', js)
-  lowlight.register('ts', ts)
-  lowlight.register('python', python)
-  lowlight.register('java', java)
 
   const editor = useEditor({
     editable: false,
@@ -163,122 +148,11 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
 
   return (
     <EditorOptionsProvider options={{ isEditable: false }}>
-      <PreviewWrapper>
+      <div className="editor-preview-wrapper">
         <EditorContent editor={editor} />
-      </PreviewWrapper>
+      </div>
     </EditorOptionsProvider>
   )
 }
-
-const PreviewWrapper = styled.div`
-  .ProseMirror {
-    h1 {
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    h2 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    h4 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    h5 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 16px;
-    }
-
-    a {
-      color: #2563eb;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    p {
-      margin-bottom: 8px;
-    }
-
-    &:focus {
-      outline: none !important;
-    }
-
-    pre {
-      background: #0d0d0d;
-      border-radius: 0.5rem;
-      color: #fff;
-      font-family: 'JetBrainsMono', monospace;
-      padding: 0.75rem 1rem;
-      font-size: 0.8rem;
-
-      code {
-        background: none;
-        color: inherit;
-        padding: 0;
-      }
-    }
-
-    ul,
-    ol {
-      padding: 0 1rem;
-      padding-left: 20px;
-    }
-
-    ul {
-      list-style-type: disc;
-    }
-
-    ol {
-      list-style-type: decimal;
-    }
-
-    table {
-      border-collapse: collapse;
-      margin: 0;
-      overflow: hidden;
-      table-layout: fixed;
-      width: 100%;
-
-      td,
-      th {
-        border: 1px solid rgba(139, 139, 139, 0.4);
-        box-sizing: border-box;
-        min-width: 1em;
-        padding: 6px 8px;
-        position: relative;
-        vertical-align: top;
-      }
-
-      th {
-        background-color: rgba(217, 217, 217, 0.4);
-        font-weight: bold;
-        text-align: left;
-      }
-    }
-  }
-
-  iframe {
-    border-radius: 6px;
-    border: none;
-    min-width: 200px;
-    width: 100%;
-    height: 300px;
-    min-height: 200px;
-    display: block;
-  }
-`
 
 export default EditorPreview

@@ -44,7 +44,7 @@ function NewChapterModal({ submitChapter, closeModal, course }: any) {
   return (
     <FormLayout onSubmit={handleSubmit}>
       <FormField name="chapter-name">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>{t('dashboard.courses.structure.modals.new_chapter.form.name_label')}</FormLabel>
           <FormMessage match="valueMissing">
             {t('dashboard.courses.structure.modals.new_chapter.form.name_required')}
@@ -55,7 +55,7 @@ function NewChapterModal({ submitChapter, closeModal, course }: any) {
         </Form.Control>
       </FormField>
       <FormField name="chapter-desc">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>{t('dashboard.courses.structure.modals.new_chapter.form.description_label')}</FormLabel>
           <FormMessage match="valueMissing">
             {t('dashboard.courses.structure.modals.new_chapter.form.description_required')}
@@ -66,9 +66,9 @@ function NewChapterModal({ submitChapter, closeModal, course }: any) {
         </Form.Control>
       </FormField>
 
-      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+      <Flex className="mt-6 justify-end">
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+          <ButtonBlack type="submit" className="mt-2.5">
             {isSubmitting ? (
               <BarLoader
                 cssOverride={{ borderRadius: 60 }}

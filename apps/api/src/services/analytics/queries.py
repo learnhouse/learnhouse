@@ -1,5 +1,5 @@
 """
-SQL queries for ClickHouse analytics dashboard.
+SQL queries for Tinybird analytics dashboard.
 
 Parameters use Python .format() placeholders: {org_id}, {days}.
 The org_id filter uses (0 = 0 OR org_id = 0) pattern for multi-org support:
@@ -53,16 +53,25 @@ LIMIT 20
 """
 
 ENROLLMENT_FUNNEL = """
+WITH user_events AS (
+    SELECT
+        org_id,
+        user_id,
+        groupUniqArrayIf(event_name, event_name IN ('page_view', 'course_view', 'course_enrolled', 'course_completed')) AS events_set
+    FROM events
+    WHERE
+        ({org_id} = 0 OR org_id = {org_id})
+        AND event_name IN ('page_view', 'course_view', 'course_enrolled', 'course_completed')
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY org_id, user_id
+)
 SELECT
     org_id,
-    uniqExactIf(user_id, event_name = 'page_view') AS page_views,
-    uniqExactIf(user_id, event_name = 'course_view') AS course_views,
-    uniqExactIf(user_id, event_name = 'course_enrolled') AS enrollments,
-    uniqExactIf(user_id, event_name = 'course_completed') AS completions
-FROM events
-WHERE
-    ({org_id} = 0 OR org_id = {org_id})
-    AND timestamp >= now() - INTERVAL {days} DAY
+    countIf(has(events_set, 'page_view')) AS page_views,
+    countIf(has(events_set, 'course_view')) AS course_views,
+    countIf(has(events_set, 'course_enrolled')) AS enrollments,
+    countIf(has(events_set, 'course_completed')) AS completions
+FROM user_events
 GROUP BY org_id
 """
 
@@ -157,10 +166,11 @@ SELECT
     anyIf(JSONExtractString(properties, 'course_uuid'), JSONExtractString(properties, 'course_uuid') != '') AS course_uuid,
     uniqExactIf(user_id, event_name = 'activity_view') AS views,
     uniqExactIf(user_id, event_name = 'activity_completed') AS completions,
-    if(count() > 0,
+    if(countIf(event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0) > 0,
        avgIf(
            JSONExtractFloat(properties, 'seconds_spent'),
            event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0
+               AND JSONExtractFloat(properties, 'seconds_spent') <= 14400
        ),
        0) AS avg_seconds_spent
 FROM events
@@ -242,6 +252,7 @@ SELECT
     uniqExactIf(s.user_id, dateDiff('week', s.cohort_week, a.active_week) = 8) AS week_8
 FROM signups s
 LEFT JOIN activity a ON s.user_id = a.user_id AND s.org_id = a.org_id
+    AND a.active_week >= s.cohort_week
 GROUP BY s.org_id, s.cohort_week
 ORDER BY s.cohort_week ASC
 """
@@ -276,6 +287,7 @@ SELECT
     count() AS completions_count
 FROM enrollments e
 INNER JOIN completions c ON e.user_id = c.user_id AND e.course_uuid = c.course_uuid AND e.org_id = c.org_id
+WHERE c.completed_at >= e.enrolled_at
 GROUP BY e.org_id, e.course_uuid
 ORDER BY median_days ASC
 """
@@ -327,25 +339,31 @@ ORDER BY completion_rate DESC
 """
 
 NEW_VS_RETURNING = """
-WITH first_seen AS (
-    SELECT org_id, user_id, min(toDate(timestamp)) AS first_date
-    FROM events
-    WHERE ({org_id} = 0 OR org_id = {org_id})
-    GROUP BY org_id, user_id
-),
-daily_users AS (
+WITH daily_users AS (
     SELECT DISTINCT org_id, user_id, toDate(timestamp) AS date
     FROM events
     WHERE ({org_id} = 0 OR org_id = {org_id})
         AND timestamp >= now() - INTERVAL {days} DAY
+),
+first_seen_in_window AS (
+    SELECT org_id, user_id, min(date) AS first_date
+    FROM daily_users
+    GROUP BY org_id, user_id
+),
+ever_seen_before AS (
+    SELECT DISTINCT org_id, user_id
+    FROM events
+    WHERE ({org_id} = 0 OR org_id = {org_id})
+        AND timestamp < now() - INTERVAL {days} DAY
 )
 SELECT
     d.org_id,
     d.date,
-    countIf(d.date = f.first_date) AS new_users,
-    countIf(d.date > f.first_date) AS returning_users
+    countIf(d.date = f.first_date AND e.user_id IS NULL) AS new_users,
+    countIf(d.date > f.first_date OR e.user_id IS NOT NULL) AS returning_users
 FROM daily_users d
-INNER JOIN first_seen f ON d.user_id = f.user_id AND d.org_id = f.org_id
+INNER JOIN first_seen_in_window f ON d.user_id = f.user_id AND d.org_id = f.org_id
+LEFT JOIN ever_seen_before e ON d.user_id = e.user_id AND d.org_id = e.org_id
 GROUP BY d.org_id, d.date
 ORDER BY d.date ASC
 """
@@ -372,6 +390,7 @@ SELECT
     count() AS transitions
 FROM ordered
 WHERE prev_ts > toDateTime('2020-01-01 00:00:00')
+    AND dateDiff('hour', prev_ts, timestamp) > 0
 GROUP BY org_id, course_uuid
 ORDER BY avg_hours_between ASC
 """
@@ -419,12 +438,24 @@ GROUP BY e.org_id
 """
 
 USER_PROGRESS_SNAPSHOT = """
-WITH user_activities AS (
+WITH total_activities AS (
+    SELECT
+        org_id,
+        JSONExtractString(properties, 'course_uuid') AS course_uuid,
+        uniqExact(JSONExtractString(properties, 'activity_uuid')) AS total_count
+    FROM events
+    WHERE ({org_id} = 0 OR org_id = {org_id})
+        AND event_name IN ('activity_view', 'activity_completed')
+        AND JSONExtractString(properties, 'activity_uuid') != ''
+        AND timestamp >= now() - INTERVAL {days} DAY
+    GROUP BY org_id, course_uuid
+),
+user_activities AS (
     SELECT
         org_id,
         user_id,
         JSONExtractString(properties, 'course_uuid') AS course_uuid,
-        countIf(event_name = 'activity_completed') AS completed_activities
+        uniqExactIf(JSONExtractString(properties, 'activity_uuid'), event_name = 'activity_completed') AS completed_activities
     FROM events
     WHERE ({org_id} = 0 OR org_id = {org_id})
         AND event_name IN ('course_enrolled', 'activity_completed')
@@ -432,19 +463,21 @@ WITH user_activities AS (
     GROUP BY org_id, user_id, course_uuid
 )
 SELECT
-    org_id,
-    course_uuid,
+    ua.org_id,
+    ua.course_uuid,
     multiIf(
-        completed_activities = 0, '0%',
-        completed_activities <= 2, '1-25%',
-        completed_activities <= 5, '26-50%',
-        completed_activities <= 8, '51-75%',
+        ta.total_count IS NULL OR ta.total_count = 0, '0%',
+        ua.completed_activities = 0, '0%',
+        (ua.completed_activities / ta.total_count) <= 0.25, '1-25%',
+        (ua.completed_activities / ta.total_count) <= 0.50, '26-50%',
+        (ua.completed_activities / ta.total_count) <= 0.75, '51-75%',
         '76-100%'
     ) AS bracket,
     count() AS user_count
-FROM user_activities
-GROUP BY org_id, course_uuid, bracket
-ORDER BY course_uuid, bracket
+FROM user_activities ua
+LEFT JOIN total_activities ta ON ua.course_uuid = ta.course_uuid AND ua.org_id = ta.org_id
+GROUP BY ua.org_id, ua.course_uuid, bracket
+ORDER BY ua.course_uuid, bracket
 """
 
 SEARCH_EFFECTIVENESS = """
@@ -500,7 +533,7 @@ ORG_GROWTH_TREND = """
 SELECT
     org_id,
     toStartOfWeek(timestamp) AS week,
-    countIf(event_name = 'user_signed_up') AS signups,
+    uniqExactIf(user_id, event_name = 'user_signed_up') AS signups,
     uniqExactIf(user_id, event_name = 'course_enrolled') AS enrollments,
     uniqExactIf(user_id, event_name = 'course_completed') AS completions
 FROM events
@@ -519,12 +552,15 @@ SELECT
     uniqExactIf(JSONExtractString(properties, 'path'), event_name = 'page_view') AS page_views,
     uniqExactIf(JSONExtractString(properties, 'activity_uuid'), event_name = 'activity_completed') AS activities_completed,
     uniqExactIf(JSONExtractString(properties, 'course_uuid'), event_name = 'course_completed') AS courses_completed,
-    sumIf(JSONExtractFloat(properties, 'seconds_spent'), event_name = 'time_on_activity') AS total_time_spent,
-    (
-        uniqExactIf(JSONExtractString(properties, 'path'), event_name = 'page_view') * 1
-        + uniqExactIf(JSONExtractString(properties, 'activity_uuid'), event_name = 'activity_completed') * 10
-        + uniqExactIf(JSONExtractString(properties, 'course_uuid'), event_name = 'course_completed') * 50
-        + least(sumIf(JSONExtractFloat(properties, 'seconds_spent'), event_name = 'time_on_activity') / 3600, 100) * 5
+    sumIf(least(JSONExtractFloat(properties, 'seconds_spent'), 14400), event_name = 'time_on_activity') AS total_time_spent,
+    least(
+        (
+            least(uniqExactIf(JSONExtractString(properties, 'path'), event_name = 'page_view'), 50) * 1
+            + least(uniqExactIf(JSONExtractString(properties, 'activity_uuid'), event_name = 'activity_completed'), 100) * 10
+            + least(uniqExactIf(JSONExtractString(properties, 'course_uuid'), event_name = 'course_completed'), 20) * 50
+            + least(sumIf(least(JSONExtractFloat(properties, 'seconds_spent'), 14400), event_name = 'time_on_activity') / 3600, 100) * 5
+        ),
+        2500
     ) AS engagement_score
 FROM events
 WHERE
@@ -727,7 +763,7 @@ COURSE_LEARNER_PROGRESS = """
 WITH user_completions AS (
     SELECT
         user_id,
-        count() AS completed_activities
+        uniqExact(JSONExtractString(properties, 'activity_uuid')) AS completed_activities
     FROM events
     WHERE
         ({org_id} = 0 OR org_id = {org_id})
@@ -754,7 +790,7 @@ COURSE_TIME_PER_ACTIVITY = """
 SELECT
     JSONExtractString(properties, 'activity_uuid') AS activity_uuid,
     if(count() > 0,
-       round(avg(if(JSONExtractFloat(properties, 'seconds_spent') > 0, JSONExtractFloat(properties, 'seconds_spent'), 0)), 1),
+       round(avg(least(JSONExtractFloat(properties, 'seconds_spent'), 14400)), 1),
        0) AS avg_seconds_spent,
     count() AS samples
 FROM events
@@ -762,6 +798,7 @@ WHERE
     ({org_id} = 0 OR org_id = {org_id})
     AND JSONExtractString(properties, 'course_uuid') = '{course_uuid}'
     AND event_name = 'time_on_activity'
+    AND JSONExtractFloat(properties, 'seconds_spent') > 0
     AND timestamp >= now() - INTERVAL {days} DAY
 GROUP BY activity_uuid
 ORDER BY avg_seconds_spent DESC
@@ -788,6 +825,7 @@ SELECT
     count() AS transitions
 FROM ordered
 WHERE prev_ts > toDateTime('2020-01-01 00:00:00')
+    AND dateDiff('hour', prev_ts, timestamp) > 0
 """
 
 COURSE_ACTIVE_LEARNERS = """
@@ -835,6 +873,7 @@ SELECT
     quantile(0.75)(dateDiff('day', e.enrolled_at, c.completed_at)) AS p75_days
 FROM enrollments e
 INNER JOIN completions c ON e.user_id = c.user_id
+WHERE c.completed_at >= e.enrolled_at
 """
 
 COURSE_CERTIFICATION_RATE = """
@@ -949,7 +988,8 @@ SELECT
     (SELECT uniqExact(user_id) FROM first_activity) AS cohort_size
 FROM first_activity f
 INNER JOIN daily_activity d ON f.user_id = d.user_id
-WHERE dateDiff('day', f.first_day, d.active_day) <= 30
+WHERE dateDiff('day', f.first_day, d.active_day) >= 0
+    AND dateDiff('day', f.first_day, d.active_day) <= 30
 GROUP BY days_since_start
 ORDER BY days_since_start
 """
@@ -965,14 +1005,10 @@ SELECT
         JSONExtractString(properties, 'activity_uuid'),
         event_name = 'activity_view'
     ) AS views,
-    uniqExactIf(
-        JSONExtractString(properties, 'activity_uuid'),
-        event_name = 'activity_completed'
-    ) AS unique_activities_completed,
-    if(countIf(event_name = 'time_on_activity') > 0,
+    if(countIf(event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0) > 0,
        sumIf(
-           JSONExtractFloat(properties, 'seconds_spent'),
-           event_name = 'time_on_activity'
+           least(JSONExtractFloat(properties, 'seconds_spent'), 14400),
+           event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0
        ), 0) AS total_seconds_spent
 FROM events
 WHERE
@@ -1025,10 +1061,11 @@ SELECT
     uniqExact(user_id) AS unique_learners,
     count() AS total_events,
     uniqExactIf(user_id, event_name = 'activity_completed') AS completions,
-    if(countIf(event_name = 'time_on_activity') > 0,
+    if(countIf(event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0) > 0,
        avgIf(
            JSONExtractFloat(properties, 'seconds_spent'),
            event_name = 'time_on_activity' AND JSONExtractFloat(properties, 'seconds_spent') > 0
+               AND JSONExtractFloat(properties, 'seconds_spent') <= 14400
        ),
        0) AS avg_seconds_spent
 FROM events
@@ -1060,14 +1097,15 @@ ORDER BY date ASC
 COURSE_AVG_SESSION_DURATION = """
 SELECT
     toDate(timestamp) AS date,
-    round(sum(JSONExtractFloat(properties, 'seconds_spent')) / greatest(uniqExact(user_id), 1), 0) AS avg_seconds_per_user,
-    sum(JSONExtractFloat(properties, 'seconds_spent')) AS total_seconds,
+    round(sum(least(JSONExtractFloat(properties, 'seconds_spent'), 14400)) / greatest(uniqExact(user_id), 1), 0) AS avg_seconds_per_user,
+    sum(least(JSONExtractFloat(properties, 'seconds_spent'), 14400)) AS total_seconds,
     uniqExact(user_id) AS unique_users
 FROM events
 WHERE
     ({org_id} = 0 OR org_id = {org_id})
     AND JSONExtractString(properties, 'course_uuid') = '{course_uuid}'
     AND event_name = 'time_on_activity'
+    AND JSONExtractFloat(properties, 'seconds_spent') > 0
     AND timestamp >= now() - INTERVAL {days} DAY
 GROUP BY date
 ORDER BY date ASC

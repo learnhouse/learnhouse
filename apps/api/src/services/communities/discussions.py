@@ -7,6 +7,8 @@ from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
 from src.db.communities.communities import Community
+from src.services.analytics.analytics import track
+from src.services.analytics import events as analytics_events
 from src.db.communities.discussions import (
     Discussion,
     DiscussionReadWithVoteStatus,
@@ -123,6 +125,18 @@ async def create_discussion(
     db_session.add(discussion)
     db_session.commit()
     db_session.refresh(discussion)
+
+    # Track discussion posted event
+    await track(
+        event_name=analytics_events.DISCUSSION_POSTED,
+        org_id=community.org_id,
+        user_id=current_user.id,
+        properties={
+            "community_uuid": community_uuid,
+            "discussion_uuid": discussion.discussion_uuid,
+            "label": validated_label,
+        },
+    )
 
     # Create auto-upvote from author
     vote = DiscussionVote(

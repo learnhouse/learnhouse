@@ -22,18 +22,22 @@ import {
   LinkSimple,
 } from '@phosphor-icons/react'
 import {
+  ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
 } from 'recharts'
 import { useTranslation } from 'react-i18next'
+
+const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v))
+const shortDate = (v: string) =>
+  new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
 const EVENT_META: Record<
   string,
@@ -62,84 +66,6 @@ const EVENT_META: Record<
     icon: <FileText size={16} weight="duotone" className="text-amber-400" />,
     dotColor: 'bg-amber-400',
   },
-}
-
-function ChartTooltip({ active, payload, label, breakdownMap, t }: any) {
-  if (!active || !payload?.length) return null
-  const date = new Date(label)
-  const formatted = date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
-  const dateKey = label
-  const bd = breakdownMap?.[dateKey]
-
-  return (
-    <div className="bg-white nice-shadow rounded-xl px-4 py-3 text-sm min-w-[200px]">
-      <p className="text-gray-500 text-xs mb-2">{formatted}</p>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="w-2 h-2 rounded-full bg-blue-400" />
-        <span className="text-gray-700 font-medium">{t('analytics.overview.active_users')}</span>
-        <span className="text-gray-900 font-bold ml-auto">
-          {payload[0].value.toLocaleString()}
-        </span>
-      </div>
-
-      {bd && (
-        <>
-          <div className="border-t border-gray-100 pt-2 mt-1 space-y-1.5">
-            <div className="flex items-center gap-2 text-[11px]">
-              <Desktop size={11} className="text-blue-400" />
-              <span className="text-gray-500">{t('analytics.overview.desktop')}</span>
-              <span className="text-gray-700 font-medium ml-auto">{(bd.desktop ?? 0).toLocaleString()}</span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px]">
-              <DeviceMobile size={11} className="text-indigo-400" />
-              <span className="text-gray-500">{t('analytics.overview.mobile')}</span>
-              <span className="text-gray-700 font-medium ml-auto">{(bd.mobile ?? 0).toLocaleString()}</span>
-            </div>
-            {(bd.tablet ?? 0) > 0 && (
-              <div className="flex items-center gap-2 text-[11px]">
-                <Devices size={11} className="text-purple-400" />
-                <span className="text-gray-500">{t('analytics.overview.tablet')}</span>
-                <span className="text-gray-700 font-medium ml-auto">{bd.tablet.toLocaleString()}</span>
-              </div>
-            )}
-          </div>
-
-          {bd.top_countries?.length > 0 && bd.top_countries.some((c: string) => c) && (
-            <div className="border-t border-gray-100 pt-2 mt-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-1">
-                <GlobeHemisphereWest size={10} />
-                <span>{t('analytics.overview.top_countries')}</span>
-              </div>
-              <div className="flex gap-1.5">
-                {bd.top_countries.filter((c: string) => c).map((code: string, i: number) => (
-                  <span key={i} className="text-[11px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                    {code}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {bd.top_referrer?.length > 0 && bd.top_referrer[0] && (
-            <div className="border-t border-gray-100 pt-2 mt-2">
-              <div className="flex items-center gap-1.5 text-[11px]">
-                <LinkSimple size={10} className="text-green-400" />
-                <span className="text-gray-400">{t('analytics.overview.top_referrer')}</span>
-                <span className="text-gray-600 font-medium ml-auto truncate max-w-[120px]">
-                  {bd.top_referrer[0]}
-                </span>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
 }
 
 const DEVICE_COLORS: Record<string, string> = {
@@ -214,6 +140,58 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
   }))
   const totalDeviceVisits = devicePieData.reduce((s: number, d: any) => s + d.value, 0)
 
+  // Custom tooltip for the DAU chart
+  const DauTooltipContent = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    const dateStr = new Date(label).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    const bd = breakdownMap[label]
+    return (
+      <div
+        style={{
+          borderRadius: 12,
+          border: '1px solid #f3f4f6',
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+          background: '#fff',
+          padding: 12,
+        }}
+      >
+        <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>{dateStr}</p>
+        <p style={{ fontSize: 13, fontWeight: 'bold', color: '#111827', margin: '4px 0 0' }}>
+          {t('analytics.overview.active_users')}: {payload[0].value?.toLocaleString()}
+        </p>
+        {bd && (
+          <>
+            <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
+              {t('analytics.overview.desktop')}: {(bd.desktop ?? 0).toLocaleString()}
+            </p>
+            <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+              {t('analytics.overview.mobile')}: {(bd.mobile ?? 0).toLocaleString()}
+            </p>
+            {(bd.tablet ?? 0) > 0 && (
+              <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+                {t('analytics.overview.tablet')}: {bd.tablet.toLocaleString()}
+              </p>
+            )}
+            {bd.top_countries?.length > 0 && bd.top_countries.some((c: string) => c) && (
+              <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
+                {t('analytics.overview.top_countries')}: {bd.top_countries.filter((c: string) => c).join(', ')}
+              </p>
+            )}
+            {bd.top_referrer?.length > 0 && bd.top_referrer[0] && (
+              <p style={{ fontSize: 11, color: '#6b7280', margin: '2px 0 0' }}>
+                {t('analytics.overview.top_referrer')}: {bd.top_referrer[0]}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
     <div className="bg-white nice-shadow rounded-xl overflow-hidden">
@@ -228,7 +206,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
             <span className="text-xs font-medium text-gray-400">{t('analytics.overview.live_now')}</span>
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {liveLoading ? '—' : liveCount.toLocaleString()}
+            {liveLoading ? '\u2014' : liveCount.toLocaleString()}
           </div>
           <p className="text-[11px] text-gray-300 mt-0.5">{t('analytics.overview.last_5_minutes')}</p>
         </div>
@@ -247,7 +225,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
                 </span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {isLoading ? '—' : card.total.toLocaleString()}
+                {isLoading ? '\u2014' : card.total.toLocaleString()}
               </div>
               <p className="text-[11px] text-gray-300 mt-0.5">
                 {isLoading ? '\u00A0' : `${card.unique} ${t('analytics.common.unique_users')}`}
@@ -270,61 +248,44 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
             {t('analytics.common.no_data')}
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={dauRows}>
-              <defs>
-                <linearGradient id="dauGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#93b5fd" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#93b5fd" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#f3f4f6"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: '#9ca3af' }}
-                tickFormatter={(v) => {
-                  const d = new Date(v)
-                  return d.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                  })
-                }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: '#9ca3af' }}
-                allowDecimals={false}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) =>
-                  v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v
-                }
-              />
-              <Tooltip
-                content={<ChartTooltip breakdownMap={breakdownMap} t={t} />}
-                cursor={{ stroke: '#d1d5db', strokeWidth: 1 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="dau"
-                stroke="#6b8de3"
-                strokeWidth={2}
-                fill="url(#dauGradient)"
-                dot={false}
-                activeDot={{
-                  r: 4,
-                  fill: '#6b8de3',
-                  stroke: '#fff',
-                  strokeWidth: 2,
-                }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div style={{ height: 240 }}>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={dauRows}>
+                <defs>
+                  <linearGradient id="dauOverviewGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6b8de3" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#6b8de3" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  stroke="#9ca3af"
+                  tickFormatter={shortDate}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  stroke="#9ca3af"
+                  tickFormatter={kFormatter}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<DauTooltipContent />} />
+                <Area
+                  type="monotone"
+                  dataKey="dau"
+                  stroke="#6b8de3"
+                  strokeWidth={2}
+                  fill="url(#dauOverviewGradient)"
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
 
@@ -376,23 +337,30 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
             <div className="h-[160px] flex items-center justify-center text-gray-300 text-xs">{t('analytics.common.no_data')}</div>
           ) : (
             <div className="flex items-center gap-4 h-[160px]">
-              <div className="flex-shrink-0">
-                <ResponsiveContainer width={120} height={120}>
+              <div className="flex-shrink-0" style={{ width: 120, height: 120 }}>
+                <ResponsiveContainer width="100%" height={120}>
                   <PieChart>
                     <Pie
                       data={devicePieData}
                       dataKey="value"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={32}
-                      outerRadius={52}
-                      paddingAngle={2}
+                      innerRadius={25}
+                      outerRadius={55}
                       strokeWidth={0}
                     >
-                      {devicePieData.map((d: any, i: number) => (
-                        <Cell key={i} fill={d.fill} />
+                      {devicePieData.map((entry: any, index: number) => (
+                        <Cell key={index} fill={entry.fill} />
                       ))}
                     </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: '1px solid #f3f4f6',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

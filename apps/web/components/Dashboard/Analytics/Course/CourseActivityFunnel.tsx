@@ -201,7 +201,7 @@ export default function CourseActivityFunnel({
   orgslug,
   courseUuid,
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
   activityMap: ActivityMap
   orgslug: string

@@ -543,13 +543,9 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
       dialogContent={showPreview ? renderPreviewContent() : renderEditContent()}
       dialogClose={
         <>
-          <ButtonBlack 
+          <ButtonBlack
             onClick={handleClose}
-            css={{ 
-              backgroundColor: '$gray200', 
-              color: '$gray700',
-              '&:hover': { backgroundColor: '$gray300' }
-            }}
+            className="bg-gray-200 text-gray-700 hover:bg-gray-300"
           >
             Cancel
           </ButtonBlack>

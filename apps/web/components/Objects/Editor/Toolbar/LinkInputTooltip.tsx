@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import styled from 'styled-components'
 import { CheckIcon, Cross2Icon } from '@radix-ui/react-icons'
 
 interface LinkInputTooltipProps {
@@ -19,100 +18,43 @@ const LinkInputTooltip: React.FC<LinkInputTooltipProps> = ({ onSave, onCancel, c
     e.preventDefault()
     if (url) {
       // Ensure the URL has a protocol
-      const formattedUrl = url.startsWith('http://') || url.startsWith('https://') 
-        ? url 
+      const formattedUrl = url.startsWith('http://') || url.startsWith('https://')
+        ? url
         : `https://${url}`
       onSave(formattedUrl)
     }
   }
 
   return (
-    <TooltipContainer>
-      <Form onSubmit={handleSubmit}>
-        <Input
+    <div className="absolute top-full left-0 bg-white border border-gray-300/50 rounded-md shadow-sm p-2 mt-1" style={{ zIndex: 'var(--z-editor-bubble)' }}>
+      <form onSubmit={handleSubmit} className="flex items-center gap-1">
+        <input
           type="text"
           placeholder="Enter URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           autoFocus
+          className="py-1 px-2 border border-gray-300/50 rounded text-xs w-[200px] focus:outline-none focus:border-gray-300/80"
         />
-        <ButtonGroup>
-          <SaveButton type="submit" disabled={!url}>
+        <div className="flex gap-0.5">
+          <button
+            type="submit"
+            disabled={!url}
+            className="flex items-center justify-center p-1 border-none rounded cursor-pointer bg-gray-300/25 transition-colors hover:bg-gray-300/50 disabled:opacity-50 disabled:cursor-not-allowed text-[#4CAF50]"
+          >
             <CheckIcon />
-          </SaveButton>
-          <CancelButton type="button" onClick={onCancel}>
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex items-center justify-center p-1 border-none rounded cursor-pointer bg-gray-300/25 transition-colors hover:bg-gray-300/50 text-[#F44336]"
+          >
             <Cross2Icon />
-          </CancelButton>
-        </ButtonGroup>
-      </Form>
-    </TooltipContainer>
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
-const TooltipContainer = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border: 1px solid rgba(217, 217, 217, 0.5);
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: var(--z-editor-bubble);
-  padding: 8px;
-  margin-top: 4px;
-`
-
-const Form = styled.form`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`
-
-const Input = styled.input`
-  padding: 4px 8px;
-  border: 1px solid rgba(217, 217, 217, 0.5);
-  border-radius: 4px;
-  font-size: 12px;
-  width: 200px;
-
-  &:focus {
-    outline: none;
-    border-color: rgba(217, 217, 217, 0.8);
-  }
-`
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 2px;
-`
-
-const Button = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background: rgba(217, 217, 217, 0.24);
-  transition: background 0.2s;
-
-  &:hover {
-    background: rgba(217, 217, 217, 0.48);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`
-
-const SaveButton = styled(Button)`
-  color: #4CAF50;
-`
-
-const CancelButton = styled(Button)`
-  color: #F44336;
-`
-
-export default LinkInputTooltip 
+export default LinkInputTooltip

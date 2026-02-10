@@ -41,7 +41,7 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
   return (
     <FormLayout onSubmit={handleSubmit}>
       <FormField name="dynamic-activity-name">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>Activity name</FormLabel>
           <FormMessage match="valueMissing">
             Please provide a name for your activity
@@ -52,7 +52,7 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
         </Form.Control>
       </FormField>
       <FormField name="dynamic-activity-desc">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>Activity description</FormLabel>
           <FormMessage match="valueMissing">
             Please provide a description for your activity
@@ -63,9 +63,9 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
         </Form.Control>
       </FormField>
 
-      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+      <Flex className="mt-6 justify-end">
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+          <ButtonBlack type="submit" className="mt-2.5">
             {isSubmitting ? (
               <BarLoader
                 cssOverride={{ borderRadius: 60 }}

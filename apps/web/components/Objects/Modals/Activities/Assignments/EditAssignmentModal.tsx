@@ -74,7 +74,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
     return (
         <FormLayout onSubmit={formik.handleSubmit}>
             <FormField name="title">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.edit.form.title_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.edit.form.title_required')}
@@ -91,7 +91,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             </FormField>
 
             <FormField name="description">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.edit.form.description_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.edit.form.description_required')}
@@ -107,7 +107,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             </FormField>
 
             <FormField name="due_date">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.edit.form.due_date_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.edit.form.due_date_required')}
@@ -124,7 +124,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             </FormField>
 
             <FormField name="grading_type">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Flex className="items-baseline justify-between">
                     <FormLabel>{t('dashboard.assignments.modals.edit.form.grading_type_label')}</FormLabel>
                     <FormMessage match="valueMissing">
                         {t('dashboard.assignments.modals.edit.form.grading_type_required')}

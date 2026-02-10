@@ -34,7 +34,7 @@ export default function CourseActivityTypeBreakdown({
   courseId,
   days = '30',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()

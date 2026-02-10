@@ -49,7 +49,7 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
   return (
     <FormLayout onSubmit={handleSubmit}>
       <FormField name="documentpdf-activity-name">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>PDF Document name</FormLabel>
           <FormMessage match="valueMissing">
             Please provide a name for your PDF Document activity
@@ -60,7 +60,7 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
         </Form.Control>
       </FormField>
       <FormField name="documentpdf-activity-file">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <Flex className="items-baseline justify-between">
           <FormLabel>PDF Document file</FormLabel>
           <FormMessage match="valueMissing">
             Please provide a PDF Document for your activity
@@ -71,9 +71,9 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
         </Form.Control>
       </FormField>
 
-      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+      <Flex className="mt-6 justify-end">
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+          <ButtonBlack type="submit" className="mt-2.5">
             {isSubmitting ? (
               <BarLoader
                 cssOverride={{ borderRadius: 60 }}

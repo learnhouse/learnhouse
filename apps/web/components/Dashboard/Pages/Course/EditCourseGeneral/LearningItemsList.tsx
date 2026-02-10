@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback, lazy, Suspense } from 'react';
 import { Plus, X, Link as LinkIcon } from 'lucide-react';
-import Picker from '@emoji-mart/react';
-import data from '@emoji-mart/data';
+const Picker = lazy(() => import('@emoji-mart/react'));
 import { Input } from '@components/ui/input';
 
 interface LearningItem {
@@ -320,15 +319,16 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
       
       {showEmojiPicker === item.id && (
         <div ref={pickerRef} className="absolute z-10 mt-1 left-0">
-          <Picker
-            data={data}
-            onEmojiSelect={(emoji: any) => handleEmojiSelect(item.id, emoji)}
-            theme="light"
-            previewPosition="none"
-            searchPosition="top"
-            maxFrequentRows={0}
-            autoFocus={false}
-          />
+          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+            <Picker
+              onEmojiSelect={(emoji: any) => handleEmojiSelect(item.id, emoji)}
+              theme="light"
+              previewPosition="none"
+              searchPosition="top"
+              maxFrequentRows={0}
+              autoFocus={false}
+            />
+          </Suspense>
         </div>
       )}
       

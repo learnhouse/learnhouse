@@ -2,15 +2,27 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCoursePipe } from '../useAnalyticsDashboard'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
 import { CheckCircle } from '@phosphor-icons/react'
 import CourseWidgetCard, { WidgetIcon, AnimatedNumber } from './CourseWidgetCard'
+
+const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v))
+const shortDate = (v: string) =>
+  new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
 export default function CourseDailyCompletions({
   courseId,
   days = '30',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()
@@ -49,21 +61,23 @@ export default function CourseDailyCompletions({
                 <p className="text-2xl font-bold text-gray-700">{avgDaily}</p>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={380}>
-              <AreaChart data={rows}>
-                <defs>
-                  <linearGradient id="compGradM" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                <Area type="monotone" dataKey="completions" stroke="#10b981" strokeWidth={2.5} fill="url(#compGradM)" dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} name={t('analytics.course_analytics.common.completions')} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div style={{ height: 380 }}>
+              <ResponsiveContainer width="100%" height={380}>
+                <AreaChart data={rows}>
+                  <defs>
+                    <linearGradient id="completionsModalGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={shortDate} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={kFormatter} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Area type="monotone" dataKey="completions" stroke="#10b981" strokeWidth={2.5} fill="url(#completionsModalGrad)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )
       }
@@ -78,20 +92,21 @@ export default function CourseDailyCompletions({
             <span className="text-2xl font-bold text-gray-900"><AnimatedNumber value={totalCompletions} /></span>
             <span className="text-xs text-gray-400">{t('analytics.course_analytics.units.total_completions')}</span>
           </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={rows}>
-              <defs>
-                <linearGradient id="compGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="date" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.08)', fontSize: 12 }} />
-              <Area type="monotone" dataKey="completions" stroke="#10b981" strokeWidth={2} fill="url(#compGrad)" dot={false} name={t('analytics.course_analytics.common.completions')} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div style={{ height: 160 }}>
+            <ResponsiveContainer width="100%" height={160}>
+              <AreaChart data={rows}>
+                <defs>
+                  <linearGradient id="completionsMiniGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="#9ca3af" tickFormatter={shortDate} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Area type="monotone" dataKey="completions" stroke="#10b981" strokeWidth={2} fill="url(#completionsMiniGrad)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
     </CourseWidgetCard>

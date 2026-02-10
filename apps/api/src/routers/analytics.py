@@ -130,6 +130,7 @@ async def _execute_tinybird_query(
     for row in rows:
         for key, val in row.items():
             if isinstance(val, float) and (val != val or val == float('inf') or val == float('-inf')):
+                logger.debug("Query '%s' returned NaN/Inf for key '%s', converting to None", query_name, key)
                 row[key] = None
 
     response = {
@@ -261,16 +262,26 @@ async def ingest_frontend_event(
 
     ip = request.client.host if request.client else ""
 
-    # Enrich page_view with server-side geo data from proxy headers
+    # Sanitize seconds_spent — cap at 4 hours, reject negatives
     properties = dict(body.properties)
-    if body.event_name == "page_view":
-        country = (
-            request.headers.get("cf-ipcountry")  # Cloudflare
-            or request.headers.get("x-country-code")  # Custom proxy
-            or ""
-        )
-        if country and country not in ("XX", "T1"):
-            properties.setdefault("country_code", country.upper())
+    if "seconds_spent" in properties:
+        try:
+            seconds = float(properties["seconds_spent"])
+            if seconds <= 0:
+                properties.pop("seconds_spent")
+            elif seconds > 14400:
+                properties["seconds_spent"] = 14400
+        except (ValueError, TypeError):
+            properties.pop("seconds_spent")
+
+    # Enrich all frontend events with server-side geo data from proxy headers
+    country = (
+        request.headers.get("cf-ipcountry")  # Cloudflare
+        or request.headers.get("x-country-code")  # Custom proxy
+        or ""
+    )
+    if country and country not in ("XX", "T1"):
+        properties.setdefault("country_code", country.upper())
 
     await track(
         event_name=body.event_name,
