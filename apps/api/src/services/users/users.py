@@ -196,7 +196,7 @@ async def create_user_with_invite(
 
     
 
-    user = await create_user(request, db_session, current_user, user_object, org_id)
+    user = await create_user(request, db_session, current_user, user_object, org_id, signup_provider="invite")
 
     # Check if invite code contains UserGroup
     if inviteCode.get("usergroup_id"): # type: ignore

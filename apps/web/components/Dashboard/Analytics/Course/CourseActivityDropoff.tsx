@@ -98,7 +98,7 @@ export default function CourseActivityDropoff({
   orgslug,
   courseUuid,
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
   activityMap: ActivityMap
   orgslug: string

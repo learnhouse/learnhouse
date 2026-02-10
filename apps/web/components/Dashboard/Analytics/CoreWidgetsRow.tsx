@@ -17,30 +17,21 @@ import {
   ArrowsOutSimple,
 } from '@phosphor-icons/react'
 import {
+  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
   Cell,
 } from 'recharts'
 import AnalyticsDetailModal from './AnalyticsDetailModal'
 import { useTranslation } from 'react-i18next'
 
-const COLORS = ['#6b8de3', '#818cf8', '#a78bfa', '#c4b5fd']
+const kFormatter = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v))
 
-function BarTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-white nice-shadow rounded-lg px-3 py-2 text-sm">
-      <p className="text-gray-500 text-xs mb-0.5">{payload[0].payload.name}</p>
-      <p className="text-gray-900 font-bold">
-        {payload[0].value.toLocaleString()}
-      </p>
-    </div>
-  )
-}
+const COLORS = ['#6b8de3', '#818cf8', '#a78bfa', '#c4b5fd']
 
 function ExpandButton({ onClick }: { onClick: () => void }) {
   return (
@@ -110,36 +101,42 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
               {t('analytics.common.no_data')}
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={chartData} layout="vertical" barCategoryGap="20%">
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#9ca3af' }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) =>
-                    v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v
-                  }
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  width={90}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  content={<BarTooltip />}
-                  cursor={{ fill: '#f9fafb' }}
-                />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                  {chartData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData} layout="vertical">
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 11 }}
+                    stroke="#9ca3af"
+                    tickFormatter={kFormatter}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    stroke="#6b7280"
+                    axisLine={false}
+                    tickLine={false}
+                    width={100}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: '1px solid #f3f4f6',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    }}
+                    formatter={(value: number) => [value.toLocaleString(), '']}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {chartData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
 
@@ -211,33 +208,42 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           <div className="text-center text-gray-300 py-12">{t('analytics.common.no_data')}</div>
         ) : (
           <div className="space-y-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData} layout="vertical" barCategoryGap="20%">
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 12, fill: '#9ca3af' }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) =>
-                    v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v
-                  }
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 13, fill: '#374151' }}
-                  width={110}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<BarTooltip />} cursor={{ fill: '#f9fafb' }} />
-                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                  {chartData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData} layout="vertical">
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 12 }}
+                    stroke="#9ca3af"
+                    tickFormatter={kFormatter}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 13 }}
+                    stroke="#374151"
+                    axisLine={false}
+                    tickLine={false}
+                    width={120}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: '1px solid #f3f4f6',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    }}
+                    formatter={(value: number) => [value.toLocaleString(), '']}
+                  />
+                  <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                    {chartData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
             {/* Conversion rates */}
             <div className="grid grid-cols-3 gap-4">
@@ -411,7 +417,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                 ? row.avg_seconds_spent >= 60
                   ? `${Math.round(row.avg_seconds_spent / 60)}m`
                   : `${Math.round(row.avg_seconds_spent)}s`
-                : '—'
+                : '\u2014'
 
               return (
                 <Wrapper

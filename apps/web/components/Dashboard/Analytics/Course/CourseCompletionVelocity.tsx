@@ -15,7 +15,7 @@ export default function CourseCompletionVelocity({
   courseId,
   days = '90',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()

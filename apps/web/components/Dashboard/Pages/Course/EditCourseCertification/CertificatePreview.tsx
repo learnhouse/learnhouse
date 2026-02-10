@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Award, CheckCircle, QrCode, Building, User, Calendar, Hash } from 'lucide-react';
-import QRCode from 'qrcode';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getOrgLogoMediaDirectory } from '@services/media/media';
 
@@ -33,6 +32,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
     const generateQRCode = async () => {
       try {
         const certificateData = qrCodeLink || `${certificateId}`;
+        const QRCode = (await import('qrcode')).default;
         const qrUrl = await QRCode.toDataURL(certificateData, {
           width: 185,
           margin: 1,

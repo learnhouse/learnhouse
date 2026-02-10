@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useMemo } from 'react'
-import styled from 'styled-components'
+
 import Link from 'next/link'
 import { Package, Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -146,9 +146,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   }, [userRoles, org?.id]);
 
   return (
-    <ProfileArea>
+    <div className="flex items-stretch items-center">
       {session.status == 'unauthenticated' && (
-        <UnidentifiedArea className="flex items-center">
+        <div className="flex items-stretch grow items-center">
           <ul className="flex space-x-0.5 sm:space-x-1 items-center">
             <li>
               <LanguageSwitcher primaryColor={primaryColor} />
@@ -162,10 +162,10 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
               <Link href={getUriWithOrg(org?.slug, '/signup')}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
-        </UnidentifiedArea>
+        </div>
       )}
       {session.status == 'authenticated' && (
-        <AccountArea className="space-x-0">
+        <div className="flex items-center space-x-0">
           <div className="flex items-center space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -269,29 +269,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </AccountArea>
+        </div>
       )}
-    </ProfileArea>
+    </div>
   )
 }
 
-const AccountArea = styled.div`
-  display: flex;
-  place-items: center;
-
-  img {
-    width: 29px;
-  }
-`
-
-const ProfileArea = styled.div`
-  display: flex;
-  place-items: stretch;
-  place-items: center;
-`
-
-const UnidentifiedArea = styled.div`
-  display: flex;
-  place-items: stretch;
-  grow: 1;
-`

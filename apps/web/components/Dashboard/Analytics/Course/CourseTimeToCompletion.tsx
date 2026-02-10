@@ -9,7 +9,7 @@ export default function CourseTimeToCompletion({
   courseId,
   days = '180',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()

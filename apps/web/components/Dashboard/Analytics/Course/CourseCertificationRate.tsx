@@ -9,7 +9,7 @@ export default function CourseCertificationRate({
   courseId,
   days = '90',
 }: {
-  courseId: string | number
+  courseId: string
   days?: string
 }) {
   const { t } = useTranslation()

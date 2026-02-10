@@ -1,5 +1,5 @@
 import React from 'react'
-import styled from 'styled-components'
+
 import { Droppable, Draggable } from '@hello-pangea/dnd'
 import Activity from './Activity'
 import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
@@ -48,12 +48,11 @@ function Chapter(props: any) {
       index={props.index}
     >
       {(provided, snapshot) => (
-        <ChapterWrapper
+        <div
           {...provided.dragHandleProps}
           {...provided.draggableProps}
           ref={provided.innerRef}
-          //  isDragging={snapshot.isDragging}
-          className="max-w-(--breakpoint-2xl) mx-auto bg-white px-5"
+          className="max-w-(--breakpoint-2xl) mx-auto bg-white px-5 mb-5 p-3 text-[15px] block rounded-[9px] border border-white/20 shadow-md transition-all duration-200"
           key={props.info.list.chapter.id}
         >
           <div className="flex pt-3 pr-3 font-bold text-md items-center space-x-2">
@@ -137,9 +136,10 @@ function Chapter(props: any) {
             type="activity"
           >
             {(provided) => (
-              <ActivitiesList
+              <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
+                className="p-2.5"
               >
                 <div className="flex flex-col">
                   {props.info.list.activities.map(
@@ -167,32 +167,14 @@ function Chapter(props: any) {
                     </div>
                   </div>
                 </div>
-              </ActivitiesList>
+              </div>
             )}
           </Droppable>
-        </ChapterWrapper>
+        </div>
       )}
     </Draggable>
   )
 }
 
-const ChapterWrapper = styled.div`
-  margin-bottom: 20px;
-  padding: 12px;
-  font-size: 15px;
-  display: block;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.19);
-  box-shadow: 0px 13px 33px -13px rgb(0 0 0 / 12%);
-  transition: all 0.2s ease;
-  h3 {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-`
-
-const ActivitiesList = styled.div`
-  padding: 10px;
-`
 
 export default Chapter

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { useTranslation } from 'react-i18next'
 import { ChartBar } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -7,27 +8,28 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import { useAnalyticsStatus } from '../useAnalyticsDashboard'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import CourseOverviewStats from './CourseOverviewStats'
-import CourseEnrollmentTrend from './CourseEnrollmentTrend'
-import CourseActivityFunnel from './CourseActivityFunnel'
-import CourseLearnerProgress from './CourseLearnerProgress'
-import CourseTimePerActivity from './CourseTimePerActivity'
-import CourseCompletionVelocity from './CourseCompletionVelocity'
-import CourseActiveLearners from './CourseActiveLearners'
-import CourseTimeToCompletion from './CourseTimeToCompletion'
-import CourseRecentEnrollments from './CourseRecentEnrollments'
-import CourseCertificationRate from './CourseCertificationRate'
-import CourseViewToEnrollment from './CourseViewToEnrollment'
-import CourseActivityTypeBreakdown from './CourseActivityTypeBreakdown'
-import CoursePeakHours from './CoursePeakHours'
-import CourseLearnerRetention from './CourseLearnerRetention'
-import CourseTopLearners from './CourseTopLearners'
-import CourseActivityDropoff from './CourseActivityDropoff'
-import CourseEngagementByType from './CourseEngagementByType'
-import CourseDailyCompletions from './CourseDailyCompletions'
-import CourseAvgSessionDuration from './CourseAvgSessionDuration'
-import CourseUniqueViewers from './CourseUniqueViewers'
 import ExportAnalyticsButton from '../AnalyticsExport'
+
+const CourseOverviewStats = dynamic(() => import('./CourseOverviewStats'))
+const CourseEnrollmentTrend = dynamic(() => import('./CourseEnrollmentTrend'))
+const CourseActivityFunnel = dynamic(() => import('./CourseActivityFunnel'))
+const CourseLearnerProgress = dynamic(() => import('./CourseLearnerProgress'))
+const CourseTimePerActivity = dynamic(() => import('./CourseTimePerActivity'))
+const CourseCompletionVelocity = dynamic(() => import('./CourseCompletionVelocity'))
+const CourseActiveLearners = dynamic(() => import('./CourseActiveLearners'))
+const CourseTimeToCompletion = dynamic(() => import('./CourseTimeToCompletion'))
+const CourseRecentEnrollments = dynamic(() => import('./CourseRecentEnrollments'))
+const CourseCertificationRate = dynamic(() => import('./CourseCertificationRate'))
+const CourseViewToEnrollment = dynamic(() => import('./CourseViewToEnrollment'))
+const CourseActivityTypeBreakdown = dynamic(() => import('./CourseActivityTypeBreakdown'))
+const CoursePeakHours = dynamic(() => import('./CoursePeakHours'))
+const CourseLearnerRetention = dynamic(() => import('./CourseLearnerRetention'))
+const CourseTopLearners = dynamic(() => import('./CourseTopLearners'))
+const CourseActivityDropoff = dynamic(() => import('./CourseActivityDropoff'))
+const CourseEngagementByType = dynamic(() => import('./CourseEngagementByType'))
+const CourseDailyCompletions = dynamic(() => import('./CourseDailyCompletions'))
+const CourseAvgSessionDuration = dynamic(() => import('./CourseAvgSessionDuration'))
+const CourseUniqueViewers = dynamic(() => import('./CourseUniqueViewers'))
 
 const COURSE_QUERY_NAMES = [
   'course_overview_stats', 'course_enrollment_trend', 'course_activity_funnel',

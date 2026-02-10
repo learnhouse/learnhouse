@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { useAnalyticsPipe } from './useAnalyticsDashboard'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function CertificationRate({ days = '90' }: { days?: string }) {
   const { data, isLoading } = useAnalyticsPipe('certification_rate', { days })
@@ -18,10 +18,11 @@ export default function CertificationRate({ days = '90' }: { days?: string }) {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={rows}>
-            <XAxis dataKey="course_name" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 11 }} unit="%" />
-            <Tooltip />
-            <Bar dataKey="claim_rate" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+            <XAxis dataKey="course_name" tick={{ fontSize: 10 }} stroke="#9ca3af" />
+            <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={(v: number) => `${v}%`} />
+            <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(v: number) => `${v}%`} />
+            <Bar dataKey="claim_rate" name="Claim Rate" fill="#10b981" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}

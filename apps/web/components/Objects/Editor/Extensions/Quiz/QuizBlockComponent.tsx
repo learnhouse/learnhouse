@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { cn } from '@/lib/utils'
 import React from 'react'
 import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
-import ReactConfetti from 'react-confetti'
+import dynamic from 'next/dynamic'
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
 

@@ -4,84 +4,44 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '../locales/en.json';
-import fr from '../locales/fr.json';
-import de from '../locales/de.json';
-import es from '../locales/es.json';
-import ar from '../locales/ar.json';
-import ja from '../locales/ja.json';
-import pt from '../locales/pt.json';
-import ru from '../locales/ru.json';
-import zh from '../locales/zh.json';
-import hi from '../locales/hi.json';
-import ko from '../locales/ko.json';
-import it from '../locales/it.json';
-import tr from '../locales/tr.json';
-import vi from '../locales/vi.json';
-import id from '../locales/id.json';
-import pl from '../locales/pl.json';
-import nl from '../locales/nl.json';
-import th from '../locales/th.json';
-import bn from '../locales/bn.json';
 
-const resources = {
-  en: {
-    common: en
-  },
-  fr: {
-    common: fr
-  },
-  de: {
-    common: de
-  },
-  es: {
-    common: es
-  },
-  ar: {
-    common: ar
-  },
-  ja: {
-    common: ja
-  },
-  pt: {
-    common: pt
-  },
-  ru: {
-    common: ru
-  },
-  zh: {
-    common: zh
-  },
-  hi: {
-    common: hi
-  },
-  ko: {
-    common: ko
-  },
-  it: {
-    common: it
-  },
-  tr: {
-    common: tr
-  },
-  vi: {
-    common: vi
-  },
-  id: {
-    common: id
-  },
-  pl: {
-    common: pl
-  },
-  nl: {
-    common: nl
-  },
-  th: {
-    common: th
-  },
-  bn: {
-    common: bn
-  }
+const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
+  fr: () => import('../locales/fr.json'),
+  de: () => import('../locales/de.json'),
+  es: () => import('../locales/es.json'),
+  ar: () => import('../locales/ar.json'),
+  ja: () => import('../locales/ja.json'),
+  pt: () => import('../locales/pt.json'),
+  ru: () => import('../locales/ru.json'),
+  zh: () => import('../locales/zh.json'),
+  hi: () => import('../locales/hi.json'),
+  ko: () => import('../locales/ko.json'),
+  it: () => import('../locales/it.json'),
+  tr: () => import('../locales/tr.json'),
+  vi: () => import('../locales/vi.json'),
+  id: () => import('../locales/id.json'),
+  pl: () => import('../locales/pl.json'),
+  nl: () => import('../locales/nl.json'),
+  th: () => import('../locales/th.json'),
+  bn: () => import('../locales/bn.json'),
 };
+
+// Only bundle English; lazy-load all other locales on demand
+const resources = {
+  en: { common: en },
+};
+
+async function loadLocale(lng: string) {
+  if (lng === 'en' || !LOCALE_LOADERS[lng]) return;
+  if (i18n.hasResourceBundle(lng, 'common')) return;
+
+  try {
+    const mod = await LOCALE_LOADERS[lng]();
+    i18n.addResourceBundle(lng, 'common', mod.default, true, true);
+  } catch (e) {
+    console.warn(`Failed to load locale: ${lng}`, e);
+  }
+}
 
 i18n
   .use(LanguageDetector)
@@ -104,5 +64,11 @@ i18n
       useSuspense: false,
     }
   });
+
+// Load the detected language if it's not English
+loadLocale(i18n.language);
+
+// Load locale whenever the language changes
+i18n.on('languageChanged', loadLocale);
 
 export default i18n;

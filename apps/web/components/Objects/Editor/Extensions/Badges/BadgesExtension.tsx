@@ -1,6 +1,6 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
-import Picker from '@emoji-mart/react'
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
+const Picker = lazy(() => import('@emoji-mart/react'))
 import { ChevronDown, ChevronRight, Palette } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -202,14 +202,16 @@ const BadgesExtension: React.FC = (props: any) => {
 
       {isEditable && showEmojiPicker && (
         <div ref={pickerRef}>
-          <Picker
-            searchPosition="top"
-            theme="light"
-            previewPosition="none"
-            maxFrequentRows={0}
-            autoFocus={false}
-            onEmojiSelect={handleEmojiSelect}
-          />
+          <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+            <Picker
+              searchPosition="top"
+              theme="light"
+              previewPosition="none"
+              maxFrequentRows={0}
+              autoFocus={false}
+              onEmojiSelect={handleEmojiSelect}
+            />
+          </Suspense>
         </div>
       )}
 

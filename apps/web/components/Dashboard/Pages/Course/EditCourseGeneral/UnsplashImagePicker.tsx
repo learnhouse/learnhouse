@@ -1,14 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { createApi } from 'unsplash-js';
-import { Search, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils, 
-  Dumbbell, Music, Shirt, Book, Building, Bike, Camera, Microscope, Coins, Coffee, Gamepad, 
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils,
+  Dumbbell, Music, Shirt, Book, Building, Bike, Camera, Microscope, Coins, Coffee, Gamepad,
   Flower} from 'lucide-react';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { useTranslation } from 'react-i18next';
 
-const unsplash = createApi({
-  accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY as string,
-});
+let unsplashApi: any = null;
+async function getUnsplashApi() {
+  if (!unsplashApi) {
+    const { createApi } = await import('unsplash-js');
+    unsplashApi = createApi({
+      accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY as string,
+    });
+  }
+  return unsplashApi;
+}
 
 const IMAGES_PER_PAGE = 20;
 
@@ -51,6 +57,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
   const fetchImages = useCallback(async (searchQuery: string, pageNum: number) => {
     setLoading(true);
     try {
+      const unsplash = await getUnsplashApi();
       const result = await unsplash.search.getPhotos({
         query: searchQuery,
         page: pageNum,
@@ -69,6 +76,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
   const fetchDefaultImages = useCallback(async (pageNum: number) => {
     setLoading(true);
     try {
+      const unsplash = await getUnsplashApi();
       const result = await unsplash.photos.list({
         page: pageNum,
         perPage: IMAGES_PER_PAGE,
