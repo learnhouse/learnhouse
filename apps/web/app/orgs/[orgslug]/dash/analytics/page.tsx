@@ -165,7 +165,7 @@ export default function AnalyticsDashboard() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="flex-1 overflow-y-auto px-10 pb-10"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-10 pb-10"
       >
         {analyticsStatus && !isConfigured ? (
           <div className="flex flex-col items-center justify-center h-96 text-center">
@@ -178,12 +178,12 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         ) : tab === 'overview' ? (
-          <div className="space-y-6 max-w-[1600px]">
+          <div className="space-y-6 max-w-[1600px] mx-auto w-full">
             <EventOverview days={days} />
             <CoreWidgetsRow days={days} />
           </div>
         ) : (
-          <div className="space-y-6 max-w-[1600px]">
+          <div className="space-y-6 max-w-[1600px] mx-auto w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AdvancedGate isAdvanced={isAdvanced} currentPlan={plan}>
                 <OrgGrowthTrend days={days} />

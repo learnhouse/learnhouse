@@ -7,7 +7,7 @@ export default function TopCoursesTable({ days = '30' }: { days?: string }) {
   const rows = data?.data ?? []
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5">
+    <div className="bg-white rounded-xl nice-shadow p-5 overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Courses</h3>
       {isLoading ? (
         <div className="h-32 flex items-center justify-center text-gray-300">Loading...</div>
@@ -28,7 +28,7 @@ export default function TopCoursesTable({ days = '30' }: { days?: string }) {
               {rows.map((row: any, i: number) => (
                 <tr key={i} className="border-b border-gray-50">
                   <td className="py-2 font-medium text-gray-700 truncate max-w-[200px]">
-                    {row.course_name || row.course_id}
+                    {row.course_name || row.course_uuid}
                   </td>
                   <td className="py-2 text-right text-gray-500">{row.views}</td>
                   <td className="py-2 text-right text-gray-500">{row.enrollments}</td>

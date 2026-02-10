@@ -3,7 +3,6 @@ import io
 import logging
 import re
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -11,10 +10,14 @@ from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, User
+from src.db.courses.courses import Course
+from src.db.courses.activities import Activity
+from src.db.trail_runs import TrailRun
 from src.security.auth import get_current_user
 from src.security.rbac.rbac import authorization_verify_based_on_roles
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
+import httpx
 from src.services.analytics.analytics import track
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
@@ -50,6 +53,28 @@ class AnalyticsStatusResponse(BaseModel):
     configured: bool
 
 
+# Lazy singleton httpx client for Tinybird Query API
+_read_client: httpx.AsyncClient | None = None
+
+
+def _get_read_client() -> httpx.AsyncClient | None:
+    global _read_client
+    if _read_client is not None:
+        return _read_client
+
+    config = get_learnhouse_config()
+    tb = config.tinybird_config
+    if tb is None:
+        return None
+
+    _read_client = httpx.AsyncClient(
+        base_url=tb.api_url,
+        headers={"Authorization": f"Bearer {tb.read_token}"},
+        timeout=30.0,
+    )
+    return _read_client
+
+
 # -------------------------------------------------------------------
 # Shared Tinybird query execution with Redis caching
 # -------------------------------------------------------------------
@@ -62,10 +87,10 @@ async def _execute_tinybird_query(
     empty_response: dict | None = None,
 ) -> dict:
     """
-    Execute a Tinybird SQL query with Redis caching.
+    Execute a SQL query via Tinybird Query API with Redis caching.
 
     1. Check Redis cache for a previous result.
-    2. On miss, POST to Tinybird Query API.
+    2. On miss, POST SQL to Tinybird /v0/sql.
     3. Cache the response on success.
     4. Return the JSON result dict.
     """
@@ -77,36 +102,46 @@ async def _execute_tinybird_query(
     if cached is not None:
         return cached
 
-    # --- Tinybird call ---
-    config = get_learnhouse_config()
-    tb = config.tinybird_config
-    if tb is None:
+    # --- Tinybird SQL API call ---
+    client = _get_read_client()
+    if client is None:
         raise HTTPException(status_code=503, detail="Analytics not configured")
 
-    url = f"{tb.api_url.rstrip('/')}/v0/sql"
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(
-            url,
-            content=sql,
-            headers={"Authorization": f"Bearer {tb.read_token}"},
-        )
-
-    if resp.status_code != 200:
-        error_body = resp.text[:500]
+    try:
+        resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
+        resp.raise_for_status()
+        result = resp.json()
+    except httpx.HTTPStatusError as exc:
+        error_msg = exc.response.text[:500]
         logger.warning(
-            "Tinybird query '%s' failed (%d): %s",
-            query_name, resp.status_code, error_body,
+            "Tinybird query '%s' failed (%s): %s",
+            query_name, exc.response.status_code, error_msg,
         )
-        if any(s in error_body for s in ("not found", "doesn't exist", "UNKNOWN_TABLE")):
+        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
             return empty_response
         raise HTTPException(status_code=502, detail="Analytics query failed")
+    except Exception as exc:
+        logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
+        raise HTTPException(status_code=502, detail="Analytics query failed")
 
-    result = resp.json()
+    # Tinybird returns {"data": [...], "rows": N, "meta": [...]} — same shape as frontend expects.
+    # Safety net: sanitize NaN/Inf values in the response
+    rows = result.get("data", [])
+    for row in rows:
+        for key, val in row.items():
+            if isinstance(val, float) and (val != val or val == float('inf') or val == float('-inf')):
+                row[key] = None
+
+    response = {
+        "data": rows,
+        "rows": result.get("rows", len(rows)),
+        "meta": result.get("meta", []),
+    }
 
     # --- cache store ---
-    set_cached_result(query_name, org_id, days, result, course_id)
+    set_cached_result(query_name, org_id, days, response, course_id)
 
-    return result
+    return response
 
 
 def _parse_safe_params(
@@ -122,6 +157,77 @@ def _parse_safe_params(
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid parameter")
     return safe_org_id, safe_days
+
+
+def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
+    """Enrich analytics result rows with course/activity metadata from PostgreSQL."""
+    if not rows:
+        return rows
+
+    # Collect unique course_uuids
+    course_uuids = set()
+    for row in rows:
+        if row.get("course_uuid"):
+            course_uuids.add(row["course_uuid"])
+
+    # Batch fetch courses
+    course_map: dict[str, Course] = {}
+    if course_uuids:
+        courses = db_session.exec(
+            select(Course).where(Course.course_uuid.in_(list(course_uuids)))  # type: ignore
+        ).all()
+        course_map = {c.course_uuid: c for c in courses}
+
+    # Collect unique activity_uuids
+    activity_uuids = set()
+    for row in rows:
+        for key in ("activity_uuid", "last_activity_uuid"):
+            if row.get(key):
+                activity_uuids.add(row[key])
+
+    # Batch fetch activities
+    activity_map: dict[str, Activity] = {}
+    if activity_uuids:
+        activities = db_session.exec(
+            select(Activity).where(Activity.activity_uuid.in_(list(activity_uuids)))  # type: ignore
+        ).all()
+        activity_map = {a.activity_uuid: a for a in activities}
+
+        # Also resolve course_uuid for activities (needed when rows don't have course_uuid)
+        activity_course_ids = {a.course_id for a in activities if a.course_id}
+        missing_course_ids = activity_course_ids - {c.id for c in course_map.values()}
+        if missing_course_ids:
+            extra_courses = db_session.exec(
+                select(Course).where(Course.id.in_(list(missing_course_ids)))  # type: ignore
+            ).all()
+            for c in extra_courses:
+                course_map[c.course_uuid] = c
+
+    # Build course_id -> course_uuid lookup for activity enrichment
+    course_id_to_obj = {c.id: c for c in course_map.values()}
+
+    # Inject metadata into rows
+    for row in rows:
+        if row.get("course_uuid"):
+            course = course_map.get(row["course_uuid"])
+            if course:
+                row["course_name"] = course.name
+                row["thumbnail_image"] = course.thumbnail_image or ""
+
+        for key in ("activity_uuid", "last_activity_uuid"):
+            if row.get(key):
+                activity = activity_map.get(row[key])
+                if activity:
+                    name_key = "activity_name" if key == "activity_uuid" else "last_activity_name"
+                    row[name_key] = activity.name
+                    # If row doesn't have course_uuid, resolve it from the activity
+                    if not row.get("course_uuid") and activity.course_id:
+                        parent_course = course_id_to_obj.get(activity.course_id)
+                        if parent_course:
+                            row["course_uuid"] = parent_course.course_uuid
+                            row["course_name"] = parent_course.name
+
+    return rows
 
 
 # -------------------------------------------------------------------
@@ -206,17 +312,18 @@ async def query_dashboard_detail(
 
     sql = sql_template.format(org_id=safe_org_id, days=safe_days)
 
-    tb_result = await _execute_tinybird_query(
+    ch_result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
         empty_response={"data": [], "users": {}},
     )
 
-    # For detail queries the cached result is the full Tinybird response;
-    # we still need to enrich with user data.
-    tb_data = tb_result.get("data", [])
+    ch_data = ch_result.get("data", [])
+
+    # Enrich with course/activity metadata from PostgreSQL
+    ch_data = _enrich_with_metadata(ch_data, db_session)
 
     # Enrich with user info from PostgreSQL
-    user_ids = list({int(row["user_id"]) for row in tb_data if row.get("user_id")})
+    user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
         users = db_session.exec(select(User).where(User.id.in_(user_ids))).all()  # type: ignore
@@ -232,11 +339,11 @@ async def query_dashboard_detail(
             for u in users
         }
 
-    return {"data": tb_data, "users": users_map}
+    return {"data": ch_data, "users": users_map}
 
 
 # -------------------------------------------------------------------
-# GET /dashboard/{query_name} — Run analytics query via Tinybird SQL API
+# GET /dashboard/{query_name} — Run analytics query via Tinybird
 # -------------------------------------------------------------------
 @router.get("/dashboard/{query_name}")
 async def query_dashboard(
@@ -273,7 +380,9 @@ async def query_dashboard(
 
     sql = sql_template.format(org_id=safe_org_id, days=safe_days)
 
-    return await _execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
+    result = await _execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
+    result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
+    return result
 
 
 # -------------------------------------------------------------------
@@ -342,14 +451,14 @@ def _query_grade_distribution(org_id: int, db_session: Session):
 # -------------------------------------------------------------------
 # Helpers
 # -------------------------------------------------------------------
-_SAFE_COURSE_ID = re.compile(r"^[a-zA-Z0-9_]+$")
+_SAFE_COURSE_UUID = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
-def _validate_course_id(course_id: str) -> str:
-    """Validate course_id is safe for string interpolation into SQL."""
-    if not course_id or not _SAFE_COURSE_ID.match(course_id):
-        raise HTTPException(status_code=400, detail="Invalid course_id")
-    return course_id
+def _validate_course_uuid(course_uuid: str) -> str:
+    """Validate course_uuid is safe for string interpolation into SQL."""
+    if not course_uuid or not _SAFE_COURSE_UUID.match(course_uuid):
+        raise HTTPException(status_code=400, detail="Invalid course_uuid")
+    return course_uuid
 
 
 # -------------------------------------------------------------------
@@ -359,7 +468,7 @@ def _validate_course_id(course_id: str) -> str:
 async def query_course_dashboard_detail(
     query_name: str,
     org_id: int,
-    course_id: str,
+    course_uuid: str,
     request: Request,
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -384,23 +493,49 @@ async def query_course_dashboard_detail(
     if query_name not in COURSE_DETAIL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown course detail query")
 
-    safe_course_id = _validate_course_id(course_id)
+    safe_course_uuid = _validate_course_uuid(course_uuid)
 
     sql_template, default_days = COURSE_DETAIL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_id=safe_course_id)
+    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_uuid=safe_course_uuid)
 
-    tb_result = await _execute_tinybird_query(
+    ch_result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
-        course_id=safe_course_id,
+        course_id=safe_course_uuid,
         empty_response={"data": [], "users": {}},
     )
 
-    tb_data = tb_result.get("data", [])
+    ch_data = ch_result.get("data", [])
+
+    # Fallback: if Tinybird has no enrollment data, use PostgreSQL TrailRun
+    if query_name == "course_recent_enrollments" and not ch_data:
+        course_obj = db_session.exec(
+            select(Course).where(Course.course_uuid == safe_course_uuid)
+        ).first()
+        if course_obj:
+            trail_runs = db_session.exec(
+                select(TrailRun)
+                .where(
+                    TrailRun.course_id == course_obj.id,
+                    TrailRun.org_id == safe_org_id,
+                )
+                .order_by(TrailRun.id.desc())  # type: ignore
+                .limit(50)
+            ).all()
+            ch_data = [
+                {
+                    "user_id": tr.user_id,
+                    "timestamp": tr.creation_date,
+                }
+                for tr in trail_runs
+            ]
+
+    # Enrich with course/activity metadata from PostgreSQL
+    ch_data = _enrich_with_metadata(ch_data, db_session)
 
     # Enrich with user info from PostgreSQL
-    user_ids = list({int(row["user_id"]) for row in tb_data if row.get("user_id")})
+    user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
         users = db_session.exec(select(User).where(User.id.in_(user_ids))).all()  # type: ignore
@@ -416,7 +551,7 @@ async def query_course_dashboard_detail(
             for u in users
         }
 
-    return {"data": tb_data, "users": users_map}
+    return {"data": ch_data, "users": users_map}
 
 
 # -------------------------------------------------------------------
@@ -426,7 +561,7 @@ async def query_course_dashboard_detail(
 async def query_course_dashboard(
     query_name: str,
     org_id: int,
-    course_id: str,
+    course_uuid: str,
     request: Request,
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -451,17 +586,19 @@ async def query_course_dashboard(
     if query_name not in COURSE_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown course query")
 
-    safe_course_id = _validate_course_id(course_id)
+    safe_course_uuid = _validate_course_uuid(course_uuid)
 
     sql_template, default_days = COURSE_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_id=safe_course_id)
+    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_uuid=safe_course_uuid)
 
-    return await _execute_tinybird_query(
+    result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
-        course_id=safe_course_id,
+        course_id=safe_course_uuid,
     )
+    result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
+    return result
 
 
 # -------------------------------------------------------------------
@@ -493,8 +630,8 @@ async def export_analytics(
         raise HTTPException(status_code=400, detail="queries parameter required")
 
     query_names = [q.strip() for q in queries_param.split(",") if q.strip()]
-    course_id = request.query_params.get("course_id")
-    safe_course_id = _validate_course_id(course_id) if course_id else None
+    course_uuid = request.query_params.get("course_uuid")
+    safe_course_uuid = _validate_course_uuid(course_uuid) if course_uuid else None
 
     days_param = request.query_params.get("days", "30")
     try:
@@ -504,7 +641,7 @@ async def export_analytics(
         raise HTTPException(status_code=400, detail="Invalid parameter")
 
     # Determine which query registries to check
-    if safe_course_id:
+    if safe_course_uuid:
         allowed = {**COURSE_QUERIES, **COURSE_DETAIL_QUERIES}
     else:
         allowed = {**ALL_QUERIES}
@@ -516,11 +653,12 @@ async def export_analytics(
             continue
         sql_template, default_days = allowed[qname]
         d = safe_days if safe_days else default_days
-        if safe_course_id:
-            sql = sql_template.format(org_id=safe_org_id, days=d, course_id=safe_course_id)
+        if safe_course_uuid:
+            sql = sql_template.format(org_id=safe_org_id, days=d, course_uuid=safe_course_uuid)
         else:
             sql = sql_template.format(org_id=safe_org_id, days=d)
-        result = await _execute_tinybird_query(qname, sql, safe_org_id, d, course_id=safe_course_id)
+        result = await _execute_tinybird_query(qname, sql, safe_org_id, d, course_id=safe_course_uuid)
+        result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
         results[qname] = result
 
     if fmt == "json":

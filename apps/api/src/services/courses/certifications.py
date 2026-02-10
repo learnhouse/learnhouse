@@ -326,8 +326,6 @@ async def create_certificate_user(
                 org_id=course.org_id,
                 user_id=user_id,
                 properties={
-                    "course_id": str(course.id),
-                    "course_name": course.name,
                     "course_uuid": course.course_uuid,
                 },
             )

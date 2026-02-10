@@ -8,7 +8,7 @@ export default function GradeDistribution() {
   const rows = data?.data ?? []
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Grade Distribution</h3>
       <p className="text-xs text-gray-400 mb-4">Assignment grade histogram</p>
       {isLoading ? (

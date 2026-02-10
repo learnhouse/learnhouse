@@ -343,7 +343,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       )}
                     </div>
                     <span className="text-sm text-gray-700 truncate group-hover:text-gray-900 font-medium">
-                      {row.course_name || `Course ${row.course_id}`}
+                      {row.course_name || `Course ${row.course_uuid}`}
                     </span>
                   </div>
                   <span className="text-sm text-gray-600 text-right tabular-nums">
@@ -399,9 +399,11 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                     className="text-gray-300"
                   />
                 )
+              const cleanCourseUuid = row.course_uuid ? row.course_uuid.replace('course_', '') : null
+              const cleanActivityUuid = row.activity_uuid ? row.activity_uuid.replace('activity_', '') : null
               const activityHref =
-                row.course_uuid && row.activity_id
-                  ? `/course/${row.course_uuid}/activity/${row.activity_id}`
+                cleanCourseUuid && cleanActivityUuid
+                  ? `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`
                   : null
               const Wrapper = activityHref ? Link : 'div'
               const wrapperProps = activityHref ? { href: activityHref } : {}
@@ -422,7 +424,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       {typeIcon}
                     </div>
                     <span className="text-sm text-gray-700 truncate group-hover:text-gray-900 font-medium">
-                      {row.activity_name || row.activity_id}
+                      {row.activity_name || row.activity_uuid}
                     </span>
                   </div>
                   <span className="text-xs text-gray-400 text-right capitalize">
@@ -478,7 +480,7 @@ function CourseRow({ row, org }: { row: any; org: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-700 truncate group-hover:text-gray-900">
-          {row.course_name || `Course ${row.course_id}`}
+          {row.course_name || `Course ${row.course_uuid}`}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
           <span className="flex items-center gap-0.5">
@@ -506,9 +508,11 @@ function ActivityRow({ row }: { row: any }) {
     ) : (
       <BookOpen size={14} weight="duotone" className="text-gray-300" />
     )
+  const cleanCourseUuid = row.course_uuid ? row.course_uuid.replace('course_', '') : null
+  const cleanActivityUuid = row.activity_uuid ? row.activity_uuid.replace('activity_', '') : null
   const activityHref =
-    row.course_uuid && row.activity_id
-      ? `/course/${row.course_uuid}/activity/${row.activity_id}`
+    cleanCourseUuid && cleanActivityUuid
+      ? `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`
       : null
   const Wrapper = activityHref ? Link : 'div'
   const wrapperProps = activityHref ? { href: activityHref } : {}
@@ -523,7 +527,7 @@ function ActivityRow({ row }: { row: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-700 truncate group-hover:text-gray-900">
-          {row.activity_name || row.activity_id}
+          {row.activity_name || row.activity_uuid}
         </p>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
           <span className="capitalize">{row.activity_type}</span>

@@ -56,16 +56,15 @@ const CourseClient = (props: any) => {
   const { track } = useAnalytics()
 
   // Track course view
+  const courseId = course?.id
+  const courseUuidForTracking = course?.course_uuid
   useEffect(() => {
-    if (course) {
+    if (courseId && courseUuidForTracking) {
       track('course_view', {
-        course_id: String(course.id),
-        course_name: course.name,
-        course_uuid: course.course_uuid,
-        thumbnail_image: course.thumbnail_image || '',
+        course_uuid: courseUuidForTracking,
       })
     }
-  }, [course?.id])
+  }, [courseId, courseUuidForTracking, track])
 
   // Add SWR for trail data
   const { data: trailData } = useSWR(
