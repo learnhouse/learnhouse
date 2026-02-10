@@ -13,40 +13,36 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v5
         with:
           version: latest
 
       - name: Install dependencies
-        run: |
-          cd apps/api
-          uv sync
+        run: uv sync
+        working-directory: apps/api
 
       - name: Run tests
-        run: |
-          cd apps/api
-          uv run pytest src/tests/ -v --tb=short
+        run: uv run pytest src/tests/ -v --tb=short
+        working-directory: apps/api
         env:
           TESTING: "true"
 
       - name: Run security tests with coverage
-        run: |
-          cd apps/api
-          uv run pytest src/tests/security/ --cov=src.security --cov-report=html --cov-report=term-missing
+        run: uv run pytest src/tests/security/ --cov=src.security --cov-report=html --cov-report=term-missing
+        working-directory: apps/api
         env:
           TESTING: "true"
 
-      - name: Upload coverage report to GitHub
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
