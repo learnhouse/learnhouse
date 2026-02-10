@@ -16,7 +16,7 @@ export function AdvancedGate({
   const { t } = useTranslation()
 
   return (
-    <div className="relative min-h-[300px]">
+    <div className="relative min-h-[300px] min-w-0 overflow-hidden">
       {isAdvanced ? (
         children
       ) : (

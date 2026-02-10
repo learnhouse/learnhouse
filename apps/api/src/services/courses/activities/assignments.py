@@ -1251,8 +1251,8 @@ async def create_assignment_submission(
         org_id=course.org_id,
         user_id=current_user.id,
         properties={
-            "assignment_id": assignment_uuid,
-            "course_id": str(course.id),
+            "assignment_uuid": assignment_uuid,
+            "course_uuid": course.course_uuid,
         },
     )
 

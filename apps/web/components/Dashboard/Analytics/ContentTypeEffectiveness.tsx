@@ -8,7 +8,7 @@ export default function ContentTypeEffectiveness({ days = '30' }: { days?: strin
   const rows = data?.data ?? []
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Content Type Effectiveness</h3>
       <p className="text-xs text-gray-400 mb-4">Completion rate by activity type</p>
       {isLoading ? (

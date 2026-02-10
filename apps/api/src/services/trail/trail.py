@@ -270,9 +270,8 @@ async def add_activity_to_trail(
         org_id=course.org_id,
         user_id=user.id,
         properties={
-            "activity_id": activity_uuid,
-            "course_id": str(course.id),
-            "activity_name": activity.name if activity else "",
+            "activity_uuid": activity_uuid,
+            "course_uuid": course.course_uuid,
         },
     )
 
@@ -288,7 +287,7 @@ async def add_activity_to_trail(
             event_name=analytics_events.COURSE_COMPLETED,
             org_id=course.org_id,
             user_id=user.id,
-            properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
+            properties={"course_uuid": course.course_uuid},
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -406,7 +405,7 @@ async def add_course_to_trail(
         event_name=analytics_events.COURSE_ENROLLED,
         org_id=course.org_id,
         user_id=user.id,
-        properties={"course_id": str(course.id), "course_name": course.name, "course_uuid": course.course_uuid},
+        properties={"course_uuid": course.course_uuid},
     )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)

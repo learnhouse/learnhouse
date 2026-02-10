@@ -20,7 +20,7 @@ export async function trackEvent(
 ): Promise<void> {
   try {
     const url = `${getAPIUrl()}analytics/events`
-    fetch(url, {
+    await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

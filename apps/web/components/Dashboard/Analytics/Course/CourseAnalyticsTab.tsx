@@ -66,24 +66,26 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const isConfigured = analyticsStatus?.configured === true
   const orgslug = org?.slug || ''
 
-  // Get the numeric course ID from the course context
+  // Get the course UUID from the course context
   const [courseId, setCourseId] = useState<string | null>(null)
   useEffect(() => {
-    if (courseContext?.courseStructure?.id) {
-      setCourseId(String(courseContext.courseStructure.id))
+    if (courseContext?.courseStructure?.course_uuid) {
+      setCourseId(courseContext.courseStructure.course_uuid)
     }
-  }, [courseContext?.courseStructure?.id])
+  }, [courseContext?.courseStructure?.course_uuid])
 
   // Build activity name map from course structure
+  // Keys are the FULL activity_uuid (with prefix) since that's how ClickHouse stores them
   const activityMap: ActivityMap = useMemo(() => {
     const map: ActivityMap = {}
     const course = courseContext?.courseStructure
     if (!course?.chapters) return map
     for (const chapter of course.chapters) {
       for (const activity of chapter.activities || []) {
-        const cleanUuid = activity.activity_uuid?.replace('activity_', '') || ''
-        if (cleanUuid) {
-          map[cleanUuid] = {
+        const uuid = activity.activity_uuid || ''
+        if (uuid) {
+          const cleanUuid = uuid.replace('activity_', '')
+          map[uuid] = {
             name: activity.name || 'Untitled',
             type: activity.activity_type || '',
             chapterName: chapter.name || '',
@@ -135,7 +137,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const cleanCourseUuid = courseUUID.replace('course_', '')
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px]">
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
       {/* Date range selector */}
       <div className="flex justify-end items-center gap-2">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">

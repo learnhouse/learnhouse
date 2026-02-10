@@ -11,6 +11,8 @@ const TYPE_COLORS: Record<string, string> = {
   quiz: 'bg-purple-500',
   assignment: 'bg-rose-500',
   dynamic: 'bg-teal-500',
+  custom: 'bg-gray-500',
+  scorm: 'bg-cyan-500',
 }
 
 const TYPE_HEX: Record<string, string> = {
@@ -19,10 +21,13 @@ const TYPE_HEX: Record<string, string> = {
   quiz: '#8b5cf6',
   assignment: '#f43f5e',
   dynamic: '#14b8a6',
+  custom: '#6b7280',
+  scorm: '#06b6d4',
 }
 
 function getColor(type: string) {
-  return TYPE_COLORS[type] || 'bg-gray-400'
+  const key = type.replace(/^TYPE_/, '').toLowerCase()
+  return TYPE_COLORS[key] || 'bg-gray-400'
 }
 
 export default function CourseActivityTypeBreakdown({
@@ -33,7 +38,11 @@ export default function CourseActivityTypeBreakdown({
   days?: string
 }) {
   const { t } = useTranslation()
-  const getTypeLabel = (type: string) => t('analytics.course_analytics.type_labels.' + type) || type
+  const getTypeLabel = (type: string) => {
+    const key = type.replace(/^TYPE_/, '').toLowerCase()
+    const label = t('analytics.course_analytics.type_labels.' + key)
+    return label.startsWith('analytics.') ? key.charAt(0).toUpperCase() + key.slice(1) : label
+  }
   const { data, isLoading } = useCoursePipe('course_activity_type_breakdown', courseId, { days })
   const rows = data?.data ?? []
   const totalViews = rows.reduce((s: number, r: any) => s + (r.views || 0), 0)

@@ -210,12 +210,12 @@ export default function CourseActivityFunnel({
   const { t } = useTranslation()
   const { data, isLoading } = useCoursePipe('course_activity_funnel', courseId, { days })
   const rows = (data?.data ?? []).map((r: any) => {
-    const info = activityMap[r.activity_id]
+    const info = activityMap[r.activity_uuid]
     return {
       ...r,
       displayName: info?.name || r.activity_name || t('analytics.course_analytics.common.unknown_activity'),
       chapterName: info?.chapterName || '',
-      activityUuid: r.activity_id,
+      activityUuid: (r.activity_uuid || '').replace('activity_', ''),
     }
   })
 

@@ -169,5 +169,5 @@ Pipfile
 Pipfile.lock
 run.py
 
-# Tinybird
+# Tinybird CLI local state
 .tinyb

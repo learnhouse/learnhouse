@@ -17,10 +17,10 @@ from config.config import get_learnhouse_config
 logger = logging.getLogger(__name__)
 
 # Default TTL per query category (seconds)
-CACHE_TTL_CORE = 60        # core widgets — 1 min
-CACHE_TTL_ADVANCED = 120   # advanced widgets — 2 min
-CACHE_TTL_COURSE = 60      # course-level widgets — 1 min
-CACHE_TTL_DETAIL = 30      # detail/enriched queries — 30 s
+CACHE_TTL_CORE = 30        # core widgets — 30 s
+CACHE_TTL_ADVANCED = 60    # advanced widgets — 1 min
+CACHE_TTL_COURSE = 30      # course-level widgets — 30 s
+CACHE_TTL_DETAIL = 15      # detail/enriched queries — 15 s
 CACHE_TTL_LIVE = 0         # live_users — never cached
 
 # Queries that should never be cached (real-time data)
@@ -80,7 +80,7 @@ def get_cached_result(
     days: int,
     course_id: Optional[str] = None,
 ) -> Optional[dict]:
-    """Return cached Tinybird result or None."""
+    """Return cached analytics result or None."""
     if query_name in _NO_CACHE_QUERIES:
         return None
     r = _get_redis_client()
@@ -103,7 +103,7 @@ def set_cached_result(
     result: dict,
     course_id: Optional[str] = None,
 ) -> None:
-    """Store a Tinybird result in Redis with appropriate TTL."""
+    """Store an analytics result in Redis with appropriate TTL."""
     ttl = get_ttl_for_query(query_name)
     if ttl <= 0:
         return

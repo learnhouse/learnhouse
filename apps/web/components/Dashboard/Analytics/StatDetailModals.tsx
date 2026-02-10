@@ -315,10 +315,10 @@ export function EnrollmentsDetail({ days }: { days: string }) {
               <td className="py-2.5">
                 {courseLink ? (
                   <a href={courseLink} className="text-blue-600 hover:underline truncate max-w-[200px] block">
-                    {row.course_name || row.course_id}
+                    {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_id || '—'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
@@ -376,10 +376,10 @@ export function CompletionsDetail({ days }: { days: string }) {
               <td className="py-2.5">
                 {courseLink ? (
                   <a href={courseLink} className="text-blue-600 hover:underline truncate max-w-[200px] block">
-                    {row.course_name || row.course_id}
+                    {row.course_name || row.course_uuid}
                   </a>
                 ) : (
-                  <span className="text-gray-500">{row.course_name || row.course_id || '—'}</span>
+                  <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">

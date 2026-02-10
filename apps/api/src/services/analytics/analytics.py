@@ -9,15 +9,26 @@ from config.config import get_learnhouse_config
 
 logger = logging.getLogger(__name__)
 
-# Shared httpx client for connection pooling
-_client: httpx.AsyncClient | None = None
+# Lazy singleton httpx client for Tinybird ingestion
+_ingest_client: httpx.AsyncClient | None = None
 
 
-def _get_client() -> httpx.AsyncClient:
-    global _client
-    if _client is None:
-        _client = httpx.AsyncClient(timeout=10.0)
-    return _client
+def _get_ingest_client() -> httpx.AsyncClient | None:
+    global _ingest_client
+    if _ingest_client is not None:
+        return _ingest_client
+
+    config = get_learnhouse_config()
+    tb = config.tinybird_config
+    if tb is None:
+        return None
+
+    _ingest_client = httpx.AsyncClient(
+        base_url=tb.api_url,
+        headers={"Authorization": f"Bearer {tb.ingest_token}"},
+        timeout=10.0,
+    )
+    return _ingest_client
 
 
 async def track(
@@ -34,15 +45,11 @@ async def track(
     All errors are swallowed and logged — analytics never breaks the app.
     """
     config = get_learnhouse_config()
-    tb = config.tinybird_config
-
-    if tb is None:
+    if config.tinybird_config is None:
         return
 
     asyncio.create_task(
         _send_event(
-            api_url=tb.api_url,
-            token=tb.ingest_token,
             event_name=event_name,
             org_id=org_id,
             user_id=user_id,
@@ -55,8 +62,6 @@ async def track(
 
 
 async def _send_event(
-    api_url: str,
-    token: str,
     event_name: str,
     org_id: int,
     user_id: int,
@@ -66,7 +71,10 @@ async def _send_event(
     ip: str,
 ) -> None:
     try:
-        client = _get_client()
+        client = _get_ingest_client()
+        if client is None:
+            return
+
         payload = {
             "event_name": event_name,
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
@@ -77,17 +85,15 @@ async def _send_event(
             "source": source,
             "ip": ip,
         }
-        url = f"{api_url.rstrip('/')}/v0/events?name=events"
         resp = await client.post(
-            url,
+            "/v0/events?name=events",
             json=payload,
-            headers={"Authorization": f"Bearer {token}"},
         )
-        if resp.status_code != 200 and resp.status_code != 202:
+        if resp.status_code >= 400:
             logger.warning(
-                "Tinybird event ingest failed (%d): %s",
+                "Tinybird ingest failed (%s): %s",
                 resp.status_code,
-                resp.text[:300],
+                resp.text[:200],
             )
     except Exception:
         logger.warning("Failed to send analytics event %s", event_name, exc_info=True)

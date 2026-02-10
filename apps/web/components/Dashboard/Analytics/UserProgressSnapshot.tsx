@@ -7,11 +7,11 @@ export default function UserProgressSnapshot({ days = '90' }: { days?: string })
   const { data, isLoading } = useAnalyticsPipe('user_progress_snapshot', { days })
   const rows: any[] = data?.data ?? []
 
-  // Group by course_id, with brackets as sub-bars
+  // Group by course_uuid, with brackets as sub-bars
   const courseMap = new Map<string, any>()
   for (const r of rows) {
-    if (!courseMap.has(r.course_id)) courseMap.set(r.course_id, { course_id: r.course_id })
-    courseMap.get(r.course_id)[r.bracket] = r.user_count
+    if (!courseMap.has(r.course_uuid)) courseMap.set(r.course_uuid, { course_uuid: r.course_uuid, label: r.course_name || r.course_uuid })
+    courseMap.get(r.course_uuid)[r.bracket] = r.user_count
   }
   const chartData = Array.from(courseMap.values()).slice(0, 10)
 
@@ -19,7 +19,7 @@ export default function UserProgressSnapshot({ days = '90' }: { days?: string })
   const COLORS = ['#e5e7eb', '#c4b5fd', '#a78bfa', '#8b5cf6', '#6d28d9']
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">User Progress Snapshot</h3>
       <p className="text-xs text-gray-400 mb-4">Users at each completion bracket per course</p>
       {isLoading ? (
@@ -29,7 +29,7 @@ export default function UserProgressSnapshot({ days = '90' }: { days?: string })
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData}>
-            <XAxis dataKey="course_id" tick={{ fontSize: 10 }} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: 10 }} />

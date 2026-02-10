@@ -8,7 +8,7 @@ export default function TimeToCompletion({ days = '180' }: { days?: string }) {
   const rows = data?.data ?? []
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Time to Completion</h3>
       <p className="text-xs text-gray-400 mb-4">Median days to complete each course</p>
       {isLoading ? (

@@ -28,7 +28,7 @@ export default function CompletionVelocity({ days = '90' }: { days?: string }) {
   const velocity = avgHours != null && totalTransitions >= 3 ? formatVelocity(avgHours) : null
 
   return (
-    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px]">
+    <div className="bg-white rounded-xl nice-shadow p-5 min-h-[300px] overflow-hidden min-w-0">
       <h3 className="text-sm font-semibold text-gray-700 mb-1">Completion Velocity</h3>
       <p className="text-xs text-gray-400 mb-4">Average time between activity completions</p>
       {isLoading ? (
