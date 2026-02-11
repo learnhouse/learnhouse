@@ -275,8 +275,9 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Step 5: Check email verification (required for login)
-    if not user.email_verified:
+    # Step 5: Check email verification (required for login, skipped in OSS mode)
+    LH_CONFIG = get_learnhouse_config()
+    if not user.email_verified and not LH_CONFIG.general_config.oss_mode:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={

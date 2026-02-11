@@ -263,6 +263,12 @@ export const getUriWithoutOrg = (path: string) => {
   return `${protocol}${domain}${path}`
 }
 
+// OSS mode — watermark and branding always visible
+export const isOSSMode = () => {
+  const val = getConfig('NEXT_PUBLIC_LEARNHOUSE_OSS', 'false')
+  return val.toLowerCase() === 'true'
+}
+
 export const getDefaultOrg = () => {
   // 1. Env var (backward compat)
   const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG')

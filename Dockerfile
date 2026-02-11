@@ -88,7 +88,7 @@ COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./extra/start.sh /app/start.sh
 RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh
 
-ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true
+ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
 
 EXPOSE 80 9000
 
