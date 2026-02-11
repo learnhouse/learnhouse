@@ -1,6 +1,6 @@
 # LearnHouse CLI
 
-Deploy and manage a self-hosted LearnHouse instance with a single command. Handles configuration, Docker, SSL, and database setup.
+The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance. Handles setup, configuration, Docker orchestration, SSL, database management, and more.
 
 <img width="915" height="871" alt="image" src="https://github.com/user-attachments/assets/957c6cea-3efb-4cab-a643-55df3ac4c6aa" />
 
