@@ -1,7 +1,7 @@
 {
   "name": "learnhouse",
-  "version": "1.0.0",
-  "description": "CLI tool for self-hosting LearnHouse",
+  "version": "1.0.1",
+  "description": "The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance",
   "type": "module",
   "bin": {
     "learnhouse": "./dist/bin/learnhouse.js"

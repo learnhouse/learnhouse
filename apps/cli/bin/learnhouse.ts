@@ -41,7 +41,7 @@ const program = new Command()
 
 program
   .name('learnhouse')
-  .description('CLI tool for self-hosting LearnHouse')
+  .description('The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance')
   .version(VERSION)
   .action(showWelcome)
 
