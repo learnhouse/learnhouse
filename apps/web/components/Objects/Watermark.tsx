@@ -4,6 +4,7 @@ import blacklogo from '@public/black_logo.png'
 import React, { useEffect } from 'react'
 import { useOrg } from '../Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
+import { isOSSMode } from '@services/config/config'
 
 function Watermark() {
     const { t } = useTranslation()
@@ -15,8 +16,9 @@ function Watermark() {
 
     const plan = org?.config?.config?.cloud?.plan || 'free'
     const isFreeUser = plan === 'free'
+    const showWatermark = isOSSMode() || isFreeUser
 
-    if (isFreeUser) {
+    if (showWatermark) {
         return (
             <div className='fixed bottom-8 right-8'>
                 <Link href={`https://www.learnhouse.app/?source=in-app`} className="flex items-center cursor-pointer bg-white/80 backdrop-blur-lg text-gray-700 rounded-2xl p-2 light-shadow text-xs px-5 font-semibold space-x-2">

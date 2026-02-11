@@ -3,7 +3,7 @@ import { validateRequired } from '../utils/validators.js'
 
 export interface FeaturesConfig {
   aiEnabled: boolean
-  openaiApiKey?: string
+  geminiApiKey?: string
   emailEnabled: boolean
   resendApiKey?: string
   systemEmailAddress?: string
@@ -21,7 +21,7 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
   const selected = await p.multiselect({
     message: 'Enable optional features? (Space to toggle, Enter to confirm)',
     options: [
-      { value: 'ai', label: 'AI Features (OpenAI)' },
+      { value: 'ai', label: 'AI Features (Gemini)' },
       { value: 'email', label: 'Email (Resend)' },
       { value: 's3', label: 'S3 Storage' },
       { value: 'google', label: 'Google OAuth' },
@@ -41,14 +41,14 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
   }
 
   if (config.aiEnabled) {
-    p.log.info('Configure AI (OpenAI)')
+    p.log.info('Configure AI (Gemini)')
     const key = await p.text({
-      message: 'OpenAI API key?',
-      placeholder: 'sk-...',
+      message: 'Gemini API key?',
+      placeholder: 'AIza...',
       validate: validateRequired,
     })
     if (p.isCancel(key)) { p.cancel(); process.exit(0) }
-    config.openaiApiKey = key as string
+    config.geminiApiKey = key as string
   }
 
   if (config.emailEnabled) {
