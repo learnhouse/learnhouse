@@ -7,12 +7,14 @@ Follows the same pattern as upload_content.py and frontend media.ts:
 - When content_delivery is "s3api", files are on S3/R2 (and may also be local)
 """
 
+import logging
 import os
 from typing import Optional
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
-
 from config.config import get_learnhouse_config
+
+logger = logging.getLogger(__name__)
 
 
 def get_content_delivery_type() -> str:
@@ -76,13 +78,13 @@ def read_file_content(file_path: str) -> Optional[bytes]:
                 error_code = e.response.get('Error', {}).get('Code', '')
                 if error_code == 'NoSuchKey':
                     return None
-                print(f"S3 error reading {file_path}: {e}")
+                logger.error("S3 error reading %s: %s", file_path, e)
                 return None
             except NoCredentialsError:
-                print("S3 credentials not configured")
+                logger.error("S3 credentials not configured")
                 return None
             except Exception as e:
-                print(f"Error reading from S3: {e}")
+                logger.error("Error reading from S3: %s", e)
                 return None
         return None
     else:
@@ -159,7 +161,7 @@ def list_directory(dir_path: str) -> list[str]:
             except ClientError:
                 pass
             except Exception as e:
-                print(f"Error listing S3 directory: {e}")
+                logger.error("Error listing S3 directory: %s", e)
         return files
     else:
         # List from local filesystem
@@ -201,7 +203,7 @@ def walk_directory(base_path: str):
             except ClientError:
                 pass
             except Exception as e:
-                print(f"Error walking S3 directory: {e}")
+                logger.error("Error walking S3 directory: %s", e)
 
         if not all_paths:
             return
@@ -272,10 +274,10 @@ def upload_to_s3(file_path: str, content: bytes) -> bool:
         )
         return True
     except ClientError as e:
-        print(f"S3 upload error for {file_path}: {e}")
+        logger.error("S3 upload error for %s: %s", file_path, e)
         return False
     except Exception as e:
-        print(f"Error uploading to S3: {e}")
+        logger.error("Error uploading to S3: %s", e)
         return False
 
 
@@ -310,7 +312,7 @@ def delete_storage_directory(dir_path: str) -> bool:
                             Delete={'Objects': delete_keys},
                         )
             except Exception as e:
-                print(f"Error deleting S3 directory {dir_path}: {e}")
+                logger.error("Error deleting S3 directory %s: %s", dir_path, e)
                 success = False
 
     # Also clean up local directory if it exists
@@ -344,7 +346,7 @@ def delete_storage_file(file_path: str) -> bool:
                     Key=file_path,
                 )
             except Exception as e:
-                print(f"Error deleting S3 file {file_path}: {e}")
+                logger.error("Error deleting S3 file %s: %s", file_path, e)
                 return False
 
     # Also clean up local file if it exists
@@ -387,7 +389,7 @@ def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
                 if not upload_to_s3(s3_path, content):
                     success = False
             except Exception as e:
-                print(f"Error reading/uploading {local_path}: {e}")
+                logger.error("Error reading/uploading %s: %s", local_path, e)
                 success = False
 
     return success

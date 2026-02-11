@@ -6,6 +6,7 @@ Rate limits:
 - Signup: 10 attempts per hour per IP
 - Verification resend: 5 attempts per 5 minutes per email
 """
+import ipaddress
 from typing import Optional, Tuple
 import redis
 from fastapi import HTTPException, Request
@@ -34,24 +35,51 @@ def get_redis_connection() -> redis.Redis:
     return redis.Redis.from_url(redis_conn_string)
 
 
+def _is_trusted_proxy(ip: str) -> bool:
+    """Check if the direct connection IP is from a trusted local proxy."""
+    try:
+        addr = ipaddress.ip_address(ip)
+        return addr.is_loopback or addr.is_private
+    except ValueError:
+        return False
+
+
 def get_client_ip(request: Request) -> str:
     """
     Extract client IP from request, considering proxy headers.
-    """
-    # Check for forwarded headers (reverse proxy)
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        # Take the first IP in the chain (original client)
-        return forwarded.split(",")[0].strip()
 
-    # Check for real IP header
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
+    Only trusts X-Forwarded-For/X-Real-IP when the direct connection
+    comes from a private/loopback address (i.e., a local reverse proxy).
+    """
+    direct_ip = request.client.host if request.client else None
+
+    # Only trust proxy headers if request comes from a local reverse proxy
+    if direct_ip and _is_trusted_proxy(direct_ip):
+        # Check for forwarded headers (reverse proxy)
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            # Take the first IP in the chain (original client)
+            client_ip = forwarded.split(",")[0].strip()
+            # Validate it's a real IP, not garbage
+            try:
+                ipaddress.ip_address(client_ip)
+                return client_ip
+            except ValueError:
+                pass
+
+        # Check for real IP header
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            real_ip = real_ip.strip()
+            try:
+                ipaddress.ip_address(real_ip)
+                return real_ip
+            except ValueError:
+                pass
 
     # Fall back to direct client host
-    if request.client:
-        return request.client.host
+    if direct_ip:
+        return direct_ip
 
     return "unknown"
 
@@ -170,6 +198,25 @@ def check_refresh_rate_limit(request: Request) -> Tuple[bool, int]:
         key=key,
         max_attempts=60,
         window_seconds=60  # 1 minute
+    )
+
+    return is_allowed, retry_after
+
+
+def check_api_token_rate_limit(request: Request) -> Tuple[bool, int]:
+    """
+    Check API token creation/regeneration rate limit: 10 per hour per IP.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    ip = get_client_ip(request)
+    key = f"api_token:{ip}"
+
+    is_allowed, count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=10,
+        window_seconds=60 * 60  # 1 hour
     )
 
     return is_allowed, retry_after

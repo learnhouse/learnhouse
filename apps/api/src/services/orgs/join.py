@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from fastapi import HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
@@ -17,8 +17,13 @@ from src.services.users.usergroups import add_users_to_usergroup
 
 class JoinOrg(BaseModel):
     org_id: int
-    user_id: str
+    user_id: Union[str, int]
     invite_code: Optional[str] = None
+
+    @field_validator("user_id", mode="before")
+    @classmethod
+    def coerce_user_id_to_str(cls, v: Union[str, int]) -> str:
+        return str(v)
 
 
 async def join_org(
@@ -44,8 +49,14 @@ async def join_org(
         request, args.org_id, current_user, db_session
     )
 
-    # Get User by UUID
-    statement = select(User).where(User.user_uuid == args.user_id)
+    # Get User by UUID or numeric ID
+    user_id_str = str(args.user_id)
+    if user_id_str.isdigit():
+        statement = select(User).where(
+            (User.user_uuid == user_id_str) | (User.id == int(user_id_str))
+        )
+    else:
+        statement = select(User).where(User.user_uuid == user_id_str)
     result = db_session.exec(statement)
 
     user = result.first()

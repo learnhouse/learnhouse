@@ -208,17 +208,15 @@ async def create_episode(
 
     # Upload audio file
     if audio_file and audio_file.filename:
-        name_in_disk = f"{episode.episode_uuid}_audio_{uuid4()}.{audio_file.filename.split('.')[-1]}"
-        await upload_episode_audio(
-            audio_file, name_in_disk, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
+        name_in_disk = await upload_episode_audio(
+            audio_file, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
         )
         episode.audio_file = name_in_disk
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{episode.episode_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_episode_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
+        name_in_disk = await upload_episode_thumbnail(
+            thumbnail_file, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
         )
         episode.thumbnail_image = name_in_disk
 
@@ -356,9 +354,8 @@ async def upload_episode_audio_file(
 
     # Upload audio file
     if audio_file and audio_file.filename:
-        name_in_disk = f"{episode.episode_uuid}_audio_{uuid4()}.{audio_file.filename.split('.')[-1]}"
-        await upload_episode_audio(
-            audio_file, name_in_disk, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
+        name_in_disk = await upload_episode_audio(
+            audio_file, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
         )
         episode.audio_file = name_in_disk
     else:
@@ -411,9 +408,8 @@ async def upload_episode_thumbnail_file(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{episode.episode_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_episode_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
+        name_in_disk = await upload_episode_thumbnail(
+            thumbnail_file, org.org_uuid, podcast.podcast_uuid, episode.episode_uuid
         )
         episode.thumbnail_image = name_in_disk
     else:

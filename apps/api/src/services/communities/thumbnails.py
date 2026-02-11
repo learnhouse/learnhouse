@@ -1,27 +1,18 @@
-from src.services.utils.upload_content import upload_content
+from fastapi import UploadFile
+from src.services.utils.upload_content import upload_file
 
 
 async def upload_community_thumbnail(
-    thumbnail_file,
-    name_in_disk: str,
+    thumbnail_file: UploadFile,
     org_uuid: str,
     community_uuid: str,
-):
-    """
-    Upload a thumbnail image for a community.
-
-    Files are stored at: content/orgs/{org_uuid}/communities/{community_uuid}/thumbnails/{filename}
-    """
-    contents = thumbnail_file.file.read()
-    try:
-        await upload_content(
-            f"communities/{community_uuid}/thumbnails",
-            "orgs",
-            org_uuid,
-            contents,
-            f"{name_in_disk}",
-        )
-    except Exception as e:
-        return {"message": f"There was an error uploading the file: {str(e)}"}
-
-    return {"message": "Thumbnail uploaded successfully"}
+) -> str:
+    """Upload a thumbnail image for a community with file validation."""
+    return await upload_file(
+        file=thumbnail_file,
+        directory=f"communities/{community_uuid}/thumbnails",
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["image"],
+        filename_prefix="thumbnail",
+    )

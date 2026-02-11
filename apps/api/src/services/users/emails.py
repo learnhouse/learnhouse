@@ -1,3 +1,6 @@
+import html
+from urllib.parse import quote
+
 from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
@@ -8,14 +11,14 @@ def send_account_creation_email(
     user: UserRead,
     email: EmailStr,
 ):
-    # send email
+    safe_username = html.escape(user.username)
     return send_email(
         to=email,
-        subject=f"Welcome to LearnHouse, {user.username}!",
+        subject=f"Welcome to LearnHouse, {safe_username}!",
         body=f"""
 <html>
     <body>
-        <p>Hello {user.username}</p>
+        <p>Hello {safe_username}</p>
         <p>Welcome to LearnHouse! , get started by creating your own organization or join a one.</p>
         <p>Need some help to get started ? <a href="https://university.learnhouse.io">LearnHouse Academy</a></p>
     </body>
@@ -31,18 +34,21 @@ def send_password_reset_email(
     email: EmailStr,
     base_url: str,
 ):
+    safe_username = html.escape(user.username)
+    safe_code = html.escape(generated_reset_code)
+    safe_email = quote(str(email), safe='')
+    safe_code_param = quote(generated_reset_code, safe='')
 
-    # send email
     return send_email(
         to=email,
         subject="Reset your password",
         body=f"""
 <html>
     <body>
-        <p>Hello {user.username}</p>
+        <p>Hello {safe_username}</p>
         <p>You have requested to reset your password.</p>
-        <p>Here is your reset code: {generated_reset_code}</p>
-        <p>Click <a href="{base_url}/reset?email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
+        <p>Here is your reset code: {safe_code}</p>
+        <p>Click <a href="{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}">here</a> to reset your password.</p>
     </body>
 </html>
 """,
@@ -69,7 +75,11 @@ def send_email_verification_email(
     Returns:
         Boolean indicating if email was sent successfully
     """
-    verification_url = f"{base_url}/verify-email?token={token}&user={user.user_uuid}&org={organization.org_uuid}"
+    safe_username = html.escape(user.username)
+    safe_token = quote(token, safe='')
+    safe_user_uuid = quote(user.user_uuid, safe='')
+    safe_org_uuid = quote(organization.org_uuid, safe='')
+    verification_url = f"{base_url}/verify-email?token={safe_token}&amp;user={safe_user_uuid}&amp;org={safe_org_uuid}"
 
     return send_email(
         to=email,
@@ -77,7 +87,7 @@ def send_email_verification_email(
         body=f"""
 <html>
     <body>
-        <p>Hello {user.username},</p>
+        <p>Hello {safe_username},</p>
         <p>Welcome to LearnHouse! Please verify your email address to complete your registration.</p>
         <p>Click <a href="{verification_url}">here</a> to verify your email address.</p>
         <p>Or copy and paste this link into your browser:</p>

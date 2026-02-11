@@ -321,7 +321,7 @@ async def query_dashboard_detail(
     sql_template, default_days = DETAIL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days)
+    sql = _build_sql(sql_template, safe_org_id, safe_days)
 
     ch_result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
@@ -389,7 +389,7 @@ async def query_dashboard(
     sql_template, default_days = ALL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days)
+    sql = _build_sql(sql_template, safe_org_id, safe_days)
 
     result = await _execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
     result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
@@ -469,7 +469,37 @@ def _validate_course_uuid(course_uuid: str) -> str:
     """Validate course_uuid is safe for string interpolation into SQL."""
     if not course_uuid or not _SAFE_COURSE_UUID.match(course_uuid):
         raise HTTPException(status_code=400, detail="Invalid course_uuid")
+    if len(course_uuid) > 100:
+        raise HTTPException(status_code=400, detail="Invalid course_uuid")
     return course_uuid
+
+
+def _build_sql(
+    sql_template: str,
+    org_id: int,
+    days: int,
+    course_uuid: str | None = None,
+) -> str:
+    """
+    Build SQL from template with validated parameters.
+
+    Tinybird SQL API does not support parameterized queries, so we must
+    interpolate values. This function centralizes that interpolation and
+    enforces type safety so callers cannot accidentally pass unvalidated input.
+    """
+    # org_id and days are already validated as int by _parse_safe_params
+    if not isinstance(org_id, int) or not isinstance(days, int):
+        raise HTTPException(status_code=400, detail="Invalid parameter types")
+
+    params: dict = {"org_id": org_id, "days": days}
+
+    if course_uuid is not None:
+        # Re-validate even if caller already did — defense in depth
+        if not _SAFE_COURSE_UUID.match(course_uuid) or len(course_uuid) > 100:
+            raise HTTPException(status_code=400, detail="Invalid course_uuid")
+        params["course_uuid"] = course_uuid
+
+    return sql_template.format(**params)
 
 
 # -------------------------------------------------------------------
@@ -509,7 +539,7 @@ async def query_course_dashboard_detail(
     sql_template, default_days = COURSE_DETAIL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_uuid=safe_course_uuid)
+    sql = _build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
 
     ch_result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
@@ -602,7 +632,7 @@ async def query_course_dashboard(
     sql_template, default_days = COURSE_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)
 
-    sql = sql_template.format(org_id=safe_org_id, days=safe_days, course_uuid=safe_course_uuid)
+    sql = _build_sql(sql_template, safe_org_id, safe_days, safe_course_uuid)
 
     result = await _execute_tinybird_query(
         query_name, sql, safe_org_id, safe_days,
@@ -664,10 +694,7 @@ async def export_analytics(
             continue
         sql_template, default_days = allowed[qname]
         d = safe_days if safe_days else default_days
-        if safe_course_uuid:
-            sql = sql_template.format(org_id=safe_org_id, days=d, course_uuid=safe_course_uuid)
-        else:
-            sql = sql_template.format(org_id=safe_org_id, days=d)
+        sql = _build_sql(sql_template, safe_org_id, d, safe_course_uuid)
         result = await _execute_tinybird_query(qname, sql, safe_org_id, d, course_id=safe_course_uuid)
         result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
         results[qname] = result

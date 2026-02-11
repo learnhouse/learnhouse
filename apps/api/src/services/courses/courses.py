@@ -645,9 +645,8 @@ async def create_course(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid  # type: ignore
+        name_in_disk = await upload_thumbnail(
+            thumbnail_file, org.org_uuid, course.course_uuid  # type: ignore
         )
         if thumbnail_type == ThumbnailType.IMAGE:
             course.thumbnail_image = name_in_disk
@@ -744,9 +743,8 @@ async def update_course_thumbnail(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid  # type: ignore
+        name_in_disk = await upload_thumbnail(
+            thumbnail_file, org.org_uuid, course.course_uuid  # type: ignore
         )
 
     # Update course

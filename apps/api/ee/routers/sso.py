@@ -111,7 +111,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     response.set_cookie(
         key="access_token_cookie",
         value=access_token,
-        httponly=False,
+        httponly=True,
         domain=cookie_domain,
         expires=int(timedelta(hours=8).total_seconds()),
     )

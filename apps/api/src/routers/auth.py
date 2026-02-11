@@ -92,17 +92,28 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
 def is_request_secure(request: Request | None) -> bool:
     """
     Determine if the request is over HTTPS.
-    Checks X-Forwarded-Proto header (for proxies) and URL scheme.
+    Only trusts X-Forwarded-Proto when the direct connection is from a local proxy.
     """
     if not request:
         return not isDevModeEnabled()
 
-    # Check X-Forwarded-Proto header (common with reverse proxies)
-    forwarded_proto = request.headers.get("x-forwarded-proto", "")
-    if forwarded_proto.lower() == "https":
-        return True
-    if forwarded_proto.lower() == "http":
-        return False
+    # Only trust proxy headers if connection comes from a local reverse proxy
+    direct_ip = request.client.host if request.client else None
+    trust_proxy = False
+    if direct_ip:
+        import ipaddress
+        try:
+            addr = ipaddress.ip_address(direct_ip)
+            trust_proxy = addr.is_loopback or addr.is_private
+        except ValueError:
+            pass
+
+    if trust_proxy:
+        forwarded_proto = request.headers.get("x-forwarded-proto", "")
+        if forwarded_proto.lower() == "https":
+            return True
+        if forwarded_proto.lower() == "http":
+            return False
 
     # Check the URL scheme
     if request.url.scheme == "https":
