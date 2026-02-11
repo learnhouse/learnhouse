@@ -3,10 +3,21 @@ export interface SetupConfig {
   deploymentId: string
   installDir: string
 
-  // Domain
+  // Domain & SSL
   domain: string
   useHttps: boolean
   httpPort: number
+  autoSsl: boolean
+  sslEmail?: string
+
+  // Database
+  useExternalDb: boolean
+  externalDbConnectionString?: string
+  dbPassword?: string
+
+  // Redis
+  useExternalRedis: boolean
+  externalRedisConnectionString?: string
 
   // Organization
   orgName: string
@@ -17,7 +28,7 @@ export interface SetupConfig {
 
   // Optional Features
   aiEnabled: boolean
-  openaiApiKey?: string
+  geminiApiKey?: string
   emailEnabled: boolean
   resendApiKey?: string
   systemEmailAddress?: string
@@ -39,5 +50,7 @@ export interface LearnHouseConfigJson {
   domain: string
   httpPort: number
   useHttps: boolean
+  autoSsl: boolean
+  useExternalDb: boolean
   orgSlug: string
 }

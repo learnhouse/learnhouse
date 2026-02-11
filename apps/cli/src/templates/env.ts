@@ -5,10 +5,6 @@ function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64')
 }
 
-function generateDbPassword(): string {
-  return crypto.randomBytes(24).toString('base64url')
-}
-
 export function generateEnvFile(config: SetupConfig): string {
   const protocol = config.useHttps ? 'https' : 'http'
   const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80)
@@ -25,7 +21,6 @@ export function generateEnvFile(config: SetupConfig): string {
     ? '.localhost'
     : `.${topDomain}`
 
-  const dbPassword = generateDbPassword()
   const nextAuthSecret = generateSecret()
   const jwtSecret = generateSecret()
 
@@ -53,7 +48,6 @@ export function generateEnvFile(config: SetupConfig): string {
     `NEXT_PUBLIC_LEARNHOUSE_HTTPS=${config.useHttps ? 'True' : 'False'}`,
   ]
 
-  // Unsplash
   if (config.unsplashEnabled && config.unsplashAccessKey) {
     lines.push(`NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${config.unsplashAccessKey}`)
   }
@@ -68,7 +62,6 @@ export function generateEnvFile(config: SetupConfig): string {
     `NEXTAUTH_SECRET=${nextAuthSecret}`,
   )
 
-  // Google OAuth
   if (config.googleOAuthEnabled && config.googleClientId && config.googleClientSecret) {
     lines.push(
       `LEARNHOUSE_GOOGLE_CLIENT_ID=${config.googleClientId}`,
@@ -82,8 +75,12 @@ export function generateEnvFile(config: SetupConfig): string {
     '# Backend Configuration',
     '# =============================================================================',
     '',
-    `LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://learnhouse:${dbPassword}@db:5432/learnhouse`,
-    'LEARNHOUSE_REDIS_CONNECTION_STRING=redis://redis:6379/learnhouse',
+    `LEARNHOUSE_SQL_CONNECTION_STRING=${config.useExternalDb
+      ? config.externalDbConnectionString
+      : `postgresql://learnhouse:${config.dbPassword}@db:5432/learnhouse`}`,
+    `LEARNHOUSE_REDIS_CONNECTION_STRING=${config.useExternalRedis
+      ? config.externalRedisConnectionString
+      : 'redis://redis:6379/learnhouse'}`,
     `LEARNHOUSE_COOKIE_DOMAIN=${cookieDomain}`,
     'LEARNHOUSE_PORT=9000',
     '',
@@ -101,17 +98,18 @@ export function generateEnvFile(config: SetupConfig): string {
     '',
     'LEARNHOUSE_DEVELOPMENT_MODE=False',
     'LEARNHOUSE_LOGFIRE_ENABLED=False',
+    'LEARNHOUSE_OSS=True',
+    'NEXT_PUBLIC_LEARNHOUSE_OSS=True',
   )
 
-  // AI
-  if (config.aiEnabled && config.openaiApiKey) {
+  if (config.aiEnabled && config.geminiApiKey) {
     lines.push(
       '',
       '# =============================================================================',
       '# AI Configuration',
       '# =============================================================================',
       '',
-      `LEARNHOUSE_OPENAI_API_KEY=${config.openaiApiKey}`,
+      `LEARNHOUSE_GEMINI_API_KEY=${config.geminiApiKey}`,
       'LEARNHOUSE_IS_AI_ENABLED=True',
     )
   } else {
@@ -125,7 +123,6 @@ export function generateEnvFile(config: SetupConfig): string {
     )
   }
 
-  // Email
   if (config.emailEnabled && config.resendApiKey) {
     lines.push(
       '',
@@ -138,7 +135,6 @@ export function generateEnvFile(config: SetupConfig): string {
     )
   }
 
-  // S3
   if (config.s3Enabled && config.s3BucketName) {
     lines.push(
       '',
@@ -163,18 +159,21 @@ export function generateEnvFile(config: SetupConfig): string {
     )
   }
 
-  // Database
-  lines.push(
-    '',
-    '# =============================================================================',
-    '# Database Configuration',
-    '# =============================================================================',
-    '',
-    'POSTGRES_USER=learnhouse',
-    `POSTGRES_PASSWORD=${dbPassword}`,
-    'POSTGRES_DB=learnhouse',
-    '',
-  )
+  if (!config.useExternalDb) {
+    lines.push(
+      '',
+      '# =============================================================================',
+      '# Database Configuration',
+      '# =============================================================================',
+      '',
+      'POSTGRES_USER=learnhouse',
+      `POSTGRES_PASSWORD=${config.dbPassword}`,
+      'POSTGRES_DB=learnhouse',
+      '',
+    )
+  } else {
+    lines.push('')
+  }
 
   return lines.join('\n')
 }
