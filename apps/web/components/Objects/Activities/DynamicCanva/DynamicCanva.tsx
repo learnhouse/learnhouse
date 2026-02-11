@@ -29,6 +29,7 @@ import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/Info
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
 import VideoBlock from '@components/Objects/Editor/Extensions/Video/VideoBlock'
+import AudioBlock from '@components/Objects/Editor/Extensions/Audio/AudioBlock'
 import MathEquationBlock from '@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from '@components/Objects/Editor/Extensions/PDF/PDFBlock'
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
@@ -119,6 +120,10 @@ function Canva(props: Editor) {
         activity: props.activity,
       }),
       VideoBlock.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      AudioBlock.configure({
         editable: true,
         activity: props.activity,
       }),

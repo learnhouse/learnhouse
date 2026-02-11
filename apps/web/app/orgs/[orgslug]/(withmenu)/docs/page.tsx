@@ -3,7 +3,8 @@ import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { getOrgDocSpaces, getDefaultDocSpace } from '@services/docs/docspaces'
 import { redirect } from 'next/navigation'
 import DocsLandingClient from './docs-landing'
@@ -114,10 +115,18 @@ export default async function DocsPage({ params }: { params: PageParams }) {
     }
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Documentation', url: getCanonicalUrl(orgslug, '/docs') },
+  ])
+
   return (
-    <DocsLandingClient
-      orgslug={orgslug}
-      docspaces={docspaces}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <DocsLandingClient
+        orgslug={orgslug}
+        docspaces={docspaces}
+      />
+    </>
   )
 }

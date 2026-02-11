@@ -5,7 +5,8 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -134,14 +135,24 @@ const ActivityPage = async (params: any) => {
     notFound()
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+    { name: course_meta.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
+    { name: activity.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}/activity/${activityid}`) },
+  ])
+
   return (
-    <ActivityClient
-      activityid={activityid}
-      courseuuid={courseuuid}
-      orgslug={orgslug}
-      activity={activity}
-      course={course_meta}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <ActivityClient
+        activityid={activityid}
+        courseuuid={courseuuid}
+        orgslug={orgslug}
+        activity={activity}
+        course={course_meta}
+      />
+    </>
   )
 }
 

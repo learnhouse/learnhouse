@@ -3,7 +3,8 @@ import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastsClient from './podcasts'
 
 type PageParams = Promise<{
@@ -95,11 +96,19 @@ export default async function PodcastsPage({ params }: { params: PageParams }) {
     console.error('Error fetching podcasts:', error)
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Podcasts', url: getCanonicalUrl(orgslug, '/podcasts') },
+  ])
+
   return (
-    <PodcastsClient
-      orgslug={orgslug}
-      org_id={org?.id || 0}
-      initialPodcasts={initialPodcasts || []}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <PodcastsClient
+        orgslug={orgslug}
+        org_id={org?.id || 0}
+        initialPodcasts={initialPodcasts || []}
+      />
+    </>
   )
 }

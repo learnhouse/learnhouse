@@ -91,6 +91,7 @@ export const config = {
     '/sitemap.xml',
     '/robots.txt',
     '/payments/stripe/connect/oauth',
+    '/podcast/:path*/feed',
   ],
 }
 
@@ -261,6 +262,27 @@ export default async function proxy(req: NextRequest) {
       redirectUrl.search = queryString
     }
     return NextResponse.redirect(redirectUrl)
+  }
+
+  // Podcast RSS Feed rewrite
+  if (pathname.match(/^\/podcast\/([^\/]+)\/feed$/)) {
+    let orgslug: string;
+    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
+      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
+      if (resolvedOrg) {
+        orgslug = resolvedOrg.slug;
+      } else {
+        orgslug = default_org as string;
+      }
+    } else if (hosting_mode === 'multi') {
+      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
+    } else {
+      orgslug = default_org as string;
+    }
+    const feedUrl = new URL(`/api${pathname}`, req.url);
+    const response = NextResponse.rewrite(feedUrl);
+    response.headers.set('X-Feed-Orgslug', orgslug);
+    return response;
   }
 
   if (pathname.startsWith('/sitemap.xml')) {

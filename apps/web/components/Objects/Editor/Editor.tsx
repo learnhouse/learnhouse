@@ -20,6 +20,7 @@ import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
+import AudioBlock from './Extensions/Audio/AudioBlock'
 import { Eye, Monitor, History, AlertTriangle, RefreshCw, GitMerge, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
@@ -152,6 +153,10 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       VideoBlock.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      AudioBlock.configure({
         editable: true,
         activity: props.activity,
       }),
