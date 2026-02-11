@@ -1,0 +1,9 @@
+export const VERSION = '0.1.0'
+export const APP_IMAGE = 'ghcr.io/learnhouse/app:latest'
+export const NGINX_IMAGE = 'nginx:alpine'
+export const POSTGRES_IMAGE = 'postgres:16-alpine'
+export const REDIS_IMAGE = 'redis:7.2.3-alpine'
+export const HEALTH_CHECK_URL_PATH = '/api/v1/health'
+export const HEALTH_CHECK_TIMEOUT_MS = 180_000 // 3 minutes
+export const HEALTH_CHECK_INTERVAL_MS = 3_000
+export const CONFIG_FILENAME = 'learnhouse.config.json'
