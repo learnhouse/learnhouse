@@ -15,9 +15,9 @@ function DocumentPdfActivity({
   }, [activity, org])
 
   return (
-    <div className="m-8 bg-zinc-900 rounded-md mt-14">
+    <div className="m-0 sm:m-8 bg-zinc-900 sm:rounded-md mt-0 sm:mt-14">
       <iframe
-        className="rounded-lg w-full h-[900px]"
+        className="sm:rounded-lg w-full h-[85vh] sm:h-[900px]"
         src={getActivityMediaDirectory(
           org?.org_uuid,
           course?.course_uuid,

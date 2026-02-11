@@ -88,7 +88,7 @@ function HomeClient() {
             </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2 w-full">
+              <Link href="/account/general" className="flex items-center space-x-2 w-full">
                 <Settings size={16} />
                 <span>{t('common.settings')}</span>
               </Link>

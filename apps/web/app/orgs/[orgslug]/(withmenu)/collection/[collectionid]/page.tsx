@@ -1,73 +1,93 @@
-'use client'
-
-import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
-import { getCollectionById } from '@services/courses/collections'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useOrg } from '@components/Contexts/OrgContext'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
+import { getCollectionById } from '@services/courses/collections'
+import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import CollectionClient from './collection'
 
-const CollectionPage = (props: any) => {
-  const { t } = useTranslation()
-  const params = React.use(props.params) as any
-  const orgslug = params.orgslug
-  const collectionid = params.collectionid
-  const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token
-  const org = useOrg() as any
+type MetadataProps = {
+  params: Promise<{ orgslug: string; collectionid: string }>
+}
 
-  const { data: col, error } = useSWR(
-    collectionid && access_token ? [`collections/collection_${collectionid}`, access_token] : null,
-    ([, token]) => swrFetcher(`${getAPIUrl()}collections/collection_${collectionid}`, token)
-  )
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params
+  const session = await getServerSession()
+  const access_token = session?.tokens?.access_token
 
-  const removeCoursePrefix = (courseid: string) => {
-    return courseid.replace('course_', '')
+  const org = await getOrganizationContextInfo(params.orgslug, {
+    revalidate: 1800,
+    tags: ['organizations'],
+  })
+
+  const seoConfig = getOrgSeoConfig(org)
+
+  let collection: any = null
+  try {
+    collection = await getCollectionById(
+      `collection_${params.collectionid}`,
+      access_token || '',
+      { revalidate: 0, tags: ['collections'] }
+    )
+  } catch {
+    // Collection might not exist or user doesn't have access
   }
 
-  if (!col) return <PageLoading />
+  const title = buildPageTitle(collection ? collection.name : 'Collection', org?.name || 'Organization', seoConfig)
+  const description = collection?.description || seoConfig.default_meta_description || `Browse this collection from ${org?.name || 'this organization'}`
+  const ogImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
+  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
+  const canonical = getCanonicalUrl(params.orgslug, `/collections/${params.collectionid}`)
+
+  return {
+    title,
+    description,
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 600,
+          alt: collection?.name || org?.name || 'Collection',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
+    },
+  }
+}
+
+const CollectionPage = async (props: { params: MetadataProps['params'] }) => {
+  const params = await props.params
 
   return (
-    <GeneralWrapperStyled>
-      <h2 className="text-sm font-bold text-gray-400">{t('collections.collection')}</h2>
-      <h1 className="text-3xl font-bold">{col.name}</h1>
-      <br />
-      <div className="home_courses flex flex-wrap">
-        {col.courses.map((course: any) => (
-          <div className="pr-8" key={course.course_uuid}>
-            <Link
-              href={getUriWithOrg(
-                orgslug,
-                '/course/' + removeCoursePrefix(course.course_uuid)
-              )}
-            >
-              <div
-                className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover"
-                style={{
-                  backgroundImage: `url(${course.thumbnail_image
-                    ? getCourseThumbnailMediaDirectory(
-                        org.org_uuid,
-                        course.course_uuid,
-                        course.thumbnail_image
-                      )
-                    : '/empty_thumbnail.png'
-                  })`,
-                }}
-              ></div>
-            </Link>
-            <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>
-          </div>
-        ))}
-      </div>
-    </GeneralWrapperStyled>
+    <CollectionClient
+      orgslug={params.orgslug}
+      collectionid={params.collectionid}
+    />
   )
 }
 

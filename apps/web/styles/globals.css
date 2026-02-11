@@ -2421,6 +2421,32 @@
 .canva-content-wrapper .ProseMirror pre .hljs-emphasis { font-style: italic; }
 .canva-content-wrapper .ProseMirror pre .hljs-strong { font-weight: 700; }
 
+/* ─── DynamicCanva Mobile Overrides ─── */
+@media (max-width: 768px) {
+  .canva-content-wrapper > div:first-child:not(:last-child) {
+    display: none;
+  }
+
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:first-child {
+    display: none;
+  }
+
+  .canva-content-wrapper > div:last-child,
+  .canva-content-wrapper:has(> div:first-child:not(:last-child)) > div:last-child {
+    width: 100%;
+  }
+
+  .canva-content-wrapper .ProseMirror {
+    padding: 0.5rem;
+  }
+
+  .canva-content-wrapper .ProseMirror h1 { font-size: 24px; }
+  .canva-content-wrapper .ProseMirror h2 { font-size: 22px; }
+  .canva-content-wrapper .ProseMirror h3 { font-size: 18px; }
+  .canva-content-wrapper .ProseMirror h4 { font-size: 16px; }
+  .canva-content-wrapper .ProseMirror h5 { font-size: 15px; }
+}
+
 /* ─── EditorPreview ProseMirror Styles ─── */
 
 .editor-preview-wrapper .ProseMirror h1 { font-size: 28px; font-weight: 600; margin-bottom: 16px; }

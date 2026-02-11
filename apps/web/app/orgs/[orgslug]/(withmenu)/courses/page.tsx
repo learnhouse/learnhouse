@@ -4,7 +4,9 @@ import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgCourses } from '@services/courses/courses'
-import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
@@ -19,10 +21,19 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     tags: ['organizations'],
   })
 
+  const seoConfig = getOrgSeoConfig(org)
+  const ogImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
+  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
+  const canonical = getCanonicalUrl(params.orgslug, '/courses')
+  const title = buildPageTitle('Courses', org.name, seoConfig)
+  const description = org.description || seoConfig.default_meta_description || ''
+
   // SEO
   return {
-    title: 'Courses — ' + org.name,
-    description: org.description,
+    title,
+    description,
     keywords: `${org.name}, ${org.description}, courses, learning, education, online learning, edu, online courses, ${org.name} courses`,
     robots: {
       index: true,
@@ -34,18 +45,28 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
         'max-image-preview': 'large',
       },
     },
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title: 'Courses — ' + org.name,
-      description: org.description,
+      title,
+      description,
       type: 'website',
       images: [
         {
-          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
+          url: imageUrl,
           width: 800,
           height: 600,
           alt: org.name,
         },
       ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
@@ -76,8 +97,25 @@ const CoursesPage = async (params: any) => {
     }
   }
 
+  const coursesJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Courses — ${org.name}`,
+    itemListElement: courses.map((course: any, index: number) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Course',
+        name: course.name,
+        description: course.description,
+        url: getCanonicalUrl(orgslug, `/course/${course.course_uuid.replace('course_', '')}`),
+      },
+    })),
+  }
+
   return (
     <div>
+      <JsonLd data={coursesJsonLd} />
       <Courses org_id={org.id} orgslug={orgslug} courses={courses} />
     </div>
   )

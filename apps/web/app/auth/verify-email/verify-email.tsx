@@ -83,7 +83,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                 )}
 
                 <div className="flex-1 flex flex-row">
-                    <div className="m-auto w-full max-w-sm px-6">
+                    <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
                         {/* Header */}
                         <div className="mb-8 text-center">
                             <h1 className="text-2xl font-bold text-gray-900">{t('auth.verify_email_title')}</h1>

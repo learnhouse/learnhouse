@@ -60,3 +60,15 @@ async def upload_org_auth_background(file: UploadFile, org_uuid: str) -> str:
         allowed_types=["image"],
         filename_prefix="auth_bg"
     )
+
+
+async def upload_org_og_image(file: UploadFile, org_uuid: str) -> str:
+    """Upload organization OG image for social media sharing."""
+    return await upload_file(
+        file=file,
+        directory="og_images",
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["image"],
+        filename_prefix="og"
+    )

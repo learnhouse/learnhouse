@@ -557,11 +557,12 @@ function AccountGeneral() {
     const file = event.target.files[0]
     setLocalAvatar(file)
     setIsLoading(true)
-    const res = await updateUserAvatar(session.data.user_uuid, file, access_token)
-    await new Promise((r) => setTimeout(r, 1500))
+    const res = await updateUserAvatar(session.data.user.id, file, access_token)
     if (res.success === false) {
       setError(res.HTTPmessage)
     } else {
+      // Force refresh session to pick up the new avatar filename
+      await session.update(true)
       setIsLoading(false)
       setError('')
       setSuccess(t('user.settings.general.avatar_updated'))

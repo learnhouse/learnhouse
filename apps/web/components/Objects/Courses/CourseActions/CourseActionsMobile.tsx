@@ -58,6 +58,7 @@ interface CourseActionsMobileProps {
 
 // Component for displaying multiple authors
 const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
+  if (!authors.length) return null
   const displayedAvatars = authors.slice(0, 3)
   const remainingCount = Math.max(0, authors.length - 3)
   

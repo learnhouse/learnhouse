@@ -147,6 +147,11 @@ export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
   return uri
 }
 
+export function getOrgOgImageMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/og_images/${fileId}`
+  return uri
+}
+
 export function getOrgAuthBackgroundMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/auth_backgrounds/${fileId}`
   return uri

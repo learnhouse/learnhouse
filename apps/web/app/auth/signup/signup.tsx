@@ -138,7 +138,7 @@ const LoggedInJoinScreen = ({ inviteCode, org }: JoinScreenProps) => {
       )}
 
       <div className="flex-1 flex flex-row">
-        <div className="m-auto w-full max-w-sm px-6">
+        <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900">{t('auth.join_organization')}</h1>
@@ -254,7 +254,7 @@ const NoTokenScreen = ({ org }: NoTokenScreenProps) => {
       )}
 
       <div className="flex-1 flex flex-row">
-        <div className="m-auto w-full max-w-sm px-6">
+        <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900">{t('auth.invite_required')}</h1>
