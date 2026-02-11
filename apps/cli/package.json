@@ -1,0 +1,56 @@
+{
+  "name": "learnhouse",
+  "version": "1.0.0",
+  "description": "CLI tool for self-hosting LearnHouse",
+  "type": "module",
+  "bin": {
+    "learnhouse": "./dist/bin/learnhouse.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "prepublishOnly": "tsup",
+    "version:patch": "node scripts/bump-version.js patch",
+    "version:minor": "node scripts/bump-version.js minor",
+    "version:major": "node scripts/bump-version.js major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/learnhouse/learnhouse.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/learnhouse/learnhouse/tree/main/apps/cli",
+  "bugs": {
+    "url": "https://github.com/learnhouse/learnhouse/issues"
+  },
+  "keywords": [
+    "learnhouse",
+    "lms",
+    "self-hosted",
+    "cli",
+    "docker",
+    "education",
+    "learning-management-system"
+  ],
+  "author": "LearnHouse",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.8.2",
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}

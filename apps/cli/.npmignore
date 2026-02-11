@@ -1,0 +1,10 @@
+src/
+bin/
+scripts/
+tsup.config.ts
+tsconfig.json
+*.ts
+!dist/**
+node_modules/
+learnhouse/
+.gitignore

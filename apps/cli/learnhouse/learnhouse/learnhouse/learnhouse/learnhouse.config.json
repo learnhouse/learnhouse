@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "deploymentId": "b4167307",
+  "createdAt": "2026-02-11T20:20:39.237Z",
+  "installDir": "/Users/swve/Documents/projects/learnhouse/learnhouse/apps/cli/learnhouse/learnhouse/learnhouse/learnhouse",
+  "domain": "localhost",
+  "httpPort": 80,
+  "useHttps": false,
+  "autoSsl": false,
+  "useExternalDb": false,
+  "orgSlug": "default"
+}

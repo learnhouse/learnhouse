@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
+    _is_oss_mode,
 )
 from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
@@ -70,11 +71,11 @@ async def create_user(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
-    # OAuth users get auto-verified email (provider already verified)
-    if is_oauth:
+    # OAuth users and OSS mode get auto-verified email
+    if is_oauth or _is_oss_mode():
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
-        user.signup_method = signup_provider
+        user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
         user.email_verified_at = None
@@ -247,11 +248,11 @@ async def create_user_without_org(
     user.user_uuid = f"user_{uuid4()}"
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
-    # OAuth users get auto-verified email (provider already verified)
-    if is_oauth:
+    # OAuth users and OSS mode get auto-verified email
+    if is_oauth or _is_oss_mode():
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
-        user.signup_method = signup_provider
+        user.signup_method = signup_provider if is_oauth else "email"
     else:
         user.email_verified = False
         user.email_verified_at = None
