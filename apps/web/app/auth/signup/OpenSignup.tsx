@@ -109,7 +109,7 @@ function OpenSignUpComponent() {
   };
 
   return (
-    <div className="m-auto w-full max-w-sm px-6">
+    <div className="m-auto w-full max-w-sm px-6 py-8 sm:py-0">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{t('auth.create_account')}</h1>

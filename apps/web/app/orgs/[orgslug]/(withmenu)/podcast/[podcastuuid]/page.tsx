@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getPodcastThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastClient from './podcast'
 
 type PageParams = Promise<{
@@ -34,11 +37,61 @@ export async function generateMetadata({
     tags: ['organizations'],
   })
 
+  const seoConfig = getOrgSeoConfig(org)
+
+  const title = buildPageTitle(podcastMeta?.podcast?.name || 'Podcast', org?.name || 'Organization', seoConfig)
+  const description = podcastMeta?.podcast?.description || seoConfig.default_meta_description || `Listen to this podcast from ${org?.name || 'this organization'}`
+  const ogImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : undefined
+  const imageUrl = podcastMeta?.podcast?.thumbnail_image
+    ? getPodcastThumbnailMediaDirectory(
+        org?.org_uuid,
+        `podcast_${podcastuuid}`,
+        podcastMeta.podcast.thumbnail_image
+      )
+    : ogImageUrl
+  const canonical = getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`)
+
   return {
-    title: podcastMeta?.podcast?.name
-      ? `${podcastMeta.podcast.name} - ${org?.name || 'Organization'}`
-      : 'Podcast',
-    description: podcastMeta?.podcast?.description || `Listen to this podcast from ${org?.name || 'this organization'}`,
+    title,
+    description,
+    keywords: podcastMeta?.podcast?.tags || `${org?.name}, podcast, audio, learning`,
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      ...(imageUrl && {
+        images: [
+          {
+            url: imageUrl,
+            width: 800,
+            height: 600,
+            alt: podcastMeta?.podcast?.name || 'Podcast',
+          },
+        ],
+      }),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imageUrl && { images: [imageUrl] }),
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
+    },
   }
 }
 
@@ -71,13 +124,40 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
     )
   }
 
+  const podcastJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'PodcastSeries',
+    name: podcastMeta.podcast.name,
+    description: podcastMeta.podcast.description,
+    url: getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`),
+    provider: {
+      '@type': 'Organization',
+      name: org?.name,
+    },
+    episode: (podcastMeta.episodes || []).map((ep: any) => ({
+      '@type': 'PodcastEpisode',
+      name: ep.name,
+      description: ep.description,
+    })),
+  }
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Podcasts', url: getCanonicalUrl(orgslug, '/podcasts') },
+    { name: podcastMeta.podcast.name, url: getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`) },
+  ])
+
   return (
-    <PodcastClient
-      orgslug={orgslug}
-      org_id={org?.id || 0}
-      podcastUuid={`podcast_${podcastuuid}`}
-      initialPodcast={podcastMeta.podcast}
-      initialEpisodes={podcastMeta.episodes}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={podcastJsonLd} />
+      <PodcastClient
+        orgslug={orgslug}
+        org_id={org?.id || 0}
+        podcastUuid={`podcast_${podcastuuid}`}
+        initialPodcast={podcastMeta.podcast}
+        initialEpisodes={podcastMeta.episodes}
+      />
+    </>
   )
 }

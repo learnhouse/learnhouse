@@ -7,6 +7,7 @@ import {
   FileText,
   Globe,
   GitBranch,
+  Headphones,
   Heading1,
   Heading2,
   Heading3,
@@ -205,6 +206,17 @@ export const slashCommands: SlashCommandItem[] = [
     keywords: ['pdf', 'document', 'file', 'embed'],
     command: (editor) => {
       editor.chain().focus().insertContent({ type: 'blockPDF' }).run()
+    },
+  },
+  {
+    id: 'audio',
+    title: 'Audio',
+    description: 'Upload audio or embed a podcast',
+    icon: <Headphones size={18} />,
+    category: 'media',
+    keywords: ['audio', 'music', 'sound', 'podcast', 'mp3', 'episode'],
+    command: (editor) => {
+      editor.chain().focus().insertContent({ type: 'blockAudio' }).run()
     },
   },
 

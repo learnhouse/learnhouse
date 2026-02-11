@@ -40,6 +40,7 @@ function OrgFooter() {
               alt="LearnHouse"
               width={24}
               height={24}
+              style={{ height: 'auto' }}
               className="opacity-15 hover:opacity-40 transition-opacity duration-300 cursor-pointer"
             />
           </Link>

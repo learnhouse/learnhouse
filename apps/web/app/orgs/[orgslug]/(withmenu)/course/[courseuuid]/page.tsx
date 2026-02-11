@@ -3,8 +3,10 @@ import CourseClient from './course'
 import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -40,16 +42,20 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 
   // SEO - use custom SEO fields with fallbacks to existing fields
+  const seoConfig = getOrgSeoConfig(org)
   const seo = course_meta.seo || {}
-  const defaultTitle = course_meta.name + ` — ${org.name}`
-  const defaultDescription = course_meta.description || ''
+  const defaultTitle = buildPageTitle(course_meta.name, org.name, seoConfig)
+  const defaultDescription = course_meta.description || seoConfig.default_meta_description || ''
+  const orgOgImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
   const defaultImage = course_meta?.thumbnail_image
     ? getCourseThumbnailMediaDirectory(
         org?.org_uuid,
         course_meta?.course_uuid,
         course_meta?.thumbnail_image
       )
-    : '/empty_thumbnail.png'
+    : orgOgImageUrl || '/empty_thumbnail.png'
 
   // Determine robots settings
   const shouldIndex = !seo.robots_noindex
@@ -69,11 +75,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
         'max-image-preview': 'large',
       },
     },
-    ...(seo.canonical_url && {
-      alternates: {
-        canonical: seo.canonical_url,
-      },
-    }),
+    alternates: {
+      canonical: seo.canonical_url || getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`),
+    },
     openGraph: {
       title: seo.og_title || seo.title || defaultTitle,
       description: seo.og_description || seo.description || defaultDescription,
@@ -94,6 +98,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       title: seo.twitter_title || seo.og_title || seo.title || defaultTitle,
       description: seo.twitter_description || seo.og_description || seo.description || defaultDescription,
       images: [seo.og_image || defaultImage],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
@@ -123,14 +128,49 @@ const CoursePage = async (params: any) => {
     notFound()
   }
 
+  // Fetch org info for JSON-LD
+  const org = await getOrganizationContextInfo(orgslug, {
+    revalidate: 1800,
+    tags: ['organizations'],
+  })
+
+  // Build Course JSON-LD for structured data
+  const courseJsonLd = course_meta ? {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course_meta.name,
+    description: course_meta.description || '',
+    url: getCanonicalUrl(orgslug, `/course/${courseuuid}`),
+    provider: {
+      '@type': 'Organization',
+      name: org?.name || '',
+    },
+    ...(course_meta.thumbnail_image && org && {
+      image: getCourseThumbnailMediaDirectory(org.org_uuid, course_meta.course_uuid, course_meta.thumbnail_image),
+    }),
+    ...(course_meta.learnings && {
+      keywords: Array.isArray(course_meta.learnings) ? course_meta.learnings.join(', ') : course_meta.learnings,
+    }),
+  } : null
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+    { name: course_meta?.name || 'Course', url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
+  ])
+
   return (
-    <CourseClient
-      courseuuid={courseuuid}
-      orgslug={orgslug}
-      course={course_meta}
-      access_token={access_token}
-      serverError={fetchError}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      {courseJsonLd && <JsonLd data={courseJsonLd} />}
+      <CourseClient
+        courseuuid={courseuuid}
+        orgslug={orgslug}
+        course={course_meta}
+        access_token={access_token}
+        serverError={fetchError}
+      />
+    </>
   )
 }
 

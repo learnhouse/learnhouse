@@ -3,9 +3,10 @@ import React, { use } from 'react'
 import { PodcastProvider, usePodcast } from '@components/Contexts/PodcastContext'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Info, ListMusic, Headphones, ArrowLeft } from 'lucide-react'
+import { Info, ListMusic, Headphones, ArrowLeft, Rss } from 'lucide-react'
 import EditPodcastGeneral from '@components/Dashboard/Pages/Podcast/EditPodcastGeneral/EditPodcastGeneral'
 import EditPodcastEpisodes from '@components/Dashboard/Pages/Podcast/EditPodcastEpisodes/EditPodcastEpisodes'
+import PodcastDistribution from '@components/Dashboard/Pages/Podcast/PodcastDistribution/PodcastDistribution'
 import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
@@ -39,6 +40,12 @@ function PodcastOverviewPage(props: { params: Promise<PodcastOverviewParams> }) 
       icon: ListMusic,
       href: `/dash/podcasts/podcast/${params.podcastuuid}/content`,
     },
+    {
+      key: 'distribution',
+      label: 'Distribution',
+      icon: Rss,
+      href: `/dash/podcasts/podcast/${params.podcastuuid}/distribution`,
+    },
   ]
 
   return (
@@ -58,6 +65,9 @@ function PodcastOverviewPage(props: { params: Promise<PodcastOverviewParams> }) 
             )}
             {params.subpage === 'content' && (
               <EditPodcastEpisodes orgslug={params.orgslug} podcastuuid={podcastuuid} />
+            )}
+            {params.subpage === 'distribution' && (
+              <PodcastDistribution orgslug={params.orgslug} podcastuuid={podcastuuid} />
             )}
           </div>
         </motion.div>

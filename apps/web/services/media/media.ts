@@ -40,6 +40,20 @@ export function getVideoBlockStreamUrl(
   return `${getApiUrl()}api/v1/stream/block/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
 }
 
+/**
+ * Get the streaming URL for an audio block.
+ * Uses the optimized streaming endpoint with proper Range request support.
+ */
+export function getAudioBlockStreamUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string,
+  filename: string
+) {
+  return `${getApiUrl()}api/v1/stream/block/audio/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
+}
+
 export function getCourseThumbnailMediaDirectory(
   orgUUID: string,
   courseUUID: string,
@@ -86,6 +100,10 @@ export function getActivityBlockMediaDirectory(
   }
   if (type == 'imageBlock') {
     let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/dynamic/blocks/imageBlock/${blockId}/${fileId}`
+    return uri
+  }
+  if (type == 'audioBlock') {
+    let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/dynamic/blocks/audioBlock/${blockId}/${fileId}`
     return uri
   }
 }
@@ -144,6 +162,11 @@ export function getOrgThumbnailMediaDirectory(orgUUID: string, fileId: string) {
 
 export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/previews/${fileId}`
+  return uri
+}
+
+export function getOrgOgImageMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/og_images/${fileId}`
   return uri
 }
 

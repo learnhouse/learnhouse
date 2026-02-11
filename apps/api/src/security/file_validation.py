@@ -55,6 +55,32 @@ def validate_video_content(content: bytes) -> bool:
     return False
 
 
+def validate_audio_content(content: bytes) -> bool:
+    """Validate audio content using magic bytes."""
+    if len(content) < 12:
+        return False
+
+    magic_bytes = content[:12]
+
+    # MP3: ID3 tag or MPEG sync word
+    if magic_bytes.startswith(b'ID3') or magic_bytes[:2] == b'\xff\xfb' or magic_bytes[:2] == b'\xff\xf3' or magic_bytes[:2] == b'\xff\xf2':
+        return True
+
+    # WAV: RIFF....WAVE
+    if magic_bytes.startswith(b'RIFF') and content[8:12] == b'WAVE':
+        return True
+
+    # OGG: OggS
+    if magic_bytes.startswith(b'OggS'):
+        return True
+
+    # M4A/AAC: ftyp box
+    if magic_bytes[4:8] == b'ftyp' and (b'M4A' in magic_bytes[8:12] or b'mp4' in magic_bytes[8:12] or b'isom' in magic_bytes[8:12] or b'dash' in magic_bytes[8:12]):
+        return True
+
+    return False
+
+
 def validate_zip_content(content: bytes) -> bool:
     """Validate ZIP file content using magic bytes."""
     if len(content) < 4:
@@ -83,6 +109,12 @@ FILE_TYPES = {
         'mime_types': ['application/pdf'],
         'max_size': None,  # No limit
         'validator': lambda content: content.startswith(b'%PDF-')
+    },
+    'audio': {
+        'extensions': ['.mp3', '.wav', '.ogg', '.m4a'],
+        'mime_types': ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4'],
+        'max_size': None,  # No limit
+        'validator': validate_audio_content
     },
     'scorm': {
         'extensions': ['.zip'],

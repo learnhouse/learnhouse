@@ -25,6 +25,8 @@ async def upload_file_and_return_file_object(
         allowed_types.append('video')
     if any(fmt in ['pdf'] for fmt in list_of_allowed_file_formats):
         allowed_types.append('document')
+    if any(fmt in ['mp3', 'wav', 'ogg', 'm4a'] for fmt in list_of_allowed_file_formats):
+        allowed_types.append('audio')
     
     if not allowed_types:
         raise HTTPException(status_code=400, detail="No valid file types specified")

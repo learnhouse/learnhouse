@@ -126,6 +126,44 @@ export async function updateOrgAuthBrandingConfig(
   return res
 }
 
+export interface SeoOrgConfig {
+  default_meta_title_suffix: string
+  default_meta_description: string
+  default_og_image: string
+  google_site_verification: string
+  twitter_handle: string
+  noindex_communities: boolean
+  noindex_docs: boolean
+}
+
+export async function updateOrgSeoConfig(
+  org_id: string,
+  seo_config: SeoOrgConfig,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/seo`,
+    RequestBodyWithAuthHeader('PUT', seo_config, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+export async function uploadOrganizationOgImage(
+  org_id: string,
+  og_image_file: File,
+  access_token: string
+) {
+  const formData = new FormData()
+  formData.append('og_image_file', og_image_file)
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/og_image`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function uploadOrgAuthBackground(
   org_id: string,
   background_file: File,
