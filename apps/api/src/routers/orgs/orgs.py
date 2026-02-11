@@ -479,7 +479,6 @@ async def api_get_invite_code(
     """
     Get invite code
     """
-    print(f"org_id: {org_id}, invite_code: {invite_code}")
     return await get_invite_code(request, org_id, invite_code, current_user, db_session)
 
 

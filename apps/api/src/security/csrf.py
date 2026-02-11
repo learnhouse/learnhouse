@@ -5,12 +5,15 @@ Validates Origin header on state-changing requests (POST, PUT, DELETE, PATCH)
 to protect against Cross-Site Request Forgery attacks.
 """
 
+import logging
 import re
 from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 from config.config import get_learnhouse_config
+
+logger = logging.getLogger(__name__)
 
 
 # Methods that require CSRF protection
@@ -37,8 +40,12 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if self.allowed_regexp:
             try:
                 self.compiled_regexp = re.compile(self.allowed_regexp)
-            except re.error:
-                pass
+            except re.error as e:
+                logger.error(
+                    "CSRF: Failed to compile allowed_regexp '%s': %s. "
+                    "Regex-based origin matching is DISABLED.",
+                    self.allowed_regexp, e,
+                )
 
     def is_allowed_origin(self, origin: str | None) -> bool:
         """Check if the origin is allowed."""

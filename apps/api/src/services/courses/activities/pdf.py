@@ -79,13 +79,19 @@ async def create_documentpdf_activity(
             status_code=status.HTTP_409_CONFLICT, detail="Pdf : Wrong pdf format"
         )
 
-    # get pdf format
-    if pdf_file.filename:
-        pdf_format = pdf_file.filename.split(".")[-1]
-
-    else:
+    if not pdf_file.filename:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Pdf : No pdf file provided"
+        )
+
+    # Upload pdf first to get safe filename
+    saved_filename = None
+    if pdf_file and organization and course:
+        saved_filename = await upload_pdf(
+            pdf_file,
+            activity_uuid,
+            organization.org_uuid,
+            course.course_uuid,
         )
 
     # Create activity
@@ -94,9 +100,9 @@ async def create_documentpdf_activity(
         activity_type=ActivityTypeEnum.TYPE_DOCUMENT,
         activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DOCUMENT_PDF,
         content={
-            "filename": "documentpdf." + pdf_format,
+            "filename": saved_filename or "documentpdf",
             "activity_uuid": activity_uuid,
-            },  
+            },
         org_id=org_id if org_id else 0,
         course_id=coursechapter.course_id,
         activity_uuid=activity_uuid,
@@ -129,16 +135,6 @@ async def create_documentpdf_activity(
         update_date=str(datetime.now()),
         order=to_be_used_order,
     )
-
-    # upload pdf
-    if pdf_file and organization and course:
-        # get pdffile format
-        await upload_pdf(
-            pdf_file,
-            activity.activity_uuid,
-            organization.org_uuid,
-            course.course_uuid,
-        )
 
     # Insert ChapterActivity link in DB
     db_session.add(activity_chapter)

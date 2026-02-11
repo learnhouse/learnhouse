@@ -85,14 +85,20 @@ async def create_video_activity(
             status_code=status.HTTP_409_CONFLICT, detail="Video : Wrong video format"
         )
 
-    # get video format
-    if video_file.filename:
-        video_format = video_file.filename.split(".")[-1]
-
-    else:
+    if not video_file.filename:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Video : No video file provided",
+        )
+
+    # Upload video first to get safe filename
+    saved_filename = None
+    if video_file and organization and course:
+        saved_filename = await upload_video(
+            video_file,
+            activity_uuid,
+            organization.org_uuid,
+            course.course_uuid,
         )
 
     activity_object = Activity(
@@ -103,7 +109,7 @@ async def create_video_activity(
         org_id=coursechapter.org_id,
         course_id=coursechapter.course_id,
         content={
-            "filename": "video." + video_format,
+            "filename": saved_filename or "video",
             "activity_uuid": activity_uuid,
         },
         details=details if isinstance(details, dict) else json.loads(details),
@@ -116,16 +122,6 @@ async def create_video_activity(
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
-
-    # upload video
-    if video_file and organization and course:
-        # get videofile format
-        await upload_video(
-            video_file,
-            activity.activity_uuid,
-            organization.org_uuid,
-            course.course_uuid,
-        )
 
     # Find the last activity order in the chapter
     statement = (

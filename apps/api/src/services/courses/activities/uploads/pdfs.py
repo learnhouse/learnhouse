@@ -1,18 +1,14 @@
-from src.services.utils.upload_content import upload_content
+from fastapi import UploadFile
+from src.services.utils.upload_content import upload_file
 
 
-async def upload_pdf(pdf_file, activity_uuid, org_uuid, course_uuid):
-    contents = pdf_file.file.read()
-    pdf_format = pdf_file.filename.split(".")[-1]
-
-    try:
-        await upload_content(
-            f"courses/{course_uuid}/activities/{activity_uuid}/documentpdf",
-            "orgs",
-            org_uuid,
-            contents,
-            f"documentpdf.{pdf_format}",
-        )
-
-    except Exception:
-        return {"message": "There was an error uploading the file"}
+async def upload_pdf(pdf_file: UploadFile, activity_uuid: str, org_uuid: str, course_uuid: str) -> str:
+    """Upload a PDF file for a course activity with file validation."""
+    return await upload_file(
+        file=pdf_file,
+        directory=f"courses/{course_uuid}/activities/{activity_uuid}/documentpdf",
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["document"],
+        filename_prefix="documentpdf",
+    )

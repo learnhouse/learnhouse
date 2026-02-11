@@ -1,5 +1,4 @@
 from typing import List
-from uuid import uuid4
 from fastapi import APIRouter, Depends, Request, UploadFile
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -221,14 +220,9 @@ async def api_update_community_thumbnail(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     if thumbnail:
-        # Generate unique filename
-        file_ext = thumbnail.filename.split(".")[-1] if thumbnail.filename else "jpg"
-        filename = f"thumbnail_{uuid4()}.{file_ext}"
-
-        # Upload thumbnail
-        await upload_community_thumbnail(
+        # Upload thumbnail (returns safe filename)
+        filename = await upload_community_thumbnail(
             thumbnail,
-            filename,
             org.org_uuid,
             community_uuid,
         )

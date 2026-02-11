@@ -485,9 +485,8 @@ async def create_podcast(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{podcast.podcast_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_podcast_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, podcast.podcast_uuid
+        name_in_disk = await upload_podcast_thumbnail(
+            thumbnail_file, org.org_uuid, podcast.podcast_uuid
         )
         podcast.thumbnail_image = name_in_disk
     else:
@@ -573,9 +572,8 @@ async def update_podcast_thumbnail(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = f"{podcast_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_podcast_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, podcast.podcast_uuid
+        name_in_disk = await upload_podcast_thumbnail(
+            thumbnail_file, org.org_uuid, podcast.podcast_uuid
         )
 
     # Update podcast

@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session
 
 from src.core.events.database import get_db_session
@@ -19,6 +19,7 @@ from src.services.api_tokens.api_tokens import (
     revoke_api_token,
     update_api_token,
 )
+from src.services.security.rate_limiting import check_api_token_rate_limit
 
 router = APIRouter()
 
@@ -39,6 +40,13 @@ async def api_create_api_token(
 
     Requires the user to have 'roles.action_create' permission in the organization.
     """
+    is_allowed, retry_after = check_api_token_rate_limit(request)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many token creation requests. Try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
     return await create_api_token(
         request, db_session, token_data, org_id, current_user
     )
@@ -129,6 +137,13 @@ async def api_regenerate_api_token(
 
     Requires the user to have 'roles.action_update' permission in the organization.
     """
+    is_allowed, retry_after = check_api_token_rate_limit(request)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many token regeneration requests. Try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
     return await regenerate_api_token(
         request, db_session, org_id, token_uuid, current_user
     )

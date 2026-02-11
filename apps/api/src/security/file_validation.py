@@ -121,6 +121,15 @@ FILE_TYPES = {
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
         'max_size': None,  # No limit
         'validator': validate_zip_content
+    },
+    'office': {
+        'extensions': ['.docx', '.pptx'],
+        'mime_types': [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        ],
+        'max_size': None,  # No limit
+        'validator': validate_zip_content  # OOXML formats are ZIP-based
     }
 }
 

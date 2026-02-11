@@ -489,7 +489,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
         config_version="1.3",
         general=OrgGeneralConfig(
             enabled=True,
-            color="normal",
+            color="",
             watermark=True,
         ),
         features=OrgFeatureConfig(

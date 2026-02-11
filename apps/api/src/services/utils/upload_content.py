@@ -1,3 +1,4 @@
+import logging
 from typing import Literal, Optional
 import boto3
 from botocore.exceptions import ClientError
@@ -5,6 +6,8 @@ import os
 from fastapi import HTTPException, UploadFile
 from config.config import get_learnhouse_config
 from src.security.file_validation import validate_upload
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_directory_exists(directory: str):
@@ -94,38 +97,29 @@ async def upload_content(
             f.close()
 
     elif content_delivery == "s3api":
-        # Upload to server then to s3 (AWS Keys are stored in environment variables and are loaded by boto3)
-        # TODO: Improve implementation of this
-        print("Uploading to s3...")
         s3 = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
         )
 
-        # Upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
+        bucket_name = learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
+        local_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+        s3_key = local_path
+
+        # Write to local temp file for S3 upload
+        with open(local_path, "wb") as f:
             f.write(file_binary)
-            f.close()
 
-        print("Uploading to s3 using boto3...")
         try:
-            s3.upload_file(
-                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-                "learnhouse-media",
-                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            )
+            s3.upload_file(local_path, bucket_name, s3_key)
+            s3.head_object(Bucket=bucket_name, Key=s3_key)
+            logger.debug("S3 upload successful: %s", s3_key)
         except ClientError as e:
-            print(e)
-
-        print("Checking if file exists in s3...")
-        try:
-            s3.head_object(
-                Bucket="learnhouse-media",
-                Key=f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            )
-            print("File upload successful!")
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
+            logger.error("S3 upload failed: %s", e)
+            raise HTTPException(status_code=500, detail="File upload to storage failed")
+        finally:
+            # Clean up local temp file after S3 upload
+            try:
+                os.remove(local_path)
+            except OSError:
+                pass

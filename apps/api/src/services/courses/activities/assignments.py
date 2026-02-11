@@ -519,12 +519,8 @@ async def put_assignment_task_reference_file(
 
     # Upload reference file
     if reference_file and reference_file.filename and activity and org:
-        name_in_disk = (
-            f"{assignment_task_uuid}{uuid4()}.{reference_file.filename.split('.')[-1]}"
-        )
-        await upload_reference_file(
+        name_in_disk = await upload_reference_file(
             reference_file,
-            name_in_disk,
             activity.activity_uuid,
             org.org_uuid,
             course.course_uuid,
@@ -605,10 +601,8 @@ async def put_assignment_task_submission_file(
 
     # Upload submission file
     if sub_file and sub_file.filename and activity and org:
-        name_in_disk = f"{assignment_task_uuid}_sub_{current_user.email}_{uuid4()}.{sub_file.filename.split('.')[-1]}"
-        await upload_submission_file(
+        name_in_disk = await upload_submission_file(
             sub_file,
-            name_in_disk,
             activity.activity_uuid,
             org.org_uuid,
             course.course_uuid,
@@ -1484,8 +1478,22 @@ async def update_assignment_submission(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Check if user is an instructor/admin (has UPDATE permission)
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+
+    if is_instructor:
+        # Instructors/admins can update any submission (e.g., for grading)
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    else:
+        # Regular users need READ access and can only update their own submissions
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+        if str(assignment_user_submission.user_id) != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="You can only update your own submissions",
+            )
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_user_submission_object).items():
