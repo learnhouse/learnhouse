@@ -3,7 +3,8 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCollectionById } from '@services/courses/collections'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import CollectionClient from './collection'
 
 type MetadataProps = {
@@ -82,12 +83,34 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const CollectionPage = async (props: { params: MetadataProps['params'] }) => {
   const params = await props.params
+  const session = await getServerSession()
+  const access_token = session?.tokens?.access_token
+
+  let collection: any = null
+  try {
+    collection = await getCollectionById(
+      `collection_${params.collectionid}`,
+      access_token || '',
+      { revalidate: 0, tags: ['collections'] }
+    )
+  } catch {
+    // Collection might not exist or user doesn't have access
+  }
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(params.orgslug, '/') },
+    { name: 'Collections', url: getCanonicalUrl(params.orgslug, '/courses') },
+    { name: collection?.name || 'Collection', url: getCanonicalUrl(params.orgslug, `/collection/${params.collectionid}`) },
+  ])
 
   return (
-    <CollectionClient
-      orgslug={params.orgslug}
-      collectionid={params.collectionid}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <CollectionClient
+        orgslug={params.orgslug}
+        collectionid={params.collectionid}
+      />
+    </>
   )
 }
 

@@ -20,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: 'Verify Email' + ` — ${org?.name || 'LearnHouse'}`,
+    robots: { index: false, follow: false },
   }
 }
 

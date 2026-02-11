@@ -3,7 +3,8 @@ import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunities } from '@services/communities/communities'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import CommunitiesClient from './communities'
 
 type MetadataProps = {
@@ -91,12 +92,20 @@ const CommunitiesPage = async (params: any) => {
     communities = []
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Communities', url: getCanonicalUrl(orgslug, '/communities') },
+  ])
+
   return (
-    <CommunitiesClient
-      communities={communities || []}
-      orgslug={orgslug}
-      org_id={org_id}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <CommunitiesClient
+        communities={communities || []}
+        orgslug={orgslug}
+        org_id={org_id}
+      />
+    </>
   )
 }
 

@@ -5,7 +5,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgCourses } from '@services/courses/courses'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
 import { JsonLd } from '@components/SEO/JsonLd'
 
 type MetadataProps = {
@@ -113,8 +113,14 @@ const CoursesPage = async (params: any) => {
     })),
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+  ])
+
   return (
     <div>
+      <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={coursesJsonLd} />
       <Courses org_id={org.id} orgslug={orgslug} courses={courses} />
     </div>

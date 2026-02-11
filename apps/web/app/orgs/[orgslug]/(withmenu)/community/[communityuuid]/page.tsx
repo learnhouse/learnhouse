@@ -4,7 +4,7 @@ import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussions, DiscussionWithAuthor } from '@services/communities/discussions'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
 import { JsonLd } from '@components/SEO/JsonLd'
 import CommunityClient from './community'
 
@@ -142,8 +142,15 @@ const CommunityPage = async (params: any) => {
     url: getCanonicalUrl(orgslug, `/community/${communityuuid}`),
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Communities', url: getCanonicalUrl(orgslug, '/communities') },
+    { name: community.name || 'Community', url: getCanonicalUrl(orgslug, `/community/${communityuuid}`) },
+  ])
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={communityJsonLd} />
       <CommunityClient
         community={community}

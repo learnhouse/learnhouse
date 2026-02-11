@@ -1,5 +1,10 @@
-import { getUriWithOrg } from '@services/config/config'
 import { NextRequest, NextResponse } from 'next/server'
+
+function getBaseUrlFromRequest(request: NextRequest): string {
+  const host = request.headers.get('host') || 'localhost'
+  const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https')
+  return `${proto}://${host}/`
+}
 
 export async function GET(request: NextRequest) {
   const orgSlug = request.headers.get('X-Robots-Orgslug')
@@ -11,7 +16,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const baseUrl = getUriWithOrg(orgSlug, '/')
+  const baseUrl = getBaseUrlFromRequest(request)
 
   const robotsTxt = `User-agent: *
 Allow: /

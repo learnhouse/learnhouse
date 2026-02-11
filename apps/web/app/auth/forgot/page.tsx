@@ -18,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: 'Forgot Password' + ` — ${org?.name || 'LearnHouse'}`,
+    robots: { index: false, follow: false },
   }
 }
 

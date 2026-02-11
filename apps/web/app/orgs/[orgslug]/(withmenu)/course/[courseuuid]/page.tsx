@@ -5,7 +5,8 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -127,14 +128,49 @@ const CoursePage = async (params: any) => {
     notFound()
   }
 
+  // Fetch org info for JSON-LD
+  const org = await getOrganizationContextInfo(orgslug, {
+    revalidate: 1800,
+    tags: ['organizations'],
+  })
+
+  // Build Course JSON-LD for structured data
+  const courseJsonLd = course_meta ? {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course_meta.name,
+    description: course_meta.description || '',
+    url: getCanonicalUrl(orgslug, `/course/${courseuuid}`),
+    provider: {
+      '@type': 'Organization',
+      name: org?.name || '',
+    },
+    ...(course_meta.thumbnail_image && org && {
+      image: getCourseThumbnailMediaDirectory(org.org_uuid, course_meta.course_uuid, course_meta.thumbnail_image),
+    }),
+    ...(course_meta.learnings && {
+      keywords: Array.isArray(course_meta.learnings) ? course_meta.learnings.join(', ') : course_meta.learnings,
+    }),
+  } : null
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+    { name: course_meta?.name || 'Course', url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
+  ])
+
   return (
-    <CourseClient
-      courseuuid={courseuuid}
-      orgslug={orgslug}
-      course={course_meta}
-      access_token={access_token}
-      serverError={fetchError}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      {courseJsonLd && <JsonLd data={courseJsonLd} />}
+      <CourseClient
+        courseuuid={courseuuid}
+        orgslug={orgslug}
+        course={course_meta}
+        access_token={access_token}
+        serverError={fetchError}
+      />
+    </>
   )
 }
 

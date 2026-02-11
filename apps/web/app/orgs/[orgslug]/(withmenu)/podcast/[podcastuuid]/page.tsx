@@ -3,7 +3,7 @@ import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getPodcastThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
 import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastClient from './podcast'
 
@@ -141,8 +141,15 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
     })),
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Podcasts', url: getCanonicalUrl(orgslug, '/podcasts') },
+    { name: podcastMeta.podcast.name, url: getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`) },
+  ])
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={podcastJsonLd} />
       <PodcastClient
         orgslug={orgslug}

@@ -15,6 +15,10 @@ from src.services.blocks.block_types.pdfBlock.pdfBlock import (
     create_pdf_block,
     get_pdf_block,
 )
+from src.services.blocks.block_types.audioBlock.audioBlock import (
+    create_audio_block,
+    get_audio_block,
+)
 
 from src.db.users import AnonymousUser, PublicUser
 
@@ -114,3 +118,35 @@ async def api_get_pdf_file_block(
     Get pdf file
     """
     return await get_pdf_block(request, block_uuid, current_user, db_session)
+
+
+####################
+# Audio Block
+####################
+
+
+@router.post("/audio")
+async def api_create_audio_file_block(
+    request: Request,
+    file_object: UploadFile,
+    activity_uuid: str = Form(),
+    db_session=Depends(get_db_session),
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
+) -> BlockRead:
+    """
+    Create new audio file
+    """
+    return await create_audio_block(request, file_object, activity_uuid, db_session)
+
+
+@router.get("/audio")
+async def api_get_audio_file_block(
+    request: Request,
+    block_uuid: str,
+    db_session=Depends(get_db_session),
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
+) -> BlockRead:
+    """
+    Get audio file
+    """
+    return await get_audio_block(request, block_uuid, current_user, db_session)
