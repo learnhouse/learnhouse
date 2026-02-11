@@ -85,6 +85,17 @@ def _set_session_cache(user_id: int, session_data: dict) -> None:
         logger.debug("Session cache write failed for user %s", user_id, exc_info=True)
 
 
+def _invalidate_session_cache(user_id: int) -> None:
+    """Invalidate cached session data for a user."""
+    r = _get_redis_client()
+    if r is None:
+        return
+    try:
+        r.delete(f"session:{user_id}")
+    except Exception:
+        logger.debug("Session cache invalidation failed for user %s", user_id, exc_info=True)
+
+
 @router.get("/profile")
 async def api_get_current_user(
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user)
@@ -263,7 +274,9 @@ async def api_update_user(
     """
     Update User
     """
-    return await update_user(request, db_session, user_id, current_user, user_object)
+    result = await update_user(request, db_session, user_id, current_user, user_object)
+    _invalidate_session_cache(user_id)
+    return result
 
 
 @router.put("/update_avatar/{user_id}", response_model=UserRead, tags=["users"])
@@ -287,7 +300,10 @@ async def api_update_avatar_user(
             status_code=403,
             detail="You can only update your own avatar",
         )
-    return await update_user_avatar(request, db_session, current_user, avatar_file)
+    result = await update_user_avatar(request, db_session, current_user, avatar_file)
+    # Invalidate session cache so the next session fetch returns the new avatar
+    _invalidate_session_cache(user_id)
+    return result
 
 
 @router.put("/change_password/{user_id}", response_model=UserRead, tags=["users"])

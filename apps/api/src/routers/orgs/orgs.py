@@ -53,8 +53,10 @@ from src.services.orgs.orgs import (
     upload_org_landing_content_service,
     update_org_auth_branding_config,
     upload_org_auth_background_service,
+    update_org_seo_config,
+    upload_org_og_image_service,
 )
-from src.db.organization_config import AuthBrandingConfig
+from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 
 
 router = APIRouter()
@@ -396,6 +398,42 @@ async def api_upload_org_auth_background(
     return await upload_org_auth_background_service(
         request=request,
         background_file=background_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )
+
+
+@router.put("/{org_id}/config/seo")
+async def api_update_org_seo_config(
+    request: Request,
+    org_id: int,
+    seo_config: SeoOrgConfig,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization SEO configuration
+    """
+    return await update_org_seo_config(
+        request, seo_config, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/og_image")
+async def api_upload_org_og_image(
+    request: Request,
+    org_id: int,
+    og_image_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Upload OG image for social media sharing
+    """
+    return await upload_org_og_image_service(
+        request=request,
+        og_image_file=og_image_file,
         org_id=org_id,
         current_user=current_user,
         db_session=db_session,

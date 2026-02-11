@@ -31,7 +31,7 @@ export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated'
 export interface UseSessionReturn {
   data: Session | null
   status: SessionStatus
-  update: () => Promise<void>
+  update: (force?: boolean) => Promise<void>
 }
 
 export interface SignInOptions {
@@ -78,7 +78,7 @@ interface AuthContextValue {
   session: Session | null
   status: SessionStatus
   accessToken: string | null
-  refreshSession: () => Promise<void>
+  refreshSession: (force?: boolean) => Promise<void>
   signIn: (provider: string, options?: SignInOptions) => Promise<SignInResult | void>
   signOut: (options?: SignOutOptions) => Promise<void>
 }
@@ -312,16 +312,22 @@ export function SessionProvider({
   }, [refreshAccessToken, fetchUserSession])
 
   // Main session refresh function
-  const refreshSession = useCallback(async () => {
-    // Check cache first
+  const refreshSession = useCallback(async (force?: boolean) => {
+    // Check cache first (skip if force refresh requested)
     const now = Date.now()
     if (
+      !force &&
       sessionCacheRef.current &&
       now - sessionCacheRef.current.timestamp < SESSION_CACHE_TTL
     ) {
       setSession(sessionCacheRef.current.data)
       setStatus('authenticated')
       return
+    }
+
+    // Invalidate cache when forcing
+    if (force) {
+      sessionCacheRef.current = null
     }
 
     try {

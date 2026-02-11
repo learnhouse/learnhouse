@@ -36,6 +36,7 @@ import {
   ToggleRight,
   Wrench,
   ChartLine,
+  MagnifyingGlass,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -465,6 +466,12 @@ function DashLeftMenu() {
                     <Link href="/dash/org/settings/landing" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <Rocket size={16} weight="fill" />
                       <span>{t('dashboard.organization.settings.tabs.landing')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/seo" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <MagnifyingGlass size={16} weight="fill" />
+                      <span>SEO</span>
                     </Link>
                   </HoverMenuItem>
                   <HoverMenuItem asChild>

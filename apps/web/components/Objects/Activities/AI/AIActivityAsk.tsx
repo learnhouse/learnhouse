@@ -1177,7 +1177,7 @@ const AISidePanelPlaceholder = (props: {
               <span className="flex items-center space-x-2">
                 <span>{t('common.hello')}</span>
                 <UserAvatar rounded="rounded-lg" border="border-2" width={28} shadow="shadow-none" />
-                <span className="capitalize">{session.data.user.username},</span>
+                <span className="capitalize">{session?.data?.user?.username},</span>
               </span>
               <span>{t('ai.how_can_we_help')}</span>
             </p>

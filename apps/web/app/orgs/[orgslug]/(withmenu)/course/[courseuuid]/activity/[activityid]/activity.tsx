@@ -452,14 +452,16 @@ function ActivityClient(props: ActivityClientProps) {
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
                         >
-                          <ActivityShareDropdown
-                            activityName={activity.name}
-                            activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
-                            orgslug={orgslug}
-                            courseUuid={course.course_uuid}
-                            activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                            activityType={activity.activity_type}
-                          />
+                          <div className="hidden sm:block">
+                            <ActivityShareDropdown
+                              activityName={activity.name}
+                              activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                              orgslug={orgslug}
+                              courseUuid={course.course_uuid}
+                              activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                              activityType={activity.activity_type}
+                            />
+                          </div>
                           <ActivityChapterDropdown
                             course={course}
                             currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
@@ -585,22 +587,22 @@ function ActivityClient(props: ActivityClientProps) {
                   />
                 ) : (
                   <div className="space-y-4 pt-0 relative">
-                    <div className="pt-2 pb-6">
+                    <div className="pt-2 pb-3 sm:pb-6">
                       <Breadcrumbs items={[
                         { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
                         { label: course.name, href: getUriWithOrg(orgslug, `/course/${courseuuid}`) },
                         { label: activity.name }
                       ]} />
                     </div>
-                    <div className="space-y-4 activity-info-section relative" style={{ zIndex: 'var(--z-content)' }}>
-                        <div className="flex justify-between items-center">
-                          <div className="flex space-x-6">
-                            <div className="flex">
+                    <div className="space-y-3 sm:space-y-4 activity-info-section relative" style={{ zIndex: 'var(--z-content)' }}>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                          <div className="flex space-x-4 sm:space-x-6 items-center">
+                            <div className="flex shrink-0">
                               <Link
                                 href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                               >
                                 <img
-                                  className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                                  className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] rounded-md drop-shadow-md"
                                   src={course.thumbnail_image
                                     ? getCourseThumbnailMediaDirectory(
                                         org?.org_uuid,
@@ -614,20 +616,22 @@ function ActivityClient(props: ActivityClientProps) {
                               </Link>
                             </div>
                             <div className="flex flex-col -space-y-1">
-                              <p className="font-bold text-gray-700 text-md">{t('search.course')} </p>
-                              <h1 className="font-bold text-gray-950 text-3xl first-letter:uppercase">
+                              <p className="font-bold text-gray-700 text-xs sm:text-md">{t('search.course')} </p>
+                              <h1 className="font-bold text-gray-950 text-lg sm:text-3xl first-letter:uppercase">
                                 {course.name}
                               </h1>
                             </div>
                           </div>
-                          <ActivityShareDropdown
-                            activityName={activity.name}
-                            activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
-                            orgslug={orgslug}
-                            courseUuid={course.course_uuid}
-                            activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                            activityType={activity.activity_type}
-                          />
+                          <div className="hidden sm:block">
+                            <ActivityShareDropdown
+                              activityName={activity.name}
+                              activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                              orgslug={orgslug}
+                              courseUuid={course.course_uuid}
+                              activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                              activityType={activity.activity_type}
+                            />
+                          </div>
                         </div>
 
                         <ActivityIndicators
@@ -639,13 +643,13 @@ function ActivityClient(props: ActivityClientProps) {
                           trailData={trailData}
                         />
 
-                        <div className="flex justify-between items-center w-full">
-                          <div className="flex flex-1/3 items-center space-x-3">
-                            <div className="flex flex-col -space-y-1">
-                              <p className="font-bold text-gray-700 text-md">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
+                          <div className="flex flex-1 items-center space-x-3 min-w-0">
+                            <div className="flex flex-col -space-y-1 min-w-0">
+                              <p className="font-bold text-gray-700 text-xs sm:text-md">
                                 {getChapterNameByActivityId(course, activity.id)}
                               </p>
-                              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                              <h1 className="font-bold text-gray-950 text-base sm:text-2xl first-letter:uppercase">
                                 {activity.name}
                               </h1>
                               {/* Authors and Dates Section */}
@@ -712,7 +716,7 @@ function ActivityClient(props: ActivityClientProps) {
                                   </div>
                                 )}
                                 {/* Dates */}
-                                <div className="flex items-center text-xs text-gray-500 gap-2">
+                                <div className="flex flex-wrap items-center text-xs text-gray-500 gap-1 sm:gap-2">
                                   <span>
                                     {t('courses.created_on')} {new Date(course.creation_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                                   </span>
@@ -724,7 +728,7 @@ function ActivityClient(props: ActivityClientProps) {
                               </div>
                             </div>
                           </div>
-                          <div className="flex space-x-2 items-center relative" style={{ zIndex: 'var(--z-interactive)' }}>
+                          <div className="hidden sm:flex space-x-2 items-center relative shrink-0" style={{ zIndex: 'var(--z-interactive)' }}>
                             {activity && activity.published == true && activity.content.paid_access != false && (
                               <AuthenticatedClientElement checkMethod="authentication">
                                 {activity.activity_type != 'TYPE_ASSIGNMENT' && (
@@ -769,10 +773,10 @@ function ActivityClient(props: ActivityClientProps) {
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-3 sm:p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 <button
                                   onClick={() => setIsFocusMode(true)}
-                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
+                                  className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
                                   style={{ zIndex: 'var(--z-interactive)' }}
                                   title={t('activities.focus_mode')}
                                 >
@@ -795,16 +799,16 @@ function ActivityClient(props: ActivityClientProps) {
 
                       {/* Activity Actions below the content box */}
                       {activity && activity.published == true && activity.content.paid_access != false && (
-                        <div className="flex justify-between items-center mt-4 w-full">
-                          <div>
-                            <PreviousActivityButton 
-                              course={course} 
-                              currentActivityId={activity.id} 
-                              orgslug={orgslug} 
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-4 w-full gap-2 sm:gap-0">
+                          <div className="order-1 sm:order-none">
+                            <PreviousActivityButton
+                              course={course}
+                              currentActivityId={activity.id}
+                              orgslug={orgslug}
                             />
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <ActivityActions 
+                          <div className="flex items-center justify-between sm:justify-end space-x-2 order-2 sm:order-none">
+                            <ActivityActions
                               activity={activity}
                               activityid={activityid}
                               course={course}
@@ -812,10 +816,10 @@ function ActivityClient(props: ActivityClientProps) {
                               assignment={assignment}
                               showNavigation={false}
                             />
-                            <NextActivityButton 
-                              course={course} 
-                              currentActivityId={activity.id} 
-                              orgslug={orgslug} 
+                            <NextActivityButton
+                              course={course}
+                              currentActivityId={activity.id}
+                              orgslug={orgslug}
                             />
                           </div>
                         </div>
@@ -1150,12 +1154,12 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-gray-200 rounded-md px-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:bg-gray-200"
+      className="bg-gray-200 rounded-md px-3 sm:px-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] flex flex-col p-2 sm:p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:bg-gray-200"
     >
       <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.next')}</span>
       <div className="flex items-center space-x-1">
-        <span className="text-sm font-semibold truncate max-w-[200px]">{nextActivity.name}</span>
-        <ChevronRight size={17} />
+        <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{nextActivity.name}</span>
+        <ChevronRight size={17} className="shrink-0" />
       </div>
     </div>
   );
@@ -1203,12 +1207,12 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-white rounded-md px-4 nice-shadow flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+      className="bg-white rounded-md px-3 sm:px-4 nice-shadow flex flex-col p-2 sm:p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
     >
       <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.previous')}</span>
       <div className="flex items-center space-x-1">
-        <ChevronLeft size={17} />
-        <span className="text-sm font-semibold truncate max-w-[200px]">{previousActivity.name}</span>
+        <ChevronLeft size={17} className="shrink-0" />
+        <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{previousActivity.name}</span>
       </div>
     </div>
   );

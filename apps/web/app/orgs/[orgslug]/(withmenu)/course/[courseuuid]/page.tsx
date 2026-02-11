@@ -3,8 +3,9 @@ import CourseClient from './course'
 import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -40,16 +41,20 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 
   // SEO - use custom SEO fields with fallbacks to existing fields
+  const seoConfig = getOrgSeoConfig(org)
   const seo = course_meta.seo || {}
-  const defaultTitle = course_meta.name + ` — ${org.name}`
-  const defaultDescription = course_meta.description || ''
+  const defaultTitle = buildPageTitle(course_meta.name, org.name, seoConfig)
+  const defaultDescription = course_meta.description || seoConfig.default_meta_description || ''
+  const orgOgImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
   const defaultImage = course_meta?.thumbnail_image
     ? getCourseThumbnailMediaDirectory(
         org?.org_uuid,
         course_meta?.course_uuid,
         course_meta?.thumbnail_image
       )
-    : '/empty_thumbnail.png'
+    : orgOgImageUrl || '/empty_thumbnail.png'
 
   // Determine robots settings
   const shouldIndex = !seo.robots_noindex
@@ -69,11 +74,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
         'max-image-preview': 'large',
       },
     },
-    ...(seo.canonical_url && {
-      alternates: {
-        canonical: seo.canonical_url,
-      },
-    }),
+    alternates: {
+      canonical: seo.canonical_url || getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`),
+    },
     openGraph: {
       title: seo.og_title || seo.title || defaultTitle,
       description: seo.og_description || seo.description || defaultDescription,
@@ -94,6 +97,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       title: seo.twitter_title || seo.og_title || seo.title || defaultTitle,
       description: seo.twitter_description || seo.og_description || seo.description || defaultDescription,
       images: [seo.og_image || defaultImage],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
