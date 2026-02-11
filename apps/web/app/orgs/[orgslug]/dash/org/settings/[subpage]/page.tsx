@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe, Search } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -15,6 +15,7 @@ import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
 import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
+import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -38,6 +39,7 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
+  { id: 'seo', label: 'SEO', icon: Search },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains') || 'Domains', icon: Globe, requiredPlan: 'standard' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
@@ -98,6 +100,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'landing') {
       setH1Label(t('dashboard.organization.settings.pages.landing.title'))
       setH2Label(t('dashboard.organization.settings.pages.landing.subtitle'))
+    } else if (params.subpage == 'seo') {
+      setH1Label('SEO')
+      setH2Label('Manage search engine optimization settings')
     } else if (params.subpage == 'ai') {
       setH1Label(t('dashboard.organization.settings.pages.ai.title') || 'AI Features')
       setH2Label(t('dashboard.organization.settings.pages.ai.subtitle') || 'Configure AI capabilities for your organization')
@@ -162,6 +167,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'features' ? <OrgEditFeatures /> : ''}
         {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
+        {params.subpage == 'seo' ? <OrgEditSEO /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}
         {params.subpage == 'domains' ? <OrgEditDomains /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}

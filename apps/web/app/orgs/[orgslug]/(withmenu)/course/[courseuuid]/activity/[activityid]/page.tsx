@@ -2,8 +2,11 @@ import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { getCourseMetadata } from '@services/courses/courses'
 import ActivityClient from './activity'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -45,12 +48,26 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
   // Check if this is the course end page
   const isCourseEnd = params.activityid === 'end';
-  const pageTitle = isCourseEnd ? `Congratulations — ${course_meta.name} Course` : activity.name + ` — ${course_meta.name} Course`;
+  const seoConfig = getOrgSeoConfig(org)
+  const rawTitle = isCourseEnd ? `Congratulations — ${course_meta.name} Course` : `${activity.name} — ${course_meta.name} Course`
+  const pageTitle = seoConfig.default_meta_title_suffix ? `${rawTitle}${seoConfig.default_meta_title_suffix}` : rawTitle
+
+  const orgOgImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
+  const imageUrl = course_meta?.thumbnail_image
+    ? getCourseThumbnailMediaDirectory(
+        org?.org_uuid,
+        course_meta?.course_uuid,
+        course_meta?.thumbnail_image
+      )
+    : orgOgImageUrl || '/empty_thumbnail.png'
+  const canonical = getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}/activity/${params.activityid}`)
 
   // SEO
   return {
     title: pageTitle,
-    description: course_meta.description,
+    description: course_meta.description || seoConfig.default_meta_description || '',
     keywords: course_meta.learnings,
     robots: {
       index: true,
@@ -62,11 +79,29 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
         'max-image-preview': 'large',
       },
     },
+    alternates: {
+      canonical,
+    },
     openGraph: {
       title: pageTitle,
-      description: course_meta.description,
+      description: course_meta.description || seoConfig.default_meta_description || '',
       publishedTime: course_meta.creation_date,
       tags: course_meta.learnings,
+      images: [
+        {
+          url: imageUrl,
+          width: 800,
+          height: 600,
+          alt: course_meta.name,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: course_meta.description || seoConfig.default_meta_description || '',
+      images: [imageUrl],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
@@ -100,14 +135,24 @@ const ActivityPage = async (params: any) => {
     notFound()
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+    { name: course_meta.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
+    { name: activity.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}/activity/${activityid}`) },
+  ])
+
   return (
-    <ActivityClient
-      activityid={activityid}
-      courseuuid={courseuuid}
-      orgslug={orgslug}
-      activity={activity}
-      course={course_meta}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <ActivityClient
+        activityid={activityid}
+        courseuuid={courseuuid}
+        orgslug={orgslug}
+        activity={activity}
+        course={course_meta}
+      />
+    </>
   )
 }
 

@@ -121,6 +121,17 @@ class OrgCloudConfig(BaseModel):
     custom_domain: bool = False
 
 
+# SEO
+class SeoOrgConfig(BaseModel):
+    default_meta_title_suffix: str = ""
+    default_meta_description: str = ""
+    default_og_image: str = ""
+    google_site_verification: str = ""
+    twitter_handle: str = ""
+    noindex_communities: bool = False
+    noindex_docs: bool = False
+
+
 # Main Config
 class OrganizationConfigBase(BaseModel):
     config_version: str = "1.4"
@@ -128,6 +139,7 @@ class OrganizationConfigBase(BaseModel):
     features: OrgFeatureConfig
     cloud: OrgCloudConfig
     landing: dict = Field(default_factory=dict)
+    seo: SeoOrgConfig = SeoOrgConfig()
 
 
 class OrganizationConfig(SQLModel, table=True):

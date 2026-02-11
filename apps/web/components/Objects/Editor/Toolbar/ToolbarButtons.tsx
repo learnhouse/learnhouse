@@ -32,6 +32,7 @@ import {
   ListOrdered,
   Globe,
   GitBranch,
+  Headphones,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -340,6 +341,23 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label={t('editor.blocks.video')}
         >
           <Video size={15} />
+        </div>
+      </ToolTip>
+      <ToolTip content="Audio">
+        <div
+          className="editor-tool-btn editor-tool-btn-media"
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: 'blockAudio',
+              })
+              .run()
+          }
+          aria-label="Audio"
+        >
+          <Headphones size={15} />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.youtube')}>

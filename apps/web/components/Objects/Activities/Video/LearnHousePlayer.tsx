@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useState, useCallback, useEffect } from 'react'
+import { useMediaQuery } from 'usehooks-ts'
 import {
   Play,
   Pause,
@@ -62,6 +63,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   const [showSettings, setShowSettings] = useState(false)
   const [showVolumeSlider, setShowVolumeSlider] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   // Hide controls after inactivity
   const resetHideControlsTimer = useCallback(() => {
@@ -229,9 +231,11 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="learnhouse-player relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40"
-      onMouseMove={resetHideControlsTimer}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
+      className={`learnhouse-player relative w-full aspect-video overflow-hidden bg-black ${
+        isMobile ? 'rounded-none' : 'rounded-xl shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40'
+      }`}
+      onMouseMove={!isMobile ? resetHideControlsTimer : undefined}
+      onMouseLeave={!isMobile ? () => isPlaying && setShowControls(false) : undefined}
     >
       {/* Video Element */}
       <video
@@ -242,6 +246,8 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         preload="metadata"
         playsInline
         muted={isMuted}
+        controls={isMobile}
+        controlsList="nodownload"
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
@@ -259,6 +265,9 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
         onError={(e) => console.error('Video error:', e)}
       />
 
+      {/* Custom controls - desktop only */}
+      {!isMobile && (
+        <>
       {/* Click overlay for play/pause */}
       <div
         className="absolute inset-0 z-10 cursor-pointer"
@@ -413,6 +422,8 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }

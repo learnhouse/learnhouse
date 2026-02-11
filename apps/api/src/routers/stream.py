@@ -191,6 +191,138 @@ async def stream_activity_video(
         )
 
 
+@router.get("/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+async def stream_block_audio(
+    request: Request,
+    org_uuid: str = Path(..., description="Organization UUID"),
+    course_uuid: str = Path(..., description="Course UUID"),
+    activity_uuid: str = Path(..., description="Activity UUID"),
+    block_uuid: str = Path(..., description="Block UUID"),
+    filename: str = Path(..., description="Audio filename"),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Stream an audio file from an audio block with proper Range request support.
+
+    SECURITY: Validates user has read access to the course via RBAC.
+    """
+    # SECURITY: Verify user has access to this course/activity
+    await _verify_course_activity_access(request, course_uuid, activity_uuid, current_user, db_session)
+
+    # Construct and validate the file path
+    file_path = validate_video_path(
+        CONTENT_DIR,
+        "orgs",
+        org_uuid,
+        "courses",
+        course_uuid,
+        "activities",
+        activity_uuid,
+        "dynamic",
+        "blocks",
+        "audioBlock",
+        block_uuid,
+        filename,
+    )
+
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    # Get file info
+    file_size, mime_type, exists = get_file_info(file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    # Parse Range header if present
+    range_header = request.headers.get("range")
+    start, end = parse_range_header(range_header, file_size)
+
+    # Calculate content length for this range
+    content_length = end - start + 1
+
+    # Common headers for audio streaming
+    headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Type": mime_type,
+        "Cache-Control": "public, max-age=86400",
+        "X-Content-Type-Options": "nosniff",
+    }
+
+    if range_header:
+        headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
+        headers["Content-Length"] = str(content_length)
+
+        return StreamingResponse(
+            stream_video_file(file_path, start, end, CHUNK_SIZE),
+            status_code=206,
+            headers=headers,
+            media_type=mime_type,
+        )
+    else:
+        headers["Content-Length"] = str(file_size)
+
+        return StreamingResponse(
+            stream_video_file(file_path, 0, file_size - 1, CHUNK_SIZE),
+            status_code=200,
+            headers=headers,
+            media_type=mime_type,
+        )
+
+
+@router.head("/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+async def head_block_audio(
+    request: Request,
+    org_uuid: str = Path(..., description="Organization UUID"),
+    course_uuid: str = Path(..., description="Course UUID"),
+    activity_uuid: str = Path(..., description="Activity UUID"),
+    block_uuid: str = Path(..., description="Block UUID"),
+    filename: str = Path(..., description="Audio filename"),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    HEAD request for block audio - returns metadata without body.
+
+    SECURITY: Validates user has read access to the course via RBAC.
+    """
+    await _verify_course_activity_access(request, course_uuid, activity_uuid, current_user, db_session)
+
+    file_path = validate_video_path(
+        CONTENT_DIR,
+        "orgs",
+        org_uuid,
+        "courses",
+        course_uuid,
+        "activities",
+        activity_uuid,
+        "dynamic",
+        "blocks",
+        "audioBlock",
+        block_uuid,
+        filename,
+    )
+
+    if not file_path:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    file_size, mime_type, exists = get_file_info(file_path)
+
+    if not exists:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    return Response(
+        status_code=200,
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(file_size),
+            "Content-Type": mime_type,
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+
 @router.get("/block/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
 async def stream_block_video(
     request: Request,

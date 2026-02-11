@@ -80,7 +80,7 @@ function DashMobileMenu() {
           </ToolTip>
         </AdminAuthorization>
         <ToolTip content={t('common.settings')} slateBlack sideOffset={8} side="top">
-          <Link href={'/dash/user-account/settings/general'} className="flex flex-col items-center p-2" aria-label="User account settings">
+          <Link href={'/account/general'} className="flex flex-col items-center p-2" aria-label="User account settings">
             <Settings size={20} />
             <span className="text-xs mt-1">{t('common.settings')}</span>
           </Link>

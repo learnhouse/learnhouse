@@ -2,7 +2,9 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunities } from '@services/communities/communities'
-import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import CommunitiesClient from './communities'
 
 type MetadataProps = {
@@ -17,31 +19,51 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     tags: ['organizations'],
   })
 
+  const seoConfig = getOrgSeoConfig(org)
+
+  const ogImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
+  const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
+  const title = buildPageTitle('Communities', org.name, seoConfig)
+  const description = seoConfig.default_meta_description || `Discussion communities from ${org.name}`
+  const canonical = getCanonicalUrl(params.orgslug, '/communities')
+
   return {
-    title: `Communities — ${org.name}`,
-    description: `Discussion communities from ${org.name}`,
+    title,
+    description,
     robots: {
-      index: true,
+      index: !seoConfig.noindex_communities,
       follow: true,
       nocache: true,
       googleBot: {
-        index: true,
+        index: !seoConfig.noindex_communities,
         follow: true,
         'max-image-preview': 'large',
       },
     },
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title: `Communities — ${org.name}`,
-      description: `Discussion communities from ${org.name}`,
+      title,
+      description,
       type: 'website',
       images: [
         {
-          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
+          url: imageUrl,
           width: 800,
           height: 600,
           alt: org.name,
         },
       ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
@@ -70,12 +92,20 @@ const CommunitiesPage = async (params: any) => {
     communities = []
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Communities', url: getCanonicalUrl(orgslug, '/communities') },
+  ])
+
   return (
-    <CommunitiesClient
-      communities={communities || []}
-      orgslug={orgslug}
-      org_id={org_id}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <CommunitiesClient
+        communities={communities || []}
+        orgslug={orgslug}
+        org_id={org_id}
+      />
+    </>
   )
 }
 

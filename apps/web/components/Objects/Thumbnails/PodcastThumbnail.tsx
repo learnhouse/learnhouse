@@ -78,7 +78,11 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
     ? getPodcastThumbnailMediaDirectory(org?.org_uuid, podcast.podcast_uuid, podcast.thumbnail_image)
     : '/empty_thumbnail.png'
 
-  const podcastLink = customLink ? customLink : getUriWithOrg(orgslug, `/podcast/${removePodcastPrefix(podcast.podcast_uuid)}`)
+  const podcastLink = customLink
+    ? customLink
+    : isDashboard
+      ? getUriWithOrg(orgslug, `/dash/podcasts/podcast/${removePodcastPrefix(podcast.podcast_uuid)}/general`)
+      : getUriWithOrg(orgslug, `/podcast/${removePodcastPrefix(podcast.podcast_uuid)}`)
 
   return (
     <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">

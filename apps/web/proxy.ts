@@ -89,7 +89,9 @@ export const config = {
      */
     '/((?!api|_next|fonts|umami|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/sitemap.xml',
+    '/robots.txt',
     '/payments/stripe/connect/oauth',
+    '/podcast/:path*/feed',
   ],
 }
 
@@ -262,24 +264,65 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Podcast RSS Feed rewrite
+  if (pathname.match(/^\/podcast\/([^\/]+)\/feed$/)) {
+    let orgslug: string;
+    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
+      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
+      if (resolvedOrg) {
+        orgslug = resolvedOrg.slug;
+      } else {
+        orgslug = default_org as string;
+      }
+    } else if (hosting_mode === 'multi') {
+      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
+    } else {
+      orgslug = default_org as string;
+    }
+    const feedUrl = new URL(`/api${pathname}`, req.url);
+    const response = NextResponse.rewrite(feedUrl);
+    response.headers.set('X-Feed-Orgslug', orgslug);
+    return response;
+  }
+
   if (pathname.startsWith('/sitemap.xml')) {
     let orgslug: string;
 
-    if (hosting_mode === 'multi') {
+    // Check custom domain first (fixes bug where sitemap ran before custom domain detection)
+    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
+      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
+      if (resolvedOrg) {
+        orgslug = resolvedOrg.slug
+      } else {
+        orgslug = default_org as string
+      }
+    } else if (hosting_mode === 'multi') {
       orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
     } else {
-      // Single hosting mode
       orgslug = default_org as string;
     }
 
     const sitemapUrl = new URL(`/api/sitemap`, req.url);
-
-    // Create a response object
     const response = NextResponse.rewrite(sitemapUrl);
-
-    // Set the orgslug in a header
     response.headers.set('X-Sitemap-Orgslug', orgslug);
+    return response;
+  }
 
+  if (pathname === '/robots.txt') {
+    let orgslug: string;
+
+    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
+      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
+      orgslug = resolvedOrg?.slug || (default_org as string)
+    } else if (hosting_mode === 'multi') {
+      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
+    } else {
+      orgslug = default_org as string;
+    }
+
+    const robotsUrl = new URL(`/api/robots`, req.url);
+    const response = NextResponse.rewrite(robotsUrl);
+    response.headers.set('X-Robots-Orgslug', orgslug);
     return response;
   }
 

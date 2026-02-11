@@ -1,8 +1,10 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
+import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { JsonLd } from '@components/SEO/JsonLd'
 import { getOrgDocSpaces, getDefaultDocSpace } from '@services/docs/docspaces'
 import { redirect } from 'next/navigation'
 import DocsLandingClient from './docs-landing'
@@ -20,34 +22,53 @@ export async function generateMetadata({
     tags: ['organizations'],
   })
 
+  const seoConfig = getOrgSeoConfig(org)
+  const ogImageUrl = seoConfig.default_og_image
+    ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
+    : null
+  const imageUrl = ogImageUrl || (org ? getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image) : undefined)
+  const title = buildPageTitle('Documentation', org?.name || 'Organization', seoConfig)
+  const description = org?.description || seoConfig.default_meta_description || `Browse documentation from ${org?.name || 'this organization'}`
+  const canonical = getCanonicalUrl(orgslug, '/docs')
+
   return {
-    title: `Documentation — ${org?.name || 'Organization'}`,
-    description: org?.description || `Browse documentation from ${org?.name || 'this organization'}`,
+    title,
+    description,
     keywords: `${org?.name}, documentation, docs, help, guides, ${org?.name} docs`,
     robots: {
-      index: true,
+      index: !seoConfig.noindex_docs,
       follow: true,
       nocache: true,
       googleBot: {
-        index: true,
+        index: !seoConfig.noindex_docs,
         follow: true,
         'max-image-preview': 'large',
       },
     },
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title: `Documentation — ${org?.name || 'Organization'}`,
-      description: org?.description || `Browse documentation from ${org?.name || 'this organization'}`,
+      title,
+      description,
       type: 'website',
-      images: org
-        ? [
-            {
-              url: getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image),
-              width: 800,
-              height: 600,
-              alt: org.name,
-            },
-          ]
-        : [],
+      ...(imageUrl && {
+        images: [
+          {
+            url: imageUrl,
+            width: 800,
+            height: 600,
+            alt: org?.name || 'Documentation',
+          },
+        ],
+      }),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      ...(imageUrl && { images: [imageUrl] }),
+      ...(seoConfig.twitter_handle && { site: seoConfig.twitter_handle }),
     },
   }
 }
@@ -94,10 +115,18 @@ export default async function DocsPage({ params }: { params: PageParams }) {
     }
   }
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
+    { name: 'Documentation', url: getCanonicalUrl(orgslug, '/docs') },
+  ])
+
   return (
-    <DocsLandingClient
-      orgslug={orgslug}
-      docspaces={docspaces}
-    />
+    <>
+      <JsonLd data={breadcrumbJsonLd} />
+      <DocsLandingClient
+        orgslug={orgslug}
+        docspaces={docspaces}
+      />
+    </>
   )
 }

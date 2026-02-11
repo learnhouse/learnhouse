@@ -61,7 +61,7 @@ function DashboardHome() {
         </AdminAuthorization>
 
         <Link
-          href={'/dash/user-account/settings/general'}
+          href={'/account/general'}
           className="flex bg-white shadow-lg p-4 items-center rounded-lg mx-auto hover:scale-105 transition-all ease-linear cursor-pointer max-w-md"
         >
           <div className="flex flex-col sm:flex-row mx-auto gap-2 sm:gap-3 items-center text-center sm:text-left">
