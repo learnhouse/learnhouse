@@ -90,8 +90,8 @@ export async function resetPassword(
   reset_code: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}users/reset_password/change_password/${email}?reset_code=${reset_code}&new_password=${new_password}&org_id=${org_id}`,
-    RequestBody('POST', null, null)
+    `${getAPIUrl()}users/reset_password/change_password/${email}`,
+    RequestBody('POST', { new_password, org_id, reset_code }, null)
   )
   const res = await getResponseMetadata(result)
   return res

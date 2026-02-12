@@ -22,6 +22,7 @@ from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
     check_login_rate_limit,
     check_refresh_rate_limit,
+    check_email_verification_rate_limit,
     get_client_ip,
 )
 from src.services.security.account_lockout import (
@@ -398,6 +399,14 @@ async def api_verify_email(
     """
     Verify user email with token.
     """
+    # Rate limit: 5 attempts per 5 minutes per user_uuid
+    is_allowed, retry_after = check_email_verification_rate_limit(body.user_uuid)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many verification attempts. Please try again in {retry_after // 60} minutes.",
+        )
+
     result = await verify_email_token(
         request=request,
         db_session=db_session,

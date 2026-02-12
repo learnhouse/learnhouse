@@ -47,24 +47,74 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                     self.allowed_regexp, e,
                 )
 
-    def is_allowed_origin(self, origin: str | None) -> bool:
-        """Check if the origin is allowed."""
-        if not origin:
-            # No origin header - could be same-origin request
-            return True
+    def _extract_origin_from_url(self, url: str) -> str | None:
+        """Extract origin (scheme + host) from a URL."""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            if parsed.scheme and parsed.netloc:
+                return f"{parsed.scheme}://{parsed.netloc}"
+        except Exception:
+            pass
+        return None
 
-        # Check explicit allowed origins
+    def _is_origin_allowed(self, origin: str) -> bool:
+        """Check a single origin value against allowed list."""
         if origin in self.allowed_origins:
             return True
 
-        # Check against regexp
         if self.compiled_regexp and self.compiled_regexp.match(origin):
             return True
 
-        # In development mode, allow localhost origins
         if self.development_mode:
             if "localhost" in origin or "127.0.0.1" in origin:
                 return True
+
+        return False
+
+    def is_allowed_origin(self, origin: str | None, referer: str | None = None) -> bool:
+        """Check if the request origin is allowed.
+
+        Uses Origin header first, falls back to Referer header.
+        Rejects state-changing requests that have neither.
+        """
+        if origin:
+            return self._is_origin_allowed(origin)
+
+        # No Origin header — fall back to Referer
+        if referer:
+            referer_origin = self._extract_origin_from_url(referer)
+            if referer_origin:
+                return self._is_origin_allowed(referer_origin)
+
+        # No Origin and no Referer — reject state-changing requests
+        # (API clients using Bearer tokens are not affected by CSRF
+        # since tokens must be explicitly attached)
+        return False
+
+    def _is_csrf_exempt(self, request: Request) -> bool:
+        """Check if the request is exempt from CSRF validation.
+
+        CSRF attacks exploit browser-sent cookies. Only requests that use
+        auth mechanisms which NEVER fall back to cookies are exempt:
+
+        - API tokens (Bearer lh_*): validated independently, rejected if invalid
+          (auth.py never falls back to cookies for lh_ tokens)
+        - Stripe webhooks: use HMAC signature verification, no cookies involved
+
+        Regular Bearer JWT tokens are NOT exempt because get_current_user()
+        falls back to cookie auth when the JWT is invalid — an attacker could
+        send a fake Bearer header to bypass CSRF while the real auth happens
+        via the victim's cookies.
+        """
+        auth_header = request.headers.get("authorization", "")
+        # Only exempt API tokens (lh_*) — these never fall back to cookies
+        if auth_header.lower().startswith("bearer lh_"):
+            return True
+
+        # Stripe webhooks use signature-based verification, not cookies
+        if request.headers.get("stripe-signature"):
+            return True
 
         return False
 
@@ -73,11 +123,16 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if request.method not in STATE_CHANGING_METHODS:
             return await call_next(request)
 
-        # Get origin header
+        # Skip CSRF for requests using explicit auth (not cookie-based)
+        if self._is_csrf_exempt(request):
+            return await call_next(request)
+
+        # Get origin and referer headers
         origin = request.headers.get("origin")
+        referer = request.headers.get("referer")
 
         # Validate origin
-        if not self.is_allowed_origin(origin):
+        if not self.is_allowed_origin(origin, referer):
             return JSONResponse(
                 status_code=403,
                 content={

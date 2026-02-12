@@ -10,7 +10,6 @@ from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
-from src.services.dev.dev import isDevModeEnabled
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY
 
@@ -59,14 +58,10 @@ def decode_jwt(token: str) -> Optional[dict]:
     - Uses explicit algorithm list to prevent algorithm confusion attacks
     """
     try:
-        # SECURITY: Always require sub claim, require exp in production
+        # SECURITY: Always require sub and exp claims, always verify expiration.
+        # Dev mode no longer bypasses JWT expiration to prevent leaked tokens
+        # from being valid forever if dev mode is accidentally left on.
         decode_options = {"require": ["exp", "sub"]}
-
-        if isDevModeEnabled():
-            # Dev mode: skip expiration verification for convenience
-            # Tokens still have exp set, just not enforced during development
-            decode_options["verify_exp"] = False
-            decode_options["require"] = ["sub"]  # Don't require exp in dev (for legacy tokens)
 
         payload = jwt.decode(
             token,
@@ -156,10 +151,8 @@ def decode_refresh_token(token: str) -> Optional[dict]:
     Dev mode does not affect refresh token validation.
     """
     try:
+        # SECURITY: Always verify expiration for refresh tokens
         decode_options = {"require": ["exp", "sub"]}
-        if isDevModeEnabled():
-            # Dev mode: skip expiration verification but still require the claim
-            decode_options["verify_exp"] = False
 
         payload = jwt.decode(
             token,

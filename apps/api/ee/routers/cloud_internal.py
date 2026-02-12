@@ -1,4 +1,5 @@
 import os
+import secrets
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session
@@ -11,9 +12,10 @@ router = APIRouter()
 
 # Utils
 def check_internal_cloud_key(request: Request):
-    if request.headers.get("CloudInternalKey") != os.environ.get(
-        "CLOUD_INTERNAL_KEY"
-    ):
+    provided_key = request.headers.get("CloudInternalKey", "")
+    expected_key = os.environ.get("CLOUD_INTERNAL_KEY", "")
+    # SECURITY: Use constant-time comparison to prevent timing attacks
+    if not provided_key or not expected_key or not secrets.compare_digest(provided_key, expected_key):
         raise HTTPException(status_code=403, detail="Unauthorized")
 
 @router.get("/explore/orgs")

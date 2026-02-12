@@ -568,7 +568,8 @@ async def get_list_of_invited_users(
             detail="Could not connect to Redis",
         )
 
-    invited_users = r.keys(f"invited_user:*:org:{org.org_uuid}")
+    # Use scan_iter instead of keys() to avoid blocking Redis
+    invited_users = list(r.scan_iter(match=f"invited_user:*:org:{org.org_uuid}", count=100))
 
     invited_users_list = []
 

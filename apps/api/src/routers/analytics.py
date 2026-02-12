@@ -10,11 +10,13 @@ from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, User
+from src.db.user_organizations import UserOrganization
+from src.db.roles import Role
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.db.trail_runs import TrailRun
 from src.security.auth import get_current_user
-from src.security.rbac.rbac import authorization_verify_based_on_roles
+from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 import httpx
@@ -145,6 +147,66 @@ async def _execute_tinybird_query(
     return response
 
 
+def _verify_org_membership(user_id: int, org_id: int, db_session: Session) -> None:
+    """Verify the user is a member of the specified organization.
+
+    Prevents cross-org data access (IDOR) by ensuring the requesting user
+    actually belongs to the org whose data they are querying.
+    Superadmins bypass this check (they have access to all organizations).
+    """
+    if is_user_superadmin(user_id, db_session):
+        return
+
+    membership = db_session.exec(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Not a member of this organization")
+
+
+def _verify_org_admin(user_id: int, org_id: int, db_session: Session) -> None:
+    """Verify the user has admin/maintainer role or a custom role with
+    organizations.action_update permission in the specific organization.
+
+    Unlike the old 'org_x' check, this ensures admin status is scoped
+    to the actual organization being accessed — not any org the user belongs to.
+    Superadmins bypass this check.
+    """
+    if is_user_superadmin(user_id, db_session):
+        return
+
+    # Get the user's role in this specific org
+    membership = db_session.exec(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == org_id,
+        )
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    # Fetch the role to check permissions
+    role = db_session.exec(
+        select(Role).where(Role.id == membership.role_id)
+    ).first()
+    if not role:
+        raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+    # Check if the role has organizations.action_update permission
+    if role.rights:
+        rights = role.rights
+        org_rights = rights.get("organizations") if isinstance(rights, dict) else getattr(rights, "organizations", None)
+        if org_rights:
+            has_update = org_rights.get("action_update", False) if isinstance(org_rights, dict) else getattr(org_rights, "action_update", False)
+            if has_update:
+                return
+
+    raise HTTPException(status_code=403, detail="Admin access required for this organization")
+
+
 def _parse_safe_params(
     org_id: int,
     request: Request,
@@ -253,9 +315,12 @@ async def ingest_frontend_event(
     body: FrontendEvent,
     request: Request,
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
+
+    _verify_org_membership(current_user.id, body.org_id, db_session)
 
     if body.event_name not in ALLOWED_FRONTEND_EVENTS:
         raise HTTPException(status_code=400, detail="Invalid event name")
@@ -309,11 +374,9 @@ async def query_dashboard_detail(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_membership(current_user.id, org_id, db_session)
+
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     if query_name not in DETAIL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown detail query")
@@ -367,12 +430,10 @@ async def query_dashboard(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
+    _verify_org_membership(current_user.id, org_id, db_session)
+
     # Admin check
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     if query_name not in ALL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown query")
@@ -410,11 +471,9 @@ async def query_dashboard_db(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_membership(current_user.id, org_id, db_session)
+
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     DB_QUERIES = {"grade_distribution"}
 
@@ -517,11 +576,9 @@ async def query_course_dashboard_detail(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_membership(current_user.id, org_id, db_session)
+
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     # Pro plan required for all course analytics
     current_plan = get_org_plan(org_id, db_session)
@@ -610,11 +667,9 @@ async def query_course_dashboard(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_membership(current_user.id, org_id, db_session)
+
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     # Pro plan required for all course analytics
     current_plan = get_org_plan(org_id, db_session)
@@ -655,11 +710,9 @@ async def export_analytics(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    is_admin = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", "org_x", db_session
-    )
-    if not is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _verify_org_membership(current_user.id, org_id, db_session)
+
+    _verify_org_admin(current_user.id, org_id, db_session)
 
     # Parse params
     fmt = request.query_params.get("format", "json")
@@ -732,6 +785,8 @@ async def get_plan_info(
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
+
+    _verify_org_membership(current_user.id, org_id, db_session)
 
     current_plan = get_org_plan(org_id, db_session)
     tier = "advanced" if plan_meets_requirement(current_plan, "pro") else "core"

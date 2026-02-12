@@ -50,6 +50,15 @@ class UserRead(UserBase):
     is_superadmin: bool = False
 
 
+class UserReadPublic(UserBase):
+    """User model for public-facing endpoints — excludes sensitive fields."""
+    id: int
+    user_uuid: str
+    email_verified: bool = False
+    avatar_image: Optional[str] = ""
+    bio: Optional[str] = ""
+
+
 class PublicUser(UserRead):
     pass
 

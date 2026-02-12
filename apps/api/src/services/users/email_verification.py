@@ -18,8 +18,8 @@ from src.services.email.utils import get_base_url_from_request
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
 
 
-# Token expiration time in seconds (24 hours)
-TOKEN_TTL_SECONDS = 24 * 60 * 60
+# Token expiration time in seconds (1 hour)
+TOKEN_TTL_SECONDS = 60 * 60
 
 
 def get_redis_connection() -> redis.Redis:
@@ -258,9 +258,9 @@ def invalidate_verification_tokens(user_uuid: str, org_uuid: str) -> None:
     """
     r = get_redis_connection()
 
-    # Find and delete all tokens for this user/org
+    # Find and delete all tokens for this user/org (use scan_iter to avoid blocking Redis)
     pattern = f"email_verification:{user_uuid}:org:{org_uuid}:token:*"
-    keys = r.keys(pattern)
+    keys = list(r.scan_iter(match=pattern, count=100))
 
     if keys:
         r.delete(*keys)

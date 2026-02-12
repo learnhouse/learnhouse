@@ -21,6 +21,11 @@ class SearchResult(BaseModel):
     collections: List[CollectionRead]
     users: List[UserRead]
 
+def _escape_like_wildcards(query: str) -> str:
+    """Escape SQL LIKE wildcards to prevent user enumeration via pattern matching."""
+    return query.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+
 async def search_across_org(
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -38,12 +43,16 @@ async def search_across_org(
     - Anonymous users CANNOT search/enumerate users (privacy protection)
     - Maximum limit enforced at service level
     - Uses parameterized queries (SQL injection protected)
+    - LIKE wildcards are escaped to prevent user enumeration
     """
     from fastapi import HTTPException, status
 
     # SECURITY: Enforce maximum limit to prevent data dumping
     limit = min(limit, 50)
     offset = (page - 1) * limit
+
+    # SECURITY: Escape SQL LIKE wildcards to prevent pattern-based enumeration
+    search_query = _escape_like_wildcards(search_query)
 
     # Get organization
     org_statement = select(Organization).where(Organization.slug == org_slug)
