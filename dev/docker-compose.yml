@@ -39,4 +39,3 @@ services:
 volumes:
   learnhouse_db_dev_data:
   learnhouse_redis_dev_data:
-

@@ -27,6 +27,7 @@ from src.db.users import (
     User,
     UserCreate,
     UserRead,
+    UserReadPublic,
     UserRoleWithOrg,
     UserSession,
     UserUpdate,
@@ -489,6 +490,7 @@ async def read_user_by_id(
     Get user by ID.
 
     SECURITY: Returns 404 with generic message to prevent user enumeration.
+    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
     """
     # Get user
     statement = select(User).where(User.id == user_id)
@@ -500,9 +502,7 @@ async def read_user_by_id(
             detail="Resource not found",  # Generic message prevents enumeration
         )
 
-    user = UserRead.model_validate(user)
-
-    return user
+    return UserReadPublic.model_validate(user)
 
 
 async def read_user_by_uuid(
@@ -515,6 +515,7 @@ async def read_user_by_uuid(
     Get user by UUID.
 
     SECURITY: Returns 404 with generic message to prevent user enumeration.
+    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
     """
     # Get user
     statement = select(User).where(User.user_uuid == user_uuid)
@@ -526,9 +527,7 @@ async def read_user_by_uuid(
             detail="Resource not found",  # Generic message prevents enumeration
         )
 
-    user = UserRead.model_validate(user)
-
-    return user
+    return UserReadPublic.model_validate(user)
 
 
 async def read_user_by_username(
@@ -541,6 +540,7 @@ async def read_user_by_username(
     Get user by username.
 
     SECURITY: Returns 404 with generic message to prevent username enumeration.
+    Returns UserReadPublic to exclude sensitive fields (is_superadmin, signup_method).
     """
     # Get user
     statement = select(User).where(User.username == username)
@@ -552,9 +552,7 @@ async def read_user_by_username(
             detail="Resource not found",  # Generic message prevents enumeration
         )
 
-    user = UserRead.model_validate(user)
-
-    return user
+    return UserReadPublic.model_validate(user)
 
 
 async def get_user_session(

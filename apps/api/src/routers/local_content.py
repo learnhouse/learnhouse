@@ -1,8 +1,9 @@
 """
-Content Files Router
+Local Content Files Router
 
-Serves static content files from S3 storage when S3 is enabled.
-Replaces the StaticFiles mount for S3 deployments.
+Serves static content files from the local filesystem with access control.
+Replaces the unauthenticated StaticFiles mount to enforce authorization
+on private course/podcast content while allowing public content through.
 
 SECURITY:
 - Activity content (videos, PDFs, blocks) for non-public courses requires auth
@@ -11,9 +12,12 @@ SECURITY:
 - Podcast episode content for non-public podcasts requires auth
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse, Response
+import os
 from pathlib import Path
+from urllib.parse import unquote
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 
 from src.core.events.database import get_db_session
@@ -22,69 +26,31 @@ from src.db.podcasts.podcasts import Podcast
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.user_organizations import UserOrganization
 from src.security.auth import get_current_user
-from src.services.courses.transfer.storage_utils import (
-    get_storage_client,
-    get_s3_bucket_name,
-)
 
 router = APIRouter()
 
-# MIME type mapping
-MIME_TYPES = {
-    '.mp4': 'video/mp4',
-    '.webm': 'video/webm',
-    '.mov': 'video/quicktime',
-    '.avi': 'video/x-msvideo',
-    '.mkv': 'video/x-matroska',
-    '.mp3': 'audio/mpeg',
-    '.wav': 'audio/wav',
-    '.aac': 'audio/aac',
-    '.flac': 'audio/flac',
-    '.m4a': 'audio/mp4',
-    '.ogg': 'audio/ogg',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.pdf': 'application/pdf',
-    '.doc': 'application/msword',
-    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.zip': 'application/zip',
-    '.json': 'application/json',
-    '.xml': 'application/xml',
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'application/javascript',
-    '.txt': 'text/plain',
-}
-
-CHUNK_SIZE = 1024 * 1024  # 1MB
-
-
-def _get_mime_type(file_path: str) -> str:
-    ext = Path(file_path).suffix.lower()
-    return MIME_TYPES.get(ext, 'application/octet-stream')
+CONTENT_DIR = Path("content")
 
 
 def _validate_content_path(file_path: str) -> bool:
-    """Prevent directory traversal including URL-encoded sequences."""
-    from urllib.parse import unquote
-    # Decode any URL-encoded characters to catch %2e%2e etc.
-    decoded = unquote(unquote(file_path))  # Double-decode to catch double-encoding
+    """Validate path is safe — prevents directory traversal."""
+    # Decode URL-encoded characters (double-decode for double-encoding attacks)
+    decoded = unquote(unquote(file_path))
     if '..' in decoded or decoded.startswith('/') or '\x00' in decoded:
         return False
-    # Normalize path separators
     normalized = decoded.replace('\\', '/')
     if '..' in normalized:
         return False
-    # Defense-in-depth: resolve path and verify it stays within the content prefix
-    base = Path("content").resolve()
-    resolved = (base / normalized).resolve()
-    if not str(resolved).startswith(str(base)):
+
+    # Resolve and verify the path stays within CONTENT_DIR
+    try:
+        resolved = (CONTENT_DIR / decoded).resolve()
+        base_resolved = CONTENT_DIR.resolve()
+        if not str(resolved).startswith(str(base_resolved) + os.sep) and resolved != base_resolved:
+            return False
+    except (OSError, ValueError):
         return False
+
     return True
 
 
@@ -171,10 +137,12 @@ def _check_content_access(
         return
 
     # Course metadata (thumbnails, etc.) and org-level content — always public
+    # These are displayed on listing pages to all users
     if len(parts) >= 2 and parts[0] == 'orgs':
         return
 
     # User content (avatars, profile images) — always public
+    # Paths: users/{user_uuid}/avatars/...
     if len(parts) >= 2 and parts[0] == 'users':
         return
 
@@ -183,155 +151,98 @@ def _check_content_access(
         raise HTTPException(status_code=401, detail="Authentication required")
 
 
+# MIME type mapping
+_MIME_TYPES = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.m4a': 'audio/mp4',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.ico': 'image/x-icon',
+    '.pdf': 'application/pdf',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.zip': 'application/zip',
+    '.json': 'application/json',
+    '.txt': 'text/plain',
+}
+
+
 @router.get("/content/{file_path:path}")
-async def serve_content_file(
+async def serve_local_content(
     request: Request,
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Serve content files from S3 storage.
+    Serve content files from local filesystem with access control.
 
-    Supports HTTP Range requests for video/audio seeking.
+    SECURITY: Validates user access based on resource ownership.
+    Public courses/podcasts are accessible to anonymous users.
+    Private content requires authentication.
     """
     if not _validate_content_path(file_path):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
 
-    s3_key = f"content/{file_path}"
-    s3_client = get_storage_client()
-    bucket = get_s3_bucket_name()
+    full_path = CONTENT_DIR / file_path
+    resolved = full_path.resolve()
 
-    if not s3_client:
-        raise HTTPException(status_code=500, detail="Storage not configured")
-
-    # Get file metadata
-    try:
-        head = s3_client.head_object(Bucket=bucket, Key=s3_key)
-    except Exception:
+    if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_size = head['ContentLength']
-    mime_type = _get_mime_type(file_path)
+    ext = resolved.suffix.lower()
+    media_type = _MIME_TYPES.get(ext, 'application/octet-stream')
 
-    headers = {
-        "Accept-Ranges": "bytes",
-        "Content-Type": mime_type,
-        "Cache-Control": "public, max-age=86400",
-        "X-Content-Type-Options": "nosniff",
-    }
-
-    range_header = request.headers.get("range")
-
-    if range_header:
-        # Parse range
-        try:
-            range_spec = range_header.replace('bytes=', '')
-            if range_spec.startswith('-'):
-                suffix_length = int(range_spec[1:])
-                start = max(0, file_size - suffix_length)
-                end = file_size - 1
-            elif range_spec.endswith('-'):
-                start = int(range_spec[:-1])
-                end = file_size - 1
-            else:
-                parts = range_spec.split('-')
-                start = int(parts[0])
-                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
-
-            start = max(0, min(start, file_size - 1))
-            end = max(start, min(end, file_size - 1))
-        except (ValueError, IndexError):
-            start, end = 0, file_size - 1
-
-        content_length = end - start + 1
-        headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
-        headers["Content-Length"] = str(content_length)
-
-        def stream_range():
-            remaining = content_length
-            pos = start
-            while remaining > 0:
-                chunk_end = min(pos + CHUNK_SIZE - 1, end)
-                resp = s3_client.get_object(
-                    Bucket=bucket, Key=s3_key,
-                    Range=f"bytes={pos}-{chunk_end}",
-                )
-                data = resp['Body'].read()
-                if not data:
-                    break
-                remaining -= len(data)
-                pos += len(data)
-                yield data
-
-        return StreamingResponse(
-            stream_range(),
-            status_code=206,
-            headers=headers,
-            media_type=mime_type,
-        )
-    else:
-        headers["Content-Length"] = str(file_size)
-
-        def stream_full():
-            remaining = file_size
-            pos = 0
-            while remaining > 0:
-                chunk_end = min(pos + CHUNK_SIZE - 1, file_size - 1)
-                resp = s3_client.get_object(
-                    Bucket=bucket, Key=s3_key,
-                    Range=f"bytes={pos}-{chunk_end}",
-                )
-                data = resp['Body'].read()
-                if not data:
-                    break
-                remaining -= len(data)
-                pos += len(data)
-                yield data
-
-        return StreamingResponse(
-            stream_full(),
-            status_code=200,
-            headers=headers,
-            media_type=mime_type,
-        )
+    return FileResponse(
+        path=str(resolved),
+        media_type=media_type,
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.head("/content/{file_path:path}")
-async def head_content_file(
+async def head_local_content(
+    request: Request,
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
-    """HEAD request for content files - returns metadata without body."""
+    """HEAD request for content files — returns metadata without body."""
     if not _validate_content_path(file_path):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
 
-    s3_key = f"content/{file_path}"
-    s3_client = get_storage_client()
-    bucket = get_s3_bucket_name()
+    full_path = CONTENT_DIR / file_path
+    resolved = full_path.resolve()
 
-    if not s3_client:
-        raise HTTPException(status_code=500, detail="Storage not configured")
-
-    try:
-        head = s3_client.head_object(Bucket=bucket, Key=s3_key)
-    except Exception:
+    if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_size = head['ContentLength']
-    mime_type = _get_mime_type(file_path)
+    ext = resolved.suffix.lower()
+    media_type = _MIME_TYPES.get(ext, 'application/octet-stream')
+    file_size = resolved.stat().st_size
 
+    from fastapi.responses import Response
     return Response(
         status_code=200,
         headers={
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
-            "Content-Type": mime_type,
+            "Content-Type": media_type,
             "Cache-Control": "public, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
         },
     )

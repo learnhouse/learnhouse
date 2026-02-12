@@ -190,10 +190,6 @@ async def api_import_scorm_as_course(
     Requires enterprise plan.
     """
     check_enterprise_plan(import_request.org_id, db_session)
-    print(f"[SCORM Router] Received import request: org_id={import_request.org_id}, course_name={import_request.course_name}")
-    print(f"[SCORM Router] sco_assignments count: {len(import_request.sco_assignments)}")
-    for i, a in enumerate(import_request.sco_assignments):
-        print(f"[SCORM Router] Assignment {i}: sco_identifier={a.sco_identifier}, activity_name={a.activity_name}, chapter_name={a.chapter_name}")
 
     result = await import_scorm_as_new_course(
         request=request,
@@ -222,20 +218,22 @@ async def api_get_scorm_content(
     request: Request,
     activity_uuid: str,
     file_path: str,
+    current_user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     """
     Serve SCORM content files.
     The file_path parameter captures the full path within the SCORM package.
 
-    Note: This endpoint does not require authentication to allow SCORM content
-    to load sub-resources (JS, CSS, images) without needing tokens on every request.
-    Access control is enforced at the page/activity level in the frontend.
+    SECURITY: Requires authentication for non-public courses.
+    Public+published courses allow anonymous access so SCORM sub-resources
+    (JS, CSS, images) can load without per-request tokens.
     """
     from sqlmodel import select
     from src.db.courses.activities import Activity
     from src.db.organizations import Organization
     from src.db.courses.courses import Course
+    from src.db.users import AnonymousUser
 
     validate_activity_uuid(activity_uuid)
 
@@ -259,6 +257,11 @@ async def api_get_scorm_content(
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+
+    # SECURITY: Check access — allow public courses, require auth otherwise
+    if not course.public:
+        if isinstance(current_user, AnonymousUser):
+            raise HTTPException(status_code=401, detail="Authentication required")
 
     # Get the content file path
     content_path = get_scorm_content_path(

@@ -214,12 +214,23 @@ async def change_password_with_reset_code(
             detail="Could not connect to Redis",
         )
 
-    # Get reset code - SECURITY: Use generic error messages
-    reset_code_key = f"*:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
-    keys = r.keys(reset_code_key)
+    # SECURITY: Validate reset_code is strictly alphanumeric to prevent
+    # Redis wildcard injection (e.g., "*" matching any code)
+    if not reset_code.isalnum():
+        logging.warning(f"Invalid reset code format for user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset code",
+        )
 
-    # SECURITY FIX: Generic error message to prevent code enumeration
-    if not keys:
+    # SECURITY: Use scan_iter instead of keys() to avoid blocking Redis
+    reset_code_pattern = f"*:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
+    matched_key = None
+    for key in r.scan_iter(match=reset_code_pattern, count=10):
+        matched_key = key
+        break
+
+    if not matched_key:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
@@ -227,7 +238,7 @@ async def change_password_with_reset_code(
         )
 
     # Get reset code object
-    reset_code_value = r.get(keys[0])
+    reset_code_value = r.get(matched_key)
 
     if reset_code_value is None:
         logging.warning(f"Reset code value missing for user: {user.user_uuid}")
@@ -240,7 +251,7 @@ async def change_password_with_reset_code(
     # Check if reset code is expired
     if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
         # Delete expired code
-        r.delete(keys[0])
+        r.delete(matched_key)
         logging.info(f"Expired reset code used for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
@@ -255,7 +266,7 @@ async def change_password_with_reset_code(
     db_session.refresh(user)
 
     # Delete reset code (one-time use)
-    r.delete(keys[0])
+    r.delete(matched_key)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     return "Password changed"

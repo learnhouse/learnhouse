@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Literal, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
 import redis
 from config.config import get_learnhouse_config
@@ -10,6 +10,7 @@ from src.services.users.password_reset import (
     change_password_with_reset_code,
     send_reset_password_code,
 )
+from src.services.security.rate_limiting import check_password_reset_rate_limit
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user, get_authenticated_user
 from src.core.events.database import get_db_session
@@ -20,6 +21,7 @@ from src.db.users import (
     PublicUser,
     UserCreate,
     UserRead,
+    UserReadPublic,
     UserSession,
     UserUpdate,
     UserUpdatePassword,
@@ -213,51 +215,54 @@ async def api_create_user_without_org(
     return await create_user_without_org(request, db_session, current_user, user_object)
 
 
-@router.get("/id/{user_id}", response_model=UserRead, tags=["users"])
+@router.get("/id/{user_id}", response_model=UserReadPublic, tags=["users"])
 async def api_get_user_by_id(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     user_id: int,
-) -> UserRead:
+) -> UserReadPublic:
     """
     Get User by ID.
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
     Anonymous users cannot access this endpoint.
+    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_id(request, db_session, current_user, user_id)
 
 
-@router.get("/uuid/{user_uuid}", response_model=UserRead, tags=["users"])
+@router.get("/uuid/{user_uuid}", response_model=UserReadPublic, tags=["users"])
 async def api_get_user_by_uuid(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     user_uuid: str,
-) -> UserRead:
+) -> UserReadPublic:
     """
     Get User by UUID.
 
     SECURITY: Requires authentication to prevent user enumeration attacks.
+    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
 
-@router.get("/username/{username}", response_model=UserRead, tags=["users"])
+@router.get("/username/{username}", response_model=UserReadPublic, tags=["users"])
 async def api_get_user_by_username(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     username: str,
-) -> UserRead:
+) -> UserReadPublic:
     """
     Get User by Username.
 
     SECURITY: Requires authentication to prevent username enumeration attacks.
+    Returns a restricted view — sensitive fields (is_superadmin, signup_method) are excluded.
     """
     return await read_user_by_username(request, db_session, current_user, username)
 
@@ -321,22 +326,37 @@ async def api_update_user_password(
     return await update_user_password(request, db_session, current_user, user_id, form)
 
 
+class ResetPasswordRequest(BaseModel):
+    new_password: str
+    org_id: int
+    reset_code: str
+
+
 @router.post("/reset_password/change_password/{email}", tags=["users"])
 async def api_change_password_with_reset_code(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-    new_password: str,
     email: EmailStr,
-    org_id: int,
-    reset_code: str,
+    body: ResetPasswordRequest,
 ):
     """
-    Update User Password with reset code
+    Update User Password with reset code.
+
+    SECURITY: Password and reset code are in the request body (not query params)
+    to prevent them from appearing in server logs and browser history.
     """
+    # Rate limit: 5 attempts per 5 minutes per email
+    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+
     return await change_password_with_reset_code(
-        request, db_session, current_user, new_password, org_id, email, reset_code
+        request, db_session, current_user, body.new_password, body.org_id, email, body.reset_code
     )
 
 

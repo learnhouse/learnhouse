@@ -59,12 +59,23 @@ def validate_zip(content: bytes) -> bool:
 
 def sanitize_path(path: str) -> str:
     """Sanitize file path to prevent directory traversal attacks"""
+    from urllib.parse import unquote
+    from pathlib import PurePosixPath
+    # Decode URL-encoded characters to catch %2e%2e etc.
+    path = unquote(unquote(path))
+    # Strip null bytes
+    path = path.replace('\x00', '')
     # Remove leading slashes and normalize
     path = path.lstrip('/\\')
     # Remove any .. components
     parts = path.replace('\\', '/').split('/')
     safe_parts = [p for p in parts if p and p != '..']
-    return '/'.join(safe_parts)
+    sanitized = '/'.join(safe_parts)
+    # Final check: resolve and verify no traversal remains
+    resolved = PurePosixPath(sanitized)
+    if '..' in resolved.parts:
+        return ''
+    return sanitized
 
 
 async def analyze_import_package(

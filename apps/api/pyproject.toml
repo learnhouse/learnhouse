@@ -40,6 +40,7 @@ dependencies = [
     "protobuf>=6.33.5",
     "workos>=5.0.0",
     "dnspython>=2.6.0",
+    "defusedxml>=0.7.1",
 ]
 
 [tool.ruff]

@@ -6,11 +6,11 @@ from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
 from src.router import v1_router
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
 from src.core.ee_hooks import register_ee_middlewares
 from src.security.csrf import CSRFProtectionMiddleware
 from src.routers.content_files import router as content_files_router
+from src.routers.local_content import router as local_content_router
 
 
 ########################
@@ -27,7 +27,7 @@ if learnhouse_config.general_config.sentry_config.dsn:
     sentry_sdk.init(
         dsn=learnhouse_config.general_config.sentry_config.dsn,
         environment=learnhouse_config.general_config.env,
-        send_default_pii=True,
+        send_default_pii=False,
         enable_logs=True,
         traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
         profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
@@ -75,10 +75,11 @@ app.add_event_handler("shutdown", shutdown_app(app))
 
 
 # Static Files - use S3-aware router when S3 is enabled, otherwise serve locally
+# SECURITY: Both paths use routers with access control instead of raw StaticFiles
 if learnhouse_config.hosting_config.content_delivery.type == "s3api":
     app.include_router(content_files_router)
 else:
-    app.mount("/content", StaticFiles(directory="content"), name="content")
+    app.include_router(local_content_router)
 
 # Global Routes
 app.include_router(v1_router)

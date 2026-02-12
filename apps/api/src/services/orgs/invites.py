@@ -1,5 +1,5 @@
 import json
-import random
+import secrets
 import string
 import uuid
 from typing import Optional
@@ -59,8 +59,8 @@ async def create_invite_code(
             detail="Could not connect to Redis",
         )
 
-    # Check if this org has more than 6 invite codes
-    invite_codes = r.keys(f"*:org:{org.org_uuid}:code:*")
+    # Check if this org has more than 6 invite codes (use scan_iter to avoid blocking Redis)
+    invite_codes = list(r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:*", count=100))
 
     if len(invite_codes) >= 6:
         raise HTTPException(
@@ -81,10 +81,10 @@ async def create_invite_code(
                 detail="UserGroup not found or does not belong to this organization",
             )
 
-    # Generate invite code
-    def generate_code(length=5):
-        letters_and_digits = string.ascii_letters + string.digits
-        return "".join(random.choice(letters_and_digits) for _ in range(length))
+    # Generate invite code using cryptographically secure random
+    def generate_code(length=8):
+        alphabet = string.ascii_letters + string.digits
+        return "".join(secrets.choice(alphabet) for _ in range(length))
 
     generated_invite_code = generate_code()
     invite_code_uuid = f"org_invite_code_{uuid.uuid4()}"
@@ -152,8 +152,8 @@ async def get_invite_codes(
             detail="Could not connect to Redis",
         )
 
-    # Get invite codes
-    invite_codes = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:*")
+    # Get invite codes (use scan_iter to avoid blocking Redis)
+    invite_codes = list(r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:*", count=100))
 
     invite_codes_list = []
 
@@ -214,19 +214,29 @@ async def get_invite_code(
             detail="Could not connect to Redis",
         )
 
-    # Get invite code
-    invite_code = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}")  # type: ignore
-
-    if not invite_code:
+    # SECURITY: Validate invite code is alphanumeric to prevent Redis wildcard injection
+    if not invite_code.isalnum():
         raise HTTPException(
             status_code=404,
             detail="Invite code not found",
         )
 
-    invite_code = r.get(invite_code[0])  # type: ignore
-    invite_code = json.loads(invite_code)
+    # Get invite code (use scan_iter to avoid blocking Redis)
+    matched_key = None
+    for key in r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}", count=10):
+        matched_key = key
+        break
 
-    return invite_code
+    if not matched_key:
+        raise HTTPException(
+            status_code=404,
+            detail="Invite code not found",
+        )
+
+    invite_code_value = r.get(matched_key)
+    invite_code_data = json.loads(invite_code_value)
+
+    return invite_code_data
 
 
 async def delete_invite_code(
@@ -269,8 +279,8 @@ async def delete_invite_code(
             detail="Could not connect to Redis",
         )
 
-    # Delete invite code
-    keys = r.keys(f"{invite_code_uuid}:org:{org.org_uuid}:code:*")
+    # Delete invite code (use scan_iter to avoid blocking Redis)
+    keys = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))
     if keys:
         r.delete(*keys)
 
@@ -308,8 +318,8 @@ def send_invite_email(
             detail="Could not connect to Redis",
         )
 
-    # Get invite code
-    invite = r.keys(f"{invite_code_uuid}:org:{org.org_uuid}:code:*")  # type: ignore
+    # Get invite code (use scan_iter to avoid blocking Redis)
+    invite = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))  # type: ignore
 
     # Send email
     if invite:

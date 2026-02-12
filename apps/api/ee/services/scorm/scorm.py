@@ -3,10 +3,13 @@ SCORM Package Processing Service
 Handles analysis, extraction, and import of SCORM packages
 """
 
+import logging
 import os
+import re
 import shutil
 import zipfile
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
+from xml.etree.ElementTree import Element
 from datetime import datetime
 from typing import Optional
 from uuid import uuid4
@@ -35,6 +38,11 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.rbac import check_resource_access, AccessAction
 
+logger = logging.getLogger(__name__)
+
+# Regex to validate temp_package_id as a UUID
+_VALID_UUID = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+
 
 # SCORM namespace definitions
 SCORM_12_NAMESPACE = "http://www.imsproject.org/xsd/imscp_rootv1p1p2"
@@ -47,6 +55,8 @@ TEMP_SCORM_DIR = "content/temp/scorm"
 
 # Max SCORM package size: 200MB
 MAX_SCORM_PACKAGE_SIZE = 200 * 1024 * 1024
+# Max single file size within a SCORM package: 50MB
+MAX_SCORM_FILE_SIZE = 50 * 1024 * 1024
 
 
 def validate_scorm_zip(content: bytes) -> bool:
@@ -64,7 +74,55 @@ def sanitize_path(path: str) -> str:
     return '/'.join(safe_parts)
 
 
-def detect_scorm_version(manifest_root: ET.Element) -> ScormVersionEnum:
+def _safe_extract_zip(zip_path: str, extract_dir: str) -> None:
+    """Extract a ZIP file with security hardening.
+
+    Protections:
+    - Zip bomb: total uncompressed size capped at 5x MAX_SCORM_PACKAGE_SIZE
+    - Per-file size limit: MAX_SCORM_FILE_SIZE (50 MB)
+    - Symlinks: skipped entirely to prevent symlink traversal
+    - Path traversal: sanitize_path + realpath containment check
+    """
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        total_size = sum(info.file_size for info in zip_ref.infolist())
+        if total_size > MAX_SCORM_PACKAGE_SIZE * 5:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid SCORM package: suspicious compression ratio",
+            )
+
+        abs_extract = os.path.realpath(extract_dir)
+
+        for info in zip_ref.infolist():
+            # Skip symlinks (external_attr upper 16 bits: 0xA000 = symlink)
+            if ((info.external_attr >> 16) & 0xF000) == 0xA000:
+                logger.warning("SCORM zip contains symlink, skipping: %s", info.filename)
+                continue
+
+            # Per-file size limit
+            if info.file_size > MAX_SCORM_FILE_SIZE:
+                logger.warning("SCORM zip file too large, skipping: %s (%d bytes)", info.filename, info.file_size)
+                continue
+
+            safe_path = sanitize_path(info.filename)
+            if not safe_path:
+                continue
+
+            target_path = os.path.join(extract_dir, safe_path)
+
+            # Use realpath to resolve any symlinks and verify containment
+            if not os.path.realpath(target_path).startswith(abs_extract + os.sep) and os.path.realpath(target_path) != abs_extract:
+                continue
+
+            if info.is_dir():
+                os.makedirs(target_path, exist_ok=True)
+            else:
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                with zip_ref.open(info) as source, open(target_path, 'wb') as target:
+                    shutil.copyfileobj(source, target)
+
+
+def detect_scorm_version(manifest_root: Element) -> ScormVersionEnum:
     """Detect SCORM version from manifest XML"""
     # Check for SCORM 2004 indicators
     for elem in manifest_root.iter():
@@ -90,7 +148,7 @@ def detect_scorm_version(manifest_root: ET.Element) -> ScormVersionEnum:
     return ScormVersionEnum.SCORM_12
 
 
-def extract_scos_from_manifest(manifest_root: ET.Element, scorm_version: ScormVersionEnum) -> list[ScormScoInfo]:
+def extract_scos_from_manifest(manifest_root: Element, scorm_version: ScormVersionEnum) -> list[ScormScoInfo]:
     """Extract all SCOs from the manifest"""
     scos = []
 
@@ -182,7 +240,7 @@ def extract_scos_from_manifest(manifest_root: ET.Element, scorm_version: ScormVe
     return scos
 
 
-def get_package_title(manifest_root: ET.Element) -> str:
+def get_package_title(manifest_root: Element) -> str:
     """Extract the package title from manifest"""
     # Try to find title in organizations
     for elem in manifest_root.iter():
@@ -248,33 +306,7 @@ async def analyze_scorm_package(
         extract_dir = os.path.join(temp_dir, "extracted")
         os.makedirs(extract_dir, exist_ok=True)
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            # Check for zip bomb (ratio check)
-            total_size = sum(info.file_size for info in zip_ref.infolist())
-            if total_size > MAX_SCORM_PACKAGE_SIZE * 10:  # 10x compression ratio limit
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid SCORM package: Suspicious compression ratio"
-                )
-
-            # Extract with path sanitization
-            for info in zip_ref.infolist():
-                safe_path = sanitize_path(info.filename)
-                if not safe_path:
-                    continue
-
-                target_path = os.path.join(extract_dir, safe_path)
-
-                # Ensure target is within extract_dir
-                if not os.path.abspath(target_path).startswith(os.path.abspath(extract_dir)):
-                    continue
-
-                if info.is_dir():
-                    os.makedirs(target_path, exist_ok=True)
-                else:
-                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                    with zip_ref.open(info) as source, open(target_path, 'wb') as target:
-                        shutil.copyfileobj(source, target)
+        _safe_extract_zip(zip_path, extract_dir)
 
         # Find and parse imsmanifest.xml
         manifest_path = os.path.join(extract_dir, "imsmanifest.xml")
@@ -315,18 +347,20 @@ async def analyze_scorm_package(
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise
     except ET.ParseError as e:
+        logger.warning("SCORM manifest parse error: %s", e)
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid SCORM package: Could not parse manifest - {str(e)}"
+            detail="Invalid SCORM package: Could not parse manifest"
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("Error analyzing SCORM package")
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Error analyzing SCORM package: {str(e)}"
+            detail="Error analyzing SCORM package"
         )
 
 
@@ -344,6 +378,9 @@ async def import_scorm_package(
     """
     # RBAC check
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.CREATE)
+
+    # Validate temp_package_id to prevent path traversal
+    _validate_temp_package_id(temp_package_id)
 
     # Verify temp package exists
     temp_dir = os.path.join(TEMP_SCORM_DIR, temp_package_id)
@@ -551,18 +588,28 @@ def get_scorm_content_path(
     else:
         full_path = os.path.join(base_dir, safe_path)
 
-        # Verify path is within base directory (prevent traversal)
-        abs_base = os.path.abspath(base_dir)
-        abs_full = os.path.abspath(full_path)
+        # Verify path is within base directory (prevent traversal via symlinks)
+        real_base = os.path.realpath(base_dir)
+        real_full = os.path.realpath(full_path)
 
-        if not abs_full.startswith(abs_base):
+        if not real_full.startswith(real_base + os.sep) and real_full != real_base:
             return None
 
-        # Verify file exists
+        # Verify file exists and is a regular file (not a symlink to outside)
         if not os.path.isfile(full_path):
             return None
 
         return full_path
+
+
+def _validate_temp_package_id(temp_package_id: str) -> str:
+    """Validate temp_package_id is a UUID to prevent path traversal."""
+    if not temp_package_id or not _VALID_UUID.match(temp_package_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid package ID format"
+        )
+    return temp_package_id
 
 
 def cleanup_old_temp_packages(max_age_minutes: int = 30):
@@ -633,32 +680,7 @@ async def analyze_scorm_for_course_import(
         extract_dir = os.path.join(temp_dir, "extracted")
         os.makedirs(extract_dir, exist_ok=True)
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            # Check for zip bomb
-            total_size = sum(info.file_size for info in zip_ref.infolist())
-            if total_size > MAX_SCORM_PACKAGE_SIZE * 10:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid SCORM package: Suspicious compression ratio"
-                )
-
-            # Extract with path sanitization
-            for info in zip_ref.infolist():
-                safe_path = sanitize_path(info.filename)
-                if not safe_path:
-                    continue
-
-                target_path = os.path.join(extract_dir, safe_path)
-
-                if not os.path.abspath(target_path).startswith(os.path.abspath(extract_dir)):
-                    continue
-
-                if info.is_dir():
-                    os.makedirs(target_path, exist_ok=True)
-                else:
-                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                    with zip_ref.open(info) as source, open(target_path, 'wb') as target:
-                        shutil.copyfileobj(source, target)
+        _safe_extract_zip(zip_path, extract_dir)
 
         # Find and parse imsmanifest.xml
         manifest_path = os.path.join(extract_dir, "imsmanifest.xml")
@@ -698,18 +720,20 @@ async def analyze_scorm_for_course_import(
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise
     except ET.ParseError as e:
+        logger.warning("SCORM manifest parse error: %s", e)
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid SCORM package: Could not parse manifest - {str(e)}"
+            detail="Invalid SCORM package: Could not parse manifest"
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("Error analyzing SCORM package")
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Error analyzing SCORM package: {str(e)}"
+            detail="Error analyzing SCORM package"
         )
 
 
@@ -733,6 +757,9 @@ async def import_scorm_as_new_course(
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Validate temp_package_id to prevent path traversal
+    _validate_temp_package_id(temp_package_id)
+
     # Verify temp package exists
     temp_dir = os.path.join(TEMP_SCORM_DIR, temp_package_id)
     if not os.path.exists(temp_dir):
@@ -752,9 +779,7 @@ async def import_scorm_as_new_course(
     scos = extract_scos_from_manifest(manifest_root, scorm_version)
     sco_lookup = {sco.identifier: sco for sco in scos}
 
-    # Debug logging
-    print(f"[SCORM Import] SCO identifiers from manifest: {list(sco_lookup.keys())}")
-    print(f"[SCORM Import] SCO assignments received: {sco_assignments}")
+    logger.debug("SCORM import: %d SCOs found, %d assignments", len(sco_lookup), len(sco_assignments))
 
     # Create the course
     course_uuid = f"course_{uuid4()}"
@@ -786,10 +811,8 @@ async def import_scorm_as_new_course(
     created_activities = []
     chapter_order = 1
 
-    print(f"[SCORM Import] chapters_map: {chapters_map}")
-
     for chapter_name, chapter_assignments in chapters_map.items():
-        print(f"[SCORM Import] Creating chapter: {chapter_name}")
+        logger.debug("SCORM import: creating chapter '%s'", chapter_name)
         # Create chapter
         chapter = Chapter(
             name=chapter_name,
@@ -803,7 +826,6 @@ async def import_scorm_as_new_course(
         db_session.add(chapter)
         db_session.commit()
         db_session.refresh(chapter)
-        print(f"[SCORM Import] Created chapter with id: {chapter.id}")
 
         # Link chapter to course
         course_chapter = CourseChapter(
@@ -816,7 +838,6 @@ async def import_scorm_as_new_course(
         )
         db_session.add(course_chapter)
         db_session.commit()
-        print(f"[SCORM Import] Linked chapter {chapter.id} to course {course.id}")
         chapter_order += 1
 
         activity_order = 1
@@ -824,10 +845,8 @@ async def import_scorm_as_new_course(
             sco_identifier = assignment.get("sco_identifier")
             activity_name = assignment.get("activity_name")
 
-            print(f"[SCORM Import] Processing assignment: sco_identifier={sco_identifier}, activity_name={activity_name}")
-
             if sco_identifier not in sco_lookup:
-                print(f"[SCORM Import] WARNING: sco_identifier '{sco_identifier}' not found in sco_lookup!")
+                logger.warning("SCORM import: sco_identifier '%s' not found in package", sco_identifier)
                 continue
 
             sco = sco_lookup[sco_identifier]
@@ -835,22 +854,18 @@ async def import_scorm_as_new_course(
             try:
                 # Generate activity UUID
                 activity_uuid = f"activity_{uuid4()}"
-                print(f"[SCORM Import] Creating activity with UUID: {activity_uuid}")
 
                 # Copy SCORM content to permanent location
                 permanent_dir = f"content/orgs/{organization.org_uuid}/courses/{course.course_uuid}/activities/{activity_uuid}/scorm"
-                print(f"[SCORM Import] Creating directory: {permanent_dir}")
                 os.makedirs(permanent_dir, exist_ok=True)
 
                 # Copy package.zip
                 zip_src = os.path.join(temp_dir, "package.zip")
                 zip_dst = os.path.join(permanent_dir, "package.zip")
-                print(f"[SCORM Import] Copying {zip_src} to {zip_dst}")
                 shutil.copy2(zip_src, zip_dst)
 
                 # Copy extracted content
                 permanent_extract_dir = os.path.join(permanent_dir, "extracted")
-                print(f"[SCORM Import] Copying extracted content to {permanent_extract_dir}")
                 shutil.copytree(extract_dir, permanent_extract_dir)
 
                 # Upload to S3 if configured
@@ -866,10 +881,8 @@ async def import_scorm_as_new_course(
                     if scorm_version == ScormVersionEnum.SCORM_2004
                     else ActivitySubTypeEnum.SUBTYPE_SCORM_12
                 )
-                print(f"[SCORM Import] Activity subtype: {activity_sub_type}")
 
                 # Create activity
-                print("[SCORM Import] Creating Activity record...")
                 activity = Activity(
                     name=activity_name,
                     activity_type=ActivityTypeEnum.TYPE_SCORM,
@@ -891,10 +904,8 @@ async def import_scorm_as_new_course(
                 db_session.add(activity)
                 db_session.commit()
                 db_session.refresh(activity)
-                print(f"[SCORM Import] Created Activity with id: {activity.id}")
 
                 # Create SCORM package record
-                print("[SCORM Import] Creating ScormPackage record...")
                 package = ScormPackage(
                     activity_id=activity.id,
                     org_id=organization.id,
@@ -914,10 +925,8 @@ async def import_scorm_as_new_course(
                 )
                 db_session.add(package)
                 db_session.commit()
-                print("[SCORM Import] Created ScormPackage")
 
                 # Link activity to chapter
-                print("[SCORM Import] Creating ChapterActivity link...")
                 chapter_activity = ChapterActivity(
                     chapter_id=chapter.id,
                     activity_id=activity.id,
@@ -929,16 +938,12 @@ async def import_scorm_as_new_course(
                 )
                 db_session.add(chapter_activity)
                 db_session.commit()
-                print(f"[SCORM Import] Linked activity {activity.id} to chapter {chapter.id}")
 
                 created_activities.append(ActivityRead.model_validate(activity))
                 activity_order += 1
-                print(f"[SCORM Import] Successfully created activity: {activity_name}")
 
-            except Exception as e:
-                print(f"[SCORM Import] ERROR creating activity: {str(e)}")
-                import traceback
-                traceback.print_exc()
+            except Exception:
+                logger.exception("SCORM import: error creating activity '%s'", activity_name)
                 raise
 
     # Clean up temp directory

@@ -222,6 +222,42 @@ def check_api_token_rate_limit(request: Request) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+def check_password_reset_rate_limit(email: str) -> Tuple[bool, int]:
+    """
+    Check password reset verification rate limit: 5 attempts per 5 minutes per email.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"password_reset:{email.lower()}"
+
+    is_allowed, count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=5,
+        window_seconds=5 * 60  # 5 minutes
+    )
+
+    return is_allowed, retry_after
+
+
+def check_email_verification_rate_limit(email: str) -> Tuple[bool, int]:
+    """
+    Check email verification rate limit: 5 attempts per 5 minutes per email.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"email_verify:{email.lower()}"
+
+    is_allowed, count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=5,
+        window_seconds=5 * 60  # 5 minutes
+    )
+
+    return is_allowed, retry_after
+
+
 def increment_rate_limit(key: str, window_seconds: int) -> None:
     """
     Increment a rate limit counter for tracking purposes.

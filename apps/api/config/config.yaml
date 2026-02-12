@@ -9,7 +9,9 @@ general:
   logfire_enabled: false
 
 security:
-  auth_jwt_secret_key: learnhouse-dev-secret-key-32chars!
+  # SECURITY: Set via LEARNHOUSE_AUTH_JWT_SECRET_KEY env var (required, min 32 chars).
+  # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+  auth_jwt_secret_key: ""
 
 hosting_config:
   domain: localhost:3000
