@@ -30,7 +30,13 @@ export interface SetupConfig {
   aiEnabled: boolean
   geminiApiKey?: string
   emailEnabled: boolean
+  emailProvider?: 'resend' | 'smtp'
   resendApiKey?: string
+  smtpHost?: string
+  smtpPort?: number
+  smtpUsername?: string
+  smtpPassword?: string
+  smtpUseTls?: boolean
   systemEmailAddress?: string
   s3Enabled: boolean
   s3BucketName?: string

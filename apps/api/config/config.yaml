@@ -31,8 +31,14 @@ hosting_config:
       endpoint_url: ""
 
 mailing_config:
-  resend_api_key: ""
+  email_provider: "resend" # "resend" or "smtp"
   system_email_address: ""
+  resend_api_key: ""
+  smtp_host: ""
+  smtp_port: 587
+  smtp_username: ""
+  smtp_password: ""
+  smtp_use_tls: true
 
 database_config:
   sql_connection_string: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
