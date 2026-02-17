@@ -60,8 +60,14 @@ class HostingConfig(BaseModel):
 
 
 class MailingConfig(BaseModel):
-    resend_api_key: str
+    email_provider: Literal["resend", "smtp"]
     system_email_address: str
+    resend_api_key: Optional[str] = None
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_use_tls: Optional[bool] = True
 
 
 class DatabaseConfig(BaseModel):
@@ -273,14 +279,32 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ).get("redis_connection_string")
 
     # Mailing config
+    env_email_provider = os.environ.get("LEARNHOUSE_EMAIL_PROVIDER")
     env_resend_api_key = os.environ.get("LEARNHOUSE_RESEND_API_KEY")
     env_system_email_address = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_ADDRESS")
+    env_smtp_host = os.environ.get("LEARNHOUSE_SMTP_HOST")
+    env_smtp_port = os.environ.get("LEARNHOUSE_SMTP_PORT")
+    env_smtp_username = os.environ.get("LEARNHOUSE_SMTP_USERNAME")
+    env_smtp_password = os.environ.get("LEARNHOUSE_SMTP_PASSWORD")
+    env_smtp_use_tls = os.environ.get("LEARNHOUSE_SMTP_USE_TLS")
+
+    email_provider = env_email_provider or yaml_config.get("mailing_config", {}).get(
+        "email_provider", "resend"
+    )
     resend_api_key = env_resend_api_key or yaml_config.get("mailing_config", {}).get(
         "resend_api_key"
     )
     system_email_address = env_system_email_address or yaml_config.get(
         "mailing_config", {}
     ).get("system_email_address")
+    smtp_host = env_smtp_host or yaml_config.get("mailing_config", {}).get("smtp_host")
+    smtp_port = int(env_smtp_port) if env_smtp_port else yaml_config.get("mailing_config", {}).get("smtp_port", 587)
+    smtp_username = env_smtp_username or yaml_config.get("mailing_config", {}).get("smtp_username")
+    smtp_password = env_smtp_password or yaml_config.get("mailing_config", {}).get("smtp_password")
+    smtp_use_tls = (
+        env_smtp_use_tls.lower() in ("true", "1", "yes") if env_smtp_use_tls
+        else yaml_config.get("mailing_config", {}).get("smtp_use_tls", True)
+    )
 
     # Tinybird config — auto-enabled when API URL is set
     env_tinybird_api_url = os.environ.get("LEARNHOUSE_TINYBIRD_API_URL")
@@ -367,7 +391,14 @@ def get_learnhouse_config() -> LearnHouseConfig:
         ai_config=ai_config,
         redis_config=RedisConfig(redis_connection_string=redis_connection_string),
         mailing_config=MailingConfig(
-            resend_api_key=resend_api_key, system_email_address=system_email_address
+            email_provider=email_provider,
+            system_email_address=system_email_address,
+            resend_api_key=resend_api_key,
+            smtp_host=smtp_host,
+            smtp_port=smtp_port,
+            smtp_username=smtp_username,
+            smtp_password=smtp_password,
+            smtp_use_tls=smtp_use_tls,
         ),
         payments_config=InternalPaymentsConfig(
             stripe=InternalStripeConfig(

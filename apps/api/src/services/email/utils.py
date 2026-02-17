@@ -1,4 +1,7 @@
 import logging
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from urllib.parse import urlparse
 
 from pydantic import EmailStr
@@ -83,15 +86,43 @@ def get_base_url_from_request(request: Request) -> str:
 
 def send_email(to: EmailStr, subject: str, body: str):
     lh_config = get_learnhouse_config()
-    params = {
-        "from": "LearnHouse <" + lh_config.mailing_config.system_email_address + ">",
+    mailing = lh_config.mailing_config
+    sender = f"LearnHouse <{mailing.system_email_address}>"
+
+    if mailing.email_provider == "smtp":
+        return _send_email_smtp(sender, to, subject, body, mailing)
+    else:
+        return _send_email_resend(sender, to, subject, body, mailing)
+
+
+def _send_email_resend(sender: str, to: EmailStr, subject: str, body: str, mailing):
+    resend.api_key = mailing.resend_api_key
+    return resend.Emails.send({
+        "from": sender,
         "to": [to],
         "subject": subject,
         "html": body,
-    }
+    })
 
-    resend.api_key = lh_config.mailing_config.resend_api_key
-    email = resend.Emails.send(params)
 
-    return email
-        
+def _send_email_smtp(sender: str, to: EmailStr, subject: str, body: str, mailing):
+    msg = MIMEMultipart("alternative")
+    msg["From"] = sender
+    msg["To"] = str(to)
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "html"))
+
+    if mailing.smtp_use_tls:
+        server = smtplib.SMTP(mailing.smtp_host, mailing.smtp_port)
+        server.starttls()
+    else:
+        server = smtplib.SMTP(mailing.smtp_host, mailing.smtp_port)
+
+    if mailing.smtp_username and mailing.smtp_password:
+        server.login(mailing.smtp_username, mailing.smtp_password)
+
+    server.sendmail(mailing.system_email_address, str(to), msg.as_string())
+    server.quit()
+
+    return {"id": None, "to": str(to)}
+

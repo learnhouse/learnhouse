@@ -123,16 +123,29 @@ export function generateEnvFile(config: SetupConfig): string {
     )
   }
 
-  if (config.emailEnabled && config.resendApiKey) {
+  if (config.emailEnabled) {
+    const provider = config.emailProvider || 'resend'
     lines.push(
       '',
       '# =============================================================================',
       '# Email Configuration',
       '# =============================================================================',
       '',
-      `LEARNHOUSE_RESEND_API_KEY=${config.resendApiKey}`,
+      `LEARNHOUSE_EMAIL_PROVIDER=${provider}`,
       `LEARNHOUSE_SYSTEM_EMAIL_ADDRESS=${config.systemEmailAddress || `noreply@${config.domain}`}`,
     )
+
+    if (provider === 'resend' && config.resendApiKey) {
+      lines.push(`LEARNHOUSE_RESEND_API_KEY=${config.resendApiKey}`)
+    }
+
+    if (provider === 'smtp') {
+      if (config.smtpHost) lines.push(`LEARNHOUSE_SMTP_HOST=${config.smtpHost}`)
+      lines.push(`LEARNHOUSE_SMTP_PORT=${config.smtpPort || 587}`)
+      if (config.smtpUsername) lines.push(`LEARNHOUSE_SMTP_USERNAME=${config.smtpUsername}`)
+      if (config.smtpPassword) lines.push(`LEARNHOUSE_SMTP_PASSWORD=${config.smtpPassword}`)
+      lines.push(`LEARNHOUSE_SMTP_USE_TLS=${config.smtpUseTls !== false ? 'True' : 'False'}`)
+    }
   }
 
   if (config.s3Enabled && config.s3BucketName) {
