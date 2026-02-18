@@ -67,6 +67,7 @@ import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import {  isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { isOSSMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 
 function DashLeftMenu() {
@@ -161,6 +162,8 @@ function DashLeftMenu() {
   if (!org || !session) return null
 
   const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const oss = isOSSMode()
+  const planLabel = oss ? 'OSS' : plan
 
   // Feature visibility: enabled by org AND allowed by plan
   const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
@@ -205,12 +208,13 @@ function DashLeftMenu() {
               </span>
               <span className={cn(
                 "text-[9px] font-medium uppercase tracking-wider",
+                oss ? "text-green-400" :
                 plan === 'enterprise' ? "text-amber-400" :
                 plan === 'pro' ? "text-purple-400" :
                 plan === 'standard' ? "text-blue-400" :
                 "text-white/40"
               )}>
-                {plan}
+                {planLabel}
               </span>
             </div>
           )}

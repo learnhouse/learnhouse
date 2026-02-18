@@ -7,11 +7,17 @@ Provides dependency functions to enforce plan requirements at the router level.
 from fastapi import Depends, HTTPException, Request
 from sqlmodel import Session, select
 
+from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 from src.db.communities.communities import Community
 from src.db.organizations import Organization
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
+
+
+def _is_oss_mode() -> bool:
+    """Check if OSS mode is enabled (disables plan-based limits)."""
+    return get_learnhouse_config().general_config.oss_mode
 
 
 def get_org_plan(org_id: int, db_session: Session) -> PlanLevel:
@@ -62,6 +68,9 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
+        if _is_oss_mode():
+            return True
+
         org_id = None
 
         # Try to get org_id from path parameters first
@@ -122,6 +131,9 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
+        if _is_oss_mode():
+            return True
+
         org_id = None
 
         # Try to get org_id from path parameters first
@@ -184,6 +196,9 @@ def require_plan_for_docs(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
+        if _is_oss_mode():
+            return True
+
         org_id = None
         path_params = request.path_params
 

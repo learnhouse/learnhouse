@@ -101,18 +101,52 @@ interface StreamFollowUpsEvent {
   follow_up_suggestions: string[]
 }
 
+interface StreamSourcesEvent {
+  type: 'sources'
+  sources: Array<{
+    activity_uuid?: string
+    activity_name?: string
+    chapter_name?: string
+    course_name?: string
+    course_uuid?: string
+    source_type?: string
+    chunk_text?: string
+    similarity?: number
+  }>
+}
+
+interface StreamSessionTitleEvent {
+  type: 'session_title'
+  title: string
+}
+
 interface StreamErrorEvent {
   type: 'error'
   message: string
 }
 
-type StreamEvent = StreamStartEvent | StreamChunkEvent | StreamDoneEvent | StreamFollowUpsEvent | StreamErrorEvent
+type StreamEvent = StreamStartEvent | StreamChunkEvent | StreamDoneEvent | StreamFollowUpsEvent | StreamSourcesEvent | StreamSessionTitleEvent | StreamErrorEvent
+
+export interface StreamSourceData {
+  sources: Array<{
+    activity_uuid?: string
+    activity_name?: string
+    chapter_name?: string
+    course_name?: string
+    course_uuid?: string
+    source_type?: string
+    chunk_text?: string
+    similarity?: number
+  }>
+}
 
 export interface StreamCallbacks {
   onStart?: (data: StreamStartData) => void
   onChunk: (chunk: string) => void
   onComplete: (data: StreamDoneData) => void
   onFollowUps?: (data: StreamFollowUpsData) => void
+  onSources?: (data: StreamSourceData) => void
+  onSessionTitle?: (title: string) => void
   onError: (error: string) => void
 }
 
@@ -164,6 +198,12 @@ async function processStream(
                 break
               case 'follow_ups':
                 callbacks.onFollowUps?.({ follow_up_suggestions: event.follow_up_suggestions })
+                break
+              case 'sources':
+                callbacks.onSources?.({ sources: event.sources })
+                break
+              case 'session_title':
+                callbacks.onSessionTitle?.(event.title)
                 break
               case 'error':
                 callbacks.onError(event.message)
@@ -442,5 +482,155 @@ export async function sendEditorAIChatMessageStream(
     await processEditorStream(response, callbacks)
   } catch (error) {
     callbacks.onError(error instanceof Error ? error.message : 'Failed to send editor message')
+  }
+}
+
+// ============================================================================
+// RAG Session Management Functions
+// ============================================================================
+
+export interface RAGChatSession {
+  aichat_uuid: string
+  title: string
+  course_uuid?: string | null
+  created_at: string
+  favorite?: boolean
+  mode?: 'course_only' | 'general'
+}
+
+export async function fetchRAGChatSessions(
+  accessToken: string
+): Promise<RAGChatSession[]> {
+  const res = await fetch(`${getAPIUrl()}ai/rag/sessions`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.sessions || []
+}
+
+export async function fetchRAGChatMessages(
+  aichatUuid: string,
+  accessToken: string
+): Promise<Array<{ role: string; content: string; sources?: StreamSourceData['sources'] }>> {
+  const res = await fetch(`${getAPIUrl()}ai/rag/sessions/${aichatUuid}/messages`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.messages || []
+}
+
+export async function deleteRAGChatSession(
+  aichatUuid: string,
+  accessToken: string
+): Promise<boolean> {
+  const res = await fetch(`${getAPIUrl()}ai/rag/sessions/${aichatUuid}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return res.ok
+}
+
+export async function updateRAGChatSession(
+  aichatUuid: string,
+  accessToken: string,
+  updates: { title?: string; favorite?: boolean }
+): Promise<RAGChatSession | null> {
+  const res = await fetch(`${getAPIUrl()}ai/rag/sessions/${aichatUuid}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(updates),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.session || null
+}
+
+// ============================================================================
+// RAG Chat Streaming Functions
+// ============================================================================
+
+/**
+ * Start a new RAG chat session with streaming response
+ */
+export async function startRAGChatStream(
+  message: string,
+  accessToken: string,
+  callbacks: StreamCallbacks,
+  courseUuid?: string,
+  mode?: string
+): Promise<void> {
+  const data: Record<string, string> = { message, mode: mode || 'course_only' }
+  if (courseUuid) {
+    data.course_uuid = courseUuid
+  }
+
+  try {
+    const response = await fetch(
+      `${getAPIUrl()}ai/rag/chat`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      return
+    }
+
+    await processStream(response, callbacks)
+  } catch (error) {
+    callbacks.onError(error instanceof Error ? error.message : 'Failed to start RAG chat session')
+  }
+}
+
+/**
+ * Send a message to an existing RAG chat session with streaming response
+ */
+export async function sendRAGChatStream(
+  message: string,
+  aichatUuid: string,
+  accessToken: string,
+  callbacks: StreamCallbacks,
+  courseUuid?: string,
+  mode?: string
+): Promise<void> {
+  const data: Record<string, string> = { message, aichat_uuid: aichatUuid, mode: mode || 'course_only' }
+  if (courseUuid) {
+    data.course_uuid = courseUuid
+  }
+
+  try {
+    const response = await fetch(
+      `${getAPIUrl()}ai/rag/chat`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+      callbacks.onError(errorData.detail || `HTTP error ${response.status}`)
+      return
+    }
+
+    await processStream(response, callbacks)
+  } catch (error) {
+    callbacks.onError(error instanceof Error ? error.message : 'Failed to send RAG chat message')
   }
 }

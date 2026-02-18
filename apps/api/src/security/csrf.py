@@ -87,9 +87,11 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             if referer_origin:
                 return self._is_origin_allowed(referer_origin)
 
-        # No Origin and no Referer — reject state-changing requests
-        # (API clients using Bearer tokens are not affected by CSRF
-        # since tokens must be explicitly attached)
+        # No Origin and no Referer — in development mode, allow these
+        # (server-side proxies like Next.js strip the Origin header)
+        if self.development_mode:
+            return True
+
         return False
 
     def _is_csrf_exempt(self, request: Request) -> bool:

@@ -972,8 +972,8 @@ var require_command = __commonJS({
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var childProcess = __require("child_process");
-    var path6 = __require("path");
-    var fs6 = __require("fs");
+    var path7 = __require("path");
+    var fs7 = __require("fs");
     var process2 = __require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
@@ -1905,11 +1905,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path6.resolve(baseDir, baseName);
-          if (fs6.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path6.extname(baseName))) return void 0;
+          const localBin = path7.resolve(baseDir, baseName);
+          if (fs7.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path7.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
-            (ext) => fs6.existsSync(`${localBin}${ext}`)
+            (ext) => fs7.existsSync(`${localBin}${ext}`)
           );
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
@@ -1921,21 +1921,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs6.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs7.realpathSync(this._scriptPath);
           } catch (err) {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path6.resolve(
-            path6.dirname(resolvedScriptPath),
+          executableDir = path7.resolve(
+            path7.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path6.basename(
+            const legacyName = path7.basename(
               this._scriptPath,
-              path6.extname(this._scriptPath)
+              path7.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -1946,7 +1946,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path6.extname(executableFile));
+        launchWithNode = sourceExt.includes(path7.extname(executableFile));
         let proc;
         if (process2.platform !== "win32") {
           if (launchWithNode) {
@@ -2786,7 +2786,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path6.basename(filename, path6.extname(filename));
+        this._name = path7.basename(filename, path7.extname(filename));
         return this;
       }
       /**
@@ -2800,9 +2800,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path7) {
-        if (path7 === void 0) return this._executableDir;
-        this._executableDir = path7;
+      executableDir(path8) {
+        if (path8 === void 0) return this._executableDir;
+        this._executableDir = path8;
         return this;
       }
       /**
@@ -3180,11 +3180,13 @@ var {
 } = import_index.default;
 
 // bin/learnhouse.ts
-var import_picocolors15 = __toESM(require_picocolors(), 1);
+var import_picocolors16 = __toESM(require_picocolors(), 1);
 
 // src/constants.ts
 var VERSION = "1.0.1";
 var APP_IMAGE = "ghcr.io/learnhouse/app:latest";
+var POSTGRES_IMAGE = "postgres:16-alpine";
+var POSTGRES_AI_IMAGE = "pgvector/pgvector:pg16";
 var HEALTH_CHECK_TIMEOUT_MS = 18e4;
 var HEALTH_CHECK_INTERVAL_MS = 3e3;
 var CONFIG_FILENAME = "learnhouse.config.json";
@@ -4451,10 +4453,23 @@ async function promptDatabase() {
   let useExternalDb = false;
   let externalDbConnectionString;
   let dbPassword;
+  let useAiDatabase = false;
   if (dbChoice === "external") {
     externalDbConnectionString = await promptAndVerifyPostgres();
     useExternalDb = true;
   } else {
+    const dbImageChoice = await le({
+      message: "Which PostgreSQL image?",
+      options: [
+        { value: "ai", label: "PostgreSQL with AI capabilities", hint: "recommended \u2014 enables AI course chatbot (RAG)" },
+        { value: "standard", label: "Standard PostgreSQL", hint: "lighter image, no AI search features" }
+      ]
+    });
+    if (lD(dbImageChoice)) {
+      he();
+      process.exit(0);
+    }
+    useAiDatabase = dbImageChoice === "ai";
     dbPassword = crypto.randomBytes(24).toString("base64url");
     v2.message("");
     v2.info(import_picocolors6.default.bold("Database credentials generated:"));
@@ -4495,6 +4510,7 @@ async function promptDatabase() {
     useExternalDb,
     externalDbConnectionString,
     dbPassword,
+    useAiDatabase,
     useExternalRedis,
     externalRedisConnectionString
   };
@@ -4775,9 +4791,10 @@ ${deps.join("\n")}` : "";
       timeout: 10s
       retries: 3
 `;
+  const dbImage = config.useAiDatabase ? POSTGRES_AI_IMAGE : POSTGRES_IMAGE;
   const dbService = useLocalDb ? `
   db:
-    image: postgres:16-alpine
+    image: ${dbImage}
     container_name: learnhouse-db-${id}
     restart: unless-stopped
     env_file:
@@ -5318,7 +5335,7 @@ async function setupCommand() {
     `  ${import_picocolors7.default.dim("Directory:")}     ${resolvedDir}`,
     `  ${import_picocolors7.default.dim("URL:")}           ${url}`,
     `  ${import_picocolors7.default.dim("HTTPS:")}         ${config.autoSsl ? "Auto SSL (Caddy)" : config.useHttps ? "Manual" : "Disabled"}`,
-    `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : "Local (Docker)"}`,
+    `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : config.useAiDatabase ? "Local (Docker, AI-enabled)" : "Local (Docker)"}`,
     `  ${import_picocolors7.default.dim("Redis:")}         ${config.useExternalRedis ? "External" : "Local (Docker)"}`,
     `  ${import_picocolors7.default.dim("Organization:")} ${config.orgName}`,
     `  ${import_picocolors7.default.dim("Admin:")}        ${config.adminEmail}`,
@@ -5393,7 +5410,7 @@ async function setupCommand() {
         `  ${import_picocolors7.default.dim("Directory:")}     ${config.installDir}`,
         `  ${import_picocolors7.default.dim("URL:")}           ${url2}`,
         `  ${import_picocolors7.default.dim("HTTPS:")}         ${config.autoSsl ? "Auto SSL (Caddy)" : config.useHttps ? "Manual" : "Disabled"}`,
-        `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : "Local (Docker)"}`,
+        `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : config.useAiDatabase ? "Local (Docker, AI-enabled)" : "Local (Docker)"}`,
         `  ${import_picocolors7.default.dim("Redis:")}         ${config.useExternalRedis ? "External" : "Local (Docker)"}`,
         `  ${import_picocolors7.default.dim("Organization:")} ${config.orgName}`,
         `  ${import_picocolors7.default.dim("Admin:")}        ${config.adminEmail}`,
@@ -5533,8 +5550,8 @@ async function logsCommand() {
   v2.info("Streaming logs (Ctrl+C to stop)...");
   if (config?.installDir) {
     try {
-      const { execSync: execSync5 } = await import("child_process");
-      const ps = execSync5("docker compose ps -q", { cwd: config.installDir, stdio: "pipe" }).toString().trim();
+      const { execSync: execSync6 } = await import("child_process");
+      const ps = execSync6("docker compose ps -q", { cwd: config.installDir, stdio: "pipe" }).toString().trim();
       if (ps) {
         dockerComposeLogs(config.installDir);
         return;
@@ -6216,6 +6233,244 @@ async function shellCommand() {
   dockerExecInteractive(selected, "/bin/sh");
 }
 
+// src/commands/dev.ts
+import { spawn as spawn2, execSync as execSync5 } from "child_process";
+import * as crypto4 from "crypto";
+var import_picocolors15 = __toESM(require_picocolors(), 1);
+import * as path6 from "path";
+import * as fs6 from "fs";
+var SESSION_ID = crypto4.randomBytes(4).toString("hex");
+function findProjectRoot() {
+  let dir = process.cwd();
+  while (true) {
+    if (fs6.existsSync(path6.join(dir, "dev", "docker-compose.yml")) && fs6.existsSync(path6.join(dir, "apps", "api")) && fs6.existsSync(path6.join(dir, "apps", "web"))) {
+      return dir;
+    }
+    const parent = path6.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function waitForHealth2(label, command, args, maxAttempts = 30) {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      execSync5([command, ...args].join(" "), { stdio: "pipe", timeout: 5e3 });
+      return true;
+    } catch {
+      await sleep(1e3);
+    }
+  }
+  return false;
+}
+var CONTROLS_BAR = import_picocolors15.default.dim("\u2500".repeat(60)) + "\n" + import_picocolors15.default.dim("  ") + import_picocolors15.default.bold("ra") + import_picocolors15.default.dim(" restart api  ") + import_picocolors15.default.bold("rw") + import_picocolors15.default.dim(" restart web  ") + import_picocolors15.default.bold("rb") + import_picocolors15.default.dim(" restart both  ") + import_picocolors15.default.bold("q") + import_picocolors15.default.dim(" quit") + "\n" + import_picocolors15.default.dim("\u2500".repeat(60));
+var lineCount = 0;
+var CONTROLS_INTERVAL = 50;
+function printControls() {
+  process.stdout.write("\n" + CONTROLS_BAR + "\n\n");
+  lineCount = 0;
+}
+function prefixStream(proc, label, color) {
+  const prefix = color(`[${label}]`);
+  const handleData = (data) => {
+    const lines = data.toString().split("\n");
+    for (const line of lines) {
+      if (line.length > 0) {
+        process.stdout.write(`${prefix} ${line}
+`);
+        lineCount++;
+        if (lineCount >= CONTROLS_INTERVAL) {
+          printControls();
+        }
+      }
+    }
+  };
+  proc.stdout?.on("data", handleData);
+  proc.stderr?.on("data", handleData);
+}
+var serviceEnv = {};
+function spawnService(command, args, cwd, label, color) {
+  const child = spawn2(command, args, {
+    cwd,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, ...serviceEnv }
+  });
+  prefixStream(child, label, color);
+  child.on("exit", (code) => {
+    if (code !== null && code !== 0) {
+      console.log(color(`[${label}]`) + ` exited with code ${code}`);
+    }
+  });
+  return child;
+}
+function killProcess(child) {
+  return new Promise((resolve) => {
+    if (!child || child.killed || child.exitCode !== null) {
+      resolve();
+      return;
+    }
+    child.on("exit", () => resolve());
+    child.kill("SIGTERM");
+    setTimeout(() => {
+      if (!child.killed && child.exitCode === null) {
+        child.kill("SIGKILL");
+      }
+    }, 5e3);
+  });
+}
+async function devCommand() {
+  const root = findProjectRoot();
+  if (!root) {
+    v2.error("Not inside a LearnHouse project.");
+    v2.info("Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).");
+    process.exit(1);
+  }
+  if (!isDockerInstalled()) {
+    v2.error("Docker is not installed. Please install Docker and try again.");
+    process.exit(1);
+  }
+  if (!isDockerRunning()) {
+    v2.error("Docker is not running. Please start Docker and try again.");
+    process.exit(1);
+  }
+  const projectName = `learnhouse-dev-${SESSION_ID}`;
+  pe(import_picocolors15.default.cyan("LearnHouse Dev Mode"));
+  console.log(import_picocolors15.default.dim(`  Session: ${import_picocolors15.default.bold(SESSION_ID)}`));
+  console.log();
+  const email = await ae({
+    message: "Admin email",
+    placeholder: "admin@school.dev",
+    defaultValue: "admin@school.dev"
+  });
+  if (lD(email)) process.exit(0);
+  const password = await oe({
+    message: "Admin password"
+  });
+  if (lD(password)) process.exit(0);
+  if (!password) {
+    v2.error("Password is required.");
+    process.exit(1);
+  }
+  serviceEnv = {
+    FORCE_COLOR: "1",
+    LEARNHOUSE_OSS: "true",
+    NEXT_PUBLIC_LEARNHOUSE_OSS: "true",
+    LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
+    LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password
+  };
+  const infraSpinner = _2();
+  infraSpinner.start("Starting DB and Redis containers...");
+  try {
+    execSync5(`docker compose -f dev/docker-compose.yml -p ${projectName} up -d`, {
+      cwd: root,
+      stdio: "pipe"
+    });
+    infraSpinner.stop("Containers started");
+  } catch (e2) {
+    infraSpinner.stop("Failed to start containers");
+    v2.error(e2.stderr?.toString() || "docker compose up failed");
+    process.exit(1);
+  }
+  const healthSpinner = _2();
+  healthSpinner.start("Waiting for DB and Redis to be healthy...");
+  const [dbReady, redisReady] = await Promise.all([
+    waitForHealth2("DB", "docker", ["exec", "learnhouse-db-dev", "pg_isready", "-U", "learnhouse"]),
+    waitForHealth2("Redis", "docker", ["exec", "learnhouse-redis-dev", "redis-cli", "ping"])
+  ]);
+  if (!dbReady || !redisReady) {
+    healthSpinner.stop("Health checks failed");
+    if (!dbReady) v2.error("Database did not become ready in time.");
+    if (!redisReady) v2.error("Redis did not become ready in time.");
+    process.exit(1);
+  }
+  healthSpinner.stop("DB and Redis are healthy");
+  let apiProc = null;
+  let webProc = null;
+  const startApi = () => {
+    return spawnService("uv", ["run", "python", "app.py"], path6.join(root, "apps", "api"), "api", import_picocolors15.default.magenta);
+  };
+  const startWeb = () => {
+    return spawnService("pnpm", ["dev"], path6.join(root, "apps", "web"), "web", import_picocolors15.default.cyan);
+  };
+  apiProc = startApi();
+  webProc = startWeb();
+  v2.success("API and Web servers started");
+  console.log();
+  console.log(import_picocolors15.default.dim("  Thank you for contributing to LearnHouse!"));
+  console.log();
+  printControls();
+  let shuttingDown = false;
+  const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log("\n" + import_picocolors15.default.dim("Shutting down..."));
+    if (process.stdin.isTTY && process.stdin.isRaw) {
+      process.stdin.setRawMode(false);
+    }
+    process.stdin.pause();
+    await Promise.all([killProcess(apiProc), killProcess(webProc)]);
+    try {
+      execSync5(`docker compose -f dev/docker-compose.yml -p ${projectName} down`, {
+        cwd: root,
+        stdio: "pipe"
+      });
+      console.log(import_picocolors15.default.dim("Containers stopped."));
+    } catch {
+    }
+    console.log(import_picocolors15.default.dim("Thanks for building with LearnHouse!"));
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+    let pendingR = false;
+    process.stdin.on("data", async (key) => {
+      if (key === "") {
+        await shutdown();
+        return;
+      }
+      if (key === "q") {
+        await shutdown();
+        return;
+      }
+      if (key === "r") {
+        pendingR = true;
+        setTimeout(() => {
+          pendingR = false;
+        }, 1e3);
+        return;
+      }
+      if (pendingR) {
+        pendingR = false;
+        if (key === "a") {
+          console.log(import_picocolors15.default.magenta("\n  Restarting API...\n"));
+          await killProcess(apiProc);
+          apiProc = startApi();
+          printControls();
+        } else if (key === "w") {
+          console.log(import_picocolors15.default.cyan("\n  Restarting Web...\n"));
+          await killProcess(webProc);
+          webProc = startWeb();
+          printControls();
+        } else if (key === "b") {
+          console.log(import_picocolors15.default.yellow("\n  Restarting both...\n"));
+          await Promise.all([killProcess(apiProc), killProcess(webProc)]);
+          apiProc = startApi();
+          webProc = startWeb();
+          printControls();
+        }
+      }
+    });
+  }
+  await new Promise(() => {
+  });
+}
+
 // bin/learnhouse.ts
 var COMMANDS = [
   { name: "setup", desc: "Interactive setup wizard" },
@@ -6226,17 +6481,18 @@ var COMMANDS = [
   { name: "backup", desc: "Backup & restore database" },
   { name: "deployments", desc: "Manage deployments & resources" },
   { name: "doctor", desc: "Diagnose issues" },
-  { name: "shell", desc: "Container shell access" }
+  { name: "shell", desc: "Container shell access" },
+  { name: "dev", desc: "Development mode" }
 ];
 async function showWelcome() {
   await printBanner();
-  console.log(import_picocolors15.default.bold(import_picocolors15.default.white("  Available commands:\n")));
+  console.log(import_picocolors16.default.bold(import_picocolors16.default.white("  Available commands:\n")));
   for (const cmd of COMMANDS) {
-    console.log(`    ${import_picocolors15.default.cyan(cmd.name.padEnd(14))} ${import_picocolors15.default.dim(cmd.desc)}`);
+    console.log(`    ${import_picocolors16.default.cyan(cmd.name.padEnd(14))} ${import_picocolors16.default.dim(cmd.desc)}`);
   }
   console.log();
-  console.log(import_picocolors15.default.dim("  Run a command with: npx learnhouse <command>"));
-  console.log(import_picocolors15.default.dim("  Get started with:   npx learnhouse setup"));
+  console.log(import_picocolors16.default.dim("  Run a command with: npx learnhouse <command>"));
+  console.log(import_picocolors16.default.dim("  Get started with:   npx learnhouse setup"));
   console.log();
 }
 var program2 = new Command();
@@ -6250,6 +6506,7 @@ program2.command("backup").description("Backup & restore LearnHouse database").a
 program2.command("deployments").description("Manage deployments & resource limits").action(deploymentsCommand);
 program2.command("doctor").description("Diagnose common issues with LearnHouse").action(doctorCommand);
 program2.command("shell").description("Open a shell in a LearnHouse container").action(shellCommand);
+program2.command("dev").description("Start development environment (DB + Redis in Docker, API + Web locally)").action(devCommand);
 var updateCheck = checkForUpdates();
 program2.parseAsync().then(() => updateCheck.catch(() => {
 }));

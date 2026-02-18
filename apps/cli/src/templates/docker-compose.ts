@@ -1,4 +1,4 @@
-import { APP_IMAGE } from '../constants.js'
+import { APP_IMAGE, POSTGRES_IMAGE, POSTGRES_AI_IMAGE } from '../constants.js'
 import type { SetupConfig } from '../types.js'
 
 /**
@@ -64,10 +64,11 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
       retries: 3
 `
 
+  const dbImage = config.useAiDatabase ? POSTGRES_AI_IMAGE : POSTGRES_IMAGE
   const dbService = useLocalDb
     ? `
   db:
-    image: postgres:16-alpine
+    image: ${dbImage}
     container_name: learnhouse-db-${id}
     restart: unless-stopped
     env_file:

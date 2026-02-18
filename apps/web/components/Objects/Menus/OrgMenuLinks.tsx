@@ -6,6 +6,7 @@ import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText } from 
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
 function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const org = useOrg() as any
@@ -92,7 +93,8 @@ const LinkItem = (props: any) => {
   const { t } = useTranslation()
   const link = props.link
   const orgslug = props.orgslug
-  const textColorClass = props.primaryColor ? 'text-white' : 'text-gray-700'
+  const colors = getMenuColorClasses(props.primaryColor || '')
+  const textColorClass = colors.text
   return (
     <Link href={getUriWithOrg(orgslug, link)}>
       <li className={`flex space-x-2 items-center ${textColorClass} font-semibold`}>
@@ -137,6 +139,7 @@ const LinkItem = (props: any) => {
             <span>{t('docs.docs')}</span>
           </>
         )}
+
       </li>
     </Link>
   )

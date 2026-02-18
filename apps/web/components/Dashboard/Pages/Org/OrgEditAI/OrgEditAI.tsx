@@ -11,7 +11,7 @@ import { PlanLevel } from '@services/plans/plans'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert } from 'lucide-react'
+import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 
 const OrgEditAI: React.FC = () => {
@@ -24,21 +24,28 @@ const OrgEditAI: React.FC = () => {
   const canEditOrgSettings = rights?.organizations?.action_update === true
 
   const [aiEnabled, setAiEnabled] = React.useState<boolean>(false)
+  const [copilotEnabled, setCopilotEnabled] = React.useState<boolean>(true)
   const [isUpdating, setIsUpdating] = React.useState<boolean>(false)
 
-  // Initialize AI enabled state from org config
   React.useEffect(() => {
     if (org?.config?.config?.features?.ai?.enabled !== undefined) {
       setAiEnabled(org.config.config.features.ai.enabled)
     }
+    if (org?.config?.config?.features?.ai?.copilot_enabled !== undefined) {
+      setCopilotEnabled(org.config.config.features.ai.copilot_enabled)
+    }
   }, [org])
 
-  const updateAIConfig = async (enabled: boolean) => {
+  const updateAIConfig = async (params: { ai_enabled?: boolean; copilot_enabled?: boolean }) => {
     setIsUpdating(true)
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
 
     try {
-      const response = await fetch(`${getAPIUrl()}orgs/${org.id}/config/ai?ai_enabled=${enabled}`, {
+      const queryParts: string[] = []
+      if (params.ai_enabled !== undefined) queryParts.push(`ai_enabled=${params.ai_enabled}`)
+      if (params.copilot_enabled !== undefined) queryParts.push(`copilot_enabled=${params.copilot_enabled}`)
+
+      const response = await fetch(`${getAPIUrl()}orgs/${org.id}/config/ai?${queryParts.join('&')}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -52,21 +59,17 @@ const OrgEditAI: React.FC = () => {
 
       await revalidateTags(['organizations'], org.slug)
       mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
-      setAiEnabled(enabled)
+      if (params.ai_enabled !== undefined) setAiEnabled(params.ai_enabled)
+      if (params.copilot_enabled !== undefined) setCopilotEnabled(params.copilot_enabled)
       toast.success(t('dashboard.organization.ai.toasts.save_success'), { id: loadingToast })
     } catch (err) {
       console.error('Error updating AI configuration:', err)
       toast.error(t('dashboard.organization.ai.toasts.save_error'), { id: loadingToast })
-      // Revert the switch state on error
-      setAiEnabled(!enabled)
+      if (params.ai_enabled !== undefined) setAiEnabled(!params.ai_enabled)
+      if (params.copilot_enabled !== undefined) setCopilotEnabled(!params.copilot_enabled)
     } finally {
       setIsUpdating(false)
     }
-  }
-
-  const handleToggle = (checked: boolean) => {
-    setAiEnabled(checked)
-    updateAIConfig(checked)
   }
 
   return (
@@ -84,89 +87,118 @@ const OrgEditAI: React.FC = () => {
       titleKey="common.plans.feature_restricted.ai.title"
       descriptionKey="common.plans.feature_restricted.ai.description"
     >
-      <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-        <div className="pt-0.5">
-          <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Image
-                  src="/learnhouse_ai_simple_colored.png"
-                  alt="LearnHouse AI"
-                  width={24}
-                  height={24}
-                />
-                <div>
-                  <h1 className="font-bold text-xl text-gray-800">
-                    {t('dashboard.organization.ai.title')}
-                  </h1>
-                  <h2 className="text-gray-500 text-md">
-                    {t('dashboard.organization.ai.subtitle')}
-                  </h2>
-                </div>
-              </div>
-            </div>
+      <div className="sm:mx-10 mx-0 space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Image
+            src="/learnhouse_ai_simple_colored.png"
+            alt="LearnHouse AI"
+            width={28}
+            height={28}
+          />
+          <div>
+            <h1 className="font-bold text-lg text-gray-800">
+              {t('dashboard.organization.ai.title')}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {t('dashboard.organization.ai.subtitle')}
+            </p>
           </div>
         </div>
 
-        <div className="p-4 pt-1">
-          <div className="space-y-4">
-            {/* Admin-only warning */}
-            {!canEditOrgSettings && (
-              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
-                <div className="flex items-center space-x-3">
-                  <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                  <p className="text-sm text-amber-800">
-                    {t('dashboard.organization.ai.admin_only')}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* AI Enable/Disable Toggle */}
-            <div className={`p-4 rounded-lg border ${canEditOrgSettings ? 'bg-gray-50/50 border-gray-200' : 'bg-gray-100 border-gray-200 opacity-60'}`}>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-gray-800">
-                    {t('dashboard.organization.ai.enable_ai')}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    {t('dashboard.organization.ai.enable_ai_description')}
-                  </p>
-                </div>
-                <Switch
-                  checked={aiEnabled}
-                  onCheckedChange={handleToggle}
-                  disabled={isUpdating || !canEditOrgSettings}
-                />
-              </div>
-            </div>
-
-            {/* AI Features Info */}
-            {aiEnabled && (
-              <div className="p-4 rounded-lg bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border border-indigo-100">
-                <h4 className="text-sm font-medium text-gray-800 mb-2">
-                  {t('dashboard.organization.ai.features_enabled')}
-                </h4>
-                <ul className="text-xs text-gray-600 space-y-1.5">
-                  <li className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                    <span>{t('dashboard.organization.ai.feature_editor')}</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                    <span>{t('dashboard.organization.ai.feature_activity')}</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-                    <span>{t('dashboard.organization.ai.feature_canvas')}</span>
-                  </li>
-                </ul>
-              </div>
-            )}
+        {/* Admin-only warning */}
+        {!canEditOrgSettings && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200/80">
+            <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-800">
+              {t('dashboard.organization.ai.admin_only')}
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* Main AI toggle */}
+        <SettingRow
+          icon={<BrainCircuit className="w-4 h-4" />}
+          title={t('dashboard.organization.ai.enable_ai')}
+          description={t('dashboard.organization.ai.enable_ai_description')}
+          checked={aiEnabled}
+          onToggle={(checked) => {
+            setAiEnabled(checked)
+            updateAIConfig({ ai_enabled: checked })
+          }}
+          disabled={isUpdating || !canEditOrgSettings}
+        />
+
+        {/* Sub-features (only when AI is enabled) */}
+        {aiEnabled && (
+          <div className="space-y-3 pl-4 border-l-2 border-gray-100 ml-2">
+            <SettingRow
+              icon={<MessageCircle className="w-4 h-4" />}
+              title="AI Copilot"
+              description="Let learners ask questions about course content. Uses indexed material to provide grounded answers with source citations."
+              checked={copilotEnabled}
+              onToggle={(checked) => {
+                setCopilotEnabled(checked)
+                updateAIConfig({ copilot_enabled: checked })
+              }}
+              disabled={isUpdating || !canEditOrgSettings}
+            />
+
+            <SettingRow
+              icon={<Pencil className="w-4 h-4" />}
+              title={t('dashboard.organization.ai.feature_editor')}
+              description="AI-powered content editing assistance for course creators."
+              checked={true}
+              disabled={true}
+              alwaysOn
+            />
+
+            <SettingRow
+              icon={<Sparkles className="w-4 h-4" />}
+              title={t('dashboard.organization.ai.feature_activity')}
+              description="AI assistant available within activities to help learners."
+              checked={true}
+              disabled={true}
+              alwaysOn
+            />
+          </div>
+        )}
       </div>
     </PlanRestrictedFeature>
+  )
+}
+
+function SettingRow({ icon, title, description, checked, onToggle, disabled, alwaysOn }: {
+  icon: React.ReactNode
+  title: string
+  description: string
+  checked: boolean
+  onToggle?: (checked: boolean) => void
+  disabled?: boolean
+  alwaysOn?: boolean
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-white nice-shadow">
+      <div className="flex gap-3 min-w-0">
+        <div className="flex-shrink-0 mt-0.5 text-gray-400">{icon}</div>
+        <div className="space-y-0.5 min-w-0">
+          <h4 className="text-sm font-medium text-gray-800">{title}</h4>
+          <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+        </div>
+      </div>
+      {alwaysOn ? (
+        <span className="flex-shrink-0 text-[11px] font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md mt-0.5">
+          Always on
+        </span>
+      ) : (
+        <Switch
+          checked={checked}
+          onCheckedChange={onToggle}
+          disabled={disabled}
+          className="flex-shrink-0 mt-0.5"
+        />
+      )}
+    </div>
   )
 }
 

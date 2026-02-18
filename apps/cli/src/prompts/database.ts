@@ -8,6 +8,7 @@ export interface DatabaseConfig {
   useExternalDb: boolean
   externalDbConnectionString?: string
   dbPassword?: string
+  useAiDatabase: boolean
   useExternalRedis: boolean
   externalRedisConnectionString?: string
 }
@@ -106,11 +107,22 @@ export async function promptDatabase(): Promise<DatabaseConfig> {
   let useExternalDb = false
   let externalDbConnectionString: string | undefined
   let dbPassword: string | undefined
+  let useAiDatabase = false
 
   if (dbChoice === 'external') {
     externalDbConnectionString = await promptAndVerifyPostgres()
     useExternalDb = true
   } else {
+    const dbImageChoice = await p.select({
+      message: 'Which PostgreSQL image?',
+      options: [
+        { value: 'ai', label: 'PostgreSQL with AI capabilities', hint: 'recommended — enables AI course chatbot (RAG)' },
+        { value: 'standard', label: 'Standard PostgreSQL', hint: 'lighter image, no AI search features' },
+      ],
+    })
+    if (p.isCancel(dbImageChoice)) { p.cancel(); process.exit(0) }
+    useAiDatabase = dbImageChoice === 'ai'
+
     dbPassword = crypto.randomBytes(24).toString('base64url')
     p.log.message('')
     p.log.info(pc.bold('Database credentials generated:'))
@@ -150,6 +162,7 @@ export async function promptDatabase(): Promise<DatabaseConfig> {
     useExternalDb,
     externalDbConnectionString,
     dbPassword,
+    useAiDatabase,
     useExternalRedis,
     externalRedisConnectionString,
   }
