@@ -4,7 +4,7 @@ name: learnhouse-dev
 
 services:
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: learnhouse-db-dev
     restart: unless-stopped
     environment:

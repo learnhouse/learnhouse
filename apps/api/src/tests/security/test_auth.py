@@ -147,18 +147,17 @@ class TestAuth:
 
     def test_create_access_token_default_expiry(self):
         """Test access token creation with default expiry"""
-        with patch('src.security.auth.isDevModeEnabled', return_value=False):
-            data = {"sub": "test@example.com"}
-            token = create_access_token(data)
+        data = {"sub": "test@example.com"}
+        token = create_access_token(data)
 
-            # Verify token is created
-            assert isinstance(token, str)
-            assert len(token) > 0
+        # Verify token is created
+        assert isinstance(token, str)
+        assert len(token) > 0
 
-            # Decode and verify token
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            assert decoded["sub"] == "test@example.com"
-            assert "exp" in decoded
+        # Decode and verify token
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        assert decoded["sub"] == "test@example.com"
+        assert "exp" in decoded
 
     def test_create_access_token_custom_expiry(self):
         """Test access token creation with custom expiry"""

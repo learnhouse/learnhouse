@@ -8,9 +8,14 @@ from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 
+import asyncio
+import logging
+
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.activities.versioning import create_activity_version
+
+logger = logging.getLogger(__name__)
 
 
 ####################################################
@@ -249,9 +254,28 @@ async def update_activity(
         if isinstance(activity.content, dict):
             logger.info(f"[Activity Update] Post-save content 'type': {activity.content.get('type')}")
 
+    # Trigger background re-indexing for RAG when content changes
+    if 'content' in update_data:
+        asyncio.create_task(
+            _trigger_course_embedding(activity.course_id, activity.org_id)
+        )
+
     activity = ActivityRead.model_validate(activity)
 
     return activity
+
+
+async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
+    """Background task to re-index course embeddings after content update."""
+    try:
+        from src.core.events.database import get_db_session
+        from src.services.ai.rag.embedding_service import embed_course_content
+
+        # Create a new DB session for the background task
+        for session in get_db_session():
+            embed_course_content(course_id, org_id, session)
+    except Exception as e:
+        logger.warning("Background embedding update failed (non-critical): %s", e)
 
 
 async def delete_activity(
