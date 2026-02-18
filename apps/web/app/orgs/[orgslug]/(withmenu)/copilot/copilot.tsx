@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -89,6 +90,8 @@ function CopilotChat({ orgslug }: CopilotProps) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
+  const searchParams = useSearchParams()
+  const initialChatUuid = searchParams.get('chat')
 
   // All messages including the current streaming one (appended live)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -216,6 +219,17 @@ function CopilotChat({ orgslug }: CopilotProps) {
       setIsLoadingSession(false)
     }
   }, [accessToken, aichatUuid])
+
+  // Auto-load session from ?chat= URL parameter
+  const initialLoadDone = useRef(false)
+  useEffect(() => {
+    if (initialLoadDone.current || !initialChatUuid || !accessToken || !sessions.length) return
+    const target = sessions.find((s) => s.aichat_uuid === initialChatUuid)
+    if (target) {
+      initialLoadDone.current = true
+      handleLoadSession(target)
+    }
+  }, [initialChatUuid, accessToken, sessions, handleLoadSession])
 
   const handleDeleteSession = useCallback(async (uuid: string) => {
     if (!accessToken) return
