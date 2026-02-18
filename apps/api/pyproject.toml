@@ -41,6 +41,9 @@ dependencies = [
     "workos>=5.0.0",
     "dnspython>=2.6.0",
     "defusedxml>=0.7.1",
+    "llama-index-core>=0.12.0",
+    "pgvector>=0.3.0",
+    "pypdf>=5.0.0",
 ]
 
 [tool.ruff]

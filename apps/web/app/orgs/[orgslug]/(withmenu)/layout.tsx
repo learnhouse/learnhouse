@@ -62,6 +62,10 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
   const docsIndex = pathParts.indexOf('docs')
   const isDocSpacePage = docsIndex >= 0 && pathParts.length > docsIndex + 1
 
+  // Pages that use a full-bleed layout (no footer/watermark)
+  const noFooterPaths = ['copilot']
+  const isFullBleedPage = noFooterPaths.some((p) => pathParts.includes(p))
+
   return (
     <div
       className="flex flex-col min-h-screen"
@@ -75,8 +79,8 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
-      {!isDocSpacePage && <OrgFooter />}
-      <Watermark />
+      {!isDocSpacePage && !isFullBleedPage && <OrgFooter />}
+      {!isFullBleedPage && <Watermark />}
     </div>
   )
 }

@@ -6,7 +6,7 @@ from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
 from src.routers import api_tokens
-from src.routers.ai import ai, magicblocks, courseplanning
+from src.routers.ai import ai, magicblocks, courseplanning, rag
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
 from src.routers.courses import chapters, collections, courses, assignments, certifications
@@ -182,6 +182,12 @@ v1_router.include_router(
     courseplanning.router,
     prefix="/ai",
     tags=["ai", "courseplanning"],
+    dependencies=[Depends(get_non_api_token_user)]
+)
+v1_router.include_router(
+    rag.router,
+    prefix="/ai",
+    tags=["ai", "rag"],
     dependencies=[Depends(get_non_api_token_user)]
 )
 
