@@ -14,6 +14,7 @@ export interface SetupConfig {
   useExternalDb: boolean
   externalDbConnectionString?: string
   dbPassword?: string
+  useAiDatabase: boolean
 
   // Redis
   useExternalRedis: boolean

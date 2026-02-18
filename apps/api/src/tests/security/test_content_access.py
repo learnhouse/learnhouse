@@ -137,7 +137,7 @@ class TestCheckContentAccess:
                 "orgs/org1/courses/course_abc/activities/act1/video.mp4",
                 self._make_anon_user(), db
             )
-        assert exc_info.value.status_code == 401
+        assert exc_info.value.status_code == 403
 
     def test_public_podcast_episode_anonymous(self):
         """Anonymous users can access episode content of public podcasts."""

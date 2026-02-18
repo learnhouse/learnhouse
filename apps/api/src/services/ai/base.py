@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any, AsyncGenerator
 from uuid import uuid4
+from datetime import datetime, timezone
 import redis
 import json
 import asyncio
@@ -15,6 +16,7 @@ def get_gemini_client():
     if not api_key:
         raise Exception("Gemini API key not configured")
     return genai.Client(api_key=api_key)
+
 
 def ask_ai(
     question: str,
@@ -103,19 +105,20 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
         "aichat_uuid": session_id
     }
 
-def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str):
-    """Save a message exchange to Redis history"""
+def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str, user_id: Optional[int] = None, course_uuid: Optional[str] = None, sources: Optional[list] = None, mode: str = "course_only"):
+    """Save a message exchange to Redis history. Auto-creates session metadata on first message."""
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-    
+
     if not redis_conn_string:
         return
-    
+
     try:
         r = redis.from_url(redis_conn_string)
-        
+
         # Get existing history
-        history_data = r.get(f"chat_history:{aichat_uuid}")
+        history_key = f"chat_history:{aichat_uuid}"
+        history_data = r.get(history_key)
         if history_data:
             if isinstance(history_data, bytes):
                 history = json.loads(history_data.decode('utf-8'))
@@ -125,20 +128,205 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
                 history = []
         else:
             history = []
-        
+
+        # Auto-create session metadata on first message pair
+        is_first_message = len(history) == 0
+
         # Add new messages
         history.append({"role": "user", "content": user_message})
-        history.append({"role": "model", "content": ai_response})
-        
+        model_msg = {"role": "model", "content": ai_response}
+        if sources:
+            model_msg["sources"] = sources
+        history.append(model_msg)
+
         # Keep only last 20 messages to prevent unlimited growth
         if len(history) > 20:
             history = history[-20:]
-        
+
         # Save back to Redis with TTL of 25 days
-        r.setex(f"chat_history:{aichat_uuid}", 2160000, json.dumps(history))
-        
+        r.setex(history_key, 2160000, json.dumps(history))
+
+        # Create session metadata on first message
+        if is_first_message and user_id is not None:
+            title = user_message[:50].strip()
+            if len(user_message) > 50:
+                title += "..."
+            save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode)
+
     except Exception as e:
         print(f"Failed to save message to Redis: {e}")
+
+
+CHAT_TTL = 2160000  # 25 days in seconds
+
+
+def _get_redis():
+    """Get a Redis connection."""
+    LH_CONFIG = get_learnhouse_config()
+    conn = LH_CONFIG.redis_config.redis_connection_string
+    if not conn:
+        return None
+    return redis.from_url(conn)
+
+
+def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only"):
+    """Store session metadata and add to user's session index."""
+    r = _get_redis()
+    if not r:
+        return
+    try:
+        now = datetime.now(timezone.utc)
+        meta = {
+            "aichat_uuid": aichat_uuid,
+            "user_id": user_id,
+            "title": title,
+            "course_uuid": course_uuid,
+            "created_at": now.isoformat(),
+            "favorite": False,
+            "mode": mode,
+        }
+        r.setex(f"chat_meta:{aichat_uuid}", CHAT_TTL, json.dumps(meta))
+        r.zadd(f"user_chats:{user_id}", {aichat_uuid: now.timestamp()})
+        r.expire(f"user_chats:{user_id}", CHAT_TTL)
+    except Exception as e:
+        print(f"Failed to save chat session meta: {e}")
+
+
+def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str] = None, favorite: Optional[bool] = None) -> Optional[dict]:
+    """Update title and/or favorite flag on a session. Returns updated meta or None."""
+    r = _get_redis()
+    if not r:
+        return None
+    try:
+        meta_key = f"chat_meta:{aichat_uuid}"
+        meta_data = r.get(meta_key)
+        if not meta_data:
+            return None
+        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+        if meta.get("user_id") != user_id:
+            return None
+
+        if title is not None:
+            meta["title"] = title
+        if favorite is not None:
+            meta["favorite"] = favorite
+
+        ttl = r.ttl(meta_key)
+        if ttl and ttl > 0:
+            r.setex(meta_key, ttl, json.dumps(meta))
+        else:
+            r.setex(meta_key, CHAT_TTL, json.dumps(meta))
+
+        return meta
+    except Exception as e:
+        print(f"Failed to update chat session meta: {e}")
+        return None
+
+
+def get_user_chat_sessions(user_id: int) -> list[dict]:
+    """Return all chat sessions for a user, newest first."""
+    r = _get_redis()
+    if not r:
+        return []
+    try:
+        # Get all session UUIDs from sorted set, newest first
+        members = r.zrevrange(f"user_chats:{user_id}", 0, -1)
+        if not members:
+            return []
+
+        sessions = []
+        expired_uuids = []
+        for member in members:
+            uuid_str = member.decode("utf-8") if isinstance(member, bytes) else member
+            meta_data = r.get(f"chat_meta:{uuid_str}")
+            if not meta_data:
+                expired_uuids.append(uuid_str)
+                continue
+            meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+            sessions.append(meta)
+
+        # Clean up expired entries from the sorted set
+        if expired_uuids:
+            r.zrem(f"user_chats:{user_id}", *expired_uuids)
+
+        return sessions
+    except Exception as e:
+        print(f"Failed to get user chat sessions: {e}")
+        return []
+
+
+def get_chat_messages(aichat_uuid: str, user_id: int) -> Optional[list[dict]]:
+    """Get messages for a chat session, validating ownership. Returns None if not owned."""
+    r = _get_redis()
+    if not r:
+        return None
+    try:
+        # Validate ownership
+        meta_data = r.get(f"chat_meta:{aichat_uuid}")
+        if not meta_data:
+            return None
+        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+        if meta.get("user_id") != user_id:
+            return None
+
+        # Get messages
+        history_data = r.get(f"chat_history:{aichat_uuid}")
+        if not history_data:
+            return []
+        return json.loads(history_data.decode("utf-8") if isinstance(history_data, bytes) else history_data)
+    except Exception as e:
+        print(f"Failed to get chat messages: {e}")
+        return None
+
+
+def delete_chat_session(aichat_uuid: str, user_id: int) -> bool:
+    """Delete a chat session and its metadata. Returns True if deleted."""
+    r = _get_redis()
+    if not r:
+        return False
+    try:
+        # Validate ownership
+        meta_data = r.get(f"chat_meta:{aichat_uuid}")
+        if not meta_data:
+            return False
+        meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+        if meta.get("user_id") != user_id:
+            return False
+
+        r.delete(f"chat_history:{aichat_uuid}", f"chat_meta:{aichat_uuid}")
+        r.zrem(f"user_chats:{user_id}", aichat_uuid)
+        return True
+    except Exception as e:
+        print(f"Failed to delete chat session: {e}")
+        return False
+
+
+def generate_chat_title(user_message: str, ai_response: str) -> str:
+    """Generate a short summarized title for a chat session using a lightweight model."""
+    try:
+        client = get_gemini_client()
+        prompt = (
+            "Summarize this conversation into a very short title (max 6 words). "
+            "Output ONLY the title, nothing else. No quotes, no punctuation at the end.\n\n"
+            f"User: {user_message[:300]}\n"
+            f"Assistant: {ai_response[:300]}"
+        )
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-lite",
+            contents=[{"role": "user", "parts": [{"text": prompt}]}],
+            config={"max_output_tokens": 30, "temperature": 0.3},
+        )
+        if response.text:
+            title = response.text.strip().strip('"\'').strip()
+            if title:
+                return title[:60]
+    except Exception as e:
+        print(f"Failed to generate chat title: {e}")
+    # Fallback to truncated message
+    fallback = user_message[:50].strip()
+    if len(user_message) > 50:
+        fallback += "..."
+    return fallback
 
 
 async def ask_ai_stream(

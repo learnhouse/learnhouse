@@ -5,6 +5,8 @@
  * checking feature availability based on organization plan.
  */
 
+import { isOSSMode } from '@services/config/config'
+
 export type PlanLevel = 'free' | 'standard' | 'pro' | 'enterprise'
 
 // Plan hierarchy (lower index = lower tier)
@@ -77,6 +79,7 @@ export function getPlanLimit(plan: PlanLevel, resource: string): number {
  * @returns True if limit is reached (creation should be blocked)
  */
 export function isLimitReached(plan: PlanLevel, resource: string, currentUsage: number): boolean {
+  if (isOSSMode()) return false
   const limit = getPlanLimit(plan, resource)
   if (limit === 0) return false // Unlimited
   return currentUsage >= limit
@@ -107,6 +110,7 @@ export function planMeetsRequirement(
   currentPlan: PlanLevel,
   requiredPlan: PlanLevel
 ): boolean {
+  if (isOSSMode()) return true
   const currentIndex = PLAN_HIERARCHY.indexOf(currentPlan)
   const requiredIndex = PLAN_HIERARCHY.indexOf(requiredPlan)
   return currentIndex >= requiredIndex
@@ -130,6 +134,7 @@ export function getRequiredPlanForFeature(featureKey: string): PlanLevel | undef
  * @returns True if the feature is available, false otherwise
  */
 export function isFeatureAvailable(featureKey: string, currentPlan: PlanLevel): boolean {
+  if (isOSSMode()) return true
   const requiredPlan = getRequiredPlanForFeature(featureKey)
   if (!requiredPlan) {
     // No restriction, feature is available to all plans

@@ -228,7 +228,8 @@ async def api_get_org_signup_mechanism(
 async def api_update_org_ai_config(
     request: Request,
     org_id: int,
-    ai_enabled: bool,
+    ai_enabled: Optional[bool] = None,
+    copilot_enabled: Optional[bool] = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
@@ -236,7 +237,7 @@ async def api_update_org_ai_config(
     Update organization AI configuration (admin-only)
     """
     return await update_org_ai_config(
-        request, ai_enabled, org_id, current_user, db_session
+        request, ai_enabled, org_id, current_user, db_session, copilot_enabled=copilot_enabled
     )
 
 

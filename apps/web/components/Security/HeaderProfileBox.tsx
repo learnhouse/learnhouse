@@ -25,6 +25,7 @@ import { signOut } from '@components/Contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
+import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 
 interface RoleInfo {
   name: string;
@@ -44,6 +45,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
   const org = useOrg() as any
   const { t, i18n } = useTranslation()
+  const colors = getMenuColorClasses(primaryColor)
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -155,10 +157,10 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
             </li>
             <li>
               <Link
-                className={`px-3 py-2 rounded-lg transition-colors text-sm font-bold ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
+                className={`px-3 py-2 rounded-lg transition-colors text-sm font-bold ${colors.hoverBg} ${colors.text}`}
                 href={getUriWithOrg(org?.slug, '/login')} >{t('auth.login')}</Link>
             </li>
-            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ml-1 sm:ml-2 ${primaryColor ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-black text-white hover:bg-gray-800'}`}>
+            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ml-1 sm:ml-2 ${colors.signUpBtn}`}>
               <Link href={getUriWithOrg(org?.slug, '/signup')}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
@@ -169,11 +171,11 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
           <div className="flex items-center space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${primaryColor ? 'hover:bg-white/10' : 'hover:bg-gray-50'}`}>
+                <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${colors.profileHover}`}>
                   <UserAvatar border="border-2" rounded="rounded-lg" width={30} shadow={primaryColor ? '' : undefined} />
                   <div className="flex flex-col items-start space-y-0">
                     <div className="flex items-center space-x-2">
-                      <p className={`text-sm font-semibold capitalize ${primaryColor ? 'text-white' : 'text-gray-900'}`}>{session.data.user.username}</p>
+                      <p className={`text-sm font-semibold capitalize ${colors.profileName}`}>{session.data.user.username}</p>
                       {userRoleInfo && userRoleInfo.name !== 'USER' && (
                         <Tooltip 
                           content={userRoleInfo.description}
@@ -201,9 +203,9 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                         </Tooltip>
                       ))}
                     </div>
-                    <p className={`text-xs ${primaryColor ? 'text-white/70' : 'text-gray-500'}`}>{session.data.user.email}</p>
+                    <p className={`text-xs ${colors.profileMuted}`}>{session.data.user.email}</p>
                   </div>
-                  <CaretDown size={16} weight="fill" className={primaryColor ? 'text-white/70' : 'text-gray-500'} />
+                  <CaretDown size={16} weight="fill" className={colors.profileMuted} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">

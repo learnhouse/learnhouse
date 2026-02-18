@@ -12,6 +12,7 @@ import { backupCommand } from '../src/commands/backup.js'
 import { deploymentsCommand } from '../src/commands/deployments.js'
 import { doctorCommand } from '../src/commands/doctor.js'
 import { shellCommand } from '../src/commands/shell.js'
+import { devCommand } from '../src/commands/dev.js'
 
 const COMMANDS: { name: string; desc: string }[] = [
   { name: 'setup', desc: 'Interactive setup wizard' },
@@ -23,6 +24,7 @@ const COMMANDS: { name: string; desc: string }[] = [
   { name: 'deployments', desc: 'Manage deployments & resources' },
   { name: 'doctor', desc: 'Diagnose issues' },
   { name: 'shell', desc: 'Container shell access' },
+  { name: 'dev', desc: 'Development mode' },
 ]
 
 async function showWelcome() {
@@ -91,6 +93,11 @@ program
   .command('shell')
   .description('Open a shell in a LearnHouse container')
   .action(shellCommand)
+
+program
+  .command('dev')
+  .description('Start development environment (DB + Redis in Docker, API + Web locally)')
+  .action(devCommand)
 
 // Non-blocking update check — runs in background, prints warning if outdated
 const updateCheck = checkForUpdates()

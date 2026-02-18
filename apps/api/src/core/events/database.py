@@ -83,6 +83,18 @@ else:
 
 # Only create tables if not in test mode (tests will handle this themselves)
 if not is_testing:
+    # Enable pgvector extension for vector similarity search (optional — RAG feature)
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+            conn.commit()
+    except Exception as e:
+        logging.warning(
+            "pgvector extension not available — RAG features will be disabled. "
+            "Install pgvector on your PostgreSQL server to enable course chatbot. "
+            "Error: %s", e
+        )
     SQLModel.metadata.create_all(engine)
     # Note: logfire instrumentation will be handled in app.py after configuration
 

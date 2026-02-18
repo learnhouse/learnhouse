@@ -6,6 +6,7 @@ access to premium features.
 """
 
 from typing import Literal
+from config.config import get_learnhouse_config
 
 
 # Plan type definition - matches OrgCloudConfig
@@ -79,6 +80,8 @@ def get_ai_credit_limit(plan: PlanLevel) -> int:
     Returns:
         The AI credit limit (0 = no access, -1 = unlimited)
     """
+    if _is_oss_mode():
+        return -1  # Unlimited in OSS mode
     return AI_CREDIT_LIMITS.get(plan, 0)
 
 
@@ -93,8 +96,15 @@ def get_plan_limit(plan: PlanLevel, feature: str) -> int:
     Returns:
         The limit for the feature (0 means unlimited)
     """
+    if _is_oss_mode():
+        return 0  # Unlimited in OSS mode
     plan_limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
     return plan_limits.get(feature, 0)
+
+
+def _is_oss_mode() -> bool:
+    """Check if OSS mode is enabled (disables plan-based limits)."""
+    return get_learnhouse_config().general_config.oss_mode
 
 
 def plan_meets_requirement(current_plan: PlanLevel, required_plan: PlanLevel) -> bool:
@@ -108,6 +118,8 @@ def plan_meets_requirement(current_plan: PlanLevel, required_plan: PlanLevel) ->
     Returns:
         True if current_plan >= required_plan in the hierarchy
     """
+    if _is_oss_mode():
+        return True
     current_index = PLAN_HIERARCHY.index(current_plan)
     required_index = PLAN_HIERARCHY.index(required_plan)
     return current_index >= required_index

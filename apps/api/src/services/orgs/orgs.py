@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 from uuid import uuid4
 from sqlmodel import Session, select
 from src.db.organization_config import (
@@ -696,10 +696,11 @@ async def update_org_signup_mechanism(
 
 async def update_org_ai_config(
     request: Request,
-    ai_enabled: bool,
+    ai_enabled: Optional[bool],
     org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
+    copilot_enabled: Optional[bool] = None,
 ):
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
@@ -739,7 +740,12 @@ async def update_org_ai_config(
         updated_config["features"]["ai"] = {"enabled": True, "limit": 10}
 
     # Update config
-    updated_config["features"]["ai"]["enabled"] = ai_enabled
+    if ai_enabled is not None:
+        updated_config["features"]["ai"]["enabled"] = ai_enabled
+
+    # Update copilot setting if provided
+    if copilot_enabled is not None:
+        updated_config["features"]["ai"]["copilot_enabled"] = copilot_enabled
 
     # Clean up deprecated model field if present
     if "model" in updated_config["features"]["ai"]:
