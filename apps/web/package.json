@@ -34,6 +34,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@hocuspocus/provider": "^2.15.0",
     "@sentry/nextjs": "^10.38.0",
     "@tiptap/core": "^3.10.1",
     "@tiptap/extension-bullet-list": "^3.10.1",
@@ -47,6 +48,8 @@
     "@tiptap/extension-table-cell": "^3.10.1",
     "@tiptap/extension-table-header": "^3.10.1",
     "@tiptap/extension-table-row": "^3.10.1",
+    "@tiptap/extension-collaboration": "3.10.1",
+    "@tiptap/extension-collaboration-caret": "3.10.1",
     "@tiptap/extension-youtube": "^3.10.1",
     "@tiptap/html": "^3.10.1",
     "@tiptap/pm": "^3.10.1",
@@ -100,6 +103,8 @@
     "usehooks-ts": "^3.1.1",
     "uuid": "^13.0.0",
     "wavesurfer.js": "^7.12.1",
+    "y-prosemirror": "^1.2.12",
+    "yjs": "^13.6.20",
     "yup": "^1.7.1"
   },
   "devDependencies": {

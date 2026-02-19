@@ -269,6 +269,9 @@ export const isOSSMode = () => {
   return val.toLowerCase() === 'true'
 }
 
+// Collaboration server WebSocket URL
+export const getCollabUrl = () => getConfig('NEXT_PUBLIC_COLLAB_URL', 'ws://localhost:4000')
+
 export const getDefaultOrg = () => {
   // 1. Env var (backward compat)
   const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG')

@@ -37,6 +37,7 @@ import {
   Wrench,
   ChartLine,
   MagnifyingGlass,
+  ChalkboardSimple,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -169,6 +170,7 @@ function DashLeftMenu() {
   const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
   const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
   const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
+  const showBoards = org?.config?.config?.features?.boards?.enabled === true
   const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
 
   return (
@@ -370,6 +372,14 @@ function DashLeftMenu() {
                 href="/dash/docs"
                 icon={<Book size={20} weight="fill" />}
                 label="Documentation"
+                isCollapsed={isCollapsed}
+              />
+            )}
+            {showBoards && (
+              <MenuLink
+                href="/dash/boards"
+                icon={<ChalkboardSimple size={20} weight="fill" />}
+                label="Boards"
                 isCollapsed={isCollapsed}
               />
             )}
@@ -575,7 +585,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
-            {(!showCommunities || !showPodcasts || !showDocs || !showPayments) && (
+            {(!showCommunities || !showPodcasts || !showDocs || !showBoards || !showPayments) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
@@ -607,6 +617,14 @@ function DashLeftMenu() {
                         <Link href="/dash/docs" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <Book size={16} weight="fill" />
                           <span>Documentation</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showBoards && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/boards" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <ChalkboardSimple size={16} weight="fill" />
+                          <span>{t('common.boards')}</span>
                         </Link>
                       </HoverMenuItem>
                     )}

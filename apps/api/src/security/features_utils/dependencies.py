@@ -22,6 +22,7 @@ FeatureName = Literal[
     "communities",
     "podcasts",
     "docs",
+    "boards",
     "ai",
     "payments",
     "usergroups",
@@ -334,5 +335,36 @@ async def require_docs_feature(
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail="Invalid org_id format")
         return _check_feature_enabled("docs", org_id, db_session)
+
+    return True
+
+
+async def require_boards_feature(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+) -> bool:
+    """
+    Router-level dependency that auto-detects the parameter type and checks
+    if the boards feature is enabled.
+
+    Checks in order: board_uuid, org_id
+    """
+    path_params = request.path_params
+
+    if "board_uuid" in path_params:
+        from src.db.boards import Board
+        board_uuid = path_params["board_uuid"]
+        statement = select(Board).where(Board.board_uuid == board_uuid)
+        board = db_session.exec(statement).first()
+        if not board:
+            raise HTTPException(status_code=404, detail="Board not found")
+        return _check_feature_enabled("boards", board.org_id, db_session)
+
+    if "org_id" in path_params:
+        try:
+            org_id = int(path_params["org_id"])
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid org_id format")
+        return _check_feature_enabled("boards", org_id, db_session)
 
     return True

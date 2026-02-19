@@ -23,6 +23,7 @@ export function generateEnvFile(config: SetupConfig): string {
 
   const nextAuthSecret = generateSecret()
   const jwtSecret = generateSecret()
+  const collabInternalKey = generateSecret()
 
   const lines: string[] = [
     '# LearnHouse Environment Variables',
@@ -91,6 +92,13 @@ export function generateEnvFile(config: SetupConfig): string {
     `LEARNHOUSE_AUTH_JWT_SECRET_KEY=${jwtSecret}`,
     `LEARNHOUSE_INITIAL_ADMIN_EMAIL=${config.adminEmail}`,
     `LEARNHOUSE_INITIAL_ADMIN_PASSWORD=${config.adminPassword}`,
+    '',
+    '# =============================================================================',
+    '# Collaboration Server',
+    '# =============================================================================',
+    '',
+    `COLLAB_INTERNAL_KEY=${collabInternalKey}`,
+    `NEXT_PUBLIC_COLLAB_URL=${config.useHttps ? 'wss' : 'ws'}://${config.domain}${portSuffix}/collab`,
     '',
     '# =============================================================================',
     '# General Settings',

@@ -7,6 +7,7 @@ from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
 from src.routers import api_tokens
 from src.routers.ai import ai, magicblocks, courseplanning, rag
+from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
 from src.routers.courses import chapters, collections, courses, assignments, certifications
@@ -15,6 +16,7 @@ from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
 from src.routers.podcasts import podcasts as podcasts_router_module
 from src.routers.podcasts import episodes as episodes_router_module
+from src.routers.boards import boards as boards_router_module
 from src.routers.docs import docspaces as docspaces_router_module
 from src.routers.docs import docsections as docsections_router_module
 from src.routers.docs import docgroups as docgroups_router_module
@@ -161,6 +163,17 @@ v1_router.include_router(
     dependencies=[Depends(require_plan("pro", "Certifications"))]
 )
 v1_router.include_router(
+    boards_router_module.router,
+    prefix="/boards",
+    tags=["boards"],
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Boards"))]
+)
+v1_router.include_router(
+    boards_router_module.internal_router,
+    prefix="/boards",
+    tags=["boards-internal"],
+)
+v1_router.include_router(
     trail.router,
     prefix="/trail",
     tags=["trail"],
@@ -189,6 +202,12 @@ v1_router.include_router(
     prefix="/ai",
     tags=["ai", "rag"],
     dependencies=[Depends(get_non_api_token_user)]
+)
+v1_router.include_router(
+    boards_playground.router,
+    prefix="/boards",
+    tags=["boards", "boards-playground"],
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Boards"))]
 )
 
 v1_router.include_router(

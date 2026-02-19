@@ -1,4 +1,4 @@
-import { APP_IMAGE, POSTGRES_IMAGE, POSTGRES_AI_IMAGE } from '../constants.js'
+import { APP_IMAGE, COLLAB_IMAGE, POSTGRES_IMAGE, POSTGRES_AI_IMAGE } from '../constants.js'
 import type { SetupConfig } from '../types.js'
 
 /**
@@ -35,6 +35,8 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
     depends_on:
       learnhouse-app:
         condition: service_healthy
+      learnhouse-collab:
+        condition: service_started
     networks:
       - learnhouse-network-${id}
     healthcheck:
@@ -55,6 +57,8 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
     depends_on:
       learnhouse-app:
         condition: service_healthy
+      learnhouse-collab:
+        condition: service_started
     networks:
       - learnhouse-network-${id}
     healthcheck:
@@ -141,6 +145,21 @@ ${appDependsOn}
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  learnhouse-collab:
+    image: ${COLLAB_IMAGE}
+    container_name: learnhouse-collab-${id}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - COLLAB_PORT=4000
+      - LEARNHOUSE_API_URL=http://learnhouse-app:9000
+    depends_on:
+      learnhouse-app:
+        condition: service_healthy
+    networks:
+      - learnhouse-network-${id}
 ${proxyService}${dbService}${redisService}
 networks:
   learnhouse-network-${id}:

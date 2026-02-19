@@ -17,6 +17,7 @@ interface AuthenticatedClientElementProps {
   | 'discussions'
   | 'podcasts'
   | 'docspaces'
+  | 'boards'
   action?: 'create' | 'update' | 'delete' | 'read'
 }
 

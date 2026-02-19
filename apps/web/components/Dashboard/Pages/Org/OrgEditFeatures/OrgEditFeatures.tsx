@@ -12,6 +12,7 @@ import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
 import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy, FileText } from 'lucide-react'
+import { ChalkboardSimple } from '@phosphor-icons/react'
 
 interface FeatureToggleProps {
   id: string
@@ -91,6 +92,7 @@ const OrgEditFeatures: React.FC = () => {
   const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
   const [podcastsEnabled, setPodcastsEnabled] = useState<boolean>(false)
   const [docsEnabled, setDocsEnabled] = useState<boolean>(false)
+  const [boardsEnabled, setBoardsEnabled] = useState<boolean>(false)
 
   // Loading states
   const [updatingFeature, setUpdatingFeature] = useState<string | null>(null)
@@ -123,6 +125,10 @@ const OrgEditFeatures: React.FC = () => {
       // Docs - default to false (disabled by default)
       const docEnabled = features.docs?.enabled
       setDocsEnabled(docEnabled !== undefined ? docEnabled : false)
+
+      // Boards - default to false (disabled by default)
+      const brdEnabled = features.boards?.enabled
+      setBoardsEnabled(brdEnabled !== undefined ? brdEnabled : false)
     }
   }, [org])
 
@@ -217,6 +223,13 @@ const OrgEditFeatures: React.FC = () => {
     const success = await updateFeatureConfig('docs', enabled)
     if (success) {
       setDocsEnabled(enabled)
+    }
+  }
+
+  const handleBoardsToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('boards', enabled)
+    if (success) {
+      setBoardsEnabled(enabled)
     }
   }
 
@@ -334,6 +347,21 @@ const OrgEditFeatures: React.FC = () => {
             currentPlan={currentPlan}
             icon={<FileText size={20} className="text-gray-600" />}
             onToggle={handleDocsToggle}
+            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
+          />
+
+          {/* Boards Toggle */}
+          <FeatureToggle
+            id="boards"
+            title="Boards"
+            description="Create collaborative boards with lists and cards for project management"
+            enabled={boardsEnabled}
+            isUpdating={updatingFeature === 'boards'}
+            canEdit={canEditOrgSettings}
+            requiredPlan="pro"
+            currentPlan={currentPlan}
+            icon={<ChalkboardSimple size={20} className="text-gray-600" />}
+            onToggle={handleBoardsToggle}
             upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
         </div>

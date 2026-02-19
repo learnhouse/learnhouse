@@ -27,6 +27,7 @@ export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
   docs: 'pro',
   roles: 'pro',
   api_tokens: 'pro',
+  boards: 'pro',
   analytics_advanced: 'pro',
   course_analytics: 'pro',
   scorm: 'enterprise',
