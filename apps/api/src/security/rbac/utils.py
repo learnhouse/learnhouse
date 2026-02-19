@@ -43,6 +43,8 @@ async def check_element_type(element_uuid):
         return "docgroups"
     elif element_uuid.startswith("docpage_"):
         return "docpages"
+    elif element_uuid.startswith("board_"):
+        return "boards"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -253,6 +255,12 @@ async def get_element_organization_id(
         statement = select(DocPage).where(DocPage.docpage_uuid == element_uuid)
         docpage = db_session.exec(statement).first()
         return docpage.org_id if docpage else None
+
+    elif element_type == "boards":
+        from src.db.boards import Board
+        statement = select(Board).where(Board.board_uuid == element_uuid)
+        board = db_session.exec(statement).first()
+        return board.org_id if board else None
 
     # Unknown element type
     return None

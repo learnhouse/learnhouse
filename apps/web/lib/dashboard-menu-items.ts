@@ -7,6 +7,7 @@ import {
   Buildings,
   ChatsCircle,
   Book,
+  ChalkboardSimple,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -45,6 +46,14 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     icon: ChatsCircle,
     labelKey: 'communities.title',
     featureKey: 'communities',
+  },
+  {
+    id: 'boards',
+    href: '/dash/boards',
+    icon: ChalkboardSimple,
+    labelKey: 'common.boards',
+    featureKey: 'boards',
+    defaultDisabled: true,
   },
   {
     id: 'docs',

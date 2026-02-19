@@ -7,6 +7,7 @@ This script handles all migrations:
 2. Podcasts permissions for roles
 3. Podcasts feature for organization configs
 4. Reset orgconfig colors to empty string
+5. Boards permissions for roles
 
 Run this script from the apps/api directory:
     python scripts/migrate.py
@@ -255,6 +256,83 @@ def migrate_org_configs_podcasts(session):
 
 
 # =============================================================================
+# Boards Migration
+# =============================================================================
+
+def migrate_roles_boards(session):
+    """Add boards permissions to all existing roles."""
+    print("\n" + "=" * 60)
+    print("Migrating Roles: Boards Permissions")
+    print("=" * 60)
+
+    result = session.execute(text("SELECT id, name, rights FROM role"))
+    roles = result.fetchall()
+
+    print(f"Found {len(roles)} roles to check")
+    updated_count = 0
+
+    for role_id, role_name, rights in roles:
+        if rights is None:
+            rights = {}
+        elif isinstance(rights, str):
+            rights = json.loads(rights)
+
+        # Check if already migrated
+        if 'boards' in rights:
+            print(f"  - Role '{role_name}' (id={role_id}): Already has boards, skipping")
+            continue
+
+        is_admin = has_admin_like_perms(rights)
+        is_instructor = can_only_manage_own(rights)
+
+        # Add boards permission based on role type
+        if is_admin and not is_instructor:
+            # Admin/Maintainer: full permissions
+            rights['boards'] = {
+                'action_create': True,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': True,
+                'action_update_own': True,
+                'action_delete': True,
+                'action_delete_own': True,
+            }
+        elif is_instructor:
+            # Instructor: can create and manage own
+            rights['boards'] = {
+                'action_create': True,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': False,
+                'action_update_own': True,
+                'action_delete': False,
+                'action_delete_own': True,
+            }
+        else:
+            # User/Learner: read only
+            rights['boards'] = {
+                'action_create': False,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': False,
+                'action_update_own': False,
+                'action_delete': False,
+                'action_delete_own': False,
+            }
+
+        session.execute(
+            text("UPDATE role SET rights = :rights WHERE id = :id"),
+            {'rights': json.dumps(rights), 'id': role_id}
+        )
+
+        print(f"  - Role '{role_name}' (id={role_id}): Added boards permissions")
+        updated_count += 1
+
+    print(f"\nBoards roles migration complete! Updated {updated_count} roles.")
+    return updated_count
+
+
+# =============================================================================
 # Org Config Colors Migration
 # =============================================================================
 
@@ -422,6 +500,30 @@ def show_dry_run():
         if podcasts_count == 0:
             print("  (none)")
 
+        # Check roles for boards
+        print("\nRoles needing boards permissions:")
+        boards_count = 0
+        for role_id, role_name, rights in roles:
+            if rights is None:
+                rights = {}
+            elif isinstance(rights, str):
+                rights = json.loads(rights)
+
+            if 'boards' not in rights:
+                is_admin = has_admin_like_perms(rights)
+                is_instructor = can_only_manage_own(rights)
+                if is_admin and not is_instructor:
+                    perm_type = "full"
+                elif is_instructor:
+                    perm_type = "own-only"
+                else:
+                    perm_type = "read-only"
+                print(f"  - {role_name}: Would add {perm_type} boards permissions")
+                boards_count += 1
+
+        if boards_count == 0:
+            print("  (none)")
+
         # Check org configs for podcasts
         print("\nOrg configs needing podcasts feature:")
         result = session.execute(text("SELECT id, org_id, config FROM organizationconfig"))
@@ -443,7 +545,8 @@ def show_dry_run():
 
         print("\n" + "=" * 60)
         print(f"Summary: {communities_count} roles for communities, "
-              f"{podcasts_count} roles for podcasts, {config_count} org configs")
+              f"{podcasts_count} roles for podcasts, {boards_count} roles for boards, "
+              f"{config_count} org configs")
         print("=" * 60)
 
     finally:
@@ -465,6 +568,7 @@ def run_all_migrations():
             'podcasts_roles': migrate_roles_podcasts(session),
             'podcasts_configs': migrate_org_configs_podcasts(session),
             'colors_configs': migrate_org_configs_colors(session),
+            'boards_roles': migrate_roles_boards(session),
         }
 
         session.commit()
@@ -476,6 +580,7 @@ def run_all_migrations():
         print(f"  Roles updated with podcasts: {results['podcasts_roles']}")
         print(f"  Org configs updated with podcasts: {results['podcasts_configs']}")
         print(f"  Org configs reset colors: {results['colors_configs']}")
+        print(f"  Roles updated with boards: {results['boards_roles']}")
         print("\nAll migrations completed successfully!")
 
     except Exception as e:
@@ -521,6 +626,23 @@ def run_podcasts_migration():
         session.close()
 
 
+def run_boards_migration():
+    """Run only boards migration."""
+    print("Connecting to database...")
+    session = get_session()
+
+    try:
+        roles_updated = migrate_roles_boards(session)
+        session.commit()
+        print(f"\nBoards migration completed! Updated {roles_updated} roles.")
+    except Exception as e:
+        session.rollback()
+        print(f"\nError during migration: {e}")
+        raise
+    finally:
+        session.close()
+
+
 def run_colors_migration():
     """Run only colors migration."""
     print("Connecting to database...")
@@ -550,9 +672,10 @@ Examples:
   python scripts/migrate.py communities  Run only communities migration
   python scripts/migrate.py podcasts     Run only podcasts migration
   python scripts/migrate.py colors       Run only colors reset migration
+  python scripts/migrate.py boards       Run only boards migration
         """
     )
-    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts', 'colors'],
+    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts', 'colors', 'boards'],
                         help='Specific migration to run (default: all)')
     parser.add_argument('--show', action='store_true',
                         help='Show current state without migrating')
@@ -577,6 +700,9 @@ Examples:
         show_current_state()
     elif args.migration == 'colors':
         run_colors_migration()
+        show_current_state()
+    elif args.migration == 'boards':
+        run_boards_migration()
         show_current_state()
     else:
         run_all_migrations()

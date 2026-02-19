@@ -1,0 +1,312 @@
+from typing import List, Optional
+from uuid import uuid4
+from datetime import datetime
+from sqlmodel import Session, select, func
+from fastapi import HTTPException, Request, UploadFile
+from src.db.boards import (
+    Board,
+    BoardCreate,
+    BoardRead,
+    BoardUpdate,
+    BoardMember,
+    BoardMemberCreate,
+    BoardMemberRead,
+    BoardMemberRole,
+)
+from src.db.organizations import Organization
+from src.db.users import PublicUser, AnonymousUser, User
+from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+from src.security.rbac import AccessAction, check_resource_access
+from src.services.utils.upload_content import upload_file
+
+
+async def create_board(
+    request: Request,
+    org_id: int,
+    board_object: BoardCreate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardRead:
+    await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
+
+    board = Board(
+        **board_object.model_dump(),
+        org_id=org_id,
+        board_uuid=f"board_{uuid4()}",
+        created_by=current_user.id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(board)
+    db_session.commit()
+    db_session.refresh(board)
+
+    # Add creator as owner
+    member = BoardMember(
+        board_id=board.id,
+        user_id=current_user.id,
+        role=BoardMemberRole.OWNER,
+        creation_date=str(datetime.now()),
+    )
+    db_session.add(member)
+
+    # Track resource authorship
+    resource_author = ResourceAuthor(
+        resource_uuid=board.board_uuid,
+        user_id=current_user.id,
+        authorship=ResourceAuthorshipEnum.CREATOR,
+        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db_session.add(resource_author)
+    db_session.commit()
+
+    return _board_to_read(board, db_session)
+
+
+async def get_board(
+    request: Request,
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardRead:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+    return _board_to_read(board, db_session)
+
+
+async def get_boards_by_org(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> List[BoardRead]:
+    statement = (
+        select(Board)
+        .where(Board.org_id == org_id)
+        .order_by(Board.creation_date.desc())
+    )
+    boards = db_session.exec(statement).all()
+    return [_board_to_read(b, db_session) for b in boards]
+
+
+async def update_board(
+    request: Request,
+    board_uuid: str,
+    board_object: BoardUpdate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardRead:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
+
+    for var, value in vars(board_object).items():
+        if value is not None:
+            setattr(board, var, value)
+
+    board.update_date = str(datetime.now())
+    db_session.add(board)
+    db_session.commit()
+    db_session.refresh(board)
+
+    return _board_to_read(board, db_session)
+
+
+async def delete_board(
+    request: Request,
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.DELETE)
+
+    db_session.delete(board)
+    db_session.commit()
+
+    return {"detail": "Board deleted"}
+
+
+async def add_board_member(
+    request: Request,
+    board_uuid: str,
+    member_object: BoardMemberCreate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardMemberRead:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
+
+    # Check if already a member
+    existing = db_session.exec(
+        select(BoardMember).where(
+            BoardMember.board_id == board.id,
+            BoardMember.user_id == member_object.user_id,
+        )
+    ).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="User is already a board member")
+
+    member = BoardMember(
+        board_id=board.id,
+        user_id=member_object.user_id,
+        role=member_object.role,
+        creation_date=str(datetime.now()),
+    )
+    db_session.add(member)
+    db_session.commit()
+    db_session.refresh(member)
+
+    return _member_to_read(member, db_session)
+
+
+async def remove_board_member(
+    request: Request,
+    board_uuid: str,
+    user_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
+
+    member = db_session.exec(
+        select(BoardMember).where(
+            BoardMember.board_id == board.id,
+            BoardMember.user_id == user_id,
+        )
+    ).first()
+
+    if not member:
+        raise HTTPException(status_code=404, detail="Board member not found")
+
+    if member.role == BoardMemberRole.OWNER:
+        raise HTTPException(status_code=400, detail="Cannot remove the board owner")
+
+    db_session.delete(member)
+    db_session.commit()
+
+    return {"detail": "Member removed"}
+
+
+async def check_board_membership(
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardMemberRead:
+    board = _get_board_or_404(board_uuid, db_session)
+
+    member = db_session.exec(
+        select(BoardMember).where(
+            BoardMember.board_id == board.id,
+            BoardMember.user_id == current_user.id,
+        )
+    ).first()
+
+    if not member:
+        raise HTTPException(status_code=403, detail="Not a member of this board")
+
+    return _member_to_read(member, db_session)
+
+
+async def get_board_members(
+    request: Request,
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> List[BoardMemberRead]:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+
+    statement = select(BoardMember).where(BoardMember.board_id == board.id)
+    members = db_session.exec(statement).all()
+    return [_member_to_read(m, db_session) for m in members]
+
+
+async def update_board_thumbnail(
+    request: Request,
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+    thumbnail_file: UploadFile | None = None,
+) -> BoardRead:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
+
+    org = db_session.exec(select(Organization).where(Organization.id == board.org_id)).first()
+
+    if not thumbnail_file or not thumbnail_file.filename:
+        raise HTTPException(status_code=400, detail="No thumbnail file provided")
+
+    name_in_disk = await upload_file(
+        file=thumbnail_file,
+        directory=f"boards/{board.board_uuid}/thumbnails",
+        type_of_dir="orgs",
+        uuid=org.org_uuid,
+        allowed_types=["image"],
+        filename_prefix="thumbnail",
+    )
+
+    board.thumbnail_image = name_in_disk
+    board.update_date = str(datetime.now())
+    db_session.add(board)
+    db_session.commit()
+    db_session.refresh(board)
+
+    return _board_to_read(board, db_session)
+
+
+async def get_ydoc_state(
+    board_uuid: str,
+    db_session: Session,
+) -> Optional[bytes]:
+    board = _get_board_or_404(board_uuid, db_session)
+    return board.ydoc_state
+
+
+async def store_ydoc_state(
+    board_uuid: str,
+    state: bytes,
+    db_session: Session,
+):
+    board = _get_board_or_404(board_uuid, db_session)
+    board.ydoc_state = state
+    board.update_date = str(datetime.now())
+    db_session.add(board)
+    db_session.commit()
+    return {"detail": "Ydoc state stored"}
+
+
+def _get_board_or_404(board_uuid: str, db_session: Session) -> Board:
+    statement = select(Board).where(Board.board_uuid == board_uuid)
+    board = db_session.exec(statement).first()
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+    return board
+
+
+def _board_to_read(board: Board, db_session: Session) -> BoardRead:
+    member_count = db_session.exec(
+        select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
+    ).one()
+    return BoardRead(
+        **board.model_dump(exclude={"ydoc_state"}),
+        member_count=member_count,
+    )
+
+
+def _member_to_read(member: BoardMember, db_session: Session) -> BoardMemberRead:
+    user = db_session.exec(select(User).where(User.id == member.user_id)).first()
+    return BoardMemberRead(
+        id=member.id,
+        board_id=member.board_id,
+        user_id=member.user_id,
+        role=member.role,
+        creation_date=member.creation_date,
+        username=user.username if user else None,
+        email=user.email if user else None,
+        avatar_image=user.avatar_image if user else None,
+        user_uuid=user.user_uuid if user else None,
+    )
