@@ -1,9 +1,11 @@
 'use client'
 
-import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
-import { NodeViewWrapper } from '@tiptap/react'
-import { GripVertical, BookOpen, ChevronRight, ArrowLeft, ExternalLink } from 'lucide-react'
-import NodeActions from './NodeActions'
+import React, { Suspense, lazy, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { BookOpen, ChevronRight, ArrowLeft, ExternalLink } from 'lucide-react'
+import BoardBlockWrapper from './BoardBlockWrapper'
+import DragHandle from './DragHandle'
+import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
 import { getOrgCourses } from '@services/courses/courses'
 import { getCourseMetadata } from '@services/courses/courses'
@@ -49,6 +51,7 @@ const LoadingFallback = () => (
 )
 
 export default function ActivityBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { activityUuid, courseUuid, x, y, width, height } = node.attrs
 
   // Picker state
@@ -121,12 +124,9 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
     x, y, width, height,
     minWidth: 320, minHeight: 240,
     updateAttributes,
+    editor,
+    getPos,
   })
-
-  // --- Stop wheel from bubbling to canvas ---
-  const stopWheel = useCallback((e: React.WheelEvent) => {
-    e.stopPropagation()
-  }, [])
 
   // --- Select activity ---
   const handleSelectActivity = (act: any) => {
@@ -138,21 +138,12 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
   // --- No activity set: show picker ---
   if (!activityUuid) {
     return (
-      <NodeViewWrapper
-        as="div"
-        onWheel={stopWheel}
-        className={`absolute group rounded-xl nice-shadow bg-white ${
-          selected ? 'ring-2 ring-blue-400' : ''
-        }`}
-        style={{ left: x, top: y, width, minHeight: 200 }}
+      <BoardBlockWrapper
+        selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+        x={x} y={y} width={width} stopWheel
+        style={{ minHeight: 200 }}
       >
-        <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-        <div
-          onMouseDown={handleDragStart}
-          className="flex items-center justify-center h-6 cursor-grab active:cursor-grabbing bg-gray-50/80 border-b border-gray-100 rounded-t-xl"
-        >
-          <GripVertical size={12} className="text-gray-400" />
-        </div>
+        <DragHandle onMouseDown={handleDragStart} className="bg-gray-50/80 border-b border-gray-100 rounded-t-xl" />
 
         {!selectedCourse ? (
           // Step 1: Course list
@@ -161,12 +152,12 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
                 <BookOpen size={14} className="text-blue-500" />
               </div>
-              <p className="text-xs font-medium text-neutral-600">Select a course</p>
+              <p className="text-xs font-medium text-neutral-600">{t('boards.activity_block.select_course')}</p>
             </div>
             {loadingCourses ? (
               <LoadingFallback />
             ) : courses.length === 0 ? (
-              <p className="text-xs text-neutral-400 text-center py-4">No courses found</p>
+              <p className="text-xs text-neutral-400 text-center py-4">{t('boards.activity_block.no_courses')}</p>
             ) : (
               <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto">
                 {courses.map((course: any) => (
@@ -199,7 +190,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
             {loadingMeta ? (
               <LoadingFallback />
             ) : !courseMetadata?.chapters ? (
-              <p className="text-xs text-neutral-400 text-center py-4">No activities found</p>
+              <p className="text-xs text-neutral-400 text-center py-4">{t('boards.activity_block.no_activities')}</p>
             ) : (
               <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto">
                 {courseMetadata.chapters.map((chapter: any) => {
@@ -231,7 +222,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
             )}
           </div>
         )}
-      </NodeViewWrapper>
+      </BoardBlockWrapper>
     )
   }
 
@@ -270,31 +261,25 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
       default:
         return (
           <div className="flex items-center justify-center h-full text-xs text-neutral-400">
-            Unsupported activity type
+            {t('boards.activity_block.unsupported_type')}
           </div>
         )
     }
   }
 
-  const bgColor = activity?.activity_type === 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'
+  const bgColorClass = activity?.activity_type === 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'
 
   return (
-    <NodeViewWrapper
-      as="div"
-      onWheel={stopWheel}
-      className={`absolute group rounded-xl nice-shadow bg-white ${
-        selected ? 'ring-2 ring-blue-400' : ''
-      }`}
-      style={{ left: x, top: y, width, height }}
+    <BoardBlockWrapper
+      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+      x={x} y={y} width={width} height={height} stopWheel
     >
-      <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-
       {/* Drag handle + header */}
-      <div
+      <DragHandle
         onMouseDown={handleDragStart}
-        className="flex items-center gap-2 h-8 cursor-grab active:cursor-grabbing bg-gray-50/90 border-b border-gray-100 rounded-t-xl px-2"
+        height="h-8"
+        className="bg-gray-50/90 border-b border-gray-100 rounded-t-xl"
       >
-        <GripVertical size={12} className="text-gray-400 shrink-0" />
         <span className="text-[11px] font-medium text-neutral-600 truncate flex-1">
           {activity?.name || 'Activity'}
         </span>
@@ -309,25 +294,17 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
             <ExternalLink size={11} />
           </a>
         )}
-      </div>
+      </DragHandle>
 
       {/* Activity content */}
       <div
-        className={`${bgColor} overflow-auto rounded-b-xl`}
+        className={`${bgColorClass} overflow-auto rounded-b-xl`}
         style={{ height: height - 32 }}
       >
         {renderActivityContent()}
       </div>
 
-      {/* Resize handle */}
-      <div
-        onMouseDown={handleResizeStart}
-        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <svg viewBox="0 0 16 16" className="w-full h-full text-neutral-300">
-          <path d="M14 14L14 8M14 14L8 14" stroke="currentColor" strokeWidth="1.5" fill="none" />
-        </svg>
-      </div>
-    </NodeViewWrapper>
+      <ResizeHandle onMouseDown={handleResizeStart} color="text-neutral-300" selected={selected} />
+    </BoardBlockWrapper>
   )
 }

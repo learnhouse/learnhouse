@@ -11,7 +11,10 @@ import * as Y from 'yjs'
 import { getCollabUrl } from '@services/config/config'
 import BoardToolbar from './BoardToolbar'
 import BoardTopBar from './BoardTopBar'
+import BoardTopRight from './BoardTopRight'
+import BoardZoomControls from './BoardZoomControls'
 import EphemeralChat from './EphemeralChat'
+import BoardEffects from './BoardEffects'
 import { BoardCardExtension } from './Extensions/BoardCard'
 import { StickyNoteExtension } from './Extensions/StickyNote'
 import { DrawingStrokeExtension } from './Extensions/DrawingStroke'
@@ -20,9 +23,12 @@ import { PlaygroundBlockExtension } from './Extensions/PlaygroundBlock'
 import { ActivityBlockExtension } from './Extensions/ActivityBlock'
 import { EmbedBlockExtension } from './Extensions/EmbedBlock'
 import { WebpageBlockExtension } from './Extensions/WebpageBlock'
+import { StickerBlockExtension } from './Extensions/StickerBlock'
+import { FrameBoxExtension } from './Extensions/FrameBox'
 import RemoteCursors from './RemoteCursors'
 import { Extension } from '@tiptap/core'
 import { BoardYjsProvider } from './BoardYjsContext'
+import { BoardSelectionProvider } from './BoardSelectionContext'
 
 
 interface BoardCanvasProps {
@@ -73,15 +79,23 @@ function BoardEditorInner({
   ydoc: Y.Doc
   provider: HocuspocusProvider
 }) {
-  const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'sticky' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage'>('select')
+  const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'sticky' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame'>('select')
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [drawColor, setDrawColor] = useState('#000000')
+  const [drawWidth, setDrawWidth] = useState(2)
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [isDrawing, setIsDrawing] = useState(false)
   const drawPointsRef = useRef<{ x: number; y: number }[]>([])
   const [drawingPath, setDrawingPath] = useState('')
   const canvasRef = useRef<HTMLDivElement>(null)
+  const panRafRef = useRef(0)
+
+  // Multi-select state
+  const [selectedPositions, setSelectedPositions] = useState<Set<number>>(new Set())
+  const [marquee, setMarquee] = useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null)
+  const marqueeRef = useRef<typeof marquee>(null)
 
   const userColor = useMemo(() => getRandomColor(), [])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -124,6 +138,8 @@ function BoardEditorInner({
       ActivityBlockExtension,
       EmbedBlockExtension,
       WebpageBlockExtension,
+      StickerBlockExtension,
+      FrameBoxExtension,
     ],
     immediatelyRender: false,
     editorProps: {
@@ -132,6 +148,59 @@ function BoardEditorInner({
       },
     },
   })
+
+  // Remap selected positions when the document changes
+  useEffect(() => {
+    if (!editor) return
+    const handler = () => {
+      // Get the last transaction from the editor state
+      // We remap after every update to keep positions valid
+      setSelectedPositions((prev) => {
+        if (prev.size === 0) return prev
+        const next = new Set<number>()
+        const doc = editor.state.doc
+        // Re-validate positions: check each still points to a top-level node
+        for (const pos of prev) {
+          if (pos >= 0 && pos < doc.content.size) {
+            const node = doc.nodeAt(pos)
+            if (node) next.add(pos)
+          }
+        }
+        if (next.size === prev.size && [...next].every((p) => prev.has(p))) return prev
+        return next
+      })
+    }
+    editor.on('update', handler)
+    return () => { editor.off('update', handler) }
+  }, [editor])
+
+  // Keyboard handler: Delete/Backspace removes all selected nodes
+  useEffect(() => {
+    if (!editor) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Only handle if no text input is focused
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+        if (selectedPositions.size === 0) return
+        e.preventDefault()
+        // Delete in reverse order to preserve earlier positions
+        const sorted = Array.from(selectedPositions).sort((a, b) => b - a)
+        editor.chain()
+          .command(({ tr }) => {
+            for (const pos of sorted) {
+              const node = tr.doc.nodeAt(pos)
+              if (node) tr.delete(pos, pos + node.nodeSize)
+            }
+            return true
+          })
+          .run()
+        setSelectedPositions(new Set())
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [editor, selectedPositions])
 
   // Pan/Zoom handlers
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -148,10 +217,28 @@ function BoardEditorInner({
   }, [])
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (toolMode === 'pan' || e.button === 1 || (e.button === 0 && e.shiftKey)) {
+    if (toolMode === 'pan' || e.button === 1 || (e.button === 0 && e.shiftKey && toolMode !== 'select')) {
       setIsPanning(true)
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
+    } else if (toolMode === 'select' && e.button === 0) {
+      // Check if click landed on a block (node-view-wrapper) — if so, let the block handle it
+      const target = e.target as HTMLElement
+      const isOnBlock = target.closest('[data-node-view-wrapper]')
+      if (!isOnBlock) {
+        // Start marquee or just clear selection
+        const rect = canvasRef.current?.getBoundingClientRect()
+        if (rect) {
+          const sx = e.clientX - rect.left
+          const sy = e.clientY - rect.top
+          const m = { startX: sx, startY: sy, currentX: sx, currentY: sy }
+          setMarquee(m)
+          marqueeRef.current = m
+        }
+        if (!e.shiftKey) {
+          setSelectedPositions(new Set())
+        }
+      }
     } else if (toolMode === 'draw') {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -261,14 +348,57 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+    } else if (toolMode === 'sticker' && editor) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const x = (e.clientX - rect.left - pan.x) / zoom
+      const y = (e.clientY - rect.top - pan.y) / zoom
+      const pos = editor.state.doc.content.size
+      editor.chain().insertContentAt(pos, {
+        type: 'stickerBlock',
+        attrs: {
+          x: Math.round(x),
+          y: Math.round(y),
+          emoji: '😀',
+        },
+      }).run()
+      setToolMode('select')
+    } else if (toolMode === 'frame' && editor) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const x = (e.clientX - rect.left - pan.x) / zoom
+      const y = (e.clientY - rect.top - pan.y) / zoom
+      const pos = editor.state.doc.content.size
+      editor.chain().insertContentAt(pos, {
+        type: 'frameBox',
+        attrs: {
+          x: Math.round(x),
+          y: Math.round(y),
+          width: 400,
+          height: 300,
+          title: 'Frame',
+        },
+      }).run()
+      setToolMode('select')
     }
   }, [toolMode, pan, zoom, editor])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning) {
-      setPan({
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y,
+      const newX = e.clientX - panStart.x
+      const newY = e.clientY - panStart.y
+      cancelAnimationFrame(panRafRef.current)
+      panRafRef.current = requestAnimationFrame(() => {
+        setPan({ x: newX, y: newY })
+      })
+    } else if (marqueeRef.current) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const m = { ...marqueeRef.current, currentX: e.clientX - rect.left, currentY: e.clientY - rect.top }
+      marqueeRef.current = m
+      cancelAnimationFrame(panRafRef.current)
+      panRafRef.current = requestAnimationFrame(() => {
+        setMarquee(m)
       })
     } else if (isDrawing) {
       const rect = canvasRef.current?.getBoundingClientRect()
@@ -276,13 +406,66 @@ function BoardEditorInner({
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       drawPointsRef.current.push({ x, y })
-      setDrawingPath(pointsToSvgPath(drawPointsRef.current))
+      cancelAnimationFrame(panRafRef.current)
+      panRafRef.current = requestAnimationFrame(() => {
+        setDrawingPath(pointsToSvgPath(drawPointsRef.current))
+      })
     }
   }, [isPanning, panStart, isDrawing, pan, zoom])
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
       setIsPanning(false)
+    }
+    if (marqueeRef.current && editor) {
+      const m = marqueeRef.current
+      // Convert screen-space marquee rect to world-space
+      const left = Math.min(m.startX, m.currentX)
+      const top = Math.min(m.startY, m.currentY)
+      const right = Math.max(m.startX, m.currentX)
+      const bottom = Math.max(m.startY, m.currentY)
+
+      // Only count as marquee if dragged at least 5px
+      if (right - left > 5 || bottom - top > 5) {
+        // Convert to world coords
+        const wLeft = (left - pan.x) / zoom
+        const wTop = (top - pan.y) / zoom
+        const wRight = (right - pan.x) / zoom
+        const wBottom = (bottom - pan.y) / zoom
+
+        const hits: number[] = []
+        editor.state.doc.forEach((node: any, pos: number) => {
+          const nx = node.attrs.x ?? 0
+          const ny = node.attrs.y ?? 0
+
+          // Resolve actual rendered size per node type
+          let nw: number, nh: number
+          const typeName = node.type.name
+          if (typeName === 'stickyNote') {
+            nw = 192; nh = 120
+          } else if (typeName === 'stickerBlock') {
+            nw = 80; nh = 80
+          } else if (typeName === 'drawingStroke') {
+            const vb = (node.attrs.viewBox || '0 0 100 100').split(' ').map(Number)
+            nw = vb[2] || 100
+            nh = vb[3] || 100
+          } else {
+            nw = node.attrs.width ?? 300
+            nh = node.attrs.height ?? 200
+          }
+
+          // Check if block overlaps marquee rect
+          if (nx + nw > wLeft && nx < wRight && ny + nh > wTop && ny < wBottom) {
+            hits.push(pos)
+          }
+        })
+        if (hits.length > 0) {
+          setSelectedPositions(new Set(hits))
+        }
+      }
+
+      marqueeRef.current = null
+      setMarquee(null)
     }
     if (isDrawing && editor) {
       setIsDrawing(false)
@@ -315,8 +498,8 @@ function BoardEditorInner({
         type: 'drawingStroke',
         attrs: {
           pathData,
-          strokeColor: '#000000',
-          strokeWidth: 2,
+          strokeColor: drawColor,
+          strokeWidth: drawWidth,
           x: Math.round(minX),
           y: Math.round(minY),
           viewBox: `0 0 ${Math.round(width)} ${Math.round(height)}`,
@@ -326,7 +509,7 @@ function BoardEditorInner({
       setDrawingPath('')
       drawPointsRef.current = []
     }
-  }, [isPanning, isDrawing, editor])
+  }, [isPanning, isDrawing, editor, drawColor, drawWidth])
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 3))
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.25))
@@ -336,8 +519,9 @@ function BoardEditorInner({
 
   return (
     <BoardYjsProvider value={ydoc}>
+    <BoardSelectionProvider editor={editor} selectedPositions={selectedPositions} setSelectedPositions={setSelectedPositions}>
     <div
-      className="relative h-screen w-full overflow-hidden"
+      className="relative h-screen w-full overflow-hidden board-effect-shake-target"
       style={{
         backgroundColor: '#f8f8f8',
         backgroundImage: 'radial-gradient(circle, #d1d1d1 1px, transparent 1px)',
@@ -353,7 +537,7 @@ function BoardEditorInner({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         style={{
-          cursor: toolMode === 'pan' || isPanning ? 'grab' : (toolMode === 'draw' || toolMode === 'card' || toolMode === 'sticky' || toolMode === 'youtube' || toolMode === 'playground' || toolMode === 'activity' || toolMode === 'embed' || toolMode === 'webpage') ? 'crosshair' : 'default',
+          cursor: toolMode === 'pan' || isPanning ? 'grab' : (toolMode === 'draw' || toolMode === 'card' || toolMode === 'sticky' || toolMode === 'youtube' || toolMode === 'playground' || toolMode === 'activity' || toolMode === 'embed' || toolMode === 'webpage' || toolMode === 'sticker' || toolMode === 'frame') ? 'crosshair' : 'default',
         }}
       >
         <div
@@ -366,6 +550,25 @@ function BoardEditorInner({
         </div>
         <RemoteCursors provider={provider} canvasRef={canvasRef} pan={pan} zoom={zoom} />
 
+        {/* Marquee selection overlay */}
+        {marquee && (
+          <svg
+            className="absolute inset-0 pointer-events-none z-30"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <rect
+              x={Math.min(marquee.startX, marquee.currentX)}
+              y={Math.min(marquee.startY, marquee.currentY)}
+              width={Math.abs(marquee.currentX - marquee.startX)}
+              height={Math.abs(marquee.currentY - marquee.startY)}
+              fill="rgba(59, 130, 246, 0.1)"
+              stroke="rgba(59, 130, 246, 0.5)"
+              strokeWidth={1}
+              strokeDasharray="4 2"
+            />
+          </svg>
+        )}
+
         {/* Live drawing overlay */}
         {isDrawing && drawingPath && (
           <svg
@@ -375,8 +578,8 @@ function BoardEditorInner({
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
               <path
                 d={drawingPath}
-                stroke="#000000"
-                strokeWidth={2 / zoom}
+                stroke={drawColor}
+                strokeWidth={drawWidth / zoom}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -386,15 +589,16 @@ function BoardEditorInner({
         )}
       </div>
 
-      {/* Top bar: back, title, zoom, presence, share */}
+      {/* Top bar: back + logo + title */}
       <BoardTopBar
         boardName={board.name}
         orgslug={orgslug}
+      />
+
+      {/* Top right: avatars + clock + timer + share */}
+      <BoardTopRight
         provider={provider}
-        zoom={zoom}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onZoomReset={handleZoomReset}
+        ydoc={ydoc}
       />
 
       {/* Bottom toolbar: logo, tools, undo/redo */}
@@ -402,10 +606,28 @@ function BoardEditorInner({
         toolMode={toolMode}
         onToolModeChange={setToolMode}
         editor={editor}
+        drawColor={drawColor}
+        drawWidth={drawWidth}
+        onDrawColorChange={setDrawColor}
+        onDrawWidthChange={setDrawWidth}
       />
 
-      {/* Ephemeral Chat */}
-      <EphemeralChat ydoc={ydoc} provider={provider} />
+      {/* Bottom right stack: effects → chat → zoom */}
+      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none">
+        {/* Ephemeral Chat */}
+        <EphemeralChat ydoc={ydoc} provider={provider} />
+
+        {/* Live Effects */}
+        <BoardEffects ydoc={ydoc} provider={provider} />
+
+        {/* Zoom controls */}
+        <BoardZoomControls
+          zoom={zoom}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onZoomReset={handleZoomReset}
+        />
+      </div>
 
       {/* Feedback button — bottom left */}
       <button
@@ -425,6 +647,7 @@ function BoardEditorInner({
         userName={username}
       />
     </div>
+    </BoardSelectionProvider>
     </BoardYjsProvider>
   )
 }

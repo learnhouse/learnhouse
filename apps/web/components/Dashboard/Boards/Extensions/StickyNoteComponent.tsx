@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { NodeViewWrapper, NodeViewContent } from '@tiptap/react'
-import NodeActions from './NodeActions'
+import { NodeViewContent } from '@tiptap/react'
+import BoardBlockWrapper from './BoardBlockWrapper'
 import { useDragResize } from './useDragResize'
 
 const STICKY_COLORS: Record<string, string> = {
@@ -20,22 +20,17 @@ export default function StickyNoteComponent({ node, updateAttributes, selected, 
   const { handleDragStart } = useDragResize({
     x, y, width: 192, height: 120,
     updateAttributes,
+    editor,
+    getPos,
   })
 
   return (
-    <NodeViewWrapper
-      as="div"
-      className={`absolute group w-48 min-h-[120px] rounded-xl nice-shadow ${
-        selected ? 'ring-2 ring-blue-400' : ''
-      }`}
-      style={{
-        left: x,
-        top: y,
-        backgroundColor: bgColor,
-      }}
+    <BoardBlockWrapper
+      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+      x={x} y={y} bgColor={bgColor}
+      className="w-48 min-h-[120px]"
     >
-      <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-      {/* Drag handle area */}
+      {/* Drag handle area (custom — includes color picker) */}
       <div
         onMouseDown={handleDragStart}
         className="flex items-center justify-between px-3 pt-2 cursor-grab active:cursor-grabbing"
@@ -58,6 +53,6 @@ export default function StickyNoteComponent({ node, updateAttributes, selected, 
       <div className="px-3 py-2">
         <NodeViewContent className="sticky-note-content text-sm outline-none" />
       </div>
-    </NodeViewWrapper>
+    </BoardBlockWrapper>
   )
 }

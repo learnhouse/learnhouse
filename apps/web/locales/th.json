@@ -508,6 +508,12 @@
         "attach_youtube": "ลิงก์ YouTube",
         "attach_file": "เอกสาร"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3322,55 +3328,216 @@
       "not_configured_title": "ยังไม่ได้กำหนดค่าการวิเคราะห์",
       "not_configured_desc": "การวิเคราะห์ต้องกำหนดค่า Tinybird กรุณาติดต่อผู้ดูแลระบบ",
       "common": {
-        "loading": "กำลังโหลด...", "no_data": "ยังไม่มีข้อมูล", "no_enrollments": "ยังไม่มีการลงทะเบียน",
-        "total": "รวม", "daily_avg": "เฉลี่ยต่อวัน", "latest_day": "วันล่าสุด",
-        "peak": "สูงสุด", "peak_day": "วันสูงสุด", "type": "ประเภท", "rate": "อัตรา",
-        "views": "การดู", "enrollments": "การลงทะเบียน", "completions": "การเสร็จสิ้น",
-        "completion_rate": "อัตราการเสร็จสิ้น", "conversion": "การแปลง", "avg_time": "เวลาเฉลี่ย",
-        "total_views": "การดูทั้งหมด", "total_completions": "การเสร็จสิ้นทั้งหมด",
-        "avg_rate": "อัตราเฉลี่ย", "needs_attention": "ต้องให้ความสนใจ", "total_samples": "ตัวอย่างทั้งหมด",
-        "more_expand": "+{{count}} เพิ่มเติม — คลิกเพื่อขยาย", "activities_count": "{{count}} กิจกรรม",
-        "pct_of_total": "% ของทั้งหมด", "bar_width_hint": "ความกว้างแถบ = การดูสัมพัทธ์",
-        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
-        "low_conversion": "การแปลงต่ำ", "avg_completion": "การเสร็จสิ้นเฉลี่ย",
-        "avg_prefix": "เฉลี่ย {{value}}", "unknown_activity": "กิจกรรมที่ไม่รู้จัก"
+        "loading": "กำลังโหลด...",
+        "no_data": "ยังไม่มีข้อมูล",
+        "no_enrollments": "ยังไม่มีการลงทะเบียน",
+        "total": "รวม",
+        "daily_avg": "เฉลี่ยต่อวัน",
+        "latest_day": "วันล่าสุด",
+        "peak": "สูงสุด",
+        "peak_day": "วันสูงสุด",
+        "type": "ประเภท",
+        "rate": "อัตรา",
+        "views": "การดู",
+        "enrollments": "การลงทะเบียน",
+        "completions": "การเสร็จสิ้น",
+        "completion_rate": "อัตราการเสร็จสิ้น",
+        "conversion": "การแปลง",
+        "avg_time": "เวลาเฉลี่ย",
+        "total_views": "การดูทั้งหมด",
+        "total_completions": "การเสร็จสิ้นทั้งหมด",
+        "avg_rate": "อัตราเฉลี่ย",
+        "needs_attention": "ต้องให้ความสนใจ",
+        "total_samples": "ตัวอย่างทั้งหมด",
+        "more_expand": "+{{count}} เพิ่มเติม — คลิกเพื่อขยาย",
+        "activities_count": "{{count}} กิจกรรม",
+        "pct_of_total": "% ของทั้งหมด",
+        "bar_width_hint": "ความกว้างแถบ = การดูสัมพัทธ์",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "การแปลงต่ำ",
+        "avg_completion": "การเสร็จสิ้นเฉลี่ย",
+        "avg_prefix": "เฉลี่ย {{value}}",
+        "unknown_activity": "กิจกรรมที่ไม่รู้จัก"
       },
       "units": {
-        "done": "เสร็จแล้ว", "views": "การดู", "enrolled": "ลงทะเบียนแล้ว",
-        "learner": "ผู้เรียน", "learners": "ผู้เรียน", "events": "เหตุการณ์",
-        "total": "รวม", "total_views": "การดูทั้งหมด", "total_completions": "การเสร็จสิ้นทั้งหมด",
-        "total_dropoffs": "การออกทั้งหมด", "peak_active": "ผู้ใช้งานสูงสุด",
-        "conversion": "การแปลง", "retention": "การรักษาผู้เรียน", "in_cohort": "ในกลุ่ม",
-        "active_learners": "ผู้เรียนที่ใช้งาน", "recent_enrollments": "การลงทะเบียนล่าสุด",
-        "transitions": "การเปลี่ยน", "median_days": "มัธยฐานวัน",
-        "claim_rate": "อัตราการรับ", "claimed": "รับแล้ว", "completed": "เสร็จสิ้น",
-        "unique": "ไม่ซ้ำ", "time": "เวลา", "avg_per_day": "เฉลี่ย / วัน",
-        "busiest_time": "เวลาที่คึกคักที่สุด", "minutes": "นาที", "hours": "ชั่วโมง",
-        "days": "วัน", "done_before": "เสร็จก่อน", "sample": "ตัวอย่าง",
-        "samples": "ตัวอย่าง", "min": "นาที", "avg_per_learner": "เฉลี่ยต่อผู้เรียน"
+        "done": "เสร็จแล้ว",
+        "views": "การดู",
+        "enrolled": "ลงทะเบียนแล้ว",
+        "learner": "ผู้เรียน",
+        "learners": "ผู้เรียน",
+        "events": "เหตุการณ์",
+        "total": "รวม",
+        "total_views": "การดูทั้งหมด",
+        "total_completions": "การเสร็จสิ้นทั้งหมด",
+        "total_dropoffs": "การออกทั้งหมด",
+        "peak_active": "ผู้ใช้งานสูงสุด",
+        "conversion": "การแปลง",
+        "retention": "การรักษาผู้เรียน",
+        "in_cohort": "ในกลุ่ม",
+        "active_learners": "ผู้เรียนที่ใช้งาน",
+        "recent_enrollments": "การลงทะเบียนล่าสุด",
+        "transitions": "การเปลี่ยน",
+        "median_days": "มัธยฐานวัน",
+        "claim_rate": "อัตราการรับ",
+        "claimed": "รับแล้ว",
+        "completed": "เสร็จสิ้น",
+        "unique": "ไม่ซ้ำ",
+        "time": "เวลา",
+        "avg_per_day": "เฉลี่ย / วัน",
+        "busiest_time": "เวลาที่คึกคักที่สุด",
+        "minutes": "นาที",
+        "hours": "ชั่วโมง",
+        "days": "วัน",
+        "done_before": "เสร็จก่อน",
+        "sample": "ตัวอย่าง",
+        "samples": "ตัวอย่าง",
+        "min": "นาที",
+        "avg_per_learner": "เฉลี่ยต่อผู้เรียน"
       },
-      "type_labels": { "video": "วิดีโอ", "document": "เอกสาร", "quiz": "แบบทดสอบ", "assignment": "งานที่มอบหมาย", "dynamic": "ไดนามิก" },
-      "overview_stats": { "views": "การดู", "enrollments": "การลงทะเบียน", "completions": "การเสร็จสิ้น", "completion_rate": "อัตราการเสร็จสิ้น" },
-      "activity_type_breakdown": { "title": "การแยกตามประเภทกิจกรรม", "subtitle": "การกระจายและอัตราการเสร็จสิ้นตามประเภทเนื้อหา" },
-      "engagement_by_type": { "title": "การมีส่วนร่วมตามประเภทเนื้อหา", "subtitle": "ตัวชี้วัดการมีส่วนร่วมของผู้เรียนต่อประเภทกิจกรรม", "total_events": "เหตุการณ์ทั้งหมด", "total_learners": "ผู้เรียนทั้งหมด" },
-      "peak_hours": { "title": "ชั่วโมงเรียนสูงสุด", "subtitle": "เมื่อผู้เรียนใช้งานมากที่สุดในคอร์สนี้", "peak_time": "เวลาสูงสุด", "peak_events": "เหตุการณ์สูงสุด", "less": "น้อย", "more": "มาก", "days": { "mon": "จ.", "tue": "อ.", "wed": "พ.", "thu": "พฤ.", "fri": "ศ.", "sat": "ส.", "sun": "อา." }, "events_tooltip": "{{day}} {{hour}}: {{count}} เหตุการณ์" },
-      "enrollment_trend": { "title": "แนวโน้มการลงทะเบียน", "subtitle": "การลงทะเบียนใหม่รายวัน" },
-      "active_learners": { "title": "ผู้เรียนที่ใช้งาน", "subtitle": "ผู้เรียนที่ใช้งานไม่ซ้ำรายวันในคอร์สนี้" },
-      "unique_viewers": { "title": "ผู้ชมคอร์ส", "subtitle": "ผู้เยี่ยมชมไม่ซ้ำรายวันในหน้าคอร์สนี้", "total_views": "การดูทั้งหมด", "peak_viewers": "ผู้ชมสูงสุด" },
-      "view_to_enrollment": { "title": "การดู → การลงทะเบียน", "subtitle": "มีผู้ชมกี่คนที่ลงทะเบียนเรียน" },
-      "daily_completions": { "title": "การเสร็จสิ้นรายวัน", "subtitle": "การเสร็จสิ้นกิจกรรมต่อวัน" },
-      "activity_funnel": { "title": "ช่องทางการเสร็จสิ้นกิจกรรม", "subtitle": "การดูเทียบกับการเสร็จสิ้นต่อกิจกรรม" },
-      "time_per_activity": { "title": "เวลาต่อกิจกรรม", "subtitle": "เวลาเฉลี่ยที่ผู้เรียนใช้ในแต่ละกิจกรรม" },
-      "activity_dropoff": { "title": "จุดออก", "subtitle": "จุดที่ผู้เรียนหยุดความก้าวหน้า — กิจกรรมสุดท้ายที่เสร็จสิ้น", "total_dropoffs": "การออกทั้งหมด", "dropoff_points": "จุดออก" },
-      "avg_session_duration": { "title": "เวลาต่อผู้เรียนรายวัน", "subtitle": "เวลาเฉลี่ยที่ผู้เรียนแต่ละคนใช้ต่อวัน", "total_time": "เวลารวม", "avg_per_day": "เฉลี่ยต่อวัน", "minutes_label": "นาที" },
-      "learner_progress": { "title": "ความก้าวหน้าของผู้เรียน", "subtitle": "ผู้เรียนเสร็จสิ้นกิจกรรมกี่รายการ", "total_across_brackets": "{{count}} ผู้เรียนทั้งหมดในทุกกลุ่มความก้าวหน้า" },
-      "learner_retention": { "title": "การรักษาผู้เรียน", "subtitle": "% ของผู้เรียนที่กลับมาหลังกิจกรรมแรก", "cohort_size": "ขนาดกลุ่ม", "current_retention": "การรักษาปัจจุบัน", "days_since_first": "วันนับจากกิจกรรมแรก", "day_label": "วันที่ {{day}}" },
-      "completion_velocity": { "title": "ความเร็วการเสร็จสิ้น", "subtitle": "เวลาเฉลี่ยระหว่างการเสร็จสิ้นกิจกรรม", "not_enough_data": "ข้อมูลยังไม่เพียงพอ", "need_transitions": "ต้องมีการเปลี่ยนกิจกรรมอย่างน้อย 3 ครั้งเพื่อคำนวณความเร็ว", "not_enough_data_short": "ข้อมูลไม่เพียงพอ", "need_transitions_short": "ต้องมี 3+ การเปลี่ยน", "avg_between": "เฉลี่ย {{unit}} ระหว่างการเสร็จสิ้น", "transitions_tracked": "การเปลี่ยนที่ติดตาม", "raw_hours_avg": "ค่าเฉลี่ยชั่วโมงดิบ", "description": "วัดว่าผู้เรียนก้าวหน้าจากกิจกรรมหนึ่งไปยังอีกกิจกรรมเร็วแค่ไหน ยิ่งน้อยยิ่งดี — หมายความว่าผู้เรียนผ่านเนื้อหาได้เร็วขึ้น" },
-      "time_to_completion": { "title": "เวลาจนเสร็จสิ้น", "subtitle": "ผู้เรียนใช้เวลานานเท่าไหร่ในการจบคอร์สนี้", "median_days_to_complete": "มัธยฐานวันจนเสร็จสิ้น", "fast_p25": "เร็ว (P25)", "top_25_finish": "25% แรกจบภายใน", "median": "มัธยฐาน", "half_finish": "ครึ่งหนึ่งจบภายใน", "slow_p75": "ช้า (P75)", "pct_75_finish": "75% จบภายใน", "based_on": "อ้างอิงจาก {{count}} การจบคอร์ส", "days_unit": "วัน" },
-      "certification_rate": { "title": "อัตราการรับใบรับรอง", "subtitle": "% ของผู้จบที่รับใบรับรอง", "of_completers_claimed": "ของผู้จบรับใบรับรองแล้ว", "certificates_claimed": "ใบรับรองที่รับแล้ว", "course_completions": "การจบคอร์ส" },
-      "top_learners": { "title": "ผู้เรียนอันดับต้น", "subtitle": "ผู้เรียนที่ใช้งานมากที่สุดตามการเสร็จสิ้น", "user_fallback": "ผู้ใช้ #{{id}}" },
-      "recent_enrollments": { "title": "การลงทะเบียนล่าสุด", "subtitle": "ผู้เรียนล่าสุดที่ลงทะเบียนในคอร์สนี้", "count_in_period": "{{count}} การลงทะเบียนในช่วงนี้" },
-      "pagination": { "range": "{{from}}–{{to}} จาก {{total}}" }
+      "type_labels": {
+        "video": "วิดีโอ",
+        "document": "เอกสาร",
+        "quiz": "แบบทดสอบ",
+        "assignment": "งานที่มอบหมาย",
+        "dynamic": "ไดนามิก"
+      },
+      "overview_stats": {
+        "views": "การดู",
+        "enrollments": "การลงทะเบียน",
+        "completions": "การเสร็จสิ้น",
+        "completion_rate": "อัตราการเสร็จสิ้น"
+      },
+      "activity_type_breakdown": {
+        "title": "การแยกตามประเภทกิจกรรม",
+        "subtitle": "การกระจายและอัตราการเสร็จสิ้นตามประเภทเนื้อหา"
+      },
+      "engagement_by_type": {
+        "title": "การมีส่วนร่วมตามประเภทเนื้อหา",
+        "subtitle": "ตัวชี้วัดการมีส่วนร่วมของผู้เรียนต่อประเภทกิจกรรม",
+        "total_events": "เหตุการณ์ทั้งหมด",
+        "total_learners": "ผู้เรียนทั้งหมด"
+      },
+      "peak_hours": {
+        "title": "ชั่วโมงเรียนสูงสุด",
+        "subtitle": "เมื่อผู้เรียนใช้งานมากที่สุดในคอร์สนี้",
+        "peak_time": "เวลาสูงสุด",
+        "peak_events": "เหตุการณ์สูงสุด",
+        "less": "น้อย",
+        "more": "มาก",
+        "days": {
+          "mon": "จ.",
+          "tue": "อ.",
+          "wed": "พ.",
+          "thu": "พฤ.",
+          "fri": "ศ.",
+          "sat": "ส.",
+          "sun": "อา."
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} เหตุการณ์"
+      },
+      "enrollment_trend": {
+        "title": "แนวโน้มการลงทะเบียน",
+        "subtitle": "การลงทะเบียนใหม่รายวัน"
+      },
+      "active_learners": {
+        "title": "ผู้เรียนที่ใช้งาน",
+        "subtitle": "ผู้เรียนที่ใช้งานไม่ซ้ำรายวันในคอร์สนี้"
+      },
+      "unique_viewers": {
+        "title": "ผู้ชมคอร์ส",
+        "subtitle": "ผู้เยี่ยมชมไม่ซ้ำรายวันในหน้าคอร์สนี้",
+        "total_views": "การดูทั้งหมด",
+        "peak_viewers": "ผู้ชมสูงสุด"
+      },
+      "view_to_enrollment": {
+        "title": "การดู → การลงทะเบียน",
+        "subtitle": "มีผู้ชมกี่คนที่ลงทะเบียนเรียน"
+      },
+      "daily_completions": {
+        "title": "การเสร็จสิ้นรายวัน",
+        "subtitle": "การเสร็จสิ้นกิจกรรมต่อวัน"
+      },
+      "activity_funnel": {
+        "title": "ช่องทางการเสร็จสิ้นกิจกรรม",
+        "subtitle": "การดูเทียบกับการเสร็จสิ้นต่อกิจกรรม"
+      },
+      "time_per_activity": {
+        "title": "เวลาต่อกิจกรรม",
+        "subtitle": "เวลาเฉลี่ยที่ผู้เรียนใช้ในแต่ละกิจกรรม"
+      },
+      "activity_dropoff": {
+        "title": "จุดออก",
+        "subtitle": "จุดที่ผู้เรียนหยุดความก้าวหน้า — กิจกรรมสุดท้ายที่เสร็จสิ้น",
+        "total_dropoffs": "การออกทั้งหมด",
+        "dropoff_points": "จุดออก"
+      },
+      "avg_session_duration": {
+        "title": "เวลาต่อผู้เรียนรายวัน",
+        "subtitle": "เวลาเฉลี่ยที่ผู้เรียนแต่ละคนใช้ต่อวัน",
+        "total_time": "เวลารวม",
+        "avg_per_day": "เฉลี่ยต่อวัน",
+        "minutes_label": "นาที"
+      },
+      "learner_progress": {
+        "title": "ความก้าวหน้าของผู้เรียน",
+        "subtitle": "ผู้เรียนเสร็จสิ้นกิจกรรมกี่รายการ",
+        "total_across_brackets": "{{count}} ผู้เรียนทั้งหมดในทุกกลุ่มความก้าวหน้า"
+      },
+      "learner_retention": {
+        "title": "การรักษาผู้เรียน",
+        "subtitle": "% ของผู้เรียนที่กลับมาหลังกิจกรรมแรก",
+        "cohort_size": "ขนาดกลุ่ม",
+        "current_retention": "การรักษาปัจจุบัน",
+        "days_since_first": "วันนับจากกิจกรรมแรก",
+        "day_label": "วันที่ {{day}}"
+      },
+      "completion_velocity": {
+        "title": "ความเร็วการเสร็จสิ้น",
+        "subtitle": "เวลาเฉลี่ยระหว่างการเสร็จสิ้นกิจกรรม",
+        "not_enough_data": "ข้อมูลยังไม่เพียงพอ",
+        "need_transitions": "ต้องมีการเปลี่ยนกิจกรรมอย่างน้อย 3 ครั้งเพื่อคำนวณความเร็ว",
+        "not_enough_data_short": "ข้อมูลไม่เพียงพอ",
+        "need_transitions_short": "ต้องมี 3+ การเปลี่ยน",
+        "avg_between": "เฉลี่ย {{unit}} ระหว่างการเสร็จสิ้น",
+        "transitions_tracked": "การเปลี่ยนที่ติดตาม",
+        "raw_hours_avg": "ค่าเฉลี่ยชั่วโมงดิบ",
+        "description": "วัดว่าผู้เรียนก้าวหน้าจากกิจกรรมหนึ่งไปยังอีกกิจกรรมเร็วแค่ไหน ยิ่งน้อยยิ่งดี — หมายความว่าผู้เรียนผ่านเนื้อหาได้เร็วขึ้น"
+      },
+      "time_to_completion": {
+        "title": "เวลาจนเสร็จสิ้น",
+        "subtitle": "ผู้เรียนใช้เวลานานเท่าไหร่ในการจบคอร์สนี้",
+        "median_days_to_complete": "มัธยฐานวันจนเสร็จสิ้น",
+        "fast_p25": "เร็ว (P25)",
+        "top_25_finish": "25% แรกจบภายใน",
+        "median": "มัธยฐาน",
+        "half_finish": "ครึ่งหนึ่งจบภายใน",
+        "slow_p75": "ช้า (P75)",
+        "pct_75_finish": "75% จบภายใน",
+        "based_on": "อ้างอิงจาก {{count}} การจบคอร์ส",
+        "days_unit": "วัน"
+      },
+      "certification_rate": {
+        "title": "อัตราการรับใบรับรอง",
+        "subtitle": "% ของผู้จบที่รับใบรับรอง",
+        "of_completers_claimed": "ของผู้จบรับใบรับรองแล้ว",
+        "certificates_claimed": "ใบรับรองที่รับแล้ว",
+        "course_completions": "การจบคอร์ส"
+      },
+      "top_learners": {
+        "title": "ผู้เรียนอันดับต้น",
+        "subtitle": "ผู้เรียนที่ใช้งานมากที่สุดตามการเสร็จสิ้น",
+        "user_fallback": "ผู้ใช้ #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "การลงทะเบียนล่าสุด",
+        "subtitle": "ผู้เรียนล่าสุดที่ลงทะเบียนในคอร์สนี้",
+        "count_in_period": "{{count}} การลงทะเบียนในช่วงนี้"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} จาก {{total}}"
+      }
     }
   }
 }

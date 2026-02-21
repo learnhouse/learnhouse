@@ -69,23 +69,27 @@ def _get_mime_type(file_path: str) -> str:
     return MIME_TYPES.get(ext, 'application/octet-stream')
 
 
-def _validate_content_path(file_path: str) -> bool:
-    """Prevent directory traversal including URL-encoded sequences."""
+def _validate_content_path(file_path: str) -> str | None:
+    """Validate and sanitize path, preventing directory traversal.
+
+    Returns the sanitized relative path string, or None if the path is unsafe.
+    """
     from urllib.parse import unquote
     # Decode any URL-encoded characters to catch %2e%2e etc.
     decoded = unquote(unquote(file_path))  # Double-decode to catch double-encoding
     if '..' in decoded or decoded.startswith('/') or '\x00' in decoded:
-        return False
+        return None
     # Normalize path separators
     normalized = decoded.replace('\\', '/')
     if '..' in normalized:
-        return False
+        return None
     # Defense-in-depth: resolve path and verify it stays within the content prefix
     base = Path("content").resolve()
     resolved = (base / normalized).resolve()
     if not str(resolved).startswith(str(base)):
-        return False
-    return True
+        return None
+    # Return the validated relative path derived from the resolved path
+    return str(resolved.relative_to(base))
 
 
 def _check_content_access(
@@ -195,12 +199,13 @@ async def serve_content_file(
 
     Supports HTTP Range requests for video/audio seeking.
     """
-    if not _validate_content_path(file_path):
+    safe_path = _validate_content_path(file_path)
+    if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(file_path, current_user, db_session)
+    _check_content_access(safe_path, current_user, db_session)
 
-    s3_key = f"content/{file_path}"
+    s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
     bucket = get_s3_bucket_name()
 
@@ -214,7 +219,7 @@ async def serve_content_file(
         raise HTTPException(status_code=404, detail="File not found")
 
     file_size = head['ContentLength']
-    mime_type = _get_mime_type(file_path)
+    mime_type = _get_mime_type(safe_path)
 
     headers = {
         "Accept-Ranges": "bytes",
@@ -306,12 +311,13 @@ async def head_content_file(
     db_session: Session = Depends(get_db_session),
 ):
     """HEAD request for content files - returns metadata without body."""
-    if not _validate_content_path(file_path):
+    safe_path = _validate_content_path(file_path)
+    if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(file_path, current_user, db_session)
+    _check_content_access(safe_path, current_user, db_session)
 
-    s3_key = f"content/{file_path}"
+    s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
     bucket = get_s3_bucket_name()
 
@@ -324,7 +330,7 @@ async def head_content_file(
         raise HTTPException(status_code=404, detail="File not found")
 
     file_size = head['ContentLength']
-    mime_type = _get_mime_type(file_path)
+    mime_type = _get_mime_type(safe_path)
 
     return Response(
         status_code=200,

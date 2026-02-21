@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { NodeViewWrapper } from '@tiptap/react'
-import { GripVertical, Play, Link as LinkIcon } from 'lucide-react'
-import NodeActions from './NodeActions'
+import { useTranslation } from 'react-i18next'
+import { Play, Link as LinkIcon } from 'lucide-react'
 import { useBoardYdoc } from '../BoardYjsContext'
+import BoardBlockWrapper from './BoardBlockWrapper'
+import DragHandle from './DragHandle'
+import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
 
 // Extend window for YT API
@@ -54,6 +56,7 @@ function extractVideoId(input: string): string | null {
 }
 
 export default function YouTubeBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { videoId, x, y, width, height } = node.attrs
   const [urlInput, setUrlInput] = useState('')
   const isSyncingRef = useRef(false)
@@ -179,6 +182,8 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
     x, y, width, height,
     minWidth: 280, minHeight: 158,
     updateAttributes,
+    editor,
+    getPos,
   })
 
   // --- URL Submit ---
@@ -193,25 +198,17 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
   // --- No video yet: show URL input ---
   if (!videoId) {
     return (
-      <NodeViewWrapper
-        as="div"
-        className={`absolute group rounded-xl nice-shadow bg-white ${
-          selected ? 'ring-2 ring-blue-400' : ''
-        }`}
-        style={{ left: x, top: y, width, minHeight: 160 }}
+      <BoardBlockWrapper
+        selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+        x={x} y={y} width={width}
+        style={{ minHeight: 160 }}
       >
-        <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-        <div
-          onMouseDown={handleDragStart}
-          className="flex items-center justify-center h-6 cursor-grab active:cursor-grabbing bg-gray-50/80 border-b border-gray-100"
-        >
-          <GripVertical size={12} className="text-gray-400" />
-        </div>
+        <DragHandle onMouseDown={handleDragStart} />
         <div className="p-5 flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
             <Play size={18} className="text-red-500 ml-0.5" />
           </div>
-          <p className="text-xs font-medium text-neutral-500">Paste a YouTube URL</p>
+          <p className="text-xs font-medium text-neutral-500">{t('boards.youtube_block.paste_url')}</p>
           <div className="flex items-center gap-2 w-full">
             <div className="flex-1 flex items-center gap-1.5 bg-neutral-100 rounded-lg px-2.5 py-1.5">
               <LinkIcon size={12} className="text-neutral-400 shrink-0" />
@@ -220,7 +217,7 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                placeholder="https://youtube.com/watch?v=..."
+                placeholder={t('boards.youtube_block.url_placeholder')}
                 className="flex-1 text-xs bg-transparent outline-none text-neutral-700 placeholder:text-neutral-400"
               />
             </div>
@@ -228,47 +225,35 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
               onClick={handleUrlSubmit}
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors"
             >
-              Add
+              {t('boards.youtube_block.add')}
             </button>
           </div>
         </div>
-      </NodeViewWrapper>
+      </BoardBlockWrapper>
     )
   }
 
   // --- Video player ---
   return (
-    <NodeViewWrapper
-      as="div"
+    <BoardBlockWrapper
       ref={containerRef}
-      className={`absolute group rounded-xl nice-shadow bg-black ${
-        selected ? 'ring-2 ring-blue-400' : ''
-      }`}
-      style={{ left: x, top: y, width, height }}
+      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+      x={x} y={y} width={width} height={height}
+      bgColor="black" className="bg-black"
     >
-      <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
       {/* Drag handle */}
-      <div
+      <DragHandle
         onMouseDown={handleDragStart}
-        className="flex items-center justify-center h-6 cursor-grab active:cursor-grabbing bg-neutral-900/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl"
-      >
-        <GripVertical size={12} className="text-neutral-400" />
-      </div>
+        autoHide
+        className="bg-neutral-900/80 rounded-t-xl"
+      />
 
       {/* YouTube player */}
-      <div className="overflow-hidden rounded-b-xl" style={{ width: '100%', height: height - 24, overscrollBehavior: 'contain' }}>
+      <div className="overflow-hidden rounded-b-xl" style={{ width: '100%', height: height - 24, overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}>
         <div id={playerDivId.current} style={{ width: '100%', height: '100%' }} />
       </div>
 
-      {/* Resize handle */}
-      <div
-        onMouseDown={handleResizeStart}
-        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
-      >
-        <svg viewBox="0 0 16 16" className="w-full h-full text-white/40">
-          <path d="M14 14L14 8M14 14L8 14" stroke="currentColor" strokeWidth="1.5" fill="none" />
-        </svg>
-      </div>
-    </NodeViewWrapper>
+      <ResizeHandle onMouseDown={handleResizeStart} color="text-white/40" selected={selected} />
+    </BoardBlockWrapper>
   )
 }

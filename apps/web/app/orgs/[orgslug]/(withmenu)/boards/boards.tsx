@@ -227,7 +227,7 @@ function PublicBoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
 
   return (
     <Link
-      href={`/board/${board.board_uuid}`}
+      href={`/board/${board.board_uuid.replace('board_', '')}`}
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"
     >
       <div className="block relative aspect-video overflow-hidden bg-gray-50">

@@ -12,6 +12,7 @@ from src.db.boards import (
 )
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
+from src.security.features_utils.dependencies import require_boards_feature
 from src.services.boards.boards import (
     create_board,
     get_board,
@@ -27,7 +28,7 @@ from src.services.boards.boards import (
     store_ydoc_state,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_boards_feature)])
 internal_router = APIRouter()
 
 

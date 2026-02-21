@@ -7,6 +7,7 @@
     "your_organizations": "आपके संगठन",
     "no_orgs_message": "ऐसा लगता है कि आप अभी तक किसी संगठन का हिस्सा नहीं हैं, इसे यहां देखने के लिए किसी संगठन में शामिल हों",
     "assignments": "असाइनमेंट",
+    "boards": "बोर्ड",
     "payments": "भुगतान",
     "organization": "संगठन",
     "dashboard": "डैशबोर्ड",
@@ -104,7 +105,9 @@
           "communities": "समुदाय",
           "podcasts": "पॉडकास्ट",
           "payments": "भुगतान",
-          "trail": "प्रगति ट्रैकिंग"
+          "trail": "प्रगति ट्रैकिंग",
+          "boards": "बोर्ड",
+          "docs": "दस्तावेज़ीकरण"
         },
         "public": {
           "title": "{{feature}} उपलब्ध नहीं",
@@ -508,6 +511,12 @@
         "attach_youtube": "YouTube लिंक",
         "attach_file": "दस्तावेज़"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1708,6 +1717,7 @@
           "ai": "AI",
           "api": "API एक्सेस",
           "features": "सुविधाएं",
+          "usage": "Usage",
           "other": "अन्य"
         },
         "pages": {
@@ -1738,6 +1748,10 @@
           "features": {
             "title": "सुविधाएं",
             "subtitle": "अपने संगठन के लिए सुविधाएं सक्षम या अक्षम करें"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "संगठन का नाम",
@@ -1748,8 +1762,6 @@
         "label_placeholder": "संगठन लेबल चुनें",
         "about": "संगठन के बारे में",
         "about_placeholder": "आपके संगठन का विस्तृत विवरण",
-        "showcase_explore": "LearnHouse Explore में दिखाएं",
-        "showcase_description": "अपने संगठन के कोर्स और सामग्री को LearnHouse समुदाय के साथ साझा करें। शिक्षार्थियों को आपके मूल्यवान शैक्षिक संसाधनों की खोज करने में मदद करने के लिए इसे सक्षम करें।",
         "save_changes": "बदलाव सहेजें",
         "saving": "सहेजा जा रहा है...",
         "update_success": "संगठन अपडेट किया गया",
@@ -3421,27 +3433,344 @@
         "less": "कम",
         "more": "अधिक",
         "days": {
-          "mon": "सोम", "tue": "मंगल", "wed": "बुध", "thu": "गुरु", "fri": "शुक्र", "sat": "शनि", "sun": "रवि"
+          "mon": "सोम",
+          "tue": "मंगल",
+          "wed": "बुध",
+          "thu": "गुरु",
+          "fri": "शुक्र",
+          "sat": "शनि",
+          "sun": "रवि"
         },
         "events_tooltip": "{{day}} {{hour}}: {{count}} इवेंट"
       },
-      "enrollment_trend": { "title": "नामांकन प्रवृत्ति", "subtitle": "समय के साथ दैनिक नए नामांकन" },
-      "active_learners": { "title": "सक्रिय शिक्षार्थी", "subtitle": "इस कोर्स में दैनिक अद्वितीय सक्रिय शिक्षार्थी" },
-      "unique_viewers": { "title": "कोर्स दर्शक", "subtitle": "इस कोर्स पृष्ठ पर दैनिक अद्वितीय आगंतुक", "total_views": "कुल दृश्य", "peak_viewers": "शीर्ष दर्शक" },
-      "view_to_enrollment": { "title": "दृश्य → नामांकन", "subtitle": "कितने दर्शक नामांकित शिक्षार्थी बनते हैं" },
-      "daily_completions": { "title": "दैनिक पूर्णता", "subtitle": "प्रतिदिन गतिविधि पूर्णता" },
-      "activity_funnel": { "title": "गतिविधि पूर्णता फ़नल", "subtitle": "प्रत्येक गतिविधि में दृश्य बनाम पूर्णता" },
-      "time_per_activity": { "title": "प्रति गतिविधि समय", "subtitle": "शिक्षार्थी प्रत्येक गतिविधि पर औसतन कितना समय बिताते हैं" },
-      "activity_dropoff": { "title": "ड्रॉप-ऑफ़ बिंदु", "subtitle": "शिक्षार्थी कहाँ प्रगति रोकते हैं — अंतिम पूर्ण गतिविधि", "total_dropoffs": "कुल ड्रॉप-ऑफ़", "dropoff_points": "ड्रॉप-ऑफ़ बिंदु" },
-      "avg_session_duration": { "title": "प्रति शिक्षार्थी दैनिक समय", "subtitle": "प्रत्येक शिक्षार्थी प्रतिदिन औसतन कितना समय बिताता है", "total_time": "कुल समय", "avg_per_day": "प्रति दिन औसत", "minutes_label": "मिनट" },
-      "learner_progress": { "title": "शिक्षार्थी प्रगति", "subtitle": "शिक्षार्थियों ने कितनी गतिविधियाँ पूर्ण की हैं", "total_across_brackets": "सभी प्रगति वर्गों में {{count}} कुल शिक्षार्थी" },
-      "learner_retention": { "title": "शिक्षार्थी प्रतिधारण", "subtitle": "पहली गतिविधि के बाद लौटने वाले शिक्षार्थियों का %", "cohort_size": "समूह का आकार", "current_retention": "वर्तमान प्रतिधारण", "days_since_first": "पहली गतिविधि के बाद के दिन", "day_label": "दिन {{day}}" },
-      "completion_velocity": { "title": "पूर्णता गति", "subtitle": "गतिविधि पूर्णता के बीच औसत समय", "not_enough_data": "अभी तक पर्याप्त डेटा नहीं", "need_transitions": "गति गणना के लिए कम से कम 3 गतिविधि संक्रमण आवश्यक", "not_enough_data_short": "पर्याप्त डेटा नहीं", "need_transitions_short": "3+ संक्रमण आवश्यक", "avg_between": "पूर्णता के बीच औसत {{unit}}", "transitions_tracked": "संक्रमण ट्रैक किए गए", "raw_hours_avg": "कच्चे घंटों का औसत", "description": "यह मापता है कि शिक्षार्थी कितनी तेज़ी से एक गतिविधि से अगली में जाते हैं। कम बेहतर है — इसका मतलब है कि शिक्षार्थी सामग्री में तेज़ी से आगे बढ़ रहे हैं।" },
-      "time_to_completion": { "title": "पूर्णता का समय", "subtitle": "शिक्षार्थियों को यह कोर्स पूरा करने में कितना समय लगता है", "median_days_to_complete": "पूर्णता के लिए मध्य दिन", "fast_p25": "तेज़ (P25)", "top_25_finish": "शीर्ष 25% तक पूर्ण", "median": "मध्य", "half_finish": "आधे तक पूर्ण", "slow_p75": "धीमा (P75)", "pct_75_finish": "75% तक पूर्ण", "based_on": "{{count}} कोर्स पूर्णता के आधार पर", "days_unit": "दिन" },
-      "certification_rate": { "title": "प्रमाणन दर", "subtitle": "पूर्ण करने वालों में से जिन्होंने प्रमाणपत्र का दावा किया उनका %", "of_completers_claimed": "पूर्ण करने वालों ने प्रमाणपत्र का दावा किया", "certificates_claimed": "प्रमाणपत्र दावा किए गए", "course_completions": "कोर्स पूर्णता" },
-      "top_learners": { "title": "शीर्ष शिक्षार्थी", "subtitle": "पूर्णता के अनुसार सबसे सक्रिय शिक्षार्थी", "user_fallback": "उपयोगकर्ता #{{id}}" },
-      "recent_enrollments": { "title": "हाल के नामांकन", "subtitle": "इस कोर्स में नवीनतम नामांकित शिक्षार्थी", "count_in_period": "इस अवधि में {{count}} नामांकन" },
-      "pagination": { "range": "{{from}}–{{to}} में से {{total}}" }
+      "enrollment_trend": {
+        "title": "नामांकन प्रवृत्ति",
+        "subtitle": "समय के साथ दैनिक नए नामांकन"
+      },
+      "active_learners": {
+        "title": "सक्रिय शिक्षार्थी",
+        "subtitle": "इस कोर्स में दैनिक अद्वितीय सक्रिय शिक्षार्थी"
+      },
+      "unique_viewers": {
+        "title": "कोर्स दर्शक",
+        "subtitle": "इस कोर्स पृष्ठ पर दैनिक अद्वितीय आगंतुक",
+        "total_views": "कुल दृश्य",
+        "peak_viewers": "शीर्ष दर्शक"
+      },
+      "view_to_enrollment": {
+        "title": "दृश्य → नामांकन",
+        "subtitle": "कितने दर्शक नामांकित शिक्षार्थी बनते हैं"
+      },
+      "daily_completions": {
+        "title": "दैनिक पूर्णता",
+        "subtitle": "प्रतिदिन गतिविधि पूर्णता"
+      },
+      "activity_funnel": {
+        "title": "गतिविधि पूर्णता फ़नल",
+        "subtitle": "प्रत्येक गतिविधि में दृश्य बनाम पूर्णता"
+      },
+      "time_per_activity": {
+        "title": "प्रति गतिविधि समय",
+        "subtitle": "शिक्षार्थी प्रत्येक गतिविधि पर औसतन कितना समय बिताते हैं"
+      },
+      "activity_dropoff": {
+        "title": "ड्रॉप-ऑफ़ बिंदु",
+        "subtitle": "शिक्षार्थी कहाँ प्रगति रोकते हैं — अंतिम पूर्ण गतिविधि",
+        "total_dropoffs": "कुल ड्रॉप-ऑफ़",
+        "dropoff_points": "ड्रॉप-ऑफ़ बिंदु"
+      },
+      "avg_session_duration": {
+        "title": "प्रति शिक्षार्थी दैनिक समय",
+        "subtitle": "प्रत्येक शिक्षार्थी प्रतिदिन औसतन कितना समय बिताता है",
+        "total_time": "कुल समय",
+        "avg_per_day": "प्रति दिन औसत",
+        "minutes_label": "मिनट"
+      },
+      "learner_progress": {
+        "title": "शिक्षार्थी प्रगति",
+        "subtitle": "शिक्षार्थियों ने कितनी गतिविधियाँ पूर्ण की हैं",
+        "total_across_brackets": "सभी प्रगति वर्गों में {{count}} कुल शिक्षार्थी"
+      },
+      "learner_retention": {
+        "title": "शिक्षार्थी प्रतिधारण",
+        "subtitle": "पहली गतिविधि के बाद लौटने वाले शिक्षार्थियों का %",
+        "cohort_size": "समूह का आकार",
+        "current_retention": "वर्तमान प्रतिधारण",
+        "days_since_first": "पहली गतिविधि के बाद के दिन",
+        "day_label": "दिन {{day}}"
+      },
+      "completion_velocity": {
+        "title": "पूर्णता गति",
+        "subtitle": "गतिविधि पूर्णता के बीच औसत समय",
+        "not_enough_data": "अभी तक पर्याप्त डेटा नहीं",
+        "need_transitions": "गति गणना के लिए कम से कम 3 गतिविधि संक्रमण आवश्यक",
+        "not_enough_data_short": "पर्याप्त डेटा नहीं",
+        "need_transitions_short": "3+ संक्रमण आवश्यक",
+        "avg_between": "पूर्णता के बीच औसत {{unit}}",
+        "transitions_tracked": "संक्रमण ट्रैक किए गए",
+        "raw_hours_avg": "कच्चे घंटों का औसत",
+        "description": "यह मापता है कि शिक्षार्थी कितनी तेज़ी से एक गतिविधि से अगली में जाते हैं। कम बेहतर है — इसका मतलब है कि शिक्षार्थी सामग्री में तेज़ी से आगे बढ़ रहे हैं।"
+      },
+      "time_to_completion": {
+        "title": "पूर्णता का समय",
+        "subtitle": "शिक्षार्थियों को यह कोर्स पूरा करने में कितना समय लगता है",
+        "median_days_to_complete": "पूर्णता के लिए मध्य दिन",
+        "fast_p25": "तेज़ (P25)",
+        "top_25_finish": "शीर्ष 25% तक पूर्ण",
+        "median": "मध्य",
+        "half_finish": "आधे तक पूर्ण",
+        "slow_p75": "धीमा (P75)",
+        "pct_75_finish": "75% तक पूर्ण",
+        "based_on": "{{count}} कोर्स पूर्णता के आधार पर",
+        "days_unit": "दिन"
+      },
+      "certification_rate": {
+        "title": "प्रमाणन दर",
+        "subtitle": "पूर्ण करने वालों में से जिन्होंने प्रमाणपत्र का दावा किया उनका %",
+        "of_completers_claimed": "पूर्ण करने वालों ने प्रमाणपत्र का दावा किया",
+        "certificates_claimed": "प्रमाणपत्र दावा किए गए",
+        "course_completions": "कोर्स पूर्णता"
+      },
+      "top_learners": {
+        "title": "शीर्ष शिक्षार्थी",
+        "subtitle": "पूर्णता के अनुसार सबसे सक्रिय शिक्षार्थी",
+        "user_fallback": "उपयोगकर्ता #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "हाल के नामांकन",
+        "subtitle": "इस कोर्स में नवीनतम नामांकित शिक्षार्थी",
+        "count_in_period": "इस अवधि में {{count}} नामांकन"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} में से {{total}}"
+      }
+    }
+  },
+  "boards": {
+    "boards": "बोर्ड",
+    "new_board": "नया बोर्ड",
+    "create_new_board": "नया बोर्ड बनाएं",
+    "create_new_board_description": "एक नया सहयोगी बोर्ड सेट करें",
+    "create_board": "बोर्ड बनाएं",
+    "board_created": "बोर्ड बनाया गया",
+    "board_created_error": "बोर्ड बनाने में विफल",
+    "search_placeholder": "बोर्ड खोजें...",
+    "no_boards_found": "कोई बोर्ड नहीं मिला",
+    "try_different_search": "कोई अलग खोज शब्द आज़माएं",
+    "no_boards_yet": "अभी तक कोई बोर्ड नहीं",
+    "no_boards_description": "शुरू करने के लिए अपना पहला सहयोगी बोर्ड बनाएं।",
+    "public": "सार्वजनिक",
+    "private": "निजी",
+    "member_count": "{{count}} सदस्य",
+    "member_count_plural": "{{count}} सदस्य",
+    "settings": "सेटिंग्स",
+    "name": "नाम",
+    "name_placeholder": "उदा., परियोजना नियोजन",
+    "description": "विवरण",
+    "description_placeholder": "संक्षिप्त विवरण...",
+    "back_to_boards": "बोर्ड पर वापस",
+    "general": {
+      "title": "सामान्य",
+      "description": "बोर्ड की बुनियादी जानकारी",
+      "board_updated": "बोर्ड अपडेट किया गया",
+      "board_updated_error": "बोर्ड अपडेट करने में विफल",
+      "saving": "सहेजा जा रहा है...",
+      "save_changes": "परिवर्तन सहेजें"
+    },
+    "thumbnail": {
+      "title": "थंबनेल",
+      "description": "कार्ड पर दिखाई जाने वाली बोर्ड कवर छवि",
+      "alt": "बोर्ड थंबनेल",
+      "uploading": "अपलोड हो रहा है...",
+      "upload_image": "छवि अपलोड करें",
+      "gallery": "गैलरी",
+      "supported_formats": "समर्थित प्रारूप: JPG, JPEG, PNG। अधिकतम 8MB।",
+      "thumbnail_updated": "थंबनेल अपडेट किया गया",
+      "thumbnail_updated_error": "थंबनेल अपलोड करने में विफल"
+    },
+    "access": {
+      "title": "पहुंच नियंत्रण",
+      "description": "नियंत्रित करें कि इस बोर्ड तक कौन पहुंच सकता है",
+      "set_to_public": "सार्वजनिक करें",
+      "set_to_public_confirm": "सभी साइन-इन किए हुए संगठन सदस्य इस बोर्ड तक पहुंच सकेंगे।",
+      "make_board_public": "बोर्ड को सार्वजनिक बनाएं",
+      "set_to_private": "निजी करें",
+      "set_to_private_confirm": "केवल लिंक किए गए UserGroups के सदस्य इस बोर्ड तक पहुंच सकेंगे।",
+      "make_board_private": "बोर्ड को निजी बनाएं",
+      "active": "सक्रिय",
+      "public_option": "सार्वजनिक",
+      "public_description": "सभी साइन-इन किए हुए संगठन सदस्य इस बोर्ड तक पहुंच सकते हैं",
+      "private_option": "केवल उपयोगकर्ता",
+      "private_description": "केवल लिंक किए गए UserGroups इस बोर्ड तक पहुंच सकते हैं",
+      "board_set_public": "बोर्ड सार्वजनिक किया गया",
+      "board_set_private": "बोर्ड निजी किया गया",
+      "access_update_error": "पहुंच अपडेट करने में विफल",
+      "user_groups": "उपयोगकर्ता समूह",
+      "user_groups_description": "प्रबंधित करें कि किन उपयोगकर्ता समूहों को इस बोर्ड तक पहुंच है",
+      "actions": "कार्रवाइयां",
+      "unlink": "अनलिंक करें",
+      "unlink_confirm": "इस उपयोगकर्ता समूह की इस बोर्ड तक पहुंच समाप्त हो जाएगी।",
+      "unlink_user_group": "उपयोगकर्ता समूह अनलिंक करें",
+      "no_user_groups": "अभी तक कोई उपयोगकर्ता समूह लिंक नहीं किया गया",
+      "link_to_user_group": "उपयोगकर्ता समूह से लिंक करें",
+      "link_to_user_group_description": "इस बोर्ड तक पहुंच देने के लिए एक उपयोगकर्ता समूह चुनें",
+      "link_to_usergroup_btn": "UserGroup से लिंक करें",
+      "user_group": "उपयोगकर्ता समूह",
+      "no_user_groups_available": "कोई उपयोगकर्ता समूह उपलब्ध नहीं",
+      "create_user_group": "उपयोगकर्ता समूह बनाएं",
+      "link": "लिंक करें",
+      "user_group_linked": "उपयोगकर्ता समूह लिंक किया गया",
+      "user_group_unlinked": "उपयोगकर्ता समूह अनलिंक किया गया",
+      "link_error": "लिंक करने में विफल: ",
+      "unlink_error": "अनलिंक करने में विफल: ",
+      "unlink_error_generic": "उपयोगकर्ता समूह अनलिंक करने में विफल"
+    },
+    "members": {
+      "title": "सदस्य",
+      "description": "प्रबंधित करें कि इस बोर्ड पर कौन सहयोग कर सकता है",
+      "user": "उपयोगकर्ता",
+      "role": "भूमिका",
+      "actions": "कार्रवाइयां",
+      "remove": "हटाएं",
+      "remove_confirm": "{{name}} को बोर्ड से हटाएं?",
+      "remove_member": "सदस्य हटाएं",
+      "no_members": "अभी तक कोई सदस्य नहीं",
+      "member_limit_reached": "सदस्य सीमा पूरी हो गई (अधिकतम 10)",
+      "add_member": "सदस्य जोड़ें",
+      "add_member_description": "इस बोर्ड में जोड़ने के लिए संगठन के सदस्य खोजें",
+      "search_placeholder": "नाम या ईमेल से खोजें...",
+      "no_users_found": "कोई उपयोगकर्ता नहीं मिला",
+      "role_label": "भूमिका:",
+      "editor": "संपादक",
+      "viewer": "दर्शक",
+      "adding": "जोड़ा जा रहा है...",
+      "member_added": "सदस्य जोड़ा गया",
+      "member_added_error": "सदस्य जोड़ने में विफल (पहले से सदस्य हो सकता है)",
+      "member_removed": "सदस्य हटाया गया",
+      "member_removed_error": "सदस्य हटाने में विफल"
+    },
+    "toolbar": {
+      "select": "चुनें",
+      "pan": "खिसकाएं",
+      "draw": "बनाएं",
+      "add_card": "कार्ड जोड़ें",
+      "sticky_note": "स्टिकी नोट",
+      "frame": "फ्रेम",
+      "sticker": "स्टिकर",
+      "youtube": "YouTube",
+      "ai_playground": "AI प्लेग्राउंड",
+      "activity": "गतिविधि",
+      "embed": "एम्बेड",
+      "webpage": "वेबपेज",
+      "thin": "पतला",
+      "medium": "मध्यम",
+      "thick": "मोटा",
+      "undo": "पूर्ववत करें",
+      "redo": "फिर से करें"
+    },
+    "zoom": {
+      "zoom_in": "ज़ूम इन",
+      "zoom_out": "ज़ूम आउट"
+    },
+    "chat": {
+      "placeholder": "कुछ कहें..."
+    },
+    "effects": {
+      "title": "प्रभाव",
+      "inferno": "इन्फर्नो",
+      "blizzard": "बर्फीला तूफान",
+      "matrix": "Matrix",
+      "fireworks": "आतिशबाजी",
+      "earthquake": "भूकंप",
+      "black_hole": "ब्लैक होल",
+      "aurora": "ऑरोरा",
+      "lightning": "बिजली",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "टाइमर सेट करें",
+      "set_timer_title": "टाइमर सेट करें",
+      "times_up": "समय समाप्त!",
+      "resume": "फिर से शुरू करें",
+      "pause": "रोकें",
+      "restart": "पुनः आरंभ करें",
+      "close": "बंद करें"
+    },
+    "share": {
+      "share_board": "बोर्ड साझा करें",
+      "share_this_board": "यह बोर्ड साझा करें"
+    },
+    "youtube_block": {
+      "paste_url": "YouTube URL पेस्ट करें",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "जोड़ें"
+    },
+    "activity_block": {
+      "select_course": "एक कोर्स चुनें",
+      "no_courses": "कोई कोर्स नहीं मिला",
+      "no_activities": "कोई गतिविधि नहीं मिली",
+      "unsupported_type": "असमर्थित गतिविधि प्रकार"
+    },
+    "embed_block": {
+      "embed": "एम्बेड",
+      "add_embed": "{{name}} एम्बेड जोड़ें",
+      "url": "URL",
+      "code": "कोड",
+      "paste_url": "एम्बेड URL पेस्ट करें",
+      "url_help": "YouTube, Figma, CodePen, Spotify और अन्य से URL पेस्ट करें",
+      "paste_code": "एम्बेड कोड पेस्ट करें",
+      "code_help": "iframe या एम्बेड कोड पेस्ट करें",
+      "remove_embed": "एम्बेड हटाएं",
+      "edit_embed": "एम्बेड संपादित करें",
+      "edit_embed_url": "एम्बेड URL संपादित करें",
+      "edit_embed_code": "एम्बेड कोड संपादित करें",
+      "apply": "लागू करें"
+    },
+    "webpage_block": {
+      "embed_webpage": "वेबपेज एम्बेड करें",
+      "url_placeholder": "https://example.com",
+      "add": "जोड़ें",
+      "blocking_notice": "कुछ साइटें एम्बेडिंग ब्लॉक कर सकती हैं",
+      "reload": "रीलोड करें",
+      "open_in_new_tab": "नए टैब में खोलें"
+    },
+    "playground_block": {
+      "title": "AI प्लेग्राउंड",
+      "description": "AI द्वारा संचालित इंटरैक्टिव तत्व बनाएं",
+      "generate": "जनरेट करें",
+      "edit": "संपादित करें",
+      "save_close": "सहेजें और बंद करें",
+      "generating": "इंटरैक्टिव सामग्री जनरेट हो रही है...",
+      "streaming": "जनरेट हो रहा है...",
+      "empty_state": "वर्णन करें कि आप क्या बनाना चाहते हैं और इसे जीवंत होते देखें",
+      "chat_header": "AI प्लेग्राउंड",
+      "prompt_text": "जनरेट करने के लिए एक इंटरैक्टिव तत्व का वर्णन करें",
+      "ai_content": "AI द्वारा जनरेट की गई सामग्री",
+      "check_preview": "बाईं ओर पूर्वावलोकन देखें",
+      "creating": "बनाया जा रहा है...",
+      "max_iterations": "अधिकतम पुनरावृत्तियां पूरी हो गईं। अपना काम सहेजें!",
+      "input_placeholder": "वर्णन करें कि आप क्या बनाना चाहते हैं...",
+      "input_placeholder_refine": "परिवर्तन या सुधार का वर्णन करें...",
+      "quiz": "क्विज़",
+      "flashcards": "फ्लैशकार्ड",
+      "chart": "चार्ट",
+      "timeline": "समयरेखा",
+      "drawing": "ड्राइंग",
+      "calculator": "कैलकुलेटर"
+    },
+    "node_actions": {
+      "move_back": "पीछे ले जाएं",
+      "move_forward": "आगे ले जाएं",
+      "delete": "हटाएं",
+      "delete_multiple": "{{count}} आइटम हटाएं"
+    },
+    "pagination": {
+      "previous": "पिछला",
+      "next": "अगला",
+      "page_of": "पृष्ठ {{current}} / {{total}}",
+      "results": "\"{{query}}\" के लिए {{count}} परिणाम",
+      "results_plural": "\"{{query}}\" के लिए {{count}} परिणाम"
     }
   }
 }

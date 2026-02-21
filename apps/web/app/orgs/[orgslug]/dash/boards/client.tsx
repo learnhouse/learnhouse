@@ -11,10 +11,12 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import { createBoard } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
@@ -28,6 +30,7 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
   orgId: number
   accessToken: string
 }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
@@ -36,35 +39,35 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
     if (!name.trim()) return
     try {
       await createBoard(orgId, { name, description }, accessToken)
-      toast.success('Board created')
+      toast.success(t('boards.board_created'))
       setName('')
       setDescription('')
       onCreated()
     } catch {
-      toast.error('Failed to create board')
+      toast.error(t('boards.board_created_error'))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-1">
       <div>
-        <label className="text-sm font-medium text-gray-700">Name</label>
+        <label className="text-sm font-medium text-gray-700">{t('boards.name')}</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full mt-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1"
-          placeholder="e.g., Project Planning"
+          placeholder={t('boards.name_placeholder')}
           required
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700">Description</label>
+        <label className="text-sm font-medium text-gray-700">{t('boards.description')}</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full mt-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1"
-          placeholder="Brief description..."
+          placeholder={t('boards.description_placeholder')}
           rows={3}
         />
       </div>
@@ -74,7 +77,7 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
           disabled={!name.trim()}
           className="rounded-lg bg-black px-5 py-2 text-sm font-medium text-white disabled:opacity-50 hover:bg-gray-800 transition-colors"
         >
-          Create Board
+          {t('boards.create_board')}
         </button>
       </div>
     </form>
@@ -82,17 +85,20 @@ function CreateBoardForm({ onCreated, orgId, accessToken }: {
 }
 
 export default function BoardListClient({ org_id, orgslug }: BoardListClientProps) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+
+  const isBoardsEnabled = org?.config?.config?.features?.boards?.enabled !== false
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 12
 
-  const boardsKey = access_token ? `${getAPIUrl()}boards/org/${org_id}` : null
+  const boardsKey = isBoardsEnabled && access_token ? `${getAPIUrl()}boards/org/${org_id}` : null
   const { data: boards, isLoading } = useSWR(
     boardsKey,
     (url) => swrFetcher(url, access_token),
@@ -163,14 +169,15 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
       titleKey="Boards"
       descriptionKey="Create collaborative boards for real-time brainstorming and planning."
     >
+    <FeatureDisabledView featureName="boards" orgslug={orgslug} context="dashboard">
       <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
         <div className="mb-6 pt-6">
           <Breadcrumbs items={[
-            { label: 'Boards', href: '/dash/boards', icon: <ChalkboardSimple size={14} /> }
+            { label: t('boards.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> }
           ]} />
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-3xl font-bold mb-4 sm:mb-0">Boards</h1>
+              <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t('boards.boards')}</h1>
             </div>
             <AuthenticatedClientElement
               checkMethod="roles"
@@ -181,8 +188,8 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
               <Modal
                 isDialogOpen={createModalOpen}
                 onOpenChange={setCreateModalOpen}
-                dialogTitle="Create New Board"
-                dialogDescription="Set up a new collaborative board"
+                dialogTitle={t('boards.create_new_board')}
+                dialogDescription={t('boards.create_new_board_description')}
                 dialogContent={
                   <CreateBoardForm
                     onCreated={handleCreated}
@@ -192,7 +199,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
                 }
                 dialogTrigger={
                   <button className="rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center hover:scale-105">
-                    <div>New Board</div>
+                    <div>{t('boards.new_board')}</div>
                     <div className="text-md bg-neutral-800 px-1 rounded-full">+</div>
                   </button>
                 }
@@ -210,7 +217,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search boards..."
+                placeholder={t('boards.search_placeholder')}
                 className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
               />
               {searchQuery && (
@@ -228,7 +235,9 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
         {/* Search Results Info */}
         {searchQuery && (
           <div className="mb-4 text-sm text-gray-500">
-            {filteredBoards.length} result{filteredBoards.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
+            {filteredBoards.length !== 1
+              ? t('boards.pagination.results_plural', { count: filteredBoards.length, query: searchQuery })
+              : t('boards.pagination.results', { count: filteredBoards.length, query: searchQuery })}
           </div>
         )}
 
@@ -256,8 +265,8 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
               <div className="col-span-full flex justify-center items-center py-8">
                 <div className="text-center">
                   <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-600 mb-2">No boards found</h2>
-                  <p className="text-gray-400">Try a different search term</p>
+                  <h2 className="text-xl font-semibold text-gray-600 mb-2">{t('boards.no_boards_found')}</h2>
+                  <p className="text-gray-400">{t('boards.try_different_search')}</p>
                 </div>
               </div>
             )}
@@ -269,9 +278,9 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
                   <div className="rounded-full bg-gray-100 p-4 w-fit mx-auto mb-4">
                     <ChalkboardSimple size={24} className="text-gray-400" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-600 mb-2">No boards yet</h2>
+                  <h2 className="text-2xl font-bold text-gray-600 mb-2">{t('boards.no_boards_yet')}</h2>
                   <p className="text-lg text-gray-400">
-                    Create your first collaborative board to get started.
+                    {t('boards.no_boards_description')}
                   </p>
                 </div>
               </div>
@@ -288,7 +297,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
               className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Previous</span>
+              <span className="hidden sm:inline">{t('boards.pagination.previous')}</span>
             </button>
 
             <div className="flex items-center gap-1">
@@ -317,7 +326,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
               disabled={currentPage === totalPages}
               className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white nice-shadow rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <span className="hidden sm:inline">Next</span>
+              <span className="hidden sm:inline">{t('boards.pagination.next')}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -325,22 +334,24 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
         {totalPages > 1 && (
           <div className="mb-6 text-center text-sm text-gray-500">
-            Page {currentPage} of {totalPages}
+            {t('boards.pagination.page_of', { current: currentPage, total: totalPages })}
           </div>
         )}
       </div>
+    </FeatureDisabledView>
     </PlanRestrictedFeature>
   )
 }
 
 function BoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
+  const { t } = useTranslation()
   const thumbnailImage = board.thumbnail_image
     ? getBoardThumbnailMediaDirectory(orgUuid, board.board_uuid, board.thumbnail_image)
     : '/empty_thumbnail.png'
 
   return (
     <Link
-      href={`/dash/boards/${board.board_uuid}`}
+      href={`/dash/boards/${board.board_uuid.replace('board_', '')}`}
       className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]"
     >
       <div className="block relative aspect-video overflow-hidden bg-gray-50">
@@ -353,12 +364,12 @@ function BoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
           {board.public ? (
             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
               <Globe size={10} />
-              Public
+              {t('boards.public')}
             </span>
           ) : (
             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-700 rounded-full">
               <Lock size={10} />
-              Private
+              {t('boards.private')}
             </span>
           )}
         </div>
@@ -380,10 +391,12 @@ function BoardCard({ board, orgUuid }: { board: any; orgUuid: string }) {
         <div className="pt-1.5 flex items-center justify-between border-t border-gray-100">
           <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
             <Users size={12} />
-            <span>{board.member_count} member{board.member_count !== 1 ? 's' : ''}</span>
+            <span>{board.member_count !== 1
+              ? t('boards.member_count_plural', { count: board.member_count })
+              : t('boards.member_count', { count: board.member_count })}</span>
           </div>
           <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-900 transition-colors uppercase tracking-wider">
-            Settings
+            {t('boards.settings')}
           </span>
         </div>
       </div>

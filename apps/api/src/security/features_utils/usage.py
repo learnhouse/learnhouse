@@ -4,7 +4,8 @@ from src.db.organization_config import OrganizationConfig
 from src.db.billing_usage import UsageEvent
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
-from src.db.roles import Role
+from src.db.roles import Role, RoleTypeEnum
+from sqlalchemy import or_
 from config.config import get_learnhouse_config
 from typing import Literal, TypeAlias
 from fastapi import HTTPException
@@ -83,8 +84,13 @@ def _get_actual_admin_seat_count(org_id: int, db_session: Session) -> int:
     Get count of users with dashboard access (admin seats).
     Admin seat = user with a role that has dashboard.action_access = true
     """
-    # Get all roles for this org that have dashboard access
-    statement = select(Role).where(Role.org_id == org_id)
+    # Get all roles that could apply: org-specific roles AND global default roles
+    statement = select(Role).where(
+        or_(
+            Role.org_id == org_id,
+            Role.role_type == RoleTypeEnum.TYPE_GLOBAL,
+        )
+    )
     roles = db_session.exec(statement).all()
 
     # Find role IDs with dashboard access
@@ -248,7 +254,7 @@ def check_limits_with_usage(
 
         if feature_limit > 0 and current_usage >= feature_limit:
             # For non-free plans, allow overage (tracked via events for billing)
-            if org_plan != "free":
+            if org_plan not in ("free",):
                 return True
             else:
                 # Free plan - hard limit
@@ -750,9 +756,6 @@ def deduct_ai_credit(
     amount: int = 1,
 ) -> int:
     """Deduct AI credits from the organization."""
-    if _is_oss_mode():
-        return 0
-
     r = _get_redis_client()
 
     used_credits = r.get(f"ai_credits_used:{org_id}")
@@ -795,18 +798,20 @@ def get_ai_credits_summary(org_id: int, db_session: Session) -> dict:
 
     org_plan = _get_org_plan(org_config)
 
+    r = _get_redis_client()
+
     if _is_oss_mode():
+        used_credits = r.get(f"ai_credits_used:{org_id}")
+        used_credits_count = int(used_credits) if used_credits else 0
         return {
             "plan": org_plan,
             "mode": "oss",
             "base_credits": "unlimited",
             "purchased_credits": 0,
             "total_credits": "unlimited",
-            "used_credits": 0,
+            "used_credits": used_credits_count,
             "remaining_credits": "unlimited",
         }
-
-    r = _get_redis_client()
 
     base_credits = get_ai_credit_limit(org_plan)
 

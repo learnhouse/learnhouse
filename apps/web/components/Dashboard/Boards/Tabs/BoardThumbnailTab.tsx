@@ -8,6 +8,7 @@ import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 const MAX_FILE_SIZE = 8_000_000
 const VALID_IMAGE_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'] as const
@@ -20,6 +21,7 @@ interface BoardThumbnailTabProps {
 }
 
 function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbnailTabProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -45,12 +47,12 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
     setIsUploading(true)
     try {
       await updateBoardThumbnail(boardUuid, file, access_token)
-      toast.success('Thumbnail updated')
+      toast.success(t('boards.thumbnail.thumbnail_updated'))
       setLocalThumbnail(null)
       if (boardKey) mutate(boardKey)
       mutate((key) => typeof key === 'string' && key.includes('/boards/org/'), undefined, { revalidate: true })
     } catch {
-      toast.error('Failed to upload thumbnail')
+      toast.error(t('boards.thumbnail.thumbnail_updated_error'))
     } finally {
       setIsUploading(false)
     }
@@ -97,14 +99,14 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
       <div className="h-6"></div>
       <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-          <h1 className="font-bold text-lg sm:text-xl text-gray-800">Thumbnail</h1>
-          <h2 className="text-gray-500 text-xs sm:text-sm">Board cover image shown on cards</h2>
+          <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('boards.thumbnail.title')}</h1>
+          <h2 className="text-gray-500 text-xs sm:text-sm">{t('boards.thumbnail.description')}</h2>
         </div>
         <div className="px-3 sm:px-5 py-3 space-y-4">
           <div className="max-w-[480px]">
             <img
               src={thumbnailUrl}
-              alt="Board thumbnail"
+              alt={t('boards.thumbnail.alt')}
               className={`w-full aspect-video object-cover rounded-lg border border-gray-200 ${isUploading ? 'animate-pulse' : ''}`}
             />
           </div>
@@ -113,7 +115,7 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
             <div className="flex items-center gap-2">
               <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
                 <ArrowBigUpDash size={16} className="mr-2 animate-bounce" />
-                Uploading...
+                {t('boards.thumbnail.uploading')}
               </div>
             </div>
           ) : (
@@ -131,7 +133,7 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
                 onClick={() => imageInputRef.current?.click()}
               >
                 <UploadCloud size={16} />
-                Upload Image
+                {t('boards.thumbnail.upload_image')}
               </button>
               <button
                 type="button"
@@ -139,12 +141,12 @@ function BoardThumbnailTab({ board, boardUuid, orgUuid, boardKey }: BoardThumbna
                 onClick={() => setShowUnsplashPicker(true)}
               >
                 <ImageIcon size={16} />
-                Gallery
+                {t('boards.thumbnail.gallery')}
               </button>
             </div>
           )}
 
-          <p className="text-sm text-gray-500">Supported formats: JPG, JPEG, PNG. Max 8MB.</p>
+          <p className="text-sm text-gray-500">{t('boards.thumbnail.supported_formats')}</p>
         </div>
       </div>
 

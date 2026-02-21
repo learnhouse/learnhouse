@@ -7,6 +7,7 @@
     "your_organizations": "Le tue organizzazioni",
     "no_orgs_message": "Sembra che tu non faccia ancora parte di un'organizzazione, unisciti a una per poterla vedere qui",
     "assignments": "Compiti",
+    "boards": "Lavagne",
     "payments": "Pagamenti",
     "organization": "Organizzazione",
     "dashboard": "Pannello di controllo",
@@ -104,7 +105,9 @@
           "communities": "Comunità",
           "podcasts": "Podcast",
           "payments": "Pagamenti",
-          "trail": "Monitoraggio progressi"
+          "trail": "Monitoraggio progressi",
+          "boards": "Lavagne",
+          "docs": "Documentazione"
         },
         "public": {
           "title": "{{feature}} non disponibile",
@@ -515,6 +518,12 @@
         "attach_youtube": "Link YouTube",
         "attach_file": "Documento"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1715,6 +1724,7 @@
           "ai": "IA",
           "api": "Accesso API",
           "features": "Funzionalità",
+          "usage": "Usage",
           "other": "Altro"
         },
         "pages": {
@@ -1745,6 +1755,10 @@
           "features": {
             "title": "Funzionalità",
             "subtitle": "Attiva o disattiva funzionalità per la tua organizzazione"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "Nome organizzazione",
@@ -1755,8 +1769,6 @@
         "label_placeholder": "Seleziona etichetta organizzazione",
         "about": "Informazioni sull'organizzazione",
         "about_placeholder": "Descrizione dettagliata della tua organizzazione",
-        "showcase_explore": "Mostra in LearnHouse Explore",
-        "showcase_description": "Condividi i corsi e i contenuti della tua organizzazione con la comunità di LearnHouse. Abilita questa opzione per aiutare gli studenti a scoprire le tue preziose risorse educative.",
         "save_changes": "Salva modifiche",
         "saving": "Salvataggio...",
         "update_success": "Organizzazione aggiornata",
@@ -3329,55 +3341,443 @@
       "not_configured_title": "Analytics Non Configurato",
       "not_configured_desc": "L'analytics richiede la configurazione di Tinybird. Contatta il tuo amministratore.",
       "common": {
-        "loading": "Caricamento...", "no_data": "Ancora nessun dato", "no_enrollments": "Ancora nessuna iscrizione",
-        "total": "Totale", "daily_avg": "Media Giornaliera", "latest_day": "Ultimo Giorno",
-        "peak": "Picco", "peak_day": "Giorno di Picco", "type": "Tipo", "rate": "Tasso",
-        "views": "Visualizzazioni", "enrollments": "Iscrizioni", "completions": "Completamenti",
-        "completion_rate": "Tasso di Completamento", "conversion": "Conversione", "avg_time": "Tempo Medio",
-        "total_views": "Visualizzazioni Totali", "total_completions": "Completamenti Totali",
-        "avg_rate": "Tasso Medio", "needs_attention": "Richiede Attenzione", "total_samples": "Campioni Totali",
-        "more_expand": "+{{count}} altri — clicca per espandere", "activities_count": "{{count}} attività",
-        "pct_of_total": "% del Totale", "bar_width_hint": "Larghezza barra = visualizzazioni relative",
-        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
-        "low_conversion": "bassa conversione", "avg_completion": "completamento medio",
-        "avg_prefix": "media {{value}}", "unknown_activity": "Attività sconosciuta"
+        "loading": "Caricamento...",
+        "no_data": "Ancora nessun dato",
+        "no_enrollments": "Ancora nessuna iscrizione",
+        "total": "Totale",
+        "daily_avg": "Media Giornaliera",
+        "latest_day": "Ultimo Giorno",
+        "peak": "Picco",
+        "peak_day": "Giorno di Picco",
+        "type": "Tipo",
+        "rate": "Tasso",
+        "views": "Visualizzazioni",
+        "enrollments": "Iscrizioni",
+        "completions": "Completamenti",
+        "completion_rate": "Tasso di Completamento",
+        "conversion": "Conversione",
+        "avg_time": "Tempo Medio",
+        "total_views": "Visualizzazioni Totali",
+        "total_completions": "Completamenti Totali",
+        "avg_rate": "Tasso Medio",
+        "needs_attention": "Richiede Attenzione",
+        "total_samples": "Campioni Totali",
+        "more_expand": "+{{count}} altri — clicca per espandere",
+        "activities_count": "{{count}} attività",
+        "pct_of_total": "% del Totale",
+        "bar_width_hint": "Larghezza barra = visualizzazioni relative",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "bassa conversione",
+        "avg_completion": "completamento medio",
+        "avg_prefix": "media {{value}}",
+        "unknown_activity": "Attività sconosciuta"
       },
       "units": {
-        "done": "completato", "views": "visualizzazioni", "enrolled": "iscritti",
-        "learner": "studente", "learners": "studenti", "events": "eventi",
-        "total": "totale", "total_views": "visualizzazioni totali", "total_completions": "completamenti totali",
-        "total_dropoffs": "abbandoni totali", "peak_active": "picco attivi",
-        "conversion": "conversione", "retention": "ritenzione", "in_cohort": "nella coorte",
-        "active_learners": "studenti attivi", "recent_enrollments": "iscrizioni recenti",
-        "transitions": "transizioni", "median_days": "giorni mediani",
-        "claim_rate": "tasso di richiesta", "claimed": "richiesti", "completed": "completati",
-        "unique": "unici", "time": "tempo", "avg_per_day": "media / giorno",
-        "busiest_time": "orario di punta", "minutes": "minuti", "hours": "ore",
-        "days": "giorni", "done_before": "completato prima", "sample": "campione",
-        "samples": "campioni", "min": "min", "avg_per_learner": "Media per studente"
+        "done": "completato",
+        "views": "visualizzazioni",
+        "enrolled": "iscritti",
+        "learner": "studente",
+        "learners": "studenti",
+        "events": "eventi",
+        "total": "totale",
+        "total_views": "visualizzazioni totali",
+        "total_completions": "completamenti totali",
+        "total_dropoffs": "abbandoni totali",
+        "peak_active": "picco attivi",
+        "conversion": "conversione",
+        "retention": "ritenzione",
+        "in_cohort": "nella coorte",
+        "active_learners": "studenti attivi",
+        "recent_enrollments": "iscrizioni recenti",
+        "transitions": "transizioni",
+        "median_days": "giorni mediani",
+        "claim_rate": "tasso di richiesta",
+        "claimed": "richiesti",
+        "completed": "completati",
+        "unique": "unici",
+        "time": "tempo",
+        "avg_per_day": "media / giorno",
+        "busiest_time": "orario di punta",
+        "minutes": "minuti",
+        "hours": "ore",
+        "days": "giorni",
+        "done_before": "completato prima",
+        "sample": "campione",
+        "samples": "campioni",
+        "min": "min",
+        "avg_per_learner": "Media per studente"
       },
-      "type_labels": { "video": "Video", "document": "Documento", "quiz": "Quiz", "assignment": "Compito", "dynamic": "Dinamico" },
-      "overview_stats": { "views": "Visualizzazioni", "enrollments": "Iscrizioni", "completions": "Completamenti", "completion_rate": "Tasso di Completamento" },
-      "activity_type_breakdown": { "title": "Distribuzione Tipi di Attività", "subtitle": "Distribuzione e tassi di completamento per tipo di contenuto" },
-      "engagement_by_type": { "title": "Coinvolgimento per Tipo di Contenuto", "subtitle": "Metriche di coinvolgimento degli studenti per tipo di attività", "total_events": "Eventi totali", "total_learners": "Studenti totali" },
-      "peak_hours": { "title": "Ore di Picco di Apprendimento", "subtitle": "Quando gli studenti sono più attivi in questo corso", "peak_time": "Orario di picco", "peak_events": "Eventi di picco", "less": "Meno", "more": "Più", "days": { "mon": "Lun", "tue": "Mar", "wed": "Mer", "thu": "Gio", "fri": "Ven", "sat": "Sab", "sun": "Dom" }, "events_tooltip": "{{day}} {{hour}}: {{count}} eventi" },
-      "enrollment_trend": { "title": "Tendenza Iscrizioni", "subtitle": "Nuove iscrizioni giornaliere nel tempo" },
-      "active_learners": { "title": "Studenti Attivi", "subtitle": "Studenti attivi unici giornalieri in questo corso" },
-      "unique_viewers": { "title": "Visitatori del Corso", "subtitle": "Visitatori unici giornalieri alla pagina del corso", "total_views": "Visualizzazioni Totali", "peak_viewers": "Picco Visitatori" },
-      "view_to_enrollment": { "title": "Visualizzazione → Iscrizione", "subtitle": "Quanti visitatori diventano studenti iscritti" },
-      "daily_completions": { "title": "Completamenti Giornalieri", "subtitle": "Completamenti di attività al giorno" },
-      "activity_funnel": { "title": "Funnel Completamento Attività", "subtitle": "Visualizzazioni vs completamenti per attività" },
-      "time_per_activity": { "title": "Tempo per Attività", "subtitle": "Tempo medio che gli studenti dedicano a ogni attività" },
-      "activity_dropoff": { "title": "Punti di Abbandono", "subtitle": "Dove gli studenti smettono di progredire — ultima attività completata", "total_dropoffs": "Abbandoni Totali", "dropoff_points": "Punti di Abbandono" },
-      "avg_session_duration": { "title": "Tempo Giornaliero per Studente", "subtitle": "Tempo medio che ogni studente dedica al giorno", "total_time": "Tempo Totale", "avg_per_day": "Media al Giorno", "minutes_label": "Minuti" },
-      "learner_progress": { "title": "Progresso degli Studenti", "subtitle": "Quante attività hanno completato gli studenti", "total_across_brackets": "{{count}} studenti totali in tutte le fasce di progresso" },
-      "learner_retention": { "title": "Ritenzione degli Studenti", "subtitle": "% di studenti che ritornano dopo la prima attività", "cohort_size": "Dimensione Coorte", "current_retention": "Ritenzione Attuale", "days_since_first": "Giorni dalla prima attività", "day_label": "Giorno {{day}}" },
-      "completion_velocity": { "title": "Velocità di Completamento", "subtitle": "Tempo medio tra i completamenti delle attività", "not_enough_data": "Dati insufficienti", "need_transitions": "Servono almeno 3 transizioni tra attività per calcolare la velocità", "not_enough_data_short": "Dati insufficienti", "need_transitions_short": "Servono 3+ transizioni", "avg_between": "media {{unit}} tra i completamenti", "transitions_tracked": "transizioni tracciate", "raw_hours_avg": "media ore grezze", "description": "Misura quanto velocemente gli studenti passano da un'attività alla successiva. Più basso è meglio — significa che gli studenti avanzano nei contenuti più rapidamente." },
-      "time_to_completion": { "title": "Tempo di Completamento", "subtitle": "Quanto tempo impiegano gli studenti per finire questo corso", "median_days_to_complete": "giorni mediani per completare", "fast_p25": "Veloce (P25)", "top_25_finish": "Il top 25% finisce entro", "median": "Mediana", "half_finish": "La metà finisce entro", "slow_p75": "Lento (P75)", "pct_75_finish": "Il 75% finisce entro", "based_on": "Basato su {{count}} completamento/i del corso", "days_unit": "giorni" },
-      "certification_rate": { "title": "Tasso di Certificazione", "subtitle": "% di completatori che hanno richiesto il certificato", "of_completers_claimed": "dei completatori ha richiesto un certificato", "certificates_claimed": "certificati richiesti", "course_completions": "completamenti del corso" },
-      "top_learners": { "title": "Migliori Studenti", "subtitle": "Studenti più attivi per completamenti", "user_fallback": "Utente #{{id}}" },
-      "recent_enrollments": { "title": "Iscrizioni Recenti", "subtitle": "Ultimi studenti iscritti a questo corso", "count_in_period": "{{count}} iscrizioni in questo periodo" },
-      "pagination": { "range": "{{from}}–{{to}} di {{total}}" }
+      "type_labels": {
+        "video": "Video",
+        "document": "Documento",
+        "quiz": "Quiz",
+        "assignment": "Compito",
+        "dynamic": "Dinamico"
+      },
+      "overview_stats": {
+        "views": "Visualizzazioni",
+        "enrollments": "Iscrizioni",
+        "completions": "Completamenti",
+        "completion_rate": "Tasso di Completamento"
+      },
+      "activity_type_breakdown": {
+        "title": "Distribuzione Tipi di Attività",
+        "subtitle": "Distribuzione e tassi di completamento per tipo di contenuto"
+      },
+      "engagement_by_type": {
+        "title": "Coinvolgimento per Tipo di Contenuto",
+        "subtitle": "Metriche di coinvolgimento degli studenti per tipo di attività",
+        "total_events": "Eventi totali",
+        "total_learners": "Studenti totali"
+      },
+      "peak_hours": {
+        "title": "Ore di Picco di Apprendimento",
+        "subtitle": "Quando gli studenti sono più attivi in questo corso",
+        "peak_time": "Orario di picco",
+        "peak_events": "Eventi di picco",
+        "less": "Meno",
+        "more": "Più",
+        "days": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Gio",
+          "fri": "Ven",
+          "sat": "Sab",
+          "sun": "Dom"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} eventi"
+      },
+      "enrollment_trend": {
+        "title": "Tendenza Iscrizioni",
+        "subtitle": "Nuove iscrizioni giornaliere nel tempo"
+      },
+      "active_learners": {
+        "title": "Studenti Attivi",
+        "subtitle": "Studenti attivi unici giornalieri in questo corso"
+      },
+      "unique_viewers": {
+        "title": "Visitatori del Corso",
+        "subtitle": "Visitatori unici giornalieri alla pagina del corso",
+        "total_views": "Visualizzazioni Totali",
+        "peak_viewers": "Picco Visitatori"
+      },
+      "view_to_enrollment": {
+        "title": "Visualizzazione → Iscrizione",
+        "subtitle": "Quanti visitatori diventano studenti iscritti"
+      },
+      "daily_completions": {
+        "title": "Completamenti Giornalieri",
+        "subtitle": "Completamenti di attività al giorno"
+      },
+      "activity_funnel": {
+        "title": "Funnel Completamento Attività",
+        "subtitle": "Visualizzazioni vs completamenti per attività"
+      },
+      "time_per_activity": {
+        "title": "Tempo per Attività",
+        "subtitle": "Tempo medio che gli studenti dedicano a ogni attività"
+      },
+      "activity_dropoff": {
+        "title": "Punti di Abbandono",
+        "subtitle": "Dove gli studenti smettono di progredire — ultima attività completata",
+        "total_dropoffs": "Abbandoni Totali",
+        "dropoff_points": "Punti di Abbandono"
+      },
+      "avg_session_duration": {
+        "title": "Tempo Giornaliero per Studente",
+        "subtitle": "Tempo medio che ogni studente dedica al giorno",
+        "total_time": "Tempo Totale",
+        "avg_per_day": "Media al Giorno",
+        "minutes_label": "Minuti"
+      },
+      "learner_progress": {
+        "title": "Progresso degli Studenti",
+        "subtitle": "Quante attività hanno completato gli studenti",
+        "total_across_brackets": "{{count}} studenti totali in tutte le fasce di progresso"
+      },
+      "learner_retention": {
+        "title": "Ritenzione degli Studenti",
+        "subtitle": "% di studenti che ritornano dopo la prima attività",
+        "cohort_size": "Dimensione Coorte",
+        "current_retention": "Ritenzione Attuale",
+        "days_since_first": "Giorni dalla prima attività",
+        "day_label": "Giorno {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Velocità di Completamento",
+        "subtitle": "Tempo medio tra i completamenti delle attività",
+        "not_enough_data": "Dati insufficienti",
+        "need_transitions": "Servono almeno 3 transizioni tra attività per calcolare la velocità",
+        "not_enough_data_short": "Dati insufficienti",
+        "need_transitions_short": "Servono 3+ transizioni",
+        "avg_between": "media {{unit}} tra i completamenti",
+        "transitions_tracked": "transizioni tracciate",
+        "raw_hours_avg": "media ore grezze",
+        "description": "Misura quanto velocemente gli studenti passano da un'attività alla successiva. Più basso è meglio — significa che gli studenti avanzano nei contenuti più rapidamente."
+      },
+      "time_to_completion": {
+        "title": "Tempo di Completamento",
+        "subtitle": "Quanto tempo impiegano gli studenti per finire questo corso",
+        "median_days_to_complete": "giorni mediani per completare",
+        "fast_p25": "Veloce (P25)",
+        "top_25_finish": "Il top 25% finisce entro",
+        "median": "Mediana",
+        "half_finish": "La metà finisce entro",
+        "slow_p75": "Lento (P75)",
+        "pct_75_finish": "Il 75% finisce entro",
+        "based_on": "Basato su {{count}} completamento/i del corso",
+        "days_unit": "giorni"
+      },
+      "certification_rate": {
+        "title": "Tasso di Certificazione",
+        "subtitle": "% di completatori che hanno richiesto il certificato",
+        "of_completers_claimed": "dei completatori ha richiesto un certificato",
+        "certificates_claimed": "certificati richiesti",
+        "course_completions": "completamenti del corso"
+      },
+      "top_learners": {
+        "title": "Migliori Studenti",
+        "subtitle": "Studenti più attivi per completamenti",
+        "user_fallback": "Utente #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Iscrizioni Recenti",
+        "subtitle": "Ultimi studenti iscritti a questo corso",
+        "count_in_period": "{{count}} iscrizioni in questo periodo"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} di {{total}}"
+      }
+    }
+  },
+  "boards": {
+    "boards": "Lavagne",
+    "new_board": "Nuova Lavagna",
+    "create_new_board": "Crea Nuova Lavagna",
+    "create_new_board_description": "Configura una nuova lavagna collaborativa",
+    "create_board": "Crea Lavagna",
+    "board_created": "Lavagna creata",
+    "board_created_error": "Impossibile creare la lavagna",
+    "search_placeholder": "Cerca lavagne...",
+    "no_boards_found": "Nessuna lavagna trovata",
+    "try_different_search": "Prova un termine di ricerca diverso",
+    "no_boards_yet": "Ancora nessuna lavagna",
+    "no_boards_description": "Crea la tua prima lavagna collaborativa per iniziare.",
+    "public": "Pubblica",
+    "private": "Privata",
+    "member_count": "{{count}} membro",
+    "member_count_plural": "{{count}} membri",
+    "settings": "Impostazioni",
+    "name": "Nome",
+    "name_placeholder": "es., Pianificazione Progetto",
+    "description": "Descrizione",
+    "description_placeholder": "Breve descrizione...",
+    "back_to_boards": "Torna alle lavagne",
+    "general": {
+      "title": "Generale",
+      "description": "Informazioni di base della lavagna",
+      "board_updated": "Lavagna aggiornata",
+      "board_updated_error": "Impossibile aggiornare la lavagna",
+      "saving": "Salvataggio...",
+      "save_changes": "Salva Modifiche"
+    },
+    "thumbnail": {
+      "title": "Miniatura",
+      "description": "Immagine di copertina della lavagna mostrata sulle schede",
+      "alt": "Miniatura della lavagna",
+      "uploading": "Caricamento...",
+      "upload_image": "Carica Immagine",
+      "gallery": "Galleria",
+      "supported_formats": "Formati supportati: JPG, JPEG, PNG. Max 8MB.",
+      "thumbnail_updated": "Miniatura aggiornata",
+      "thumbnail_updated_error": "Impossibile caricare la miniatura"
+    },
+    "access": {
+      "title": "Controllo Accessi",
+      "description": "Controlla chi può accedere a questa lavagna",
+      "set_to_public": "Imposta come Pubblica",
+      "set_to_public_confirm": "Tutti i membri dell'organizzazione che hanno effettuato l'accesso potranno accedere a questa lavagna.",
+      "make_board_public": "Rendi Lavagna Pubblica",
+      "set_to_private": "Imposta come Privata",
+      "set_to_private_confirm": "Solo i membri dei UserGroups collegati potranno accedere a questa lavagna.",
+      "make_board_private": "Rendi Lavagna Privata",
+      "active": "Attivo",
+      "public_option": "Pubblica",
+      "public_description": "Tutti i membri dell'organizzazione che hanno effettuato l'accesso possono accedere a questa lavagna",
+      "private_option": "Solo Utenti",
+      "private_description": "Solo i UserGroups collegati possono accedere a questa lavagna",
+      "board_set_public": "Lavagna impostata come pubblica",
+      "board_set_private": "Lavagna impostata come privata",
+      "access_update_error": "Impossibile aggiornare l'accesso",
+      "user_groups": "Gruppi Utenti",
+      "user_groups_description": "Gestisci quali gruppi utenti hanno accesso a questa lavagna",
+      "actions": "Azioni",
+      "unlink": "Scollega",
+      "unlink_confirm": "Questo gruppo utenti non avrà più accesso a questa lavagna.",
+      "unlink_user_group": "Scollega Gruppo Utenti",
+      "no_user_groups": "Nessun gruppo utenti collegato ancora",
+      "link_to_user_group": "Collega a Gruppo Utenti",
+      "link_to_user_group_description": "Seleziona un gruppo utenti per dare loro accesso a questa lavagna",
+      "link_to_usergroup_btn": "Collega a UserGroup",
+      "user_group": "Gruppo Utenti",
+      "no_user_groups_available": "Nessun gruppo utenti disponibile",
+      "create_user_group": "Crea Gruppo Utenti",
+      "link": "Collega",
+      "user_group_linked": "Gruppo utenti collegato",
+      "user_group_unlinked": "Gruppo utenti scollegato",
+      "link_error": "Impossibile collegare: ",
+      "unlink_error": "Impossibile scollegare: ",
+      "unlink_error_generic": "Impossibile scollegare il gruppo utenti"
+    },
+    "members": {
+      "title": "Membri",
+      "description": "Gestisci chi può collaborare su questa lavagna",
+      "user": "Utente",
+      "role": "Ruolo",
+      "actions": "Azioni",
+      "remove": "Rimuovi",
+      "remove_confirm": "Rimuovere {{name}} dalla lavagna?",
+      "remove_member": "Rimuovi Membro",
+      "no_members": "Ancora nessun membro",
+      "member_limit_reached": "Limite membri raggiunto (max 10)",
+      "add_member": "Aggiungi Membro",
+      "add_member_description": "Cerca un membro dell'organizzazione da aggiungere a questa lavagna",
+      "search_placeholder": "Cerca per nome o email...",
+      "no_users_found": "Nessun utente trovato",
+      "role_label": "Ruolo:",
+      "editor": "Editor",
+      "viewer": "Visualizzatore",
+      "adding": "Aggiunta...",
+      "member_added": "Membro aggiunto",
+      "member_added_error": "Impossibile aggiungere il membro (potrebbe essere già un membro)",
+      "member_removed": "Membro rimosso",
+      "member_removed_error": "Impossibile rimuovere il membro"
+    },
+    "toolbar": {
+      "select": "Seleziona",
+      "pan": "Sposta",
+      "draw": "Disegna",
+      "add_card": "Aggiungi Scheda",
+      "sticky_note": "Nota Adesiva",
+      "frame": "Cornice",
+      "sticker": "Adesivo",
+      "youtube": "YouTube",
+      "ai_playground": "AI Playground",
+      "activity": "Attività",
+      "embed": "Incorpora",
+      "webpage": "Pagina Web",
+      "thin": "Sottile",
+      "medium": "Medio",
+      "thick": "Spesso",
+      "undo": "Annulla",
+      "redo": "Ripeti"
+    },
+    "zoom": {
+      "zoom_in": "Ingrandisci",
+      "zoom_out": "Riduci"
+    },
+    "chat": {
+      "placeholder": "Scrivi qualcosa..."
+    },
+    "effects": {
+      "title": "Effetti",
+      "inferno": "Inferno",
+      "blizzard": "Bufera",
+      "matrix": "Matrix",
+      "fireworks": "Fuochi d'Artificio",
+      "earthquake": "Terremoto",
+      "black_hole": "Buco Nero",
+      "aurora": "Aurora",
+      "lightning": "Fulmine",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "Imposta timer",
+      "set_timer_title": "Imposta Timer",
+      "times_up": "Tempo scaduto!",
+      "resume": "Riprendi",
+      "pause": "Pausa",
+      "restart": "Riavvia",
+      "close": "Chiudi"
+    },
+    "share": {
+      "share_board": "Condividi lavagna",
+      "share_this_board": "Condividi questa lavagna"
+    },
+    "youtube_block": {
+      "paste_url": "Incolla un URL di YouTube",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "Aggiungi"
+    },
+    "activity_block": {
+      "select_course": "Seleziona un corso",
+      "no_courses": "Nessun corso trovato",
+      "no_activities": "Nessuna attività trovata",
+      "unsupported_type": "Tipo di attività non supportato"
+    },
+    "embed_block": {
+      "embed": "Incorpora",
+      "add_embed": "Aggiungi incorporamento {{name}}",
+      "url": "URL",
+      "code": "Codice",
+      "paste_url": "Incolla URL di incorporamento",
+      "url_help": "Incolla un URL da YouTube, Figma, CodePen, Spotify e altri",
+      "paste_code": "Incolla codice di incorporamento",
+      "code_help": "Incolla codice iframe o di incorporamento",
+      "remove_embed": "Rimuovi incorporamento",
+      "edit_embed": "Modifica incorporamento",
+      "edit_embed_url": "Modifica URL incorporamento",
+      "edit_embed_code": "Modifica codice incorporamento",
+      "apply": "Applica"
+    },
+    "webpage_block": {
+      "embed_webpage": "Incorpora una pagina web",
+      "url_placeholder": "https://example.com",
+      "add": "Aggiungi",
+      "blocking_notice": "Alcuni siti potrebbero bloccare l'incorporamento",
+      "reload": "Ricarica",
+      "open_in_new_tab": "Apri in una nuova scheda"
+    },
+    "playground_block": {
+      "title": "AI Playground",
+      "description": "Genera elementi interattivi alimentati dall'AI",
+      "generate": "Genera",
+      "edit": "Modifica",
+      "save_close": "Salva e Chiudi",
+      "generating": "Generazione contenuto interattivo...",
+      "streaming": "Generazione...",
+      "empty_state": "Descrivi cosa vuoi creare e guardalo prendere vita",
+      "chat_header": "AI Playground",
+      "prompt_text": "Descrivi un elemento interattivo da generare",
+      "ai_content": "Contenuto generato dall'AI",
+      "check_preview": "Controlla l'anteprima a sinistra",
+      "creating": "Creazione...",
+      "max_iterations": "Iterazioni massime raggiunte. Salva il tuo lavoro!",
+      "input_placeholder": "Descrivi cosa vuoi creare...",
+      "input_placeholder_refine": "Descrivi modifiche o perfezionamenti...",
+      "quiz": "Quiz",
+      "flashcards": "Flashcard",
+      "chart": "Grafico",
+      "timeline": "Cronologia",
+      "drawing": "Disegno",
+      "calculator": "Calcolatrice"
+    },
+    "node_actions": {
+      "move_back": "Sposta indietro",
+      "move_forward": "Sposta avanti",
+      "delete": "Elimina",
+      "delete_multiple": "Elimina {{count}} elementi"
+    },
+    "pagination": {
+      "previous": "Precedente",
+      "next": "Successivo",
+      "page_of": "Pagina {{current}} di {{total}}",
+      "results": "{{count}} risultato per \"{{query}}\"",
+      "results_plural": "{{count}} risultati per \"{{query}}\""
     }
   }
 }

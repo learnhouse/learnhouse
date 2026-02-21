@@ -7,16 +7,17 @@
 
 import { isOSSMode } from '@services/config/config'
 
-export type PlanLevel = 'free' | 'standard' | 'pro' | 'enterprise'
+export type PlanLevel = 'free' | 'personal' | 'family' | 'standard' | 'pro' | 'enterprise' | 'oss'
 
 // Plan hierarchy (lower index = lower tier)
-export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'standard', 'pro', 'enterprise']
+export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'family', 'standard', 'pro', 'enterprise', 'oss']
 
 // Feature to required plan mapping
 export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
-  usergroups: 'standard',
+  usergroups: 'personal',
+  ai: 'personal',
+  boards: 'personal',
   payments: 'standard',
-  ai: 'standard',
   communities: 'standard',
   seo: 'standard',
   versioning: 'standard',
@@ -27,7 +28,6 @@ export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
   docs: 'pro',
   roles: 'pro',
   api_tokens: 'pro',
-  boards: 'pro',
   analytics_advanced: 'pro',
   course_analytics: 'pro',
   scorm: 'enterprise',
@@ -43,6 +43,16 @@ export const PLAN_LIMITS: Record<PlanLevel, Record<string, number>> = {
     members: 30,
     admin_seats: 1,
   },
+  personal: {
+    courses: 0, // Unlimited
+    members: 1,
+    admin_seats: 1,
+  },
+  family: {
+    courses: 0, // Unlimited
+    members: 4,
+    admin_seats: 4,
+  },
   standard: {
     courses: 0, // Unlimited
     members: 500,
@@ -54,6 +64,11 @@ export const PLAN_LIMITS: Record<PlanLevel, Record<string, number>> = {
     admin_seats: 10,
   },
   enterprise: {
+    courses: 0, // Unlimited
+    members: 0, // Unlimited
+    admin_seats: 0, // Unlimited
+  },
+  oss: {
     courses: 0, // Unlimited
     members: 0, // Unlimited
     admin_seats: 0, // Unlimited

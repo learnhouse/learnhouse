@@ -17,6 +17,22 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Board blocks: smooth remote position/size changes via Yjs.
+   Transition overshoots the ~800ms broadcast interval so each
+   update flows seamlessly into the next with no visible steps. */
+.board-editor [data-node-view-wrapper] {
+  transition: left 900ms cubic-bezier(0.22, 1, 0.36, 1),
+              top 900ms cubic-bezier(0.22, 1, 0.36, 1),
+              width 900ms cubic-bezier(0.22, 1, 0.36, 1),
+              height 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Chat bubble pop-in on remote cursors */
+@keyframes bubble-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @theme {
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);

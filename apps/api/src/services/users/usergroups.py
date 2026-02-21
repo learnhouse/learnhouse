@@ -274,6 +274,30 @@ async def get_usergroups_by_resource(
     return [UserGroupRead.model_validate(ug) for ug in usergroups]
 
 
+async def get_resources_by_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+) -> list[str]:
+
+    # RBAC check
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+    )
+
+    statement = select(UserGroupResource).where(
+        UserGroupResource.usergroup_id == usergroup_id
+    )
+    usergroup_resources = db_session.exec(statement).all()
+
+    return [ugr.resource_uuid for ugr in usergroup_resources]
+
+
 async def update_usergroup_by_id(
     request: Request,
     db_session: Session,

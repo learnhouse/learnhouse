@@ -6,6 +6,7 @@ import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd
 import { JsonLd } from '@components/SEO/JsonLd'
 import { getBoards } from '@services/boards/boards'
 import BoardsPublicClient from './boards'
+import { redirect } from 'next/navigation'
 
 type PageParams = Promise<{
   orgslug: string
@@ -78,6 +79,11 @@ export default async function BoardsPage({ params }: { params: PageParams }) {
   const { orgslug } = await params
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
+
+  // Require authentication to view boards
+  if (!access_token) {
+    redirect(`/orgs/${orgslug}/login?redirect=/orgs/${orgslug}/boards`)
+  }
 
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 1800,

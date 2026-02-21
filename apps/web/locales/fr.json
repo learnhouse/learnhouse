@@ -7,6 +7,7 @@
     "your_organizations": "Vos organisations",
     "no_orgs_message": "Vous ne faites partie d'aucune organisation. Rejoignez-en une pour la voir ici.",
     "assignments": "Devoirs",
+    "boards": "Tableaux",
     "payments": "Paiements",
     "organization": "Organisation",
     "dashboard": "Tableau de bord",
@@ -104,7 +105,9 @@
           "communities": "Communautés",
           "podcasts": "Podcasts",
           "payments": "Paiements",
-          "trail": "Suivi de progression"
+          "trail": "Suivi de progression",
+          "boards": "Tableaux",
+          "docs": "Documentation"
         },
         "public": {
           "title": "{{feature}} non disponible",
@@ -523,6 +526,12 @@
         "video_takes_time": "L'analyse vidéo peut prendre 1-2 minutes",
         "video_hint": "Les vidéos peuvent prendre 1-2 minutes à traiter"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1723,6 +1732,7 @@
           "ai": "IA",
           "api": "Accès API",
           "features": "Fonctionnalités",
+          "usage": "Usage",
           "other": "Autre"
         },
         "pages": {
@@ -1753,6 +1763,10 @@
           "features": {
             "title": "Fonctionnalités",
             "subtitle": "Activez ou désactivez les fonctionnalités de votre organisation"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "Nom de l'organisation",
@@ -1763,8 +1777,6 @@
         "label_placeholder": "Sélectionnez un label pour l'organisation",
         "about": "À propos de l'organisation",
         "about_placeholder": "Description détaillée de votre organisation",
-        "showcase_explore": "Afficher dans LearnHouse Explore",
-        "showcase_description": "Partagez les cours et le contenu de votre organisation avec la communauté LearnHouse. Activez cette option pour aider les apprenants à découvrir vos ressources pédagogiques.",
         "save_changes": "Enregistrer les modifications",
         "saving": "Enregistrement...",
         "update_success": "Organisation mise à jour",
@@ -3389,11 +3401,11 @@
     },
     "course_analytics": {
       "not_configured_title": "Analytique non configurée",
-      "not_configured_desc": "L\u2019analytique nécessite la configuration de Tinybird. Veuillez contacter votre administrateur.",
+      "not_configured_desc": "L’analytique nécessite la configuration de Tinybird. Veuillez contacter votre administrateur.",
       "common": {
         "loading": "Chargement...",
         "no_data": "Pas encore de données",
-        "no_enrollments": "Pas encore d\u2019inscriptions",
+        "no_enrollments": "Pas encore d’inscriptions",
         "total": "Total",
         "daily_avg": "Moy. journalière",
         "latest_day": "Dernier jour",
@@ -3404,7 +3416,7 @@
         "views": "Vues",
         "enrollments": "Inscriptions",
         "completions": "Achèvements",
-        "completion_rate": "Taux d\u2019achèvement",
+        "completion_rate": "Taux d’achèvement",
         "conversion": "Conversion",
         "avg_time": "Temps moy.",
         "total_views": "Vues totales",
@@ -3412,12 +3424,12 @@
         "avg_rate": "Taux moy.",
         "needs_attention": "Attention requise",
         "total_samples": "Échantillons totaux",
-        "more_expand": "+{{count}} de plus \u2014 cliquez pour développer",
+        "more_expand": "+{{count}} de plus — cliquez pour développer",
         "activities_count": "{{count}} activités",
         "pct_of_total": "% du total",
         "bar_width_hint": "Largeur de barre = vues relatives",
         "rate_high": ">70%",
-        "rate_mid": "40\u201370%",
+        "rate_mid": "40–70%",
         "rate_low": "<40%",
         "low_conversion": "faible conversion",
         "avg_completion": "achèvement moy.",
@@ -3435,7 +3447,7 @@
         "total_views": "vues totales",
         "total_completions": "achèvements totaux",
         "total_dropoffs": "abandons totaux",
-        "peak_active": "pic d\u2019activité",
+        "peak_active": "pic d’activité",
         "conversion": "conversion",
         "retention": "rétention",
         "in_cohort": "dans la cohorte",
@@ -3470,20 +3482,20 @@
         "views": "Vues",
         "enrollments": "Inscriptions",
         "completions": "Achèvements",
-        "completion_rate": "Taux d\u2019achèvement"
+        "completion_rate": "Taux d’achèvement"
       },
       "activity_type_breakdown": {
-        "title": "Répartition par type d\u2019activité",
-        "subtitle": "Distribution et taux d\u2019achèvement par type de contenu"
+        "title": "Répartition par type d’activité",
+        "subtitle": "Distribution et taux d’achèvement par type de contenu"
       },
       "engagement_by_type": {
         "title": "Engagement par type de contenu",
-        "subtitle": "Métriques d\u2019engagement des apprenants par type d\u2019activité",
+        "subtitle": "Métriques d’engagement des apprenants par type d’activité",
         "total_events": "Événements totaux",
         "total_learners": "Apprenants totaux"
       },
       "peak_hours": {
-        "title": "Heures de pointe d\u2019apprentissage",
+        "title": "Heures de pointe d’apprentissage",
         "subtitle": "Quand les apprenants sont les plus actifs dans ce cours",
         "peak_time": "Heure de pointe",
         "peak_events": "Événements au pic",
@@ -3515,15 +3527,15 @@
         "peak_viewers": "Pic de visiteurs"
       },
       "view_to_enrollment": {
-        "title": "Vue \u2192 Inscription",
+        "title": "Vue → Inscription",
         "subtitle": "Combien de visiteurs deviennent des apprenants inscrits"
       },
       "daily_completions": {
         "title": "Achèvements quotidiens",
-        "subtitle": "Achèvements d\u2019activités par jour"
+        "subtitle": "Achèvements d’activités par jour"
       },
       "activity_funnel": {
-        "title": "Entonnoir d\u2019achèvement des activités",
+        "title": "Entonnoir d’achèvement des activités",
         "subtitle": "Vues vs achèvements par activité"
       },
       "time_per_activity": {
@@ -3531,10 +3543,10 @@
         "subtitle": "Temps moyen passé par les apprenants sur chaque activité"
       },
       "activity_dropoff": {
-        "title": "Points d\u2019abandon",
-        "subtitle": "Où les apprenants arrêtent de progresser \u2014 dernière activité complétée",
+        "title": "Points d’abandon",
+        "subtitle": "Où les apprenants arrêtent de progresser — dernière activité complétée",
         "total_dropoffs": "Abandons totaux",
-        "dropoff_points": "Points d\u2019abandon"
+        "dropoff_points": "Points d’abandon"
       },
       "avg_session_duration": {
         "title": "Temps quotidien par apprenant",
@@ -3545,31 +3557,31 @@
       },
       "learner_progress": {
         "title": "Progression des apprenants",
-        "subtitle": "Combien d\u2019activités les apprenants ont terminées",
+        "subtitle": "Combien d’activités les apprenants ont terminées",
         "total_across_brackets": "{{count}} apprenants au total dans toutes les tranches de progression"
       },
       "learner_retention": {
         "title": "Rétention des apprenants",
-        "subtitle": "% d\u2019apprenants revenant après la première activité",
+        "subtitle": "% d’apprenants revenant après la première activité",
         "cohort_size": "Taille de la cohorte",
         "current_retention": "Rétention actuelle",
         "days_since_first": "Jours depuis la première activité",
         "day_label": "Jour {{day}}"
       },
       "completion_velocity": {
-        "title": "Vitesse d\u2019achèvement",
-        "subtitle": "Temps moyen entre les achèvements d\u2019activités",
+        "title": "Vitesse d’achèvement",
+        "subtitle": "Temps moyen entre les achèvements d’activités",
         "not_enough_data": "Pas assez de données",
-        "need_transitions": "Il faut au moins 3 transitions d\u2019activité pour calculer la vitesse",
+        "need_transitions": "Il faut au moins 3 transitions d’activité pour calculer la vitesse",
         "not_enough_data_short": "Données insuffisantes",
         "need_transitions_short": "3+ transitions nécessaires",
         "avg_between": "moy. {{unit}} entre les achèvements",
         "transitions_tracked": "transitions suivies",
         "raw_hours_avg": "moy. heures brutes",
-        "description": "Mesure la rapidité avec laquelle les apprenants progressent d\u2019une activité à la suivante. Plus bas est mieux \u2014 cela signifie que les apprenants avancent plus vite dans le contenu."
+        "description": "Mesure la rapidité avec laquelle les apprenants progressent d’une activité à la suivante. Plus bas est mieux — cela signifie que les apprenants avancent plus vite dans le contenu."
       },
       "time_to_completion": {
-        "title": "Temps jusqu\u2019à l\u2019achèvement",
+        "title": "Temps jusqu’à l’achèvement",
         "subtitle": "Combien de temps il faut aux apprenants pour terminer ce cours",
         "median_days_to_complete": "jours médians pour terminer",
         "fast_p25": "Rapide (P25)",
@@ -3599,8 +3611,235 @@
         "count_in_period": "{{count}} inscriptions sur cette période"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} sur {{total}}"
+        "range": "{{from}}–{{to}} sur {{total}}"
       }
+    }
+  },
+  "boards": {
+    "boards": "Tableaux",
+    "new_board": "Nouveau tableau",
+    "create_new_board": "Créer un nouveau tableau",
+    "create_new_board_description": "Configurer un nouveau tableau collaboratif",
+    "create_board": "Créer le tableau",
+    "board_created": "Tableau créé",
+    "board_created_error": "Échec de la création du tableau",
+    "search_placeholder": "Rechercher des tableaux...",
+    "no_boards_found": "Aucun tableau trouvé",
+    "try_different_search": "Essayez un autre terme de recherche",
+    "no_boards_yet": "Aucun tableau pour le moment",
+    "no_boards_description": "Créez votre premier tableau collaboratif pour commencer.",
+    "public": "Public",
+    "private": "Privé",
+    "member_count": "{{count}} membre",
+    "member_count_plural": "{{count}} membres",
+    "settings": "Paramètres",
+    "name": "Nom",
+    "name_placeholder": "ex. : Planification de projet",
+    "description": "Description",
+    "description_placeholder": "Brève description...",
+    "back_to_boards": "Retour aux tableaux",
+    "general": {
+      "title": "Général",
+      "description": "Informations de base du tableau",
+      "board_updated": "Tableau mis à jour",
+      "board_updated_error": "Échec de la mise à jour du tableau",
+      "saving": "Enregistrement...",
+      "save_changes": "Enregistrer les modifications"
+    },
+    "thumbnail": {
+      "title": "Miniature",
+      "description": "Image de couverture du tableau affichée sur les cartes",
+      "alt": "Miniature du tableau",
+      "uploading": "Téléversement...",
+      "upload_image": "Téléverser une image",
+      "gallery": "Galerie",
+      "supported_formats": "Formats pris en charge : JPG, JPEG, PNG. Max 8MB.",
+      "thumbnail_updated": "Miniature mise à jour",
+      "thumbnail_updated_error": "Échec du téléversement de la miniature"
+    },
+    "access": {
+      "title": "Contrôle d'accès",
+      "description": "Contrôlez qui peut accéder à ce tableau",
+      "set_to_public": "Définir comme public",
+      "set_to_public_confirm": "Tous les membres connectés de l'organisation pourront accéder à ce tableau.",
+      "make_board_public": "Rendre le tableau public",
+      "set_to_private": "Définir comme privé",
+      "set_to_private_confirm": "Seuls les membres des UserGroups liés pourront accéder à ce tableau.",
+      "make_board_private": "Rendre le tableau privé",
+      "active": "Actif",
+      "public_option": "Public",
+      "public_description": "Tous les membres connectés de l'organisation peuvent accéder à ce tableau",
+      "private_option": "Utilisateurs uniquement",
+      "private_description": "Seuls les UserGroups liés peuvent accéder à ce tableau",
+      "board_set_public": "Tableau défini comme public",
+      "board_set_private": "Tableau défini comme privé",
+      "access_update_error": "Échec de la mise à jour de l'accès",
+      "user_groups": "Groupes d'utilisateurs",
+      "user_groups_description": "Gérez quels groupes d'utilisateurs ont accès à ce tableau",
+      "actions": "Actions",
+      "unlink": "Dissocier",
+      "unlink_confirm": "Ce groupe d'utilisateurs n'aura plus accès à ce tableau.",
+      "unlink_user_group": "Dissocier le groupe d'utilisateurs",
+      "no_user_groups": "Aucun groupe d'utilisateurs lié pour le moment",
+      "link_to_user_group": "Lier à un groupe d'utilisateurs",
+      "link_to_user_group_description": "Sélectionnez un groupe d'utilisateurs pour lui donner accès à ce tableau",
+      "link_to_usergroup_btn": "Lier à un UserGroup",
+      "user_group": "Groupe d'utilisateurs",
+      "no_user_groups_available": "Aucun groupe d'utilisateurs disponible",
+      "create_user_group": "Créer un groupe d'utilisateurs",
+      "link": "Lier",
+      "user_group_linked": "Groupe d'utilisateurs lié",
+      "user_group_unlinked": "Groupe d'utilisateurs dissocié",
+      "link_error": "Échec de la liaison : ",
+      "unlink_error": "Échec de la dissociation : ",
+      "unlink_error_generic": "Échec de la dissociation du groupe d'utilisateurs"
+    },
+    "members": {
+      "title": "Membres",
+      "description": "Gérez qui peut collaborer sur ce tableau",
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "actions": "Actions",
+      "remove": "Supprimer",
+      "remove_confirm": "Supprimer {{name}} du tableau ?",
+      "remove_member": "Supprimer le membre",
+      "no_members": "Aucun membre pour le moment",
+      "member_limit_reached": "Limite de membres atteinte (10 max)",
+      "add_member": "Ajouter un membre",
+      "add_member_description": "Recherchez un membre de l'organisation pour l'ajouter à ce tableau",
+      "search_placeholder": "Rechercher par nom ou e-mail...",
+      "no_users_found": "Aucun utilisateur trouvé",
+      "role_label": "Rôle :",
+      "editor": "Éditeur",
+      "viewer": "Lecteur",
+      "adding": "Ajout en cours...",
+      "member_added": "Membre ajouté",
+      "member_added_error": "Échec de l'ajout du membre (peut déjà être membre)",
+      "member_removed": "Membre supprimé",
+      "member_removed_error": "Échec de la suppression du membre"
+    },
+    "toolbar": {
+      "select": "Sélectionner",
+      "pan": "Déplacer",
+      "draw": "Dessiner",
+      "add_card": "Ajouter une carte",
+      "sticky_note": "Note adhésive",
+      "frame": "Cadre",
+      "sticker": "Sticker",
+      "youtube": "YouTube",
+      "ai_playground": "Aire de jeu IA",
+      "activity": "Activité",
+      "embed": "Intégrer",
+      "webpage": "Page web",
+      "thin": "Fin",
+      "medium": "Moyen",
+      "thick": "Épais",
+      "undo": "Annuler",
+      "redo": "Rétablir"
+    },
+    "zoom": {
+      "zoom_in": "Zoom avant",
+      "zoom_out": "Zoom arrière"
+    },
+    "chat": {
+      "placeholder": "Dites quelque chose..."
+    },
+    "effects": {
+      "title": "Effets",
+      "inferno": "Enfer",
+      "blizzard": "Blizzard",
+      "matrix": "Matrix",
+      "fireworks": "Feux d'artifice",
+      "earthquake": "Tremblement de terre",
+      "black_hole": "Trou noir",
+      "aurora": "Aurore",
+      "lightning": "Éclair",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "Définir un minuteur",
+      "set_timer_title": "Définir un minuteur",
+      "times_up": "Le temps est écoulé !",
+      "resume": "Reprendre",
+      "pause": "Pause",
+      "restart": "Redémarrer",
+      "close": "Fermer"
+    },
+    "share": {
+      "share_board": "Partager le tableau",
+      "share_this_board": "Partager ce tableau"
+    },
+    "youtube_block": {
+      "paste_url": "Collez une URL YouTube",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "Ajouter"
+    },
+    "activity_block": {
+      "select_course": "Sélectionner un cours",
+      "no_courses": "Aucun cours trouvé",
+      "no_activities": "Aucune activité trouvée",
+      "unsupported_type": "Type d'activité non pris en charge"
+    },
+    "embed_block": {
+      "embed": "Intégrer",
+      "add_embed": "Ajouter une intégration {{name}}",
+      "url": "URL",
+      "code": "Code",
+      "paste_url": "Collez l'URL d'intégration",
+      "url_help": "Collez une URL de YouTube, Figma, CodePen, Spotify et plus",
+      "paste_code": "Collez le code d'intégration",
+      "code_help": "Collez le code iframe ou d'intégration",
+      "remove_embed": "Supprimer l'intégration",
+      "edit_embed": "Modifier l'intégration",
+      "edit_embed_url": "Modifier l'URL d'intégration",
+      "edit_embed_code": "Modifier le code d'intégration",
+      "apply": "Appliquer"
+    },
+    "webpage_block": {
+      "embed_webpage": "Intégrer une page web",
+      "url_placeholder": "https://example.com",
+      "add": "Ajouter",
+      "blocking_notice": "Certains sites peuvent bloquer l'intégration",
+      "reload": "Recharger",
+      "open_in_new_tab": "Ouvrir dans un nouvel onglet"
+    },
+    "playground_block": {
+      "title": "Aire de jeu IA",
+      "description": "Générez des éléments interactifs propulsés par l'IA",
+      "generate": "Générer",
+      "edit": "Modifier",
+      "save_close": "Enregistrer et fermer",
+      "generating": "Génération de contenu interactif...",
+      "streaming": "Génération...",
+      "empty_state": "Décrivez ce que vous voulez créer et regardez-le prendre vie",
+      "chat_header": "Aire de jeu IA",
+      "prompt_text": "Décrivez un élément interactif à générer",
+      "ai_content": "Contenu généré par l'IA",
+      "check_preview": "Consultez l'aperçu à gauche",
+      "creating": "Création...",
+      "max_iterations": "Nombre maximum d'itérations atteint. Enregistrez votre travail !",
+      "input_placeholder": "Décrivez ce que vous voulez créer...",
+      "input_placeholder_refine": "Décrivez les modifications ou améliorations...",
+      "quiz": "Quiz",
+      "flashcards": "Cartes mémoire",
+      "chart": "Graphique",
+      "timeline": "Chronologie",
+      "drawing": "Dessin",
+      "calculator": "Calculatrice"
+    },
+    "node_actions": {
+      "move_back": "Reculer",
+      "move_forward": "Avancer",
+      "delete": "Supprimer",
+      "delete_multiple": "Supprimer {{count}} éléments"
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page_of": "Page {{current}} sur {{total}}",
+      "results": "{{count}} résultat pour \"{{query}}\"",
+      "results_plural": "{{count}} résultats pour \"{{query}}\""
     }
   }
 }

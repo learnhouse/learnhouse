@@ -515,6 +515,12 @@
         "attach_youtube": "YouTube-link",
         "attach_file": "Document"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3453,7 +3459,7 @@
         "peak_viewers": "Piek bezoekers"
       },
       "view_to_enrollment": {
-        "title": "Weergave \u2192 Inschrijving",
+        "title": "Weergave → Inschrijving",
         "subtitle": "Hoeveel bezoekers zich inschrijven"
       },
       "daily_completions": {
@@ -3537,7 +3543,7 @@
         "count_in_period": "{{count}} inschrijvingen in deze periode"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} van {{total}}"
+        "range": "{{from}}–{{to}} van {{total}}"
       }
     }
   }
