@@ -13,6 +13,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import UserAvatar from '@components/Objects/UserAvatar'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 interface BoardMembersTabProps {
   boardUuid: string
@@ -20,6 +21,7 @@ interface BoardMembersTabProps {
 }
 
 function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -35,10 +37,10 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
   const handleRemoveMember = async (userId: number) => {
     try {
       await removeBoardMember(boardUuid, userId, access_token)
-      toast.success('Member removed')
+      toast.success(t('boards.members.member_removed'))
       if (membersKey) mutate(membersKey)
     } catch {
-      toast.error('Failed to remove member')
+      toast.error(t('boards.members.member_removed_error'))
     }
   }
 
@@ -49,16 +51,23 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
       <div className="h-6"></div>
       <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-          <h1 className="font-bold text-lg sm:text-xl text-gray-800">Members</h1>
-          <h2 className="text-gray-500 text-xs sm:text-sm">Manage who can collaborate on this board</h2>
+          <div className="flex items-center justify-between">
+            <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('boards.members.title')}</h1>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+              membersList.length >= 10 ? 'bg-red-100 text-red-600' : 'bg-gray-200 text-gray-500'
+            }`}>
+              {membersList.length} / 10
+            </span>
+          </div>
+          <h2 className="text-gray-500 text-xs sm:text-sm">{t('boards.members.description')}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
             <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
               <tr className="font-bolder text-sm">
-                <th className="py-3 px-4">User</th>
-                <th className="py-3 px-4">Role</th>
-                <th className="py-3 px-4">Actions</th>
+                <th className="py-3 px-4">{t('boards.members.user')}</th>
+                <th className="py-3 px-4">{t('boards.members.role')}</th>
+                <th className="py-3 px-4">{t('boards.members.actions')}</th>
               </tr>
             </thead>
             <tbody className="mt-5 bg-white rounded-md">
@@ -99,13 +108,13 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
                   <td className="py-3 px-4">
                     {member.role !== 'owner' && (
                       <ConfirmationModal
-                        confirmationButtonText="Remove"
-                        confirmationMessage={`Remove ${member.username || 'this user'} from the board?`}
-                        dialogTitle="Remove Member"
+                        confirmationButtonText={t('boards.members.remove')}
+                        confirmationMessage={t('boards.members.remove_confirm', { name: member.username || 'this user' })}
+                        dialogTitle={t('boards.members.remove_member')}
                         dialogTrigger={
                           <button className="flex items-center gap-1 px-3 py-1 text-red-600 hover:bg-red-50 rounded-md text-sm transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
-                            Remove
+                            {t('boards.members.remove')}
                           </button>
                         }
                         functionToExecute={() => handleRemoveMember(member.user_id)}
@@ -118,37 +127,41 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
               {membersList.length === 0 && (
                 <tr>
                   <td colSpan={3} className="py-6 px-4 text-center text-gray-400 text-sm">
-                    No members yet
+                    {t('boards.members.no_members')}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <div className="flex flex-row-reverse mt-3 mr-2">
-          <Modal
-            isDialogOpen={addMemberModal}
-            onOpenChange={setAddMemberModal}
-            minHeight="no-min"
-            minWidth="md"
-            dialogContent={
-              <AddBoardMember
-                boardUuid={boardUuid}
-                orgId={orgId}
-                accessToken={access_token}
-                setModalOpen={setAddMemberModal}
-                membersKey={membersKey}
-              />
-            }
-            dialogTitle="Add Member"
-            dialogDescription="Search for an organization member to add to this board"
-            dialogTrigger={
-              <button className="flex items-center gap-1 px-3 py-1.5 bg-black text-white rounded-md font-bold text-sm hover:bg-gray-800 transition-colors">
-                <UserPlus className="w-4 h-4" />
-                <span>Add Member</span>
-              </button>
-            }
-          />
+        <div className="flex flex-row-reverse mt-3 mr-2 items-center gap-3">
+          {membersList.length >= 10 ? (
+            <span className="text-xs text-red-500 font-medium">{t('boards.members.member_limit_reached')}</span>
+          ) : (
+            <Modal
+              isDialogOpen={addMemberModal}
+              onOpenChange={setAddMemberModal}
+              minHeight="no-min"
+              minWidth="md"
+              dialogContent={
+                <AddBoardMember
+                  boardUuid={boardUuid}
+                  orgId={orgId}
+                  accessToken={access_token}
+                  setModalOpen={setAddMemberModal}
+                  membersKey={membersKey}
+                />
+              }
+              dialogTitle={t('boards.members.add_member')}
+              dialogDescription={t('boards.members.add_member_description')}
+              dialogTrigger={
+                <button className="flex items-center gap-1 px-3 py-1.5 bg-black text-white rounded-md font-bold text-sm hover:bg-gray-800 transition-colors">
+                  <UserPlus className="w-4 h-4" />
+                  <span>{t('boards.members.add_member')}</span>
+                </button>
+              }
+            />
+          )}
         </div>
       </div>
     </div>
@@ -162,6 +175,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
   setModalOpen: (open: boolean) => void
   membersKey: string | null
 }) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [role, setRole] = useState('editor')
@@ -190,11 +204,11 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
     setIsAdding(true)
     try {
       await addBoardMember(boardUuid, { user_id: selectedUserId, role }, accessToken)
-      toast.success('Member added')
+      toast.success(t('boards.members.member_added'))
       setModalOpen(false)
       if (membersKey) mutate(membersKey)
     } catch {
-      toast.error('Failed to add member (may already be a member)')
+      toast.error(t('boards.members.member_added_error'))
     } finally {
       setIsAdding(false)
     }
@@ -207,7 +221,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by name or email..."
+          placeholder={t('boards.members.search_placeholder')}
           className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-1"
         />
       </div>
@@ -238,19 +252,19 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
           </button>
         ))}
         {filteredUsers.length === 0 && (
-          <div className="px-3 py-4 text-center text-gray-400 text-sm">No users found</div>
+          <div className="px-3 py-4 text-center text-gray-400 text-sm">{t('boards.members.no_users_found')}</div>
         )}
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Role:</span>
+          <span className="text-sm text-gray-500">{t('boards.members.role_label')}</span>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="border rounded-md px-2 py-1 text-sm"
           >
-            <option value="editor">Editor</option>
-            <option value="viewer">Viewer</option>
+            <option value="editor">{t('boards.members.editor')}</option>
+            <option value="viewer">{t('boards.members.viewer')}</option>
           </select>
         </div>
         <button
@@ -258,7 +272,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
           disabled={!selectedUserId || isAdding}
           className="bg-black text-white font-bold px-4 py-2 rounded-md text-sm disabled:opacity-50 hover:bg-gray-800 transition-colors"
         >
-          {isAdding ? 'Adding...' : 'Add Member'}
+          {isAdding ? t('boards.members.adding') : t('boards.members.add_member')}
         </button>
       </div>
     </div>

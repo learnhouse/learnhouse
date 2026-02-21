@@ -139,6 +139,13 @@ async def add_board_member(
     board = _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
+    # Check member limit (max 10 per board)
+    member_count = db_session.exec(
+        select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
+    ).one()
+    if member_count >= 10:
+        raise HTTPException(status_code=403, detail="Board member limit reached (max 10)")
+
     # Check if already a member
     existing = db_session.exec(
         select(BoardMember).where(

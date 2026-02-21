@@ -34,7 +34,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
-import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { isFeatureAvailable, planMeetsRequirement, PlanLevel } from '@services/plans/plans'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
@@ -154,26 +154,28 @@ export const OrgMenu = (props: any) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Boards */}
-            {org?.config?.config?.features?.boards?.enabled === true && (
-              <div className="hidden md:flex">
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={getUriWithOrg(orgslug, '/boards')}
-                        className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                        aria-label="Boards"
-                      >
-                        <ChalkboardSimple size={20} weight="fill" />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Boards
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+            {/* Boards (Pro+ or OSS only, authenticated users only) */}
+            {org?.config?.config?.features?.boards?.enabled === true && planMeetsRequirement(org?.config?.config?.cloud?.plan || 'free', 'pro') && (
+              <AuthenticatedClientElement checkMethod="authentication">
+                <div className="hidden md:flex">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={getUriWithOrg(orgslug, '/boards')}
+                          className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                          aria-label="Boards"
+                        >
+                          <ChalkboardSimple size={20} weight="fill" />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        Boards
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </AuthenticatedClientElement>
             )}
             {/* AI Copilot */}
             {org?.config?.config?.features?.ai?.enabled !== false && org?.config?.config?.features?.ai?.copilot_enabled !== false && (

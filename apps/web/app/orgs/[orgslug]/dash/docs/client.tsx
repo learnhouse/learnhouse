@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -149,9 +149,9 @@ const DocSpaceListClient = ({ org_id, orgslug }: DocSpaceListClientProps) => {
       descriptionKey="common.plans.feature_restricted.docs.description"
       fullScreen
     >
+    <FeatureDisabledView featureName="docs" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
-        <FeatureDisabledBanner featureName="docs" orgslug={orgslug} />
         <Breadcrumbs items={[
           { label: 'Documentation', href: '/dash/docs', icon: <FileText size={14} /> }
         ]} />
@@ -358,6 +358,7 @@ const DocSpaceListClient = ({ org_id, orgslug }: DocSpaceListClientProps) => {
         )}
       </div>
     </div>
+    </FeatureDisabledView>
     </PlanRestrictedFeature>
   )
 }

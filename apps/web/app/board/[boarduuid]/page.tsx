@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import React from 'react'
 import { cookies } from 'next/headers'
 import { getServerSession } from '@/lib/auth/server'
+import { redirect } from 'next/navigation'
 import BoardCanvasClient from './client'
 
 type MetadataProps = {
@@ -27,9 +28,19 @@ async function BoardEditorPage(props: any) {
   const cookieStore = await cookies()
   const orgslug = cookieStore.get('learnhouse_current_orgslug')?.value || cookieStore.get('learnhouse_orgslug')?.value || ''
 
+  // Require authentication to access board canvas
+  if (!access_token) {
+    redirect(orgslug ? `/orgs/${orgslug}/login` : '/login')
+  }
+
+  // Ensure board_uuid has the board_ prefix for the API
+  const boardUuid = params.boarduuid.startsWith('board_')
+    ? params.boarduuid
+    : `board_${params.boarduuid}`
+
   return (
     <BoardCanvasClient
-      boardUuid={params.boarduuid}
+      boardUuid={boardUuid}
       accessToken={access_token}
       orgslug={orgslug}
       username={session?.user?.username || session?.user?.email || 'Anonymous'}

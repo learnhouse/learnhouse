@@ -81,56 +81,23 @@ def save_boards_playground_session(session: BoardsPlaygroundSessionData) -> bool
 
 
 def build_boards_playground_system_prompt(context: BoardsPlaygroundContext) -> str:
-    return f"""You are an expert interactive content creator specializing in MULTIPLAYER / COLLABORATIVE experiences for educational boards.
+    return f"""You are an expert interactive content creator for educational boards.
 
 CONTEXT:
 - Board: {context.board_name}
 - Description: {context.board_description}
 
-YOU ARE CREATING A COLLABORATIVE, MULTIPLAYER INTERACTIVE ELEMENT.
-Multiple users will interact with this element simultaneously in real-time on a shared board.
-
-SHARED STATE API — window.boardState:
-The generated HTML has access to a real-time shared state API. ALL state that should be visible to other users MUST go through this API.
-
-- boardState.get(key) — get a shared value
-- boardState.set(key, value) — set a value (synced to all users instantly)
-- boardState.on(key, callback) — listen for changes: callback(newValue, key). Returns an unsubscribe function.
-- boardState.getAll() — get all shared state as a plain object
-- boardState.getMyself() — get current user as {{name, color}}
-
-HOW MULTIPLAYER WORKS:
-Each user has a pre-loaded identity (name + color) accessible via boardState.getMyself().
-There is NO automatic user list — your generated code manages participants itself.
-When the experience loads, show a "Join" button. When clicked, add the user to a shared players list:
-
-Example join flow:
-  var me = boardState.getMyself();
-  var players = boardState.get('players') || [];
-  players.push({{ name: me.name, color: me.color }});
-  boardState.set('players', players);
-
-Then listen for changes:
-  boardState.on('players', function(list) {{ /* re-render player list */ }});
-
-This way each user explicitly joins, and the player list syncs to everyone via shared state.
-
-IMPORTANT: You MUST wait for the state to be ready before using it:
-window.addEventListener('boardStateReady', function() {{
-  // Initialize your app here
-  // Show a "Join" button or auto-join the user
-}});
+You create standalone interactive HTML elements — widgets, visualizations, mini-apps, simulations, and educational tools that run entirely in the browser.
 
 DESIGN RULES:
 1. Generate a COMPLETE, self-contained HTML document
 2. ALWAYS use Tailwind CSS via CDN for styling
 3. Use LIGHT backgrounds (white, gray-50) — no dark themes
 4. Design as an embedded widget/component, NOT a full page
-5. Keep it responsive and sized to fit its container
-6. ALWAYS design for multiplayer — show each user's contributions with their name/color
-7. ALWAYS include a join mechanism — users must explicitly enter/join before participating
-8. Use clean, modern UI with proper spacing, rounded corners, shadows
-9. Include clear instructions for users on how to interact
+5. Keep it responsive and sized to fit its container (use 100% width/height on html and body)
+6. Use clean, modern UI with proper spacing, rounded corners, shadows
+7. Make it interactive and engaging — buttons, inputs, animations, visual feedback
+8. Include clear instructions or labels so users know how to interact
 
 AVAILABLE LIBRARIES (use via CDN):
 - Tailwind CSS: <script src="https://cdn.tailwindcss.com"></script>
@@ -144,16 +111,22 @@ AVAILABLE LIBRARIES (use via CDN):
 - Confetti: <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
 - KaTeX: <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 - SortableJS: <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+- Three.js: <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+- Mermaid: <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 
-EXAMPLES OF COLLABORATIVE EXPERIENCES:
-- Live polls/voting with real-time results
-- Multiplayer quizzes with leaderboards
-- Shared whiteboards/drawing canvases
-- Collaborative brainstorming boards
-- Real-time games (tic-tac-toe, trivia, word games)
-- Shared timers/counters
-- Collaborative sorting/ranking exercises
-- Live reaction boards
+EXAMPLES OF INTERACTIVE ELEMENTS:
+- Interactive quizzes and flashcards
+- Data visualizations and charts
+- Physics simulations and animations
+- Math equation explorers
+- Timelines and flowcharts
+- Drawing canvases and sketchpads
+- Interactive maps and diagrams
+- Code playgrounds and sandboxes
+- Sorting and drag-and-drop exercises
+- Mini games (memory, word search, puzzles)
+- Calculators and converters
+- Interactive stories and decision trees
 
 OUTPUT FORMAT:
 Return ONLY the HTML code, starting with <!DOCTYPE html> and ending with </html>.
@@ -178,7 +151,7 @@ async def generate_boards_playground_stream(
                 "role": "model",
                 "parts": [
                     {
-                        "text": "I understand. I'll create collaborative, multiplayer interactive HTML content that uses window.boardState for real-time shared state. I'll output only valid HTML code."
+                        "text": "I understand. I'll create interactive, self-contained HTML content for educational boards. I'll output only valid HTML code."
                     }
                 ],
             }
@@ -188,7 +161,7 @@ async def generate_boards_playground_stream(
             contents.append({"role": msg.role, "parts": [{"text": msg.content}]})
 
         if current_html and session.iteration_count > 0:
-            iteration_prompt = f"""The user wants to modify the existing collaborative element.
+            iteration_prompt = f"""The user wants to modify the existing interactive element.
 
 CURRENT HTML CODE:
 ```html

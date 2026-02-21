@@ -25,7 +25,7 @@ export default function PresenceAvatars({ provider }: PresenceAvatarsProps) {
 
       const connected: AwarenessUser[] = []
       states.forEach((state, clientId) => {
-        if (state.user && clientId !== provider.awareness?.clientID) {
+        if (state.user) {
           connected.push({
             clientId,
             name: state.user.name || 'Unknown',
@@ -47,7 +47,7 @@ export default function PresenceAvatars({ provider }: PresenceAvatarsProps) {
   if (users.length === 0) return null
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center -space-x-1.5">
       {users.slice(0, 5).map((user) => (
         <div
           key={user.clientId}

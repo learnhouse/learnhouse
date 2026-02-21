@@ -11,7 +11,7 @@ import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/Paym
 import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import { BadgeDollarSign } from 'lucide-react'
 
@@ -63,10 +63,10 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
       descriptionKey="common.plans.feature_restricted.payments.description"
       fullScreen
     >
+    <FeatureDisabledView featureName="payments" orgslug={params.orgslug} context="dashboard">
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
-          <FeatureDisabledBanner featureName="payments" orgslug={params.orgslug} />
           <Breadcrumbs items={[
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }
           ]} />
@@ -115,6 +115,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         {subpage === 'customers' && <PaymentsCustomersPage />}
       </motion.div>
     </div>
+    </FeatureDisabledView>
     </PlanRestrictedFeature>
   )
 }

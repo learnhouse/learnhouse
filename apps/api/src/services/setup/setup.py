@@ -30,6 +30,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
 from src.security.security import security_hash_password
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from config.config import get_learnhouse_config
 
 
 # Install Default roles
@@ -548,7 +549,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
             boards=BoardsOrgConfig(enabled=False, limit=10),
         ),
         cloud=OrgCloudConfig(
-            plan='free',
+            plan='oss' if get_learnhouse_config().general_config.oss_mode else 'free',
             custom_domain=False
         ),
         landing={}

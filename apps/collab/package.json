@@ -8,11 +8,12 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@hocuspocus/server": "^2.15.0",
     "@hocuspocus/extension-database": "^2.15.0",
-    "yjs": "^13.6.20",
+    "@hocuspocus/server": "^2.15.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.4.7"
+    "yjs": "^13.6.20"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.7",

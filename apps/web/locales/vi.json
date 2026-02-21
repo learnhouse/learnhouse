@@ -508,6 +508,12 @@
         "attach_youtube": "Liên kết YouTube",
         "attach_file": "Tài liệu"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3319,107 +3325,107 @@
       }
     },
     "course_analytics": {
-      "not_configured_title": "Ch\u01b0a c\u1ea5u h\u00ecnh ph\u00e2n t\u00edch",
-      "not_configured_desc": "Ph\u00e2n t\u00edch y\u00eau c\u1ea7u c\u1ea5u h\u00ecnh Tinybird. Vui l\u00f2ng li\u00ean h\u1ec7 qu\u1ea3n tr\u1ecb vi\u00ean.",
+      "not_configured_title": "Chưa cấu hình phân tích",
+      "not_configured_desc": "Phân tích yêu cầu cấu hình Tinybird. Vui lòng liên hệ quản trị viên.",
       "common": {
-        "loading": "\u0110ang t\u1ea3i...",
-        "no_data": "Ch\u01b0a c\u00f3 d\u1eef li\u1ec7u",
-        "no_enrollments": "Ch\u01b0a c\u00f3 \u0111\u0103ng k\u00fd",
-        "total": "T\u1ed5ng",
-        "daily_avg": "TB ng\u00e0y",
-        "latest_day": "Ng\u00e0y g\u1ea7n nh\u1ea5t",
-        "peak": "Cao \u0111i\u1ec3m",
-        "peak_day": "Ng\u00e0y cao \u0111i\u1ec3m",
-        "type": "Lo\u1ea1i",
-        "rate": "T\u1ef7 l\u1ec7",
-        "views": "L\u01b0\u1ee3t xem",
-        "enrollments": "\u0110\u0103ng k\u00fd",
-        "completions": "Ho\u00e0n th\u00e0nh",
-        "completion_rate": "T\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh",
-        "conversion": "Chuy\u1ec3n \u0111\u1ed5i",
-        "avg_time": "Th\u1eddi gian TB",
-        "total_views": "T\u1ed5ng l\u01b0\u1ee3t xem",
-        "total_completions": "T\u1ed5ng ho\u00e0n th\u00e0nh",
-        "avg_rate": "T\u1ef7 l\u1ec7 TB",
-        "needs_attention": "C\u1ea7n ch\u00fa \u00fd",
-        "total_samples": "T\u1ed5ng m\u1eabu",
-        "more_expand": "+{{count}} n\u1eefa \u2014 nh\u1ea5p \u0111\u1ec3 m\u1edf r\u1ed9ng",
-        "activities_count": "{{count}} ho\u1ea1t \u0111\u1ed9ng",
-        "pct_of_total": "% t\u1ed5ng",
-        "bar_width_hint": "\u0110\u1ed9 r\u1ed9ng thanh = l\u01b0\u1ee3t xem t\u01b0\u01a1ng \u0111\u1ed1i",
+        "loading": "Đang tải...",
+        "no_data": "Chưa có dữ liệu",
+        "no_enrollments": "Chưa có đăng ký",
+        "total": "Tổng",
+        "daily_avg": "TB ngày",
+        "latest_day": "Ngày gần nhất",
+        "peak": "Cao điểm",
+        "peak_day": "Ngày cao điểm",
+        "type": "Loại",
+        "rate": "Tỷ lệ",
+        "views": "Lượt xem",
+        "enrollments": "Đăng ký",
+        "completions": "Hoàn thành",
+        "completion_rate": "Tỷ lệ hoàn thành",
+        "conversion": "Chuyển đổi",
+        "avg_time": "Thời gian TB",
+        "total_views": "Tổng lượt xem",
+        "total_completions": "Tổng hoàn thành",
+        "avg_rate": "Tỷ lệ TB",
+        "needs_attention": "Cần chú ý",
+        "total_samples": "Tổng mẫu",
+        "more_expand": "+{{count}} nữa — nhấp để mở rộng",
+        "activities_count": "{{count}} hoạt động",
+        "pct_of_total": "% tổng",
+        "bar_width_hint": "Độ rộng thanh = lượt xem tương đối",
         "rate_high": ">70%",
-        "rate_mid": "40\u201370%",
+        "rate_mid": "40–70%",
         "rate_low": "<40%",
-        "low_conversion": "chuy\u1ec3n \u0111\u1ed5i th\u1ea5p",
-        "avg_completion": "ho\u00e0n th\u00e0nh TB",
+        "low_conversion": "chuyển đổi thấp",
+        "avg_completion": "hoàn thành TB",
         "avg_prefix": "TB {{value}}",
-        "unknown_activity": "Ho\u1ea1t \u0111\u1ed9ng kh\u00f4ng x\u00e1c \u0111\u1ecbnh"
+        "unknown_activity": "Hoạt động không xác định"
       },
       "units": {
         "done": "xong",
-        "views": "l\u01b0\u1ee3t xem",
-        "enrolled": "\u0111\u00e3 \u0111\u0103ng k\u00fd",
-        "learner": "h\u1ecdc vi\u00ean",
-        "learners": "h\u1ecdc vi\u00ean",
-        "events": "s\u1ef1 ki\u1ec7n",
-        "total": "t\u1ed5ng",
-        "total_views": "t\u1ed5ng l\u01b0\u1ee3t xem",
-        "total_completions": "t\u1ed5ng ho\u00e0n th\u00e0nh",
-        "total_dropoffs": "t\u1ed5ng b\u1ecf ngang",
-        "peak_active": "cao \u0111i\u1ec3m ho\u1ea1t \u0111\u1ed9ng",
-        "conversion": "chuy\u1ec3n \u0111\u1ed5i",
-        "retention": "gi\u1eef ch\u00e2n",
-        "in_cohort": "trong nh\u00f3m",
-        "active_learners": "h\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng",
-        "recent_enrollments": "\u0111\u0103ng k\u00fd g\u1ea7n \u0111\u00e2y",
-        "transitions": "chuy\u1ec3n ti\u1ebfp",
-        "median_days": "ng\u00e0y trung v\u1ecb",
-        "claim_rate": "t\u1ef7 l\u1ec7 nh\u1eadn",
-        "claimed": "\u0111\u00e3 nh\u1eadn",
-        "completed": "\u0111\u00e3 ho\u00e0n th\u00e0nh",
-        "unique": "duy nh\u1ea5t",
-        "time": "th\u1eddi gian",
-        "avg_per_day": "TB / ng\u00e0y",
-        "busiest_time": "gi\u1edd b\u1eadn nh\u1ea5t",
-        "minutes": "ph\u00fat",
-        "hours": "gi\u1edd",
-        "days": "ng\u00e0y",
-        "done_before": "xong tr\u01b0\u1edbc",
-        "sample": "m\u1eabu",
-        "samples": "m\u1eabu",
-        "min": "ph\u00fat",
-        "avg_per_learner": "TB m\u1ed7i h\u1ecdc vi\u00ean"
+        "views": "lượt xem",
+        "enrolled": "đã đăng ký",
+        "learner": "học viên",
+        "learners": "học viên",
+        "events": "sự kiện",
+        "total": "tổng",
+        "total_views": "tổng lượt xem",
+        "total_completions": "tổng hoàn thành",
+        "total_dropoffs": "tổng bỏ ngang",
+        "peak_active": "cao điểm hoạt động",
+        "conversion": "chuyển đổi",
+        "retention": "giữ chân",
+        "in_cohort": "trong nhóm",
+        "active_learners": "học viên hoạt động",
+        "recent_enrollments": "đăng ký gần đây",
+        "transitions": "chuyển tiếp",
+        "median_days": "ngày trung vị",
+        "claim_rate": "tỷ lệ nhận",
+        "claimed": "đã nhận",
+        "completed": "đã hoàn thành",
+        "unique": "duy nhất",
+        "time": "thời gian",
+        "avg_per_day": "TB / ngày",
+        "busiest_time": "giờ bận nhất",
+        "minutes": "phút",
+        "hours": "giờ",
+        "days": "ngày",
+        "done_before": "xong trước",
+        "sample": "mẫu",
+        "samples": "mẫu",
+        "min": "phút",
+        "avg_per_learner": "TB mỗi học viên"
       },
       "type_labels": {
         "video": "Video",
-        "document": "T\u00e0i li\u1ec7u",
-        "quiz": "B\u00e0i ki\u1ec3m tra",
-        "assignment": "B\u00e0i t\u1eadp",
-        "dynamic": "\u0110\u1ed9ng"
+        "document": "Tài liệu",
+        "quiz": "Bài kiểm tra",
+        "assignment": "Bài tập",
+        "dynamic": "Động"
       },
       "overview_stats": {
-        "views": "L\u01b0\u1ee3t xem",
-        "enrollments": "\u0110\u0103ng k\u00fd",
-        "completions": "Ho\u00e0n th\u00e0nh",
-        "completion_rate": "T\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh"
+        "views": "Lượt xem",
+        "enrollments": "Đăng ký",
+        "completions": "Hoàn thành",
+        "completion_rate": "Tỷ lệ hoàn thành"
       },
       "activity_type_breakdown": {
-        "title": "Ph\u00e2n lo\u1ea1i ho\u1ea1t \u0111\u1ed9ng",
-        "subtitle": "Ph\u00e2n b\u1ed1 v\u00e0 t\u1ef7 l\u1ec7 ho\u00e0n th\u00e0nh theo lo\u1ea1i n\u1ed9i dung"
+        "title": "Phân loại hoạt động",
+        "subtitle": "Phân bố và tỷ lệ hoàn thành theo loại nội dung"
       },
       "engagement_by_type": {
-        "title": "T\u01b0\u01a1ng t\u00e1c theo lo\u1ea1i n\u1ed9i dung",
-        "subtitle": "Ch\u1ec9 s\u1ed1 t\u01b0\u01a1ng t\u00e1c c\u1ee7a h\u1ecdc vi\u00ean theo t\u1eebng lo\u1ea1i ho\u1ea1t \u0111\u1ed9ng",
-        "total_events": "T\u1ed5ng s\u1ef1 ki\u1ec7n",
-        "total_learners": "T\u1ed5ng h\u1ecdc vi\u00ean"
+        "title": "Tương tác theo loại nội dung",
+        "subtitle": "Chỉ số tương tác của học viên theo từng loại hoạt động",
+        "total_events": "Tổng sự kiện",
+        "total_learners": "Tổng học viên"
       },
       "peak_hours": {
-        "title": "Gi\u1edd h\u1ecdc cao \u0111i\u1ec3m",
-        "subtitle": "Th\u1eddi \u0111i\u1ec3m h\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng nhi\u1ec1u nh\u1ea5t",
-        "peak_time": "Gi\u1edd cao \u0111i\u1ec3m",
-        "peak_events": "S\u1ef1 ki\u1ec7n cao \u0111i\u1ec3m",
-        "less": "\u00cdt h\u01a1n",
-        "more": "Nhi\u1ec1u h\u01a1n",
+        "title": "Giờ học cao điểm",
+        "subtitle": "Thời điểm học viên hoạt động nhiều nhất",
+        "peak_time": "Giờ cao điểm",
+        "peak_events": "Sự kiện cao điểm",
+        "less": "Ít hơn",
+        "more": "Nhiều hơn",
         "days": {
           "mon": "T2",
           "tue": "T3",
@@ -3429,108 +3435,108 @@
           "sat": "T7",
           "sun": "CN"
         },
-        "events_tooltip": "{{day}} {{hour}}: {{count}} s\u1ef1 ki\u1ec7n"
+        "events_tooltip": "{{day}} {{hour}}: {{count}} sự kiện"
       },
       "enrollment_trend": {
-        "title": "Xu h\u01b0\u1edbng \u0111\u0103ng k\u00fd",
-        "subtitle": "\u0110\u0103ng k\u00fd m\u1edbi h\u00e0ng ng\u00e0y theo th\u1eddi gian"
+        "title": "Xu hướng đăng ký",
+        "subtitle": "Đăng ký mới hàng ngày theo thời gian"
       },
       "active_learners": {
-        "title": "H\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng",
-        "subtitle": "H\u1ecdc vi\u00ean duy nh\u1ea5t ho\u1ea1t \u0111\u1ed9ng h\u00e0ng ng\u00e0y"
+        "title": "Học viên hoạt động",
+        "subtitle": "Học viên duy nhất hoạt động hàng ngày"
       },
       "unique_viewers": {
-        "title": "Ng\u01b0\u1eddi xem kh\u00f3a h\u1ecdc",
-        "subtitle": "Kh\u00e1ch truy c\u1eadp duy nh\u1ea5t h\u00e0ng ng\u00e0y",
-        "total_views": "T\u1ed5ng l\u01b0\u1ee3t xem",
-        "peak_viewers": "Ng\u01b0\u1eddi xem cao \u0111i\u1ec3m"
+        "title": "Người xem khóa học",
+        "subtitle": "Khách truy cập duy nhất hàng ngày",
+        "total_views": "Tổng lượt xem",
+        "peak_viewers": "Người xem cao điểm"
       },
       "view_to_enrollment": {
-        "title": "Xem \u2192 \u0110\u0103ng k\u00fd",
-        "subtitle": "Bao nhi\u00eau ng\u01b0\u1eddi xem tr\u1edf th\u00e0nh h\u1ecdc vi\u00ean"
+        "title": "Xem → Đăng ký",
+        "subtitle": "Bao nhiêu người xem trở thành học viên"
       },
       "daily_completions": {
-        "title": "Ho\u00e0n th\u00e0nh h\u00e0ng ng\u00e0y",
-        "subtitle": "Ho\u00e0n th\u00e0nh ho\u1ea1t \u0111\u1ed9ng m\u1ed7i ng\u00e0y"
+        "title": "Hoàn thành hàng ngày",
+        "subtitle": "Hoàn thành hoạt động mỗi ngày"
       },
       "activity_funnel": {
-        "title": "Ph\u1ec5u ho\u00e0n th\u00e0nh ho\u1ea1t \u0111\u1ed9ng",
-        "subtitle": "L\u01b0\u1ee3t xem so v\u1edbi ho\u00e0n th\u00e0nh t\u1eebng ho\u1ea1t \u0111\u1ed9ng"
+        "title": "Phễu hoàn thành hoạt động",
+        "subtitle": "Lượt xem so với hoàn thành từng hoạt động"
       },
       "time_per_activity": {
-        "title": "Th\u1eddi gian m\u1ed7i ho\u1ea1t \u0111\u1ed9ng",
-        "subtitle": "Th\u1eddi gian trung b\u00ecnh h\u1ecdc vi\u00ean d\u00e0nh cho m\u1ed7i ho\u1ea1t \u0111\u1ed9ng"
+        "title": "Thời gian mỗi hoạt động",
+        "subtitle": "Thời gian trung bình học viên dành cho mỗi hoạt động"
       },
       "activity_dropoff": {
-        "title": "\u0110i\u1ec3m b\u1ecf ngang",
-        "subtitle": "N\u01a1i h\u1ecdc vi\u00ean d\u1eebng ti\u1ebfn \u0111\u1ed9 \u2014 ho\u1ea1t \u0111\u1ed9ng ho\u00e0n th\u00e0nh cu\u1ed1i c\u00f9ng",
-        "total_dropoffs": "T\u1ed5ng b\u1ecf ngang",
-        "dropoff_points": "\u0110i\u1ec3m b\u1ecf ngang"
+        "title": "Điểm bỏ ngang",
+        "subtitle": "Nơi học viên dừng tiến độ — hoạt động hoàn thành cuối cùng",
+        "total_dropoffs": "Tổng bỏ ngang",
+        "dropoff_points": "Điểm bỏ ngang"
       },
       "avg_session_duration": {
-        "title": "Th\u1eddi gian h\u1ecdc h\u00e0ng ng\u00e0y",
-        "subtitle": "Th\u1eddi gian trung b\u00ecnh m\u1ed7i h\u1ecdc vi\u00ean d\u00e0nh m\u1ed7i ng\u00e0y",
-        "total_time": "T\u1ed5ng th\u1eddi gian",
-        "avg_per_day": "TB m\u1ed7i ng\u00e0y",
-        "minutes_label": "Ph\u00fat"
+        "title": "Thời gian học hàng ngày",
+        "subtitle": "Thời gian trung bình mỗi học viên dành mỗi ngày",
+        "total_time": "Tổng thời gian",
+        "avg_per_day": "TB mỗi ngày",
+        "minutes_label": "Phút"
       },
       "learner_progress": {
-        "title": "Ti\u1ebfn \u0111\u1ed9 h\u1ecdc vi\u00ean",
-        "subtitle": "S\u1ed1 ho\u1ea1t \u0111\u1ed9ng h\u1ecdc vi\u00ean \u0111\u00e3 ho\u00e0n th\u00e0nh",
-        "total_across_brackets": "{{count}} t\u1ed5ng h\u1ecdc vi\u00ean tr\u00ean t\u1ea5t c\u1ea3 m\u1ee9c ti\u1ebfn \u0111\u1ed9"
+        "title": "Tiến độ học viên",
+        "subtitle": "Số hoạt động học viên đã hoàn thành",
+        "total_across_brackets": "{{count}} tổng học viên trên tất cả mức tiến độ"
       },
       "learner_retention": {
-        "title": "Gi\u1eef ch\u00e2n h\u1ecdc vi\u00ean",
-        "subtitle": "% h\u1ecdc vi\u00ean quay l\u1ea1i sau ho\u1ea1t \u0111\u1ed9ng \u0111\u1ea7u ti\u00ean",
-        "cohort_size": "K\u00edch th\u01b0\u1edbc nh\u00f3m",
-        "current_retention": "Gi\u1eef ch\u00e2n hi\u1ec7n t\u1ea1i",
-        "days_since_first": "Ng\u00e0y k\u1ec3 t\u1eeb ho\u1ea1t \u0111\u1ed9ng \u0111\u1ea7u ti\u00ean",
-        "day_label": "Ng\u00e0y {{day}}"
+        "title": "Giữ chân học viên",
+        "subtitle": "% học viên quay lại sau hoạt động đầu tiên",
+        "cohort_size": "Kích thước nhóm",
+        "current_retention": "Giữ chân hiện tại",
+        "days_since_first": "Ngày kể từ hoạt động đầu tiên",
+        "day_label": "Ngày {{day}}"
       },
       "completion_velocity": {
-        "title": "T\u1ed1c \u0111\u1ed9 ho\u00e0n th\u00e0nh",
-        "subtitle": "Th\u1eddi gian trung b\u00ecnh gi\u1eefa c\u00e1c ho\u00e0n th\u00e0nh",
-        "not_enough_data": "Ch\u01b0a \u0111\u1ee7 d\u1eef li\u1ec7u",
-        "need_transitions": "C\u1ea7n \u00edt nh\u1ea5t 3 chuy\u1ec3n ti\u1ebfp ho\u1ea1t \u0111\u1ed9ng \u0111\u1ec3 t\u00ednh t\u1ed1c \u0111\u1ed9",
-        "not_enough_data_short": "Ch\u01b0a \u0111\u1ee7 d\u1eef li\u1ec7u",
-        "need_transitions_short": "C\u1ea7n 3+ chuy\u1ec3n ti\u1ebfp",
-        "avg_between": "TB {{unit}} gi\u1eefa c\u00e1c ho\u00e0n th\u00e0nh",
-        "transitions_tracked": "chuy\u1ec3n ti\u1ebfp \u0111\u01b0\u1ee3c theo d\u00f5i",
-        "raw_hours_avg": "TB gi\u1edd th\u00f4",
-        "description": "\u0110o t\u1ed1c \u0111\u1ed9 h\u1ecdc vi\u00ean ti\u1ebfn t\u1eeb ho\u1ea1t \u0111\u1ed9ng n\u00e0y sang ho\u1ea1t \u0111\u1ed9ng kh\u00e1c. C\u00e0ng th\u1ea5p c\u00e0ng t\u1ed1t \u2014 ngh\u0129a l\u00e0 h\u1ecdc vi\u00ean \u0111ang ti\u1ebfn nhanh h\u01a1n qua n\u1ed9i dung."
+        "title": "Tốc độ hoàn thành",
+        "subtitle": "Thời gian trung bình giữa các hoàn thành",
+        "not_enough_data": "Chưa đủ dữ liệu",
+        "need_transitions": "Cần ít nhất 3 chuyển tiếp hoạt động để tính tốc độ",
+        "not_enough_data_short": "Chưa đủ dữ liệu",
+        "need_transitions_short": "Cần 3+ chuyển tiếp",
+        "avg_between": "TB {{unit}} giữa các hoàn thành",
+        "transitions_tracked": "chuyển tiếp được theo dõi",
+        "raw_hours_avg": "TB giờ thô",
+        "description": "Đo tốc độ học viên tiến từ hoạt động này sang hoạt động khác. Càng thấp càng tốt — nghĩa là học viên đang tiến nhanh hơn qua nội dung."
       },
       "time_to_completion": {
-        "title": "Th\u1eddi gian ho\u00e0n th\u00e0nh",
-        "subtitle": "M\u1ea5t bao l\u00e2u \u0111\u1ec3 h\u1ecdc vi\u00ean ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc",
-        "median_days_to_complete": "ng\u00e0y trung v\u1ecb \u0111\u1ec3 ho\u00e0n th\u00e0nh",
+        "title": "Thời gian hoàn thành",
+        "subtitle": "Mất bao lâu để học viên hoàn thành khóa học",
+        "median_days_to_complete": "ngày trung vị để hoàn thành",
         "fast_p25": "Nhanh (P25)",
-        "top_25_finish": "Top 25% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
-        "median": "Trung v\u1ecb",
-        "half_finish": "50% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
-        "slow_p75": "Ch\u1eadm (P75)",
-        "pct_75_finish": "75% ho\u00e0n th\u00e0nh tr\u01b0\u1edbc",
-        "based_on": "D\u1ef1a tr\u00ean {{count}} l\u01b0\u1ee3t ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc",
-        "days_unit": "ng\u00e0y"
+        "top_25_finish": "Top 25% hoàn thành trước",
+        "median": "Trung vị",
+        "half_finish": "50% hoàn thành trước",
+        "slow_p75": "Chậm (P75)",
+        "pct_75_finish": "75% hoàn thành trước",
+        "based_on": "Dựa trên {{count}} lượt hoàn thành khóa học",
+        "days_unit": "ngày"
       },
       "certification_rate": {
-        "title": "T\u1ef7 l\u1ec7 ch\u1ee9ng ch\u1ec9",
-        "subtitle": "% ng\u01b0\u1eddi ho\u00e0n th\u00e0nh \u0111\u00e3 nh\u1eadn ch\u1ee9ng ch\u1ec9",
-        "of_completers_claimed": "ng\u01b0\u1eddi ho\u00e0n th\u00e0nh \u0111\u00e3 nh\u1eadn ch\u1ee9ng ch\u1ec9",
-        "certificates_claimed": "ch\u1ee9ng ch\u1ec9 \u0111\u00e3 nh\u1eadn",
-        "course_completions": "ho\u00e0n th\u00e0nh kh\u00f3a h\u1ecdc"
+        "title": "Tỷ lệ chứng chỉ",
+        "subtitle": "% người hoàn thành đã nhận chứng chỉ",
+        "of_completers_claimed": "người hoàn thành đã nhận chứng chỉ",
+        "certificates_claimed": "chứng chỉ đã nhận",
+        "course_completions": "hoàn thành khóa học"
       },
       "top_learners": {
-        "title": "H\u1ecdc vi\u00ean xu\u1ea5t s\u1eafc",
-        "subtitle": "H\u1ecdc vi\u00ean ho\u1ea1t \u0111\u1ed9ng nhi\u1ec1u nh\u1ea5t theo ho\u00e0n th\u00e0nh",
-        "user_fallback": "Ng\u01b0\u1eddi d\u00f9ng #{{id}}"
+        "title": "Học viên xuất sắc",
+        "subtitle": "Học viên hoạt động nhiều nhất theo hoàn thành",
+        "user_fallback": "Người dùng #{{id}}"
       },
       "recent_enrollments": {
-        "title": "\u0110\u0103ng k\u00fd g\u1ea7n \u0111\u00e2y",
-        "subtitle": "H\u1ecdc vi\u00ean m\u1edbi nh\u1ea5t \u0111\u0103ng k\u00fd kh\u00f3a h\u1ecdc",
-        "count_in_period": "{{count}} \u0111\u0103ng k\u00fd trong giai \u0111o\u1ea1n n\u00e0y"
+        "title": "Đăng ký gần đây",
+        "subtitle": "Học viên mới nhất đăng ký khóa học",
+        "count_in_period": "{{count}} đăng ký trong giai đoạn này"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} / {{total}}"
+        "range": "{{from}}–{{to}} / {{total}}"
       }
     }
   }

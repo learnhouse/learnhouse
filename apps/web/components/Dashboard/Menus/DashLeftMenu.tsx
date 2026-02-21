@@ -170,7 +170,7 @@ function DashLeftMenu() {
   const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
   const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
   const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
-  const showBoards = org?.config?.config?.features?.boards?.enabled === true
+  const showBoards = org?.config?.config?.features?.boards?.enabled === true && isFeatureAvailable('boards', plan)
   const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
 
   return (
@@ -510,6 +510,12 @@ function DashLeftMenu() {
                     <Link href="/dash/org/settings/sso" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <Lock size={16} weight="fill" />
                       <span className="flex items-center">{t('dashboard.organization.settings.tabs.sso')}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
+                    </Link>
+                  </HoverMenuItem>
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/org/settings/usage" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <ChartBar size={16} weight="fill" />
+                      <span>{t('dashboard.organization.settings.tabs.usage') || 'Usage'}</span>
                     </Link>
                   </HoverMenuItem>
                   <HoverMenuItem asChild>

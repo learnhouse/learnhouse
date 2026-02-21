@@ -509,6 +509,12 @@
         "attach_youtube": "Link YouTube",
         "attach_file": "Dokument"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3212,7 +3218,7 @@
         "peak_viewers": "Szczyt odwiedzających"
       },
       "view_to_enrollment": {
-        "title": "Wyświetlenie \u2192 Zapis",
+        "title": "Wyświetlenie → Zapis",
         "subtitle": "Ilu przeglądających staje się zapisanymi uczniami"
       },
       "daily_completions": {
@@ -3296,7 +3302,7 @@
         "count_in_period": "{{count}} zapisów w tym okresie"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} z {{total}}"
+        "range": "{{from}}–{{to}} z {{total}}"
       }
     }
   }

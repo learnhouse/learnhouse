@@ -508,6 +508,12 @@
         "attach_youtube": "Ссылка YouTube",
         "attach_file": "Документ"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3141,55 +3147,216 @@
       "not_configured_title": "Аналитика не настроена",
       "not_configured_desc": "Для аналитики требуется настройка Tinybird. Обратитесь к администратору.",
       "common": {
-        "loading": "Загрузка...", "no_data": "Данных пока нет", "no_enrollments": "Записей пока нет",
-        "total": "Всего", "daily_avg": "Среднее за день", "latest_day": "Последний день",
-        "peak": "Пик", "peak_day": "Пиковый день", "type": "Тип", "rate": "Доля",
-        "views": "Просмотры", "enrollments": "Записи", "completions": "Завершения",
-        "completion_rate": "Доля завершения", "conversion": "Конверсия", "avg_time": "Среднее время",
-        "total_views": "Всего просмотров", "total_completions": "Всего завершений",
-        "avg_rate": "Средняя доля", "needs_attention": "Требует внимания", "total_samples": "Всего выборок",
-        "more_expand": "+{{count}} ещё — нажмите, чтобы развернуть", "activities_count": "{{count}} активностей",
-        "pct_of_total": "% от общего", "bar_width_hint": "Ширина полосы = относительные просмотры",
-        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
-        "low_conversion": "низкая конверсия", "avg_completion": "среднее завершение",
-        "avg_prefix": "сред. {{value}}", "unknown_activity": "Неизвестная активность"
+        "loading": "Загрузка...",
+        "no_data": "Данных пока нет",
+        "no_enrollments": "Записей пока нет",
+        "total": "Всего",
+        "daily_avg": "Среднее за день",
+        "latest_day": "Последний день",
+        "peak": "Пик",
+        "peak_day": "Пиковый день",
+        "type": "Тип",
+        "rate": "Доля",
+        "views": "Просмотры",
+        "enrollments": "Записи",
+        "completions": "Завершения",
+        "completion_rate": "Доля завершения",
+        "conversion": "Конверсия",
+        "avg_time": "Среднее время",
+        "total_views": "Всего просмотров",
+        "total_completions": "Всего завершений",
+        "avg_rate": "Средняя доля",
+        "needs_attention": "Требует внимания",
+        "total_samples": "Всего выборок",
+        "more_expand": "+{{count}} ещё — нажмите, чтобы развернуть",
+        "activities_count": "{{count}} активностей",
+        "pct_of_total": "% от общего",
+        "bar_width_hint": "Ширина полосы = относительные просмотры",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "низкая конверсия",
+        "avg_completion": "среднее завершение",
+        "avg_prefix": "сред. {{value}}",
+        "unknown_activity": "Неизвестная активность"
       },
       "units": {
-        "done": "завершено", "views": "просмотры", "enrolled": "записан",
-        "learner": "учащийся", "learners": "учащиеся", "events": "события",
-        "total": "всего", "total_views": "всего просмотров", "total_completions": "всего завершений",
-        "total_dropoffs": "всего отсевов", "peak_active": "пик активных",
-        "conversion": "конверсия", "retention": "удержание", "in_cohort": "в когорте",
-        "active_learners": "активные учащиеся", "recent_enrollments": "недавние записи",
-        "transitions": "переходы", "median_days": "медиана дней",
-        "claim_rate": "доля получения", "claimed": "получено", "completed": "завершено",
-        "unique": "уникальные", "time": "время", "avg_per_day": "сред. / день",
-        "busiest_time": "самое загруженное время", "minutes": "минуты", "hours": "часы",
-        "days": "дни", "done_before": "завершено до", "sample": "выборка",
-        "samples": "выборки", "min": "мин", "avg_per_learner": "Сред. на учащегося"
+        "done": "завершено",
+        "views": "просмотры",
+        "enrolled": "записан",
+        "learner": "учащийся",
+        "learners": "учащиеся",
+        "events": "события",
+        "total": "всего",
+        "total_views": "всего просмотров",
+        "total_completions": "всего завершений",
+        "total_dropoffs": "всего отсевов",
+        "peak_active": "пик активных",
+        "conversion": "конверсия",
+        "retention": "удержание",
+        "in_cohort": "в когорте",
+        "active_learners": "активные учащиеся",
+        "recent_enrollments": "недавние записи",
+        "transitions": "переходы",
+        "median_days": "медиана дней",
+        "claim_rate": "доля получения",
+        "claimed": "получено",
+        "completed": "завершено",
+        "unique": "уникальные",
+        "time": "время",
+        "avg_per_day": "сред. / день",
+        "busiest_time": "самое загруженное время",
+        "minutes": "минуты",
+        "hours": "часы",
+        "days": "дни",
+        "done_before": "завершено до",
+        "sample": "выборка",
+        "samples": "выборки",
+        "min": "мин",
+        "avg_per_learner": "Сред. на учащегося"
       },
-      "type_labels": { "video": "Видео", "document": "Документ", "quiz": "Тест", "assignment": "Задание", "dynamic": "Динамический" },
-      "overview_stats": { "views": "Просмотры", "enrollments": "Записи", "completions": "Завершения", "completion_rate": "Доля завершения" },
-      "activity_type_breakdown": { "title": "Разбивка по типам активностей", "subtitle": "Распределение и доля завершения по типу контента" },
-      "engagement_by_type": { "title": "Вовлечённость по типу контента", "subtitle": "Метрики вовлечённости учащихся по типу активности", "total_events": "Всего событий", "total_learners": "Всего учащихся" },
-      "peak_hours": { "title": "Пиковые часы обучения", "subtitle": "Когда учащиеся наиболее активны в этом курсе", "peak_time": "Пиковое время", "peak_events": "Пик событий", "less": "Меньше", "more": "Больше", "days": { "mon": "Пн", "tue": "Вт", "wed": "Ср", "thu": "Чт", "fri": "Пт", "sat": "Сб", "sun": "Вс" }, "events_tooltip": "{{day}} {{hour}}: {{count}} событий" },
-      "enrollment_trend": { "title": "Тренд записи", "subtitle": "Ежедневные новые записи" },
-      "active_learners": { "title": "Активные учащиеся", "subtitle": "Ежедневные уникальные активные учащиеся в этом курсе" },
-      "unique_viewers": { "title": "Зрители курса", "subtitle": "Ежедневные уникальные посетители страницы курса", "total_views": "Всего просмотров", "peak_viewers": "Пик зрителей" },
-      "view_to_enrollment": { "title": "Просмотр → Запись", "subtitle": "Сколько зрителей становятся учащимися" },
-      "daily_completions": { "title": "Ежедневные завершения", "subtitle": "Завершения активностей в день" },
-      "activity_funnel": { "title": "Воронка завершения активностей", "subtitle": "Просмотры и завершения по активности" },
-      "time_per_activity": { "title": "Время на активность", "subtitle": "Среднее время учащихся на каждую активность" },
-      "activity_dropoff": { "title": "Точки отсева", "subtitle": "Где учащиеся прекращают прогресс — последняя завершённая активность", "total_dropoffs": "Всего отсевов", "dropoff_points": "Точки отсева" },
-      "avg_session_duration": { "title": "Ежедневное время на учащегося", "subtitle": "Среднее время каждого учащегося в день", "total_time": "Общее время", "avg_per_day": "Сред. в день", "minutes_label": "Минуты" },
-      "learner_progress": { "title": "Прогресс учащихся", "subtitle": "Сколько активностей завершили учащиеся", "total_across_brackets": "{{count}} учащихся во всех группах прогресса" },
-      "learner_retention": { "title": "Удержание учащихся", "subtitle": "% учащихся, вернувшихся после первой активности", "cohort_size": "Размер когорты", "current_retention": "Текущее удержание", "days_since_first": "Дней с первой активности", "day_label": "День {{day}}" },
-      "completion_velocity": { "title": "Скорость завершения", "subtitle": "Среднее время между завершениями активностей", "not_enough_data": "Недостаточно данных", "need_transitions": "Нужно минимум 3 перехода между активностями для расчёта скорости", "not_enough_data_short": "Мало данных", "need_transitions_short": "Нужно 3+ перехода", "avg_between": "сред. {{unit}} между завершениями", "transitions_tracked": "переходов отслежено", "raw_hours_avg": "среднее в часах", "description": "Измеряет, как быстро учащиеся переходят от одной активности к другой. Чем меньше — тем лучше: учащиеся быстрее проходят контент." },
-      "time_to_completion": { "title": "Время до завершения", "subtitle": "Сколько времени учащимся нужно для окончания курса", "median_days_to_complete": "медиана дней до завершения", "fast_p25": "Быстрые (P25)", "top_25_finish": "Топ 25% завершают к", "median": "Медиана", "half_finish": "Половина завершает к", "slow_p75": "Медленные (P75)", "pct_75_finish": "75% завершают к", "based_on": "На основе {{count}} завершений курса", "days_unit": "дней" },
-      "certification_rate": { "title": "Доля сертификации", "subtitle": "% завершивших, получивших сертификат", "of_completers_claimed": "завершивших получили сертификат", "certificates_claimed": "сертификатов получено", "course_completions": "завершений курса" },
-      "top_learners": { "title": "Лучшие учащиеся", "subtitle": "Самые активные учащиеся по завершениям", "user_fallback": "Пользователь #{{id}}" },
-      "recent_enrollments": { "title": "Недавние записи", "subtitle": "Последние учащиеся, записавшиеся на этот курс", "count_in_period": "{{count}} записей за этот период" },
-      "pagination": { "range": "{{from}}–{{to}} из {{total}}" }
+      "type_labels": {
+        "video": "Видео",
+        "document": "Документ",
+        "quiz": "Тест",
+        "assignment": "Задание",
+        "dynamic": "Динамический"
+      },
+      "overview_stats": {
+        "views": "Просмотры",
+        "enrollments": "Записи",
+        "completions": "Завершения",
+        "completion_rate": "Доля завершения"
+      },
+      "activity_type_breakdown": {
+        "title": "Разбивка по типам активностей",
+        "subtitle": "Распределение и доля завершения по типу контента"
+      },
+      "engagement_by_type": {
+        "title": "Вовлечённость по типу контента",
+        "subtitle": "Метрики вовлечённости учащихся по типу активности",
+        "total_events": "Всего событий",
+        "total_learners": "Всего учащихся"
+      },
+      "peak_hours": {
+        "title": "Пиковые часы обучения",
+        "subtitle": "Когда учащиеся наиболее активны в этом курсе",
+        "peak_time": "Пиковое время",
+        "peak_events": "Пик событий",
+        "less": "Меньше",
+        "more": "Больше",
+        "days": {
+          "mon": "Пн",
+          "tue": "Вт",
+          "wed": "Ср",
+          "thu": "Чт",
+          "fri": "Пт",
+          "sat": "Сб",
+          "sun": "Вс"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}} событий"
+      },
+      "enrollment_trend": {
+        "title": "Тренд записи",
+        "subtitle": "Ежедневные новые записи"
+      },
+      "active_learners": {
+        "title": "Активные учащиеся",
+        "subtitle": "Ежедневные уникальные активные учащиеся в этом курсе"
+      },
+      "unique_viewers": {
+        "title": "Зрители курса",
+        "subtitle": "Ежедневные уникальные посетители страницы курса",
+        "total_views": "Всего просмотров",
+        "peak_viewers": "Пик зрителей"
+      },
+      "view_to_enrollment": {
+        "title": "Просмотр → Запись",
+        "subtitle": "Сколько зрителей становятся учащимися"
+      },
+      "daily_completions": {
+        "title": "Ежедневные завершения",
+        "subtitle": "Завершения активностей в день"
+      },
+      "activity_funnel": {
+        "title": "Воронка завершения активностей",
+        "subtitle": "Просмотры и завершения по активности"
+      },
+      "time_per_activity": {
+        "title": "Время на активность",
+        "subtitle": "Среднее время учащихся на каждую активность"
+      },
+      "activity_dropoff": {
+        "title": "Точки отсева",
+        "subtitle": "Где учащиеся прекращают прогресс — последняя завершённая активность",
+        "total_dropoffs": "Всего отсевов",
+        "dropoff_points": "Точки отсева"
+      },
+      "avg_session_duration": {
+        "title": "Ежедневное время на учащегося",
+        "subtitle": "Среднее время каждого учащегося в день",
+        "total_time": "Общее время",
+        "avg_per_day": "Сред. в день",
+        "minutes_label": "Минуты"
+      },
+      "learner_progress": {
+        "title": "Прогресс учащихся",
+        "subtitle": "Сколько активностей завершили учащиеся",
+        "total_across_brackets": "{{count}} учащихся во всех группах прогресса"
+      },
+      "learner_retention": {
+        "title": "Удержание учащихся",
+        "subtitle": "% учащихся, вернувшихся после первой активности",
+        "cohort_size": "Размер когорты",
+        "current_retention": "Текущее удержание",
+        "days_since_first": "Дней с первой активности",
+        "day_label": "День {{day}}"
+      },
+      "completion_velocity": {
+        "title": "Скорость завершения",
+        "subtitle": "Среднее время между завершениями активностей",
+        "not_enough_data": "Недостаточно данных",
+        "need_transitions": "Нужно минимум 3 перехода между активностями для расчёта скорости",
+        "not_enough_data_short": "Мало данных",
+        "need_transitions_short": "Нужно 3+ перехода",
+        "avg_between": "сред. {{unit}} между завершениями",
+        "transitions_tracked": "переходов отслежено",
+        "raw_hours_avg": "среднее в часах",
+        "description": "Измеряет, как быстро учащиеся переходят от одной активности к другой. Чем меньше — тем лучше: учащиеся быстрее проходят контент."
+      },
+      "time_to_completion": {
+        "title": "Время до завершения",
+        "subtitle": "Сколько времени учащимся нужно для окончания курса",
+        "median_days_to_complete": "медиана дней до завершения",
+        "fast_p25": "Быстрые (P25)",
+        "top_25_finish": "Топ 25% завершают к",
+        "median": "Медиана",
+        "half_finish": "Половина завершает к",
+        "slow_p75": "Медленные (P75)",
+        "pct_75_finish": "75% завершают к",
+        "based_on": "На основе {{count}} завершений курса",
+        "days_unit": "дней"
+      },
+      "certification_rate": {
+        "title": "Доля сертификации",
+        "subtitle": "% завершивших, получивших сертификат",
+        "of_completers_claimed": "завершивших получили сертификат",
+        "certificates_claimed": "сертификатов получено",
+        "course_completions": "завершений курса"
+      },
+      "top_learners": {
+        "title": "Лучшие учащиеся",
+        "subtitle": "Самые активные учащиеся по завершениям",
+        "user_fallback": "Пользователь #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "Недавние записи",
+        "subtitle": "Последние учащиеся, записавшиеся на этот курс",
+        "count_in_period": "{{count}} записей за этот период"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} из {{total}}"
+      }
     }
   }
 }

@@ -524,6 +524,12 @@
         "attach_youtube": "YouTube 링크",
         "attach_file": "문서"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -3103,55 +3109,216 @@
       "not_configured_title": "분석 미설정",
       "not_configured_desc": "분석을 사용하려면 Tinybird 설정이 필요합니다. 관리자에게 문의하세요.",
       "common": {
-        "loading": "로딩 중...", "no_data": "아직 데이터가 없습니다", "no_enrollments": "아직 등록이 없습니다",
-        "total": "전체", "daily_avg": "일 평균", "latest_day": "최근 일",
-        "peak": "피크", "peak_day": "피크 일", "type": "유형", "rate": "비율",
-        "views": "조회수", "enrollments": "등록수", "completions": "완료수",
-        "completion_rate": "완료율", "conversion": "전환", "avg_time": "평균 시간",
-        "total_views": "총 조회수", "total_completions": "총 완료수",
-        "avg_rate": "평균 비율", "needs_attention": "주의 필요", "total_samples": "총 샘플 수",
-        "more_expand": "+{{count}}개 더 — 클릭하여 펼치기", "activities_count": "{{count}}개 활동",
-        "pct_of_total": "전체 대비 %", "bar_width_hint": "막대 너비 = 상대적 조회수",
-        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
-        "low_conversion": "낮은 전환", "avg_completion": "평균 완료",
-        "avg_prefix": "평균 {{value}}", "unknown_activity": "알 수 없는 활동"
+        "loading": "로딩 중...",
+        "no_data": "아직 데이터가 없습니다",
+        "no_enrollments": "아직 등록이 없습니다",
+        "total": "전체",
+        "daily_avg": "일 평균",
+        "latest_day": "최근 일",
+        "peak": "피크",
+        "peak_day": "피크 일",
+        "type": "유형",
+        "rate": "비율",
+        "views": "조회수",
+        "enrollments": "등록수",
+        "completions": "완료수",
+        "completion_rate": "완료율",
+        "conversion": "전환",
+        "avg_time": "평균 시간",
+        "total_views": "총 조회수",
+        "total_completions": "총 완료수",
+        "avg_rate": "평균 비율",
+        "needs_attention": "주의 필요",
+        "total_samples": "총 샘플 수",
+        "more_expand": "+{{count}}개 더 — 클릭하여 펼치기",
+        "activities_count": "{{count}}개 활동",
+        "pct_of_total": "전체 대비 %",
+        "bar_width_hint": "막대 너비 = 상대적 조회수",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "낮은 전환",
+        "avg_completion": "평균 완료",
+        "avg_prefix": "평균 {{value}}",
+        "unknown_activity": "알 수 없는 활동"
       },
       "units": {
-        "done": "완료", "views": "조회", "enrolled": "등록됨",
-        "learner": "학습자", "learners": "학습자", "events": "이벤트",
-        "total": "전체", "total_views": "총 조회수", "total_completions": "총 완료수",
-        "total_dropoffs": "총 이탈수", "peak_active": "피크 활성",
-        "conversion": "전환", "retention": "유지율", "in_cohort": "코호트 내",
-        "active_learners": "활성 학습자", "recent_enrollments": "최근 등록",
-        "transitions": "전환", "median_days": "중앙값 일수",
-        "claim_rate": "신청률", "claimed": "신청됨", "completed": "완료됨",
-        "unique": "고유", "time": "시간", "avg_per_day": "일 평균",
-        "busiest_time": "가장 바쁜 시간", "minutes": "분", "hours": "시간",
-        "days": "일", "done_before": "이전에 완료", "sample": "샘플",
-        "samples": "샘플", "min": "분", "avg_per_learner": "학습자당 평균"
+        "done": "완료",
+        "views": "조회",
+        "enrolled": "등록됨",
+        "learner": "학습자",
+        "learners": "학습자",
+        "events": "이벤트",
+        "total": "전체",
+        "total_views": "총 조회수",
+        "total_completions": "총 완료수",
+        "total_dropoffs": "총 이탈수",
+        "peak_active": "피크 활성",
+        "conversion": "전환",
+        "retention": "유지율",
+        "in_cohort": "코호트 내",
+        "active_learners": "활성 학습자",
+        "recent_enrollments": "최근 등록",
+        "transitions": "전환",
+        "median_days": "중앙값 일수",
+        "claim_rate": "신청률",
+        "claimed": "신청됨",
+        "completed": "완료됨",
+        "unique": "고유",
+        "time": "시간",
+        "avg_per_day": "일 평균",
+        "busiest_time": "가장 바쁜 시간",
+        "minutes": "분",
+        "hours": "시간",
+        "days": "일",
+        "done_before": "이전에 완료",
+        "sample": "샘플",
+        "samples": "샘플",
+        "min": "분",
+        "avg_per_learner": "학습자당 평균"
       },
-      "type_labels": { "video": "동영상", "document": "문서", "quiz": "퀴즈", "assignment": "과제", "dynamic": "다이나믹" },
-      "overview_stats": { "views": "조회수", "enrollments": "등록수", "completions": "완료수", "completion_rate": "완료율" },
-      "activity_type_breakdown": { "title": "활동 유형 분류", "subtitle": "콘텐츠 유형별 분포 및 완료율" },
-      "engagement_by_type": { "title": "콘텐츠 유형별 참여도", "subtitle": "활동 유형별 학습자 참여 지표", "total_events": "총 이벤트", "total_learners": "총 학습자" },
-      "peak_hours": { "title": "학습 피크 시간", "subtitle": "이 코스에서 학습자가 가장 활발한 시간대", "peak_time": "피크 시간", "peak_events": "피크 이벤트", "less": "적음", "more": "많음", "days": { "mon": "월", "tue": "화", "wed": "수", "thu": "목", "fri": "금", "sat": "토", "sun": "일" }, "events_tooltip": "{{day}} {{hour}}: {{count}}개 이벤트" },
-      "enrollment_trend": { "title": "등록 추세", "subtitle": "시간에 따른 일별 신규 등록" },
-      "active_learners": { "title": "활성 학습자", "subtitle": "이 코스의 일별 고유 활성 학습자 수" },
-      "unique_viewers": { "title": "코스 조회자", "subtitle": "코스 페이지의 일별 고유 방문자 수", "total_views": "총 조회수", "peak_viewers": "피크 조회자" },
-      "view_to_enrollment": { "title": "조회 → 등록", "subtitle": "조회자 중 등록 학습자가 되는 비율" },
-      "daily_completions": { "title": "일별 완료수", "subtitle": "하루당 활동 완료 수" },
-      "activity_funnel": { "title": "활동 완료 퍼널", "subtitle": "활동별 조회수 vs 완료수" },
-      "time_per_activity": { "title": "활동별 소요 시간", "subtitle": "각 활동에 학습자가 소비하는 평균 시간" },
-      "activity_dropoff": { "title": "이탈 지점", "subtitle": "학습자가 진행을 멈추는 곳 — 마지막으로 완료한 활동", "total_dropoffs": "총 이탈수", "dropoff_points": "이탈 지점" },
-      "avg_session_duration": { "title": "학습자당 일별 시간", "subtitle": "각 학습자가 하루에 소비하는 평균 시간", "total_time": "총 시간", "avg_per_day": "일 평균", "minutes_label": "분" },
-      "learner_progress": { "title": "학습자 진도", "subtitle": "학습자가 완료한 활동 수", "total_across_brackets": "모든 진도 구간에 걸쳐 총 {{count}}명의 학습자" },
-      "learner_retention": { "title": "학습자 유지율", "subtitle": "첫 활동 후 돌아오는 학습자 비율", "cohort_size": "코호트 크기", "current_retention": "현재 유지율", "days_since_first": "첫 활동 이후 일수", "day_label": "{{day}}일차" },
-      "completion_velocity": { "title": "완료 속도", "subtitle": "활동 완료 간 평균 시간", "not_enough_data": "데이터가 충분하지 않습니다", "need_transitions": "속도를 계산하려면 최소 3개의 활동 전환이 필요합니다", "not_enough_data_short": "데이터 부족", "need_transitions_short": "3개 이상의 전환 필요", "avg_between": "완료 간 평균 {{unit}}", "transitions_tracked": "추적된 전환", "raw_hours_avg": "원시 시간 평균", "description": "학습자가 다음 활동으로 얼마나 빨리 진행하는지 측정합니다. 낮을수록 좋습니다 — 학습자가 콘텐츠를 더 빠르게 진행하고 있다는 의미입니다." },
-      "time_to_completion": { "title": "완료까지 소요 시간", "subtitle": "학습자가 이 코스를 마치는 데 걸리는 시간", "median_days_to_complete": "완료까지 중앙값 일수", "fast_p25": "빠름 (P25)", "top_25_finish": "상위 25% 완료", "median": "중앙값", "half_finish": "절반 완료", "slow_p75": "느림 (P75)", "pct_75_finish": "75% 완료", "based_on": "{{count}}건의 코스 완료 기준", "days_unit": "일" },
-      "certification_rate": { "title": "인증률", "subtitle": "인증서를 신청한 수료자 비율", "of_completers_claimed": "의 수료자가 인증서를 신청", "certificates_claimed": "신청된 인증서", "course_completions": "코스 완료수" },
-      "top_learners": { "title": "상위 학습자", "subtitle": "완료수 기준 가장 활발한 학습자", "user_fallback": "사용자 #{{id}}" },
-      "recent_enrollments": { "title": "최근 등록", "subtitle": "이 코스에 최근 등록한 학습자", "count_in_period": "이 기간 동안 {{count}}건 등록" },
-      "pagination": { "range": "{{from}}–{{to}} / {{total}}" }
+      "type_labels": {
+        "video": "동영상",
+        "document": "문서",
+        "quiz": "퀴즈",
+        "assignment": "과제",
+        "dynamic": "다이나믹"
+      },
+      "overview_stats": {
+        "views": "조회수",
+        "enrollments": "등록수",
+        "completions": "완료수",
+        "completion_rate": "완료율"
+      },
+      "activity_type_breakdown": {
+        "title": "활동 유형 분류",
+        "subtitle": "콘텐츠 유형별 분포 및 완료율"
+      },
+      "engagement_by_type": {
+        "title": "콘텐츠 유형별 참여도",
+        "subtitle": "활동 유형별 학습자 참여 지표",
+        "total_events": "총 이벤트",
+        "total_learners": "총 학습자"
+      },
+      "peak_hours": {
+        "title": "학습 피크 시간",
+        "subtitle": "이 코스에서 학습자가 가장 활발한 시간대",
+        "peak_time": "피크 시간",
+        "peak_events": "피크 이벤트",
+        "less": "적음",
+        "more": "많음",
+        "days": {
+          "mon": "월",
+          "tue": "화",
+          "wed": "수",
+          "thu": "목",
+          "fri": "금",
+          "sat": "토",
+          "sun": "일"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}}개 이벤트"
+      },
+      "enrollment_trend": {
+        "title": "등록 추세",
+        "subtitle": "시간에 따른 일별 신규 등록"
+      },
+      "active_learners": {
+        "title": "활성 학습자",
+        "subtitle": "이 코스의 일별 고유 활성 학습자 수"
+      },
+      "unique_viewers": {
+        "title": "코스 조회자",
+        "subtitle": "코스 페이지의 일별 고유 방문자 수",
+        "total_views": "총 조회수",
+        "peak_viewers": "피크 조회자"
+      },
+      "view_to_enrollment": {
+        "title": "조회 → 등록",
+        "subtitle": "조회자 중 등록 학습자가 되는 비율"
+      },
+      "daily_completions": {
+        "title": "일별 완료수",
+        "subtitle": "하루당 활동 완료 수"
+      },
+      "activity_funnel": {
+        "title": "활동 완료 퍼널",
+        "subtitle": "활동별 조회수 vs 완료수"
+      },
+      "time_per_activity": {
+        "title": "활동별 소요 시간",
+        "subtitle": "각 활동에 학습자가 소비하는 평균 시간"
+      },
+      "activity_dropoff": {
+        "title": "이탈 지점",
+        "subtitle": "학습자가 진행을 멈추는 곳 — 마지막으로 완료한 활동",
+        "total_dropoffs": "총 이탈수",
+        "dropoff_points": "이탈 지점"
+      },
+      "avg_session_duration": {
+        "title": "학습자당 일별 시간",
+        "subtitle": "각 학습자가 하루에 소비하는 평균 시간",
+        "total_time": "총 시간",
+        "avg_per_day": "일 평균",
+        "minutes_label": "분"
+      },
+      "learner_progress": {
+        "title": "학습자 진도",
+        "subtitle": "학습자가 완료한 활동 수",
+        "total_across_brackets": "모든 진도 구간에 걸쳐 총 {{count}}명의 학습자"
+      },
+      "learner_retention": {
+        "title": "학습자 유지율",
+        "subtitle": "첫 활동 후 돌아오는 학습자 비율",
+        "cohort_size": "코호트 크기",
+        "current_retention": "현재 유지율",
+        "days_since_first": "첫 활동 이후 일수",
+        "day_label": "{{day}}일차"
+      },
+      "completion_velocity": {
+        "title": "완료 속도",
+        "subtitle": "활동 완료 간 평균 시간",
+        "not_enough_data": "데이터가 충분하지 않습니다",
+        "need_transitions": "속도를 계산하려면 최소 3개의 활동 전환이 필요합니다",
+        "not_enough_data_short": "데이터 부족",
+        "need_transitions_short": "3개 이상의 전환 필요",
+        "avg_between": "완료 간 평균 {{unit}}",
+        "transitions_tracked": "추적된 전환",
+        "raw_hours_avg": "원시 시간 평균",
+        "description": "학습자가 다음 활동으로 얼마나 빨리 진행하는지 측정합니다. 낮을수록 좋습니다 — 학습자가 콘텐츠를 더 빠르게 진행하고 있다는 의미입니다."
+      },
+      "time_to_completion": {
+        "title": "완료까지 소요 시간",
+        "subtitle": "학습자가 이 코스를 마치는 데 걸리는 시간",
+        "median_days_to_complete": "완료까지 중앙값 일수",
+        "fast_p25": "빠름 (P25)",
+        "top_25_finish": "상위 25% 완료",
+        "median": "중앙값",
+        "half_finish": "절반 완료",
+        "slow_p75": "느림 (P75)",
+        "pct_75_finish": "75% 완료",
+        "based_on": "{{count}}건의 코스 완료 기준",
+        "days_unit": "일"
+      },
+      "certification_rate": {
+        "title": "인증률",
+        "subtitle": "인증서를 신청한 수료자 비율",
+        "of_completers_claimed": "의 수료자가 인증서를 신청",
+        "certificates_claimed": "신청된 인증서",
+        "course_completions": "코스 완료수"
+      },
+      "top_learners": {
+        "title": "상위 학습자",
+        "subtitle": "완료수 기준 가장 활발한 학습자",
+        "user_fallback": "사용자 #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "최근 등록",
+        "subtitle": "이 코스에 최근 등록한 학습자",
+        "count_in_period": "이 기간 동안 {{count}}건 등록"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} / {{total}}"
+      }
     }
   }
 }

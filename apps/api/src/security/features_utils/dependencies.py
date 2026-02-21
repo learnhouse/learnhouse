@@ -345,11 +345,15 @@ async def require_boards_feature(
 ) -> bool:
     """
     Router-level dependency that auto-detects the parameter type and checks
-    if the boards feature is enabled.
+    if the boards feature is enabled AND the org plan is Pro or higher.
 
-    Checks in order: board_uuid, org_id
+    Checks in order: board_uuid (path), org_id (path), org_id (query)
     """
+    from src.security.features_utils.plan_check import get_org_plan
+    from src.security.features_utils.plans import plan_meets_requirement
+
     path_params = request.path_params
+    org_id = None
 
     if "board_uuid" in path_params:
         from src.db.boards import Board
@@ -358,13 +362,35 @@ async def require_boards_feature(
         board = db_session.exec(statement).first()
         if not board:
             raise HTTPException(status_code=404, detail="Board not found")
-        return _check_feature_enabled("boards", board.org_id, db_session)
+        org_id = board.org_id
 
-    if "org_id" in path_params:
+    if org_id is None and "org_id" in path_params:
         try:
             org_id = int(path_params["org_id"])
         except (ValueError, TypeError):
             raise HTTPException(status_code=400, detail="Invalid org_id format")
-        return _check_feature_enabled("boards", org_id, db_session)
+
+    if org_id is None:
+        org_id_query = request.query_params.get("org_id")
+        if org_id_query is not None:
+            try:
+                org_id = int(org_id_query)
+            except (ValueError, TypeError):
+                pass
+
+    if org_id is None:
+        return True
+
+    # Check feature flag
+    _check_feature_enabled("boards", org_id, db_session)
+
+    # Check plan (Pro+ or OSS)
+    current_plan = get_org_plan(org_id, db_session)
+    if not plan_meets_requirement(current_plan, "pro"):
+        raise HTTPException(
+            status_code=403,
+            detail="Boards requires a Pro plan or higher. "
+            f"Your organization is currently on the {current_plan.capitalize()} plan.",
+        )
 
     return True

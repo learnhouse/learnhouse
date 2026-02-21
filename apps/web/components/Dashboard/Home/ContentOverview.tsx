@@ -1,0 +1,191 @@
+'use client'
+import React from 'react'
+import Link from 'next/link'
+import useSWR from 'swr'
+import {
+  BookOpen,
+  Users,
+  ChatCircle,
+  FileText,
+  Microphone,
+  Chalkboard,
+} from '@phosphor-icons/react'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getAPIUrl } from '@services/config/config'
+import { swrFetcher } from '@services/utils/ts/requests'
+
+export default function ContentOverview() {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const token = session?.data?.tokens?.access_token
+  const orgslug = org?.slug
+  const orgId = org?.id
+  const features = org?.config?.config?.features
+
+  // Courses
+  const { data: coursesData } = useSWR(
+    token && orgslug
+      ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  // Members
+  const { data: membersData } = useSWR(
+    token && orgId
+      ? `${getAPIUrl()}orgs/${orgId}/users?page=1&limit=1`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  // Communities
+  const communitiesEnabled = features?.communities?.enabled !== false
+  const { data: communitiesData } = useSWR(
+    communitiesEnabled && token && orgId
+      ? `${getAPIUrl()}communities/org/${orgId}/page/1/limit/500`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  // Docs
+  const docsEnabled = features?.docs?.enabled === true
+  const { data: docsData } = useSWR(
+    docsEnabled && token && orgslug
+      ? `${getAPIUrl()}docs/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  // Podcasts
+  const podcastsEnabled = features?.podcasts?.enabled === true
+  const { data: podcastsData } = useSWR(
+    podcastsEnabled && token && orgslug
+      ? `${getAPIUrl()}podcasts/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  // Boards
+  const boardsEnabled = features?.boards?.enabled === true
+  const { data: boardsData } = useSWR(
+    boardsEnabled && token && orgId
+      ? `${getAPIUrl()}boards/org/${orgId}`
+      : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
+  const courses: any[] = coursesData ?? []
+  const totalMembers = membersData?.total ?? 0
+  const communities: any[] = communitiesData ?? []
+  const docs: any[] = docsData ?? []
+  const podcasts: any[] = podcastsData ?? []
+  const boards: any[] = boardsData ?? []
+
+  const publishedCourses = courses.filter((c: any) => c.published).length
+  const draftCourses = courses.length - publishedCourses
+
+  const cards = [
+    {
+      label: 'Courses',
+      value: courses.length,
+      sub: `${publishedCourses} published · ${draftCourses} draft`,
+      icon: BookOpen,
+      iconColor: 'text-blue-500',
+      iconBg: 'bg-blue-50',
+      href: '/dash/courses',
+      show: true,
+    },
+    {
+      label: 'Members',
+      value: totalMembers,
+      sub: 'Total users',
+      icon: Users,
+      iconColor: 'text-indigo-500',
+      iconBg: 'bg-indigo-50',
+      href: '/dash/users/settings/users',
+      show: true,
+    },
+    {
+      label: 'Communities',
+      value: communities.length,
+      sub: `${communities.filter((c: any) => c.public).length} public`,
+      icon: ChatCircle,
+      iconColor: 'text-violet-500',
+      iconBg: 'bg-violet-50',
+      href: '/dash/communities',
+      show: communitiesEnabled,
+    },
+    {
+      label: 'Doc Spaces',
+      value: docs.length,
+      sub: `${docs.filter((d: any) => d.published).length} published`,
+      icon: FileText,
+      iconColor: 'text-emerald-500',
+      iconBg: 'bg-emerald-50',
+      href: '/dash/docs',
+      show: docsEnabled,
+    },
+    {
+      label: 'Podcasts',
+      value: podcasts.length,
+      sub: `${podcasts.reduce((sum: number, p: any) => sum + (p.episode_count || 0), 0)} episodes`,
+      icon: Microphone,
+      iconColor: 'text-amber-500',
+      iconBg: 'bg-amber-50',
+      href: '/dash/podcasts',
+      show: podcastsEnabled,
+    },
+    {
+      label: 'Boards',
+      value: boards.length,
+      sub: `${boards.reduce((sum: number, b: any) => sum + (b.member_count || 0), 0)} participants`,
+      icon: Chalkboard,
+      iconColor: 'text-rose-500',
+      iconBg: 'bg-rose-50',
+      href: '/dash/boards',
+      show: boardsEnabled,
+    },
+  ]
+
+  const visibleCards = cards.filter((c) => c.show)
+
+  return (
+    <div
+      className={`grid gap-4 ${
+        visibleCards.length <= 4
+          ? 'grid-cols-2 sm:grid-cols-4'
+          : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+      }`}
+    >
+      {visibleCards.map((card) => (
+        <Link
+          key={card.label}
+          href={card.href}
+          className="bg-white rounded-xl nice-shadow px-5 py-4 hover:bg-gray-50 transition-colors group"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`p-1.5 rounded-lg ${card.iconBg}`}>
+              <card.icon
+                size={14}
+                weight="duotone"
+                className={card.iconColor}
+              />
+            </div>
+            <span className="text-xs font-medium text-gray-400">
+              {card.label}
+            </span>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{card.value}</div>
+          <p className="text-[11px] text-gray-300 mt-0.5">{card.sub}</p>
+        </Link>
+      ))}
+    </div>
+  )
+}

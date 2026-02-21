@@ -1,16 +1,18 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useDragResize } from './useDragResize'
-import { NodeViewWrapper } from '@tiptap/react'
-import { GripVertical, Link as LinkIcon, Code, X, ExternalLink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Link as LinkIcon, Code, X, ExternalLink } from 'lucide-react'
 import {
   SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps,
   SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiX,
   SiFigma, SiGiphy, SiYoutube,
 } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
-import NodeActions from './NodeActions'
+import BoardBlockWrapper from './BoardBlockWrapper'
+import DragHandle from './DragHandle'
+import ResizeHandle from './ResizeHandle'
+import { useDragResize } from './useDragResize'
 
 const SCRIPT_BASED_EMBEDS: Record<string, { src: string; identifier: string }> = {
   twitter: { src: 'https://platform.twitter.com/widgets.js', identifier: 'twitter-tweet' },
@@ -113,6 +115,7 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedCode, embedType }: {
 MemoizedEmbed.displayName = 'MemoizedEmbed'
 
 export default function EmbedBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
+  const { t } = useTranslation()
   const { embedUrl, embedCode, embedType, x, y, width, height } = node.attrs
 
   // Input state
@@ -137,10 +140,9 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
     x, y, width, height,
     minWidth: 280, minHeight: 180,
     updateAttributes,
+    editor,
+    getPos,
   })
-
-  // --- Stop wheel from bubbling ---
-  const stopWheel = useCallback((e: React.WheelEvent) => { e.stopPropagation() }, [])
 
   // --- URL submit ---
   const handleUrlSubmit = () => {
@@ -181,25 +183,18 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
   // --- No embed set: show picker ---
   if (!hasEmbed) {
     return (
-      <NodeViewWrapper
-        as="div"
-        onWheel={stopWheel}
-        className={`absolute group rounded-xl nice-shadow bg-white ${selected ? 'ring-2 ring-blue-400' : ''}`}
-        style={{ left: x, top: y, width, minHeight: 200 }}
+      <BoardBlockWrapper
+        selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+        x={x} y={y} width={width} stopWheel
+        style={{ minHeight: 200 }}
       >
-        <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-        <div
-          onMouseDown={handleDragStart}
-          className="flex items-center justify-center h-6 cursor-grab active:cursor-grabbing bg-gray-50/80 border-b border-gray-100 rounded-t-xl"
-        >
-          <GripVertical size={12} className="text-gray-400" />
-        </div>
+        <DragHandle onMouseDown={handleDragStart} className="bg-gray-50/80 border-b border-gray-100 rounded-t-xl" />
 
         {activeInput === 'none' ? (
           <div className="p-4 flex flex-col items-center gap-3">
             <div className="flex items-center gap-2 mb-1">
               <ExternalLink size={14} className="text-neutral-400" />
-              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Embed</span>
+              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{t('boards.embed_block.embed')}</span>
             </div>
 
             {/* Product grid */}
@@ -212,7 +207,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
                     setActiveInput('url')
                     setUrlValue('')
                   }}
-                  title={`Add ${product.name} embed`}
+                  title={t('boards.embed_block.add_embed', { name: product.name })}
                 >
                   <div
                     className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm group-hover/item:shadow-md transition-shadow"
@@ -232,21 +227,21 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-xs text-neutral-600 transition-colors"
               >
                 <LinkIcon size={12} />
-                URL
+                {t('boards.embed_block.url')}
               </button>
               <button
                 onClick={() => setActiveInput('code')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-xs text-neutral-600 transition-colors"
               >
                 <Code size={12} />
-                Code
+                {t('boards.embed_block.code')}
               </button>
             </div>
           </div>
         ) : activeInput === 'url' ? (
           <div className="p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-neutral-600">Paste embed URL</span>
+              <span className="text-xs font-medium text-neutral-600">{t('boards.embed_block.paste_url')}</span>
               <button onClick={() => setActiveInput('none')} className="text-neutral-400 hover:text-neutral-600">
                 <X size={14} />
               </button>
@@ -272,15 +267,15 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
                 disabled={!urlValue.trim()}
                 className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors disabled:opacity-40"
               >
-                Add
+                {t('boards.embed_block.apply')}
               </button>
             </div>
-            <p className="text-[10px] text-neutral-400">Paste a URL from YouTube, Figma, CodePen, Spotify, and more</p>
+            <p className="text-[10px] text-neutral-400">{t('boards.embed_block.url_help')}</p>
           </div>
         ) : (
           <div className="p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-neutral-600">Paste embed code</span>
+              <span className="text-xs font-medium text-neutral-600">{t('boards.embed_block.paste_code')}</span>
               <button onClick={() => setActiveInput('none')} className="text-neutral-400 hover:text-neutral-600">
                 <X size={14} />
               </button>
@@ -296,43 +291,39 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
               className="w-full p-2.5 bg-neutral-100 border border-neutral-200 rounded-lg h-24 text-xs font-mono outline-none focus:ring-1 focus:ring-neutral-300 text-neutral-700 placeholder:text-neutral-400 resize-none"
             />
             <div className="flex justify-between items-center">
-              <p className="text-[10px] text-neutral-400">Paste iframe or embed code</p>
+              <p className="text-[10px] text-neutral-400">{t('boards.embed_block.code_help')}</p>
               <button
                 onClick={handleCodeSubmit}
                 disabled={!codeValue.trim()}
                 className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors disabled:opacity-40"
               >
-                Add
+                {t('boards.embed_block.apply')}
               </button>
             </div>
           </div>
         )}
-      </NodeViewWrapper>
+      </BoardBlockWrapper>
     )
   }
 
   // --- Embed set: render content ---
   return (
-    <NodeViewWrapper
-      as="div"
-      onWheel={stopWheel}
-      className={`absolute group rounded-xl nice-shadow bg-white ${selected ? 'ring-2 ring-blue-400' : ''}`}
-      style={{ left: x, top: y, width, height }}
+    <BoardBlockWrapper
+      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
+      x={x} y={y} width={width} height={height} stopWheel
     >
-      <NodeActions selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos} />
-
       {/* Drag handle + header */}
-      <div
+      <DragHandle
         onMouseDown={handleDragStart}
-        className="flex items-center gap-2 h-7 cursor-grab active:cursor-grabbing bg-gray-50/90 border-b border-gray-100 rounded-t-xl px-2"
+        height="h-7"
+        className="bg-gray-50/90 border-b border-gray-100 rounded-t-xl"
       >
-        <GripVertical size={12} className="text-gray-400 shrink-0" />
         <ExternalLink size={10} className="text-neutral-400 shrink-0" />
-        <span className="text-[10px] font-medium text-neutral-500 truncate flex-1">Embed</span>
+        <span className="text-[10px] font-medium text-neutral-500 truncate flex-1">{t('boards.embed_block.embed')}</span>
         <button
           onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); handleRemove() }}
           className="text-neutral-400 hover:text-red-500 transition-colors shrink-0"
-          title="Remove embed"
+          title={t('boards.embed_block.remove_embed')}
         >
           <X size={11} />
         </button>
@@ -345,22 +336,22 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
             setActiveInput(embedType === 'code' ? 'code' : 'url')
           }}
           className="text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
-          title="Edit embed"
+          title={t('boards.embed_block.edit_embed')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" />
           </svg>
         </button>
-      </div>
+      </DragHandle>
 
       {/* Embed content */}
-      <div className="overflow-hidden rounded-b-xl" style={{ height: height - 28, overscrollBehavior: 'contain' }}>
+      <div className="overflow-hidden rounded-b-xl" style={{ height: height - 28, overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}>
         {activeInput !== 'none' ? (
           <div className="bg-white p-4 h-full flex flex-col justify-center">
             {activeInput === 'url' ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-neutral-600">Edit embed URL</span>
+                  <span className="text-xs font-medium text-neutral-600">{t('boards.embed_block.edit_embed_url')}</span>
                   <button onClick={() => setActiveInput('none')} className="text-neutral-400 hover:text-neutral-600">
                     <X size={14} />
                   </button>
@@ -386,14 +377,14 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
                     disabled={!urlValue.trim()}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors disabled:opacity-40"
                   >
-                    Apply
+                    {t('boards.embed_block.apply')}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-neutral-600">Edit embed code</span>
+                  <span className="text-xs font-medium text-neutral-600">{t('boards.embed_block.edit_embed_code')}</span>
                   <button onClick={() => setActiveInput('none')} className="text-neutral-400 hover:text-neutral-600">
                     <X size={14} />
                   </button>
@@ -412,7 +403,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
                     disabled={!codeValue.trim()}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors disabled:opacity-40"
                   >
-                    Apply
+                    {t('boards.embed_block.apply')}
                   </button>
                 </div>
               </div>
@@ -421,15 +412,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
         ) : embedContent}
       </div>
 
-      {/* Resize handle */}
-      <div
-        onMouseDown={handleResizeStart}
-        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity z-10"
-      >
-        <svg viewBox="0 0 16 16" className="w-full h-full text-gray-300">
-          <path d="M14 14L14 8M14 14L8 14" stroke="currentColor" strokeWidth="1.5" fill="none" />
-        </svg>
-      </div>
-    </NodeViewWrapper>
+      <ResizeHandle onMouseDown={handleResizeStart} selected={selected} />
+    </BoardBlockWrapper>
   )
 }

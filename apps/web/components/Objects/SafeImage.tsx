@@ -52,7 +52,6 @@ export function SafeImage({ src, alt, ...props }: SafeImageProps) {
     return null
   }
 
-  // lgtm[js/xss-through-dom] - URL is sanitized above, only safe protocols allowed
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={sanitizedSrc} alt={alt} {...props} />
 }
@@ -72,7 +71,6 @@ export function SafeVideo({ src, ...props }: SafeVideoProps) {
     return null
   }
 
-  // lgtm[js/xss-through-dom] - URL is sanitized above, only safe protocols allowed
   return <video src={sanitizedSrc} {...props} />
 }
 

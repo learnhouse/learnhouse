@@ -93,7 +93,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
         {/* Board info row */}
         <div className="flex">
           <div className="flex py-3 grow items-center">
-            <Link href={`/board/${boardUuid}`}>
+            <Link href={`/board/${boardUuid.replace('board_', '')}`}>
               <img
                 className="w-[100px] h-[57px] rounded-md drop-shadow-md object-cover"
                 src={thumbnailUrl}
@@ -118,11 +118,11 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
             </div>
             <div className="w-px self-stretch bg-neutral-200/80" />
             <Link
-              href={getUriWithOrg(params.orgslug, '/boards')}
+              href={`/board/${boardUuid.replace('board_', '')}`}
               className="px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-2"
             >
               <Eye className="w-4 h-4" />
-              <span>View Boards</span>
+              <span>View Board</span>
             </Link>
           </div>
         </div>
