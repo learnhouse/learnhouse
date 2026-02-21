@@ -4107,6 +4107,7 @@
       "add_card": "Añadir tarjeta",
       "sticky_note": "Nota adhesiva",
       "frame": "Marco",
+      "note": "Nota",
       "sticker": "Sticker",
       "youtube": "YouTube",
       "ai_playground": "Área de juego IA",
@@ -4117,7 +4118,8 @@
       "medium": "Medio",
       "thick": "Grueso",
       "undo": "Deshacer",
-      "redo": "Rehacer"
+      "redo": "Rehacer",
+      "podcast": "Podcast"
     },
     "zoom": {
       "zoom_in": "Acercar",

@@ -3725,6 +3725,7 @@
       "add_card": "Ajouter une carte",
       "sticky_note": "Note adhésive",
       "frame": "Cadre",
+      "note": "Note",
       "sticker": "Sticker",
       "youtube": "YouTube",
       "ai_playground": "Aire de jeu IA",
@@ -3735,7 +3736,8 @@
       "medium": "Moyen",
       "thick": "Épais",
       "undo": "Annuler",
-      "redo": "Rétablir"
+      "redo": "Rétablir",
+      "podcast": "Podcast"
     },
     "zoom": {
       "zoom_in": "Zoom avant",

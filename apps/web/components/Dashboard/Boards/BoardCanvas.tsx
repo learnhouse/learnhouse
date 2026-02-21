@@ -16,7 +16,6 @@ import BoardZoomControls from './BoardZoomControls'
 import EphemeralChat from './EphemeralChat'
 import BoardEffects from './BoardEffects'
 import { BoardCardExtension } from './Extensions/BoardCard'
-import { StickyNoteExtension } from './Extensions/StickyNote'
 import { DrawingStrokeExtension } from './Extensions/DrawingStroke'
 import { YouTubeBlockExtension } from './Extensions/YouTubeBlock'
 import { PlaygroundBlockExtension } from './Extensions/PlaygroundBlock'
@@ -25,7 +24,24 @@ import { EmbedBlockExtension } from './Extensions/EmbedBlock'
 import { WebpageBlockExtension } from './Extensions/WebpageBlock'
 import { StickerBlockExtension } from './Extensions/StickerBlock'
 import { FrameBoxExtension } from './Extensions/FrameBox'
+import { NoteBlockExtension } from './Extensions/NoteBlock'
+import { TodoBlockExtension } from './Extensions/TodoBlock'
+import { PodcastBlockExtension } from './Extensions/PodcastBlock'
 import RemoteCursors from './RemoteCursors'
+import {
+  Square,
+  YoutubeLogo,
+  Sparkle,
+  BookOpen,
+  Code,
+  Globe,
+  Smiley,
+  Note,
+  FrameCorners,
+  CheckSquare,
+  Headphones,
+  PencilSimple,
+} from '@phosphor-icons/react'
 import { Extension } from '@tiptap/core'
 import { BoardYjsProvider } from './BoardYjsContext'
 import { BoardSelectionProvider } from './BoardSelectionContext'
@@ -79,7 +95,7 @@ function BoardEditorInner({
   ydoc: Y.Doc
   provider: HocuspocusProvider
 }) {
-  const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'sticky' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame'>('select')
+  const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame' | 'note' | 'todo' | 'podcast'>('select')
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [drawColor, setDrawColor] = useState('#000000')
@@ -91,11 +107,35 @@ function BoardEditorInner({
   const [drawingPath, setDrawingPath] = useState('')
   const canvasRef = useRef<HTMLDivElement>(null)
   const panRafRef = useRef(0)
+  const prevToolModeRef = useRef<typeof toolMode | null>(null)
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
   // Multi-select state
   const [selectedPositions, setSelectedPositions] = useState<Set<number>>(new Set())
   const [marquee, setMarquee] = useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null)
   const marqueeRef = useRef<typeof marquee>(null)
+
+  // Placement tool indicator config
+  const placementTools: Partial<Record<typeof toolMode, { icon: React.ComponentType<any>; label: string }>> = {
+    draw: { icon: PencilSimple, label: 'Draw' },
+    card: { icon: Square, label: 'Card' },
+    youtube: { icon: YoutubeLogo, label: 'YouTube' },
+    playground: { icon: Sparkle, label: 'AI Playground' },
+    activity: { icon: BookOpen, label: 'Activity' },
+    embed: { icon: Code, label: 'Embed' },
+    webpage: { icon: Globe, label: 'Webpage' },
+    note: { icon: Note, label: 'Note' },
+    sticker: { icon: Smiley, label: 'Sticker' },
+    frame: { icon: FrameCorners, label: 'Frame' },
+    todo: { icon: CheckSquare, label: 'Todo' },
+    podcast: { icon: Headphones, label: 'Podcast' },
+  }
+  const activePlacement = placementTools[toolMode] ?? null
+
+  // Clear stale mouse position when leaving a placement tool
+  useEffect(() => {
+    if (!activePlacement) setMousePos(null)
+  }, [activePlacement])
 
   const userColor = useMemo(() => getRandomColor(), [])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -113,7 +153,7 @@ function BoardEditorInner({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        history: false, // Yjs handles undo/redo
+        undoRedo: false, // Yjs handles undo/redo
       }),
       Collaboration.configure({
         document: ydoc,
@@ -131,7 +171,6 @@ function BoardEditorInner({
         },
       }),
       BoardCardExtension,
-      StickyNoteExtension,
       DrawingStrokeExtension,
       YouTubeBlockExtension,
       PlaygroundBlockExtension,
@@ -140,6 +179,9 @@ function BoardEditorInner({
       WebpageBlockExtension,
       StickerBlockExtension,
       FrameBoxExtension,
+      NoteBlockExtension,
+      TodoBlockExtension,
+      PodcastBlockExtension,
     ],
     immediatelyRender: false,
     editorProps: {
@@ -174,10 +216,22 @@ function BoardEditorInner({
     return () => { editor.off('update', handler) }
   }, [editor])
 
-  // Keyboard handler: Delete/Backspace removes all selected nodes
+  // Keyboard handler: Delete/Backspace removes all selected nodes, Space to pan
   useEffect(() => {
     if (!editor) return
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Space to temporarily activate pan mode
+      if (e.code === 'Space') {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+        e.preventDefault()
+        if (prevToolModeRef.current === null) {
+          prevToolModeRef.current = toolMode
+          setToolMode('pan')
+        }
+        return
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace') {
         // Only handle if no text input is focused
         const tag = (e.target as HTMLElement)?.tagName
@@ -198,9 +252,19 @@ function BoardEditorInner({
         setSelectedPositions(new Set())
       }
     }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && prevToolModeRef.current !== null) {
+        setToolMode(prevToolModeRef.current)
+        prevToolModeRef.current = null
+      }
+    }
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [editor, selectedPositions])
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [editor, selectedPositions, toolMode])
 
   // Pan/Zoom handlers
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -258,18 +322,6 @@ function BoardEditorInner({
         type: 'boardCard',
         attrs: { x: Math.round(x), y: Math.round(y), width: 300, height: 200 },
         content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New card' }] }],
-      }).run()
-      setToolMode('select')
-    } else if (toolMode === 'sticky' && editor) {
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-      const x = (e.clientX - rect.left - pan.x) / zoom
-      const y = (e.clientY - rect.top - pan.y) / zoom
-      const stickyPos = editor.state.doc.content.size
-      editor.chain().insertContentAt(stickyPos, {
-        type: 'stickyNote',
-        attrs: { x: Math.round(x), y: Math.round(y), color: 'yellow' },
-        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Note' }] }],
       }).run()
       setToolMode('select')
     } else if (toolMode === 'youtube' && editor) {
@@ -348,6 +400,18 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
+    } else if (toolMode === 'note' && editor) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const x = (e.clientX - rect.left - pan.x) / zoom
+      const y = (e.clientY - rect.top - pan.y) / zoom
+      const pos = editor.state.doc.content.size
+      editor.chain().insertContentAt(pos, {
+        type: 'noteBlock',
+        attrs: { x: Math.round(x), y: Math.round(y), width: 260, height: 200 },
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New note' }] }],
+      }).run()
+      setToolMode('select')
     } else if (toolMode === 'sticker' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
@@ -361,6 +425,28 @@ function BoardEditorInner({
           y: Math.round(y),
           emoji: '😀',
         },
+      }).run()
+      setToolMode('select')
+    } else if (toolMode === 'todo' && editor) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const x = (e.clientX - rect.left - pan.x) / zoom
+      const y = (e.clientY - rect.top - pan.y) / zoom
+      const pos = editor.state.doc.content.size
+      editor.chain().insertContentAt(pos, {
+        type: 'todoBlock',
+        attrs: { x: Math.round(x), y: Math.round(y), width: 260, height: 260 },
+      }).run()
+      setToolMode('select')
+    } else if (toolMode === 'podcast' && editor) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const x = (e.clientX - rect.left - pan.x) / zoom
+      const y = (e.clientY - rect.top - pan.y) / zoom
+      const pos = editor.state.doc.content.size
+      editor.chain().insertContentAt(pos, {
+        type: 'podcastBlock',
+        attrs: { x: Math.round(x), y: Math.round(y), width: 400, height: 280 },
       }).run()
       setToolMode('select')
     } else if (toolMode === 'frame' && editor) {
@@ -384,6 +470,14 @@ function BoardEditorInner({
   }, [toolMode, pan, zoom, editor])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // Track mouse position for placement ghost preview
+    if (activePlacement) {
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (rect) {
+        setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+      }
+    }
+
     if (isPanning) {
       const newX = e.clientX - panStart.x
       const newY = e.clientY - panStart.y
@@ -411,7 +505,7 @@ function BoardEditorInner({
         setDrawingPath(pointsToSvgPath(drawPointsRef.current))
       })
     }
-  }, [isPanning, panStart, isDrawing, pan, zoom])
+  }, [isPanning, panStart, isDrawing, pan, zoom, activePlacement])
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
@@ -441,9 +535,7 @@ function BoardEditorInner({
           // Resolve actual rendered size per node type
           let nw: number, nh: number
           const typeName = node.type.name
-          if (typeName === 'stickyNote') {
-            nw = 192; nh = 120
-          } else if (typeName === 'stickerBlock') {
+          if (typeName === 'stickerBlock') {
             nw = 80; nh = 80
           } else if (typeName === 'drawingStroke') {
             const vb = (node.attrs.viewBox || '0 0 100 100').split(' ').map(Number)
@@ -537,7 +629,7 @@ function BoardEditorInner({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         style={{
-          cursor: toolMode === 'pan' || isPanning ? 'grab' : (toolMode === 'draw' || toolMode === 'card' || toolMode === 'sticky' || toolMode === 'youtube' || toolMode === 'playground' || toolMode === 'activity' || toolMode === 'embed' || toolMode === 'webpage' || toolMode === 'sticker' || toolMode === 'frame') ? 'crosshair' : 'default',
+          cursor: toolMode === 'pan' || isPanning ? 'grab' : toolMode === 'draw' || activePlacement ? 'crosshair' : 'default',
         }}
       >
         <div
@@ -569,6 +661,29 @@ function BoardEditorInner({
           </svg>
         )}
 
+        {/* Placement cursor indicator */}
+        {activePlacement && mousePos && (() => {
+          const Icon = activePlacement.icon
+          return (
+            <div
+              className="absolute pointer-events-none z-30"
+              style={{
+                left: mousePos.x + 16,
+                top: mousePos.y + 16,
+              }}
+            >
+              <div className="flex items-center gap-1.5 rounded-full bg-neutral-800 pl-1.5 pr-2.5 py-1 shadow-lg">
+                <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center">
+                  <Icon size={11} weight="bold" className="text-white" />
+                </div>
+                <span className="text-[11px] font-medium text-white/90 select-none whitespace-nowrap">
+                  {activePlacement.label}
+                </span>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Live drawing overlay */}
         {isDrawing && drawingPath && (
           <svg
@@ -590,16 +705,20 @@ function BoardEditorInner({
       </div>
 
       {/* Top bar: back + logo + title */}
-      <BoardTopBar
-        boardName={board.name}
-        orgslug={orgslug}
-      />
+      <div className="board-enter-top">
+        <BoardTopBar
+          boardName={board.name}
+          orgslug={orgslug}
+        />
+      </div>
 
       {/* Top right: avatars + clock + timer + share */}
-      <BoardTopRight
-        provider={provider}
-        ydoc={ydoc}
-      />
+      <div className="board-enter-top">
+        <BoardTopRight
+          provider={provider}
+          ydoc={ydoc}
+        />
+      </div>
 
       {/* Bottom toolbar: logo, tools, undo/redo */}
       <BoardToolbar
@@ -613,7 +732,7 @@ function BoardEditorInner({
       />
 
       {/* Bottom right stack: effects → chat → zoom */}
-      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none">
+      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed">
         {/* Ephemeral Chat */}
         <EphemeralChat ydoc={ydoc} provider={provider} />
 
@@ -632,7 +751,7 @@ function BoardEditorInner({
       {/* Feedback button — bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
-        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors"
+        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(12px)',

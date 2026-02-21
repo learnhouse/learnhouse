@@ -71,6 +71,25 @@ ${html}
 </html>`
 }
 
+// ─── Sparkle illustration SVG ────────────────────────────────────────────────
+
+function SparkleIllustration() {
+  return (
+    <svg width="64" height="48" viewBox="0 0 64 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Main sparkle */}
+      <path d="M32 6L35 18L44 22L35 26L32 38L29 26L20 22L29 18Z" fill="#e9d5ff" stroke="#c084fc" strokeWidth="1" />
+      {/* Small sparkles */}
+      <path d="M14 12L15.5 16L19 18L15.5 20L14 24L12.5 20L9 18L12.5 16Z" fill="#f3e8ff" stroke="#d8b4fe" strokeWidth="0.8" />
+      <path d="M50 10L51.2 13.5L54 15L51.2 16.5L50 20L48.8 16.5L46 15L48.8 13.5Z" fill="#f3e8ff" stroke="#d8b4fe" strokeWidth="0.8" />
+      <path d="M48 32L49 35L52 36L49 37L48 40L47 37L44 36L47 35Z" fill="#f3e8ff" stroke="#d8b4fe" strokeWidth="0.8" />
+      {/* Dots */}
+      <circle cx="10" cy="34" r="1.5" fill="#e9d5ff" />
+      <circle cx="54" cy="26" r="1" fill="#e9d5ff" />
+      <circle cx="22" cy="40" r="1" fill="#e9d5ff" />
+    </svg>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 interface ChatMessage {
@@ -195,53 +214,75 @@ export default function PlaygroundBlockComponent({
     setIsModalOpen(true)
   }
 
+  const modal = isModalOpen ? (
+    <PlaygroundModal
+      blockUuid={blockUuid}
+      isLoading={isLoading}
+      streamingContent={streamingContent}
+      localHtml={localHtml}
+      messages={messages}
+      chatInput={chatInput}
+      setChatInput={setChatInput}
+      error={error}
+      localIterCount={localIterCount}
+      onSend={handleSendMessage}
+      onSave={handleSave}
+      onClose={() => setIsModalOpen(false)}
+    />
+  ) : null
+
   // ── Render: Empty State ───────────────────────────────────────────────
   if (!htmlContent) {
     return (
       <BoardBlockWrapper
-        selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
-        x={x} y={y} width={width}
-        style={{ minHeight: 200 }}
+        selected={selected}
+        deleteNode={deleteNode}
+        editor={editor}
+        getPos={getPos}
+        x={x}
+        y={y}
+        width={width}
+        className="rounded-2xl flex flex-col"
+        style={{ minHeight: height }}
       >
+        {/* Top gradient */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-purple-50/80 to-transparent rounded-t-2xl pointer-events-none z-0" />
+
         <DragHandle onMouseDown={handleDragStart} />
 
-        <div className="flex flex-col items-center justify-center gap-4 p-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-            <Sparkles size={22} className="text-white" />
+        {/* Header */}
+        <div className="flex items-center px-4 pt-4 pb-0.5 relative z-[1]">
+          <div className="flex items-center gap-1.5 flex-1">
+            <div className="w-5 h-5 rounded-md bg-purple-100 flex items-center justify-center">
+              <Sparkles size={10} className="text-purple-500" />
+            </div>
+            <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-400">
+              {t('boards.playground_block.title')}
+            </span>
           </div>
+        </div>
+
+        {/* Centered content */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-5 py-6">
+          <SparkleIllustration />
           <div className="text-center">
-            <p className="text-sm font-semibold text-neutral-800">{t('boards.playground_block.title')}</p>
-            <p className="text-xs text-neutral-500 mt-1 max-w-[280px]">
+            <p className="text-sm font-semibold text-neutral-700">{t('boards.playground_block.title')}</p>
+            <p className="text-[11px] text-neutral-400 mt-1 max-w-[260px]">
               {t('boards.playground_block.description')}
             </p>
           </div>
+          <div className="w-12 h-px bg-neutral-200/80" />
           <button
             onClick={handleOpenModal}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-900 text-white hover:bg-neutral-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold rounded-xl bg-neutral-900 text-white hover:bg-neutral-700 transition-colors"
           >
-            <Wand2 size={13} />
+            <Wand2 size={12} />
             {t('boards.playground_block.generate')}
           </button>
         </div>
 
-        <ResizeHandle onMouseDown={handleResizeStart} size="w-4 h-4" selected={selected} />
-
-        {isModalOpen && (
-          <PlaygroundModal
-            blockUuid={blockUuid}
-            isLoading={isLoading}
-            streamingContent={streamingContent}
-            localHtml={localHtml}
-            messages={messages}
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            error={error}
-            localIterCount={localIterCount}
-            onSend={handleSendMessage}
-            onSave={handleSave}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+        <ResizeHandle onMouseDown={handleResizeStart} selected={selected} />
+        {modal}
       </BoardBlockWrapper>
     )
   }
@@ -249,30 +290,42 @@ export default function PlaygroundBlockComponent({
   // ── Render: Content State ─────────────────────────────────────────────
   return (
     <BoardBlockWrapper
-      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
-      x={x} y={y} width={width} height={height}
+      selected={selected}
+      deleteNode={deleteNode}
+      editor={editor}
+      getPos={getPos}
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      className="rounded-2xl"
     >
-      <DragHandle
-        onMouseDown={handleDragStart}
-        autoHide
-        height="h-7"
-        className="bg-gray-50/90 border-b border-gray-100 rounded-t-xl relative z-10"
-      >
-        <div className="flex items-center gap-1">
-          <Sparkles size={10} className="text-purple-500" />
-          <span className="text-[10px] font-semibold text-gray-500">{t('boards.playground_block.title')}</span>
-        </div>
-        <div className="flex-1" />
-        <button
-          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); handleOpenModal() }}
-          className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
+      {/* Floating toolbar — appears on hover */}
+      <div className="absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-sm nice-shadow pointer-events-auto cursor-grab active:cursor-grabbing"
+          onMouseDown={handleDragStart}
         >
-          <Pencil size={9} />
-          {t('boards.playground_block.edit')}
-        </button>
-      </DragHandle>
+          <Sparkles size={11} className="text-purple-500 shrink-0" />
+          <span className="text-[10px] font-medium text-neutral-500">
+            {t('boards.playground_block.title')}
+          </span>
+          <div className="w-px h-3.5 bg-neutral-200 mx-0.5" />
+          <button
+            onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); handleOpenModal() }}
+            className="text-neutral-400 hover:text-neutral-600 transition-colors shrink-0 p-0.5 rounded hover:bg-neutral-100"
+            title={t('boards.playground_block.edit')}
+          >
+            <Pencil size={11} />
+          </button>
+        </div>
+      </div>
 
-      <div className="overflow-hidden rounded-b-xl" style={{ width: '100%', height: height - 28, overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}>
+      {/* Full iframe */}
+      <div
+        className="bg-white overflow-hidden rounded-2xl relative w-full h-full"
+        style={{ overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+      >
         {srcdoc && (
           <iframe
             ref={iframeRef}
@@ -286,23 +339,7 @@ export default function PlaygroundBlockComponent({
       </div>
 
       <ResizeHandle onMouseDown={handleResizeStart} selected={selected} />
-
-      {isModalOpen && (
-        <PlaygroundModal
-          blockUuid={blockUuid}
-          isLoading={isLoading}
-          streamingContent={streamingContent}
-          localHtml={localHtml}
-          messages={messages}
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          error={error}
-          localIterCount={localIterCount}
-          onSend={handleSendMessage}
-          onSave={handleSave}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
+      {modal}
     </BoardBlockWrapper>
   )
 }

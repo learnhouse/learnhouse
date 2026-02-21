@@ -3726,6 +3726,7 @@
       "add_card": "カードを追加",
       "sticky_note": "付箋",
       "frame": "フレーム",
+      "note": "ノート",
       "sticker": "ステッカー",
       "youtube": "YouTube",
       "ai_playground": "AI Playground",
@@ -3736,7 +3737,8 @@
       "medium": "中",
       "thick": "太い",
       "undo": "元に戻す",
-      "redo": "やり直す"
+      "redo": "やり直す",
+      "podcast": "ポッドキャスト"
     },
     "zoom": {
       "zoom_in": "拡大",

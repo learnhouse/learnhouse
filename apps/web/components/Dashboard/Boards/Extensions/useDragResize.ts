@@ -112,10 +112,17 @@ export function useDragResize({
 
   /** Find the NodeViewWrapper (outermost node-view element) from the event */
   const getWrapper = (e: React.MouseEvent): HTMLElement | null => {
-    const target = e.currentTarget as HTMLElement
-    let el: HTMLElement | null = target
+    // Walk from both target and currentTarget to find the wrapper
+    let el: HTMLElement | null = e.currentTarget as HTMLElement
     while (el && !el.hasAttribute('data-node-view-wrapper')) {
       el = el.parentElement
+    }
+    if (!el) {
+      // Fallback: try from e.target (handles positioned-outside children)
+      el = e.target as HTMLElement
+      while (el && !el.hasAttribute('data-node-view-wrapper')) {
+        el = el.parentElement
+      }
     }
     return el
   }

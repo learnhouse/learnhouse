@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Trash2, ArrowUp, ArrowDown, Copy } from 'lucide-react'
 import type { Editor } from '@tiptap/core'
 import { useTranslation } from 'react-i18next'
 
@@ -43,6 +43,22 @@ export default function NodeActions({ selected, deleteNode, editor, getPos, mult
       .run()
   }
 
+  const duplicate = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (!editor || !getPos) return
+    const pos = getPos()
+    const node = editor.state.doc.nodeAt(pos)
+    if (!node) return
+    const insertPos = pos + node.nodeSize
+    const copy = node.toJSON()
+    // Offset the duplicate so it doesn't stack exactly on top
+    if (copy.attrs) {
+      copy.attrs = { ...copy.attrs, x: (copy.attrs.x ?? 0) + 30, y: (copy.attrs.y ?? 0) + 30 }
+    }
+    editor.chain().insertContentAt(insertPos, copy).run()
+  }
+
   const moveDown = (e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
@@ -71,7 +87,7 @@ export default function NodeActions({ selected, deleteNode, editor, getPos, mult
 
   return (
     <div
-      className={`absolute -top-8 right-0 z-20 flex items-center gap-1 transition-opacity ${
+      className={`absolute -top-9 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 transition-opacity ${
         selected && !multiCount ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >
@@ -92,6 +108,14 @@ export default function NodeActions({ selected, deleteNode, editor, getPos, mult
             title={t('boards.node_actions.move_forward')}
           >
             <ArrowUp size={12} />
+          </button>
+          <button
+            type="button"
+            onMouseDown={duplicate}
+            className="flex items-center justify-center w-6 h-6 rounded-full bg-neutral-700 text-white shadow-sm hover:bg-neutral-600 transition-colors"
+            title={t('boards.node_actions.duplicate')}
+          >
+            <Copy size={12} />
           </button>
         </>
       )}

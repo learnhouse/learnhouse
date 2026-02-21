@@ -12,7 +12,7 @@ export const EmbedBlockExtension = Node.create({
     return {
       embedUrl: { default: '' },
       embedCode: { default: '' },
-      embedType: { default: 'url' },
+      embedType: { default: 'url' }, // 'url' | 'code'
       x: { default: 100 },
       y: { default: 100 },
       width: { default: 520 },

@@ -3657,6 +3657,7 @@
       "add_card": "Tambah Kartu",
       "sticky_note": "Catatan Tempel",
       "frame": "Bingkai",
+      "note": "Catatan",
       "sticker": "Stiker",
       "youtube": "YouTube",
       "ai_playground": "AI Playground",
@@ -3667,7 +3668,8 @@
       "medium": "Sedang",
       "thick": "Tebal",
       "undo": "Urungkan",
-      "redo": "Ulangi"
+      "redo": "Ulangi",
+      "podcast": "Podcast"
     },
     "zoom": {
       "zoom_in": "Perbesar",
