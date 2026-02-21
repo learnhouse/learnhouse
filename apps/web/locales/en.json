@@ -840,6 +840,8 @@
       "add_card": "Add Card",
       "sticky_note": "Sticky Note",
       "frame": "Frame",
+      "note": "Note",
+      "todo": "To-do",
       "sticker": "Sticker",
       "youtube": "YouTube",
       "ai_playground": "AI Playground",
@@ -850,7 +852,8 @@
       "medium": "Medium",
       "thick": "Thick",
       "undo": "Undo",
-      "redo": "Redo"
+      "redo": "Redo",
+      "podcast": "Podcast"
     },
     "zoom": {
       "zoom_in": "Zoom in",

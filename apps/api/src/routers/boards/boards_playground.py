@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 import json
+import logging
 
 from src.db.organizations import Organization
 from src.db.boards import Board
@@ -37,8 +38,9 @@ async def event_generator(generator, session_uuid: str):
         async for chunk in generator:
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except Exception as e:
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    except Exception:
+        logging.exception("Error in boards playground event stream for session %s", session_uuid)
+        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred.'})}\n\n"
 
 
 def get_org_ai_model(org_id: int, db_session: Session) -> str:

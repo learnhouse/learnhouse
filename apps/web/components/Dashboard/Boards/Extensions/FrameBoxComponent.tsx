@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from 'react'
 import { Lock, Unlock } from 'lucide-react'
 import BoardBlockWrapper from './BoardBlockWrapper'
+import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useFrameDrag } from './useFrameDrag'
 
@@ -72,7 +73,9 @@ export default function FrameBoxComponent({ node, updateAttributes, selected, de
         border: `2px solid ${colorSet.border}`,
       }}
     >
-      {/* Top bar — drag area with title pill, color picker, lock */}
+      <DragHandle onMouseDown={handleDragStart} />
+
+      {/* Top bar — title pill, color picker, lock */}
       <div
         onMouseDown={handleDragStart}
         className="flex items-center gap-2 px-3 pt-3 pb-1 cursor-grab active:cursor-grabbing select-none"

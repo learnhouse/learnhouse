@@ -4107,6 +4107,7 @@
       "add_card": "Karte hinzufügen",
       "sticky_note": "Haftnotiz",
       "frame": "Rahmen",
+      "note": "Notiz",
       "sticker": "Sticker",
       "youtube": "YouTube",
       "ai_playground": "AI Playground",
@@ -4117,7 +4118,8 @@
       "medium": "Mittel",
       "thick": "Dick",
       "undo": "Rückgängig",
-      "redo": "Wiederholen"
+      "redo": "Wiederholen",
+      "podcast": "Podcast"
     },
     "zoom": {
       "zoom_in": "Vergrößern",

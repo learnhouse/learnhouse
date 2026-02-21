@@ -201,29 +201,40 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
       <BoardBlockWrapper
         selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
         x={x} y={y} width={width}
-        style={{ minHeight: 160 }}
+        styled={false}
+        className="rounded-2xl nice-shadow"
+        style={{ minHeight: 160, backgroundColor: '#18181b' }}
       >
-        <DragHandle onMouseDown={handleDragStart} />
-        <div className="p-5 flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-            <Play size={18} className="text-red-500 ml-0.5" />
+        <DragHandle onMouseDown={handleDragStart} dark />
+
+        {/* Header */}
+        <div className="flex items-center px-4 pt-4 pb-0.5">
+          <div className="flex items-center gap-1">
+            <Play size={11} className="text-neutral-500" />
+            <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-500">
+              YouTube
+            </span>
           </div>
+        </div>
+
+        {/* URL input */}
+        <div className="px-4 pt-3 pb-4 flex flex-col gap-2">
           <p className="text-xs font-medium text-neutral-500">{t('boards.youtube_block.paste_url')}</p>
           <div className="flex items-center gap-2 w-full">
-            <div className="flex-1 flex items-center gap-1.5 bg-neutral-100 rounded-lg px-2.5 py-1.5">
-              <LinkIcon size={12} className="text-neutral-400 shrink-0" />
+            <div className="flex-1 flex items-center gap-1.5 bg-neutral-800 rounded-lg px-2.5 py-1.5">
+              <LinkIcon size={12} className="text-neutral-500 shrink-0" />
               <input
                 type="text"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
                 placeholder={t('boards.youtube_block.url_placeholder')}
-                className="flex-1 text-xs bg-transparent outline-none text-neutral-700 placeholder:text-neutral-400"
+                className="flex-1 text-xs bg-transparent outline-none text-neutral-300 placeholder:text-neutral-600"
               />
             </div>
             <button
               onClick={handleUrlSubmit}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-700 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors"
             >
               {t('boards.youtube_block.add')}
             </button>
@@ -239,21 +250,21 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
       ref={containerRef}
       selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
       x={x} y={y} width={width} height={height}
-      bgColor="black" className="bg-black"
+      styled={false}
+      className="rounded-2xl nice-shadow"
+      style={{ backgroundColor: '#18181b' }}
     >
-      {/* Drag handle */}
-      <DragHandle
-        onMouseDown={handleDragStart}
-        autoHide
-        className="bg-neutral-900/80 rounded-t-xl"
-      />
+      <DragHandle onMouseDown={handleDragStart} dark />
 
-      {/* YouTube player */}
-      <div className="overflow-hidden rounded-b-xl" style={{ width: '100%', height: height - 24, overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}>
+      {/* YouTube player — full block */}
+      <div
+        className="overflow-hidden rounded-2xl"
+        style={{ width: '100%', height: '100%', overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+      >
         <div id={playerDivId.current} style={{ width: '100%', height: '100%' }} />
       </div>
 
-      <ResizeHandle onMouseDown={handleResizeStart} color="text-white/40" selected={selected} />
+      <ResizeHandle onMouseDown={handleResizeStart} selected={selected} dark />
     </BoardBlockWrapper>
   )
 }

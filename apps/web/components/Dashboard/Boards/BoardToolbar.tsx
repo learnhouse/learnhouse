@@ -9,16 +9,18 @@ import {
   Hand,
   PencilSimple,
   Square,
-  Note,
   YoutubeLogo,
   Sparkle,
   BookOpen,
   Code,
   Globe,
-  Sticker,
+  Smiley,
+  Note,
   FrameCorners,
   ArrowCounterClockwise,
   ArrowClockwise,
+  CheckSquare,
+  Headphones,
 } from '@phosphor-icons/react'
 import { DividerVerticalIcon } from '@radix-ui/react-icons'
 import * as Popover from '@radix-ui/react-popover'
@@ -26,7 +28,7 @@ import { cn } from '@/lib/utils'
 import type { Editor } from '@tiptap/core'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
-type ToolMode = 'select' | 'pan' | 'draw' | 'card' | 'sticky' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame'
+type ToolMode = 'select' | 'pan' | 'draw' | 'card' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame' | 'note' | 'todo' | 'podcast'
 
 interface BoardToolbarProps {
   toolMode: ToolMode
@@ -54,14 +56,16 @@ const tools = [
   { mode: 'pan' as const, icon: Hand, label: 'boards.toolbar.pan', colorClass: '' },
   { mode: 'draw' as const, icon: PencilSimple, label: 'boards.toolbar.draw', colorClass: 'editor-tool-btn-interactive' },
   { mode: 'card' as const, icon: Square, label: 'boards.toolbar.add_card', colorClass: 'editor-tool-btn-info' },
-  { mode: 'sticky' as const, icon: Note, label: 'boards.toolbar.sticky_note', colorClass: 'editor-tool-btn-warning' },
   { mode: 'frame' as const, icon: FrameCorners, label: 'boards.toolbar.frame', colorClass: 'editor-tool-btn-info' },
-  { mode: 'sticker' as const, icon: Sticker, label: 'boards.toolbar.sticker', colorClass: 'editor-tool-btn-warning' },
+  { mode: 'note' as const, icon: Note, label: 'boards.toolbar.note', colorClass: 'editor-tool-btn-warning' },
+  { mode: 'todo' as const, icon: CheckSquare, label: 'boards.toolbar.todo', colorClass: 'editor-tool-btn-info' },
+  { mode: 'sticker' as const, icon: Smiley, label: 'boards.toolbar.sticker', colorClass: 'editor-tool-btn-warning' },
   { mode: 'youtube' as const, icon: YoutubeLogo, label: 'boards.toolbar.youtube', colorClass: 'editor-tool-btn-interactive' },
   { mode: 'playground' as const, icon: Sparkle, label: 'boards.toolbar.ai_playground', colorClass: 'editor-tool-btn-tip' },
   { mode: 'activity' as const, icon: BookOpen, label: 'boards.toolbar.activity', colorClass: 'editor-tool-btn-info' },
   { mode: 'embed' as const, icon: Code, label: 'boards.toolbar.embed', colorClass: 'editor-tool-btn-interactive' },
   { mode: 'webpage' as const, icon: Globe, label: 'boards.toolbar.webpage', colorClass: 'editor-tool-btn-info' },
+  { mode: 'podcast' as const, icon: Headphones, label: 'boards.toolbar.podcast', colorClass: 'editor-tool-btn-tip' },
 ]
 
 export default function BoardToolbar({
@@ -78,7 +82,7 @@ export default function BoardToolbar({
 
   return (
     <div
-      className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-[7px] rounded-[15px] px-3 py-2.5 nice-shadow"
+      className="absolute bottom-5 left-1/2 z-20 flex items-center gap-[7px] rounded-[15px] px-3 py-2.5 nice-shadow board-enter-toolbar"
       style={{
         background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',

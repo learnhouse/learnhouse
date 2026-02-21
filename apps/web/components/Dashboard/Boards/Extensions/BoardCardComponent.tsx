@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { NodeViewContent } from '@tiptap/react'
+import { Article } from '@phosphor-icons/react'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
@@ -20,18 +21,36 @@ export default function BoardCardComponent({ node, updateAttributes, selected, d
 
   return (
     <BoardBlockWrapper
-      selected={selected} deleteNode={deleteNode} editor={editor} getPos={getPos}
-      x={x} y={y} width={width} bgColor={color} zIndex={zIndex}
+      selected={selected}
+      deleteNode={deleteNode}
+      editor={editor}
+      getPos={getPos}
+      x={x}
+      y={y}
+      width={width}
+      bgColor={color}
+      zIndex={zIndex}
+      className="rounded-2xl"
       style={{ minHeight: height }}
     >
-      <DragHandle onMouseDown={handleDragStart} autoHide />
+      <DragHandle onMouseDown={handleDragStart} />
 
-      {/* Content area */}
-      <div className="p-4">
-        <NodeViewContent className="board-card-content prose prose-sm max-w-none" />
+      {/* Header with icon + label */}
+      <div className="flex items-center px-4 pt-4 pb-0.5">
+        <div className="flex items-center gap-1">
+          <Article size={11} weight="fill" className="text-neutral-400" />
+          <span className="text-[9px] font-semibold tracking-wider uppercase select-none text-neutral-400">
+            Card
+          </span>
+        </div>
       </div>
 
-      <ResizeHandle onMouseDown={handleResizeStart} size="w-4 h-4" selected={selected} />
+      {/* Content */}
+      <div className="px-4 pt-1.5 pb-4">
+        <NodeViewContent className="board-card-content text-[14px] leading-[1.6] outline-none text-neutral-700" />
+      </div>
+
+      <ResizeHandle onMouseDown={handleResizeStart} selected={selected} />
     </BoardBlockWrapper>
   )
 }

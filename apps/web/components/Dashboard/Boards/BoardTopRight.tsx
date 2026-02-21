@@ -129,7 +129,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
     paused: false,
     pausedRemaining: 0,
   })
-  const tickRef = useRef<ReturnType<typeof setInterval>>()
+  const tickRef = useRef<ReturnType<typeof setInterval>>(null)
   const [timesUpPhase, setTimesUpPhase] = useState<'hidden' | 'dramatic' | 'bar'>('hidden')
   const prevExpiredRef = useRef(false)
 

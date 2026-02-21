@@ -3656,6 +3656,7 @@
       "add_card": "कार्ड जोड़ें",
       "sticky_note": "स्टिकी नोट",
       "frame": "फ्रेम",
+      "note": "नोट",
       "sticker": "स्टिकर",
       "youtube": "YouTube",
       "ai_playground": "AI प्लेग्राउंड",
@@ -3666,7 +3667,8 @@
       "medium": "मध्यम",
       "thick": "मोटा",
       "undo": "पूर्ववत करें",
-      "redo": "फिर से करें"
+      "redo": "फिर से करें",
+      "podcast": "पॉडकास्ट"
     },
     "zoom": {
       "zoom_in": "ज़ूम इन",

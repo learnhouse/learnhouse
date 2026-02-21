@@ -4117,6 +4117,7 @@
       "add_card": "إضافة بطاقة",
       "sticky_note": "ملاحظة لاصقة",
       "frame": "إطار",
+      "note": "ملاحظة",
       "sticker": "ملصق",
       "youtube": "YouTube",
       "ai_playground": "ملعب الذكاء الاصطناعي",
@@ -4127,7 +4128,8 @@
       "medium": "متوسط",
       "thick": "سميك",
       "undo": "تراجع",
-      "redo": "إعادة"
+      "redo": "إعادة",
+      "podcast": "بودكاست"
     },
     "zoom": {
       "zoom_in": "تكبير",
