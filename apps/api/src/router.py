@@ -26,7 +26,7 @@ from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
 from src.security.api_token_utils import require_non_api_token_user
-from src.security.features_utils.plan_check import require_plan, require_plan_for_community, require_plan_for_docs
+from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_docs, require_plan_for_usergroups
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -47,7 +47,7 @@ v1_router.include_router(
     usergroups.router,
     prefix="/usergroups",
     tags=["usergroups"],
-    dependencies=[Depends(require_plan("standard", "User Groups"))]
+    dependencies=[Depends(require_plan_for_usergroups("standard", "User Groups"))]
 )
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 v1_router.include_router(
@@ -160,13 +160,13 @@ v1_router.include_router(
     certifications.router,
     prefix="/certifications",
     tags=["certifications"],
-    dependencies=[Depends(require_plan("pro", "Certifications"))]
+    dependencies=[Depends(require_plan_for_certifications("pro", "Certifications"))]
 )
 v1_router.include_router(
     boards_router_module.router,
     prefix="/boards",
     tags=["boards"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Boards"))]
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_boards("pro", "Boards"))]
 )
 v1_router.include_router(
     boards_router_module.internal_router,
@@ -207,7 +207,7 @@ v1_router.include_router(
     boards_playground.router,
     prefix="/boards",
     tags=["boards", "boards-playground"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Boards"))]
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_boards("pro", "Boards"))]
 )
 
 v1_router.include_router(
