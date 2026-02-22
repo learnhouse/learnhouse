@@ -10,6 +10,7 @@ from src.db.boards import (
     BoardUpdate,
     BoardMember,
     BoardMemberCreate,
+    BoardMemberBatchCreate,
     BoardMemberRead,
     BoardMemberRole,
 )
@@ -167,6 +168,53 @@ async def add_board_member(
     db_session.refresh(member)
 
     return _member_to_read(member, db_session)
+
+
+async def add_board_members_batch(
+    request: Request,
+    board_uuid: str,
+    batch_object: BoardMemberBatchCreate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> List[BoardMemberRead]:
+    board = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
+
+    # Current member count
+    member_count = db_session.exec(
+        select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
+    ).one()
+
+    added: List[BoardMemberRead] = []
+
+    for member_create in batch_object.members:
+        # Stop if we'd exceed the limit
+        if member_count + len(added) >= 10:
+            break
+
+        # Skip duplicates silently
+        existing = db_session.exec(
+            select(BoardMember).where(
+                BoardMember.board_id == board.id,
+                BoardMember.user_id == member_create.user_id,
+            )
+        ).first()
+        if existing:
+            continue
+
+        member = BoardMember(
+            board_id=board.id,
+            user_id=member_create.user_id,
+            role=member_create.role,
+            creation_date=str(datetime.now()),
+        )
+        db_session.add(member)
+        db_session.flush()  # get the id without committing
+        db_session.refresh(member)
+        added.append(_member_to_read(member, db_session))
+
+    db_session.commit()
+    return added
 
 
 async def remove_board_member(

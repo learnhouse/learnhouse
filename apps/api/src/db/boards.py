@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from enum import Enum
 from sqlalchemy import Column, ForeignKey, Integer, LargeBinary
 from sqlmodel import Field, SQLModel
@@ -81,3 +81,7 @@ class BoardMemberRead(SQLModel):
     email: Optional[str] = None
     avatar_image: Optional[str] = None
     user_uuid: Optional[str] = None
+
+
+class BoardMemberBatchCreate(SQLModel):
+    members: List[BoardMemberCreate]

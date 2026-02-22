@@ -64,6 +64,18 @@ export async function addBoardMember(
   return errorHandling(result)
 }
 
+export async function addBoardMembersBatch(
+  boardUuid: string,
+  members: { user_id: number; role: string }[],
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}boards/${boardUuid}/members/batch`,
+    RequestBodyWithAuthHeader('POST', { members }, null, access_token)
+  )
+  return errorHandling(result)
+}
+
 export async function removeBoardMember(
   boardUuid: string,
   userId: number,

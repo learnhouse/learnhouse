@@ -9,6 +9,7 @@ from src.db.boards import (
     BoardRead,
     BoardUpdate,
     BoardMemberCreate,
+    BoardMemberBatchCreate,
     BoardMemberRead,
 )
 from src.db.users import PublicUser
@@ -21,6 +22,7 @@ from src.services.boards.boards import (
     update_board,
     delete_board,
     add_board_member,
+    add_board_members_batch,
     remove_board_member,
     check_board_membership,
     get_board_members,
@@ -124,6 +126,17 @@ async def api_add_board_member(
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardMemberRead:
     return await add_board_member(request, board_uuid, member_object, current_user, db_session)
+
+
+@router.post("/{board_uuid}/members/batch")
+async def api_add_board_members_batch(
+    request: Request,
+    board_uuid: str,
+    batch_object: BoardMemberBatchCreate,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> List[BoardMemberRead]:
+    return await add_board_members_batch(request, board_uuid, batch_object, current_user, db_session)
 
 
 @router.delete("/{board_uuid}/members/{user_id}")
