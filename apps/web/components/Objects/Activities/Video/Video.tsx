@@ -24,10 +24,12 @@ interface VideoActivityProps {
   course: {
     course_uuid: string
   }
+  orgUuid?: string
 }
 
-function VideoActivity({ activity, course }: VideoActivityProps) {
+function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
   const org = useOrg() as any
+  const resolvedOrgUuid = orgUuid || org?.org_uuid
   const [videoId, setVideoId] = React.useState('')
 
   React.useEffect(() => {
@@ -40,7 +42,7 @@ function VideoActivity({ activity, course }: VideoActivityProps) {
   const getVideoSrc = () => {
     if (!activity.content?.filename) return ''
     return getActivityVideoStreamUrl(
-      org?.org_uuid,
+      resolvedOrgUuid,
       course?.course_uuid,
       activity.activity_uuid,
       activity.content.filename

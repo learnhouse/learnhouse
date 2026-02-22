@@ -191,8 +191,8 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
       className="rounded-2xl"
       stopWheel
     >
-      {/* Floating toolbar — appears on hover */}
-      <div className="absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+      {/* Floating toolbar — appears on hover or when selected */}
+      <div className={`absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 transition-opacity pointer-events-none ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-sm nice-shadow pointer-events-auto cursor-grab active:cursor-grabbing"
           onMouseDown={handleDragStart}

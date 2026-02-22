@@ -52,6 +52,7 @@ interface BoardCanvasProps {
   accessToken: string
   orgslug: string
   username: string
+  orgUuid?: string
 }
 
 const COLORS = [
@@ -85,6 +86,7 @@ function BoardEditorInner({
   orgslug,
   username,
   accessToken,
+  orgUuid,
   ydoc,
   provider,
 }: {
@@ -92,6 +94,7 @@ function BoardEditorInner({
   orgslug: string
   username: string
   accessToken: string
+  orgUuid?: string
   ydoc: Y.Doc
   provider: HocuspocusProvider
 }) {
@@ -166,6 +169,7 @@ function BoardEditorInner({
             boardUuid: board.board_uuid,
             boardName: board.name || 'Board',
             orgslug,
+            orgUuid: orgUuid || '',
             username,
           }
         },
@@ -772,9 +776,11 @@ function BoardEditorInner({
 }
 
 /** Outer component — handles Yjs lifecycle, only renders editor once ready */
-export default function BoardCanvas({ board, accessToken, orgslug, username }: BoardCanvasProps) {
+export default function BoardCanvas({ board, accessToken, orgslug, username, orgUuid }: BoardCanvasProps) {
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null)
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null)
+  const [connStatus, setConnStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
+  const [authFailed, setAuthFailed] = useState(false)
 
   useEffect(() => {
     const doc = new Y.Doc()
@@ -783,10 +789,20 @@ export default function BoardCanvas({ board, accessToken, orgslug, username }: B
       name: `board:${board.board_uuid}`,
       document: doc,
       token: accessToken,
+      onStatus({ status }: { status: string }) {
+        setConnStatus(status as 'connecting' | 'connected' | 'disconnected')
+      },
+      onAuthenticationFailed({ reason }: { reason: string }) {
+        console.error('[board] Authentication failed:', reason)
+        setAuthFailed(true)
+        prov.disconnect()
+      },
     })
 
     setYdoc(doc)
     setProvider(prov)
+    setAuthFailed(false)
+    setConnStatus('connecting')
 
     return () => {
       prov.destroy()
@@ -794,16 +810,47 @@ export default function BoardCanvas({ board, accessToken, orgslug, username }: B
     }
   }, [board.board_uuid, accessToken])
 
+  if (authFailed) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-neutral-50">
+        <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-8 shadow-lg">
+          <div className="text-2xl">🔒</div>
+          <p className="text-sm font-medium text-neutral-700">Unable to connect to this board</p>
+          <p className="text-xs text-neutral-400">You may not have access, or the session has expired.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (!ydoc || !provider) return null
 
   return (
-    <BoardEditorInner
-      board={board}
-      orgslug={orgslug}
-      username={username}
-      accessToken={accessToken}
-      ydoc={ydoc}
-      provider={provider}
-    />
+    <>
+      <BoardEditorInner
+        board={board}
+        orgslug={orgslug}
+        username={username}
+        accessToken={accessToken}
+        orgUuid={orgUuid}
+        ydoc={ydoc}
+        provider={provider}
+      />
+      {/* Connection status indicator */}
+      {connStatus === 'disconnected' && (
+        <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-2 shadow-lg">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+          </span>
+          <span className="text-xs font-medium text-amber-700">Reconnecting...</span>
+        </div>
+      )}
+    </>
   )
 }

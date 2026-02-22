@@ -118,6 +118,10 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if request.headers.get("stripe-signature"):
             return True
 
+        # Internal service-to-service calls (collab server) use a shared key, not cookies
+        if request.headers.get("x-internal-key"):
+            return True
+
         return False
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
