@@ -19,9 +19,13 @@ const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/Do
 
 const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
 
-function EmbedCourseProvider({ children }: { children: React.ReactNode }) {
+function EmbedCourseProvider({ children, courseUuid }: { children: React.ReactNode; courseUuid?: string }) {
   const minimalState = {
-    courseStructure: null,
+    courseStructure: {
+      course_uuid: courseUuid || '',
+      name: '',
+      chapters: [],
+    },
     courseOrder: null,
     pendingChanges: {},
     isSaved: true,
@@ -66,8 +70,10 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
   const [courseMeta, setCourseMeta] = useState<any>(null)
   const [loadingActivity, setLoadingActivity] = useState(false)
 
-  const accessToken = editor?.storage?.boardContext?.accessToken || ''
-  const orgslug = editor?.storage?.boardContext?.orgslug || ''
+  const boardCtx = editor?.storage?.boardContext
+  const accessToken = boardCtx?.accessToken || ''
+  const orgslug = boardCtx?.orgslug || ''
+  const boardOrgUuid: string = boardCtx?.orgUuid || ''
 
   // Fetch courses for picker
   useEffect(() => {
@@ -76,7 +82,8 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
     getOrgCourses(orgslug, null, accessToken, true)
       .then((res: any) => {
         const list = Array.isArray(res) ? res : res?.data || res?.courses || []
-        setCourses(list)
+        // Filter out any entries without a valid course_uuid
+        setCourses(list.filter((c: any) => c && c.course_uuid))
       })
       .catch((err: any) => {
         console.error('ActivityBlock: failed to fetch courses', err)
@@ -87,8 +94,8 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
 
   // Fetch course metadata when a course is selected in picker
   useEffect(() => {
-    if (!selectedCourse) return
-    const uuid = selectedCourse.course_uuid?.replace('course_', '') || selectedCourse.course_uuid
+    if (!selectedCourse?.course_uuid) return
+    const uuid = selectedCourse.course_uuid.replace('course_', '')
     setLoadingMeta(true)
     getCourseMetadata(uuid, null, accessToken)
       .then((res: any) => setCourseMetadata(res))
@@ -227,10 +234,13 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
   }
 
   // --- Activity set: render content ---
-  const activityUrl = activity && courseMeta
+  const cUuid = courseMeta?.course_uuid || courseUuid || ''
+  const orgUuid = courseMeta?.org_uuid || boardOrgUuid
+  const courseObj = { course_uuid: cUuid }
+  const activityUrl = activity && cUuid
     ? getUriWithOrg(
         orgslug,
-        `/course/${(courseMeta.course_uuid || courseUuid).replace('course_', '')}/activity/${activityUuid.replace('activity_', '')}`
+        `/course/${cUuid.replace('course_', '')}/activity/${activityUuid.replace('activity_', '')}`
       )
     : ''
 
@@ -240,7 +250,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
     switch (activity.activity_type) {
       case 'TYPE_DYNAMIC':
         return (
-          <EmbedCourseProvider>
+          <EmbedCourseProvider courseUuid={cUuid}>
             <Suspense fallback={<LoadingFallback />}>
               <Canva content={activity.content} activity={activity} />
             </Suspense>
@@ -249,13 +259,18 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
       case 'TYPE_VIDEO':
         return (
           <Suspense fallback={<LoadingFallback />}>
-            <VideoActivity activity={activity} course={courseMeta} />
+            <VideoActivity course={courseObj} activity={activity} orgUuid={orgUuid} />
           </Suspense>
         )
       case 'TYPE_DOCUMENT':
         return (
           <Suspense fallback={<LoadingFallback />}>
-            <DocumentPdfActivity activity={activity} course={courseMeta} />
+            <DocumentPdfActivity
+              course={courseObj}
+              activity={activity}
+              orgUuid={orgUuid}
+              className="w-full h-full"
+            />
           </Suspense>
         )
       default:

@@ -19,6 +19,12 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
     (url) => swrFetcher(url, accessToken)
   )
 
+  // Fetch org info to get org_uuid for media URLs in board blocks
+  const { data: orgData } = useSWR(
+    orgslug ? `${getAPIUrl()}orgs/slug/${orgslug}` : null,
+    (url) => swrFetcher(url, accessToken)
+  )
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f8f8f8]">
@@ -41,6 +47,7 @@ export default function BoardCanvasClient({ boardUuid, accessToken, orgslug, use
       accessToken={accessToken}
       orgslug={orgslug}
       username={username}
+      orgUuid={orgData?.org_uuid || ''}
     />
   )
 }

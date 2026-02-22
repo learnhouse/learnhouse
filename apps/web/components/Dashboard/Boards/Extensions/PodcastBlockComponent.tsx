@@ -6,7 +6,6 @@ import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { getOrgPodcasts, getPodcastMeta } from '@services/podcasts/podcasts'
 import type { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
@@ -14,11 +13,10 @@ import { getPodcastThumbnailMediaDirectory, getPodcastAudioStreamUrl } from '@se
 
 export default function PodcastBlockComponent({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) {
   const { podcastUuid, episodeUuid, x, y, width, height } = node.attrs
-  const org = useOrg()
   const boardCtx = editor?.storage?.boardContext
   const orgslug: string = boardCtx?.orgslug || ''
   const accessToken: string = boardCtx?.accessToken || ''
-  const orgUUID = org?.org_uuid || ''
+  const orgUUID: string = boardCtx?.orgUuid || ''
 
   // Picker state
   const [podcasts, setPodcasts] = useState<Podcast[]>([])

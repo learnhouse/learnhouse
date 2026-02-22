@@ -203,19 +203,35 @@ async def check_board_membership(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> BoardMemberRead:
-    board = _get_board_or_404(board_uuid, db_session)
-
-    member = db_session.exec(
-        select(BoardMember).where(
-            BoardMember.board_id == board.id,
-            BoardMember.user_id == current_user.id,
-        )
+    # Single joined query: Board + BoardMember + User in one round-trip
+    result = db_session.exec(
+        select(BoardMember, User)
+        .join(Board, BoardMember.board_id == Board.id)
+        .join(User, BoardMember.user_id == User.id)
+        .where(Board.board_uuid == board_uuid, BoardMember.user_id == current_user.id)
     ).first()
 
-    if not member:
+    if not result:
+        # Check if board exists to give the right error
+        board_exists = db_session.exec(
+            select(Board.id).where(Board.board_uuid == board_uuid)
+        ).first()
+        if not board_exists:
+            raise HTTPException(status_code=404, detail="Board not found")
         raise HTTPException(status_code=403, detail="Not a member of this board")
 
-    return _member_to_read(member, db_session)
+    member, user = result
+    return BoardMemberRead(
+        id=member.id,
+        board_id=member.board_id,
+        user_id=member.user_id,
+        role=member.role,
+        creation_date=member.creation_date,
+        username=user.username if user else None,
+        email=user.email if user else None,
+        avatar_image=user.avatar_image if user else None,
+        user_uuid=user.user_uuid if user else None,
+    )
 
 
 async def get_board_members(
@@ -278,7 +294,11 @@ async def store_ydoc_state(
     state: bytes,
     db_session: Session,
 ):
-    board = _get_board_or_404(board_uuid, db_session)
+    # Use SELECT ... FOR UPDATE to prevent concurrent writes from overwriting each other
+    statement = select(Board).where(Board.board_uuid == board_uuid).with_for_update()
+    board = db_session.exec(statement).first()
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
     board.ydoc_state = state
     board.update_date = str(datetime.now())
     db_session.add(board)

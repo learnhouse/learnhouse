@@ -10,10 +10,39 @@ const SECRET_KEY = process.env.LEARNHOUSE_AUTH_JWT_SECRET_KEY || ''
 const INTERNAL_KEY = process.env.COLLAB_INTERNAL_KEY || ''
 const REDIS_URL = process.env.LEARNHOUSE_REDIS_URL || 'redis://localhost:6379'
 
+// Timeout for all outbound HTTP requests (ms)
+const FETCH_TIMEOUT_MS = 10_000
+
 // Debounce interval before flushing ydoc state to the database (ms)
 const DB_FLUSH_DELAY = 5000
 // Redis TTL for cached ydoc state (seconds) — 1 hour
 const REDIS_YDOC_TTL = 3600
+
+// ── Startup validation ──────────────────────────────────────────────────────
+
+if (!SECRET_KEY) {
+  console.error('[collab] FATAL: LEARNHOUSE_AUTH_JWT_SECRET_KEY is not set')
+  process.exit(1)
+}
+
+if (!INTERNAL_KEY) {
+  console.error('[collab] FATAL: COLLAB_INTERNAL_KEY is not set')
+  process.exit(1)
+}
+
+// ── Fetch with timeout helper ─────────────────────────────────────────────
+
+function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+    clearTimeout(timer),
+  )
+}
 
 // ── Rate limiting ───────────────────────────────────────────────────────────
 // Tracks connection attempts per IP to prevent brute-force/DoS
@@ -33,7 +62,7 @@ function isRateLimited(ip: string): boolean {
 }
 
 // Clean up stale entries every 5 minutes
-setInterval(() => {
+const rateLimitCleanupInterval = setInterval(() => {
   const now = Date.now()
   for (const [ip, entry] of connectionAttempts) {
     if (now >= entry.resetAt) connectionAttempts.delete(ip)
@@ -56,6 +85,9 @@ function getRedis(): Redis {
       maxRetriesPerRequest: 3,
       lazyConnect: true,
     })
+    redis.on('error', (err) => {
+      console.error('[collab] Redis error:', err.message)
+    })
     redis.connect().catch((err) => {
       console.error('[collab] Redis connection failed:', err)
     })
@@ -69,34 +101,46 @@ function redisYdocKey(boardUuid: string): string {
 
 // ── Debounced DB persistence ────────────────────────────────────────────────
 
-const pendingFlushes = new Map<string, NodeJS.Timeout>()
+// Store both the timer and latest state so shutdown can flush without Redis
+const pendingFlushes = new Map<
+  string,
+  { timer: NodeJS.Timeout; state: Uint8Array }
+>()
 
 function scheduleDbFlush(boardUuid: string, state: Uint8Array) {
   // Cancel any existing pending flush for this board
   const existing = pendingFlushes.get(boardUuid)
-  if (existing) clearTimeout(existing)
+  if (existing) clearTimeout(existing.timer)
+
+  // Copy the state so it survives even if the original buffer is reused
+  const stateCopy = new Uint8Array(state)
 
   const timer = setTimeout(async () => {
     pendingFlushes.delete(boardUuid)
     try {
       const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: 'PUT',
         headers: {
           'X-Internal-Key': INTERNAL_KEY,
           'Content-Type': 'application/octet-stream',
         },
-        body: state.buffer.slice(state.byteOffset, state.byteOffset + state.byteLength) as ArrayBuffer,
+        body: stateCopy.buffer.slice(
+          stateCopy.byteOffset,
+          stateCopy.byteOffset + stateCopy.byteLength,
+        ) as ArrayBuffer,
       })
       if (!response.ok) {
-        console.error(`[collab] DB flush failed for ${boardUuid}: ${response.status}`)
+        console.error(
+          `[collab] DB flush failed for ${boardUuid}: ${response.status}`,
+        )
       }
     } catch (err) {
       console.error(`[collab] DB flush error for ${boardUuid}:`, err)
     }
   }, DB_FLUSH_DELAY)
 
-  pendingFlushes.set(boardUuid, timer)
+  pendingFlushes.set(boardUuid, { timer, state: stateCopy })
 }
 
 // ── Server ──────────────────────────────────────────────────────────────────
@@ -108,11 +152,15 @@ const server = Server.configure({
   port: PORT,
 
   async onRequest({ request, response }) {
-    // Health check endpoint for Docker/load balancer probes
-    if (request.url === '/health') {
+    // Health check endpoint — handles both "/" (k8s probe) and "/health"
+    if (request.url === '/' || request.url === '/health') {
       response.writeHead(200, { 'Content-Type': 'application/json' })
       response.end(JSON.stringify({ status: 'ok' }))
-      return
+      // Throw falsy value to stop the hook chain without crashing.
+      // Hocuspocus re-throws truthy errors from onRequest which would
+      // crash the process; falsy values are silently swallowed.
+      // eslint-disable-next-line no-throw-literal
+      throw null
     }
 
     // Rate limiting by IP
@@ -121,7 +169,10 @@ const server = Server.configure({
       request.socket.remoteAddress ||
       'unknown'
     if (isRateLimited(ip)) {
-      throw new Error('Too many connection attempts')
+      response.writeHead(429, { 'Content-Type': 'application/json' })
+      response.end(JSON.stringify({ error: 'Too many connection attempts' }))
+      // eslint-disable-next-line no-throw-literal
+      throw null
     }
   },
 
@@ -143,15 +194,24 @@ const server = Server.configure({
       throw new Error('Invalid document name')
     }
 
-    // Verify board membership via backend API
-    const response = await fetch(
-      `${API_URL}/api/v1/boards/${boardUuid}/membership`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    // Verify board membership via backend API (with timeout)
+    let response: Response
+    try {
+      response = await fetchWithTimeout(
+        `${API_URL}/api/v1/boards/${boardUuid}/membership`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      }
-    )
+      )
+    } catch (err) {
+      console.error(
+        `[collab] Membership check failed for ${boardUuid}:`,
+        err,
+      )
+      throw new Error('Authentication service unavailable')
+    }
 
     if (!response.ok) {
       throw new Error('Not authorized for this board')
@@ -190,25 +250,32 @@ const server = Server.configure({
           const r = getRedis()
           const cached = await r.getBuffer(redisYdocKey(boardUuid))
           if (cached && cached.byteLength > 0) {
-            console.log(`[collab] Redis hit for ${boardUuid}: ${cached.byteLength} bytes`)
+            console.log(
+              `[collab] Redis hit for ${boardUuid}: ${cached.byteLength} bytes`,
+            )
             return new Uint8Array(cached)
           }
         } catch (err) {
-          console.error(`[collab] Redis fetch error for ${boardUuid}:`, err)
+          console.error(
+            `[collab] Redis fetch error for ${boardUuid}:`,
+            err,
+          )
         }
 
-        // 2. Fall back to database
+        // 2. Fall back to database (with timeout)
         try {
           const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
           console.log(`[collab] Fetching ydoc from DB for ${boardUuid}`)
-          const response = await fetch(url, {
+          const response = await fetchWithTimeout(url, {
             headers: {
               'X-Internal-Key': INTERNAL_KEY,
             },
           })
 
           if (!response.ok) {
-            console.error(`[collab] Failed to fetch ydoc for ${boardUuid}: ${response.status} ${response.statusText}`)
+            console.error(
+              `[collab] Failed to fetch ydoc for ${boardUuid}: ${response.status} ${response.statusText}`,
+            )
             return null
           }
 
@@ -216,19 +283,31 @@ const server = Server.configure({
           if (buffer.byteLength === 0) return null
 
           const state = new Uint8Array(buffer)
-          console.log(`[collab] Fetched ydoc from DB for ${boardUuid}: ${buffer.byteLength} bytes`)
+          console.log(
+            `[collab] Fetched ydoc from DB for ${boardUuid}: ${buffer.byteLength} bytes`,
+          )
 
           // Warm the Redis cache
           try {
             const r = getRedis()
-            await r.setex(redisYdocKey(boardUuid), REDIS_YDOC_TTL, Buffer.from(state))
+            await r.setex(
+              redisYdocKey(boardUuid),
+              REDIS_YDOC_TTL,
+              Buffer.from(state),
+            )
           } catch (err) {
-            console.error(`[collab] Redis warm error for ${boardUuid}:`, err)
+            console.error(
+              `[collab] Redis warm error for ${boardUuid}:`,
+              err,
+            )
           }
 
           return state
         } catch (err) {
-          console.error(`[collab] Error fetching ydoc for ${boardUuid}:`, err)
+          console.error(
+            `[collab] Error fetching ydoc for ${boardUuid}:`,
+            err,
+          )
           return null
         }
       },
@@ -240,9 +319,16 @@ const server = Server.configure({
         // 1. Write to Redis immediately (fast)
         try {
           const r = getRedis()
-          await r.setex(redisYdocKey(boardUuid), REDIS_YDOC_TTL, Buffer.from(state))
+          await r.setex(
+            redisYdocKey(boardUuid),
+            REDIS_YDOC_TTL,
+            Buffer.from(state),
+          )
         } catch (err) {
-          console.error(`[collab] Redis store error for ${boardUuid}:`, err)
+          console.error(
+            `[collab] Redis store error for ${boardUuid}:`,
+            err,
+          )
         }
 
         // 2. Debounced write to database (slow, batched)
@@ -252,34 +338,45 @@ const server = Server.configure({
   ],
 })
 
-// Flush all pending writes on shutdown
+// ── Graceful shutdown ─────────────────────────────────────────────────────
+
 async function gracefulShutdown() {
   console.log('[collab] Shutting down, flushing pending writes...')
 
-  // Cancel debounce timers and flush immediately
+  // Stop accepting new connections
+  clearInterval(rateLimitCleanupInterval)
+  await server.destroy()
+
+  // Flush all pending writes directly from the captured state (no Redis dependency)
   const flushPromises: Promise<void>[] = []
 
-  for (const [boardUuid, timer] of pendingFlushes) {
+  for (const [boardUuid, { timer, state }] of pendingFlushes) {
     clearTimeout(timer)
 
     const flush = async () => {
       try {
-        const r = getRedis()
-        const cached = await r.getBuffer(redisYdocKey(boardUuid))
-        if (cached && cached.byteLength > 0) {
-          const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
-          await fetch(url, {
+        const url = `${API_URL}/api/v1/boards/${boardUuid}/ydoc`
+        await fetchWithTimeout(
+          url,
+          {
             method: 'PUT',
             headers: {
               'X-Internal-Key': INTERNAL_KEY,
               'Content-Type': 'application/octet-stream',
             },
-            body: cached.buffer.slice(cached.byteOffset, cached.byteOffset + cached.byteLength) as ArrayBuffer,
-          })
-          console.log(`[collab] Flushed ${boardUuid} to DB on shutdown`)
-        }
+            body: state.buffer.slice(
+              state.byteOffset,
+              state.byteOffset + state.byteLength,
+            ) as ArrayBuffer,
+          },
+          15_000, // longer timeout for shutdown flushes
+        )
+        console.log(`[collab] Flushed ${boardUuid} to DB on shutdown`)
       } catch (err) {
-        console.error(`[collab] Shutdown flush error for ${boardUuid}:`, err)
+        console.error(
+          `[collab] Shutdown flush error for ${boardUuid}:`,
+          err,
+        )
       }
     }
 
