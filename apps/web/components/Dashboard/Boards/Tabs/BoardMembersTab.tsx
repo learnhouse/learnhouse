@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import { UserPlus, Trash2, Search, Check, User } from 'lucide-react'
+import { UserPlus, Trash2, Search, Check, User, Users } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { addBoardMember, removeBoardMember } from '@services/boards/boards'
+import { addBoardMembersBatch, removeBoardMember } from '@services/boards/boards'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -177,7 +177,8 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
 }) {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
+  const [activeGroup, setActiveGroup] = useState<string | null>(null) // null = "All"
   const [role, setRole] = useState('editor')
   const [isAdding, setIsAdding] = useState(false)
 
@@ -186,9 +187,21 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
     (url) => swrFetcher(url, accessToken)
   )
 
-  const allUsers = orgUsers?.items || []
+  const { data: usergroups } = useSWR(
+    accessToken ? `${getAPIUrl()}usergroups/org/${orgId}?org_id=${orgId}` : null,
+    (url) => swrFetcher(url, accessToken)
+  )
 
-  const filteredUsers = allUsers.filter((entry: any) => {
+  const allUsers: any[] = orgUsers?.items || []
+  const allGroups: any[] = usergroups || []
+
+  const getUserDisplayName = (u: any) => {
+    const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ')
+    return fullName || u.username || 'Unknown'
+  }
+
+  // Filter by search query
+  const searchFiltered = allUsers.filter((entry: any) => {
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
     const u = entry.user
@@ -200,11 +213,72 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
     )
   })
 
+  // Filter by active group pill
+  const groupFiltered = searchFiltered.filter((entry: any) => {
+    if (activeGroup === null) return true
+    const u = entry.user
+    const userGroupIds: number[] = (u.usergroups || []).map((g: any) => g.id ?? g)
+    const group = allGroups.find((g: any) => g.usergroup_uuid === activeGroup)
+    return group ? userGroupIds.includes(group.id) : false
+  })
+
+  // Build groups for "All" view: group users under their first group; ungrouped at the end
+  type GroupSection = { groupId: string | null; groupName: string; entries: any[] }
+  const buildGroupedSections = (): GroupSection[] => {
+    const sections: GroupSection[] = allGroups.map((g: any) => ({
+      groupId: g.usergroup_uuid,
+      groupName: g.name,
+      entries: [],
+    }))
+    const ungrouped: GroupSection = { groupId: null, groupName: 'Ungrouped', entries: [] }
+
+    groupFiltered.forEach((entry: any) => {
+      const u = entry.user
+      const userGroupIds: number[] = (u.usergroups || []).map((g: any) => g.id ?? g)
+      let placed = false
+      for (const section of sections) {
+        const g = allGroups.find((g: any) => g.usergroup_uuid === section.groupId)
+        if (g && userGroupIds.includes(g.id)) {
+          section.entries.push(entry)
+          placed = true
+          break
+        }
+      }
+      if (!placed) ungrouped.entries.push(entry)
+    })
+
+    const result = sections.filter((s) => s.entries.length > 0)
+    if (ungrouped.entries.length > 0) result.push(ungrouped)
+    return result
+  }
+
+  const sections = activeGroup === null ? buildGroupedSections() : [{ groupId: activeGroup, groupName: '', entries: groupFiltered }]
+  const showGroupHeaders = activeGroup === null && allGroups.length > 0
+
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev)
+      next.has(userId) ? next.delete(userId) : next.add(userId)
+      return next
+    })
+  }
+
+  const toggleGroupAll = (entries: any[]) => {
+    const ids = entries.map((e: any) => e.user.id as number)
+    const allSelected = ids.every((id) => selectedUserIds.has(id))
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => (allSelected ? next.delete(id) : next.add(id)))
+      return next
+    })
+  }
+
   const handleAdd = async () => {
-    if (!selectedUserId) return
+    if (selectedUserIds.size === 0) return
     setIsAdding(true)
     try {
-      await addBoardMember(boardUuid, { user_id: selectedUserId, role }, accessToken)
+      const members = Array.from(selectedUserIds).map((user_id) => ({ user_id, role }))
+      await addBoardMembersBatch(boardUuid, members, accessToken)
       toast.success(t('boards.members.member_added'))
       setModalOpen(false)
       if (membersKey) mutate(membersKey)
@@ -215,13 +289,8 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
     }
   }
 
-  const getUserDisplayName = (u: any) => {
-    const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ')
-    return fullName || u.username || 'Unknown'
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -235,60 +304,142 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
         />
       </div>
 
-      {/* User list */}
-      <div className="max-h-[280px] overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
-        {filteredUsers.map((entry: any) => {
-          const u = entry.user
-          const isSelected = selectedUserId === u.id
-          return (
+      {/* Group filter pills */}
+      {allGroups.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setActiveGroup(null)}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+              activeGroup === null
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {t('boards.members.all_groups') || 'All'}
+          </button>
+          {allGroups.map((g: any) => (
             <button
-              key={u.id}
-              onClick={() => setSelectedUserId(u.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                isSelected
+              key={g.usergroup_uuid}
+              onClick={() => setActiveGroup(g.usergroup_uuid === activeGroup ? null : g.usergroup_uuid)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                activeGroup === g.usergroup_uuid
                   ? 'bg-gray-900 text-white'
-                  : 'hover:bg-gray-50'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <UserAvatar
-                width={36}
-                userId={u.id?.toString()}
-                rounded="rounded-full"
-                border="border-2"
-                borderColor={isSelected ? 'border-gray-700' : undefined}
-              />
-              <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className={`font-semibold text-sm truncate ${isSelected ? 'text-white' : 'text-gray-800'}`}>
-                    {getUserDisplayName(u)}
-                  </span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                    isSelected
-                      ? 'bg-gray-700 text-gray-300'
-                      : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    @{u.username}
-                  </span>
-                </div>
-                {u.email && (
-                  <span className={`text-xs truncate ${isSelected ? 'text-gray-400' : 'text-gray-400'}`}>
-                    {u.email}
-                  </span>
-                )}
-              </div>
-              {isSelected && (
-                <Check className="w-5 h-5 text-white shrink-0" />
-              )}
+              <Users className="w-3 h-3" />
+              {g.name}
             </button>
-          )
-        })}
-        {filteredUsers.length === 0 && (
+          ))}
+        </div>
+      )}
+
+      {/* User list */}
+      <div className="max-h-[260px] overflow-y-auto border border-gray-200 rounded-lg">
+        {sections.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10">
             <User className="w-8 h-8 text-gray-300" />
             <p className="text-sm text-gray-400">{t('boards.members.no_users_found')}</p>
           </div>
         )}
+        {sections.map((section) => (
+          <div key={section.groupId ?? '__ungrouped'}>
+            {showGroupHeaders && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
+                <input
+                  type="checkbox"
+                  checked={section.entries.length > 0 && section.entries.every((e: any) => selectedUserIds.has(e.user.id))}
+                  onChange={() => toggleGroupAll(section.entries)}
+                  className="w-3.5 h-3.5 rounded accent-gray-900 cursor-pointer"
+                />
+                {section.groupId ? (
+                  <Users className="w-3.5 h-3.5 text-gray-400" />
+                ) : (
+                  <User className="w-3.5 h-3.5 text-gray-400" />
+                )}
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {section.groupName}
+                </span>
+                <span className="ml-auto text-xs text-gray-400">{section.entries.length}</span>
+              </div>
+            )}
+            <div className="divide-y divide-gray-100">
+              {section.entries.map((entry: any) => {
+                const u = entry.user
+                const isSelected = selectedUserIds.has(u.id)
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => toggleUser(u.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                      isSelected ? 'bg-gray-900' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleUser(u.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-3.5 h-3.5 rounded accent-gray-900 cursor-pointer shrink-0"
+                    />
+                    <UserAvatar
+                      width={32}
+                      userId={u.id?.toString()}
+                      rounded="rounded-full"
+                      border="border-2"
+                      borderColor={isSelected ? 'border-gray-700' : undefined}
+                    />
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold text-sm truncate ${isSelected ? 'text-white' : 'text-gray-800'}`}>
+                          {getUserDisplayName(u)}
+                        </span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                          isSelected ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          @{u.username}
+                        </span>
+                      </div>
+                      {u.email && (
+                        <span className={`text-xs truncate ${isSelected ? 'text-gray-400' : 'text-gray-400'}`}>
+                          {u.email}
+                        </span>
+                      )}
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-white shrink-0" />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* Selected summary */}
+      {selectedUserIds.size > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex -space-x-2">
+            {Array.from(selectedUserIds).slice(0, 4).map((uid) => (
+              <UserAvatar
+                key={uid}
+                width={22}
+                userId={uid.toString()}
+                rounded="rounded-full"
+                border="border-2"
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-gray-700">
+            {selectedUserIds.size} {selectedUserIds.size === 1 ? 'user' : 'users'} selected
+          </span>
+          <button
+            onClick={() => setSelectedUserIds(new Set())}
+            className="ml-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {/* Footer: role + add */}
       <div className="flex items-center justify-between pt-1">
@@ -305,11 +456,15 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
         </div>
         <button
           onClick={handleAdd}
-          disabled={!selectedUserId || isAdding}
+          disabled={selectedUserIds.size === 0 || isAdding}
           className="inline-flex items-center gap-2 bg-black text-white font-semibold px-5 py-2 rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-800 transition-all"
         >
           <UserPlus className="w-4 h-4" />
-          {isAdding ? t('boards.members.adding') : t('boards.members.add_member')}
+          {isAdding
+            ? t('boards.members.adding')
+            : selectedUserIds.size > 1
+            ? `${t('boards.members.add_member')} (${selectedUserIds.size})`
+            : t('boards.members.add_member')}
         </button>
       </div>
     </div>
