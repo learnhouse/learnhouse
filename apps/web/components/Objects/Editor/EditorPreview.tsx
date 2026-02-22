@@ -26,6 +26,7 @@ import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
 import Scenarios from './Extensions/Scenarios/Scenarios'
+import CodePlayground from './Extensions/CodePlayground/CodePlayground'
 import UserBlock from './Extensions/Users/UserBlock'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 
@@ -128,6 +129,10 @@ function EditorPreview({ content, activity }: EditorPreviewProps) {
         activity: activity,
       }),
       Scenarios.configure({
+        editable: false,
+        activity: activity,
+      }),
+      CodePlayground.configure({
         editable: false,
         activity: activity,
       }),
