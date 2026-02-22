@@ -75,7 +75,7 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
 
     const observer = () => {
       if (isSyncingRef.current) return
-      const state = syncMap.get(videoId)
+      const state = syncMap.get(videoId) as { playing: boolean; time: number; updatedAt: number } | undefined
       if (!state || !playerRef.current) return
 
       const player = playerRef.current

@@ -8,12 +8,7 @@ export function generateCaddyfile(config: SetupConfig): string {
 }
 
 ${config.domain} {
-  handle /collab* {
-    reverse_proxy learnhouse-collab:4000
-  }
-  handle {
-    reverse_proxy learnhouse-app:3000
-  }
+  reverse_proxy learnhouse-app:80
 }
 `
 }
