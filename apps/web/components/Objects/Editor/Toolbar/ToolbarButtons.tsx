@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   BadgeHelp,
   Code,
+  CodeSquare,
   Cuboid,
   FileText,
   ImagePlus,
@@ -48,6 +49,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
   const { t } = useTranslation()
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
+  const [showCodeMenu, setShowCodeMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
@@ -416,15 +418,49 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <BadgeHelp size={15} />
         </div>
       </ToolTip>
-      <ToolTip content={t('editor.toolbar.code_block')}>
+      <div className="relative inline-block shrink-0">
         <div
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`editor-tool-btn editor-tool-btn-code ${editor.isActive('codeBlock') ? 'is-active' : ''}`}
+          onClick={() => setShowCodeMenu(!showCodeMenu)}
+          className={`editor-tool-btn editor-tool-btn-code ${showCodeMenu || editor.isActive('codeBlock') || editor.isActive('blockCode') ? 'is-active' : ''}`}
           aria-label={t('editor.toolbar.code_block')}
         >
           <Code size={15} />
+          <ChevronDownIcon />
         </div>
-      </ToolTip>
+        {showCodeMenu && (
+          <div className="editor-menu-dropdown">
+            <div
+              onClick={() => {
+                editor.chain().focus().toggleCodeBlock().run()
+                setShowCodeMenu(false)
+              }}
+              className={`editor-menu-item ${editor.isActive('codeBlock') ? 'is-active' : ''}`}
+            >
+              <span className="icon"><Code size={15} /></span>
+              <span className="label">Basic</span>
+            </div>
+            <div
+              onClick={() => {
+                editor.chain().focus().insertContent({
+                  type: 'blockCode',
+                  attrs: {
+                    mode: 'advanced',
+                    languageId: 71,
+                    languageName: 'Python 3',
+                    starterCode: '# Write your code here\n',
+                    testCases: [],
+                  },
+                }).run()
+                setShowCodeMenu(false)
+              }}
+              className="editor-menu-item"
+            >
+              <span className="icon"><CodeSquare size={15} /></span>
+              <span className="label">Playground</span>
+            </div>
+          </div>
+        )}
+      </div>
       <ToolTip content={t('editor.blocks.embed')}>
         <div
           className="editor-tool-btn editor-tool-btn-embed"
