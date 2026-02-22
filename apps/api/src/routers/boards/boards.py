@@ -29,7 +29,16 @@ from src.services.boards.boards import (
 )
 
 router = APIRouter(dependencies=[Depends(require_boards_feature)])
-internal_router = APIRouter()
+
+
+async def verify_internal_key(x_internal_key: str = Header(...)):
+    """FastAPI dependency that validates the shared collab internal key."""
+    expected_key = os.getenv("COLLAB_INTERNAL_KEY", "")
+    if not expected_key or x_internal_key != expected_key:
+        raise HTTPException(status_code=403, detail="Invalid internal key")
+
+
+internal_router = APIRouter(dependencies=[Depends(verify_internal_key)])
 
 
 @router.post("/")
@@ -136,18 +145,13 @@ async def api_check_board_membership(
     return await check_board_membership(board_uuid, current_user, db_session)
 
 
-# Internal endpoints for Hocuspocus collab server (protected by shared key)
+# Internal endpoints for Hocuspocus collab server (protected by verify_internal_key dependency on internal_router)
 
 @internal_router.get("/{board_uuid}/ydoc")
 async def api_get_ydoc_state(
     board_uuid: str,
-    x_internal_key: str = Header(...),
     db_session: Session = Depends(get_db_session),
 ):
-    expected_key = os.getenv("COLLAB_INTERNAL_KEY", "")
-    if not expected_key or x_internal_key != expected_key:
-        raise HTTPException(status_code=403, detail="Invalid internal key")
-
     state = await get_ydoc_state(board_uuid, db_session)
     if state is None:
         return Response(content=b"", media_type="application/octet-stream")
@@ -158,12 +162,7 @@ async def api_get_ydoc_state(
 async def api_store_ydoc_state(
     request: Request,
     board_uuid: str,
-    x_internal_key: str = Header(...),
     db_session: Session = Depends(get_db_session),
 ):
-    expected_key = os.getenv("COLLAB_INTERNAL_KEY", "")
-    if not expected_key or x_internal_key != expected_key:
-        raise HTTPException(status_code=403, detail="Invalid internal key")
-
     body = await request.body()
     return await store_ydoc_state(board_uuid, body, db_session)

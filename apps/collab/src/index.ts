@@ -15,6 +15,31 @@ const DB_FLUSH_DELAY = 5000
 // Redis TTL for cached ydoc state (seconds) — 1 hour
 const REDIS_YDOC_TTL = 3600
 
+// ── Rate limiting ───────────────────────────────────────────────────────────
+// Tracks connection attempts per IP to prevent brute-force/DoS
+const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const RATE_LIMIT_MAX = 30 // max connections per IP per window
+const connectionAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = connectionAttempts.get(ip)
+  if (!entry || now >= entry.resetAt) {
+    connectionAttempts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+  entry.count++
+  return entry.count > RATE_LIMIT_MAX
+}
+
+// Clean up stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [ip, entry] of connectionAttempts) {
+    if (now >= entry.resetAt) connectionAttempts.delete(ip)
+  }
+}, 5 * 60_000)
+
 function extractBoardUuid(documentName: string): string | null {
   // Room naming: board:{board_uuid}
   const match = documentName.match(/^board:(.+)$/)
@@ -81,6 +106,24 @@ const MAX_BOARD_USERS = 10
 
 const server = Server.configure({
   port: PORT,
+
+  async onRequest({ request, response }) {
+    // Health check endpoint for Docker/load balancer probes
+    if (request.url === '/health') {
+      response.writeHead(200, { 'Content-Type': 'application/json' })
+      response.end(JSON.stringify({ status: 'ok' }))
+      return
+    }
+
+    // Rate limiting by IP
+    const ip =
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      request.socket.remoteAddress ||
+      'unknown'
+    if (isRateLimited(ip)) {
+      throw new Error('Too many connection attempts')
+    }
+  },
 
   async onAuthenticate({ token, documentName }) {
     if (!token) {

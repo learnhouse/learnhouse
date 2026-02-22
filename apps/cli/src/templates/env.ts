@@ -98,6 +98,9 @@ export function generateEnvFile(config: SetupConfig): string {
     '# =============================================================================',
     '',
     `COLLAB_INTERNAL_KEY=${collabInternalKey}`,
+    `LEARNHOUSE_REDIS_URL=${config.useExternalRedis
+      ? config.externalRedisConnectionString
+      : 'redis://redis:6379'}`,
     `NEXT_PUBLIC_COLLAB_URL=${config.useHttps ? 'wss' : 'ws'}://${config.domain}${portSuffix}/collab`,
     '',
     '# =============================================================================',
