@@ -7,6 +7,7 @@
     "your_organizations": "Organisasi Anda",
     "no_orgs_message": "Sepertinya Anda belum menjadi bagian dari organisasi mana pun, bergabunglah untuk melihatnya di sini",
     "assignments": "Tugas",
+    "boards": "Papan",
     "payments": "Pembayaran",
     "organization": "Organisasi",
     "dashboard": "Dasbor",
@@ -104,7 +105,9 @@
           "communities": "Komunitas",
           "podcasts": "Podcast",
           "payments": "Pembayaran",
-          "trail": "Pelacakan Kemajuan"
+          "trail": "Pelacakan Kemajuan",
+          "boards": "Papan",
+          "docs": "Dokumentasi"
         },
         "public": {
           "title": "{{feature}} Tidak Tersedia",
@@ -509,6 +512,12 @@
         "attach_youtube": "Link YouTube",
         "attach_file": "Dokumen"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1709,6 +1718,7 @@
           "ai": "AI",
           "api": "Akses API",
           "features": "Fitur",
+          "usage": "Usage",
           "other": "Lainnya"
         },
         "pages": {
@@ -1739,6 +1749,10 @@
           "features": {
             "title": "Fitur",
             "subtitle": "Aktifkan atau nonaktifkan fitur untuk organisasi Anda"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "Nama Organisasi",
@@ -1749,8 +1763,6 @@
         "label_placeholder": "Pilih label organisasi",
         "about": "Tentang Organisasi",
         "about_placeholder": "Deskripsi terperinci tentang organisasi Anda",
-        "showcase_explore": "Tampilkan di LearnHouse Explore",
-        "showcase_description": "Bagikan kursus dan konten organisasi Anda dengan komunitas LearnHouse. Aktifkan ini untuk membantu pelajar menemukan sumber daya pendidikan berharga Anda.",
         "save_changes": "Simpan Perubahan",
         "saving": "Menyimpan...",
         "update_success": "Organisasi Diperbarui",
@@ -3344,12 +3356,12 @@
         "avg_rate": "Rasio Rata-rata",
         "needs_attention": "Perlu Perhatian",
         "total_samples": "Total Sampel",
-        "more_expand": "+{{count}} lagi \u2014 klik untuk memperluas",
+        "more_expand": "+{{count}} lagi — klik untuk memperluas",
         "activities_count": "{{count}} aktivitas",
         "pct_of_total": "% dari Total",
         "bar_width_hint": "Lebar bar = tampilan relatif",
         "rate_high": ">70%",
-        "rate_mid": "40\u201370%",
+        "rate_mid": "40–70%",
         "rate_low": "<40%",
         "low_conversion": "konversi rendah",
         "avg_completion": "penyelesaian rata-rata",
@@ -3447,7 +3459,7 @@
         "peak_viewers": "Pengunjung Puncak"
       },
       "view_to_enrollment": {
-        "title": "Lihat \u2192 Daftar",
+        "title": "Lihat → Daftar",
         "subtitle": "Berapa banyak pengunjung yang menjadi pelajar terdaftar"
       },
       "daily_completions": {
@@ -3464,7 +3476,7 @@
       },
       "activity_dropoff": {
         "title": "Titik Putus",
-        "subtitle": "Di mana pelajar berhenti berkembang \u2014 aktivitas terakhir yang diselesaikan",
+        "subtitle": "Di mana pelajar berhenti berkembang — aktivitas terakhir yang diselesaikan",
         "total_dropoffs": "Total Putus",
         "dropoff_points": "Titik Putus"
       },
@@ -3498,7 +3510,7 @@
         "avg_between": "rata-rata {{unit}} antar penyelesaian",
         "transitions_tracked": "transisi terlacak",
         "raw_hours_avg": "rata-rata jam mentah",
-        "description": "Mengukur seberapa cepat pelajar berpindah dari satu aktivitas ke aktivitas berikutnya. Semakin rendah semakin baik \u2014 artinya pelajar lebih cepat melalui konten."
+        "description": "Mengukur seberapa cepat pelajar berpindah dari satu aktivitas ke aktivitas berikutnya. Semakin rendah semakin baik — artinya pelajar lebih cepat melalui konten."
       },
       "time_to_completion": {
         "title": "Waktu Penyelesaian",
@@ -3531,8 +3543,237 @@
         "count_in_period": "{{count}} pendaftaran dalam periode ini"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} dari {{total}}"
+        "range": "{{from}}–{{to}} dari {{total}}"
       }
+    }
+  },
+  "boards": {
+    "boards": "Papan",
+    "new_board": "Papan Baru",
+    "create_new_board": "Buat Papan Baru",
+    "create_new_board_description": "Siapkan papan kolaboratif baru",
+    "create_board": "Buat Papan",
+    "board_created": "Papan dibuat",
+    "board_created_error": "Gagal membuat papan",
+    "search_placeholder": "Cari papan...",
+    "no_boards_found": "Tidak ada papan ditemukan",
+    "try_different_search": "Coba kata pencarian yang berbeda",
+    "no_boards_yet": "Belum ada papan",
+    "no_boards_description": "Buat papan kolaboratif pertama Anda untuk memulai.",
+    "public": "Publik",
+    "private": "Privat",
+    "member_count": "{{count}} anggota",
+    "member_count_plural": "{{count}} anggota",
+    "settings": "Pengaturan",
+    "name": "Nama",
+    "name_placeholder": "mis., Perencanaan Proyek",
+    "description": "Deskripsi",
+    "description_placeholder": "Deskripsi singkat...",
+    "back_to_boards": "Kembali ke papan",
+    "general": {
+      "title": "Umum",
+      "description": "Informasi dasar papan",
+      "board_updated": "Papan diperbarui",
+      "board_updated_error": "Gagal memperbarui papan",
+      "saving": "Menyimpan...",
+      "save_changes": "Simpan Perubahan"
+    },
+    "thumbnail": {
+      "title": "Gambar Mini",
+      "description": "Gambar sampul papan yang ditampilkan pada kartu",
+      "alt": "Gambar mini papan",
+      "uploading": "Mengunggah...",
+      "upload_image": "Unggah Gambar",
+      "gallery": "Galeri",
+      "supported_formats": "Format yang didukung: JPG, JPEG, PNG. Maks 8MB.",
+      "thumbnail_updated": "Gambar mini diperbarui",
+      "thumbnail_updated_error": "Gagal mengunggah gambar mini"
+    },
+    "access": {
+      "title": "Kontrol Akses",
+      "description": "Kontrol siapa yang dapat mengakses papan ini",
+      "set_to_public": "Atur ke Publik",
+      "set_to_public_confirm": "Semua anggota organisasi yang masuk akan dapat mengakses papan ini.",
+      "make_board_public": "Jadikan Papan Publik",
+      "set_to_private": "Atur ke Privat",
+      "set_to_private_confirm": "Hanya anggota UserGroups yang terhubung yang dapat mengakses papan ini.",
+      "make_board_private": "Jadikan Papan Privat",
+      "active": "Aktif",
+      "public_option": "Publik",
+      "public_description": "Semua anggota organisasi yang masuk dapat mengakses papan ini",
+      "private_option": "Hanya Pengguna",
+      "private_description": "Hanya UserGroups yang terhubung yang dapat mengakses papan ini",
+      "board_set_public": "Papan diatur ke publik",
+      "board_set_private": "Papan diatur ke privat",
+      "access_update_error": "Gagal memperbarui akses",
+      "user_groups": "Grup Pengguna",
+      "user_groups_description": "Kelola grup pengguna mana yang memiliki akses ke papan ini",
+      "actions": "Tindakan",
+      "unlink": "Putuskan Tautan",
+      "unlink_confirm": "Grup pengguna ini tidak lagi memiliki akses ke papan ini.",
+      "unlink_user_group": "Putuskan Tautan Grup Pengguna",
+      "no_user_groups": "Belum ada grup pengguna yang terhubung",
+      "link_to_user_group": "Hubungkan ke Grup Pengguna",
+      "link_to_user_group_description": "Pilih grup pengguna untuk memberi mereka akses ke papan ini",
+      "link_to_usergroup_btn": "Hubungkan ke UserGroup",
+      "user_group": "Grup Pengguna",
+      "no_user_groups_available": "Tidak ada grup pengguna tersedia",
+      "create_user_group": "Buat Grup Pengguna",
+      "link": "Hubungkan",
+      "user_group_linked": "Grup pengguna terhubung",
+      "user_group_unlinked": "Grup pengguna terputus",
+      "link_error": "Gagal menghubungkan: ",
+      "unlink_error": "Gagal memutuskan tautan: ",
+      "unlink_error_generic": "Gagal memutuskan tautan grup pengguna"
+    },
+    "members": {
+      "title": "Anggota",
+      "description": "Kelola siapa yang dapat berkolaborasi di papan ini",
+      "user": "Pengguna",
+      "role": "Peran",
+      "actions": "Tindakan",
+      "remove": "Hapus",
+      "remove_confirm": "Hapus {{name}} dari papan?",
+      "remove_member": "Hapus Anggota",
+      "no_members": "Belum ada anggota",
+      "member_limit_reached": "Batas anggota tercapai (maks 10)",
+      "add_member": "Tambah Anggota",
+      "add_member_description": "Cari anggota organisasi untuk ditambahkan ke papan ini",
+      "search_placeholder": "Cari berdasarkan nama atau email...",
+      "no_users_found": "Tidak ada pengguna ditemukan",
+      "role_label": "Peran:",
+      "editor": "Editor",
+      "viewer": "Penonton",
+      "adding": "Menambahkan...",
+      "member_added": "Anggota ditambahkan",
+      "member_added_error": "Gagal menambahkan anggota (mungkin sudah menjadi anggota)",
+      "member_removed": "Anggota dihapus",
+      "member_removed_error": "Gagal menghapus anggota"
+    },
+    "toolbar": {
+      "select": "Pilih",
+      "pan": "Geser",
+      "draw": "Gambar",
+      "add_card": "Tambah Kartu",
+      "sticky_note": "Catatan Tempel",
+      "frame": "Bingkai",
+      "note": "Catatan",
+      "sticker": "Stiker",
+      "youtube": "YouTube",
+      "ai_playground": "AI Playground",
+      "activity": "Aktivitas",
+      "embed": "Sematkan",
+      "webpage": "Halaman Web",
+      "thin": "Tipis",
+      "medium": "Sedang",
+      "thick": "Tebal",
+      "undo": "Urungkan",
+      "redo": "Ulangi",
+      "podcast": "Podcast"
+    },
+    "zoom": {
+      "zoom_in": "Perbesar",
+      "zoom_out": "Perkecil"
+    },
+    "chat": {
+      "placeholder": "Katakan sesuatu..."
+    },
+    "effects": {
+      "title": "Efek",
+      "inferno": "Inferno",
+      "blizzard": "Badai Salju",
+      "matrix": "Matrix",
+      "fireworks": "Kembang Api",
+      "earthquake": "Gempa Bumi",
+      "black_hole": "Lubang Hitam",
+      "aurora": "Aurora",
+      "lightning": "Petir",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "Atur timer",
+      "set_timer_title": "Atur Timer",
+      "times_up": "Waktu habis!",
+      "resume": "Lanjutkan",
+      "pause": "Jeda",
+      "restart": "Mulai Ulang",
+      "close": "Tutup"
+    },
+    "share": {
+      "share_board": "Bagikan papan",
+      "share_this_board": "Bagikan papan ini"
+    },
+    "youtube_block": {
+      "paste_url": "Tempel URL YouTube",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "Tambah"
+    },
+    "activity_block": {
+      "select_course": "Pilih kursus",
+      "no_courses": "Tidak ada kursus ditemukan",
+      "no_activities": "Tidak ada aktivitas ditemukan",
+      "unsupported_type": "Tipe aktivitas tidak didukung"
+    },
+    "embed_block": {
+      "embed": "Sematkan",
+      "add_embed": "Tambah sematan {{name}}",
+      "url": "URL",
+      "code": "Kode",
+      "paste_url": "Tempel URL sematan",
+      "url_help": "Tempel URL dari YouTube, Figma, CodePen, Spotify, dan lainnya",
+      "paste_code": "Tempel kode sematan",
+      "code_help": "Tempel kode iframe atau sematan",
+      "remove_embed": "Hapus sematan",
+      "edit_embed": "Edit sematan",
+      "edit_embed_url": "Edit URL sematan",
+      "edit_embed_code": "Edit kode sematan",
+      "apply": "Terapkan"
+    },
+    "webpage_block": {
+      "embed_webpage": "Sematkan halaman web",
+      "url_placeholder": "https://example.com",
+      "add": "Tambah",
+      "blocking_notice": "Beberapa situs mungkin memblokir penyematan",
+      "reload": "Muat Ulang",
+      "open_in_new_tab": "Buka di tab baru"
+    },
+    "playground_block": {
+      "title": "AI Playground",
+      "description": "Hasilkan elemen interaktif yang didukung AI",
+      "generate": "Hasilkan",
+      "edit": "Edit",
+      "save_close": "Simpan & Tutup",
+      "generating": "Menghasilkan konten interaktif...",
+      "streaming": "Menghasilkan...",
+      "empty_state": "Jelaskan apa yang ingin Anda buat dan saksikan menjadi nyata",
+      "chat_header": "AI Playground",
+      "prompt_text": "Jelaskan elemen interaktif yang ingin dihasilkan",
+      "ai_content": "Konten buatan AI",
+      "check_preview": "Periksa pratinjau di sebelah kiri",
+      "creating": "Membuat...",
+      "max_iterations": "Iterasi maksimum tercapai. Simpan pekerjaan Anda!",
+      "input_placeholder": "Jelaskan apa yang ingin Anda buat...",
+      "input_placeholder_refine": "Jelaskan perubahan atau penyempurnaan...",
+      "quiz": "Kuis",
+      "flashcards": "Kartu Flash",
+      "chart": "Grafik",
+      "timeline": "Lini Masa",
+      "drawing": "Gambar",
+      "calculator": "Kalkulator"
+    },
+    "node_actions": {
+      "move_back": "Pindah ke belakang",
+      "move_forward": "Pindah ke depan",
+      "delete": "Hapus",
+      "delete_multiple": "Hapus {{count}} item"
+    },
+    "pagination": {
+      "previous": "Sebelumnya",
+      "next": "Berikutnya",
+      "page_of": "Halaman {{current}} dari {{total}}",
+      "results": "{{count}} hasil untuk \"{{query}}\"",
+      "results_plural": "{{count}} hasil untuk \"{{query}}\""
     }
   }
 }

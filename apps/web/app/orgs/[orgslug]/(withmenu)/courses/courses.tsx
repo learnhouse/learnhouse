@@ -1,7 +1,7 @@
 'use client'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
@@ -10,8 +10,12 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useTranslation } from 'react-i18next'
-import { BookCopy, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { BookCopy, ChevronLeft, ChevronRight, Search, X, Users, Info } from 'lucide-react'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { PlanLevel } from '@services/plans/plans'
+import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 
 interface CourseProps {
   orgslug: string
@@ -27,29 +31,94 @@ function Courses(props: CourseProps) {
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
   const isUserAdmin = useAdminStatus() as any
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+
+  // Usergroup filter — only shown on personal/family plans
+  const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'
+  const [usergroups, setUsergroups] = useState<any[]>([])
+  const [selectedUsergroupId, setSelectedUsergroupId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lh_course_usergroup_filter') || ''
+    }
+    return ''
+  })
+  const [usergroupResourceUuids, setUsergroupResourceUuids] = useState<Set<string> | null>(null)
+  const [showUsergroupInfo, setShowUsergroupInfo] = useState(false)
+
+  // Fetch usergroups
+  useEffect(() => {
+    if (!usergroupsAvailable || !access_token || !props.org_id) return
+    getUserGroups(props.org_id, access_token)
+      .then((res: any) => {
+        const list = Array.isArray(res) ? res : res?.data || []
+        setUsergroups(list)
+        if (selectedUsergroupId && !list.some((ug: any) => String(ug.id) === selectedUsergroupId)) {
+          setSelectedUsergroupId('')
+          localStorage.removeItem('lh_course_usergroup_filter')
+        }
+      })
+      .catch(() => setUsergroups([]))
+  }, [usergroupsAvailable, access_token, props.org_id])
+
+  // Fetch resource UUIDs for selected usergroup
+  useEffect(() => {
+    if (!selectedUsergroupId || !access_token || !props.org_id) {
+      setUsergroupResourceUuids(null)
+      return
+    }
+    getUserGroupResources(selectedUsergroupId, props.org_id, access_token)
+      .then((res: any) => {
+        const uuids = Array.isArray(res) ? res : res?.data || []
+        setUsergroupResourceUuids(new Set(uuids))
+      })
+      .catch(() => setUsergroupResourceUuids(null))
+  }, [selectedUsergroupId, access_token, props.org_id])
+
+  const handleUsergroupChange = (value: string) => {
+    setSelectedUsergroupId(value)
+    if (value) {
+      localStorage.setItem('lh_course_usergroup_filter', value)
+    } else {
+      localStorage.removeItem('lh_course_usergroup_filter')
+    }
+  }
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter courses based on search
+  // Filter courses based on search and usergroup
   const filteredCourses = useMemo(() => {
-    if (!searchQuery.trim()) return allCourses
-    const query = searchQuery.toLowerCase()
-    return allCourses.filter((course: any) =>
-      course.name?.toLowerCase().includes(query) ||
-      course.description?.toLowerCase().includes(query) ||
-      course.tags?.toLowerCase().includes(query)
-    )
-  }, [allCourses, searchQuery])
+    let courses = allCourses
+
+    // Usergroup filter
+    if (usergroupResourceUuids) {
+      courses = courses.filter((course: any) => usergroupResourceUuids.has(course.course_uuid))
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      courses = courses.filter((course: any) =>
+        course.name?.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query) ||
+        course.tags?.toLowerCase().includes(query)
+      )
+    }
+
+    return courses
+  }, [allCourses, searchQuery, usergroupResourceUuids])
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 12
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filter changes
   React.useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, selectedUsergroupId])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage)
@@ -135,24 +204,59 @@ function Courses(props: CourseProps) {
             </AuthenticatedClientElement>
           </div>
 
-          {/* Search */}
+          {/* Search and Usergroup Filter */}
           {allCourses.length > 0 && (
-            <div className="relative w-full sm:w-80 mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('courses.search_courses')}
-                className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('courses.search_courses')}
+                  className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Usergroup Filter */}
+              {usergroupsAvailable && usergroups.length > 0 && (
+                <div className="relative flex items-center gap-1.5">
+                  <div className="relative">
+                    <Users className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                    <select
+                      value={selectedUsergroupId}
+                      onChange={(e) => handleUsergroupChange(e.target.value)}
+                      className="pl-8 pr-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[160px]"
+                    >
+                      <option value="">{t('courses.usergroup_filter.all_courses')}</option>
+                      {usergroups.map((ug: any) => (
+                        <option key={ug.id} value={String(ug.id)}>
+                          {ug.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setShowUsergroupInfo(!showUsergroupInfo)}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+                  {showUsergroupInfo && (
+                    <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-white nice-shadow rounded-lg p-3 border border-gray-100">
+                      <p className="text-xs font-semibold text-gray-700 mb-1">{t('courses.usergroup_filter.info_title')}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed">{t('courses.usergroup_filter.info_description')}</p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}

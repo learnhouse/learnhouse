@@ -7,6 +7,7 @@
     "your_organizations": "আপনার সংস্থাসমূহ",
     "no_orgs_message": "মনে হচ্ছে আপনি এখনও কোনও সংস্থার সদস্য নন। এখানে দেখার জন্য একটি সংস্থায় যোগ দিন।",
     "assignments": "অ্যাসাইনমেন্ট",
+    "boards": "বোর্ড",
     "payments": "পেমেন্ট",
     "organization": "সংস্থা",
     "dashboard": "ড্যাশবোর্ড",
@@ -104,7 +105,9 @@
           "communities": "সম্প্রদায়",
           "podcasts": "পডকাস্ট",
           "payments": "পেমেন্ট",
-          "trail": "অগ্রগতি ট্র্যাকিং"
+          "trail": "অগ্রগতি ট্র্যাকিং",
+          "boards": "বোর্ড",
+          "docs": "ডকুমেন্টেশন"
         },
         "public": {
           "title": "{{feature}} উপলব্ধ নেই",
@@ -509,6 +512,12 @@
         "attach_youtube": "YouTube লিংক",
         "attach_file": "নথি"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1709,6 +1718,7 @@
           "ai": "AI",
           "api": "API অ্যাক্সেস",
           "features": "ফিচার",
+          "usage": "Usage",
           "other": "অন্যান্য"
         },
         "pages": {
@@ -1739,6 +1749,10 @@
           "features": {
             "title": "ফিচার",
             "subtitle": "আপনার সংস্থার জন্য ফিচার সক্রিয় বা নিষ্ক্রিয় করুন"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "সংস্থার নাম",
@@ -1749,8 +1763,6 @@
         "label_placeholder": "সংস্থা লেবেল নির্বাচন করুন",
         "about": "সংস্থা সম্পর্কে",
         "about_placeholder": "আপনার সংস্থার বিস্তারিত বর্ণনা",
-        "showcase_explore": "লার্নহাউস এক্সপ্লোরে দেখান",
-        "showcase_description": "লার্নহাউস সম্প্রদায়ের সাথে আপনার সংস্থার কোর্স এবং কন্টেন্ট শেয়ার করুন। শিক্ষার্থীদের আপনার মূল্যবান শিক্ষামূলক সম্পদ আবিষ্কার করতে সাহায্য করতে এটি সক্ষম করুন।",
         "save_changes": "পরিবর্তনগুলি সংরক্ষণ করুন",
         "saving": "সংরক্ষণ হচ্ছে...",
         "update_success": "সংস্থা আপডেট করা হয়েছে",
@@ -3422,27 +3434,346 @@
         "less": "কম",
         "more": "বেশি",
         "days": {
-          "mon": "সোম", "tue": "মঙ্গল", "wed": "বুধ", "thu": "বৃহ", "fri": "শুক্র", "sat": "শনি", "sun": "রবি"
+          "mon": "সোম",
+          "tue": "মঙ্গল",
+          "wed": "বুধ",
+          "thu": "বৃহ",
+          "fri": "শুক্র",
+          "sat": "শনি",
+          "sun": "রবি"
         },
         "events_tooltip": "{{day}} {{hour}}: {{count}} ইভেন্ট"
       },
-      "enrollment_trend": { "title": "তালিকাভুক্তির প্রবণতা", "subtitle": "সময়ের সাথে দৈনিক নতুন তালিকাভুক্তি" },
-      "active_learners": { "title": "সক্রিয় শিক্ষার্থী", "subtitle": "এই কোর্সে দৈনিক অনন্য সক্রিয় শিক্ষার্থী" },
-      "unique_viewers": { "title": "কোর্স দর্শক", "subtitle": "এই কোর্সের পৃষ্ঠায় দৈনিক অনন্য দর্শক", "total_views": "মোট দর্শন", "peak_viewers": "শীর্ষ দর্শক" },
-      "view_to_enrollment": { "title": "দর্শন → তালিকাভুক্তি", "subtitle": "কতজন দর্শক তালিকাভুক্ত শিক্ষার্থী হন" },
-      "daily_completions": { "title": "দৈনিক সম্পন্নতা", "subtitle": "প্রতিদিনের কার্যক্রম সম্পন্নতা" },
-      "activity_funnel": { "title": "কার্যক্রম সম্পন্নতা ফানেল", "subtitle": "প্রতিটি কার্যক্রমে দর্শন বনাম সম্পন্নতা" },
-      "time_per_activity": { "title": "প্রতিটি কার্যক্রমে ব্যয়িত সময়", "subtitle": "শিক্ষার্থীরা প্রতিটি কার্যক্রমে গড়ে কত সময় ব্যয় করেন" },
-      "activity_dropoff": { "title": "ঝরে পড়ার স্থান", "subtitle": "শিক্ষার্থীরা কোথায় অগ্রগতি বন্ধ করেন — শেষ সম্পন্ন কার্যক্রম", "total_dropoffs": "মোট ঝরে পড়া", "dropoff_points": "ঝরে পড়ার স্থান" },
-      "avg_session_duration": { "title": "প্রতি শিক্ষার্থীর দৈনিক সময়", "subtitle": "প্রতিটি শিক্ষার্থী প্রতিদিন গড়ে কত সময় ব্যয় করেন", "total_time": "মোট সময়", "avg_per_day": "দৈনিক গড়", "minutes_label": "মিনিট" },
-      "learner_progress": { "title": "শিক্ষার্থীর অগ্রগতি", "subtitle": "শিক্ষার্থীরা কতগুলো কার্যক্রম সম্পন্ন করেছেন", "total_across_brackets": "সমস্ত অগ্রগতি শ্রেণীতে {{count}} জন মোট শিক্ষার্থী" },
-      "learner_retention": { "title": "শিক্ষার্থী ধরে রাখা", "subtitle": "প্রথম কার্যক্রমের পরে ফিরে আসা শিক্ষার্থীদের %", "cohort_size": "দলের আকার", "current_retention": "বর্তমান ধরে রাখা", "days_since_first": "প্রথম কার্যক্রমের পর থেকে দিন", "day_label": "দিন {{day}}" },
-      "completion_velocity": { "title": "সম্পন্নতার গতি", "subtitle": "কার্যক্রম সম্পন্নতার মধ্যে গড় সময়", "not_enough_data": "এখনও পর্যাপ্ত ডেটা নেই", "need_transitions": "গতি গণনার জন্য কমপক্ষে ৩টি কার্যক্রম রূপান্তর প্রয়োজন", "not_enough_data_short": "পর্যাপ্ত ডেটা নেই", "need_transitions_short": "৩+ রূপান্তর প্রয়োজন", "avg_between": "সম্পন্নতার মধ্যে গড় {{unit}}", "transitions_tracked": "রূপান্তর ট্র্যাক করা হয়েছে", "raw_hours_avg": "কাঁচা ঘণ্টার গড়", "description": "শিক্ষার্থীরা কত দ্রুত এক কার্যক্রম থেকে পরেরটিতে যান তা পরিমাপ করে। কম ভালো — এর অর্থ শিক্ষার্থীরা দ্রুত বিষয়বস্তুর মধ্য দিয়ে এগোচ্ছেন।" },
-      "time_to_completion": { "title": "সম্পন্নতার সময়", "subtitle": "শিক্ষার্থীদের এই কোর্স শেষ করতে কত সময় লাগে", "median_days_to_complete": "সম্পন্নতার মধ্যমা দিন", "fast_p25": "দ্রুত (P25)", "top_25_finish": "শীর্ষ ২৫% শেষ করেন", "median": "মধ্যমা", "half_finish": "অর্ধেক শেষ করেন", "slow_p75": "ধীর (P75)", "pct_75_finish": "৭৫% শেষ করেন", "based_on": "{{count}} কোর্স সম্পন্নতার ভিত্তিতে", "days_unit": "দিন" },
-      "certification_rate": { "title": "সার্টিফিকেশন হার", "subtitle": "সম্পন্নকারীদের মধ্যে যারা সার্টিফিকেট দাবি করেছেন তাদের %", "of_completers_claimed": "সম্পন্নকারীদের মধ্যে সার্টিফিকেট দাবি করেছেন", "certificates_claimed": "সার্টিফিকেট দাবি করা হয়েছে", "course_completions": "কোর্স সম্পন্নতা" },
-      "top_learners": { "title": "শীর্ষ শিক্ষার্থী", "subtitle": "সম্পন্নতা অনুসারে সবচেয়ে সক্রিয় শিক্ষার্থী", "user_fallback": "ব্যবহারকারী #{{id}}" },
-      "recent_enrollments": { "title": "সাম্প্রতিক তালিকাভুক্তি", "subtitle": "এই কোর্সে সাম্প্রতিক তালিকাভুক্ত শিক্ষার্থী", "count_in_period": "এই সময়ে {{count}} তালিকাভুক্তি" },
-      "pagination": { "range": "{{from}}–{{to}} এর মধ্যে {{total}}" }
+      "enrollment_trend": {
+        "title": "তালিকাভুক্তির প্রবণতা",
+        "subtitle": "সময়ের সাথে দৈনিক নতুন তালিকাভুক্তি"
+      },
+      "active_learners": {
+        "title": "সক্রিয় শিক্ষার্থী",
+        "subtitle": "এই কোর্সে দৈনিক অনন্য সক্রিয় শিক্ষার্থী"
+      },
+      "unique_viewers": {
+        "title": "কোর্স দর্শক",
+        "subtitle": "এই কোর্সের পৃষ্ঠায় দৈনিক অনন্য দর্শক",
+        "total_views": "মোট দর্শন",
+        "peak_viewers": "শীর্ষ দর্শক"
+      },
+      "view_to_enrollment": {
+        "title": "দর্শন → তালিকাভুক্তি",
+        "subtitle": "কতজন দর্শক তালিকাভুক্ত শিক্ষার্থী হন"
+      },
+      "daily_completions": {
+        "title": "দৈনিক সম্পন্নতা",
+        "subtitle": "প্রতিদিনের কার্যক্রম সম্পন্নতা"
+      },
+      "activity_funnel": {
+        "title": "কার্যক্রম সম্পন্নতা ফানেল",
+        "subtitle": "প্রতিটি কার্যক্রমে দর্শন বনাম সম্পন্নতা"
+      },
+      "time_per_activity": {
+        "title": "প্রতিটি কার্যক্রমে ব্যয়িত সময়",
+        "subtitle": "শিক্ষার্থীরা প্রতিটি কার্যক্রমে গড়ে কত সময় ব্যয় করেন"
+      },
+      "activity_dropoff": {
+        "title": "ঝরে পড়ার স্থান",
+        "subtitle": "শিক্ষার্থীরা কোথায় অগ্রগতি বন্ধ করেন — শেষ সম্পন্ন কার্যক্রম",
+        "total_dropoffs": "মোট ঝরে পড়া",
+        "dropoff_points": "ঝরে পড়ার স্থান"
+      },
+      "avg_session_duration": {
+        "title": "প্রতি শিক্ষার্থীর দৈনিক সময়",
+        "subtitle": "প্রতিটি শিক্ষার্থী প্রতিদিন গড়ে কত সময় ব্যয় করেন",
+        "total_time": "মোট সময়",
+        "avg_per_day": "দৈনিক গড়",
+        "minutes_label": "মিনিট"
+      },
+      "learner_progress": {
+        "title": "শিক্ষার্থীর অগ্রগতি",
+        "subtitle": "শিক্ষার্থীরা কতগুলো কার্যক্রম সম্পন্ন করেছেন",
+        "total_across_brackets": "সমস্ত অগ্রগতি শ্রেণীতে {{count}} জন মোট শিক্ষার্থী"
+      },
+      "learner_retention": {
+        "title": "শিক্ষার্থী ধরে রাখা",
+        "subtitle": "প্রথম কার্যক্রমের পরে ফিরে আসা শিক্ষার্থীদের %",
+        "cohort_size": "দলের আকার",
+        "current_retention": "বর্তমান ধরে রাখা",
+        "days_since_first": "প্রথম কার্যক্রমের পর থেকে দিন",
+        "day_label": "দিন {{day}}"
+      },
+      "completion_velocity": {
+        "title": "সম্পন্নতার গতি",
+        "subtitle": "কার্যক্রম সম্পন্নতার মধ্যে গড় সময়",
+        "not_enough_data": "এখনও পর্যাপ্ত ডেটা নেই",
+        "need_transitions": "গতি গণনার জন্য কমপক্ষে ৩টি কার্যক্রম রূপান্তর প্রয়োজন",
+        "not_enough_data_short": "পর্যাপ্ত ডেটা নেই",
+        "need_transitions_short": "৩+ রূপান্তর প্রয়োজন",
+        "avg_between": "সম্পন্নতার মধ্যে গড় {{unit}}",
+        "transitions_tracked": "রূপান্তর ট্র্যাক করা হয়েছে",
+        "raw_hours_avg": "কাঁচা ঘণ্টার গড়",
+        "description": "শিক্ষার্থীরা কত দ্রুত এক কার্যক্রম থেকে পরেরটিতে যান তা পরিমাপ করে। কম ভালো — এর অর্থ শিক্ষার্থীরা দ্রুত বিষয়বস্তুর মধ্য দিয়ে এগোচ্ছেন।"
+      },
+      "time_to_completion": {
+        "title": "সম্পন্নতার সময়",
+        "subtitle": "শিক্ষার্থীদের এই কোর্স শেষ করতে কত সময় লাগে",
+        "median_days_to_complete": "সম্পন্নতার মধ্যমা দিন",
+        "fast_p25": "দ্রুত (P25)",
+        "top_25_finish": "শীর্ষ ২৫% শেষ করেন",
+        "median": "মধ্যমা",
+        "half_finish": "অর্ধেক শেষ করেন",
+        "slow_p75": "ধীর (P75)",
+        "pct_75_finish": "৭৫% শেষ করেন",
+        "based_on": "{{count}} কোর্স সম্পন্নতার ভিত্তিতে",
+        "days_unit": "দিন"
+      },
+      "certification_rate": {
+        "title": "সার্টিফিকেশন হার",
+        "subtitle": "সম্পন্নকারীদের মধ্যে যারা সার্টিফিকেট দাবি করেছেন তাদের %",
+        "of_completers_claimed": "সম্পন্নকারীদের মধ্যে সার্টিফিকেট দাবি করেছেন",
+        "certificates_claimed": "সার্টিফিকেট দাবি করা হয়েছে",
+        "course_completions": "কোর্স সম্পন্নতা"
+      },
+      "top_learners": {
+        "title": "শীর্ষ শিক্ষার্থী",
+        "subtitle": "সম্পন্নতা অনুসারে সবচেয়ে সক্রিয় শিক্ষার্থী",
+        "user_fallback": "ব্যবহারকারী #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "সাম্প্রতিক তালিকাভুক্তি",
+        "subtitle": "এই কোর্সে সাম্প্রতিক তালিকাভুক্ত শিক্ষার্থী",
+        "count_in_period": "এই সময়ে {{count}} তালিকাভুক্তি"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} এর মধ্যে {{total}}"
+      }
+    }
+  },
+  "boards": {
+    "boards": "বোর্ডসমূহ",
+    "new_board": "নতুন বোর্ড",
+    "create_new_board": "নতুন বোর্ড তৈরি করুন",
+    "create_new_board_description": "একটি নতুন সহযোগী বোর্ড সেটআপ করুন",
+    "create_board": "বোর্ড তৈরি করুন",
+    "board_created": "বোর্ড তৈরি হয়েছে",
+    "board_created_error": "বোর্ড তৈরি করতে ব্যর্থ",
+    "search_placeholder": "বোর্ড খুঁজুন...",
+    "no_boards_found": "কোনো বোর্ড পাওয়া যায়নি",
+    "try_different_search": "অন্য একটি অনুসন্ধান শব্দ ব্যবহার করুন",
+    "no_boards_yet": "এখনও কোনো বোর্ড নেই",
+    "no_boards_description": "শুরু করতে আপনার প্রথম সহযোগী বোর্ড তৈরি করুন।",
+    "public": "সর্বজনীন",
+    "private": "ব্যক্তিগত",
+    "member_count": "{{count}} সদস্য",
+    "member_count_plural": "{{count}} সদস্য",
+    "settings": "সেটিংস",
+    "name": "নাম",
+    "name_placeholder": "যেমন, প্রকল্প পরিকল্পনা",
+    "description": "বিবরণ",
+    "description_placeholder": "সংক্ষিপ্ত বিবরণ...",
+    "back_to_boards": "বোর্ডে ফিরে যান",
+    "general": {
+      "title": "সাধারণ",
+      "description": "বোর্ডের মৌলিক তথ্য",
+      "board_updated": "বোর্ড আপডেট হয়েছে",
+      "board_updated_error": "বোর্ড আপডেট করতে ব্যর্থ",
+      "saving": "সংরক্ষণ করা হচ্ছে...",
+      "save_changes": "পরিবর্তন সংরক্ষণ করুন"
+    },
+    "thumbnail": {
+      "title": "থাম্বনেইল",
+      "description": "কার্ডে প্রদর্শিত বোর্ডের কভার ইমেজ",
+      "alt": "বোর্ড থাম্বনেইল",
+      "uploading": "আপলোড হচ্ছে...",
+      "upload_image": "ইমেজ আপলোড করুন",
+      "gallery": "গ্যালারি",
+      "supported_formats": "সমর্থিত ফরম্যাট: JPG, JPEG, PNG। সর্বোচ্চ 8MB।",
+      "thumbnail_updated": "থাম্বনেইল আপডেট হয়েছে",
+      "thumbnail_updated_error": "থাম্বনেইল আপলোড করতে ব্যর্থ"
+    },
+    "access": {
+      "title": "অ্যাক্সেস নিয়ন্ত্রণ",
+      "description": "এই বোর্ডে কে অ্যাক্সেস করতে পারবে তা নিয়ন্ত্রণ করুন",
+      "set_to_public": "সর্বজনীন করুন",
+      "set_to_public_confirm": "সংস্থার সকল সাইন-ইন করা সদস্য এই বোর্ডে অ্যাক্সেস করতে পারবেন।",
+      "make_board_public": "বোর্ড সর্বজনীন করুন",
+      "set_to_private": "ব্যক্তিগত করুন",
+      "set_to_private_confirm": "শুধুমাত্র লিঙ্ক করা UserGroups-এর সদস্যরা এই বোর্ডে অ্যাক্সেস করতে পারবেন।",
+      "make_board_private": "বোর্ড ব্যক্তিগত করুন",
+      "active": "সক্রিয়",
+      "public_option": "সর্বজনীন",
+      "public_description": "সংস্থার সকল সাইন-ইন করা সদস্য এই বোর্ডে অ্যাক্সেস করতে পারবেন",
+      "private_option": "শুধুমাত্র ব্যবহারকারী",
+      "private_description": "শুধুমাত্র লিঙ্ক করা UserGroups এই বোর্ডে অ্যাক্সেস করতে পারবে",
+      "board_set_public": "বোর্ড সর্বজনীন করা হয়েছে",
+      "board_set_private": "বোর্ড ব্যক্তিগত করা হয়েছে",
+      "access_update_error": "অ্যাক্সেস আপডেট করতে ব্যর্থ",
+      "user_groups": "ব্যবহারকারী গ্রুপ",
+      "user_groups_description": "কোন ব্যবহারকারী গ্রুপের এই বোর্ডে অ্যাক্সেস আছে তা পরিচালনা করুন",
+      "actions": "কার্যক্রম",
+      "unlink": "আনলিঙ্ক",
+      "unlink_confirm": "এই ব্যবহারকারী গ্রুপের আর এই বোর্ডে অ্যাক্সেস থাকবে না।",
+      "unlink_user_group": "ব্যবহারকারী গ্রুপ আনলিঙ্ক করুন",
+      "no_user_groups": "এখনও কোনো ব্যবহারকারী গ্রুপ লিঙ্ক করা হয়নি",
+      "link_to_user_group": "ব্যবহারকারী গ্রুপে লিঙ্ক করুন",
+      "link_to_user_group_description": "এই বোর্ডে অ্যাক্সেস দিতে একটি ব্যবহারকারী গ্রুপ নির্বাচন করুন",
+      "link_to_usergroup_btn": "UserGroup-এ লিঙ্ক করুন",
+      "user_group": "ব্যবহারকারী গ্রুপ",
+      "no_user_groups_available": "কোনো ব্যবহারকারী গ্রুপ উপলব্ধ নেই",
+      "create_user_group": "ব্যবহারকারী গ্রুপ তৈরি করুন",
+      "link": "লিঙ্ক",
+      "user_group_linked": "ব্যবহারকারী গ্রুপ লিঙ্ক করা হয়েছে",
+      "user_group_unlinked": "ব্যবহারকারী গ্রুপ আনলিঙ্ক করা হয়েছে",
+      "link_error": "লিঙ্ক করতে ব্যর্থ: ",
+      "unlink_error": "আনলিঙ্ক করতে ব্যর্থ: ",
+      "unlink_error_generic": "ব্যবহারকারী গ্রুপ আনলিঙ্ক করতে ব্যর্থ"
+    },
+    "members": {
+      "title": "সদস্যরা",
+      "description": "এই বোর্ডে কে সহযোগিতা করতে পারবে তা পরিচালনা করুন",
+      "user": "ব্যবহারকারী",
+      "role": "ভূমিকা",
+      "actions": "কার্যক্রম",
+      "remove": "অপসারণ",
+      "remove_confirm": "বোর্ড থেকে {{name}} অপসারণ করবেন?",
+      "remove_member": "সদস্য অপসারণ",
+      "no_members": "এখনও কোনো সদস্য নেই",
+      "member_limit_reached": "সদস্য সীমায় পৌঁছেছে (সর্বোচ্চ 10)",
+      "add_member": "সদস্য যোগ করুন",
+      "add_member_description": "এই বোর্ডে যোগ করতে একজন সংস্থার সদস্য খুঁজুন",
+      "search_placeholder": "নাম বা ইমেইলে খুঁজুন...",
+      "no_users_found": "কোনো ব্যবহারকারী পাওয়া যায়নি",
+      "role_label": "ভূমিকা:",
+      "editor": "সম্পাদক",
+      "viewer": "দর্শক",
+      "adding": "যোগ করা হচ্ছে...",
+      "member_added": "সদস্য যোগ করা হয়েছে",
+      "member_added_error": "সদস্য যোগ করতে ব্যর্থ (ইতিমধ্যে সদস্য হতে পারেন)",
+      "member_removed": "সদস্য অপসারণ করা হয়েছে",
+      "member_removed_error": "সদস্য অপসারণ করতে ব্যর্থ"
+    },
+    "toolbar": {
+      "select": "নির্বাচন",
+      "pan": "প্যান",
+      "draw": "আঁকুন",
+      "add_card": "কার্ড যোগ করুন",
+      "sticky_note": "স্টিকি নোট",
+      "frame": "ফ্রেম",
+      "note": "নোট",
+      "sticker": "স্টিকার",
+      "youtube": "YouTube",
+      "ai_playground": "AI প্লেগ্রাউন্ড",
+      "activity": "কার্যক্রম",
+      "embed": "এম্বেড",
+      "webpage": "ওয়েবপেজ",
+      "thin": "পাতলা",
+      "medium": "মাঝারি",
+      "thick": "মোটা",
+      "undo": "পূর্বাবস্থায় ফেরান",
+      "redo": "পুনরায় করুন",
+      "podcast": "পডকাস্ট"
+    },
+    "zoom": {
+      "zoom_in": "জুম ইন",
+      "zoom_out": "জুম আউট"
+    },
+    "chat": {
+      "placeholder": "কিছু বলুন..."
+    },
+    "effects": {
+      "title": "ইফেক্ট",
+      "inferno": "ইনফার্নো",
+      "blizzard": "তুষারঝড়",
+      "matrix": "Matrix",
+      "fireworks": "আতশবাজি",
+      "earthquake": "ভূমিকম্প",
+      "black_hole": "ব্ল্যাক হোল",
+      "aurora": "অরোরা",
+      "lightning": "বজ্রপাত",
+      "glitch": "গ্লিচ",
+      "nuke": "নিউক"
+    },
+    "timer": {
+      "set_timer": "টাইমার সেট করুন",
+      "set_timer_title": "টাইমার সেট করুন",
+      "times_up": "সময় শেষ!",
+      "resume": "পুনরায় শুরু",
+      "pause": "বিরতি",
+      "restart": "পুনরায় আরম্ভ",
+      "close": "বন্ধ"
+    },
+    "share": {
+      "share_board": "বোর্ড শেয়ার করুন",
+      "share_this_board": "এই বোর্ড শেয়ার করুন"
+    },
+    "youtube_block": {
+      "paste_url": "একটি YouTube URL পেস্ট করুন",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "যোগ করুন"
+    },
+    "activity_block": {
+      "select_course": "একটি কোর্স নির্বাচন করুন",
+      "no_courses": "কোনো কোর্স পাওয়া যায়নি",
+      "no_activities": "কোনো কার্যক্রম পাওয়া যায়নি",
+      "unsupported_type": "অসমর্থিত কার্যক্রমের ধরন"
+    },
+    "embed_block": {
+      "embed": "এম্বেড",
+      "add_embed": "{{name}} এম্বেড যোগ করুন",
+      "url": "URL",
+      "code": "কোড",
+      "paste_url": "এম্বেড URL পেস্ট করুন",
+      "url_help": "YouTube, Figma, CodePen, Spotify এবং আরও অনেক থেকে একটি URL পেস্ট করুন",
+      "paste_code": "এম্বেড কোড পেস্ট করুন",
+      "code_help": "iframe বা এম্বেড কোড পেস্ট করুন",
+      "remove_embed": "এম্বেড সরান",
+      "edit_embed": "এম্বেড সম্পাদনা করুন",
+      "edit_embed_url": "এম্বেড URL সম্পাদনা করুন",
+      "edit_embed_code": "এম্বেড কোড সম্পাদনা করুন",
+      "apply": "প্রয়োগ করুন"
+    },
+    "webpage_block": {
+      "embed_webpage": "একটি ওয়েবপেজ এম্বেড করুন",
+      "url_placeholder": "https://example.com",
+      "add": "যোগ করুন",
+      "blocking_notice": "কিছু সাইট এম্বেডিং ব্লক করতে পারে",
+      "reload": "রিলোড",
+      "open_in_new_tab": "নতুন ট্যাবে খুলুন"
+    },
+    "playground_block": {
+      "title": "AI প্লেগ্রাউন্ড",
+      "description": "AI দ্বারা চালিত ইন্টারেক্টিভ উপাদান তৈরি করুন",
+      "generate": "তৈরি করুন",
+      "edit": "সম্পাদনা",
+      "save_close": "সংরক্ষণ ও বন্ধ",
+      "generating": "ইন্টারেক্টিভ কন্টেন্ট তৈরি হচ্ছে...",
+      "streaming": "তৈরি হচ্ছে...",
+      "empty_state": "আপনি কী তৈরি করতে চান তা বর্ণনা করুন এবং এটি বাস্তব হতে দেখুন",
+      "chat_header": "AI প্লেগ্রাউন্ড",
+      "prompt_text": "তৈরি করতে একটি ইন্টারেক্টিভ উপাদান বর্ণনা করুন",
+      "ai_content": "AI দ্বারা তৈরি কন্টেন্ট",
+      "check_preview": "বাম দিকে প্রিভিউ দেখুন",
+      "creating": "তৈরি হচ্ছে...",
+      "max_iterations": "সর্বোচ্চ পুনরাবৃত্তিতে পৌঁছেছে। আপনার কাজ সংরক্ষণ করুন!",
+      "input_placeholder": "আপনি কী তৈরি করতে চান তা বর্ণনা করুন...",
+      "input_placeholder_refine": "পরিবর্তন বা উন্নতি বর্ণনা করুন...",
+      "quiz": "কুইজ",
+      "flashcards": "ফ্ল্যাশকার্ড",
+      "chart": "চার্ট",
+      "timeline": "টাইমলাইন",
+      "drawing": "অঙ্কন",
+      "calculator": "ক্যালকুলেটর"
+    },
+    "node_actions": {
+      "move_back": "পিছনে সরান",
+      "move_forward": "সামনে সরান",
+      "delete": "মুছুন",
+      "delete_multiple": "{{count}} আইটেম মুছুন"
+    },
+    "pagination": {
+      "previous": "পূর্ববর্তী",
+      "next": "পরবর্তী",
+      "page_of": "পৃষ্ঠা {{current}} এর মধ্যে {{total}}",
+      "results": "\"{{query}}\" এর জন্য {{count}} ফলাফল",
+      "results_plural": "\"{{query}}\" এর জন্য {{count}} ফলাফল"
     }
   }
 }

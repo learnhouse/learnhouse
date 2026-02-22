@@ -7,6 +7,7 @@
     "your_organizations": "Ihre Organisationen",
     "no_orgs_message": "Sie sind noch kein Mitglied einer Organisation. Treten Sie einer bei, um sie hier zu sehen.",
     "assignments": "Aufgaben",
+    "boards": "Boards",
     "payments": "Zahlungen",
     "organization": "Organisation",
     "dashboard": "Dashboard",
@@ -112,7 +113,9 @@
           "communities": "Communities",
           "podcasts": "Podcasts",
           "payments": "Zahlungen",
-          "trail": "Fortschrittsverfolgung"
+          "trail": "Fortschrittsverfolgung",
+          "boards": "Boards",
+          "docs": "Dokumentation"
         },
         "public": {
           "title": "{{feature}} nicht verfügbar",
@@ -562,7 +565,13 @@
     },
     "copied": "Kopiert!",
     "quit_course_confirm": "Sind Sie sicher, dass Sie diesen Kurs verlassen möchten? Sie verlieren Ihren gesamten Fortschritt.",
-    "quit_course_title": "Kurs verlassen?"
+    "quit_course_title": "Kurs verlassen?",
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+    }
   },
   "communities": {
     "title": "Communities",
@@ -1988,6 +1997,7 @@
           "ai": "KI",
           "api": "API-Zugang",
           "features": "Funktionen",
+          "usage": "Usage",
           "other": "Sonstiges",
           "sso": "SSO"
         },
@@ -2023,6 +2033,10 @@
           "sso": {
             "subtitle": "SSO für Ihre Organisation konfigurieren",
             "title": "Single Sign-On"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "Organisations-Name",
@@ -2033,8 +2047,6 @@
         "label_placeholder": "Organisations-Label auswählen",
         "about": "Über die Organisation",
         "about_placeholder": "Detaillierte Beschreibung Ihrer Organisation",
-        "showcase_explore": "In LearnHouse Explore anzeigen",
-        "showcase_description": "Teilen Sie die Kurse und Inhalte Ihrer Organisation mit der LearnHouse-Community. Aktivieren Sie dies, um Lernenden zu helfen, Ihre wertvollen Bildungsressourcen zu entdecken.",
         "save_changes": "Änderungen speichern",
         "saving": "Speichern...",
         "update_success": "Organisation aktualisiert",
@@ -3794,12 +3806,12 @@
         "avg_rate": "Durchschn. Rate",
         "needs_attention": "Aufmerksamkeit erforderlich",
         "total_samples": "Stichproben gesamt",
-        "more_expand": "+{{count}} weitere \u2014 klicken zum Aufklappen",
+        "more_expand": "+{{count}} weitere — klicken zum Aufklappen",
         "activities_count": "{{count}} Aktivitäten",
         "pct_of_total": "% vom Gesamt",
         "bar_width_hint": "Balkenbreite = relative Aufrufe",
         "rate_high": ">70%",
-        "rate_mid": "40\u201370%",
+        "rate_mid": "40–70%",
         "rate_low": "<40%",
         "low_conversion": "niedrige Konversion",
         "avg_completion": "durchschn. Abschluss",
@@ -3897,7 +3909,7 @@
         "peak_viewers": "Spitze Besucher"
       },
       "view_to_enrollment": {
-        "title": "Aufruf \u2192 Einschreibung",
+        "title": "Aufruf → Einschreibung",
         "subtitle": "Wie viele Besucher zu eingeschriebenen Lernenden werden"
       },
       "daily_completions": {
@@ -3914,7 +3926,7 @@
       },
       "activity_dropoff": {
         "title": "Abbruchpunkte",
-        "subtitle": "Wo Lernende aufhören weiterzumachen \u2014 letzte abgeschlossene Aktivität",
+        "subtitle": "Wo Lernende aufhören weiterzumachen — letzte abgeschlossene Aktivität",
         "total_dropoffs": "Abbrüche gesamt",
         "dropoff_points": "Abbruchpunkte"
       },
@@ -3948,7 +3960,7 @@
         "avg_between": "durchschn. {{unit}} zwischen Abschlüssen",
         "transitions_tracked": "Übergänge erfasst",
         "raw_hours_avg": "Rohstunden-Durchschn.",
-        "description": "Misst, wie schnell Lernende von einer Aktivität zur nächsten fortschreiten. Niedriger ist besser \u2014 das bedeutet, dass Lernende schneller durch den Inhalt kommen."
+        "description": "Misst, wie schnell Lernende von einer Aktivität zur nächsten fortschreiten. Niedriger ist besser — das bedeutet, dass Lernende schneller durch den Inhalt kommen."
       },
       "time_to_completion": {
         "title": "Zeit bis zum Abschluss",
@@ -3981,8 +3993,237 @@
         "count_in_period": "{{count}} Einschreibungen in diesem Zeitraum"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} von {{total}}"
+        "range": "{{from}}–{{to}} von {{total}}"
       }
+    }
+  },
+  "boards": {
+    "boards": "Boards",
+    "new_board": "Neues Board",
+    "create_new_board": "Neues Board erstellen",
+    "create_new_board_description": "Ein neues kollaboratives Board einrichten",
+    "create_board": "Board erstellen",
+    "board_created": "Board erstellt",
+    "board_created_error": "Board konnte nicht erstellt werden",
+    "search_placeholder": "Boards durchsuchen...",
+    "no_boards_found": "Keine Boards gefunden",
+    "try_different_search": "Versuchen Sie einen anderen Suchbegriff",
+    "no_boards_yet": "Noch keine Boards",
+    "no_boards_description": "Erstellen Sie Ihr erstes kollaboratives Board, um loszulegen.",
+    "public": "Öffentlich",
+    "private": "Privat",
+    "member_count": "{{count}} Mitglied",
+    "member_count_plural": "{{count}} Mitglieder",
+    "settings": "Einstellungen",
+    "name": "Name",
+    "name_placeholder": "z.B. Projektplanung",
+    "description": "Beschreibung",
+    "description_placeholder": "Kurze Beschreibung...",
+    "back_to_boards": "Zurück zu Boards",
+    "general": {
+      "title": "Allgemein",
+      "description": "Grundlegende Board-Informationen",
+      "board_updated": "Board aktualisiert",
+      "board_updated_error": "Board konnte nicht aktualisiert werden",
+      "saving": "Speichern...",
+      "save_changes": "Änderungen speichern"
+    },
+    "thumbnail": {
+      "title": "Vorschaubild",
+      "description": "Board-Coverbild auf Karten angezeigt",
+      "alt": "Board-Vorschaubild",
+      "uploading": "Wird hochgeladen...",
+      "upload_image": "Bild hochladen",
+      "gallery": "Galerie",
+      "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. 8MB.",
+      "thumbnail_updated": "Vorschaubild aktualisiert",
+      "thumbnail_updated_error": "Vorschaubild konnte nicht hochgeladen werden"
+    },
+    "access": {
+      "title": "Zugriffskontrolle",
+      "description": "Steuern Sie, wer auf dieses Board zugreifen kann",
+      "set_to_public": "Auf öffentlich setzen",
+      "set_to_public_confirm": "Alle angemeldeten Organisationsmitglieder können auf dieses Board zugreifen.",
+      "make_board_public": "Board öffentlich machen",
+      "set_to_private": "Auf privat setzen",
+      "set_to_private_confirm": "Nur Mitglieder verknüpfter UserGroups können auf dieses Board zugreifen.",
+      "make_board_private": "Board privat machen",
+      "active": "Aktiv",
+      "public_option": "Öffentlich",
+      "public_description": "Alle angemeldeten Organisationsmitglieder können auf dieses Board zugreifen",
+      "private_option": "Nur Benutzer",
+      "private_description": "Nur verknüpfte UserGroups können auf dieses Board zugreifen",
+      "board_set_public": "Board auf öffentlich gesetzt",
+      "board_set_private": "Board auf privat gesetzt",
+      "access_update_error": "Zugriff konnte nicht aktualisiert werden",
+      "user_groups": "Benutzergruppen",
+      "user_groups_description": "Verwalten Sie, welche Benutzergruppen Zugriff auf dieses Board haben",
+      "actions": "Aktionen",
+      "unlink": "Verknüpfung aufheben",
+      "unlink_confirm": "Diese Benutzergruppe wird keinen Zugriff mehr auf dieses Board haben.",
+      "unlink_user_group": "Benutzergruppe trennen",
+      "no_user_groups": "Noch keine Benutzergruppen verknüpft",
+      "link_to_user_group": "Mit Benutzergruppe verknüpfen",
+      "link_to_user_group_description": "Wählen Sie eine Benutzergruppe aus, um ihr Zugriff auf dieses Board zu geben",
+      "link_to_usergroup_btn": "Mit UserGroup verknüpfen",
+      "user_group": "Benutzergruppe",
+      "no_user_groups_available": "Keine Benutzergruppen verfügbar",
+      "create_user_group": "Benutzergruppe erstellen",
+      "link": "Verknüpfen",
+      "user_group_linked": "Benutzergruppe verknüpft",
+      "user_group_unlinked": "Benutzergruppe getrennt",
+      "link_error": "Verknüpfung fehlgeschlagen: ",
+      "unlink_error": "Trennung fehlgeschlagen: ",
+      "unlink_error_generic": "Benutzergruppe konnte nicht getrennt werden"
+    },
+    "members": {
+      "title": "Mitglieder",
+      "description": "Verwalten Sie, wer an diesem Board mitarbeiten kann",
+      "user": "Benutzer",
+      "role": "Rolle",
+      "actions": "Aktionen",
+      "remove": "Entfernen",
+      "remove_confirm": "{{name}} vom Board entfernen?",
+      "remove_member": "Mitglied entfernen",
+      "no_members": "Noch keine Mitglieder",
+      "member_limit_reached": "Mitgliederlimit erreicht (max. 10)",
+      "add_member": "Mitglied hinzufügen",
+      "add_member_description": "Suchen Sie nach einem Organisationsmitglied, um es zu diesem Board hinzuzufügen",
+      "search_placeholder": "Nach Name oder E-Mail suchen...",
+      "no_users_found": "Keine Benutzer gefunden",
+      "role_label": "Rolle:",
+      "editor": "Bearbeiter",
+      "viewer": "Betrachter",
+      "adding": "Wird hinzugefügt...",
+      "member_added": "Mitglied hinzugefügt",
+      "member_added_error": "Mitglied konnte nicht hinzugefügt werden (möglicherweise bereits Mitglied)",
+      "member_removed": "Mitglied entfernt",
+      "member_removed_error": "Mitglied konnte nicht entfernt werden"
+    },
+    "toolbar": {
+      "select": "Auswählen",
+      "pan": "Verschieben",
+      "draw": "Zeichnen",
+      "add_card": "Karte hinzufügen",
+      "sticky_note": "Haftnotiz",
+      "frame": "Rahmen",
+      "note": "Notiz",
+      "sticker": "Sticker",
+      "youtube": "YouTube",
+      "ai_playground": "AI Playground",
+      "activity": "Aktivität",
+      "embed": "Einbetten",
+      "webpage": "Webseite",
+      "thin": "Dünn",
+      "medium": "Mittel",
+      "thick": "Dick",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "podcast": "Podcast"
+    },
+    "zoom": {
+      "zoom_in": "Vergrößern",
+      "zoom_out": "Verkleinern"
+    },
+    "chat": {
+      "placeholder": "Etwas sagen..."
+    },
+    "effects": {
+      "title": "Effekte",
+      "inferno": "Inferno",
+      "blizzard": "Schneesturm",
+      "matrix": "Matrix",
+      "fireworks": "Feuerwerk",
+      "earthquake": "Erdbeben",
+      "black_hole": "Schwarzes Loch",
+      "aurora": "Polarlicht",
+      "lightning": "Blitz",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "Timer einstellen",
+      "set_timer_title": "Timer einstellen",
+      "times_up": "Zeit abgelaufen!",
+      "resume": "Fortsetzen",
+      "pause": "Pause",
+      "restart": "Neustart",
+      "close": "Schließen"
+    },
+    "share": {
+      "share_board": "Board teilen",
+      "share_this_board": "Dieses Board teilen"
+    },
+    "youtube_block": {
+      "paste_url": "YouTube-URL einfügen",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "Hinzufügen"
+    },
+    "activity_block": {
+      "select_course": "Kurs auswählen",
+      "no_courses": "Keine Kurse gefunden",
+      "no_activities": "Keine Aktivitäten gefunden",
+      "unsupported_type": "Nicht unterstützter Aktivitätstyp"
+    },
+    "embed_block": {
+      "embed": "Einbetten",
+      "add_embed": "{{name}}-Einbettung hinzufügen",
+      "url": "URL",
+      "code": "Code",
+      "paste_url": "Einbettungs-URL einfügen",
+      "url_help": "Fügen Sie eine URL von YouTube, Figma, CodePen, Spotify und mehr ein",
+      "paste_code": "Einbettungscode einfügen",
+      "code_help": "iframe- oder Einbettungscode einfügen",
+      "remove_embed": "Einbettung entfernen",
+      "edit_embed": "Einbettung bearbeiten",
+      "edit_embed_url": "Einbettungs-URL bearbeiten",
+      "edit_embed_code": "Einbettungscode bearbeiten",
+      "apply": "Anwenden"
+    },
+    "webpage_block": {
+      "embed_webpage": "Webseite einbetten",
+      "url_placeholder": "https://example.com",
+      "add": "Hinzufügen",
+      "blocking_notice": "Einige Websites blockieren möglicherweise das Einbetten",
+      "reload": "Neu laden",
+      "open_in_new_tab": "In neuem Tab öffnen"
+    },
+    "playground_block": {
+      "title": "AI Playground",
+      "description": "KI-gestützte interaktive Elemente generieren",
+      "generate": "Generieren",
+      "edit": "Bearbeiten",
+      "save_close": "Speichern & Schließen",
+      "generating": "Interaktive Inhalte werden generiert...",
+      "streaming": "Wird generiert...",
+      "empty_state": "Beschreiben Sie, was Sie erstellen möchten, und sehen Sie zu, wie es entsteht",
+      "chat_header": "AI Playground",
+      "prompt_text": "Beschreiben Sie ein interaktives Element zum Generieren",
+      "ai_content": "KI-generierter Inhalt",
+      "check_preview": "Vorschau links überprüfen",
+      "creating": "Wird erstellt...",
+      "max_iterations": "Maximale Iterationen erreicht. Speichern Sie Ihre Arbeit!",
+      "input_placeholder": "Beschreiben Sie, was Sie erstellen möchten...",
+      "input_placeholder_refine": "Beschreiben Sie Änderungen oder Verfeinerungen...",
+      "quiz": "Quiz",
+      "flashcards": "Lernkarten",
+      "chart": "Diagramm",
+      "timeline": "Zeitleiste",
+      "drawing": "Zeichnung",
+      "calculator": "Taschenrechner"
+    },
+    "node_actions": {
+      "move_back": "Nach hinten",
+      "move_forward": "Nach vorne",
+      "delete": "Löschen",
+      "delete_multiple": "{{count}} Elemente löschen"
+    },
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "page_of": "Seite {{current}} von {{total}}",
+      "results": "{{count}} Ergebnis für \"{{query}}\"",
+      "results_plural": "{{count}} Ergebnisse für \"{{query}}\""
     }
   }
 }

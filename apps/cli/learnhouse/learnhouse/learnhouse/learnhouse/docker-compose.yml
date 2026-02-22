@@ -26,6 +26,21 @@ services:
       retries: 3
       start_period: 60s
 
+  learnhouse-collab:
+    image: ghcr.io/learnhouse/collab:latest
+    container_name: learnhouse-collab-b4167307
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - COLLAB_PORT=4000
+      - LEARNHOUSE_API_URL=http://learnhouse-app-b4167307:9000
+    depends_on:
+      learnhouse-app:
+        condition: service_healthy
+    networks:
+      - learnhouse-network-b4167307
+
   nginx:
     image: nginx:alpine
     container_name: learnhouse-nginx-b4167307
@@ -37,6 +52,8 @@ services:
     depends_on:
       learnhouse-app:
         condition: service_healthy
+      learnhouse-collab:
+        condition: service_started
     networks:
       - learnhouse-network-b4167307
     healthcheck:

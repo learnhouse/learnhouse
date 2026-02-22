@@ -10,16 +10,17 @@ from config.config import get_learnhouse_config
 
 
 # Plan type definition - matches OrgCloudConfig
-PlanLevel = Literal["free", "standard", "pro", "enterprise"]
+PlanLevel = Literal["free", "personal", "family", "standard", "pro", "enterprise", "oss"]
 
 # Plan hierarchy (lower index = lower tier)
-PLAN_HIERARCHY: list[PlanLevel] = ["free", "standard", "pro", "enterprise"]
+PLAN_HIERARCHY: list[PlanLevel] = ["free", "personal", "family", "standard", "pro", "enterprise", "oss"]
 
 # Feature to required plan mapping
 FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
-    "usergroups": "standard",
+    "usergroups": "personal",
+    "ai": "personal",
+    "boards": "personal",
     "payments": "standard",
-    "ai": "standard",
     "communities": "standard",
     "seo": "standard",
     "versioning": "standard",
@@ -43,6 +44,16 @@ PLAN_LIMITS: dict[PlanLevel, dict[str, int]] = {
         "members": 30,
         "admin_seats": 1,
     },
+    "personal": {
+        "courses": 0,  # Unlimited
+        "members": 1,
+        "admin_seats": 1,
+    },
+    "family": {
+        "courses": 0,  # Unlimited
+        "members": 4,
+        "admin_seats": 4,
+    },
     "standard": {
         "courses": 0,  # Unlimited
         "members": 500,
@@ -58,15 +69,23 @@ PLAN_LIMITS: dict[PlanLevel, dict[str, int]] = {
         "members": 0,  # Unlimited
         "admin_seats": 0,  # Unlimited
     },
+    "oss": {
+        "courses": 0,  # Unlimited
+        "members": 0,  # Unlimited
+        "admin_seats": 0,  # Unlimited
+    },
 }
 
 # AI credit allocation per plan
 # 0 = no access, -1 = unlimited
 AI_CREDIT_LIMITS: dict[PlanLevel, int] = {
     "free": 0,  # No AI access on free plan
+    "personal": 1000,  # Standard AI
+    "family": 3000,  # Advanced AI
     "standard": 1000,  # 1,000 credits
     "pro": 3000,  # 3,000 credits
     "enterprise": -1,  # Unlimited
+    "oss": -1,  # Unlimited
 }
 
 

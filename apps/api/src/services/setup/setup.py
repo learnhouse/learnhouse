@@ -12,6 +12,7 @@ from src.db.organization_config import (
     CourseOrgConfig,
     DiscussionOrgConfig,
     DocsOrgConfig,
+    BoardsOrgConfig,
     MemberOrgConfig,
     OrgCloudConfig,
     OrgFeatureConfig,
@@ -29,6 +30,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
 from src.security.security import security_hash_password
 from src.security.rbac.constants import ADMIN_ROLE_ID
+from config.config import get_learnhouse_config
 
 
 # Install Default roles
@@ -148,6 +150,15 @@ def install_default_elements(db_session: Session):
                 action_delete=True,
                 action_delete_own=True,
             ),
+            boards=PermissionsWithOwn(
+                action_create=True,
+                action_read=True,
+                action_read_own=True,
+                action_update=True,
+                action_update_own=True,
+                action_delete=True,
+                action_delete_own=True,
+            ),
         ),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -239,6 +250,15 @@ def install_default_elements(db_session: Session):
                 action_delete_own=True,
             ),
             docspaces=PermissionsWithOwn(
+                action_create=True,
+                action_read=True,
+                action_read_own=True,
+                action_update=True,
+                action_update_own=True,
+                action_delete=True,
+                action_delete_own=True,
+            ),
+            boards=PermissionsWithOwn(
                 action_create=True,
                 action_read=True,
                 action_read_own=True,
@@ -346,6 +366,15 @@ def install_default_elements(db_session: Session):
                 action_delete=False,
                 action_delete_own=True,
             ),
+            boards=PermissionsWithOwn(
+                action_create=True,
+                action_read=True,
+                action_read_own=True,
+                action_update=False,
+                action_update_own=True,
+                action_delete=False,
+                action_delete_own=True,
+            ),
         ),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -445,6 +474,15 @@ def install_default_elements(db_session: Session):
                 action_delete=False,
                 action_delete_own=False,
             ),
+            boards=PermissionsWithOwn(
+                action_create=False,
+                action_read=True,
+                action_read_own=True,
+                action_update=False,
+                action_update_own=False,
+                action_delete=False,
+                action_delete_own=False,
+            ),
         ),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -508,9 +546,10 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
             api=APIOrgConfig(enabled=True, limit=0),
             podcasts=PodcastsOrgConfig(enabled=True, limit=0),
             docs=DocsOrgConfig(enabled=True, limit=5),
+            boards=BoardsOrgConfig(enabled=False, limit=10),
         ),
         cloud=OrgCloudConfig(
-            plan='free',
+            plan='oss' if get_learnhouse_config().general_config.oss_mode else 'free',
             custom_domain=False
         ),
         landing={}

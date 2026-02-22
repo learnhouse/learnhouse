@@ -80,6 +80,11 @@ class DocsOrgConfig(BaseModel):
     limit: int = 5
 
 
+class BoardsOrgConfig(BaseModel):
+    enabled: bool = False
+    limit: int = 10
+
+
 class OrgFeatureConfig(BaseModel):
     courses: CourseOrgConfig = CourseOrgConfig()
     members: MemberOrgConfig = MemberOrgConfig()
@@ -96,6 +101,7 @@ class OrgFeatureConfig(BaseModel):
     api: APIOrgConfig = APIOrgConfig()
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
     docs: DocsOrgConfig = DocsOrgConfig()
+    boards: BoardsOrgConfig = BoardsOrgConfig()
 
 
 # Auth Branding
@@ -117,7 +123,7 @@ class OrgGeneralConfig(BaseModel):
 
 # Cloud
 class OrgCloudConfig(BaseModel):
-    plan: Literal["free", "standard", "pro", "enterprise"] = "free"
+    plan: Literal["free", "personal", "family", "standard", "pro", "enterprise", "oss"] = "free"
     custom_domain: bool = False
 
 

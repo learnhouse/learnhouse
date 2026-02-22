@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe, Search } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe, Search, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -16,6 +16,7 @@ import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/Org
 import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
 import OrgEditDomains from '@components/Dashboard/Pages/Org/OrgEditDomains/OrgEditDomains'
 import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
+import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -44,6 +45,7 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'domains', label: t('dashboard.organization.settings.tabs.domains') || 'Domains', icon: Globe, requiredPlan: 'standard' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'sso', label: t('dashboard.organization.settings.tabs.sso') || 'SSO', icon: Shield, requiredPlan: 'enterprise' },
+  { id: 'usage', label: t('dashboard.organization.settings.tabs.usage') || 'Usage', icon: BarChart3 },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
@@ -115,6 +117,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'sso') {
       setH1Label(t('dashboard.organization.settings.pages.sso.title') || 'Single Sign-On')
       setH2Label(t('dashboard.organization.settings.pages.sso.subtitle') || 'Configure SSO for your organization')
+    } else if (params.subpage == 'usage') {
+      setH1Label(t('dashboard.organization.settings.pages.usage.title') || 'Usage')
+      setH2Label(t('dashboard.organization.settings.pages.usage.subtitle') || 'Monitor your organization\'s resource usage and plan limits')
     } else if (params.subpage == 'other') {
       setH1Label(t('dashboard.organization.settings.pages.other.title'))
       setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
@@ -172,6 +177,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'domains' ? <OrgEditDomains /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
+        {params.subpage == 'usage' ? <OrgEditUsage /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
       </motion.div>
     </div>

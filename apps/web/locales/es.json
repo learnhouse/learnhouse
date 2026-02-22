@@ -7,6 +7,7 @@
     "your_organizations": "Tus organizaciones",
     "no_orgs_message": "Parece que aún no formas parte de ninguna organización. Únete a una para verla aquí.",
     "assignments": "Tareas",
+    "boards": "Pizarras",
     "payments": "Pagos",
     "organization": "Organización",
     "dashboard": "Panel de control",
@@ -112,7 +113,9 @@
           "communities": "Comunidades",
           "podcasts": "Podcasts",
           "payments": "Pagos",
-          "trail": "Seguimiento de progreso"
+          "trail": "Seguimiento de progreso",
+          "boards": "Pizarras",
+          "docs": "Documentación"
         },
         "public": {
           "title": "{{feature}} no disponible",
@@ -562,7 +565,13 @@
     },
     "copied": "¡Copiado!",
     "quit_course_confirm": "¿Estás seguro de que quieres abandonar este curso? Perderás todo tu progreso.",
-    "quit_course_title": "¿Abandonar curso?"
+    "quit_course_title": "¿Abandonar curso?",
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+    }
   },
   "communities": {
     "title": "Comunidades",
@@ -1988,6 +1997,7 @@
           "ai": "IA",
           "api": "Acceso API",
           "features": "Funcionalidades",
+          "usage": "Usage",
           "other": "Otros",
           "sso": "SSO"
         },
@@ -2023,6 +2033,10 @@
           "sso": {
             "subtitle": "Configurar SSO para tu organización",
             "title": "Inicio de sesión único"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "Nombre de la organización",
@@ -2033,8 +2047,6 @@
         "label_placeholder": "Seleccionar etiqueta de organización",
         "about": "Acerca de la organización",
         "about_placeholder": "Descripción detallada de tu organización",
-        "showcase_explore": "Mostrar en LearnHouse Explore",
-        "showcase_description": "Comparte los cursos y contenidos de tu organización con la comunidad LearnHouse. Activa esto para ayudar a los alumnos a descubrir tus valiosos recursos educativos.",
         "save_changes": "Guardar cambios",
         "saving": "Guardando...",
         "update_success": "Organización actualizada",
@@ -3794,12 +3806,12 @@
         "avg_rate": "Tasa prom.",
         "needs_attention": "Requiere atención",
         "total_samples": "Muestras totales",
-        "more_expand": "+{{count}} más \u2014 clic para expandir",
+        "more_expand": "+{{count}} más — clic para expandir",
         "activities_count": "{{count}} actividades",
         "pct_of_total": "% del total",
         "bar_width_hint": "Ancho de barra = vistas relativas",
         "rate_high": ">70%",
-        "rate_mid": "40\u201370%",
+        "rate_mid": "40–70%",
         "rate_low": "<40%",
         "low_conversion": "baja conversión",
         "avg_completion": "finalización prom.",
@@ -3897,7 +3909,7 @@
         "peak_viewers": "Pico de visitantes"
       },
       "view_to_enrollment": {
-        "title": "Vista \u2192 Inscripción",
+        "title": "Vista → Inscripción",
         "subtitle": "Cuántos visitantes se convierten en estudiantes inscritos"
       },
       "daily_completions": {
@@ -3914,7 +3926,7 @@
       },
       "activity_dropoff": {
         "title": "Puntos de abandono",
-        "subtitle": "Donde los estudiantes dejan de avanzar \u2014 última actividad completada",
+        "subtitle": "Donde los estudiantes dejan de avanzar — última actividad completada",
         "total_dropoffs": "Abandonos totales",
         "dropoff_points": "Puntos de abandono"
       },
@@ -3948,7 +3960,7 @@
         "avg_between": "prom. {{unit}} entre finalizaciones",
         "transitions_tracked": "transiciones registradas",
         "raw_hours_avg": "prom. horas brutas",
-        "description": "Mide la rapidez con la que los estudiantes avanzan de una actividad a la siguiente. Menor es mejor \u2014 significa que los estudiantes avanzan más rápido por el contenido."
+        "description": "Mide la rapidez con la que los estudiantes avanzan de una actividad a la siguiente. Menor es mejor — significa que los estudiantes avanzan más rápido por el contenido."
       },
       "time_to_completion": {
         "title": "Tiempo hasta la finalización",
@@ -3981,8 +3993,237 @@
         "count_in_period": "{{count}} inscripciones en este período"
       },
       "pagination": {
-        "range": "{{from}}\u2013{{to}} de {{total}}"
+        "range": "{{from}}–{{to}} de {{total}}"
       }
+    }
+  },
+  "boards": {
+    "boards": "Tableros",
+    "new_board": "Nuevo tablero",
+    "create_new_board": "Crear nuevo tablero",
+    "create_new_board_description": "Configurar un nuevo tablero colaborativo",
+    "create_board": "Crear tablero",
+    "board_created": "Tablero creado",
+    "board_created_error": "Error al crear el tablero",
+    "search_placeholder": "Buscar tableros...",
+    "no_boards_found": "No se encontraron tableros",
+    "try_different_search": "Prueba con otro término de búsqueda",
+    "no_boards_yet": "Aún no hay tableros",
+    "no_boards_description": "Crea tu primer tablero colaborativo para comenzar.",
+    "public": "Público",
+    "private": "Privado",
+    "member_count": "{{count}} miembro",
+    "member_count_plural": "{{count}} miembros",
+    "settings": "Configuración",
+    "name": "Nombre",
+    "name_placeholder": "p. ej., Planificación de proyecto",
+    "description": "Descripción",
+    "description_placeholder": "Descripción breve...",
+    "back_to_boards": "Volver a tableros",
+    "general": {
+      "title": "General",
+      "description": "Información básica del tablero",
+      "board_updated": "Tablero actualizado",
+      "board_updated_error": "Error al actualizar el tablero",
+      "saving": "Guardando...",
+      "save_changes": "Guardar cambios"
+    },
+    "thumbnail": {
+      "title": "Miniatura",
+      "description": "Imagen de portada del tablero que se muestra en las tarjetas",
+      "alt": "Miniatura del tablero",
+      "uploading": "Subiendo...",
+      "upload_image": "Subir imagen",
+      "gallery": "Galería",
+      "supported_formats": "Formatos admitidos: JPG, JPEG, PNG. Máx. 8MB.",
+      "thumbnail_updated": "Miniatura actualizada",
+      "thumbnail_updated_error": "Error al subir la miniatura"
+    },
+    "access": {
+      "title": "Control de acceso",
+      "description": "Controla quién puede acceder a este tablero",
+      "set_to_public": "Establecer como público",
+      "set_to_public_confirm": "Todos los miembros de la organización que hayan iniciado sesión podrán acceder a este tablero.",
+      "make_board_public": "Hacer tablero público",
+      "set_to_private": "Establecer como privado",
+      "set_to_private_confirm": "Solo los miembros de los UserGroups vinculados podrán acceder a este tablero.",
+      "make_board_private": "Hacer tablero privado",
+      "active": "Activo",
+      "public_option": "Público",
+      "public_description": "Todos los miembros de la organización que hayan iniciado sesión pueden acceder a este tablero",
+      "private_option": "Solo usuarios",
+      "private_description": "Solo los UserGroups vinculados pueden acceder a este tablero",
+      "board_set_public": "Tablero establecido como público",
+      "board_set_private": "Tablero establecido como privado",
+      "access_update_error": "Error al actualizar el acceso",
+      "user_groups": "Grupos de usuarios",
+      "user_groups_description": "Administra qué grupos de usuarios tienen acceso a este tablero",
+      "actions": "Acciones",
+      "unlink": "Desvincular",
+      "unlink_confirm": "Este grupo de usuarios ya no tendrá acceso a este tablero.",
+      "unlink_user_group": "Desvincular grupo de usuarios",
+      "no_user_groups": "Aún no hay grupos de usuarios vinculados",
+      "link_to_user_group": "Vincular a grupo de usuarios",
+      "link_to_user_group_description": "Selecciona un grupo de usuarios para darle acceso a este tablero",
+      "link_to_usergroup_btn": "Vincular a UserGroup",
+      "user_group": "Grupo de usuarios",
+      "no_user_groups_available": "No hay grupos de usuarios disponibles",
+      "create_user_group": "Crear grupo de usuarios",
+      "link": "Vincular",
+      "user_group_linked": "Grupo de usuarios vinculado",
+      "user_group_unlinked": "Grupo de usuarios desvinculado",
+      "link_error": "Error al vincular: ",
+      "unlink_error": "Error al desvincular: ",
+      "unlink_error_generic": "Error al desvincular grupo de usuarios"
+    },
+    "members": {
+      "title": "Miembros",
+      "description": "Administra quién puede colaborar en este tablero",
+      "user": "Usuario",
+      "role": "Rol",
+      "actions": "Acciones",
+      "remove": "Eliminar",
+      "remove_confirm": "¿Eliminar a {{name}} del tablero?",
+      "remove_member": "Eliminar miembro",
+      "no_members": "Aún no hay miembros",
+      "member_limit_reached": "Límite de miembros alcanzado (máx. 10)",
+      "add_member": "Añadir miembro",
+      "add_member_description": "Busca un miembro de la organización para añadirlo a este tablero",
+      "search_placeholder": "Buscar por nombre o correo electrónico...",
+      "no_users_found": "No se encontraron usuarios",
+      "role_label": "Rol:",
+      "editor": "Editor",
+      "viewer": "Visor",
+      "adding": "Añadiendo...",
+      "member_added": "Miembro añadido",
+      "member_added_error": "Error al añadir miembro (puede que ya sea miembro)",
+      "member_removed": "Miembro eliminado",
+      "member_removed_error": "Error al eliminar miembro"
+    },
+    "toolbar": {
+      "select": "Seleccionar",
+      "pan": "Desplazar",
+      "draw": "Dibujar",
+      "add_card": "Añadir tarjeta",
+      "sticky_note": "Nota adhesiva",
+      "frame": "Marco",
+      "note": "Nota",
+      "sticker": "Sticker",
+      "youtube": "YouTube",
+      "ai_playground": "Área de juego IA",
+      "activity": "Actividad",
+      "embed": "Insertar",
+      "webpage": "Página web",
+      "thin": "Fino",
+      "medium": "Medio",
+      "thick": "Grueso",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "podcast": "Podcast"
+    },
+    "zoom": {
+      "zoom_in": "Acercar",
+      "zoom_out": "Alejar"
+    },
+    "chat": {
+      "placeholder": "Escribe algo..."
+    },
+    "effects": {
+      "title": "Efectos",
+      "inferno": "Infierno",
+      "blizzard": "Ventisca",
+      "matrix": "Matrix",
+      "fireworks": "Fuegos artificiales",
+      "earthquake": "Terremoto",
+      "black_hole": "Agujero negro",
+      "aurora": "Aurora",
+      "lightning": "Relámpago",
+      "glitch": "Glitch",
+      "nuke": "Nuke"
+    },
+    "timer": {
+      "set_timer": "Establecer temporizador",
+      "set_timer_title": "Establecer temporizador",
+      "times_up": "¡Se acabó el tiempo!",
+      "resume": "Reanudar",
+      "pause": "Pausar",
+      "restart": "Reiniciar",
+      "close": "Cerrar"
+    },
+    "share": {
+      "share_board": "Compartir tablero",
+      "share_this_board": "Compartir este tablero"
+    },
+    "youtube_block": {
+      "paste_url": "Pega una URL de YouTube",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "Añadir"
+    },
+    "activity_block": {
+      "select_course": "Seleccionar un curso",
+      "no_courses": "No se encontraron cursos",
+      "no_activities": "No se encontraron actividades",
+      "unsupported_type": "Tipo de actividad no compatible"
+    },
+    "embed_block": {
+      "embed": "Insertar",
+      "add_embed": "Añadir inserción de {{name}}",
+      "url": "URL",
+      "code": "Código",
+      "paste_url": "Pega la URL de inserción",
+      "url_help": "Pega una URL de YouTube, Figma, CodePen, Spotify y más",
+      "paste_code": "Pega el código de inserción",
+      "code_help": "Pega código iframe o de inserción",
+      "remove_embed": "Eliminar inserción",
+      "edit_embed": "Editar inserción",
+      "edit_embed_url": "Editar URL de inserción",
+      "edit_embed_code": "Editar código de inserción",
+      "apply": "Aplicar"
+    },
+    "webpage_block": {
+      "embed_webpage": "Insertar una página web",
+      "url_placeholder": "https://example.com",
+      "add": "Añadir",
+      "blocking_notice": "Algunos sitios pueden bloquear la inserción",
+      "reload": "Recargar",
+      "open_in_new_tab": "Abrir en nueva pestaña"
+    },
+    "playground_block": {
+      "title": "Área de juego IA",
+      "description": "Genera elementos interactivos impulsados por IA",
+      "generate": "Generar",
+      "edit": "Editar",
+      "save_close": "Guardar y cerrar",
+      "generating": "Generando contenido interactivo...",
+      "streaming": "Generando...",
+      "empty_state": "Describe lo que quieres crear y observa cómo cobra vida",
+      "chat_header": "Área de juego IA",
+      "prompt_text": "Describe un elemento interactivo para generar",
+      "ai_content": "Contenido generado por IA",
+      "check_preview": "Revisa la vista previa a la izquierda",
+      "creating": "Creando...",
+      "max_iterations": "Iteraciones máximas alcanzadas. ¡Guarda tu trabajo!",
+      "input_placeholder": "Describe lo que quieres crear...",
+      "input_placeholder_refine": "Describe cambios o mejoras...",
+      "quiz": "Cuestionario",
+      "flashcards": "Tarjetas de estudio",
+      "chart": "Gráfico",
+      "timeline": "Línea de tiempo",
+      "drawing": "Dibujo",
+      "calculator": "Calculadora"
+    },
+    "node_actions": {
+      "move_back": "Mover atrás",
+      "move_forward": "Mover adelante",
+      "delete": "Eliminar",
+      "delete_multiple": "Eliminar {{count}} elementos"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page_of": "Página {{current}} de {{total}}",
+      "results": "{{count}} resultado para \"{{query}}\"",
+      "results_plural": "{{count}} resultados para \"{{query}}\""
     }
   }
 }

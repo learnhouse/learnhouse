@@ -42,6 +42,7 @@ from fastapi import HTTPException, UploadFile, status, Request
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
+from config.config import get_learnhouse_config
 
 
 async def get_organization_by_uuid(
@@ -197,7 +198,7 @@ async def create_org(
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
             api=APIOrgConfig(enabled=True, limit=0),
         ),
-        cloud=OrgCloudConfig(plan="free", custom_domain=False),
+        cloud=OrgCloudConfig(plan='oss' if get_learnhouse_config().general_config.oss_mode else 'free', custom_domain=False),
     )
 
     org_config = json.loads(org_config.model_dump_json())
@@ -1108,6 +1109,64 @@ async def update_org_docs_config(
     db_session.refresh(org_config)
 
     return {"detail": "Docs configuration updated"}
+
+
+async def update_org_boards_config(
+    request: Request,
+    boards_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "boards" not in updated_config["features"]:
+        updated_config["features"]["boards"] = {"enabled": False, "limit": 10}
+
+    # Update config
+    updated_config["features"]["boards"]["enabled"] = boards_enabled
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Boards configuration updated"}
 
 
 async def update_org_color_config(

@@ -25,36 +25,36 @@ class TestValidateContentPath:
         return _validate_content_path(path)
 
     def test_valid_path(self):
-        assert self._validate("orgs/abc/courses/def/thumbnail.png") is True
+        assert self._validate("orgs/abc/courses/def/thumbnail.png") is not None
 
     def test_valid_deep_path(self):
-        assert self._validate("orgs/abc/courses/def/activities/ghi/video.mp4") is True
+        assert self._validate("orgs/abc/courses/def/activities/ghi/video.mp4") is not None
 
     def test_directory_traversal_dotdot(self):
-        assert self._validate("../etc/passwd") is False
+        assert self._validate("../etc/passwd") is None
 
     def test_directory_traversal_middle(self):
-        assert self._validate("orgs/abc/../../etc/passwd") is False
+        assert self._validate("orgs/abc/../../etc/passwd") is None
 
     def test_absolute_path(self):
-        assert self._validate("/etc/passwd") is False
+        assert self._validate("/etc/passwd") is None
 
     def test_null_byte(self):
-        assert self._validate("orgs/abc\x00.png") is False
+        assert self._validate("orgs/abc\x00.png") is None
 
     def test_url_encoded_dotdot(self):
         """URL-encoded ../ should be caught by double-decode."""
-        assert self._validate("orgs/%2e%2e/%2e%2e/etc/passwd") is False
+        assert self._validate("orgs/%2e%2e/%2e%2e/etc/passwd") is None
 
     def test_double_encoded_dotdot(self):
         """Double URL-encoded ../ should be caught."""
-        assert self._validate("orgs/%252e%252e/etc/passwd") is False
+        assert self._validate("orgs/%252e%252e/etc/passwd") is None
 
     def test_backslash_traversal(self):
-        assert self._validate("orgs\\..\\..\\etc\\passwd") is False
+        assert self._validate("orgs\\..\\..\\etc\\passwd") is None
 
     def test_user_avatar_path(self):
-        assert self._validate("users/user_abc/avatars/photo.jpg") is True
+        assert self._validate("users/user_abc/avatars/photo.jpg") is not None
 
 
 class TestCheckContentAccess:
@@ -218,19 +218,19 @@ class TestS3ContentPathValidation:
         return _validate_content_path(path)
 
     def test_valid_path(self):
-        assert self._validate("orgs/abc/courses/def/thumbnail.png") is True
+        assert self._validate("orgs/abc/courses/def/thumbnail.png") is not None
 
     def test_directory_traversal(self):
-        assert self._validate("../etc/passwd") is False
+        assert self._validate("../etc/passwd") is None
 
     def test_null_byte(self):
-        assert self._validate("file\x00.txt") is False
+        assert self._validate("file\x00.txt") is None
 
     def test_url_encoded_traversal(self):
-        assert self._validate("%2e%2e/etc/passwd") is False
+        assert self._validate("%2e%2e/etc/passwd") is None
 
     def test_absolute_path(self):
-        assert self._validate("/etc/passwd") is False
+        assert self._validate("/etc/passwd") is None
 
 
 class TestS3ContentAccess:

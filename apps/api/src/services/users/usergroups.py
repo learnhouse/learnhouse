@@ -70,6 +70,10 @@ async def _validate_resource_exists_and_belongs_to_org(
         from src.db.docs.docspaces import DocSpace
         statement = select(DocSpace).where(DocSpace.docspace_uuid == resource_uuid)
         resource = db_session.exec(statement).first()
+    elif config.resource_type == "boards":
+        from src.db.boards import Board
+        statement = select(Board).where(Board.board_uuid == resource_uuid)
+        resource = db_session.exec(statement).first()
     else:
         raise HTTPException(
             status_code=400,
@@ -268,6 +272,30 @@ async def get_usergroups_by_resource(
     usergroups = db_session.exec(statement).all()
 
     return [UserGroupRead.model_validate(ug) for ug in usergroups]
+
+
+async def get_resources_by_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+) -> list[str]:
+
+    # RBAC check
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+    )
+
+    statement = select(UserGroupResource).where(
+        UserGroupResource.usergroup_id == usergroup_id
+    )
+    usergroup_resources = db_session.exec(statement).all()
+
+    return [ugr.resource_uuid for ugr in usergroup_resources]
 
 
 async def update_usergroup_by_id(

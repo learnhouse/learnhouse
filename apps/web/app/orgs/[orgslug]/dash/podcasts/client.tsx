@@ -10,7 +10,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import PodcastThumbnail from '@components/Objects/Thumbnails/PodcastThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 
 interface PodcastsDashClientProps {
@@ -39,9 +39,9 @@ const PodcastsDashClient = ({
       descriptionKey="common.plans.feature_restricted.podcasts.description"
       fullScreen
     >
+    <FeatureDisabledView featureName="podcasts" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
-        <FeatureDisabledBanner featureName="podcasts" orgslug={orgslug} />
         <Breadcrumbs items={[
           { label: t('podcasts.podcasts'), href: '/dash/podcasts', icon: <Headphones size={14} /> }
         ]} />
@@ -118,6 +118,7 @@ const PodcastsDashClient = ({
         orgSlug={orgslug}
       />
     </div>
+    </FeatureDisabledView>
     </PlanRestrictedFeature>
   )
 }
