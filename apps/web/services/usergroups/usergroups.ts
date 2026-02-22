@@ -107,6 +107,19 @@ export async function deleteUserGroup(
   return res
 }
 
+export async function getUserGroupResources(
+  usergroup_id: any,
+  org_id: any,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}usergroups/${usergroup_id}/resources?org_id=${org_id}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function linkResourcesToUserGroup(
   usergroup_id: any,
   resource_uuids: any,

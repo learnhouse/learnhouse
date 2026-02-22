@@ -7,6 +7,7 @@
     "your_organizations": "組織一覧",
     "no_orgs_message": "まだどの組織にも所属していないようです。参加するとここに表示されます。",
     "assignments": "課題",
+    "boards": "ボード",
     "payments": "支払い",
     "organization": "組織",
     "dashboard": "ダッシュボード",
@@ -104,7 +105,9 @@
           "communities": "コミュニティ",
           "podcasts": "ポッドキャスト",
           "payments": "支払い",
-          "trail": "進捗追跡"
+          "trail": "進捗追跡",
+          "boards": "ボード",
+          "docs": "ドキュメント"
         },
         "public": {
           "title": "{{feature}}は利用できません",
@@ -524,6 +527,12 @@
         "attach_youtube": "YouTubeリンク",
         "attach_file": "ドキュメント"
       }
+    },
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
     }
   },
   "communities": {
@@ -1724,6 +1733,7 @@
           "ai": "AI",
           "api": "APIアクセス",
           "features": "機能",
+          "usage": "Usage",
           "other": "その他"
         },
         "pages": {
@@ -1754,6 +1764,10 @@
           "features": {
             "title": "機能",
             "subtitle": "組織の機能を有効または無効にする"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "組織名",
@@ -1764,8 +1778,6 @@
         "label_placeholder": "組織ラベルを選択",
         "about": "組織について",
         "about_placeholder": "組織の詳細な説明",
-        "showcase_explore": "LearnHouse Exploreで紹介する",
-        "showcase_description": "組織のコースやコンテンツをLearnHouseコミュニティと共有します。これを有効にすると、学習者があなたの貴重な教育リソースを見つけやすくなります。",
         "save_changes": "変更を保存",
         "saving": "保存中...",
         "update_success": "組織を更新しました",
@@ -3392,55 +3404,445 @@
       "not_configured_title": "アナリティクス未設定",
       "not_configured_desc": "アナリティクスにはTinybirdの設定が必要です。管理者にお問い合わせください。",
       "common": {
-        "loading": "読み込み中...", "no_data": "データがまだありません", "no_enrollments": "登録がまだありません",
-        "total": "合計", "daily_avg": "日平均", "latest_day": "最新日",
-        "peak": "ピーク", "peak_day": "ピーク日", "type": "種類", "rate": "率",
-        "views": "閲覧数", "enrollments": "登録数", "completions": "完了数",
-        "completion_rate": "完了率", "conversion": "コンバージョン", "avg_time": "平均時間",
-        "total_views": "総閲覧数", "total_completions": "総完了数",
-        "avg_rate": "平均率", "needs_attention": "要注意", "total_samples": "総サンプル数",
-        "more_expand": "+{{count}}件 — クリックして展開", "activities_count": "{{count}}個のアクティビティ",
-        "pct_of_total": "全体の%", "bar_width_hint": "バーの幅 = 相対的な閲覧数",
-        "rate_high": ">70%", "rate_mid": "40–70%", "rate_low": "<40%",
-        "low_conversion": "低コンバージョン", "avg_completion": "平均完了",
-        "avg_prefix": "平均 {{value}}", "unknown_activity": "不明なアクティビティ"
+        "loading": "読み込み中...",
+        "no_data": "データがまだありません",
+        "no_enrollments": "登録がまだありません",
+        "total": "合計",
+        "daily_avg": "日平均",
+        "latest_day": "最新日",
+        "peak": "ピーク",
+        "peak_day": "ピーク日",
+        "type": "種類",
+        "rate": "率",
+        "views": "閲覧数",
+        "enrollments": "登録数",
+        "completions": "完了数",
+        "completion_rate": "完了率",
+        "conversion": "コンバージョン",
+        "avg_time": "平均時間",
+        "total_views": "総閲覧数",
+        "total_completions": "総完了数",
+        "avg_rate": "平均率",
+        "needs_attention": "要注意",
+        "total_samples": "総サンプル数",
+        "more_expand": "+{{count}}件 — クリックして展開",
+        "activities_count": "{{count}}個のアクティビティ",
+        "pct_of_total": "全体の%",
+        "bar_width_hint": "バーの幅 = 相対的な閲覧数",
+        "rate_high": ">70%",
+        "rate_mid": "40–70%",
+        "rate_low": "<40%",
+        "low_conversion": "低コンバージョン",
+        "avg_completion": "平均完了",
+        "avg_prefix": "平均 {{value}}",
+        "unknown_activity": "不明なアクティビティ"
       },
       "units": {
-        "done": "完了", "views": "閲覧", "enrolled": "登録済み",
-        "learner": "学習者", "learners": "学習者", "events": "イベント",
-        "total": "合計", "total_views": "総閲覧数", "total_completions": "総完了数",
-        "total_dropoffs": "総離脱数", "peak_active": "ピークアクティブ",
-        "conversion": "コンバージョン", "retention": "リテンション", "in_cohort": "コホート内",
-        "active_learners": "アクティブ学習者", "recent_enrollments": "最近の登録",
-        "transitions": "遷移", "median_days": "中央値日数",
-        "claim_rate": "申請率", "claimed": "申請済み", "completed": "完了済み",
-        "unique": "ユニーク", "time": "時間", "avg_per_day": "日平均",
-        "busiest_time": "最も忙しい時間", "minutes": "分", "hours": "時間",
-        "days": "日", "done_before": "以前に完了", "sample": "サンプル",
-        "samples": "サンプル", "min": "分", "avg_per_learner": "学習者あたり平均"
+        "done": "完了",
+        "views": "閲覧",
+        "enrolled": "登録済み",
+        "learner": "学習者",
+        "learners": "学習者",
+        "events": "イベント",
+        "total": "合計",
+        "total_views": "総閲覧数",
+        "total_completions": "総完了数",
+        "total_dropoffs": "総離脱数",
+        "peak_active": "ピークアクティブ",
+        "conversion": "コンバージョン",
+        "retention": "リテンション",
+        "in_cohort": "コホート内",
+        "active_learners": "アクティブ学習者",
+        "recent_enrollments": "最近の登録",
+        "transitions": "遷移",
+        "median_days": "中央値日数",
+        "claim_rate": "申請率",
+        "claimed": "申請済み",
+        "completed": "完了済み",
+        "unique": "ユニーク",
+        "time": "時間",
+        "avg_per_day": "日平均",
+        "busiest_time": "最も忙しい時間",
+        "minutes": "分",
+        "hours": "時間",
+        "days": "日",
+        "done_before": "以前に完了",
+        "sample": "サンプル",
+        "samples": "サンプル",
+        "min": "分",
+        "avg_per_learner": "学習者あたり平均"
       },
-      "type_labels": { "video": "動画", "document": "ドキュメント", "quiz": "クイズ", "assignment": "課題", "dynamic": "ダイナミック" },
-      "overview_stats": { "views": "閲覧数", "enrollments": "登録数", "completions": "完了数", "completion_rate": "完了率" },
-      "activity_type_breakdown": { "title": "アクティビティタイプ内訳", "subtitle": "コンテンツタイプ別の分布と完了率" },
-      "engagement_by_type": { "title": "コンテンツタイプ別エンゲージメント", "subtitle": "アクティビティタイプ別の学習者エンゲージメント指標", "total_events": "総イベント数", "total_learners": "総学習者数" },
-      "peak_hours": { "title": "学習ピーク時間", "subtitle": "このコースで学習者が最もアクティブな時間帯", "peak_time": "ピーク時間", "peak_events": "ピークイベント", "less": "少ない", "more": "多い", "days": { "mon": "月", "tue": "火", "wed": "水", "thu": "木", "fri": "金", "sat": "土", "sun": "日" }, "events_tooltip": "{{day}} {{hour}}: {{count}}イベント" },
-      "enrollment_trend": { "title": "登録トレンド", "subtitle": "日別の新規登録推移" },
-      "active_learners": { "title": "アクティブ学習者", "subtitle": "このコースの日別ユニークアクティブ学習者数" },
-      "unique_viewers": { "title": "コース閲覧者", "subtitle": "コースページの日別ユニーク訪問者数", "total_views": "総閲覧数", "peak_viewers": "ピーク閲覧者数" },
-      "view_to_enrollment": { "title": "閲覧 → 登録", "subtitle": "閲覧者のうち何人が登録学習者になったか" },
-      "daily_completions": { "title": "日別完了数", "subtitle": "1日あたりのアクティビティ完了数" },
-      "activity_funnel": { "title": "アクティビティ完了ファネル", "subtitle": "アクティビティ別の閲覧数 vs 完了数" },
-      "time_per_activity": { "title": "アクティビティ別所要時間", "subtitle": "各アクティビティに学習者が費やす平均時間" },
-      "activity_dropoff": { "title": "離脱ポイント", "subtitle": "学習者が進行を停止する場所 — 最後に完了したアクティビティ", "total_dropoffs": "総離脱数", "dropoff_points": "離脱ポイント" },
-      "avg_session_duration": { "title": "学習者あたりの日別時間", "subtitle": "各学習者が1日に費やす平均時間", "total_time": "総時間", "avg_per_day": "日平均", "minutes_label": "分" },
-      "learner_progress": { "title": "学習者の進捗", "subtitle": "学習者が完了したアクティビティ数", "total_across_brackets": "全進捗区分で合計{{count}}人の学習者" },
-      "learner_retention": { "title": "学習者リテンション", "subtitle": "最初のアクティビティ後に戻ってくる学習者の割合", "cohort_size": "コホートサイズ", "current_retention": "現在のリテンション", "days_since_first": "最初のアクティビティからの日数", "day_label": "{{day}}日目" },
-      "completion_velocity": { "title": "完了速度", "subtitle": "アクティビティ完了間の平均時間", "not_enough_data": "データが不足しています", "need_transitions": "速度を計算するには少なくとも3つのアクティビティ遷移が必要です", "not_enough_data_short": "データ不足", "need_transitions_short": "3つ以上の遷移が必要", "avg_between": "完了間の平均 {{unit}}", "transitions_tracked": "追跡された遷移", "raw_hours_avg": "生の時間平均", "description": "学習者が次のアクティビティにどれだけ速く進むかを測定します。低いほど良い — 学習者がコンテンツをより速く進めていることを意味します。" },
-      "time_to_completion": { "title": "完了までの時間", "subtitle": "学習者がこのコースを終えるまでにかかる時間", "median_days_to_complete": "完了までの中央値日数", "fast_p25": "速い (P25)", "top_25_finish": "上位25%の完了", "median": "中央値", "half_finish": "半数の完了", "slow_p75": "遅い (P75)", "pct_75_finish": "75%の完了", "based_on": "{{count}}件のコース完了に基づく", "days_unit": "日" },
-      "certification_rate": { "title": "認定率", "subtitle": "証明書を申請した修了者の割合", "of_completers_claimed": "の修了者が証明書を申請", "certificates_claimed": "申請された証明書", "course_completions": "コース完了数" },
-      "top_learners": { "title": "トップ学習者", "subtitle": "完了数による最もアクティブな学習者", "user_fallback": "ユーザー #{{id}}" },
-      "recent_enrollments": { "title": "最近の登録", "subtitle": "このコースに最近登録した学習者", "count_in_period": "この期間の登録数 {{count}}件" },
-      "pagination": { "range": "{{from}}–{{to}} / {{total}}" }
+      "type_labels": {
+        "video": "動画",
+        "document": "ドキュメント",
+        "quiz": "クイズ",
+        "assignment": "課題",
+        "dynamic": "ダイナミック"
+      },
+      "overview_stats": {
+        "views": "閲覧数",
+        "enrollments": "登録数",
+        "completions": "完了数",
+        "completion_rate": "完了率"
+      },
+      "activity_type_breakdown": {
+        "title": "アクティビティタイプ内訳",
+        "subtitle": "コンテンツタイプ別の分布と完了率"
+      },
+      "engagement_by_type": {
+        "title": "コンテンツタイプ別エンゲージメント",
+        "subtitle": "アクティビティタイプ別の学習者エンゲージメント指標",
+        "total_events": "総イベント数",
+        "total_learners": "総学習者数"
+      },
+      "peak_hours": {
+        "title": "学習ピーク時間",
+        "subtitle": "このコースで学習者が最もアクティブな時間帯",
+        "peak_time": "ピーク時間",
+        "peak_events": "ピークイベント",
+        "less": "少ない",
+        "more": "多い",
+        "days": {
+          "mon": "月",
+          "tue": "火",
+          "wed": "水",
+          "thu": "木",
+          "fri": "金",
+          "sat": "土",
+          "sun": "日"
+        },
+        "events_tooltip": "{{day}} {{hour}}: {{count}}イベント"
+      },
+      "enrollment_trend": {
+        "title": "登録トレンド",
+        "subtitle": "日別の新規登録推移"
+      },
+      "active_learners": {
+        "title": "アクティブ学習者",
+        "subtitle": "このコースの日別ユニークアクティブ学習者数"
+      },
+      "unique_viewers": {
+        "title": "コース閲覧者",
+        "subtitle": "コースページの日別ユニーク訪問者数",
+        "total_views": "総閲覧数",
+        "peak_viewers": "ピーク閲覧者数"
+      },
+      "view_to_enrollment": {
+        "title": "閲覧 → 登録",
+        "subtitle": "閲覧者のうち何人が登録学習者になったか"
+      },
+      "daily_completions": {
+        "title": "日別完了数",
+        "subtitle": "1日あたりのアクティビティ完了数"
+      },
+      "activity_funnel": {
+        "title": "アクティビティ完了ファネル",
+        "subtitle": "アクティビティ別の閲覧数 vs 完了数"
+      },
+      "time_per_activity": {
+        "title": "アクティビティ別所要時間",
+        "subtitle": "各アクティビティに学習者が費やす平均時間"
+      },
+      "activity_dropoff": {
+        "title": "離脱ポイント",
+        "subtitle": "学習者が進行を停止する場所 — 最後に完了したアクティビティ",
+        "total_dropoffs": "総離脱数",
+        "dropoff_points": "離脱ポイント"
+      },
+      "avg_session_duration": {
+        "title": "学習者あたりの日別時間",
+        "subtitle": "各学習者が1日に費やす平均時間",
+        "total_time": "総時間",
+        "avg_per_day": "日平均",
+        "minutes_label": "分"
+      },
+      "learner_progress": {
+        "title": "学習者の進捗",
+        "subtitle": "学習者が完了したアクティビティ数",
+        "total_across_brackets": "全進捗区分で合計{{count}}人の学習者"
+      },
+      "learner_retention": {
+        "title": "学習者リテンション",
+        "subtitle": "最初のアクティビティ後に戻ってくる学習者の割合",
+        "cohort_size": "コホートサイズ",
+        "current_retention": "現在のリテンション",
+        "days_since_first": "最初のアクティビティからの日数",
+        "day_label": "{{day}}日目"
+      },
+      "completion_velocity": {
+        "title": "完了速度",
+        "subtitle": "アクティビティ完了間の平均時間",
+        "not_enough_data": "データが不足しています",
+        "need_transitions": "速度を計算するには少なくとも3つのアクティビティ遷移が必要です",
+        "not_enough_data_short": "データ不足",
+        "need_transitions_short": "3つ以上の遷移が必要",
+        "avg_between": "完了間の平均 {{unit}}",
+        "transitions_tracked": "追跡された遷移",
+        "raw_hours_avg": "生の時間平均",
+        "description": "学習者が次のアクティビティにどれだけ速く進むかを測定します。低いほど良い — 学習者がコンテンツをより速く進めていることを意味します。"
+      },
+      "time_to_completion": {
+        "title": "完了までの時間",
+        "subtitle": "学習者がこのコースを終えるまでにかかる時間",
+        "median_days_to_complete": "完了までの中央値日数",
+        "fast_p25": "速い (P25)",
+        "top_25_finish": "上位25%の完了",
+        "median": "中央値",
+        "half_finish": "半数の完了",
+        "slow_p75": "遅い (P75)",
+        "pct_75_finish": "75%の完了",
+        "based_on": "{{count}}件のコース完了に基づく",
+        "days_unit": "日"
+      },
+      "certification_rate": {
+        "title": "認定率",
+        "subtitle": "証明書を申請した修了者の割合",
+        "of_completers_claimed": "の修了者が証明書を申請",
+        "certificates_claimed": "申請された証明書",
+        "course_completions": "コース完了数"
+      },
+      "top_learners": {
+        "title": "トップ学習者",
+        "subtitle": "完了数による最もアクティブな学習者",
+        "user_fallback": "ユーザー #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "最近の登録",
+        "subtitle": "このコースに最近登録した学習者",
+        "count_in_period": "この期間の登録数 {{count}}件"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} / {{total}}"
+      }
+    }
+  },
+  "boards": {
+    "boards": "ボード",
+    "new_board": "新しいボード",
+    "create_new_board": "新しいボードを作成",
+    "create_new_board_description": "新しいコラボレーションボードを設定する",
+    "create_board": "ボードを作成",
+    "board_created": "ボードが作成されました",
+    "board_created_error": "ボードの作成に失敗しました",
+    "search_placeholder": "ボードを検索...",
+    "no_boards_found": "ボードが見つかりません",
+    "try_different_search": "別の検索語を試してください",
+    "no_boards_yet": "まだボードがありません",
+    "no_boards_description": "最初のコラボレーションボードを作成して始めましょう。",
+    "public": "公開",
+    "private": "非公開",
+    "member_count": "{{count}} メンバー",
+    "member_count_plural": "{{count}} メンバー",
+    "settings": "設定",
+    "name": "名前",
+    "name_placeholder": "例: プロジェクト計画",
+    "description": "説明",
+    "description_placeholder": "簡単な説明...",
+    "back_to_boards": "ボードに戻る",
+    "general": {
+      "title": "一般",
+      "description": "ボードの基本情報",
+      "board_updated": "ボードが更新されました",
+      "board_updated_error": "ボードの更新に失敗しました",
+      "saving": "保存中...",
+      "save_changes": "変更を保存"
+    },
+    "thumbnail": {
+      "title": "サムネイル",
+      "description": "カードに表示されるボードのカバー画像",
+      "alt": "ボードのサムネイル",
+      "uploading": "アップロード中...",
+      "upload_image": "画像をアップロード",
+      "gallery": "ギャラリー",
+      "supported_formats": "対応形式: JPG, JPEG, PNG。最大 8MB。",
+      "thumbnail_updated": "サムネイルが更新されました",
+      "thumbnail_updated_error": "サムネイルのアップロードに失敗しました"
+    },
+    "access": {
+      "title": "アクセス制御",
+      "description": "このボードにアクセスできるユーザーを管理する",
+      "set_to_public": "公開に設定",
+      "set_to_public_confirm": "サインイン済みのすべての組織メンバーがこのボードにアクセスできるようになります。",
+      "make_board_public": "ボードを公開にする",
+      "set_to_private": "非公開に設定",
+      "set_to_private_confirm": "リンクされたUserGroupsのメンバーのみがこのボードにアクセスできます。",
+      "make_board_private": "ボードを非公開にする",
+      "active": "アクティブ",
+      "public_option": "公開",
+      "public_description": "サインイン済みのすべての組織メンバーがこのボードにアクセスできます",
+      "private_option": "ユーザーのみ",
+      "private_description": "リンクされたUserGroupsのみがこのボードにアクセスできます",
+      "board_set_public": "ボードが公開に設定されました",
+      "board_set_private": "ボードが非公開に設定されました",
+      "access_update_error": "アクセスの更新に失敗しました",
+      "user_groups": "ユーザーグループ",
+      "user_groups_description": "このボードにアクセスできるユーザーグループを管理する",
+      "actions": "アクション",
+      "unlink": "リンク解除",
+      "unlink_confirm": "このユーザーグループはこのボードにアクセスできなくなります。",
+      "unlink_user_group": "ユーザーグループのリンク解除",
+      "no_user_groups": "まだリンクされたユーザーグループがありません",
+      "link_to_user_group": "ユーザーグループにリンク",
+      "link_to_user_group_description": "ユーザーグループを選択してこのボードへのアクセスを付与する",
+      "link_to_usergroup_btn": "UserGroupにリンク",
+      "user_group": "ユーザーグループ",
+      "no_user_groups_available": "利用可能なユーザーグループがありません",
+      "create_user_group": "ユーザーグループを作成",
+      "link": "リンク",
+      "user_group_linked": "ユーザーグループがリンクされました",
+      "user_group_unlinked": "ユーザーグループのリンクが解除されました",
+      "link_error": "リンクに失敗しました: ",
+      "unlink_error": "リンク解除に失敗しました: ",
+      "unlink_error_generic": "ユーザーグループのリンク解除に失敗しました"
+    },
+    "members": {
+      "title": "メンバー",
+      "description": "このボードでコラボレーションできるユーザーを管理する",
+      "user": "ユーザー",
+      "role": "役割",
+      "actions": "アクション",
+      "remove": "削除",
+      "remove_confirm": "{{name}} をボードから削除しますか？",
+      "remove_member": "メンバーを削除",
+      "no_members": "まだメンバーがいません",
+      "member_limit_reached": "メンバー上限に達しました（最大10人）",
+      "add_member": "メンバーを追加",
+      "add_member_description": "このボードに追加する組織メンバーを検索する",
+      "search_placeholder": "名前またはメールで検索...",
+      "no_users_found": "ユーザーが見つかりません",
+      "role_label": "役割:",
+      "editor": "編集者",
+      "viewer": "閲覧者",
+      "adding": "追加中...",
+      "member_added": "メンバーが追加されました",
+      "member_added_error": "メンバーの追加に失敗しました（既にメンバーの可能性があります）",
+      "member_removed": "メンバーが削除されました",
+      "member_removed_error": "メンバーの削除に失敗しました"
+    },
+    "toolbar": {
+      "select": "選択",
+      "pan": "パン",
+      "draw": "描画",
+      "add_card": "カードを追加",
+      "sticky_note": "付箋",
+      "frame": "フレーム",
+      "note": "ノート",
+      "sticker": "ステッカー",
+      "youtube": "YouTube",
+      "ai_playground": "AI Playground",
+      "activity": "アクティビティ",
+      "embed": "埋め込み",
+      "webpage": "ウェブページ",
+      "thin": "細い",
+      "medium": "中",
+      "thick": "太い",
+      "undo": "元に戻す",
+      "redo": "やり直す",
+      "podcast": "ポッドキャスト"
+    },
+    "zoom": {
+      "zoom_in": "拡大",
+      "zoom_out": "縮小"
+    },
+    "chat": {
+      "placeholder": "何か入力..."
+    },
+    "effects": {
+      "title": "エフェクト",
+      "inferno": "インフェルノ",
+      "blizzard": "ブリザード",
+      "matrix": "マトリックス",
+      "fireworks": "花火",
+      "earthquake": "地震",
+      "black_hole": "ブラックホール",
+      "aurora": "オーロラ",
+      "lightning": "稲妻",
+      "glitch": "グリッチ",
+      "nuke": "ニューク"
+    },
+    "timer": {
+      "set_timer": "タイマーを設定",
+      "set_timer_title": "タイマー設定",
+      "times_up": "時間切れ！",
+      "resume": "再開",
+      "pause": "一時停止",
+      "restart": "リスタート",
+      "close": "閉じる"
+    },
+    "share": {
+      "share_board": "ボードを共有",
+      "share_this_board": "このボードを共有"
+    },
+    "youtube_block": {
+      "paste_url": "YouTube URLを貼り付け",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "追加"
+    },
+    "activity_block": {
+      "select_course": "コースを選択",
+      "no_courses": "コースが見つかりません",
+      "no_activities": "アクティビティが見つかりません",
+      "unsupported_type": "サポートされていないアクティビティタイプ"
+    },
+    "embed_block": {
+      "embed": "埋め込み",
+      "add_embed": "{{name}} の埋め込みを追加",
+      "url": "URL",
+      "code": "コード",
+      "paste_url": "埋め込みURLを貼り付け",
+      "url_help": "YouTube、Figma、CodePen、SpotifyなどのURLを貼り付け",
+      "paste_code": "埋め込みコードを貼り付け",
+      "code_help": "iframeまたは埋め込みコードを貼り付け",
+      "remove_embed": "埋め込みを削除",
+      "edit_embed": "埋め込みを編集",
+      "edit_embed_url": "埋め込みURLを編集",
+      "edit_embed_code": "埋め込みコードを編集",
+      "apply": "適用"
+    },
+    "webpage_block": {
+      "embed_webpage": "ウェブページを埋め込む",
+      "url_placeholder": "https://example.com",
+      "add": "追加",
+      "blocking_notice": "一部のサイトは埋め込みをブロックする場合があります",
+      "reload": "再読み込み",
+      "open_in_new_tab": "新しいタブで開く"
+    },
+    "playground_block": {
+      "title": "AI Playground",
+      "description": "AIを活用したインタラクティブな要素を生成する",
+      "generate": "生成",
+      "edit": "編集",
+      "save_close": "保存して閉じる",
+      "generating": "インタラクティブコンテンツを生成中...",
+      "streaming": "生成中...",
+      "empty_state": "作りたいものを説明すると、それが形になります",
+      "chat_header": "AI Playground",
+      "prompt_text": "生成するインタラクティブ要素を説明してください",
+      "ai_content": "AI生成コンテンツ",
+      "check_preview": "左側のプレビューを確認してください",
+      "creating": "作成中...",
+      "max_iterations": "最大反復回数に達しました。作業を保存してください！",
+      "input_placeholder": "作りたいものを説明してください...",
+      "input_placeholder_refine": "変更や改善を説明してください...",
+      "quiz": "クイズ",
+      "flashcards": "フラッシュカード",
+      "chart": "グラフ",
+      "timeline": "タイムライン",
+      "drawing": "お絵描き",
+      "calculator": "電卓"
+    },
+    "node_actions": {
+      "move_back": "背面に移動",
+      "move_forward": "前面に移動",
+      "delete": "削除",
+      "delete_multiple": "{{count}} 個のアイテムを削除"
+    },
+    "pagination": {
+      "previous": "前へ",
+      "next": "次へ",
+      "page_of": "{{total}} ページ中 {{current}} ページ",
+      "results": "\"{{query}}\" の検索結果 {{count}} 件",
+      "results_plural": "\"{{query}}\" の検索結果 {{count}} 件"
     }
   }
 }

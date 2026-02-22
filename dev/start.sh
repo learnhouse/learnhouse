@@ -43,16 +43,20 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     # Start API
     (cd apps/api && uv run python app.py) &
-    
+
     # Start Web
     (cd apps/web && pnpm dev) &
 
-    # Wait for both to finish
+    # Start Collab (real-time collaboration server)
+    (cd apps/collab && pnpm dev) &
+
+    # Wait for all to finish
     wait
 else
     echo -e "\n${BLUE}Manual server start instructions:${NC}"
     echo -e "1. ${GREEN}Backend:${NC} cd apps/api && uv run python app.py"
     echo -e "2. ${GREEN}Frontend:${NC} cd apps/web && pnpm dev"
+    echo -e "3. ${GREEN}Collab:${NC} cd apps/collab && pnpm dev"
 fi
 
 echo -e "\n${GREEN}Happy coding! 🚀${NC}"

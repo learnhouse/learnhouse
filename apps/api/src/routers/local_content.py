@@ -32,26 +32,26 @@ router = APIRouter()
 CONTENT_DIR = Path("content")
 
 
-def _validate_content_path(file_path: str) -> bool:
-    """Validate path is safe — prevents directory traversal."""
+def _validate_content_path(file_path: str) -> Path | None:
+    """Validate path is safe and return the resolved path, or None if unsafe."""
     # Decode URL-encoded characters (double-decode for double-encoding attacks)
     decoded = unquote(unquote(file_path))
     if '..' in decoded or decoded.startswith('/') or '\x00' in decoded:
-        return False
+        return None
     normalized = decoded.replace('\\', '/')
     if '..' in normalized:
-        return False
+        return None
 
     # Resolve and verify the path stays within CONTENT_DIR
     try:
         resolved = (CONTENT_DIR / decoded).resolve()
         base_resolved = CONTENT_DIR.resolve()
         if not str(resolved).startswith(str(base_resolved) + os.sep) and resolved != base_resolved:
-            return False
+            return None
     except (OSError, ValueError):
-        return False
+        return None
 
-    return True
+    return resolved
 
 
 def _check_content_access(
@@ -188,13 +188,11 @@ async def serve_local_content(
     Public courses/podcasts are accessible to anonymous users.
     Private content requires authentication.
     """
-    if not _validate_content_path(file_path):
+    resolved = _validate_content_path(file_path)
+    if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
-
-    full_path = CONTENT_DIR / file_path
-    resolved = full_path.resolve()
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
@@ -220,13 +218,11 @@ async def head_local_content(
     db_session: Session = Depends(get_db_session),
 ):
     """HEAD request for content files — returns metadata without body."""
-    if not _validate_content_path(file_path):
+    resolved = _validate_content_path(file_path)
+    if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
-
-    full_path = CONTENT_DIR / file_path
-    resolved = full_path.resolve()
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")

@@ -49,6 +49,16 @@ RESOURCE_CONFIGS: dict[str, ResourceConfig] = {
         uuid_field="collection_uuid",
     ),
 
+    "boards": ResourceConfig(
+        resource_type="boards",
+        uuid_prefix="board_",
+        has_published_field=False,
+        supports_usergroups=True,
+        supports_authorship=True,
+        model_name="Board",
+        uuid_field="board_uuid",
+    ),
+
     "docspaces": ResourceConfig(
         resource_type="docspaces",
         uuid_prefix="docspace_",

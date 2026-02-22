@@ -51,7 +51,21 @@ COPY --chown=nextjs:nodejs apps/web/server-wrapper.js ./
 RUN chmod +x server-wrapper.js
 
 # ───────────────────────────────────────────────
-# Stage 4: Final image combining frontend + backend
+# Stage 4: Collab server build
+# ───────────────────────────────────────────────
+FROM node:22-alpine AS collab-builder
+WORKDIR /app
+
+COPY apps/collab/package.json ./
+RUN npm install
+
+COPY apps/collab/tsconfig.json ./
+COPY apps/collab/src/ ./src/
+
+RUN npm run build
+
+# ───────────────────────────────────────────────
+# Stage 5: Final image combining frontend + backend + collab
 # ───────────────────────────────────────────────
 FROM python:3.14.2-slim-bookworm AS runner
 
@@ -81,6 +95,12 @@ COPY ./apps/api ./
 ARG LEARNHOUSE_PUBLIC=false
 RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/api/ee; fi
 
+# Collab server: copy built JS + production deps
+WORKDIR /app/collab
+COPY --from=collab-builder /app/dist ./dist
+COPY apps/collab/package.json ./
+RUN npm install --omit=dev && npm cache clean --force
+
 # Copy configs and scripts
 WORKDIR /app
 COPY ./extra/nginx.conf /etc/nginx/conf.d/default.conf
@@ -88,8 +108,8 @@ COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
 COPY ./extra/start.sh /app/start.sh
 RUN chmod +x /app/api/docker-entrypoint.sh /app/start.sh
 
-ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
+ENV PORT=8000 LEARNHOUSE_PORT=9000 COLLAB_PORT=4000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true NEXT_PUBLIC_LEARNHOUSE_OSS=true
 
-EXPOSE 80 9000
+EXPOSE 80 9000 4000
 
 CMD ["sh", "/app/start.sh"]

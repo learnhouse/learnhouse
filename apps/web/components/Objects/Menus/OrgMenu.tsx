@@ -21,6 +21,7 @@ import {
   ChatCircleDots,
   ChatCircle,
   SquaresFour,
+  ChalkboardSimple,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -33,10 +34,16 @@ import {
 } from "@components/ui/dropdown-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
-import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { isFeatureAvailable, planMeetsRequirement, PlanLevel } from '@services/plans/plans'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@components/ui/tooltip'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -147,6 +154,29 @@ export const OrgMenu = (props: any) => {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Boards (Pro+ or OSS only, authenticated users only) */}
+            {org?.config?.config?.features?.boards?.enabled === true && planMeetsRequirement(org?.config?.config?.cloud?.plan || 'free', 'pro') && (
+              <AuthenticatedClientElement checkMethod="authentication">
+                <div className="hidden md:flex">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={getUriWithOrg(orgslug, '/boards')}
+                          className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                          aria-label="Boards"
+                        >
+                          <ChalkboardSimple size={20} weight="fill" />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        Boards
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </AuthenticatedClientElement>
+            )}
             {/* AI Copilot */}
             {org?.config?.config?.features?.ai?.enabled !== false && org?.config?.config?.features?.ai?.copilot_enabled !== false && (
               <AuthenticatedClientElement checkMethod="authentication">
@@ -159,14 +189,23 @@ export const OrgMenu = (props: any) => {
             {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
               <div className="hidden md:flex">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                      aria-label={t('common.dashboard')}
-                    >
-                      <SquaresFour size={20} weight="fill" />
-                    </button>
-                  </DropdownMenuTrigger>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                            aria-label={t('common.dashboard')}
+                          >
+                            <SquaresFour size={20} weight="fill" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        {t('common.dashboard')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="flex items-center gap-2">
                       <SquaresFour size={16} weight="fill" />
@@ -193,14 +232,23 @@ export const OrgMenu = (props: any) => {
             {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
               <div className="hidden md:flex">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
-                      aria-label={t('common.help')}
-                    >
-                      <Question size={20} weight="fill" />
-                    </button>
-                  </DropdownMenuTrigger>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                            aria-label={t('common.help')}
+                          >
+                            <Question size={20} weight="fill" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        {t('common.help')}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="flex items-center gap-2">
                       <Question size={16} weight="fill" />
@@ -323,14 +371,23 @@ const CopilotMenuButton = ({ orgslug, iconBtnClass }: { orgslug: string; iconBtn
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className="p-2 rounded-lg transition-colors hover:bg-violet-500/10"
-          aria-label="Copilot"
-        >
-          <ChatCircle size={20} weight="fill" className="text-violet-500" />
-        </button>
-      </DropdownMenuTrigger>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 rounded-lg transition-colors hover:bg-violet-500/10"
+                aria-label="Copilot"
+              >
+                <ChatCircle size={20} weight="fill" className="text-violet-500" />
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            Copilot
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="flex items-center gap-2">
           <ChatCircle size={16} weight="fill" className="text-violet-500" />

@@ -1,12 +1,11 @@
 import { spawn, execSync, type ChildProcess } from 'node:child_process'
-import * as crypto from 'node:crypto'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
 
-const SESSION_ID = crypto.randomBytes(4).toString('hex')
+const PROJECT_NAME = 'learnhouse-dev'
 
 function findProjectRoot(): string | null {
   let dir = process.cwd()
@@ -43,7 +42,8 @@ async function waitForHealth(label: string, command: string, args: string[], max
 const CONTROLS_BAR = pc.dim('─'.repeat(60)) + '\n' +
   pc.dim('  ') + pc.bold('ra') + pc.dim(' restart api  ') +
   pc.bold('rw') + pc.dim(' restart web  ') +
-  pc.bold('rb') + pc.dim(' restart both  ') +
+  pc.bold('rc') + pc.dim(' restart collab  ') +
+  pc.bold('rb') + pc.dim(' restart all  ') +
   pc.bold('q') + pc.dim(' quit') + '\n' +
   pc.dim('─'.repeat(60))
 
@@ -71,6 +71,22 @@ function prefixStream(proc: ChildProcess, label: string, color: (s: string) => s
   }
   proc.stdout?.on('data', handleData)
   proc.stderr?.on('data', handleData)
+}
+
+function isContainerRunning(name: string): boolean {
+  try {
+    const state = execSync(
+      `docker inspect --format '{{.State.Running}}' ${name}`,
+      { stdio: 'pipe' }
+    ).toString().trim()
+    return state === 'true'
+  } catch {
+    return false
+  }
+}
+
+function isInfraRunning(): boolean {
+  return isContainerRunning('learnhouse-db-dev') && isContainerRunning('learnhouse-redis-dev')
 }
 
 let serviceEnv: Record<string, string> = {}
@@ -124,51 +140,63 @@ export async function devCommand() {
     process.exit(1)
   }
 
-  const projectName = `learnhouse-dev-${SESSION_ID}`
-
   p.intro(pc.cyan('LearnHouse Dev Mode'))
-  console.log(pc.dim(`  Session: ${pc.bold(SESSION_ID)}`))
   console.log()
 
-  // Admin credentials
-  const email = await p.text({
-    message: 'Admin email',
-    placeholder: 'admin@school.dev',
-    defaultValue: 'admin@school.dev',
-  })
-  if (p.isCancel(email)) process.exit(0)
+  // Check if infrastructure is already running
+  const alreadyRunning = isInfraRunning()
 
-  const password = await p.password({
-    message: 'Admin password',
-  })
-  if (p.isCancel(password)) process.exit(0)
-
-  if (!password) {
-    p.log.error('Password is required.')
-    process.exit(1)
+  if (alreadyRunning) {
+    p.log.success('Existing DB and Redis containers detected — reusing them')
   }
 
-  serviceEnv = {
-    FORCE_COLOR: '1',
-    LEARNHOUSE_OSS: 'true',
-    NEXT_PUBLIC_LEARNHOUSE_OSS: 'true',
-    LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
-    LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password,
-  }
-
-  // Start infrastructure
-  const infraSpinner = p.spinner()
-  infraSpinner.start('Starting DB and Redis containers...')
-  try {
-    execSync(`docker compose -f dev/docker-compose.yml -p ${projectName} up -d`, {
-      cwd: root,
-      stdio: 'pipe',
+  // Only ask for admin credentials on first setup
+  if (!alreadyRunning) {
+    const email = await p.text({
+      message: 'Admin email',
+      placeholder: 'admin@school.dev',
+      defaultValue: 'admin@school.dev',
     })
-    infraSpinner.stop('Containers started')
-  } catch (e: any) {
-    infraSpinner.stop('Failed to start containers')
-    p.log.error(e.stderr?.toString() || 'docker compose up failed')
-    process.exit(1)
+    if (p.isCancel(email)) process.exit(0)
+
+    const password = await p.password({
+      message: 'Admin password',
+    })
+    if (p.isCancel(password)) process.exit(0)
+
+    if (!password) {
+      p.log.error('Password is required.')
+      process.exit(1)
+    }
+
+    serviceEnv = {
+      FORCE_COLOR: '1',
+      LEARNHOUSE_OSS: 'true',
+      NEXT_PUBLIC_LEARNHOUSE_OSS: 'true',
+      LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
+      LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password,
+    }
+
+    // Start infrastructure
+    const infraSpinner = p.spinner()
+    infraSpinner.start('Starting DB and Redis containers...')
+    try {
+      execSync(`docker compose -f dev/docker-compose.yml -p ${PROJECT_NAME} up -d`, {
+        cwd: root,
+        stdio: 'pipe',
+      })
+      infraSpinner.stop('Containers started')
+    } catch (e: any) {
+      infraSpinner.stop('Failed to start containers')
+      p.log.error(e.stderr?.toString() || 'docker compose up failed')
+      process.exit(1)
+    }
+  } else {
+    serviceEnv = {
+      FORCE_COLOR: '1',
+      LEARNHOUSE_OSS: 'true',
+      NEXT_PUBLIC_LEARNHOUSE_OSS: 'true',
+    }
   }
 
   // Health checks
@@ -191,6 +219,7 @@ export async function devCommand() {
   // Start local services
   let apiProc: ChildProcess | null = null
   let webProc: ChildProcess | null = null
+  let collabProc: ChildProcess | null = null
 
   const startApi = () => {
     return spawnService('uv', ['run', 'python', 'app.py'], path.join(root, 'apps', 'api'), 'api', pc.magenta)
@@ -200,39 +229,37 @@ export async function devCommand() {
     return spawnService('pnpm', ['dev'], path.join(root, 'apps', 'web'), 'web', pc.cyan)
   }
 
+  const startCollab = () => {
+    return spawnService('pnpm', ['dev'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow)
+  }
+
   apiProc = startApi()
   webProc = startWeb()
+  collabProc = startCollab()
 
-  p.log.success('API and Web servers started')
+  p.log.success('API, Web, and Collab servers started')
   console.log()
   console.log(pc.dim('  Thank you for contributing to LearnHouse!'))
   console.log()
 
   printControls()
 
-  // Graceful shutdown
+  // Graceful shutdown — keep containers running for reuse
   let shuttingDown = false
   const shutdown = async () => {
     if (shuttingDown) return
     shuttingDown = true
-    console.log('\n' + pc.dim('Shutting down...'))
+    console.log('\n' + pc.dim('Shutting down dev servers...'))
 
     if (process.stdin.isTTY && process.stdin.isRaw) {
       process.stdin.setRawMode(false)
     }
     process.stdin.pause()
 
-    await Promise.all([killProcess(apiProc), killProcess(webProc)])
+    await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
 
-    try {
-      execSync(`docker compose -f dev/docker-compose.yml -p ${projectName} down`, {
-        cwd: root,
-        stdio: 'pipe',
-      })
-      console.log(pc.dim('Containers stopped.'))
-    } catch {
-      // Best effort
-    }
+    console.log(pc.dim('DB and Redis containers are still running for next session.'))
+    console.log(pc.dim('To stop them: docker compose -f dev/docker-compose.yml -p learnhouse-dev down'))
     console.log(pc.dim('Thanks for building with LearnHouse!'))
     process.exit(0)
   }
@@ -278,11 +305,17 @@ export async function devCommand() {
           await killProcess(webProc)
           webProc = startWeb()
           printControls()
+        } else if (key === 'c') {
+          console.log(pc.yellow('\n  Restarting Collab...\n'))
+          await killProcess(collabProc)
+          collabProc = startCollab()
+          printControls()
         } else if (key === 'b') {
-          console.log(pc.yellow('\n  Restarting both...\n'))
-          await Promise.all([killProcess(apiProc), killProcess(webProc)])
+          console.log(pc.yellow('\n  Restarting all...\n'))
+          await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
           apiProc = startApi()
           webProc = startWeb()
+          collabProc = startCollab()
           printControls()
         }
       }

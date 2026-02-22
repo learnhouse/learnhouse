@@ -132,6 +132,7 @@ services:
     environment:
       # HOSTNAME needs to be set explicitly for the container
       - HOSTNAME=0.0.0.0
+      - LEARNHOUSE_API_URL=http://localhost:9000
 ${appDependsOn}
     networks:
       - learnhouse-network-${id}

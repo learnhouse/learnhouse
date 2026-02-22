@@ -76,7 +76,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
           closeModal()
           // Redirect to the podcast dashboard
           const podcastId = res.data.podcast_uuid?.replace('podcast_', '') || res.data.podcast_uuid
-          router.push(`/dash/podcasts/${podcastId}/general`)
+          router.push(`/dash/podcasts/podcast/${podcastId}/general`)
         } else {
           toast.dismiss(toast_loading)
           const errorMessage = typeof res.data?.detail === 'string'

@@ -7,6 +7,7 @@
     "your_organizations": "منظماتك",
     "no_orgs_message": "يبدو أنك لست عضواً في أي منظمة بعد. انضم إلى واحدة لتراها هنا.",
     "assignments": "الواجبات",
+    "boards": "اللوحات",
     "payments": "المدفوعات",
     "organization": "المنظمة",
     "dashboard": "لوحة التحكم",
@@ -112,7 +113,9 @@
           "communities": "المجتمعات",
           "podcasts": "البودكاست",
           "payments": "المدفوعات",
-          "trail": "تتبع التقدم"
+          "trail": "تتبع التقدم",
+          "boards": "اللوحات",
+          "docs": "التوثيق"
         },
         "public": {
           "title": "{{feature}} غير متاح",
@@ -572,7 +575,13 @@
     },
     "copied": "تم النسخ!",
     "quit_course_confirm": "هل أنت متأكد من رغبتك في مغادرة هذه الدورة؟ ستفقد كل تقدمك.",
-    "quit_course_title": "مغادرة الدورة؟"
+    "quit_course_title": "مغادرة الدورة؟",
+    "usergroup_filter": {
+      "all_courses": "All Courses",
+      "filter_by_group": "Filter by group",
+      "info_title": "User Group Filter",
+      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+    }
   },
   "communities": {
     "title": "المجتمعات",
@@ -1998,6 +2007,7 @@
           "ai": "الذكاء الاصطناعي",
           "api": "الوصول لـ API",
           "features": "الميزات",
+          "usage": "Usage",
           "other": "أخرى",
           "sso": "SSO"
         },
@@ -2033,6 +2043,10 @@
           "sso": {
             "subtitle": "تكوين SSO لمؤسستك",
             "title": "تسجيل الدخول الموحد"
+          },
+          "usage": {
+            "title": "Usage",
+            "subtitle": "Monitor your organization's resource usage and plan limits"
           }
         },
         "name": "اسم المنظمة",
@@ -2043,8 +2057,6 @@
         "label_placeholder": "اختر ملصق المنظمة",
         "about": "حول المنظمة",
         "about_placeholder": "وصف تفصيلي لمنظمتك",
-        "showcase_explore": "عرض في LearnHouse Explore",
-        "showcase_description": "شارك دورات منظمتك ومحتواها مع مجتمع LearnHouse. قم بتمكين هذا لمساعدة المتعلمين في اكتشاف مواردك التعليمية القيمة.",
         "save_changes": "حفظ التغييرات",
         "saving": "جاري الحفظ...",
         "update_success": "تم تحديث المنظمة",
@@ -3882,27 +3894,346 @@
         "less": "أقل",
         "more": "أكثر",
         "days": {
-          "mon": "إثن", "tue": "ثلا", "wed": "أرب", "thu": "خمي", "fri": "جمع", "sat": "سبت", "sun": "أحد"
+          "mon": "إثن",
+          "tue": "ثلا",
+          "wed": "أرب",
+          "thu": "خمي",
+          "fri": "جمع",
+          "sat": "سبت",
+          "sun": "أحد"
         },
         "events_tooltip": "{{day}} {{hour}}: {{count}} أحداث"
       },
-      "enrollment_trend": { "title": "اتجاه التسجيل", "subtitle": "التسجيلات اليومية الجديدة بمرور الوقت" },
-      "active_learners": { "title": "المتعلمون النشطون", "subtitle": "المتعلمون النشطون الفريدون يومياً في هذه الدورة" },
-      "unique_viewers": { "title": "مشاهدو الدورة", "subtitle": "الزوار الفريدون يومياً لصفحة هذه الدورة", "total_views": "إجمالي المشاهدات", "peak_viewers": "ذروة المشاهدين" },
-      "view_to_enrollment": { "title": "مشاهدة ← تسجيل", "subtitle": "كم من المشاهدين يصبحون متعلمين مسجلين" },
-      "daily_completions": { "title": "الإنجازات اليومية", "subtitle": "إنجازات الأنشطة لكل يوم" },
-      "activity_funnel": { "title": "قمع إنجاز الأنشطة", "subtitle": "المشاهدات مقابل الإنجازات لكل نشاط" },
-      "time_per_activity": { "title": "الوقت المستغرق لكل نشاط", "subtitle": "متوسط الوقت الذي يقضيه المتعلمون في كل نشاط" },
-      "activity_dropoff": { "title": "نقاط التوقف", "subtitle": "أين يتوقف المتعلمون عن التقدم — آخر نشاط مكتمل", "total_dropoffs": "إجمالي حالات التوقف", "dropoff_points": "نقاط التوقف" },
-      "avg_session_duration": { "title": "الوقت اليومي لكل متعلم", "subtitle": "متوسط الوقت الذي يقضيه كل متعلم يومياً", "total_time": "الوقت الإجمالي", "avg_per_day": "المتوسط اليومي", "minutes_label": "دقائق" },
-      "learner_progress": { "title": "تقدم المتعلمين", "subtitle": "كم عدد الأنشطة التي أنجزها المتعلمون", "total_across_brackets": "{{count}} إجمالي المتعلمين عبر جميع فئات التقدم" },
-      "learner_retention": { "title": "الاحتفاظ بالمتعلمين", "subtitle": "% من المتعلمين العائدين بعد أول نشاط", "cohort_size": "حجم المجموعة", "current_retention": "الاحتفاظ الحالي", "days_since_first": "أيام منذ أول نشاط", "day_label": "اليوم {{day}}" },
-      "completion_velocity": { "title": "سرعة الإنجاز", "subtitle": "متوسط الوقت بين إنجازات الأنشطة", "not_enough_data": "لا توجد بيانات كافية بعد", "need_transitions": "تحتاج إلى 3 انتقالات نشاط على الأقل لحساب السرعة", "not_enough_data_short": "بيانات غير كافية", "need_transitions_short": "تحتاج 3+ انتقالات", "avg_between": "متوسط {{unit}} بين الإنجازات", "transitions_tracked": "انتقالات متتبعة", "raw_hours_avg": "متوسط الساعات الخام", "description": "يقيس مدى سرعة تقدم المتعلمين من نشاط إلى آخر. الأقل أفضل — يعني أن المتعلمين يتنقلون عبر المحتوى بشكل أسرع." },
-      "time_to_completion": { "title": "الوقت حتى الإنجاز", "subtitle": "كم يستغرق المتعلمون لإنهاء هذه الدورة", "median_days_to_complete": "متوسط الأيام للإنجاز", "fast_p25": "سريع (P25)", "top_25_finish": "أفضل 25% ينهون بحلول", "median": "المتوسط", "half_finish": "نصفهم ينهون بحلول", "slow_p75": "بطيء (P75)", "pct_75_finish": "75% ينهون بحلول", "based_on": "بناءً على {{count}} إنجاز(ات) للدورة", "days_unit": "أيام" },
-      "certification_rate": { "title": "معدل الشهادات", "subtitle": "% من المُنجزين الذين طالبوا بشهادتهم", "of_completers_claimed": "من المُنجزين طالبوا بشهادة", "certificates_claimed": "شهادات تمت المطالبة بها", "course_completions": "إنجازات الدورة" },
-      "top_learners": { "title": "أفضل المتعلمين", "subtitle": "أكثر المتعلمين نشاطاً حسب الإنجازات", "user_fallback": "المستخدم #{{id}}" },
-      "recent_enrollments": { "title": "التسجيلات الأخيرة", "subtitle": "أحدث المتعلمين المسجلين في هذه الدورة", "count_in_period": "{{count}} تسجيلات في هذه الفترة" },
-      "pagination": { "range": "{{from}}–{{to}} من {{total}}" }
+      "enrollment_trend": {
+        "title": "اتجاه التسجيل",
+        "subtitle": "التسجيلات اليومية الجديدة بمرور الوقت"
+      },
+      "active_learners": {
+        "title": "المتعلمون النشطون",
+        "subtitle": "المتعلمون النشطون الفريدون يومياً في هذه الدورة"
+      },
+      "unique_viewers": {
+        "title": "مشاهدو الدورة",
+        "subtitle": "الزوار الفريدون يومياً لصفحة هذه الدورة",
+        "total_views": "إجمالي المشاهدات",
+        "peak_viewers": "ذروة المشاهدين"
+      },
+      "view_to_enrollment": {
+        "title": "مشاهدة ← تسجيل",
+        "subtitle": "كم من المشاهدين يصبحون متعلمين مسجلين"
+      },
+      "daily_completions": {
+        "title": "الإنجازات اليومية",
+        "subtitle": "إنجازات الأنشطة لكل يوم"
+      },
+      "activity_funnel": {
+        "title": "قمع إنجاز الأنشطة",
+        "subtitle": "المشاهدات مقابل الإنجازات لكل نشاط"
+      },
+      "time_per_activity": {
+        "title": "الوقت المستغرق لكل نشاط",
+        "subtitle": "متوسط الوقت الذي يقضيه المتعلمون في كل نشاط"
+      },
+      "activity_dropoff": {
+        "title": "نقاط التوقف",
+        "subtitle": "أين يتوقف المتعلمون عن التقدم — آخر نشاط مكتمل",
+        "total_dropoffs": "إجمالي حالات التوقف",
+        "dropoff_points": "نقاط التوقف"
+      },
+      "avg_session_duration": {
+        "title": "الوقت اليومي لكل متعلم",
+        "subtitle": "متوسط الوقت الذي يقضيه كل متعلم يومياً",
+        "total_time": "الوقت الإجمالي",
+        "avg_per_day": "المتوسط اليومي",
+        "minutes_label": "دقائق"
+      },
+      "learner_progress": {
+        "title": "تقدم المتعلمين",
+        "subtitle": "كم عدد الأنشطة التي أنجزها المتعلمون",
+        "total_across_brackets": "{{count}} إجمالي المتعلمين عبر جميع فئات التقدم"
+      },
+      "learner_retention": {
+        "title": "الاحتفاظ بالمتعلمين",
+        "subtitle": "% من المتعلمين العائدين بعد أول نشاط",
+        "cohort_size": "حجم المجموعة",
+        "current_retention": "الاحتفاظ الحالي",
+        "days_since_first": "أيام منذ أول نشاط",
+        "day_label": "اليوم {{day}}"
+      },
+      "completion_velocity": {
+        "title": "سرعة الإنجاز",
+        "subtitle": "متوسط الوقت بين إنجازات الأنشطة",
+        "not_enough_data": "لا توجد بيانات كافية بعد",
+        "need_transitions": "تحتاج إلى 3 انتقالات نشاط على الأقل لحساب السرعة",
+        "not_enough_data_short": "بيانات غير كافية",
+        "need_transitions_short": "تحتاج 3+ انتقالات",
+        "avg_between": "متوسط {{unit}} بين الإنجازات",
+        "transitions_tracked": "انتقالات متتبعة",
+        "raw_hours_avg": "متوسط الساعات الخام",
+        "description": "يقيس مدى سرعة تقدم المتعلمين من نشاط إلى آخر. الأقل أفضل — يعني أن المتعلمين يتنقلون عبر المحتوى بشكل أسرع."
+      },
+      "time_to_completion": {
+        "title": "الوقت حتى الإنجاز",
+        "subtitle": "كم يستغرق المتعلمون لإنهاء هذه الدورة",
+        "median_days_to_complete": "متوسط الأيام للإنجاز",
+        "fast_p25": "سريع (P25)",
+        "top_25_finish": "أفضل 25% ينهون بحلول",
+        "median": "المتوسط",
+        "half_finish": "نصفهم ينهون بحلول",
+        "slow_p75": "بطيء (P75)",
+        "pct_75_finish": "75% ينهون بحلول",
+        "based_on": "بناءً على {{count}} إنجاز(ات) للدورة",
+        "days_unit": "أيام"
+      },
+      "certification_rate": {
+        "title": "معدل الشهادات",
+        "subtitle": "% من المُنجزين الذين طالبوا بشهادتهم",
+        "of_completers_claimed": "من المُنجزين طالبوا بشهادة",
+        "certificates_claimed": "شهادات تمت المطالبة بها",
+        "course_completions": "إنجازات الدورة"
+      },
+      "top_learners": {
+        "title": "أفضل المتعلمين",
+        "subtitle": "أكثر المتعلمين نشاطاً حسب الإنجازات",
+        "user_fallback": "المستخدم #{{id}}"
+      },
+      "recent_enrollments": {
+        "title": "التسجيلات الأخيرة",
+        "subtitle": "أحدث المتعلمين المسجلين في هذه الدورة",
+        "count_in_period": "{{count}} تسجيلات في هذه الفترة"
+      },
+      "pagination": {
+        "range": "{{from}}–{{to}} من {{total}}"
+      }
+    }
+  },
+  "boards": {
+    "boards": "اللوحات",
+    "new_board": "لوحة جديدة",
+    "create_new_board": "إنشاء لوحة جديدة",
+    "create_new_board_description": "إعداد لوحة تعاونية جديدة",
+    "create_board": "إنشاء لوحة",
+    "board_created": "تم إنشاء اللوحة",
+    "board_created_error": "فشل إنشاء اللوحة",
+    "search_placeholder": "البحث في اللوحات...",
+    "no_boards_found": "لم يتم العثور على لوحات",
+    "try_different_search": "جرّب مصطلح بحث مختلف",
+    "no_boards_yet": "لا توجد لوحات بعد",
+    "no_boards_description": "أنشئ أول لوحة تعاونية للبدء.",
+    "public": "عام",
+    "private": "خاص",
+    "member_count": "{{count}} عضو",
+    "member_count_plural": "{{count}} أعضاء",
+    "settings": "الإعدادات",
+    "name": "الاسم",
+    "name_placeholder": "مثال: تخطيط المشروع",
+    "description": "الوصف",
+    "description_placeholder": "وصف مختصر...",
+    "back_to_boards": "العودة إلى اللوحات",
+    "general": {
+      "title": "عام",
+      "description": "معلومات اللوحة الأساسية",
+      "board_updated": "تم تحديث اللوحة",
+      "board_updated_error": "فشل تحديث اللوحة",
+      "saving": "جارٍ الحفظ...",
+      "save_changes": "حفظ التغييرات"
+    },
+    "thumbnail": {
+      "title": "الصورة المصغرة",
+      "description": "صورة غلاف اللوحة المعروضة على البطاقات",
+      "alt": "الصورة المصغرة للوحة",
+      "uploading": "جارٍ الرفع...",
+      "upload_image": "رفع صورة",
+      "gallery": "المعرض",
+      "supported_formats": "الصيغ المدعومة: JPG، JPEG، PNG. الحد الأقصى 8MB.",
+      "thumbnail_updated": "تم تحديث الصورة المصغرة",
+      "thumbnail_updated_error": "فشل رفع الصورة المصغرة"
+    },
+    "access": {
+      "title": "التحكم في الوصول",
+      "description": "التحكم في من يمكنه الوصول إلى هذه اللوحة",
+      "set_to_public": "تعيين كعام",
+      "set_to_public_confirm": "سيتمكن جميع أعضاء المنظمة المسجلين من الوصول إلى هذه اللوحة.",
+      "make_board_public": "جعل اللوحة عامة",
+      "set_to_private": "تعيين كخاص",
+      "set_to_private_confirm": "فقط أعضاء مجموعات UserGroups المرتبطة سيتمكنون من الوصول إلى هذه اللوحة.",
+      "make_board_private": "جعل اللوحة خاصة",
+      "active": "نشط",
+      "public_option": "عام",
+      "public_description": "يمكن لجميع أعضاء المنظمة المسجلين الوصول إلى هذه اللوحة",
+      "private_option": "المستخدمون فقط",
+      "private_description": "فقط مجموعات UserGroups المرتبطة يمكنها الوصول إلى هذه اللوحة",
+      "board_set_public": "تم تعيين اللوحة كعامة",
+      "board_set_private": "تم تعيين اللوحة كخاصة",
+      "access_update_error": "فشل تحديث الوصول",
+      "user_groups": "مجموعات المستخدمين",
+      "user_groups_description": "إدارة مجموعات المستخدمين التي يمكنها الوصول إلى هذه اللوحة",
+      "actions": "الإجراءات",
+      "unlink": "إلغاء الربط",
+      "unlink_confirm": "لن تتمكن مجموعة المستخدمين هذه من الوصول إلى هذه اللوحة بعد الآن.",
+      "unlink_user_group": "إلغاء ربط مجموعة المستخدمين",
+      "no_user_groups": "لا توجد مجموعات مستخدمين مرتبطة بعد",
+      "link_to_user_group": "الربط بمجموعة مستخدمين",
+      "link_to_user_group_description": "اختر مجموعة مستخدمين لمنحها الوصول إلى هذه اللوحة",
+      "link_to_usergroup_btn": "الربط بـ UserGroup",
+      "user_group": "مجموعة المستخدمين",
+      "no_user_groups_available": "لا توجد مجموعات مستخدمين متاحة",
+      "create_user_group": "إنشاء مجموعة مستخدمين",
+      "link": "ربط",
+      "user_group_linked": "تم ربط مجموعة المستخدمين",
+      "user_group_unlinked": "تم إلغاء ربط مجموعة المستخدمين",
+      "link_error": "فشل الربط: ",
+      "unlink_error": "فشل إلغاء الربط: ",
+      "unlink_error_generic": "فشل إلغاء ربط مجموعة المستخدمين"
+    },
+    "members": {
+      "title": "الأعضاء",
+      "description": "إدارة من يمكنه التعاون على هذه اللوحة",
+      "user": "المستخدم",
+      "role": "الدور",
+      "actions": "الإجراءات",
+      "remove": "إزالة",
+      "remove_confirm": "إزالة {{name}} من اللوحة؟",
+      "remove_member": "إزالة عضو",
+      "no_members": "لا يوجد أعضاء بعد",
+      "member_limit_reached": "تم الوصول إلى الحد الأقصى للأعضاء (10 كحد أقصى)",
+      "add_member": "إضافة عضو",
+      "add_member_description": "البحث عن عضو في المنظمة لإضافته إلى هذه اللوحة",
+      "search_placeholder": "البحث بالاسم أو البريد الإلكتروني...",
+      "no_users_found": "لم يتم العثور على مستخدمين",
+      "role_label": "الدور:",
+      "editor": "محرر",
+      "viewer": "مشاهد",
+      "adding": "جارٍ الإضافة...",
+      "member_added": "تمت إضافة العضو",
+      "member_added_error": "فشل إضافة العضو (قد يكون عضواً بالفعل)",
+      "member_removed": "تمت إزالة العضو",
+      "member_removed_error": "فشل إزالة العضو"
+    },
+    "toolbar": {
+      "select": "تحديد",
+      "pan": "تحريك",
+      "draw": "رسم",
+      "add_card": "إضافة بطاقة",
+      "sticky_note": "ملاحظة لاصقة",
+      "frame": "إطار",
+      "note": "ملاحظة",
+      "sticker": "ملصق",
+      "youtube": "YouTube",
+      "ai_playground": "ملعب الذكاء الاصطناعي",
+      "activity": "نشاط",
+      "embed": "تضمين",
+      "webpage": "صفحة ويب",
+      "thin": "رفيع",
+      "medium": "متوسط",
+      "thick": "سميك",
+      "undo": "تراجع",
+      "redo": "إعادة",
+      "podcast": "بودكاست"
+    },
+    "zoom": {
+      "zoom_in": "تكبير",
+      "zoom_out": "تصغير"
+    },
+    "chat": {
+      "placeholder": "قل شيئاً..."
+    },
+    "effects": {
+      "title": "المؤثرات",
+      "inferno": "جحيم",
+      "blizzard": "عاصفة ثلجية",
+      "matrix": "Matrix",
+      "fireworks": "ألعاب نارية",
+      "earthquake": "زلزال",
+      "black_hole": "ثقب أسود",
+      "aurora": "شفق قطبي",
+      "lightning": "برق",
+      "glitch": "خلل",
+      "nuke": "نووي"
+    },
+    "timer": {
+      "set_timer": "ضبط المؤقت",
+      "set_timer_title": "ضبط المؤقت",
+      "times_up": "انتهى الوقت!",
+      "resume": "استئناف",
+      "pause": "إيقاف مؤقت",
+      "restart": "إعادة التشغيل",
+      "close": "إغلاق"
+    },
+    "share": {
+      "share_board": "مشاركة اللوحة",
+      "share_this_board": "مشاركة هذه اللوحة"
+    },
+    "youtube_block": {
+      "paste_url": "الصق رابط YouTube",
+      "url_placeholder": "https://youtube.com/watch?v=...",
+      "add": "إضافة"
+    },
+    "activity_block": {
+      "select_course": "اختر دورة",
+      "no_courses": "لم يتم العثور على دورات",
+      "no_activities": "لم يتم العثور على أنشطة",
+      "unsupported_type": "نوع نشاط غير مدعوم"
+    },
+    "embed_block": {
+      "embed": "تضمين",
+      "add_embed": "إضافة تضمين {{name}}",
+      "url": "URL",
+      "code": "كود",
+      "paste_url": "الصق رابط التضمين",
+      "url_help": "الصق رابطاً من YouTube أو Figma أو CodePen أو Spotify والمزيد",
+      "paste_code": "الصق كود التضمين",
+      "code_help": "الصق كود iframe أو كود التضمين",
+      "remove_embed": "إزالة التضمين",
+      "edit_embed": "تعديل التضمين",
+      "edit_embed_url": "تعديل رابط التضمين",
+      "edit_embed_code": "تعديل كود التضمين",
+      "apply": "تطبيق"
+    },
+    "webpage_block": {
+      "embed_webpage": "تضمين صفحة ويب",
+      "url_placeholder": "https://example.com",
+      "add": "إضافة",
+      "blocking_notice": "بعض المواقع قد تمنع التضمين",
+      "reload": "إعادة التحميل",
+      "open_in_new_tab": "فتح في علامة تبويب جديدة"
+    },
+    "playground_block": {
+      "title": "ملعب الذكاء الاصطناعي",
+      "description": "إنشاء عناصر تفاعلية مدعومة بالذكاء الاصطناعي",
+      "generate": "إنشاء",
+      "edit": "تعديل",
+      "save_close": "حفظ وإغلاق",
+      "generating": "جارٍ إنشاء محتوى تفاعلي...",
+      "streaming": "جارٍ الإنشاء...",
+      "empty_state": "صف ما تريد إنشاءه وشاهده يتحقق",
+      "chat_header": "ملعب الذكاء الاصطناعي",
+      "prompt_text": "صف عنصراً تفاعلياً لإنشائه",
+      "ai_content": "محتوى مُنشأ بالذكاء الاصطناعي",
+      "check_preview": "تحقق من المعاينة على اليسار",
+      "creating": "جارٍ الإنشاء...",
+      "max_iterations": "تم الوصول إلى الحد الأقصى للتكرارات. احفظ عملك!",
+      "input_placeholder": "صف ما تريد إنشاءه...",
+      "input_placeholder_refine": "صف التغييرات أو التحسينات...",
+      "quiz": "اختبار",
+      "flashcards": "بطاقات تعليمية",
+      "chart": "رسم بياني",
+      "timeline": "خط زمني",
+      "drawing": "رسم",
+      "calculator": "آلة حاسبة"
+    },
+    "node_actions": {
+      "move_back": "نقل للخلف",
+      "move_forward": "نقل للأمام",
+      "delete": "حذف",
+      "delete_multiple": "حذف {{count}} عناصر"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي",
+      "page_of": "صفحة {{current}} من {{total}}",
+      "results": "{{count}} نتيجة لـ \"{{query}}\"",
+      "results_plural": "{{count}} نتائج لـ \"{{query}}\""
     }
   }
 }

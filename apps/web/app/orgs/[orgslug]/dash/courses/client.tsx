@@ -3,7 +3,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
 import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
 import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
-import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Upload, Users, Info } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
@@ -25,10 +25,11 @@ import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { swrFetcher } from '@services/utils/ts/requests'
+import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 import { mutate } from 'swr'
 import useSWR from 'swr'
 import toast from 'react-hot-toast'
-import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 type CourseProps = {
   orgslug: string
@@ -75,28 +76,90 @@ function CoursesHome(params: CourseProps) {
   const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
   const courseLimit = usageData?.features?.courses?.limit ?? 0
 
+  // Usergroup filter — only shown on personal/family plans
+  const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'
+  const [usergroups, setUsergroups] = useState<any[]>([])
+  const [selectedUsergroupId, setSelectedUsergroupId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lh_course_usergroup_filter') || ''
+    }
+    return ''
+  })
+  const [usergroupResourceUuids, setUsergroupResourceUuids] = useState<Set<string> | null>(null)
+  const [showUsergroupInfo, setShowUsergroupInfo] = useState(false)
+
+  // Fetch usergroups
+  React.useEffect(() => {
+    if (!usergroupsAvailable || !access_token || !params.org_id) return
+    getUserGroups(params.org_id, access_token)
+      .then((res: any) => {
+        const list = Array.isArray(res) ? res : res?.data || []
+        setUsergroups(list)
+        // Clear saved selection if the usergroup no longer exists
+        if (selectedUsergroupId && !list.some((ug: any) => String(ug.id) === selectedUsergroupId)) {
+          setSelectedUsergroupId('')
+          localStorage.removeItem('lh_course_usergroup_filter')
+        }
+      })
+      .catch(() => setUsergroups([]))
+  }, [usergroupsAvailable, access_token, params.org_id])
+
+  // Fetch resource UUIDs for selected usergroup
+  React.useEffect(() => {
+    if (!selectedUsergroupId || !access_token || !params.org_id) {
+      setUsergroupResourceUuids(null)
+      return
+    }
+    getUserGroupResources(selectedUsergroupId, params.org_id, access_token)
+      .then((res: any) => {
+        const uuids = Array.isArray(res) ? res : res?.data || []
+        setUsergroupResourceUuids(new Set(uuids))
+      })
+      .catch(() => setUsergroupResourceUuids(null))
+  }, [selectedUsergroupId, access_token, params.org_id])
+
+  const handleUsergroupChange = (value: string) => {
+    setSelectedUsergroupId(value)
+    if (value) {
+      localStorage.setItem('lh_course_usergroup_filter', value)
+    } else {
+      localStorage.removeItem('lh_course_usergroup_filter')
+    }
+  }
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter courses based on search (client-side)
+  // Filter courses based on search and usergroup (client-side)
   const filteredCourses = useMemo(() => {
-    if (!searchQuery.trim()) return allCourses
-    const query = searchQuery.toLowerCase()
-    return allCourses.filter((course: any) =>
-      course.name?.toLowerCase().includes(query) ||
-      course.description?.toLowerCase().includes(query) ||
-      course.tags?.toLowerCase().includes(query)
-    )
-  }, [allCourses, searchQuery])
+    let courses = allCourses
+
+    // Usergroup filter
+    if (usergroupResourceUuids) {
+      courses = courses.filter((course: any) => usergroupResourceUuids.has(course.course_uuid))
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      courses = courses.filter((course: any) =>
+        course.name?.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query) ||
+        course.tags?.toLowerCase().includes(query)
+      )
+    }
+
+    return courses
+  }, [allCourses, searchQuery, usergroupResourceUuids])
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 12
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filter changes
   React.useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery])
+  }, [searchQuery, selectedUsergroupId])
 
   // Calculate pagination (client-side)
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage)
@@ -351,9 +414,9 @@ function CoursesHome(params: CourseProps) {
   }
 
   return (
+    <FeatureDisabledView featureName="courses" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
-        <FeatureDisabledBanner featureName="courses" orgslug={orgslug} />
         <Breadcrumbs items={[
           { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> }
         ]} />
@@ -426,26 +489,61 @@ function CoursesHome(params: CourseProps) {
         </div>
       </div>
 
-      {/* Search and Selection Controls - Inline */}
+      {/* Search, Usergroup Filter, and Selection Controls */}
       {allCourses.length > 0 && (
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Search Input */}
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('courses.search_courses')}
-              className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('courses.search_courses')}
+                className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Usergroup Filter */}
+            {usergroupsAvailable && usergroups.length > 0 && (
+              <div className="relative flex items-center gap-1.5">
+                <div className="relative">
+                  <Users className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                  <select
+                    value={selectedUsergroupId}
+                    onChange={(e) => handleUsergroupChange(e.target.value)}
+                    className="pl-8 pr-8 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0 appearance-none cursor-pointer min-w-[160px]"
+                  >
+                    <option value="">{t('courses.usergroup_filter.all_courses')}</option>
+                    {usergroups.map((ug: any) => (
+                      <option key={ug.id} value={String(ug.id)}>
+                        {ug.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={() => setShowUsergroupInfo(!showUsergroupInfo)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+                {showUsergroupInfo && (
+                  <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-white nice-shadow rounded-lg p-3 border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-700 mb-1">{t('courses.usergroup_filter.info_title')}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{t('courses.usergroup_filter.info_description')}</p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -640,6 +738,7 @@ function CoursesHome(params: CourseProps) {
         </div>
       )}
     </div>
+    </FeatureDisabledView>
   )
 }
 
