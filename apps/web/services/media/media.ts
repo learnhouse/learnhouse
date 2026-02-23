@@ -184,6 +184,11 @@ export function getOrgAuthBackgroundMediaDirectory(orgUUID: string, fileId: stri
   return uri
 }
 
+export function getOrgFaviconMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/favicons/${fileId}`
+  return uri
+}
+
 /**
  * Get the URL for SCORM content files
  * Routes through a local proxy to ensure same-origin for SCORM API injection
