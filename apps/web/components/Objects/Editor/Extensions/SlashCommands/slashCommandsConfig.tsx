@@ -306,6 +306,11 @@ export const slashCommands: SlashCommandItem[] = [
           description: '',
           hints: [],
           difficulty: 'medium',
+          solutionCode: '',
+          maxAttemptsBeforeReveal: 3,
+          timeComplexity: '',
+          spaceComplexity: '',
+          timeLimitMs: 10000,
         },
       }).run()
     },
