@@ -118,6 +118,7 @@ class OrgGeneralConfig(BaseModel):
     color: str = ""
     footer_text: str = ""
     watermark: bool = True
+    favicon_image: str = ""
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
 
 

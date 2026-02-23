@@ -19,6 +19,12 @@ class TinybirdConfig(BaseModel):
     read_token: str     # Token with PIPE:READ or SQL:READ scope
 
 
+class Judge0Config(BaseModel):
+    api_url: str
+    client_id: str | None
+    client_secret: str | None
+
+
 class GeneralConfig(BaseModel):
     development_mode: bool
     logfire_enabled: bool
@@ -103,6 +109,7 @@ class LearnHouseConfig(BaseModel):
     mailing_config: MailingConfig
     payments_config: InternalPaymentsConfig
     tinybird_config: TinybirdConfig | None
+    judge0_config: Judge0Config | None
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
@@ -323,6 +330,23 @@ def get_learnhouse_config() -> LearnHouseConfig:
             read_token=tinybird_read_token,
         )
 
+    # Judge0 config — auto-enabled when API URL is set
+    env_judge0_api_url = os.environ.get("LEARNHOUSE_JUDGE0_API_URL")
+    env_judge0_client_id = os.environ.get("LEARNHOUSE_JUDGE0_CLIENT_ID")
+    env_judge0_client_secret = os.environ.get("LEARNHOUSE_JUDGE0_CLIENT_SECRET")
+
+    judge0_api_url = env_judge0_api_url or yaml_config.get("judge0_config", {}).get("api_url", "")
+    judge0_client_id = env_judge0_client_id or yaml_config.get("judge0_config", {}).get("client_id")
+    judge0_client_secret = env_judge0_client_secret or yaml_config.get("judge0_config", {}).get("client_secret")
+
+    judge0_config = None
+    if judge0_api_url:
+        judge0_config = Judge0Config(
+            api_url=judge0_api_url.rstrip("/"),
+            client_id=judge0_client_id,
+            client_secret=judge0_client_secret,
+        )
+
     # Payments config
     env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
     env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
@@ -410,6 +434,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
             )
         ),
         tinybird_config=tinybird_config,
+        judge0_config=judge0_config,
     )
 
     return config

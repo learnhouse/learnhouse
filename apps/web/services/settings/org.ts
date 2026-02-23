@@ -178,3 +178,18 @@ export async function uploadOrgAuthBackground(
   const res = await errorHandling(result)
   return res
 }
+
+export async function uploadOrganizationFavicon(
+  org_id: string,
+  favicon_file: File,
+  access_token: string
+) {
+  const formData = new FormData()
+  formData.append('favicon_file', favicon_file)
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/favicon`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}

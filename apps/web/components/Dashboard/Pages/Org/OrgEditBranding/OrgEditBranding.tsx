@@ -4,11 +4,11 @@ import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, 
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getOrgLogoMediaDirectory, getOrgPreviewMediaDirectory, getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { getOrgLogoMediaDirectory, getOrgPreviewMediaDirectory, getOrgThumbnailMediaDirectory, getOrgFaviconMediaDirectory } from '@services/media/media'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
 import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
-import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization, updateOrgColorConfig } from '@services/settings/org'
+import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization, updateOrgColorConfig, uploadOrganizationFavicon } from '@services/settings/org'
 import { cn } from '@/lib/utils'
 import { Input } from "@components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog"
@@ -89,8 +89,10 @@ export default function OrgEditBranding() {
 
   const [localLogo, setLocalLogo] = useState<string | null>(null)
   const [localThumbnail, setLocalThumbnail] = useState<string | null>(null)
+  const [localFavicon, setLocalFavicon] = useState<string | null>(null)
   const [isLogoUploading, setIsLogoUploading] = useState(false)
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false)
+  const [isFaviconUploading, setIsFaviconUploading] = useState(false)
   const [previews, setPreviews] = useState<Preview[]>(() => {
     const imagePreviews = (org?.previews?.images || [])
       .filter((item: any) => item?.filename)
@@ -168,6 +170,27 @@ export default function OrgEditBranding() {
         toast.error(t('dashboard.organization.images.toasts.thumbnail_error'), { id: loadingToast })
       } finally {
         setIsThumbnailUploading(false)
+      }
+    }
+  }
+
+  const handleFaviconChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0]
+      setLocalFavicon(URL.createObjectURL(file))
+      setIsFaviconUploading(true)
+      const loadingToast = toast.loading(t('dashboard.organization.images.uploading'))
+      try {
+        await uploadOrganizationFavicon(org.id, file, access_token)
+        await new Promise((r) => setTimeout(r, 1500))
+        toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+        await revalidateTags(['organizations'], org.slug)
+        mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+        router.refresh()
+      } catch (err) {
+        toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
+      } finally {
+        setIsFaviconUploading(false)
       }
     }
   }
@@ -529,6 +552,57 @@ export default function OrgEditBranding() {
                           <p className="font-medium">{t('dashboard.organization.images.accepted_files')}</p>
                         </div>
                         <p className="text-gray-400">{t('dashboard.organization.images.recommended_size')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Favicon Upload */}
+                <div className="w-full border-t border-gray-100 pt-6">
+                  <div className="flex flex-col justify-center items-center space-y-6">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div
+                        className={cn(
+                          "w-8 h-8 bg-contain bg-no-repeat bg-center rounded bg-white",
+                          "border-2 border-gray-100 hover:border-blue-200 transition-all duration-300",
+                          isFaviconUploading && "opacity-50"
+                        )}
+                        style={{ backgroundImage: `url(${localFavicon || (org?.config?.config?.general?.favicon_image ? getOrgFaviconMediaDirectory(org?.org_uuid, org?.config?.config?.general?.favicon_image) : '')})` }}
+                      />
+                      <p className="text-xs text-gray-400">Favicon preview (32×32)</p>
+                    </div>
+
+                    <div className="flex flex-col items-center space-y-4">
+                      <input
+                        type="file"
+                        id="faviconInput"
+                        accept={SUPPORTED_FILES}
+                        className="hidden"
+                        onChange={handleFaviconChange}
+                      />
+                      <button
+                        type="button"
+                        disabled={isFaviconUploading}
+                        className={cn(
+                          "font-medium text-sm px-6 py-2.5 rounded-full",
+                          "bg-linear-to-r from-gray-600 to-gray-700 text-white",
+                          "hover:from-gray-700 hover:to-gray-800",
+                          "shadow-xs hover:shadow-sm transition-all duration-300",
+                          "flex items-center space-x-2",
+                          isFaviconUploading && "opacity-75 cursor-not-allowed"
+                        )}
+                        onClick={handleImageButtonClick('faviconInput')}
+                      >
+                        <UploadCloud size={18} className={cn("", isFaviconUploading && "animate-bounce")} />
+                        <span>{isFaviconUploading ? t('dashboard.organization.images.uploading') : 'Upload Favicon'}</span>
+                      </button>
+
+                      <div className="flex flex-col text-xs space-y-2 items-center text-gray-500">
+                        <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full">
+                          <Info size={14} />
+                          <p className="font-medium">{t('dashboard.organization.images.accepted_files')}</p>
+                        </div>
+                        <p className="text-gray-400">Recommended: 32×32px or 64×64px PNG</p>
                       </div>
                     </div>
                   </div>
