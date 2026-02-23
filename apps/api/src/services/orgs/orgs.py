@@ -39,7 +39,7 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
 from config.config import get_learnhouse_config
@@ -447,6 +447,62 @@ async def update_org_logo(
     db_session.refresh(org)
 
     return {"detail": "Logo updated"}
+
+
+async def update_org_favicon(
+    request: Request,
+    favicon_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload favicon
+    name_in_disk = await upload_org_favicon(favicon_file, org.org_uuid)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    if "general" not in updated_config:
+        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "auth_branding": {}}
+
+    updated_config["general"]["favicon_image"] = name_in_disk
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Favicon updated"}
+
 
 async def update_org_thumbnail(
     request: Request,

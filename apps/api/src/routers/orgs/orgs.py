@@ -56,6 +56,7 @@ from src.services.orgs.orgs import (
     upload_org_auth_background_service,
     update_org_seo_config,
     upload_org_og_image_service,
+    update_org_favicon,
 )
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 
@@ -587,6 +588,26 @@ async def api_update_org_logo(
     return await update_org_logo(
         request=request,
         logo_file=logo_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )
+
+
+@router.put("/{org_id}/favicon")
+async def api_update_org_favicon(
+    request: Request,
+    org_id: int,
+    favicon_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update org favicon
+    """
+    return await update_org_favicon(
+        request=request,
+        favicon_file=favicon_file,
         org_id=org_id,
         current_user=current_user,
         db_session=db_session,

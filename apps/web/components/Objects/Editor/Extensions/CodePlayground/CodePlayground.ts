@@ -34,6 +34,21 @@ export default Node.create({
       difficulty: {
         default: 'medium',
       },
+      solutionCode: {
+        default: '',
+      },
+      maxAttemptsBeforeReveal: {
+        default: 3,
+      },
+      timeComplexity: {
+        default: '',
+      },
+      spaceComplexity: {
+        default: '',
+      },
+      timeLimitMs: {
+        default: 10000,
+      },
     }
   },
 
