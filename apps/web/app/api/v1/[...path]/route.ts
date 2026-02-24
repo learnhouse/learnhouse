@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getBackendUrl } from '@services/config/config'
 
 // Allow large file uploads (videos, SCORM packages) to pass through
 export const maxDuration = 300 // 5 minutes
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
-
-const getBackendUrl = () =>
-  (process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338').replace(/\/+$/, '')
 
 // Headers to skip when forwarding (hop-by-hop or Next.js internal)
 const SKIP_REQUEST_HEADERS = new Set(['host', 'connection', 'keep-alive', 'transfer-encoding'])
@@ -17,7 +15,7 @@ const SKIP_RESPONSE_HEADERS = new Set(['connection', 'keep-alive', 'transfer-enc
 async function proxyToBackend(request: NextRequest): Promise<Response> {
   const path = request.nextUrl.pathname
   const search = request.nextUrl.search
-  const backendUrl = `${getBackendUrl()}${path}${search}`
+  const backendUrl = `${getBackendUrl().replace(/\/+$/, '')}${path}${search}`
 
   // Forward all request headers except hop-by-hop ones
   const headers = new Headers()

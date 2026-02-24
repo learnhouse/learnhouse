@@ -333,6 +333,69 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
     return plan_dependency
 
 
+def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
+    """
+    Factory function that returns a FastAPI dependency to enforce plan requirements
+    for playground routes. Resolves org_id from playground_uuid, path params, or query params.
+
+    Usage in router:
+        dependencies=[Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+    """
+
+    async def plan_dependency(
+        request: Request,
+        db_session: Session = Depends(get_db_session),
+    ):
+        if _is_oss_mode():
+            return True
+
+        org_id = None
+
+        # Try to get org_id from path parameters first
+        org_id_param = request.path_params.get("org_id")
+        if org_id_param is not None:
+            try:
+                org_id = int(org_id_param)
+            except (ValueError, TypeError):
+                pass
+
+        # Try to get org_id from query parameters
+        if org_id is None:
+            org_id_query = request.query_params.get("org_id")
+            if org_id_query is not None:
+                try:
+                    org_id = int(org_id_query)
+                except (ValueError, TypeError):
+                    pass
+
+        # If no org_id, try to get it from playground_uuid in path
+        if org_id is None:
+            playground_uuid = request.path_params.get("playground_uuid")
+            if playground_uuid:
+                from src.db.playgrounds import Playground
+                statement = select(Playground).where(Playground.playground_uuid == playground_uuid)
+                playground = db_session.exec(statement).first()
+                if playground:
+                    org_id = playground.org_id
+
+        if org_id is None:
+            # Can't determine org, allow the request (other checks will handle auth)
+            return True
+
+        current_plan = get_org_plan(org_id, db_session)
+
+        if not plan_meets_requirement(current_plan, required_plan):
+            raise HTTPException(
+                status_code=403,
+                detail=f"{feature_name} requires a {required_plan.capitalize()} plan or higher. "
+                f"Your organization is currently on the {current_plan.capitalize()} plan.",
+            )
+
+        return True
+
+    return plan_dependency
+
+
 def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
     """
     Factory function that returns a FastAPI dependency to enforce plan requirements

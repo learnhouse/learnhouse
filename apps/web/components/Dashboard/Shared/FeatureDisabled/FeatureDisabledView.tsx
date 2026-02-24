@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { LucideIcon, Ban, Settings, AlertTriangle } from 'lucide-react'
+import { Ban, Settings, AlertTriangle } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
@@ -12,8 +12,8 @@ interface FeatureDisabledViewProps {
   featureName: string
   /** The org slug for linking to settings (required for dashboard context) */
   orgslug: string
-  /** Lucide icon to display in the disabled screen */
-  icon?: LucideIcon
+  /** Icon component to display in the disabled screen (Lucide or Phosphor) */
+  icon?: React.ElementType
   /** Context: 'public' shows full disabled screen, 'dashboard' shows banner with content */
   context: 'public' | 'dashboard'
   /** Content to render if feature is enabled (or below banner in dashboard) */
@@ -96,7 +96,7 @@ const FeatureDisabledView: React.FC<FeatureDisabledViewProps> = ({
             <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
               <div className="bg-gray-50 p-4 rounded-xl nice-shadow mb-6">
                 {Icon ? (
-                  <Icon className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
+                  <Icon className="w-10 h-10 text-gray-400" />
                 ) : (
                   <Ban className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
                 )}
@@ -132,7 +132,7 @@ const FeatureDisabledView: React.FC<FeatureDisabledViewProps> = ({
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <div className="bg-gray-50 p-4 rounded-xl nice-shadow mb-6">
               {Icon ? (
-                <Icon className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
+                <Icon className="w-10 h-10 text-gray-400" />
               ) : (
                 <Ban className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
               )}

@@ -2,7 +2,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText } from '@phosphor-icons/react'
+import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText, Cube } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +31,11 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const isDocsFeatureEnabled = org?.config?.config?.features?.docs?.enabled === true
   const canAccessDocs = planMeetsRequirement(plan, 'pro')
   const showDocs = isDocsFeatureEnabled && canAccessDocs
+
+  // Playgrounds requires pro+ plan AND feature enabled
+  const isPlaygroundsFeatureEnabled = org?.config?.config?.features?.playgrounds?.enabled !== false
+  const canAccessPlaygrounds = planMeetsRequirement(plan, 'pro')
+  const showPlaygrounds = isPlaygroundsFeatureEnabled && canAccessPlaygrounds
 
   return (
     <div className='pl-1'>
@@ -71,6 +76,14 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           <LinkItem
             link="/communities"
             type="communities"
+            orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
+          ></LinkItem>
+        )}
+        {showPlaygrounds && (
+          <LinkItem
+            link="/playgrounds"
+            type="playgrounds"
             orgslug={props.orgslug}
             primaryColor={props.primaryColor}
           ></LinkItem>
@@ -140,6 +153,12 @@ const LinkItem = (props: any) => {
           </>
         )}
 
+        {props.type == 'playgrounds' && (
+          <>
+            <Cube size={20} weight="fill" />{' '}
+            <span>Playgrounds</span>
+          </>
+        )}
 
       </li>
     </Link>

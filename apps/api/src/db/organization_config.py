@@ -85,6 +85,11 @@ class BoardsOrgConfig(BaseModel):
     limit: int = 10
 
 
+class PlaygroundsOrgConfig(BaseModel):
+    enabled: bool = False
+    limit: int = 10
+
+
 class OrgFeatureConfig(BaseModel):
     courses: CourseOrgConfig = CourseOrgConfig()
     members: MemberOrgConfig = MemberOrgConfig()
@@ -102,6 +107,7 @@ class OrgFeatureConfig(BaseModel):
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
     docs: DocsOrgConfig = DocsOrgConfig()
     boards: BoardsOrgConfig = BoardsOrgConfig()
+    playgrounds: PlaygroundsOrgConfig = PlaygroundsOrgConfig()
 
 
 # Auth Branding
