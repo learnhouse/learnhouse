@@ -19,7 +19,6 @@ from src.services.playgrounds.playgrounds_generator import (
     get_playground_session,
     create_playground_session,
     generate_playground_stream,
-    save_playground_session,
     MAX_ITERATIONS,
 )
 from src.services.playgrounds.schemas.playgrounds_generator import (

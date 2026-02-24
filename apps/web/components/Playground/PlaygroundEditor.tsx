@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, type Transition, type TargetAndTransition } from 'framer-motion'
 import {
   ArrowLeft,
   Globe,
@@ -37,21 +37,21 @@ interface PlaygroundEditorProps {
 
 type Message = { role: 'user' | 'model'; content: string }
 
-const logoAnimations = [
+const logoAnimations: { initial: TargetAndTransition; animate: TargetAndTransition; transition: Transition }[] = [
   {
     initial: { y: 10, opacity: 0 },
     animate: { y: 0, opacity: 1 },
-    transition: { duration: 0.4, ease: 'easeOut' },
+    transition: { duration: 0.4, ease: 'easeOut' as const },
   },
   {
     initial: { x: -10, opacity: 0 },
     animate: { x: 0, opacity: 1 },
-    transition: { duration: 0.4, ease: 'easeOut' },
+    transition: { duration: 0.4, ease: 'easeOut' as const },
   },
   {
     initial: { scale: 0.7, opacity: 0 },
     animate: { scale: 1, opacity: 1 },
-    transition: { duration: 0.35, ease: 'easeOut' },
+    transition: { duration: 0.35, ease: 'easeOut' as const },
   },
 ]
 
