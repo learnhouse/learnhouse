@@ -220,6 +220,13 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
+  // Playground Editor — standalone full-screen page, bypass org rewrite
+  if (pathname.startsWith('/editor/playground/')) {
+    const response = NextResponse.rewrite(new URL(pathname + search, req.url))
+    setInstanceCookies(response, instanceInfo)
+    return response
+  }
+
   // Check if the request is for the Stripe callback URL
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
     const searchParams = req.nextUrl.searchParams

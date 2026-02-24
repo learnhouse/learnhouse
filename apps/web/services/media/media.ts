@@ -72,6 +72,15 @@ export function getBoardThumbnailMediaDirectory(
   return uri
 }
 
+export function getPlaygroundThumbnailMediaDirectory(
+  orgUUID: string,
+  playgroundUUID: string,
+  fileId: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/playgrounds/${playgroundUUID}/thumbnails/${fileId}`
+  return uri
+}
+
 export function getCommunityThumbnailMediaDirectory(
   orgUUID: string,
   communityUUID: string,

@@ -1,11 +1,11 @@
 import React from 'react'
 import { BookCopy, SquareLibrary, Signpost, Headphones } from 'lucide-react'
-import { ChalkboardSimple } from '@phosphor-icons/react'
+import { ChalkboardSimple, Cube } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 
 interface TypeOfContentTitleProps {
   title: string
-  type: 'col' | 'cou' | 'tra' | 'pod' | 'board' | string
+  type: 'col' | 'cou' | 'tra' | 'pod' | 'board' | 'pg' | string
 }
 
 function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
@@ -23,6 +23,8 @@ function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
         return <Headphones className="w-4 h-4 text-black" />
       case 'board':
         return <ChalkboardSimple size={16} className="text-black" weight="fill" />
+      case 'pg':
+        return <Cube size={16} className="text-black" weight="fill" />
       default:
         return null
     }

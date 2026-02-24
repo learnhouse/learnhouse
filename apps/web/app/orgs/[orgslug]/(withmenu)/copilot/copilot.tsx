@@ -42,11 +42,11 @@ import {
 } from '@phosphor-icons/react'
 import Link from 'next/link'
 
-type CopilotProps = {
+export type CopilotProps = {
   orgslug: string
 }
 
-type ChatMessage = {
+export type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
   sources?: StreamSourceData['sources']
@@ -60,7 +60,7 @@ export default function Copilot({ orgslug }: CopilotProps) {
   )
 }
 
-function groupSessionsByDate(sessions: RAGChatSession[]) {
+export function groupSessionsByDate(sessions: RAGChatSession[]) {
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -86,7 +86,7 @@ function groupSessionsByDate(sessions: RAGChatSession[]) {
   return groups.filter((g) => g.sessions.length > 0)
 }
 
-function CopilotChat({ orgslug }: CopilotProps) {
+export function CopilotChat({ orgslug }: CopilotProps) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -641,7 +641,7 @@ function CopilotChat({ orgslug }: CopilotProps) {
   )
 }
 
-function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onToggleSidebar, showMenuButton }: {
+export function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onToggleSidebar, showMenuButton }: {
   title: string
   isFavorite: boolean
   onRename: (newTitle: string) => void
@@ -730,7 +730,7 @@ function ChatTopBar({ title, isFavorite, onRename, onToggleFavorite, onToggleSid
   )
 }
 
-function SessionItem({ session, isActive, onSelect, onDelete }: {
+export function SessionItem({ session, isActive, onSelect, onDelete }: {
   session: RAGChatSession
   isActive: boolean
   onSelect: () => void
@@ -771,7 +771,7 @@ function SessionItem({ session, isActive, onSelect, onDelete }: {
 // Sub-components
 // ------------------------------------------------------------------
 
-function AssistantMessage({ content, sources, orgslug, isStreaming, isWaiting }: {
+export function AssistantMessage({ content, sources, orgslug, isStreaming, isWaiting }: {
   content: string
   sources: StreamSourceData['sources']
   orgslug: string
@@ -807,7 +807,7 @@ function AssistantMessage({ content, sources, orgslug, isStreaming, isWaiting }:
   )
 }
 
-function ThinkingIndicator() {
+export function ThinkingIndicator() {
   return (
     <div className="flex items-center gap-1.5 py-0.5">
       <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
@@ -887,7 +887,7 @@ function renderCitationsInText(text: string, sources: StreamSourceData['sources'
   return parts
 }
 
-function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = false }: {
+export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = false }: {
   content: string
   sources?: StreamSourceData['sources']
   orgslug: string
@@ -933,7 +933,7 @@ function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = false }
   )
 }
 
-function CourseDropdown({ courses, selectedCourse, onSelect, position = 'bottom' }: {
+export function CourseDropdown({ courses, selectedCourse, onSelect, position = 'bottom' }: {
   courses: any[]
   selectedCourse: string | null
   onSelect: (uuid: string | null) => void
@@ -970,7 +970,7 @@ function CourseDropdown({ courses, selectedCourse, onSelect, position = 'bottom'
   )
 }
 
-function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData['sources']; orgslug: string }) {
+export function SourcesCompact({ sources, orgslug }: { sources: StreamSourceData['sources']; orgslug: string }) {
   return (
     <div className="relative z-10 flex flex-wrap gap-x-3 gap-y-1 px-1">
       {sources.map((source, i) => {
