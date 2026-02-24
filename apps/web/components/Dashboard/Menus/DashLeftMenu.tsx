@@ -38,6 +38,7 @@ import {
   ChartLine,
   MagnifyingGlass,
   ChalkboardSimple,
+  Cube,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -171,6 +172,7 @@ function DashLeftMenu() {
   const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
   const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
   const showBoards = org?.config?.config?.features?.boards?.enabled === true && isFeatureAvailable('boards', plan)
+  const showPlaygrounds = org?.config?.config?.features?.playgrounds?.enabled === true && isFeatureAvailable('playgrounds', plan)
   const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
 
   return (
@@ -383,6 +385,14 @@ function DashLeftMenu() {
                 isCollapsed={isCollapsed}
               />
             )}
+            {showPlaygrounds && (
+              <MenuLink
+                href="/dash/playgrounds"
+                icon={<Cube size={20} weight="fill" />}
+                label="Playgrounds"
+                isCollapsed={isCollapsed}
+              />
+            )}
             {/* Users with hover menu */}
             <HoverMenu
               content={
@@ -591,7 +601,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
-            {(!showCommunities || !showPodcasts || !showDocs || !showBoards || !showPayments) && (
+            {(!showCommunities || !showPodcasts || !showDocs || !showBoards || !showPlaygrounds || !showPayments) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
@@ -631,6 +641,14 @@ function DashLeftMenu() {
                         <Link href="/dash/boards" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <ChalkboardSimple size={16} weight="fill" />
                           <span>{t('common.boards')}</span>
+                        </Link>
+                      </HoverMenuItem>
+                    )}
+                    {!showPlaygrounds && (
+                      <HoverMenuItem asChild>
+                        <Link href="/dash/playgrounds" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                          <Cube size={16} weight="fill" />
+                          <span>Playgrounds</span>
                         </Link>
                       </HoverMenuItem>
                     )}

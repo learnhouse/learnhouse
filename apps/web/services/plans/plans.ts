@@ -17,6 +17,7 @@ export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
   usergroups: 'personal',
   ai: 'personal',
   boards: 'personal',
+  playgrounds: 'pro',
   payments: 'standard',
   communities: 'standard',
   seo: 'standard',

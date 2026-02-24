@@ -8,6 +8,7 @@ This script handles all migrations:
 3. Podcasts feature for organization configs
 4. Reset orgconfig colors to empty string
 5. Boards permissions for roles
+6. Playgrounds permissions for roles + org configs
 
 Run this script from the apps/api directory:
     python scripts/migrate.py
@@ -21,6 +22,7 @@ Available commands:
     python scripts/migrate.py --dry-run    # Show what would be changed
     python scripts/migrate.py communities  # Run only communities migration
     python scripts/migrate.py podcasts     # Run only podcasts migration
+    python scripts/migrate.py playgrounds  # Run only playgrounds migration
 """
 
 import os
@@ -380,6 +382,127 @@ def migrate_org_configs_colors(session):
 
 
 # =============================================================================
+# Playgrounds Migration
+# =============================================================================
+
+def migrate_roles_playgrounds(session):
+    """Add playgrounds permissions to all existing roles."""
+    print("\n" + "=" * 60)
+    print("Migrating Roles: Playgrounds Permissions")
+    print("=" * 60)
+
+    result = session.execute(text("SELECT id, name, rights FROM role"))
+    roles = result.fetchall()
+
+    print(f"Found {len(roles)} roles to check")
+    updated_count = 0
+
+    for role_id, role_name, rights in roles:
+        if rights is None:
+            rights = {}
+        elif isinstance(rights, str):
+            rights = json.loads(rights)
+
+        # Check if already migrated
+        if 'playgrounds' in rights:
+            print(f"  - Role '{role_name}' (id={role_id}): Already has playgrounds, skipping")
+            continue
+
+        is_admin = has_admin_like_perms(rights)
+        is_instructor = can_only_manage_own(rights)
+
+        # Add playgrounds permission based on role type
+        if is_admin and not is_instructor:
+            # Admin/Maintainer: full permissions
+            rights['playgrounds'] = {
+                'action_create': True,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': True,
+                'action_update_own': True,
+                'action_delete': True,
+                'action_delete_own': True,
+            }
+        elif is_instructor:
+            # Instructor: can create and manage own
+            rights['playgrounds'] = {
+                'action_create': True,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': False,
+                'action_update_own': True,
+                'action_delete': False,
+                'action_delete_own': True,
+            }
+        else:
+            # User/Learner: read only
+            rights['playgrounds'] = {
+                'action_create': False,
+                'action_read': True,
+                'action_read_own': True,
+                'action_update': False,
+                'action_update_own': False,
+                'action_delete': False,
+                'action_delete_own': False,
+            }
+
+        session.execute(
+            text("UPDATE role SET rights = :rights WHERE id = :id"),
+            {'rights': json.dumps(rights), 'id': role_id}
+        )
+
+        print(f"  - Role '{role_name}' (id={role_id}): Added playgrounds permissions")
+        updated_count += 1
+
+    print(f"\nPlaygrounds roles migration complete! Updated {updated_count} roles.")
+    return updated_count
+
+
+def migrate_org_configs_playgrounds(session):
+    """Add playgrounds feature to all existing organization configs."""
+    print("\n" + "=" * 60)
+    print("Migrating Organization Configs: Playgrounds Feature")
+    print("=" * 60)
+
+    result = session.execute(text("SELECT id, org_id, config FROM organizationconfig"))
+    configs = result.fetchall()
+
+    print(f"Found {len(configs)} organization configs to check")
+    updated_count = 0
+
+    for config_id, org_id, config in configs:
+        if config is None:
+            config = {}
+        elif isinstance(config, str):
+            config = json.loads(config)
+
+        if 'features' not in config:
+            config['features'] = {}
+
+        # Check if already migrated
+        if 'playgrounds' in config.get('features', {}):
+            print(f"  - Org config (id={config_id}, org_id={org_id}): Already has playgrounds, skipping")
+            continue
+
+        # Add playgrounds feature (disabled by default, requires pro plan)
+        config['features']['playgrounds'] = {
+            'enabled': True,
+            'limit': 10
+        }
+
+        session.execute(
+            text("UPDATE organizationconfig SET config = :config WHERE id = :id"),
+            {'config': json.dumps(config), 'id': config_id}
+        )
+
+        print(f"  - Org config (id={config_id}, org_id={org_id}): Added playgrounds feature")
+        updated_count += 1
+
+    print(f"\nOrg configs playgrounds migration complete! Updated {updated_count} configs.")
+    return updated_count
+
+
+# =============================================================================
 # Display Functions
 # =============================================================================
 
@@ -524,6 +647,30 @@ def show_dry_run():
         if boards_count == 0:
             print("  (none)")
 
+        # Check roles for playgrounds
+        print("\nRoles needing playgrounds permissions:")
+        playgrounds_count = 0
+        for role_id, role_name, rights in roles:
+            if rights is None:
+                rights = {}
+            elif isinstance(rights, str):
+                rights = json.loads(rights)
+
+            if 'playgrounds' not in rights:
+                is_admin = has_admin_like_perms(rights)
+                is_instructor = can_only_manage_own(rights)
+                if is_admin and not is_instructor:
+                    perm_type = "full"
+                elif is_instructor:
+                    perm_type = "own-only"
+                else:
+                    perm_type = "read-only"
+                print(f"  - {role_name}: Would add {perm_type} playgrounds permissions")
+                playgrounds_count += 1
+
+        if playgrounds_count == 0:
+            print("  (none)")
+
         # Check org configs for podcasts
         print("\nOrg configs needing podcasts feature:")
         result = session.execute(text("SELECT id, org_id, config FROM organizationconfig"))
@@ -543,10 +690,27 @@ def show_dry_run():
         if config_count == 0:
             print("  (none)")
 
+        # Check org configs for playgrounds
+        print("\nOrg configs needing playgrounds feature:")
+        pg_config_count = 0
+        for config_id, org_id, config in configs:
+            if config is None:
+                config = {}
+            elif isinstance(config, str):
+                config = json.loads(config)
+
+            if 'playgrounds' not in config.get('features', {}):
+                print(f"  - Org {org_id}: Would add playgrounds feature")
+                pg_config_count += 1
+
+        if pg_config_count == 0:
+            print("  (none)")
+
         print("\n" + "=" * 60)
         print(f"Summary: {communities_count} roles for communities, "
               f"{podcasts_count} roles for podcasts, {boards_count} roles for boards, "
-              f"{config_count} org configs")
+              f"{playgrounds_count} roles for playgrounds, "
+              f"{config_count} org configs for podcasts, {pg_config_count} org configs for playgrounds")
         print("=" * 60)
 
     finally:
@@ -569,6 +733,8 @@ def run_all_migrations():
             'podcasts_configs': migrate_org_configs_podcasts(session),
             'colors_configs': migrate_org_configs_colors(session),
             'boards_roles': migrate_roles_boards(session),
+            'playgrounds_roles': migrate_roles_playgrounds(session),
+            'playgrounds_configs': migrate_org_configs_playgrounds(session),
         }
 
         session.commit()
@@ -581,6 +747,8 @@ def run_all_migrations():
         print(f"  Org configs updated with podcasts: {results['podcasts_configs']}")
         print(f"  Org configs reset colors: {results['colors_configs']}")
         print(f"  Roles updated with boards: {results['boards_roles']}")
+        print(f"  Roles updated with playgrounds: {results['playgrounds_roles']}")
+        print(f"  Org configs updated with playgrounds: {results['playgrounds_configs']}")
         print("\nAll migrations completed successfully!")
 
     except Exception as e:
@@ -660,6 +828,24 @@ def run_colors_migration():
         session.close()
 
 
+def run_playgrounds_migration():
+    """Run only playgrounds migration."""
+    print("Connecting to database...")
+    session = get_session()
+
+    try:
+        roles_updated = migrate_roles_playgrounds(session)
+        configs_updated = migrate_org_configs_playgrounds(session)
+        session.commit()
+        print(f"\nPlaygrounds migration completed! Updated {roles_updated} roles and {configs_updated} configs.")
+    except Exception as e:
+        session.rollback()
+        print(f"\nError during migration: {e}")
+        raise
+    finally:
+        session.close()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='LearnHouse Database Migration Script',
@@ -675,7 +861,7 @@ Examples:
   python scripts/migrate.py boards       Run only boards migration
         """
     )
-    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts', 'colors', 'boards'],
+    parser.add_argument('migration', nargs='?', choices=['communities', 'podcasts', 'colors', 'boards', 'playgrounds'],
                         help='Specific migration to run (default: all)')
     parser.add_argument('--show', action='store_true',
                         help='Show current state without migrating')
@@ -703,6 +889,9 @@ Examples:
         show_current_state()
     elif args.migration == 'boards':
         run_boards_migration()
+        show_current_state()
+    elif args.migration == 'playgrounds':
+        run_playgrounds_migration()
         show_current_state()
     else:
         run_all_migrations()

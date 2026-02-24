@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import CopilotBubble from '@components/Copilot/CopilotBubble'
 import Image from 'next/image'
 import Link from 'next/link'
 import useSWR from 'swr'
@@ -57,6 +58,26 @@ export const OrgMenu = (props: any) => {
   const { rights } = useAdminStatus()
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
+
+  // Copilot bubble state
+  const [bubbleOpen, setBubbleOpen] = useState(false)
+  const [bubbleSessionToLoad, setBubbleSessionToLoad] = useState<string | null>(null)
+  const [isBubbleMode, setIsBubbleMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    const stored = localStorage.getItem('copilot-bubble-mode')
+    return stored === 'true'
+  })
+
+  const toggleBubbleMode = (value: boolean) => {
+    setIsBubbleMode(value)
+    localStorage.setItem('copilot-bubble-mode', String(value))
+    if (!value) setBubbleOpen(false)
+  }
+
+  const openBubbleWithSession = (sessionUuid?: string) => {
+    if (sessionUuid) setBubbleSessionToLoad(sessionUuid)
+    setBubbleOpen(true)
+  }
   const topOffset = isJoinBannerVisible ? JOIN_BANNER_HEIGHT : 0
 
   // Get primary color from org config
@@ -181,7 +202,14 @@ export const OrgMenu = (props: any) => {
             {org?.config?.config?.features?.ai?.enabled !== false && org?.config?.config?.features?.ai?.copilot_enabled !== false && (
               <AuthenticatedClientElement checkMethod="authentication">
                 <div className="hidden md:flex">
-                  <CopilotMenuButton orgslug={orgslug} iconBtnClass={colors.iconBtn} />
+                  <CopilotMenuButton
+                    orgslug={orgslug}
+                    iconBtnClass={colors.iconBtn}
+                    isBubbleMode={isBubbleMode}
+                    onToggleBubbleMode={toggleBubbleMode}
+                    bubbleOpen={bubbleOpen}
+                    onOpenBubble={openBubbleWithSession}
+                  />
                 </div>
               </AuthenticatedClientElement>
             )}
@@ -352,14 +380,36 @@ export const OrgMenu = (props: any) => {
         userName={session?.data?.user?.username}
         userEmail={session?.data?.user?.email}
       />
+
+      {/* Copilot floating bubble */}
+      {isBubbleMode && (
+        <CopilotBubble
+          orgslug={orgslug}
+          open={bubbleOpen}
+          onOpenChange={setBubbleOpen}
+          sessionToLoad={bubbleSessionToLoad}
+        />
+      )}
     </>
   )
 }
 
-const CopilotMenuButton = ({ orgslug, iconBtnClass }: { orgslug: string; iconBtnClass: string }) => {
+const CopilotMenuButton = ({
+  orgslug,
+  isBubbleMode,
+  onToggleBubbleMode,
+  bubbleOpen,
+  onOpenBubble,
+}: {
+  orgslug: string
+  iconBtnClass: string
+  isBubbleMode: boolean
+  onToggleBubbleMode: (v: boolean) => void
+  bubbleOpen: boolean
+  onOpenBubble: (sessionUuid?: string) => void
+}) => {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
-  const { t } = useTranslation()
 
   const { data: sessions } = useSWR<RAGChatSession[]>(
     accessToken ? 'menu-rag-sessions' : null,
@@ -376,10 +426,14 @@ const CopilotMenuButton = ({ orgslug, iconBtnClass }: { orgslug: string; iconBtn
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <button
-                className="p-2 rounded-lg transition-colors hover:bg-violet-500/10"
+                className="relative p-2 rounded-lg transition-colors hover:bg-violet-500/10"
                 aria-label="Copilot"
               >
                 <ChatCircle size={20} weight="fill" className="text-violet-500" />
+                {/* Active indicator dot */}
+                {isBubbleMode && bubbleOpen && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-violet-500 ring-2 ring-white dark:ring-neutral-900" />
+                )}
               </button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -388,24 +442,34 @@ const CopilotMenuButton = ({ orgslug, iconBtnClass }: { orgslug: string; iconBtn
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="flex items-center gap-2">
           <ChatCircle size={16} weight="fill" className="text-violet-500" />
           <span>Copilot</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+
         {recentSessions.length > 0 ? (
           <>
             {recentSessions.map((s) => (
-              <DropdownMenuItem key={s.aichat_uuid} asChild>
-                <Link
-                  href={getUriWithOrg(orgslug, `/copilot?chat=${s.aichat_uuid}`)}
-                  className="flex items-center gap-2"
+              isBubbleMode ? (
+                <DropdownMenuItem
+                  key={s.aichat_uuid}
+                  onSelect={() => onOpenBubble(s.aichat_uuid)}
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
                   <span className="truncate text-sm">{s.title || 'Untitled'}</span>
-                </Link>
-              </DropdownMenuItem>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem key={s.aichat_uuid} asChild>
+                  <Link href={getUriWithOrg(orgslug, `/copilot?chat=${s.aichat_uuid}`)} className="flex items-center gap-2">
+                    <ChatCircleDots size={14} weight="fill" className="shrink-0 text-neutral-400" />
+                    <span className="truncate text-sm">{s.title || 'Untitled'}</span>
+                  </Link>
+                </DropdownMenuItem>
+              )
             ))}
             <DropdownMenuSeparator />
           </>
@@ -414,15 +478,47 @@ const CopilotMenuButton = ({ orgslug, iconBtnClass }: { orgslug: string; iconBtn
             <p className="text-xs text-neutral-400">No conversations yet</p>
           </div>
         )}
-        <DropdownMenuItem asChild>
-          <Link
-            href={getUriWithOrg(orgslug, '/copilot')}
-            className="flex items-center gap-2 font-medium"
+
+        {/* Primary action */}
+        {isBubbleMode ? (
+          <DropdownMenuItem
+            onSelect={() => onOpenBubble()}
+            className="flex items-center gap-2 font-medium cursor-pointer"
           >
             <ChatCircle size={14} weight="fill" className="text-violet-500" />
-            <span>{recentSessions.length > 0 ? 'View all conversations' : 'Start a conversation'}</span>
-          </Link>
-        </DropdownMenuItem>
+            <span>{recentSessions.length > 0 ? 'New conversation' : 'Start a conversation'}</span>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem asChild>
+            <Link href={getUriWithOrg(orgslug, '/copilot')} className="flex items-center gap-2 font-medium">
+              <ChatCircle size={14} weight="fill" className="text-violet-500" />
+              <span>{recentSessions.length > 0 ? 'View all conversations' : 'Start a conversation'}</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        <DropdownMenuSeparator />
+
+        {/* Bubble mode toggle */}
+        <button
+          onClick={() => onToggleBubbleMode(!isBubbleMode)}
+          className="w-full flex items-center justify-between px-2 py-2 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors group"
+        >
+          <span className="text-xs text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+            Open in bubble
+          </span>
+          <span
+            className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors flex-shrink-0 ${
+              isBubbleMode ? 'bg-violet-500' : 'bg-neutral-200 dark:bg-neutral-600'
+            }`}
+          >
+            <span
+              className={`inline-block h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${
+                isBubbleMode ? 'translate-x-3.5' : 'translate-x-0.5'
+              }`}
+            />
+          </span>
+        </button>
       </DropdownMenuContent>
     </DropdownMenu>
   )
