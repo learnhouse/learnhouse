@@ -467,9 +467,19 @@ function ThumbnailTab({
 
   const handleUnsplashSelect = async (imageUrl: string) => {
     try {
+      const url = new URL(imageUrl)
+      if (!['https:', 'http:'].includes(url.protocol)) {
+        toast.error('Invalid image URL')
+        return
+      }
       setIsUploading(true)
       const res = await fetch(imageUrl)
       const blob = await res.blob()
+      if (!blob.type.startsWith('image/')) {
+        toast.error('URL did not return a valid image')
+        setIsUploading(false)
+        return
+      }
       const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type })
       setLocalPreview(URL.createObjectURL(file))
       await doUpload(file)
