@@ -11,7 +11,7 @@
   "dependencies": {
     "@hocuspocus/extension-database": "^2.15.0",
     "@hocuspocus/server": "^2.15.0",
-    "dotenv": "^16.4.7",
+    "dotenv": "^17.0.0",
     "ioredis": "^5.9.3",
     "jsonwebtoken": "^9.0.2",
     "yjs": "^13.6.20"
