@@ -4,7 +4,8 @@ import { motion } from 'framer-motion'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { Settings, Users, Gem, CreditCard, Layers } from 'lucide-react'
+import { Settings, Users, Gem, CreditCard, Layers, ShoppingBag, ExternalLink } from 'lucide-react'
+import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
@@ -25,15 +26,15 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
-  const subpage = params.subpage || 'customers'
+  const subpage = params.subpage || 'overview'
   const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
   const getPageTitle = () => {
     switch (subpage) {
-      case 'customers':
+      case 'overview':
         return {
-          h1: 'Customers',
-          h2: 'View and manage your customer information'
+          h1: 'Overview',
+          h2: 'Revenue, transactions, subscriptions and customers'
         }
       case 'offers':
         return {
@@ -59,6 +60,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   }
 
   const { h1, h2 } = getPageTitle()
+  const paymentsEnabled = org?.config?.config?.features?.payments?.enabled !== false
 
   return (
     <PlanRestrictedFeature
@@ -77,7 +79,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }
           ]} />
         </div>
-        <div className="my-2 py-2">
+        <div className="my-2 py-2 flex items-end justify-between">
           <div className="w-100 flex flex-col space-y-1">
             <div className="pt-3 flex font-bold text-4xl tracking-tighter">
               {h1}
@@ -86,13 +88,36 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
               {h2}
             </div>
           </div>
+          <div className="flex items-center space-x-2 pb-1">
+            {paymentsEnabled && (
+              <Link
+                href={getUriWithOrg(params.orgslug, '/store')}
+                target="_blank"
+                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <ShoppingBag size={14} />
+                <span>Preview Shop</span>
+                <ExternalLink size={12} className="text-gray-400" />
+              </Link>
+            )}
+            <a
+              href="https://dashboard.stripe.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <SiStripe size={14} className="text-[#635BFF]" />
+              <span>Stripe Dashboard</span>
+              <ExternalLink size={12} className="text-gray-400" />
+            </a>
+          </div>
         </div>
         <div className="flex space-x-0.5 font-black text-sm">
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/customers')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/overview')}
             icon={<Users size={16} />}
-            label="Customers"
-            isActive={subpage === 'customers'}
+            label="Overview"
+            isActive={subpage === 'overview'}
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/offers')}
@@ -125,7 +150,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         {subpage === 'configuration' && <PaymentsConfigurationPage />}
         {subpage === 'offers' && <PaymentsOffersPage />}
         {subpage === 'groups' && <PaymentsGroupsPage />}
-        {subpage === 'customers' && <PaymentsCustomersPage />}
+        {(subpage === 'overview' || subpage === 'customers') && <PaymentsCustomersPage />}
       </motion.div>
     </div>
     </FeatureDisabledView>

@@ -618,6 +618,43 @@ async def api_get_customers(
 ):
     return await get_customers(request, org_id, current_user, db_session)
 
+
+# ---------------------------------------------------------------------------
+# Stripe live dashboard data (direct Stripe API)
+# ---------------------------------------------------------------------------
+
+@router.get("/{org_id}/stripe/overview")
+async def api_stripe_overview(
+    org_id: int,
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    from ee.services.payments.payments_stripe_dashboard import get_stripe_overview
+    return await get_stripe_overview(org_id, db_session)
+
+
+@router.get("/{org_id}/stripe/charges")
+async def api_stripe_charges(
+    org_id: int,
+    limit: int = 25,
+    starting_after: str | None = None,
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    from ee.services.payments.payments_stripe_dashboard import get_stripe_charges
+    return await get_stripe_charges(org_id, limit, starting_after, db_session)
+
+
+@router.get("/{org_id}/stripe/subscriptions")
+async def api_stripe_subscriptions(
+    org_id: int,
+    status: str = "active",
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    from ee.services.payments.payments_stripe_dashboard import get_stripe_subscriptions
+    return await get_stripe_subscriptions(org_id, status, db_session)
+
 # ---------------------------------------------------------------------------
 # Stripe Connect / OAuth
 # ---------------------------------------------------------------------------

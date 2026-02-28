@@ -71,7 +71,7 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
   },
   {
     id: 'payments',
-    href: '/dash/payments/customers',
+    href: '/dash/payments/overview',
     icon: CurrencyCircleDollar,
     labelKey: 'common.payments',
     featureKey: 'payments',
