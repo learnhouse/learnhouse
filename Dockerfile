@@ -1,7 +1,7 @@
 # ───────────────────────────────────────────────
 # Stage 1: Frontend dependency install
 # ───────────────────────────────────────────────
-FROM node:22-alpine AS frontend-deps
+FROM node:24-alpine AS frontend-deps
 RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN corepack enable pnpm && pnpm i --frozen-lockfile
 # ───────────────────────────────────────────────
 # Stage 2: Frontend build
 # ───────────────────────────────────────────────
-FROM node:22-alpine AS frontend-builder
+FROM node:24-alpine AS frontend-builder
 WORKDIR /app
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
@@ -27,7 +27,7 @@ RUN corepack enable pnpm && pnpm run build
 # ───────────────────────────────────────────────
 # Stage 3: Frontend production image
 # ───────────────────────────────────────────────
-FROM node:22-alpine AS frontend-runner
+FROM node:24-alpine AS frontend-runner
 WORKDIR /app
 
 RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
@@ -53,7 +53,7 @@ RUN chmod +x server-wrapper.js
 # ───────────────────────────────────────────────
 # Stage 4: Collab server build
 # ───────────────────────────────────────────────
-FROM node:22-alpine AS collab-builder
+FROM node:24-alpine AS collab-builder
 WORKDIR /app
 
 COPY apps/collab/package.json ./
