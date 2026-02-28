@@ -22,7 +22,7 @@ importers:
         version: 17.3.1
       ioredis:
         specifier: ^5.9.3
-        version: 5.9.3
+        version: 5.10.0
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.3
@@ -215,8 +215,8 @@ packages:
       y-protocols: ^1.0.6
       yjs: ^13.6.8
 
-  '@ioredis/commands@1.5.0':
-    resolution: {integrity: sha512-eUgLqrMf8nJkZxT24JvVRrQya1vZkQh8BBeYNwGDqa5I0VUi8ACx7uFvAaLxintokpTenkK6DASvo/bvNbBGow==}
+  '@ioredis/commands@1.5.1':
+    resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
@@ -273,8 +273,8 @@ packages:
   get-tsconfig@4.13.6:
     resolution: {integrity: sha512-shZT/QMiSHc/YBLxxOkMtgSid5HFoauqCE3/exfsEcwg1WkeqjG+V40yBbBrsD+jW2HDXcs28xOfcbm2jI8Ddw==}
 
-  ioredis@5.9.3:
-    resolution: {integrity: sha512-VI5tMCdeoxZWU5vjHWsiE/Su76JGhBvWF1MJnV9ZtGltHk9BmD48oDq8Tj8haZ85aceXZMxLNDQZRVo5QKNgXA==}
+  ioredis@5.10.0:
+    resolution: {integrity: sha512-HVBe9OFuqs+Z6n64q09PQvP1/R4Bm+30PAyyD4wIEqssh3v9L21QjCVk4kRLucMBcDokJTcLjsGeVRlq/nH6DA==}
     engines: {node: '>=12.22.0'}
 
   isomorphic.js@0.2.5:
@@ -496,7 +496,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@ioredis/commands@1.5.0': {}
+  '@ioredis/commands@1.5.1': {}
 
   '@types/jsonwebtoken@9.0.10':
     dependencies:
@@ -567,9 +567,9 @@ snapshots:
     dependencies:
       resolve-pkg-maps: 1.0.0
 
-  ioredis@5.9.3:
+  ioredis@5.10.0:
     dependencies:
-      '@ioredis/commands': 1.5.0
+      '@ioredis/commands': 1.5.1
       cluster-key-slot: 1.1.2
       debug: 4.4.3
       denque: 2.1.0
