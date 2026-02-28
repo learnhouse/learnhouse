@@ -83,7 +83,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7.2.3-alpine
+    image: redis:8.6.1-alpine
     container_name: learnhouse-redis-147377dc
     restart: unless-stopped
     command: redis-server --appendonly yes
