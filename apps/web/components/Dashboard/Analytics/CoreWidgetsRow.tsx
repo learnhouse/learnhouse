@@ -127,7 +127,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       border: '1px solid #f3f4f6',
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                     }}
-                    formatter={(value: number) => [value.toLocaleString(), '']}
+                    formatter={(value = 0) => [value.toLocaleString(), '']}
                   />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                     {chartData.map((_, i) => (
@@ -234,7 +234,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       border: '1px solid #f3f4f6',
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                     }}
-                    formatter={(value: number) => [value.toLocaleString(), '']}
+                    formatter={(value = 0) => [value.toLocaleString(), '']}
                   />
                   <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                     {chartData.map((_, i) => (

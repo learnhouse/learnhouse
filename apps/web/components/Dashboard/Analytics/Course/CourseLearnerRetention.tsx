@@ -39,7 +39,7 @@ export default function CourseLearnerRetention({
         </defs>
         <XAxis dataKey="day" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
         <Tooltip
-          formatter={(value: number) => [`${value}% ${t('analytics.course_analytics.units.retention')}`, '']}
+          formatter={(value = 0) => [`${value}% ${t('analytics.course_analytics.units.retention')}`, '']}
           labelFormatter={(label) => t('analytics.course_analytics.learner_retention.day_label', { day: label })}
           contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', fontSize: 13 }}
         />
@@ -73,7 +73,7 @@ export default function CourseLearnerRetention({
           tickFormatter={(v) => `${v}%`}
         />
         <Tooltip
-          formatter={(value: number) => [`${value}% ${t('analytics.course_analytics.units.retention')}`, '']}
+          formatter={(value = 0) => [`${value}% ${t('analytics.course_analytics.units.retention')}`, '']}
           labelFormatter={(label) => t('analytics.course_analytics.learner_retention.day_label', { day: label })}
           contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', fontSize: 13 }}
         />
