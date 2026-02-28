@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    ":disableRateLimiting"
+    ":disableRateLimiting",
+    "mergeConfidence:all-badges"
   ],
   "baseBranches": ["dev"],
   "schedule": ["every 2 weeks on saturday"],
@@ -13,45 +14,84 @@
     "Type",
     "Update",
     "Change",
+    "Age",
+    "Adoption",
+    "Passing",
+    "Confidence",
     "Pending"
   ],
   "prBodyNotes": [
-    "This PR contains dependency updates. Please review the changelog and release notes before merging."
+    "Please review the changelog and release notes before merging."
   ],
+  "assignees": ["swve"],
+  "reviewers": ["swve"],
   "fetchChangeLogs": "pr",
-  "releaseNotes": true,
+  "minimumReleaseAge": "3 days",
+  "rebaseWhen": "behind-base-branch",
+  "vulnerabilityAlerts": {
+    "labels": ["security", "renovate"],
+    "schedule": ["at any time"]
+  },
   "packageRules": [
     {
-      "description": "Group all non-major dependencies together",
+      "matchPackageNames": ["next"],
+      "matchPackagePatterns": ["^@next/", "^eslint-config-next$"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Next.js",
+      "groupSlug": "nextjs"
+    },
+    {
+      "matchPackageNames": ["react", "react-dom"],
+      "matchPackagePatterns": ["^@types/react", "^react-"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "React",
+      "groupSlug": "react"
+    },
+    {
+      "matchPackageNames": ["typescript"],
+      "matchPackagePatterns": ["^@types/"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "TypeScript & types",
+      "groupSlug": "typescript"
+    },
+    {
+      "matchPackagePatterns": ["^eslint", "^@eslint/"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "ESLint",
+      "groupSlug": "eslint"
+    },
+    {
+      "matchPackageNames": [
+        "fastapi", "uvicorn", "pydantic", "python-multipart", "python-dotenv",
+        "sqlmodel", "sqlalchemy", "sqlalchemy-utils", "alembic", "alembic-postgresql-enum", "psycopg2-binary", "pgvector",
+        "boto3", "botocore",
+        "redis",
+        "stripe", "resend", "workos",
+        "httpx", "requests", "pyyaml", "beautifulsoup4", "pypdf",
+        "pyjwt", "pwdlib",
+        "sentry-sdk", "logfire",
+        "protobuf", "dnspython", "defusedxml", "typer", "faker",
+        "google-genai", "tiktoken", "llama-index-core",
+        "pytest", "pytest-cov", "pytest-asyncio"
+      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Python backend",
+      "groupSlug": "python-backend"
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "Docker base images",
+      "groupSlug": "docker"
+    },
+    {
+      "matchManagers": ["pep621"],
+      "rangeStrategy": "bump"
+    },
+    {
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch"
-    },
-    {
-      "description": "Group all major dependencies together",
-      "matchUpdateTypes": ["major"],
-      "groupName": "all major dependencies",
-      "groupSlug": "all-major"
-    },
-    {
-      "description": "Group ESLint related packages",
-      "matchPackagePatterns": ["eslint"],
-      "groupName": "eslint"
-    },
-    {
-      "description": "Group TypeScript related packages",
-      "matchPackagePatterns": ["typescript", "^@types/"],
-      "groupName": "typescript"
-    },
-    {
-      "description": "Group Next.js related packages",
-      "matchPackagePatterns": ["next", "^@next/"],
-      "groupName": "nextjs"
-    },
-    {
-      "description": "Group React related packages",
-      "matchPackagePatterns": ["react", "^@types/react"],
-      "groupName": "react"
     }
   ]
 }
