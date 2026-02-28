@@ -32,6 +32,7 @@
     "labels": ["security", "renovate"],
     "schedule": ["at any time"]
   },
+  "ignoreDeps": ["@icons-pack/react-simple-icons", "prosemirror-transform", "python"],
   "packageRules": [
     {
       "matchPackageNames": ["next"],
