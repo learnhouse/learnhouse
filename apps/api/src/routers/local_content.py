@@ -192,6 +192,10 @@ async def serve_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
+    # Explicit containment check visible in this scope (defense in depth).
+    if not resolved.is_relative_to(CONTENT_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid path")
+
     _check_content_access(file_path, current_user, db_session)
 
     if not resolved.is_file():
@@ -220,6 +224,9 @@ async def head_local_content(
     """HEAD request for content files — returns metadata without body."""
     resolved = _validate_content_path(file_path)
     if resolved is None:
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    if not resolved.is_relative_to(CONTENT_DIR.resolve()):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
