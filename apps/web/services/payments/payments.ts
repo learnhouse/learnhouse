@@ -53,3 +53,32 @@ export async function getUserEnrollments(orgId: number, access_token: string) {
   const res = await errorHandling(result);
   return res;
 }
+
+export async function getStripeOverview(orgId: number, access_token: string) {
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/stripe/overview`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
+export async function getStripeCharges(orgId: number, access_token: string, limit = 25, startingAfter?: string) {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (startingAfter) params.set('starting_after', startingAfter);
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/stripe/charges?${params}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
+export async function getStripeSubscriptions(orgId: number, access_token: string, status = 'active') {
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/stripe/subscriptions?status=${encodeURIComponent(status)}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
