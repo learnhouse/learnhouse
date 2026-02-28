@@ -66,7 +66,7 @@ export default function DAUChart({ days = '30' }: { days?: string }) {
                     year: 'numeric',
                   })
                 }
-                formatter={(value: number) => [`${value.toLocaleString()}`, 'Users']}
+                formatter={(value = 0) => [`${value.toLocaleString()}`, 'Users']}
               />
               <Area
                 type="monotone"

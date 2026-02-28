@@ -47,7 +47,7 @@ export default function CourseAvgSessionDuration({
       <BarChart data={rows}>
         <XAxis dataKey="shortDate" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
         <Tooltip
-          formatter={(value: number) => [`${value} min ${t('analytics.course_analytics.units.avg_per_learner')}`, '']}
+          formatter={(value = 0) => [`${value} min ${t('analytics.course_analytics.units.avg_per_learner')}`, '']}
           contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', fontSize: 13 }}
         />
         <Bar dataKey="minutes" name={t('analytics.course_analytics.avg_session_duration.minutes_label')} fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -67,7 +67,7 @@ export default function CourseAvgSessionDuration({
           label={{ value: t('analytics.course_analytics.avg_session_duration.minutes_label'), angle: -90, position: 'insideLeft', fontSize: 10 }}
         />
         <Tooltip
-          formatter={(value: number) => [`${value} min ${t('analytics.course_analytics.units.avg_per_learner')}`, '']}
+          formatter={(value = 0) => [`${value} min ${t('analytics.course_analytics.units.avg_per_learner')}`, '']}
           contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', fontSize: 13 }}
         />
         <Bar dataKey="minutes" name={t('analytics.course_analytics.avg_session_duration.minutes_label')} fill="#8b5cf6" radius={[6, 6, 0, 0]} />
