@@ -4,19 +4,22 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  js-yaml: '>=4.1.1'
+
 importers:
 
   .:
     dependencies:
       '@hocuspocus/extension-database':
-        specifier: ^2.15.0
-        version: 2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
+        specifier: ^3.0.0
+        version: 3.4.4(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
       '@hocuspocus/server':
-        specifier: ^2.15.0
-        version: 2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
+        specifier: ^3.0.0
+        version: 3.4.4(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
+        specifier: ^17.0.0
+        version: 17.3.1
       ioredis:
         specifier: ^5.9.3
         version: 5.9.3
@@ -198,16 +201,16 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hocuspocus/common@2.15.3':
-    resolution: {integrity: sha512-Rzh1HF0a2o/tf90A3w2XNdXd9Ym3aQzMDfD3lAUONCX9B9QOdqdyiORrj6M25QEaJrEIbXFy8LtAFcL0wRdWzA==}
+  '@hocuspocus/common@3.4.4':
+    resolution: {integrity: sha512-RykIJ0tsHHMP4Xk+4UCbc7SO5LgGxGUSTdbh6anJEsaALAyqinf1Nn5HYuMjLPolAmsar1v++m9zufR09NLpXA==}
 
-  '@hocuspocus/extension-database@2.15.3':
-    resolution: {integrity: sha512-+PVlPwfdVyOase68WEBb105ZwglhCLVeGpyNa3uwnmH+Ers7OKGLma2SDMKn3Vcb5oHzTzEGx7jNt+32KTEKXA==}
+  '@hocuspocus/extension-database@3.4.4':
+    resolution: {integrity: sha512-z7iq2Dw+GOp4aQq7ys3PD0BA++7tQdXBsSHZ+8mkAbxfTDzjzQ576TphxPiXXC1WQ7yjeFXq03xp/KLIhg3Pyg==}
     peerDependencies:
       yjs: ^13.6.8
 
-  '@hocuspocus/server@2.15.3':
-    resolution: {integrity: sha512-Ju4ty4/7JtmvivcP7gKReOLf8KrFwN7Yx/5VhXYh4TRULy4kSo2fsDVUaluPp0neZa6PbVhizJuzlOim73IEbQ==}
+  '@hocuspocus/server@3.4.4':
+    resolution: {integrity: sha512-UV+oaONAejOzeYgUygNcgsc8RdZvSokVvAxluZJIisLACpRO/VsseQ5lWKDRwLd7Fn6+rHWDH3hGuQ1fdX1Ycg==}
     peerDependencies:
       y-protocols: ^1.0.6
       yjs: ^13.6.8
@@ -226,6 +229,9 @@ packages:
 
   async-lock@1.4.1:
     resolution: {integrity: sha512-Az2ZTpuytrtqENulXwO3GGv1Bztugx6TT37NIo7imr/Qo0gsYiGtSdBa2B6fsXhTpVZDNfu1Qn3pk531e3q+nQ==}
+
+  async-mutex@0.5.0:
+    resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
 
   buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
@@ -247,8 +253,8 @@ packages:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
     engines: {node: '>=0.10'}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   ecdsa-sig-formatter@1.0.11:
@@ -345,6 +351,9 @@ packages:
   standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
   tsx@4.21.0:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
     engines: {node: '>=18.0.0'}
@@ -357,10 +366,6 @@ packages:
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
-
-  uuid@11.1.0:
-    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
-    hasBin: true
 
   ws@8.19.0:
     resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
@@ -464,26 +469,26 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@hocuspocus/common@2.15.3':
+  '@hocuspocus/common@3.4.4':
     dependencies:
       lib0: 0.2.117
 
-  '@hocuspocus/extension-database@2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)':
+  '@hocuspocus/extension-database@3.4.4(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)':
     dependencies:
-      '@hocuspocus/server': 2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
+      '@hocuspocus/server': 3.4.4(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
       yjs: 13.6.29
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - y-protocols
 
-  '@hocuspocus/server@2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)':
+  '@hocuspocus/server@3.4.4(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)':
     dependencies:
-      '@hocuspocus/common': 2.15.3
+      '@hocuspocus/common': 3.4.4
       async-lock: 1.4.1
+      async-mutex: 0.5.0
       kleur: 4.1.5
       lib0: 0.2.117
-      uuid: 11.1.0
       ws: 8.19.0
       y-protocols: 1.0.7(yjs@13.6.29)
       yjs: 13.6.29
@@ -506,6 +511,10 @@ snapshots:
 
   async-lock@1.4.1: {}
 
+  async-mutex@0.5.0:
+    dependencies:
+      tslib: 2.8.1
+
   buffer-equal-constant-time@1.0.1: {}
 
   cluster-key-slot@1.1.2: {}
@@ -516,7 +525,7 @@ snapshots:
 
   denque@2.1.0: {}
 
-  dotenv@16.6.1: {}
+  dotenv@17.3.1: {}
 
   ecdsa-sig-formatter@1.0.11:
     dependencies:
@@ -638,6 +647,8 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
+  tslib@2.8.1: {}
+
   tsx@4.21.0:
     dependencies:
       esbuild: 0.27.3
@@ -648,8 +659,6 @@ snapshots:
   typescript@5.9.3: {}
 
   undici-types@6.21.0: {}
-
-  uuid@11.1.0: {}
 
   ws@8.19.0: {}
 

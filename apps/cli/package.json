@@ -42,8 +42,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@clack/prompts": "^0.8.2",
-    "commander": "^12.1.0",
+    "@clack/prompts": "^1.0.0",
+    "commander": "^14.0.0",
     "picocolors": "^1.1.1"
   },
   "engines": {

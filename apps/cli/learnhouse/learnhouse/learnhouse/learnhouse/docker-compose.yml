@@ -63,7 +63,7 @@ services:
       retries: 3
 
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: learnhouse-db-b4167307
     restart: unless-stopped
     env_file:
@@ -83,7 +83,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7.2.3-alpine
+    image: redis:8.6.1-alpine
     container_name: learnhouse-redis-b4167307
     restart: unless-stopped
     command: redis-server --appendonly yes
