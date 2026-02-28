@@ -52,5 +52,10 @@
   "license": "GPL-3.0",
   "publishConfig": {
     "access": "public"
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml": ">=4.1.1"
+    }
   }
 }
