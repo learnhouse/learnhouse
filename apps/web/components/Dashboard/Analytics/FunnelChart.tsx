@@ -31,7 +31,7 @@ export default function FunnelChart({ days = '30' }: { days?: string }) {
           <BarChart data={stages} layout="vertical">
             <XAxis type="number" tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={kFormatter} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} stroke="#9ca3af" width={100} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(v: number) => v.toLocaleString()} />
+            <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(v = 0) => v.toLocaleString()} />
             <Bar dataKey="value" name="Count" radius={[0, 4, 4, 0]}>
               {stages.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
