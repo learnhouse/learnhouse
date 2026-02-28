@@ -127,7 +127,7 @@
     "@types/react-dom": "19.2.2",
     "@types/react-katex": "^3.0.4",
     "eslint": "^9.39.2",
-    "eslint-config-next": "16.1.5",
+    "eslint-config-next": "16.1.6",
     "eslint-plugin-unused-imports": "^4.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
