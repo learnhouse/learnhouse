@@ -19,7 +19,6 @@
     "This PR contains dependency updates. Please review the changelog and release notes before merging."
   ],
   "fetchChangeLogs": "pr",
-  "releaseNotes": true,
   "packageRules": [
     {
       "description": "Group all non-major dependencies together",
