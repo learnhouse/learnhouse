@@ -4,12 +4,14 @@ import { motion } from 'framer-motion'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { Settings, Users, Gem, CreditCard } from 'lucide-react'
+import { Settings, Users, Gem, CreditCard, Layers, ShoppingBag, ExternalLink } from 'lucide-react'
+import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
-import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
+import PaymentsOffersPage from '@components/Dashboard/Pages/Payments/PaymentsOffersPage'
+import PaymentsGroupsPage from '@components/Dashboard/Pages/Payments/PaymentsGroupsPage'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
@@ -24,20 +26,25 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
-  const subpage = params.subpage || 'customers'
+  const subpage = params.subpage || 'overview'
   const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
   const getPageTitle = () => {
     switch (subpage) {
-      case 'customers':
+      case 'overview':
         return {
-          h1: 'Customers',
-          h2: 'View and manage your customer information'
+          h1: 'Overview',
+          h2: 'Revenue, transactions, subscriptions and customers'
         }
-      case 'paid-products':
+      case 'offers':
         return {
-          h1: 'Paid Products',
-          h2: 'Manage your paid products and pricing'
+          h1: 'Offers',
+          h2: 'Manage your offers and subscriptions'
+        }
+      case 'groups':
+        return {
+          h1: 'Payment Groups',
+          h2: 'Bundle resources for subscriptions and multi-course offers'
         }
       case 'configuration':
         return {
@@ -53,6 +60,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   }
 
   const { h1, h2 } = getPageTitle()
+  const paymentsEnabled = org?.config?.config?.features?.payments?.enabled !== false
 
   return (
     <PlanRestrictedFeature
@@ -71,7 +79,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }
           ]} />
         </div>
-        <div className="my-2 py-2">
+        <div className="my-2 py-2 flex items-end justify-between">
           <div className="w-100 flex flex-col space-y-1">
             <div className="pt-3 flex font-bold text-4xl tracking-tighter">
               {h1}
@@ -80,19 +88,48 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
               {h2}
             </div>
           </div>
+          <div className="flex items-center space-x-2 pb-1">
+            {paymentsEnabled && (
+              <Link
+                href={getUriWithOrg(params.orgslug, '/store')}
+                target="_blank"
+                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <ShoppingBag size={14} />
+                <span>Preview Shop</span>
+                <ExternalLink size={12} className="text-gray-400" />
+              </Link>
+            )}
+            <a
+              href="https://dashboard.stripe.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <SiStripe size={14} className="text-[#635BFF]" />
+              <span>Stripe Dashboard</span>
+              <ExternalLink size={12} className="text-gray-400" />
+            </a>
+          </div>
         </div>
         <div className="flex space-x-0.5 font-black text-sm">
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/customers')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/overview')}
             icon={<Users size={16} />}
-            label="Customers"
-            isActive={subpage === 'customers'}
+            label="Overview"
+            isActive={subpage === 'overview'}
           />
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/paid-products')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/offers')}
             icon={<Gem size={16} />}
-            label="Products & Subscriptions"
-            isActive={subpage === 'paid-products'}
+            label="Offers"
+            isActive={subpage === 'offers'}
+          />
+          <TabLink
+            href={getUriWithOrg(params.orgslug, '/dash/payments/groups')}
+            icon={<Layers size={16} />}
+            label="Payment Groups"
+            isActive={subpage === 'groups'}
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/configuration')}
@@ -111,8 +148,9 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {subpage === 'configuration' && <PaymentsConfigurationPage />}
-        {subpage === 'paid-products' && <PaymentsProductPage />}
-        {subpage === 'customers' && <PaymentsCustomersPage />}
+        {subpage === 'offers' && <PaymentsOffersPage />}
+        {subpage === 'groups' && <PaymentsGroupsPage />}
+        {(subpage === 'overview' || subpage === 'customers') && <PaymentsCustomersPage />}
       </motion.div>
     </div>
     </FeatureDisabledView>

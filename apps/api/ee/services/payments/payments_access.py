@@ -1,11 +1,62 @@
 from sqlmodel import Session, select
 from src.security.rbac.rbac import authorization_verify_if_user_is_author
-from ee.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
 from src.db.users import PublicUser, AnonymousUser
-from ee.db.payments.payments_courses import PaymentsCourse
+from ee.db.payments.payments_groups import PaymentsGroupResource, PaymentsOfferResource
+from ee.db.payments.payments_enrollments import PaymentsEnrollment, EnrollmentStatusEnum
+from ee.db.payments.payments_offers import PaymentsOffer
 from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
 from fastapi import HTTPException, Request
+
+
+PAID_STATUSES = {EnrollmentStatusEnum.ACTIVE, EnrollmentStatusEnum.COMPLETED}
+
+
+async def check_enrollment_access(resource_uuid: str, user_id: int, db_session: Session) -> bool:
+    """
+    Returns True if the user has an ACTIVE or COMPLETED enrollment for any offer
+    that grants access to this resource. This is an enrollment-based access check
+    that is independent of UserGroup membership — used as a parallel RBAC path.
+    """
+    # Path 1: direct offer → resource link
+    direct_rows = db_session.exec(
+        select(PaymentsOfferResource).where(
+            PaymentsOfferResource.resource_uuid == resource_uuid
+        )
+    ).all()
+    direct_offer_ids = [r.offer_id for r in direct_rows]
+
+    # Path 2: offer → group → resource link
+    group_resource_rows = db_session.exec(
+        select(PaymentsGroupResource).where(
+            PaymentsGroupResource.resource_uuid == resource_uuid
+        )
+    ).all()
+    group_ids = [r.payments_group_id for r in group_resource_rows]
+
+    grouped_offer_ids: list[int] = []
+    if group_ids:
+        grouped_offers = db_session.exec(
+            select(PaymentsOffer).where(
+                PaymentsOffer.payments_group_id.in_(group_ids)  # type: ignore
+            )
+        ).all()
+        grouped_offer_ids = [o.id for o in grouped_offers]
+
+    all_offer_ids = list(set(direct_offer_ids + grouped_offer_ids))
+    if not all_offer_ids:
+        return False  # resource is not behind any offer
+
+    enrollment = db_session.exec(
+        select(PaymentsEnrollment).where(
+            PaymentsEnrollment.offer_id.in_(all_offer_ids),  # type: ignore
+            PaymentsEnrollment.user_id == user_id,
+            PaymentsEnrollment.status.in_(list(PAID_STATUSES)),  # type: ignore
+        )
+    ).first()
+
+    return enrollment is not None
+
 
 async def check_activity_paid_access(
     request: Request,
@@ -14,57 +65,77 @@ async def check_activity_paid_access(
     db_session: Session,
 ) -> bool:
     """
-    Check if a user has access to a specific activity
+    Check if a user has access to a specific activity.
     Returns True if:
     - User is an author of the course
-    - Activity is in a free course
-    - User has a valid subscription for the course
+    - Course is not linked to any paid offer (free course)
+    - User has an active enrollment for an offer granting access to this course
     """
 
-
     # Get activity and associated course
-    statement = select(Activity).where(Activity.id == activity_id)
-    activity = db_session.exec(statement).first()
-
+    activity = db_session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Check if course exists
-    statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
-
+    course = db_session.exec(select(Course).where(Course.id == activity.course_id)).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    # Check if user is author of the course
-    is_course_author = await authorization_verify_if_user_is_author(request, user.id, "update", course.course_uuid, db_session)
-
+    # Authors always have access
+    is_course_author = await authorization_verify_if_user_is_author(
+        request, user.id, "update", course.course_uuid, db_session
+    )
     if is_course_author:
         return True
 
-    # Check if course is linked to a product
-    statement = select(PaymentsCourse).where(PaymentsCourse.course_id == course.id)
-    course_payment = db_session.exec(statement).first()
+    # Collect all offer IDs that grant access to this course
+    offer_ids: set[int] = set()
 
-    # If course is not linked to any product, it's free
-    if not course_payment:
+    # Path 1: course linked directly to an offer via PaymentsOfferResource
+    direct_resources = db_session.exec(
+        select(PaymentsOfferResource).where(
+            PaymentsOfferResource.resource_uuid == course.course_uuid
+        )
+    ).all()
+    for r in direct_resources:
+        offer_ids.add(r.offer_id)
+
+    # Path 2: course linked via a PaymentsGroup → find all offers in that group
+    group_resources = db_session.exec(
+        select(PaymentsGroupResource).where(
+            PaymentsGroupResource.resource_uuid == course.course_uuid
+        )
+    ).all()
+    if group_resources:
+        group_ids = [gr.payments_group_id for gr in group_resources]
+        group_offers = db_session.exec(
+            select(PaymentsOffer).where(
+                PaymentsOffer.payments_group_id.in_(group_ids)  # type: ignore
+            )
+        ).all()
+        for o in group_offers:
+            offer_ids.add(o.id)
+
+    # Course is not behind any paid offer — free access
+    if not offer_ids:
         return True
 
-    # Anonymous users have no access to paid activities
+    # Paid course — anonymous users have no access
     if isinstance(user, AnonymousUser):
         return False
 
-    # Check if user has a valid subscription or payment
-    statement = select(PaymentsUser).where(
-        PaymentsUser.user_id == user.id,
-        PaymentsUser.payment_product_id == course_payment.payment_product_id,
-        PaymentsUser.status.in_( # type: ignore
-            [PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]
-        ),
-    )
-    access = db_session.exec(statement).first()
+    # Check for an active enrollment in any of the relevant offers
+    enrollment = db_session.exec(
+        select(PaymentsEnrollment).where(
+            PaymentsEnrollment.offer_id.in_(list(offer_ids)),  # type: ignore
+            PaymentsEnrollment.user_id == user.id,
+            PaymentsEnrollment.status.in_(  # type: ignore
+                [EnrollmentStatusEnum.ACTIVE, EnrollmentStatusEnum.COMPLETED]
+            ),
+        )
+    ).first()
+    return bool(enrollment)
 
-    return bool(access)
 
 async def check_course_paid_access(
     course_id: int,
@@ -72,35 +143,53 @@ async def check_course_paid_access(
     db_session: Session,
 ) -> bool:
     """
-    Check if a user has paid access to a specific course
+    Check if a user has paid access to a specific course.
     Returns True if:
-    - User is an author of the course
-    - Course is free (not linked to any product)
-    - User has a valid subscription for the course
+    - Course is free (not linked to any paid offer)
+    - User has an active enrollment for an offer granting access
     """
-    # Check if course exists
-    statement = select(Course).where(Course.id == course_id)
-    course = db_session.exec(statement).first()
-
+    course = db_session.exec(select(Course).where(Course.id == course_id)).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    # Check if course is linked to a product
-    statement = select(PaymentsCourse).where(PaymentsCourse.course_id == course.id)
-    course_payment = db_session.exec(statement).first()
+    offer_ids: set[int] = set()
 
-    # If course is not linked to any product, it's free
-    if not course_payment:
+    direct_resources = db_session.exec(
+        select(PaymentsOfferResource).where(
+            PaymentsOfferResource.resource_uuid == course.course_uuid
+        )
+    ).all()
+    for r in direct_resources:
+        offer_ids.add(r.offer_id)
+
+    group_resources = db_session.exec(
+        select(PaymentsGroupResource).where(
+            PaymentsGroupResource.resource_uuid == course.course_uuid
+        )
+    ).all()
+    if group_resources:
+        group_ids = [gr.payments_group_id for gr in group_resources]
+        group_offers = db_session.exec(
+            select(PaymentsOffer).where(
+                PaymentsOffer.payments_group_id.in_(group_ids)  # type: ignore
+            )
+        ).all()
+        for o in group_offers:
+            offer_ids.add(o.id)
+
+    if not offer_ids:
         return True
 
-    # Check if user has a valid subscription
-    statement = select(PaymentsUser).where(
-        PaymentsUser.user_id == user.id,
-        PaymentsUser.payment_product_id == course_payment.payment_product_id,
-        PaymentsUser.status.in_( # type: ignore
-            [PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]
-        ),
-    )
-    subscription = db_session.exec(statement).first()
+    if isinstance(user, AnonymousUser):
+        return False
 
-    return bool(subscription)
+    enrollment = db_session.exec(
+        select(PaymentsEnrollment).where(
+            PaymentsEnrollment.offer_id.in_(list(offer_ids)),  # type: ignore
+            PaymentsEnrollment.user_id == user.id,
+            PaymentsEnrollment.status.in_(  # type: ignore
+                [EnrollmentStatusEnum.ACTIVE, EnrollmentStatusEnum.COMPLETED]
+            ),
+        )
+    ).first()
+    return bool(enrollment)

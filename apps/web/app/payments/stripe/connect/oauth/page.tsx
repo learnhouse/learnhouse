@@ -5,7 +5,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Check, Loader2, AlertTriangle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { verifyStripeConnection } from '@services/payments/payments'
+import { verifyStripeConnection } from '@services/payments/providers/stripe'
 import Image from 'next/image'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { useTranslation } from 'react-i18next'
@@ -40,7 +40,12 @@ function StripeConnectCallback() {
         
         setStatus('success')
         setMessage(t('payments.stripe_success'))
-        
+
+        // Notify the opener tab so it can refresh its config data
+        if (window.opener) {
+          window.opener.postMessage({ type: 'payment_provider_connected', provider: 'stripe' }, '*')
+        }
+
         // Close the window after 2 seconds of showing success
         setTimeout(() => {
           window.close()

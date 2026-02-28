@@ -2,7 +2,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText, Cube } from '@phosphor-icons/react'
+import { Books, Signpost, SquaresFour, ChatsCircle, Headphones, FileText, Cube, ShoppingBag } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -36,6 +36,10 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const isPlaygroundsFeatureEnabled = org?.config?.config?.features?.playgrounds?.enabled !== false
   const canAccessPlaygrounds = planMeetsRequirement(plan, 'pro')
   const showPlaygrounds = isPlaygroundsFeatureEnabled && canAccessPlaygrounds
+
+  // Store — shown when payments feature is enabled
+  const isPaymentsEnabled = org?.config?.config?.features?.payments?.enabled === true
+  const showStore = isPaymentsEnabled
 
   return (
     <div className='pl-1'>
@@ -84,6 +88,14 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           <LinkItem
             link="/playgrounds"
             type="playgrounds"
+            orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
+          ></LinkItem>
+        )}
+        {showStore && (
+          <LinkItem
+            link="/store"
+            type="store"
             orgslug={props.orgslug}
             primaryColor={props.primaryColor}
           ></LinkItem>
@@ -157,6 +169,13 @@ const LinkItem = (props: any) => {
           <>
             <Cube size={20} weight="fill" />{' '}
             <span>Playgrounds</span>
+          </>
+        )}
+
+        {props.type == 'store' && (
+          <>
+            <ShoppingBag size={20} weight="fill" />{' '}
+            <span>Store</span>
           </>
         )}
 

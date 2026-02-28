@@ -60,7 +60,7 @@ function DashMobileMenu() {
           )}
           {showPayments && (
             <ToolTip content={t('common.payments')} slateBlack sideOffset={8} side="top">
-              <Link href={`/dash/payments/customers`} className="flex flex-col items-center p-2" aria-label="Manage payments and billing">
+              <Link href={`/dash/payments/overview`} className="flex flex-col items-center p-2" aria-label="Manage payments and billing">
                 <BadgeDollarSign size={20} />
                 <span className="text-xs mt-1">{t('common.payments')}</span>
               </Link>

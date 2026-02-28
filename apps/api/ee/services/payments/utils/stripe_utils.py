@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 import stripe
 import logging
 
-from ee.db.payments.payments_products import PaymentsProduct
+from ee.db.payments.payments_offers import PaymentsOffer
 from src.db.users import User
 from ee.db.payments.payments import PaymentsConfig
 
@@ -27,17 +27,14 @@ async def get_user_from_customer(customer_id: str, db_session: Session) -> User:
         )
 
 
-async def get_product_from_stripe_id(
+async def get_offer_from_stripe_id(
     product_id: str, db_session: Session
-) -> PaymentsProduct:
-    """Helper function to get product from Stripe product ID"""
-    statement = select(PaymentsProduct).where(
-        PaymentsProduct.provider_product_id == product_id
+) -> PaymentsOffer | None:
+    """Helper function to get offer from Stripe product ID (new architecture)"""
+    statement = select(PaymentsOffer).where(
+        PaymentsOffer.provider_product_id == product_id
     )
-    product = db_session.exec(statement).first()
-    if not product:
-        raise HTTPException(status_code=404, detail=f"Product not found: {product_id}")
-    return product
+    return db_session.exec(statement).first()
 
 
 async def get_org_id_from_stripe_account(

@@ -47,11 +47,20 @@ redis_config:
   redis_connection_string: redis://localhost:6379/learnhouse
 
 payments_config:
+  # See ee/services/payments/README.md for full setup instructions.
+  # To add a new payment provider, add its credentials block here and register
+  # it in ee/db/payments/payments.py (PaymentProviderEnum) and config/config.py.
   stripe:
-    stripe_secret_key: ""
-    stripe_publishable_key: ""
-    stripe_webhook_standard_secret: ""
-    stripe_client_id: ""
+    # Platform API keys — Stripe Dashboard → Developers → API keys
+    stripe_secret_key: ""        # sk_live_... (or sk_test_... for development)
+    stripe_publishable_key: ""   # pk_live_... (or pk_test_... for development)
+    # Stripe Connect OAuth client ID — Stripe Dashboard → Settings → Connect → OAuth
+    stripe_client_id: ""         # ca_...
+    # Webhook signing secrets — Stripe Dashboard → Developers → Webhooks
+    # Standard endpoint:  POST /payments/stripe/webhook/standard
+    stripe_webhook_standard_secret: ""   # whsec_...
+    # Connect endpoint:   POST /payments/stripe/webhook/connect
+    stripe_webhook_connect_secret: ""    # whsec_...
 
 ai_config:
   gemini_api_key: ""

@@ -39,6 +39,7 @@ import {
   MagnifyingGlass,
   ChalkboardSimple,
   Cube,
+  ShoppingBag,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -455,7 +456,7 @@ function DashLeftMenu() {
 
             {showPayments && (
               <MenuLink
-                href="/dash/payments/customers"
+                href="/dash/payments/overview"
                 icon={<CurrencyCircleDollar size={20} weight="fill" />}
                 label={t('common.payments')}
                 isCollapsed={isCollapsed}
@@ -654,7 +655,7 @@ function DashLeftMenu() {
                     )}
                     {!showPayments && (
                       <HoverMenuItem asChild>
-                        <Link href="/dash/payments/customers" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
+                        <Link href="/dash/payments/overview" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <CurrencyCircleDollar size={16} weight="fill" />
                           <span>{t('common.payments')}</span>
                         </Link>
@@ -829,9 +830,9 @@ function DashLeftMenu() {
                   </Link>
                 </HoverMenuItem>
                 <HoverMenuItem asChild>
-                  <Link href="/account/my-courses" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
-                    <Package size={16} weight="fill" />
-                    <span>{t('courses.my_courses')}</span>
+                  <Link href={getUriWithOrg(org?.slug, '/account/purchases')} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                    <ShoppingBag size={16} weight="fill" />
+                    <span>{t('account.purchases')}</span>
                   </Link>
                 </HoverMenuItem>
                 <HoverMenuSeparator />
