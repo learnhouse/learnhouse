@@ -24,7 +24,7 @@
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hello-pangea/dnd": "^18.0.1",
-    "@hocuspocus/provider": "^2.15.0",
+    "@hocuspocus/provider": "^3.0.0",
     "@icons-pack/react-simple-icons": "^13.8.0",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
