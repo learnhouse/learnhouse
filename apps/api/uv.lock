@@ -874,7 +874,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.1" },
     { name = "python-multipart", specifier = ">=0.0.22" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "redis", specifier = ">=7.2.0" },
+    { name = "redis", specifier = ">=7.2.1" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "resend", specifier = ">=2.23.0" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.53.0" },
