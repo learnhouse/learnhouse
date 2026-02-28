@@ -4,6 +4,8 @@ Handles SCORM package upload, analysis, import, content serving, and runtime API
 """
 
 import mimetypes
+import os
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
@@ -273,6 +275,14 @@ async def api_get_scorm_content(
 
     if not content_path:
         raise HTTPException(status_code=404, detail="File not found")
+
+    # Defense-in-depth: re-verify the returned path stays within the expected
+    # base directory even after get_scorm_content_path's own containment check.
+    # This makes the path validation visible in this scope for static analysis.
+    _base = Path(f"content/orgs/{organization.org_uuid}/courses/{course.course_uuid}/activities/{activity_uuid}/scorm/extracted").resolve()
+    _resolved = Path(content_path).resolve()
+    if not str(_resolved).startswith(str(_base) + os.sep):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # Determine content type
     content_type, _ = mimetypes.guess_type(content_path)

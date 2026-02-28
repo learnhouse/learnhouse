@@ -9,6 +9,16 @@ import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut } from '@phosphor-icons/react'
 
+/** Ensure a URL only uses http/https — returns '#' for anything else. */
+function safeHref(url: string): string {
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:' ? url : '#'
+  } catch {
+    return '#'
+  }
+}
+
 interface PaginatedOrgResponse {
   items: OrgWithCount[]
   total: number
@@ -440,12 +450,12 @@ export default function OrganizationList() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="space-y-1">
-                    <a href={orgUrl} rel="noopener" className="flex items-center gap-1.5 text-xs text-blue-400/80 hover:text-blue-400 transition-colors font-mono">
+                    <a href={safeHref(orgUrl)} rel="noopener" className="flex items-center gap-1.5 text-xs text-blue-400/80 hover:text-blue-400 transition-colors font-mono">
                       <Globe size={12} weight="bold" className="shrink-0" />
                       <span className="truncate max-w-[180px]">{org.slug}.{domain}</span>
                     </a>
                     {org.custom_domains.map((d) => (
-                      <a key={d} href={`${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${d}`} rel="noopener" className="flex items-center gap-1.5 text-xs text-emerald-400/80 hover:text-emerald-400 transition-colors">
+                      <a key={d} href={safeHref(`${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${d}`)} rel="noopener" className="flex items-center gap-1.5 text-xs text-emerald-400/80 hover:text-emerald-400 transition-colors">
                         <Globe size={12} weight="fill" className="shrink-0" />
                         {d}
                       </a>
@@ -485,7 +495,7 @@ export default function OrganizationList() {
                 </td>
                 <td className="px-4 py-3">
                   <a
-                    href={`${orgUrl}/dash`}
+                    href={safeHref(`${orgUrl}/dash`)}
                     rel="noopener"
                     className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white hover:bg-white/[0.08] px-2.5 py-1.5 rounded-lg transition-colors"
                     title="Open org dashboard"
