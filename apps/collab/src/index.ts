@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { Server } from '@hocuspocus/server'
+import type { onRequestPayload, onAuthenticatePayload, onConnectPayload } from '@hocuspocus/server'
 import { Database } from '@hocuspocus/extension-database'
 import jwt from 'jsonwebtoken'
 import Redis from 'ioredis'
@@ -148,10 +149,10 @@ function scheduleDbFlush(boardUuid: string, state: Uint8Array) {
 // Max concurrent users per board
 const MAX_BOARD_USERS = 10
 
-const server = Server.configure({
+const server = new Server({
   port: PORT,
 
-  async onRequest({ request, response }) {
+  async onRequest({ request, response }: onRequestPayload) {
     // Health check endpoint — handles both "/" (k8s probe) and "/health"
     if (request.url === '/' || request.url === '/health') {
       response.writeHead(200, { 'Content-Type': 'application/json' })
@@ -176,7 +177,7 @@ const server = Server.configure({
     }
   },
 
-  async onAuthenticate({ token, documentName }) {
+  async onAuthenticate({ token, documentName }: onAuthenticatePayload) {
     if (!token) {
       throw new Error('Authentication required')
     }
@@ -228,7 +229,7 @@ const server = Server.configure({
     }
   },
 
-  async onConnect({ documentName, instance }) {
+  async onConnect({ documentName, instance }: onConnectPayload) {
     const boardUuid = extractBoardUuid(documentName)
     if (!boardUuid) return
 
