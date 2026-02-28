@@ -12,7 +12,7 @@
     "prettier": "^3.3.3",
     "turbo": "^2.0.0"
   },
-  "packageManager": "pnpm@10.30.2",
+  "packageManager": "pnpm@10.30.3",
   "pnpm": {
     "overrides": {
       "js-yaml": ">=4.1.1"
