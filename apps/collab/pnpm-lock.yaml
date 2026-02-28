@@ -15,8 +15,8 @@ importers:
         specifier: ^2.15.0
         version: 2.15.3(y-protocols@1.0.7(yjs@13.6.29))(yjs@13.6.29)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
+        specifier: ^17.0.0
+        version: 17.3.1
       ioredis:
         specifier: ^5.9.3
         version: 5.9.3
@@ -247,8 +247,8 @@ packages:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
     engines: {node: '>=0.10'}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   ecdsa-sig-formatter@1.0.11:
@@ -516,7 +516,7 @@ snapshots:
 
   denque@2.1.0: {}
 
-  dotenv@16.6.1: {}
+  dotenv@17.3.1: {}
 
   ecdsa-sig-formatter@1.0.11:
     dependencies:
