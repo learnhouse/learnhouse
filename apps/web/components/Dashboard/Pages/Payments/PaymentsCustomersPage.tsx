@@ -20,7 +20,26 @@ import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled'
 import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/UnconfiguredPaymentsDisclaimer'
 
 interface PaymentUserData {
-  payment_user_id: number;
+  // New architecture
+  enrollment_id?: number;
+  offer?: {
+    id: number;
+    name: string;
+    description: string;
+    offer_type: string;
+    amount: number;
+    currency: string;
+  };
+  // Legacy architecture
+  payment_user_id?: number;
+  product?: {
+    name: string;
+    description: string;
+    product_type: string;
+    amount: number;
+    currency: string;
+  };
+  // Shared
   user: {
     username: string;
     first_name: string;
@@ -28,13 +47,6 @@ interface PaymentUserData {
     email: string;
     avatar_image: string;
     user_uuid: string;
-  };
-  product: {
-    name: string;
-    description: string;
-    product_type: string;
-    amount: number;
-    currency: string;
   };
   status: string;
   creation_date: string;
@@ -63,7 +75,7 @@ function PaymentsUsersTable({ data }: { data: PaymentUserData[] }) {
       </TableHeader>
       <TableBody>
         {data.map((item) => (
-          <TableRow key={item.payment_user_id}>
+          <TableRow key={item.enrollment_id ?? item.payment_user_id}>
             <TableCell className="font-medium">
               <div className="flex items-center space-x-3">
                 <UserAvatar
@@ -79,10 +91,10 @@ function PaymentsUsersTable({ data }: { data: PaymentUserData[] }) {
                 </div>
               </div>
             </TableCell>
-            <TableCell>{item.product.name}</TableCell>
+            <TableCell>{item.offer?.name ?? item.product?.name ?? '—'}</TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">
-                {item.product.product_type === 'subscription' ? (
+                {(item.offer?.offer_type ?? item.product?.product_type) === 'subscription' ? (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <RefreshCcw size={12} />
                     <span>Subscription</span>
@@ -96,10 +108,14 @@ function PaymentsUsersTable({ data }: { data: PaymentUserData[] }) {
               </div>
             </TableCell>
             <TableCell>
-              {new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: item.product.currency
-              }).format(item.product.amount)}
+              {(() => {
+                const p = item.offer ?? item.product;
+                if (!p) return '—';
+                return new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: p.currency,
+                }).format(p.amount);
+              })()}
             </TableCell>
             <TableCell>
               <Badge

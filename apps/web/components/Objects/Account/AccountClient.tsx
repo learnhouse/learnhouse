@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import AccountGeneral from '@components/Objects/Account/subpages/AccountGeneral'
 import AccountProfile from '@components/Objects/Account/subpages/AccountProfile'
 import AccountSecurity from '@components/Objects/Account/subpages/AccountSecurity'
-import AccountMyCourses from '@components/Objects/Account/subpages/AccountMyCourses'
+import AccountPurchases from '@components/Objects/Account/subpages/AccountPurchases'
 
 interface AccountClientProps {
   orgslug: string
@@ -26,7 +26,7 @@ const getSubpageTitle = (subpage: string, t: (key: string) => string): string =>
     'general': t('account.general'),
     'profile': t('account.profile'),
     'security': t('account.security'),
-    'my-courses': t('account.my_courses'),
+    'purchases': t('account.purchases'),
   }
   return titles[subpage] || t('account.title')
 }
@@ -45,8 +45,8 @@ const AccountClient = ({ orgslug, org_id, subpage }: AccountClientProps) => {
         return <AccountProfile />
       case 'security':
         return <AccountSecurity />
-      case 'my-courses':
-        return <AccountMyCourses orgId={org_id} orgslug={orgslug} />
+      case 'purchases':
+        return <AccountPurchases orgId={org_id} orgslug={orgslug} />
       default:
         return <AccountGeneral />
     }

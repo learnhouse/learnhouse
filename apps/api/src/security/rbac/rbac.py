@@ -22,6 +22,29 @@ from src.security.superadmin import is_user_superadmin
 logger = logging.getLogger(__name__)
 
 
+async def _get_offer_for_usergroup(usergroup_id: int, db_session: Session) -> dict | None:
+    """
+    Return offer metadata if a usergroup is the access-control group for a PaymentsOffer.
+    Returns None if the usergroup is not tied to any offer.
+    """
+    try:
+        from ee.db.payments.payments_offers import PaymentsOffer
+        stmt = select(PaymentsOffer).where(
+            PaymentsOffer.usergroup_id == usergroup_id,
+        )
+        offer = db_session.exec(stmt).first()
+        if offer:
+            return {
+                "offer_id": offer.id,
+                "offer_name": offer.name,
+                "amount": offer.amount,
+                "currency": offer.currency,
+            }
+    except Exception:
+        pass
+    return None
+
+
 async def check_usergroup_access(
     resource_uuid: str,
     user_id: int,
@@ -33,6 +56,9 @@ async def check_usergroup_access(
     This checks if:
     1. The resource is linked to any UserGroups
     2. If yes, whether the user is a member of any of those UserGroups
+
+    When access is denied because the resource belongs to a paid offer's UserGroup,
+    raises HTTP 402 Payment Required instead of returning False.
 
     Args:
         resource_uuid: UUID of the resource (course, podcast, community, etc.)
@@ -77,6 +103,23 @@ async def check_usergroup_access(
             select(UserGroupUser).where(UserGroupUser.user_id == user_id)
         ).all()
         logger.info(f"[USERGROUP_ACCESS] User {user_id} is member of UserGroups: {[m.usergroup_id for m in all_user_memberships]}")
+
+        # Check if any of the blocking UserGroups is tied to a paid offer
+        # If so, return HTTP 402 Payment Required (semantically distinct from 403 Forbidden)
+        for ugid in usergroup_ids:
+            offer_meta = await _get_offer_for_usergroup(ugid, db_session)
+            if offer_meta:
+                logger.info(f"[USERGROUP_ACCESS] Resource is behind paid offer {offer_meta['offer_id']}, returning 402")
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail={
+                        "code": "PAYMENT_REQUIRED",
+                        "offer_id": offer_meta["offer_id"],
+                        "offer_name": offer_meta["offer_name"],
+                        "amount": offer_meta["amount"],
+                        "currency": offer_meta["currency"],
+                    },
+                )
 
     return membership is not None
 
@@ -333,11 +376,22 @@ async def authorization_verify_based_on_roles_and_authorship(
         )
     logger.info(f"[RBAC] hasUserGroupAccess={hasUserGroupAccess}")
 
-    if isAuthor or isRole or hasUserGroupAccess:
-        logger.info(f"[RBAC] Access GRANTED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess})")
+    # Enrollment-based access: users who have paid for this resource always get access,
+    # regardless of UserGroup membership state (e.g. if an admin removes them from the group).
+    hasPaidEnrollmentAccess = False
+    if action == "read":
+        try:
+            from ee.services.payments.payments_access import check_enrollment_access
+            hasPaidEnrollmentAccess = await check_enrollment_access(element_uuid, user_id, db_session)
+        except Exception:
+            pass  # payments module not available (community edition) — skip silently
+    logger.info(f"[RBAC] hasPaidEnrollmentAccess={hasPaidEnrollmentAccess}")
+
+    if isAuthor or isRole or hasUserGroupAccess or hasPaidEnrollmentAccess:
+        logger.info(f"[RBAC] Access GRANTED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess}, hasPaidEnrollmentAccess={hasPaidEnrollmentAccess})")
         return True
     else:
-        logger.info(f"[RBAC] Access DENIED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess})")
+        logger.info(f"[RBAC] Access DENIED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess}, hasPaidEnrollmentAccess={hasPaidEnrollmentAccess})")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User rights (roles & authorship) : You don't have the right to perform this action",

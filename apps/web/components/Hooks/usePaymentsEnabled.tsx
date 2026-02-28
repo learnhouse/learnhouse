@@ -14,12 +14,11 @@ export function usePaymentsEnabled() {
     ([url, token]) => getPaymentConfigs(org.id, token)
   );
 
-  const isStripeEnabled = paymentConfigs?.some(
-    (config: any) => config.provider === 'stripe' && config.active
-  );
+  // True if any payment provider is active — not tied to a specific provider
+  const isAnyProviderActive = paymentConfigs?.some((config: any) => config.active);
 
   return {
-    isEnabled: !!isStripeEnabled,
+    isEnabled: !!isAnyProviderActive,
     isLoading,
     error
   };

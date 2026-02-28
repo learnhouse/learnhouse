@@ -4,14 +4,29 @@ from typing import  Optional
 from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
 
-# PaymentsConfig
+# ---------------------------------------------------------------------------
+# Payment provider registry
+# To add a new provider: add its value here and implement a corresponding
+# service module at ee/services/payments/payments_<provider>.py that handles
+# credential retrieval, OAuth/API-key connection, checkout sessions, and
+# webhooks. No changes to the config model are required.
+# ---------------------------------------------------------------------------
 class PaymentProviderEnum(str, Enum):
     STRIPE = "stripe"
+    # LEMON_SQUEEZY = "lemon_squeezy"  # example future provider
+    # PADDLE = "paddle"                # example future provider
+
+
+class PaymentsModeEnum(str, Enum):
+    STANDARD = "standard"  # org connects their own Stripe account via OAuth
+    EXPRESS = "express"    # LearnHouse creates a Stripe Express account on the org's behalf
+
 
 class PaymentsConfigBase(SQLModel):
     enabled: bool = True
     active: bool = False
     provider: PaymentProviderEnum = PaymentProviderEnum.STRIPE
+    mode: PaymentsModeEnum = Field(default=PaymentsModeEnum.STANDARD)
     provider_specific_id: str | None = None
     provider_config: dict = Field(default_factory=dict, sa_column=Column(JSON))
 

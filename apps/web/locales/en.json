@@ -1260,6 +1260,7 @@
     "profile": "Profile",
     "security": "Security",
     "my_courses": "My Courses",
+    "purchases": "Purchases",
     "no_purchased_courses": "No purchased courses yet",
     "purchased_courses_description": "Courses you have purchased or subscribed to will appear here"
   },

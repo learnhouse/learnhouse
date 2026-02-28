@@ -39,6 +39,7 @@ import {
   MagnifyingGlass,
   ChalkboardSimple,
   Cube,
+  ShoppingBag,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
@@ -829,9 +830,9 @@ function DashLeftMenu() {
                   </Link>
                 </HoverMenuItem>
                 <HoverMenuItem asChild>
-                  <Link href="/account/my-courses" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
-                    <Package size={16} weight="fill" />
-                    <span>{t('courses.my_courses')}</span>
+                  <Link href={getUriWithOrg(org?.slug, '/account/purchases')} className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                    <ShoppingBag size={16} weight="fill" />
+                    <span>{t('account.purchases')}</span>
                   </Link>
                 </HoverMenuItem>
                 <HoverMenuSeparator />

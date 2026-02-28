@@ -2,10 +2,11 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
-from ee.db.payments.payments_users import PaymentsUser
+from ee.db.payments.payments_enrollments import PaymentsEnrollment
+from ee.db.payments.payments_offers import PaymentsOffer
 from src.services.orgs.orgs import rbac_check
-from ee.services.payments.payments_products import get_payments_product
 from src.services.users.users import read_user_by_id
+
 
 async def get_customers(
     request: Request,
@@ -13,38 +14,39 @@ async def get_customers(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
-    # Check if organization exists
     statement = select(Organization).where(Organization.id == org_id)
     org = db_session.exec(statement).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
-
-    # Get all payment users for the organization
-    statement = select(PaymentsUser).where(PaymentsUser.org_id == org_id)
-    payment_users = db_session.exec(statement).all()
 
     customers_data = []
 
-    for payment_user in payment_users:
-        # Get user data
-        user = await read_user_by_id(request, db_session, current_user, payment_user.user_id)
+    # --- New architecture: enrollment-based ---
+    stmt = (
+        select(PaymentsEnrollment, PaymentsOffer)
+        .join(PaymentsOffer, PaymentsEnrollment.offer_id == PaymentsOffer.id)  # type: ignore
+        .where(PaymentsEnrollment.org_id == org_id)
+    )
+    enrollment_rows = db_session.exec(stmt).all()
 
-        # Get product data
-        if org.id is None:
-            raise HTTPException(status_code=400, detail="Invalid organization ID")
-        product = await get_payments_product(request, org.id, payment_user.payment_product_id, current_user, db_session)
-
-        customer_data = {
-            'payment_user_id': payment_user.id,
-            'user': user if user else None,
-            'product': product if product else None,
-            'status': payment_user.status,
-            'creation_date': payment_user.creation_date,
-            'update_date': payment_user.update_date
-        }
-        customers_data.append(customer_data)
+    for enrollment, offer in enrollment_rows:
+        user = await read_user_by_id(request, db_session, current_user, enrollment.user_id)
+        customers_data.append({
+            "enrollment_id": enrollment.id,
+            "user": user if user else None,
+            "offer": {
+                "id": offer.id,
+                "name": offer.name,
+                "description": offer.description,
+                "offer_type": offer.offer_type,
+                "amount": offer.amount,
+                "currency": offer.currency,
+            },
+            "status": enrollment.status,
+            "creation_date": enrollment.creation_date,
+            "update_date": enrollment.update_date,
+        })
 
     return customers_data
