@@ -562,11 +562,15 @@ export async function startRAGChatStream(
   accessToken: string,
   callbacks: StreamCallbacks,
   courseUuid?: string,
-  mode?: string
+  mode?: string,
+  orgSlug?: string
 ): Promise<void> {
   const data: Record<string, string> = { message, mode: mode || 'course_only' }
   if (courseUuid) {
     data.course_uuid = courseUuid
+  }
+  if (orgSlug) {
+    data.org_slug = orgSlug
   }
 
   try {
@@ -603,11 +607,15 @@ export async function sendRAGChatStream(
   accessToken: string,
   callbacks: StreamCallbacks,
   courseUuid?: string,
-  mode?: string
+  mode?: string,
+  orgSlug?: string
 ): Promise<void> {
   const data: Record<string, string> = { message, aichat_uuid: aichatUuid, mode: mode || 'course_only' }
   if (courseUuid) {
     data.course_uuid = courseUuid
+  }
+  if (orgSlug) {
+    data.org_slug = orgSlug
   }
 
   try {

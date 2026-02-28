@@ -247,11 +247,11 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
     }
 
     if (aichatUuid) {
-      await sendRAGChatStream(message, aichatUuid, accessToken, callbacks, selectedCourse || undefined, chatMode)
+      await sendRAGChatStream(message, aichatUuid, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
     } else {
-      await startRAGChatStream(message, accessToken, callbacks, selectedCourse || undefined, chatMode)
+      await startRAGChatStream(message, accessToken, callbacks, selectedCourse || undefined, chatMode, orgslug)
     }
-  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions])
+  }, [accessToken, aichatUuid, selectedCourse, chatMode, mutateSessions, orgslug])
 
   const isInputDisabled = isWaiting || isLoadingSession
 

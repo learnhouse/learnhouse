@@ -1,47 +1,70 @@
-import {  Settings, ChevronRight, CreditCard } from 'lucide-react'
-import { Alert, AlertTitle, AlertDescription } from '@components/ui/alert'
-import { AlertTriangle, ShoppingCart, Users } from 'lucide-react'
+import { CreditCard, Settings, ShoppingBag, Users } from 'lucide-react'
 import React from 'react'
 import Link from 'next/link'
 
+const STEPS = [
+  {
+    icon: CreditCard,
+    title: 'Connect a payment provider',
+    description: 'Link Stripe or another provider to start accepting payments.',
+  },
+  {
+    icon: ShoppingBag,
+    title: 'Create offers',
+    description: 'Bundle courses into offers with one-time or subscription pricing.',
+  },
+  {
+    icon: Users,
+    title: 'Sell to your learners',
+    description: 'Learners can purchase access directly from your course pages.',
+  },
+]
+
 function UnconfiguredPaymentsDisclaimer() {
   return (
-    <div className="h-full w-full bg-[#f8f8f8]">
-        <div className="ml-10 mr-10 mx-auto">
-          <Alert className="mb-3 p-6 border-2 border-yellow-200 bg-yellow-100/50 light-shadow">
-            <AlertTitle className="text-lg font-semibold mb-2 flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5" />
-              <span>Payments not yet properly configured</span>
-            </AlertTitle>
-            <AlertDescription className="space-y-5">
-              <div className="pl-2">
-                <ul className="list-disc list-inside space-y-1 text-gray-600 pl-2">
-                  <li className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Configure Stripe to start accepting payments</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <ShoppingCart className="h-4 w-4" />
-                    <span>Create and manage products</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span>Start selling to your customers</span>
-                  </li>
-                </ul>
-              </div>
-              <Link
-                href="./configuration" 
-                className="text-yellow-900 hover:text-yellow-700 inline-flex items-center font-medium transition-colors duration-200 pl-2"
-              >
-                <Settings className="h-4 w-4 mr-1.5" />
-                Go to Payment Configuration
-                <ChevronRight className="ml-1.5 h-4 w-4" />
-              </Link>
-            </AlertDescription>
-          </Alert>
+    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
+      {/* Empty state */}
+      <div className="flex flex-col items-center py-12 px-6 text-center">
+        {/* Icon cluster */}
+        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-5">
+          <CreditCard className="text-gray-400" size={26} />
         </div>
+
+        <h3 className="font-semibold text-gray-800 text-base mb-1">
+          Payments not configured yet
+        </h3>
+        <p className="text-sm text-gray-500 max-w-xs mb-8">
+          Connect a payment provider to unlock offers, subscriptions, and customer management.
+        </p>
+
+        {/* Steps */}
+        <div className="w-full max-w-md space-y-2 mb-8 text-left">
+          {STEPS.map(({ icon: Icon, title, description }, i) => (
+            <div
+              key={i}
+              className="flex items-start space-x-3 border border-gray-100 rounded-xl px-4 py-3 bg-gray-50"
+            >
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 shrink-0 mt-0.5">
+                <Icon size={14} className="text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">{title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <Link
+          href="./configuration"
+          className="inline-flex items-center space-x-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors duration-150"
+        >
+          <Settings size={13} />
+          <span>Go to Payment Configuration</span>
+        </Link>
       </div>
+    </div>
   )
 }
 

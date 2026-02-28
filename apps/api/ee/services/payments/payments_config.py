@@ -1,6 +1,6 @@
 from typing import Literal
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from ee.db.payments.payments import (
     PaymentProviderEnum,
     PaymentsConfig,
@@ -40,13 +40,18 @@ async def init_payments_config(
             detail="Payments config already exists for this organization"
         )
 
-    # Initialize new config
+    # Map the string provider name to the enum value
+    try:
+        provider_enum = PaymentProviderEnum(provider)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Unsupported payment provider: {provider}")
+
+    # Initialize new config — provider_config starts empty; each provider's
+    # service layer is responsible for populating it during its own setup flow.
     new_config = PaymentsConfig(
         org_id=org_id,
-        provider=PaymentProviderEnum.STRIPE,
-        provider_config={
-            "onboarding_completed": False,
-        },
+        provider=provider_enum,
+        provider_config={},
         provider_specific_id=None
     )
 
@@ -133,6 +138,35 @@ async def delete_payments_config(
     config = db_session.exec(statement).first()
     if not config:
         raise HTTPException(status_code=404, detail="Payments config not found")
+
+    # Guard: block disconnect when active subscriptions exist
+    try:
+        from ee.db.payments.payments_offers import PaymentsOffer, OfferTypeEnum
+        from ee.db.payments.payments_enrollments import PaymentsEnrollment, EnrollmentStatusEnum
+
+        active_sub_count = db_session.exec(
+            select(func.count(PaymentsEnrollment.id))
+            .join(PaymentsOffer, PaymentsEnrollment.offer_id == PaymentsOffer.id)  # type: ignore
+            .where(
+                PaymentsOffer.payments_config_id == config.id,
+                PaymentsEnrollment.status == EnrollmentStatusEnum.ACTIVE,
+                PaymentsOffer.offer_type == OfferTypeEnum.SUBSCRIPTION,
+            )
+        ).one()
+
+        if active_sub_count > 0:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "ACTIVE_SUBSCRIPTIONS_EXIST",
+                    "count": active_sub_count,
+                    "message": "Cancel all active subscriptions before disconnecting.",
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # payments module not available — skip silently
 
     # Delete config
     db_session.delete(config)

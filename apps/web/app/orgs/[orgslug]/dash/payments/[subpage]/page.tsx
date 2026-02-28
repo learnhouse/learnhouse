@@ -4,12 +4,13 @@ import { motion } from 'framer-motion'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { Settings, Users, Gem, CreditCard } from 'lucide-react'
+import { Settings, Users, Gem, CreditCard, Layers } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
-import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
+import PaymentsOffersPage from '@components/Dashboard/Pages/Payments/PaymentsOffersPage'
+import PaymentsGroupsPage from '@components/Dashboard/Pages/Payments/PaymentsGroupsPage'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
@@ -34,10 +35,15 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
           h1: 'Customers',
           h2: 'View and manage your customer information'
         }
-      case 'paid-products':
+      case 'offers':
         return {
-          h1: 'Paid Products',
-          h2: 'Manage your paid products and pricing'
+          h1: 'Offers',
+          h2: 'Manage your offers and subscriptions'
+        }
+      case 'groups':
+        return {
+          h1: 'Payment Groups',
+          h2: 'Bundle resources for subscriptions and multi-course offers'
         }
       case 'configuration':
         return {
@@ -89,10 +95,16 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
             isActive={subpage === 'customers'}
           />
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/paid-products')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/offers')}
             icon={<Gem size={16} />}
-            label="Products & Subscriptions"
-            isActive={subpage === 'paid-products'}
+            label="Offers"
+            isActive={subpage === 'offers'}
+          />
+          <TabLink
+            href={getUriWithOrg(params.orgslug, '/dash/payments/groups')}
+            icon={<Layers size={16} />}
+            label="Payment Groups"
+            isActive={subpage === 'groups'}
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/configuration')}
@@ -111,7 +123,8 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {subpage === 'configuration' && <PaymentsConfigurationPage />}
-        {subpage === 'paid-products' && <PaymentsProductPage />}
+        {subpage === 'offers' && <PaymentsOffersPage />}
+        {subpage === 'groups' && <PaymentsGroupsPage />}
         {subpage === 'customers' && <PaymentsCustomersPage />}
       </motion.div>
     </div>

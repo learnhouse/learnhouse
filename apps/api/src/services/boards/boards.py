@@ -18,6 +18,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser, AnonymousUser, User
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.rbac import AccessAction, check_resource_access
+from src.security.org_auth import require_org_membership
 from src.services.utils.upload_content import upload_file
 
 
@@ -84,6 +85,10 @@ async def get_boards_by_org(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> List[BoardRead]:
+    # Require org membership before listing boards — prevents unauthenticated
+    # and cross-org enumeration of boards.
+    require_org_membership(current_user.id, org_id, db_session)
+
     statement = (
         select(Board)
         .where(Board.org_id == org_id)

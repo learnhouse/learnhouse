@@ -343,8 +343,11 @@ async def read_role(
             detail="Role not found",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "read", role.role_uuid, db_session)
+    # RBAC check — scope permission to the role's own org to prevent cross-org IDOR.
+    # Global roles (org_id=None) are readable by any authenticated user.
+    await authorization_verify_if_user_is_anon(current_user.id)
+    if role.org_id is not None:
+        require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_read")
 
     role = RoleRead(**role.model_dump())
 
@@ -377,8 +380,9 @@ async def update_role(
             detail="Global roles cannot be updated. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "update", role.role_uuid, db_session)
+    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
+    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_update")
 
     # Complete the role object
     role.update_date = str(datetime.now())
@@ -520,8 +524,9 @@ async def delete_role(
             detail="Global roles cannot be deleted. These are system-defined roles that must remain unchanged.",
         )
 
-    # RBAC check using the role's UUID
-    await rbac_check(request, current_user, "delete", role.role_uuid, db_session)
+    # RBAC check — scope to the role's own org to prevent cross-org IDOR.
+    # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
+    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_delete")
 
     db_session.delete(role)
     db_session.commit()

@@ -10,14 +10,14 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-const VALID_SUBPAGES = ['general', 'profile', 'security', 'my-courses']
+const VALID_SUBPAGES = ['general', 'profile', 'security', 'purchases']
 
 const getSubpageTitle = (subpage: string): string => {
   const titles: Record<string, string> = {
     'general': 'General Settings',
     'profile': 'Profile Builder',
     'security': 'Security',
-    'my-courses': 'My Courses',
+    'purchases': 'Purchases',
   }
   return titles[subpage] || 'Account'
 }

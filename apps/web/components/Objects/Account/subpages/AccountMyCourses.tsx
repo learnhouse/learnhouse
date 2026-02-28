@@ -3,7 +3,7 @@
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useSWR from 'swr'
-import { getOwnedCourses } from '@services/payments/payments'
+import { getUserEnrollments } from '@services/payments/offers'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import { BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -19,8 +19,8 @@ function AccountMyCourses({ orgId, orgslug }: AccountMyCoursesProps) {
   const { t } = useTranslation()
 
   const { data: ownedCourses, error, isLoading } = useSWR(
-    orgId ? [`/payments/${orgId}/courses/owned`, access_token] : null,
-    ([url, token]) => getOwnedCourses(orgId, token)
+    orgId && access_token ? [`/payments/${orgId}/enrollments/mine`, access_token] : null,
+    ([, token]) => getUserEnrollments(orgId, token)
   )
 
   if (isLoading) {
@@ -52,9 +52,9 @@ function AccountMyCourses({ orgId, orgslug }: AccountMyCoursesProps) {
         </div>
 
         <div className="mx-5 mb-5">
-          {ownedCourses && ownedCourses.length > 0 ? (
+          {ownedCourses?.data && ownedCourses.data.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ownedCourses.map((course: any) => (
+              {ownedCourses.data.map((course: any) => (
                 <div key={course.course_uuid}>
                   <CourseThumbnail course={course} orgslug={orgslug} />
                 </div>
