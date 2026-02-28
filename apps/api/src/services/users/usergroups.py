@@ -13,6 +13,7 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_or_api_token,
     authorization_verify_if_user_is_anon,
 )
+from src.security.org_auth import require_org_role_permission
 from src.security.rbac.config import get_resource_config
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -168,13 +169,14 @@ async def read_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="read",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     usergroup = UserGroupRead.model_validate(usergroup)
@@ -198,13 +200,14 @@ async def get_users_linked_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="read",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     # Batch fetch users linked to this usergroup in a single query
@@ -281,13 +284,23 @@ async def get_resources_by_usergroup(
     usergroup_id: int,
 ) -> list[str]:
 
-    # RBAC check
+    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+    usergroup = db_session.exec(statement).first()
+
+    if not usergroup:
+        raise HTTPException(
+            status_code=404,
+            detail="UserGroup not found",
+        )
+
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
-        usergroup_uuid="usergroup_X",
+        usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="read",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     statement = select(UserGroupResource).where(
@@ -315,13 +328,14 @@ async def update_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="update",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     usergroup.name = usergroup_update.name
@@ -353,13 +367,14 @@ async def delete_usergroup_by_id(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="delete",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     # Feature usage
@@ -388,13 +403,14 @@ async def add_users_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="create",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     user_ids_array = user_ids.split(",")
@@ -437,7 +453,7 @@ async def add_users_to_usergroup(
 async def remove_users_from_usergroup(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | InternalUser,
     usergroup_id: int,
     user_ids: str,
 ) -> str:
@@ -451,13 +467,14 @@ async def remove_users_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="delete",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     user_ids_array = user_ids.split(",")
@@ -495,13 +512,14 @@ async def add_resources_to_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="create",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     resources_uuids_array = resources_uuids.split(",")
@@ -555,13 +573,14 @@ async def remove_resources_from_usergroup(
             detail="UserGroup not found",
         )
 
-    # RBAC check
+    # RBAC check — scoped to the usergroup's org to prevent cross-org IDOR
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
         current_user=current_user,
         action="delete",
         db_session=db_session,
+        org_id=usergroup.org_id,
     )
 
     resources_uuids_array = resources_uuids.split(",")
@@ -586,12 +605,21 @@ async def remove_resources_from_usergroup(
 ## 🔒 RBAC Utils ##
 
 
+_ACTION_PERMISSION_MAP: dict[str, str] = {
+    "create": "action_create",
+    "read": "action_read",
+    "update": "action_update",
+    "delete": "action_delete",
+}
+
+
 async def rbac_check(
     request: Request,
     usergroup_uuid: str,
     current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
+    org_id: int | None = None,
 ):
     if isinstance(current_user, InternalUser):
         return True
@@ -608,13 +636,23 @@ async def rbac_check(
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship(
-            request,
-            current_user.id,
-            action,
-            usergroup_uuid,
-            db_session,
-        )
+        if org_id is not None:
+            # Scope permission check to the usergroup's own org to prevent cross-org IDOR.
+            require_org_role_permission(
+                current_user.id,
+                org_id,
+                db_session,
+                "usergroups",
+                _ACTION_PERMISSION_MAP[action],
+            )
+        else:
+            await authorization_verify_based_on_roles_and_authorship(
+                request,
+                current_user.id,
+                action,
+                usergroup_uuid,
+                db_session,
+            )
 
 
 ## 🔒 RBAC Utils ##

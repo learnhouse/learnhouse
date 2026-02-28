@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
-import { getProductsByCourse } from '@services/payments/products'
-import { ShoppingCart, AlertCircle, UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import CoursePaidOptions from './CoursePaidOptions'
-import { checkPaidAccess } from '@services/payments/payments'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getOffersByResource } from '@services/payments/offers'
+import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
+import { OfferCard } from './OfferCard'
 import { applyForContributor } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 import CourseProgress from '../CourseProgress/CourseProgress'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
-import { mutate } from 'swr'
+import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
+import Link from 'next/link'
 
 interface CourseRun {
   status: string
@@ -57,12 +56,8 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
-  const [linkedProducts, setLinkedProducts] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const [isContributeLoading, setIsContributeLoading] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { contributorStatus, refetch } = useContributorStatus(courseuuid)
   const [isProgressOpen, setIsProgressOpen] = useState(false)
   const org = useOrg() as any
@@ -70,6 +65,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+  const resourceUuid = cleanCourseUuid ? `course_${cleanCourseUuid}` : null;
 
   const isStarted = trailData?.runs?.find(
     (run: any) => {
@@ -78,47 +74,12 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     }
   ) ?? false;
 
-  useEffect(() => {
-    const fetchLinkedProducts = async () => {
-      try {
-        const response = await getProductsByCourse(
-          course.org_id,
-          course.id,
-          session.data?.tokens?.access_token
-        )
-        setLinkedProducts(response.data || [])
-      } catch (error) {
-        console.error('Failed to fetch linked products')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchLinkedProducts()
-  }, [course.id, course.org_id, session.data?.tokens?.access_token])
-
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!session.data?.user) return
-      try {
-        const response = await checkPaidAccess(
-          parseInt(course.id),
-          course.org_id,
-          session.data?.tokens?.access_token
-        )
-        setHasAccess(response.has_access)
-
-      } catch (error) {
-        console.error('Failed to check course access')
-        toast.error('Failed to check course access. Please try again later.')
-        setHasAccess(false)
-      }
-    }
-
-    if (linkedProducts.length > 0) {
-      checkAccess()
-    }
-  }, [course.id, course.org_id, session.data?.tokens?.access_token, linkedProducts])
+  // Public endpoint — no auth needed, works for unauthenticated visitors too
+  const { data: offersResult, isLoading } = useSWR(
+    org && resourceUuid ? [`/offers/by-resource`, org.id, resourceUuid] : null,
+    ([, orgId, uuid]) => getOffersByResource(orgId, uuid)
+  );
+  const linkedOffers: any[] = offersResult?.data ?? [];
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
@@ -428,70 +389,50 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     )
   }
 
-  if (linkedProducts.length > 0) {
-    return (
-      <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
-        <div className="space-y-4">
-          {hasAccess ? (
-            <>
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg nice-shadow">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <h3 className="text-green-800 font-semibold">{t('courses.you_own_this_course')}</h3>
-                </div>
-                <p className="text-green-700 text-sm mt-1">
-                  {t('courses.you_own_this_course_description')}
-                </p>
+  if (linkedOffers.length > 0) {
+    // User already enrolled / started — show "you own this" notice + leave button
+    if (!!isStarted) {
+      return (
+        <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
+          <div className="space-y-4">
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <h3 className="text-green-800 font-semibold">{t('courses.you_own_this_course')}</h3>
               </div>
-              <button
-                onClick={handleCourseAction}
-                disabled={isActionLoading}
-                aria-label={isStarted ? t('courses.leave_course') : t('courses.start_course')}
-                className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-                  isStarted
-                    ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
-                    : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
-                }`}
-              >
-                {isActionLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  renderActionButton(isStarted ? 'leave' : 'start')
-                )}
-              </button>
-              {renderContributorButton()}
-            </>
-          ) : (
-            <>
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg nice-shadow">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-800" />
-                  <h3 className="text-amber-800 font-semibold">{t('courses.paid_course')}</h3>
-                </div>
-                <p className="text-amber-700 text-sm mt-1">
-                  {t('courses.paid_course_description')}
-                </p>
-              </div>
-              <Modal
-                isDialogOpen={isModalOpen}
-                onOpenChange={setIsModalOpen}
-                dialogContent={<CoursePaidOptions course={course} />}
-                dialogTitle={t('courses.purchase_course_title')}
-                dialogDescription={t('courses.purchase_course_description')}
-                minWidth="sm"
-              />
-              <button
-                className="w-full bg-neutral-900 text-white py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
-                onClick={() => setIsModalOpen(true)}
-                aria-label={t('courses.purchase_course_title')}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {t('courses.purchase_course_title')}
-              </button>
-              {renderContributorButton()}
-            </>
-          )}
+              <p className="text-green-700 text-sm mt-1">
+                {t('courses.you_own_this_course_description')}
+              </p>
+            </div>
+            <button
+              onClick={handleCourseAction}
+              disabled={isActionLoading}
+              aria-label={t('courses.leave_course')}
+              className="w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400"
+            >
+              {isActionLoading
+                ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : renderActionButton('leave')
+              }
+            </button>
+            {renderContributorButton()}
+          </div>
         </div>
+      )
+    }
+
+    // Not enrolled — show all available offers
+    return (
+      <div className="space-y-3">
+        {linkedOffers.length > 1 && (
+          <p className="text-xs text-gray-400 font-medium px-1">
+            {linkedOffers.length} options available
+          </p>
+        )}
+        {linkedOffers.map((offer: any) => (
+          <OfferCard key={offer.offer_id} offer={offer} orgslug={orgslug} />
+        ))}
+        {renderContributorButton()}
       </div>
     )
   }

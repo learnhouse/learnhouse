@@ -16,6 +16,7 @@ from sqlmodel import Session, select
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
+from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
 from src.security.features_utils.usage import check_ai_credits, deduct_ai_credit
@@ -48,6 +49,7 @@ class RAGChatRequest(BaseModel):
     course_uuid: Optional[str] = None
     aichat_uuid: Optional[str] = None
     mode: Literal["course_only", "general"] = "course_only"
+    org_slug: Optional[str] = None
 
 
 class RAGIndexRequest(BaseModel):
@@ -148,16 +150,24 @@ async def api_rag_chat(
         course_id = course.id
         org_id = course.org_id
     else:
-        # Cross-course mode: resolve org from user's first org membership
-        from src.db.user_organizations import UserOrganization
-        user_org = db_session.exec(
-            select(UserOrganization).where(
-                UserOrganization.user_id == current_user.id
-            )
-        ).first()
-        if not user_org:
-            raise HTTPException(status_code=403, detail="User has no organization")
-        org_id = user_org.org_id
+        # Cross-course mode: resolve org from org_slug if provided, else fall back to first membership
+        if chat_request.org_slug:
+            org = db_session.exec(
+                select(Organization).where(Organization.slug == chat_request.org_slug)
+            ).first()
+            if not org:
+                raise HTTPException(status_code=404, detail="Organization not found")
+            org_id = org.id
+        else:
+            from src.db.user_organizations import UserOrganization
+            user_org = db_session.exec(
+                select(UserOrganization).where(
+                    UserOrganization.user_id == current_user.id
+                )
+            ).first()
+            if not user_org:
+                raise HTTPException(status_code=403, detail="User has no organization")
+            org_id = user_org.org_id
 
     # Check if copilot is enabled for this org
     org_config = db_session.exec(
