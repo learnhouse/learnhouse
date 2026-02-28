@@ -67,7 +67,7 @@ RUN npm run build
 # ───────────────────────────────────────────────
 # Stage 5: Final image combining frontend + backend + collab
 # ───────────────────────────────────────────────
-FROM python:3.14.2-slim-bookworm AS runner
+FROM python:3.14.3-slim-bookworm AS runner
 
 # Single apt layer: nginx, curl, netcat, node, pm2
 RUN apt-get update \
