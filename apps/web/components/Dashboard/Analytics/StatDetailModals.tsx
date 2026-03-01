@@ -322,7 +322,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
                 )}
               </td>
               <td className="py-2.5 text-right text-gray-400 text-xs">
-                {formatDate(row.timestamp)}
+                {formatDate(row.enrolled_at)}
               </td>
             </tr>
           )
