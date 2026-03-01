@@ -265,11 +265,14 @@ async def api_get_scorm_content(
         if isinstance(current_user, AnonymousUser):
             raise HTTPException(status_code=401, detail="Authentication required")
 
+    # Use DB-fetched activity_uuid (not the raw URL param) to avoid path taint from user input.
+    db_activity_uuid = activity.activity_uuid
+
     # Get the content file path
     content_path = get_scorm_content_path(
         org_uuid=organization.org_uuid,
         course_uuid=course.course_uuid,
-        activity_uuid=activity_uuid,
+        activity_uuid=db_activity_uuid,
         file_path=file_path,
     )
 
@@ -279,7 +282,7 @@ async def api_get_scorm_content(
     # Defense-in-depth: re-verify the returned path stays within the expected
     # base directory even after get_scorm_content_path's own containment check.
     # This makes the path validation visible in this scope for static analysis.
-    _base = Path(f"content/orgs/{organization.org_uuid}/courses/{course.course_uuid}/activities/{activity_uuid}/scorm/extracted").resolve()
+    _base = Path(f"content/orgs/{organization.org_uuid}/courses/{course.course_uuid}/activities/{db_activity_uuid}/scorm/extracted").resolve()
     _resolved = Path(content_path).resolve()
     if not str(_resolved).startswith(str(_base) + os.sep):
         raise HTTPException(status_code=403, detail="Access denied")

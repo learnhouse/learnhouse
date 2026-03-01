@@ -42,10 +42,6 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
                 if body:
                     try:
                         payload = json.loads(body)
-                        # Reset request body so subsequent handlers can read it
-                        async def receive():
-                            return {"type": "http.request", "body": body, "more_body": False}
-                        request._receive = receive
                     except json.JSONDecodeError:
                         pass
             elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
@@ -62,11 +58,6 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
                     else:
                         # For multipart, just note that it was multipart data
                         payload = {"_type": "multipart/form-data"}
-                    
-                    # Reset request body so subsequent handlers can read it
-                    async def receive():
-                        return {"type": "http.request", "body": body, "more_body": False}
-                    request._receive = receive
             
             # Scrub sensitive data from payload
             if isinstance(payload, dict):

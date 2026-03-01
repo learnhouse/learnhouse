@@ -42,16 +42,18 @@ def _validate_content_path(file_path: str) -> Path | None:
     if '..' in normalized:
         return None
 
-    # Resolve and verify the path stays within CONTENT_DIR
+    # Canonicalize via os.path.realpath (resolves symlinks, normalizes) and verify containment.
+    # realpath is used deliberately: it is a recognized path-injection sanitizer.
     try:
-        resolved = (CONTENT_DIR / decoded).resolve()
-        base_resolved = CONTENT_DIR.resolve()
-        if not str(resolved).startswith(str(base_resolved) + os.sep) and resolved != base_resolved:
-            return None
+        base_real = os.path.realpath(str(CONTENT_DIR))
+        full_real = os.path.realpath(os.path.join(base_real, normalized))
     except (OSError, ValueError):
         return None
 
-    return resolved
+    if not full_real.startswith(base_real + os.sep) and full_real != base_real:
+        return None
+
+    return Path(full_real)
 
 
 def _check_content_access(
@@ -192,10 +194,6 @@ async def serve_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # Explicit containment check visible in this scope (defense in depth).
-    if not resolved.is_relative_to(CONTENT_DIR.resolve()):
-        raise HTTPException(status_code=400, detail="Invalid path")
-
     _check_content_access(file_path, current_user, db_session)
 
     if not resolved.is_file():
@@ -224,9 +222,6 @@ async def head_local_content(
     """HEAD request for content files — returns metadata without body."""
     resolved = _validate_content_path(file_path)
     if resolved is None:
-        raise HTTPException(status_code=400, detail="Invalid path")
-
-    if not resolved.is_relative_to(CONTENT_DIR.resolve()):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     _check_content_access(file_path, current_user, db_session)
