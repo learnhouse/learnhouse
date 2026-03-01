@@ -242,13 +242,21 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
   }
 
   // Server-side fallback to config-based URL construction
-  const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
   const multi_org = isMultiOrgModeEnabled()
-  const domain = getLEARNHOUSE_DOMAIN()
+  const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
   if (multi_org) {
+    const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+    const domain = getLEARNHOUSE_DOMAIN()
     return `${protocol}${orgslug}.${domain}${path}`
   }
-  return `${protocol}${domain}${path}`
+  if (explicitDomain) {
+    // Explicit domain configured: construct absolute URL (needed for RSS, SEO, server-side fetches)
+    const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+    return `${protocol}${explicitDomain}${path}`
+  }
+  // No explicit domain configured: return relative path to avoid hardcoded 'localhost'
+  // URLs in SSR output that break on non-localhost deployments
+  return path
 }
 
 export const getUriWithoutOrg = (path: string) => {
@@ -258,9 +266,13 @@ export const getUriWithoutOrg = (path: string) => {
   }
 
   // Server-side fallback
-  const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
-  const domain = getLEARNHOUSE_DOMAIN()
-  return `${protocol}${domain}${path}`
+  const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
+  if (explicitDomain) {
+    const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+    return `${protocol}${explicitDomain}${path}`
+  }
+  // No explicit domain configured: return relative path to avoid hardcoded 'localhost' URLs
+  return path
 }
 
 // OSS mode — watermark and branding always visible
