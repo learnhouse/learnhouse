@@ -397,8 +397,6 @@ async def reorder_chapters_and_activities(
                 order=index,
             )
             db_session.add(course_chapter)
-        
-        db_session.commit()
 
     # Remove chapters that are no longer in the order
     chapter_ids_to_keep = {co.chapter_id for co in chapters_order.chapter_order_by_ids}
@@ -450,8 +448,6 @@ async def reorder_chapters_and_activities(
                     order=index,
                 )
                 db_session.add(chapter_activity)
-            
-            db_session.commit()
 
     # Remove activities that are no longer in any chapter
     for ca in existing_chapter_activities:

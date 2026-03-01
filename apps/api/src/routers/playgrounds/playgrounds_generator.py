@@ -113,10 +113,6 @@ async def start_playground_session(
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions to generate content")
 
-    # Force-consume request body before streaming to prevent BaseHTTPMiddleware
-    # receive_or_disconnect from receiving http.request instead of http.disconnect
-    await request.body()
-
     check_ai_credits(org.id, db_session)
     deduct_ai_credit(org.id, db_session)
 
@@ -197,10 +193,6 @@ async def iterate_playground_session(
     )
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
-
-    # Force-consume request body before streaming to prevent BaseHTTPMiddleware
-    # receive_or_disconnect from receiving http.request instead of http.disconnect
-    await request.body()
 
     check_ai_credits(org.id, db_session)
     deduct_ai_credit(org.id, db_session)

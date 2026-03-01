@@ -11,6 +11,8 @@ SECURITY:
 - Podcast episode content for non-public podcasts requires auth
 """
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse, Response
 from pathlib import Path
@@ -83,13 +85,14 @@ def _validate_content_path(file_path: str) -> str | None:
     normalized = decoded.replace('\\', '/')
     if '..' in normalized:
         return None
-    # Defense-in-depth: resolve path and verify it stays within the content prefix
-    base = Path("content").resolve()
-    resolved = (base / normalized).resolve()
-    if not str(resolved).startswith(str(base)):
+    # Canonicalize via os.path.realpath (resolves symlinks, normalizes) and verify containment.
+    # realpath is used deliberately: it is a recognized path-injection sanitizer.
+    base_real = os.path.realpath(str(Path("content")))
+    full_real = os.path.realpath(os.path.join(base_real, normalized))
+    if not full_real.startswith(base_real + os.sep):
         return None
-    # Return the validated relative path derived from the resolved path
-    return str(resolved.relative_to(base))
+    # Return the validated relative path
+    return os.path.relpath(full_real, base_real)
 
 
 def _check_content_access(
