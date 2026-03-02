@@ -1,5 +1,5 @@
 import pc from 'picocolors'
-import { VERSION } from '../constants.js'
+import { VERSION, DEV_IMAGE } from '../constants.js'
 
 const NPM_REGISTRY_URL = 'https://registry.npmjs.org/learnhouse'
 const GHCR_BASE = 'ghcr.io/learnhouse/app'
@@ -41,11 +41,18 @@ export async function checkForUpdates(): Promise<void> {
 }
 
 /**
- * Resolve the best Docker image tag for the LearnHouse app.
- * Tries versioned tag first (e.g. ghcr.io/learnhouse/app:0.2.0),
- * falls back to :latest with a warning.
+ * Resolve the Docker image tag for the LearnHouse app.
+ *
+ * - channel 'dev'    → always returns ghcr.io/learnhouse/app:dev
+ * - channel 'stable' → tries versioned tag (e.g. :1.0.1), falls back to :latest
  */
-export async function resolveAppImage(): Promise<{ image: string; isLatest: boolean }> {
+export async function resolveAppImage(
+  channel: 'stable' | 'dev' = 'stable',
+): Promise<{ image: string; isLatest: boolean }> {
+  if (channel === 'dev') {
+    return { image: DEV_IMAGE, isLatest: false }
+  }
+
   const versionedTag = `${GHCR_BASE}:${VERSION}`
 
   // Check if the versioned tag exists via GHCR token-less API

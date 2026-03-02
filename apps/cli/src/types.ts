@@ -2,6 +2,7 @@ export interface SetupConfig {
   // Deployment
   deploymentId: string
   installDir: string
+  channel: 'stable' | 'dev'
 
   // Domain & SSL
   domain: string

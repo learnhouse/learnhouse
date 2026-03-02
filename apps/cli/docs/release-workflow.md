@@ -22,9 +22,9 @@ Pick the bump type based on the changes:
 
 | Command | When to use | Example |
 |---------|-------------|---------|
-| `pnpm version:patch` | Bug fixes, small tweaks | 0.1.0 → 0.1.1 |
-| `pnpm version:minor` | New features, non-breaking | 0.1.0 → 0.2.0 |
-| `pnpm version:major` | Breaking changes | 0.1.0 → 1.0.0 |
+| `bun run version:patch` | Bug fixes, small tweaks | 0.1.0 → 0.1.1 |
+| `bun run version:minor` | New features, non-breaking | 0.1.0 → 0.2.0 |
+| `bun run version:major` | Breaking changes | 0.1.0 → 1.0.0 |
 
 This updates **both** `package.json` and `src/constants.ts` to keep them in sync.
 
@@ -55,11 +55,11 @@ git push origin cli-v0.2.0
 The tag push triggers `.github/workflows/cli-publish.yaml` which:
 
 1. Checks out the code
-2. Sets up Node.js 20 + pnpm
-3. Installs dependencies (`pnpm install --frozen-lockfile`)
-4. Builds the CLI (`pnpm build`)
+2. Sets up Bun
+3. Installs dependencies (`bun install --frozen-lockfile`)
+4. Builds the CLI (`bun run build`)
 5. Verifies the tag version matches `package.json` (fails if mismatched)
-6. Publishes to npm (`pnpm publish`) — `prepublishOnly` runs a fresh build as a safety net
+6. Publishes to npm (`npm publish`) — `prepublishOnly` runs a fresh build as a safety net
 7. Creates a GitHub Release with auto-generated release notes
 
 ### 6. Verify
@@ -100,7 +100,7 @@ The workflow only triggers on tags matching `cli-v*`. This means:
 ```bash
 # Full release flow (example: releasing 0.2.0)
 cd apps/cli
-pnpm version:minor                                    # 0.1.0 → 0.2.0
+bun run version:minor                                    # 0.1.0 → 0.2.0
 git add apps/cli/package.json apps/cli/src/constants.ts
 git commit -m "chore: bump cli to 0.2.0"
 git tag cli-v0.2.0
@@ -116,7 +116,7 @@ git push origin your-branch && git push origin cli-v0.2.0
 
 ### Version mismatch error
 - You tagged `cli-v0.2.0` but `package.json` says `0.1.0`
-- Fix: run `pnpm version:minor` (or the correct bump), amend the commit, re-tag
+- Fix: run `bun run version:minor` (or the correct bump), amend the commit, re-tag
 
 ### npm 403 / auth error
 - Check that `NPM_TOKEN` secret is set in GitHub repo settings
@@ -124,5 +124,5 @@ git push origin your-branch && git push origin cli-v0.2.0
 - Token must have publish permissions for the `learnhouse` package
 
 ### Build fails
-- Run `pnpm build` locally first to catch TypeScript errors
-- Check that `pnpm install --frozen-lockfile` works (if not, update `pnpm-lock.yaml`)
+- Run `bun run build` locally first to catch TypeScript errors
+- Check that `bun install --frozen-lockfile` works (if not, update `bun.lockb`)

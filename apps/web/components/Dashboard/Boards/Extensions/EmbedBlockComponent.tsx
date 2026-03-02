@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Code, Link as LinkIcon, X, Pencil } from 'lucide-react'
+import { Code, Link as LinkIcon, X, Pencil, Palette } from 'lucide-react'
 import {
   SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps,
-  SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiX,
+  SiNotion, SiGoogledocs, SiX,
   SiFigma, SiGiphy, SiYoutube,
 } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
@@ -60,8 +60,8 @@ const supportedProducts = [
   { name: 'Spotify', icon: SiSpotify, color: '#1DB954' },
   { name: 'Loom', icon: SiLoom, color: '#625DF5' },
   { name: 'GMaps', icon: SiGooglemaps, color: '#4285F4' },
-  { name: 'CodePen', icon: SiCodepen, color: '#000000' },
-  { name: 'Canva', icon: SiCanva, color: '#00C4CC' },
+  { name: 'CodePen', icon: Code, color: '#000000' },
+  { name: 'Canva', icon: Palette, color: '#00C4CC' },
   { name: 'Notion', icon: SiNotion, color: '#878787' },
   { name: 'G Docs', icon: SiGoogledocs, color: '#4285F4' },
   { name: 'X', icon: SiX, color: '#000000' },

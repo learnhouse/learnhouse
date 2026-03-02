@@ -1,4 +1,4 @@
-import { spawn, execSync, type ChildProcess } from 'node:child_process'
+import { spawn, spawnSync, execSync, type ChildProcess } from 'node:child_process'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import * as path from 'node:path'
@@ -92,10 +92,15 @@ function isInfraRunning(): boolean {
 let serviceEnv: Record<string, string> = {}
 
 function spawnService(command: string, args: string[], cwd: string, label: string, color: (s: string) => string): ChildProcess {
+  const localBin = path.join(cwd, 'node_modules', '.bin')
   const child = spawn(command, args, {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, ...serviceEnv },
+    env: {
+      ...process.env,
+      ...serviceEnv,
+      PATH: `${localBin}:${process.env.PATH ?? ''}`,
+    },
   })
   prefixStream(child, label, color)
   child.on('exit', (code) => {
@@ -216,6 +221,36 @@ export async function devCommand() {
   }
   healthSpinner.stop('DB and Redis are healthy')
 
+  const webDir = path.join(root, 'apps', 'web')
+  const collabDir = path.join(root, 'apps', 'collab')
+  const apiDir = path.join(root, 'apps', 'api')
+
+  // Auto-install missing dependencies
+  const bunProjects = [
+    { label: 'web', dir: webDir },
+    { label: 'collab', dir: collabDir },
+  ]
+
+  for (const { label, dir } of bunProjects) {
+    if (!fs.existsSync(path.join(dir, 'node_modules'))) {
+      p.log.info(`Installing ${label} dependencies...`)
+      const result = spawnSync('bun', ['install'], { cwd: dir, stdio: 'inherit', shell: true })
+      if (result.status !== 0) {
+        p.log.error(`Failed to install ${label} dependencies`)
+        process.exit(1)
+      }
+    }
+  }
+
+  if (!fs.existsSync(path.join(apiDir, '.venv'))) {
+    p.log.info('Installing API dependencies...')
+    const result = spawnSync('uv', ['sync'], { cwd: apiDir, stdio: 'inherit', shell: true })
+    if (result.status !== 0) {
+      p.log.error('Failed to install API dependencies')
+      process.exit(1)
+    }
+  }
+
   // Start local services
   let apiProc: ChildProcess | null = null
   let webProc: ChildProcess | null = null
@@ -226,11 +261,11 @@ export async function devCommand() {
   }
 
   const startWeb = () => {
-    return spawnService('pnpm', ['dev'], path.join(root, 'apps', 'web'), 'web', pc.cyan)
+    return spawnService('next', ['dev', '--turbopack'], path.join(root, 'apps', 'web'), 'web', pc.cyan)
   }
 
   const startCollab = () => {
-    return spawnService('pnpm', ['dev'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow)
+    return spawnService('tsx', ['watch', 'src/index.ts'], path.join(root, 'apps', 'collab'), 'collab', pc.yellow)
   }
 
   apiProc = startApi()

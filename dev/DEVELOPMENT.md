@@ -7,7 +7,7 @@ This guide will help you set up and run LearnHouse in your local development env
 Before you begin, ensure you have the following installed:
 
 - **Docker & Docker Compose**: For running the database and Redis.
-- **Node.js**: (v18 or later recommended) and **pnpm** for the frontend.
+- **Bun**: (v1 or later) for the frontend.
 - **Python**: (v3.12 recommended) and **uv** for backend package management.
 
 ---
@@ -117,7 +117,7 @@ uv run pytest
 #### Frontend
 ```bash
 cd apps/web
-pnpm lint
+bun run lint
 ```
 
 ## Infrastructure Management
