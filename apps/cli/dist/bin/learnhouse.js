@@ -7,11 +7,11 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x2) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x2, {
-  get: (a3, b3) => (typeof require !== "undefined" ? require : a3)[b3]
-}) : x2)(function(x2) {
+var __require = /* @__PURE__ */ ((x3) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x3, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x3)(function(x3) {
   if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x2 + '" is not supported');
+  throw Error('Dynamic require of "' + x3 + '" is not supported');
 });
 var __commonJS = (cb, mod) => function __require2() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -33,9 +33,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/error.js
+// node_modules/commander/lib/error.js
 var require_error = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/error.js"(exports) {
+  "node_modules/commander/lib/error.js"(exports) {
     "use strict";
     var CommanderError2 = class extends Error {
       /**
@@ -69,9 +69,9 @@ var require_error = __commonJS({
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/argument.js
+// node_modules/commander/lib/argument.js
 var require_argument = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/argument.js"(exports) {
+  "node_modules/commander/lib/argument.js"(exports) {
     "use strict";
     var { InvalidArgumentError: InvalidArgumentError2 } = require_error();
     var Argument2 = class {
@@ -104,7 +104,7 @@ var require_argument = __commonJS({
             this._name = name;
             break;
         }
-        if (this._name.length > 3 && this._name.slice(-3) === "...") {
+        if (this._name.endsWith("...")) {
           this.variadic = true;
           this._name = this._name.slice(0, -3);
         }
@@ -120,11 +120,12 @@ var require_argument = __commonJS({
       /**
        * @package
        */
-      _concatValue(value, previous) {
+      _collectValue(value, previous) {
         if (previous === this.defaultValue || !Array.isArray(previous)) {
           return [value];
         }
-        return previous.concat(value);
+        previous.push(value);
+        return previous;
       }
       /**
        * Set the default value, and optionally supply the description to be displayed in the help.
@@ -163,7 +164,7 @@ var require_argument = __commonJS({
             );
           }
           if (this.variadic) {
-            return this._concatValue(arg, previous);
+            return this._collectValue(arg, previous);
           }
           return arg;
         };
@@ -197,17 +198,29 @@ var require_argument = __commonJS({
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/help.js
+// node_modules/commander/lib/help.js
 var require_help = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/help.js"(exports) {
+  "node_modules/commander/lib/help.js"(exports) {
     "use strict";
     var { humanReadableArgName } = require_argument();
     var Help2 = class {
       constructor() {
         this.helpWidth = void 0;
+        this.minWidthToWrap = 40;
         this.sortSubcommands = false;
         this.sortOptions = false;
         this.showGlobalOptions = false;
+      }
+      /**
+       * prepareContext is called by Commander after applying overrides from `Command.configureHelp()`
+       * and just before calling `formatHelp()`.
+       *
+       * Commander just uses the helpWidth and the rest is provided for optional use by more complex subclasses.
+       *
+       * @param {{ error?: boolean, helpWidth?: number, outputHasColors?: boolean }} contextOptions
+       */
+      prepareContext(contextOptions) {
+        this.helpWidth = this.helpWidth ?? contextOptions.helpWidth ?? 80;
       }
       /**
        * Get an array of the visible subcommands. Includes a placeholder for the implicit help command, if there is one.
@@ -222,8 +235,8 @@ var require_help = __commonJS({
           visibleCommands.push(helpCommand);
         }
         if (this.sortSubcommands) {
-          visibleCommands.sort((a3, b3) => {
-            return a3.name().localeCompare(b3.name());
+          visibleCommands.sort((a, b) => {
+            return a.name().localeCompare(b.name());
           });
         }
         return visibleCommands;
@@ -235,11 +248,11 @@ var require_help = __commonJS({
        * @param {Option} b
        * @returns {number}
        */
-      compareOptions(a3, b3) {
+      compareOptions(a, b) {
         const getSortKey = (option) => {
           return option.short ? option.short.replace(/^-/, "") : option.long.replace(/^--/, "");
         };
-        return getSortKey(a3).localeCompare(getSortKey(b3));
+        return getSortKey(a).localeCompare(getSortKey(b));
       }
       /**
        * Get an array of the visible options. Includes a placeholder for the implicit help option, if there is one.
@@ -345,7 +358,12 @@ var require_help = __commonJS({
        */
       longestSubcommandTermLength(cmd, helper) {
         return helper.visibleCommands(cmd).reduce((max, command) => {
-          return Math.max(max, helper.subcommandTerm(command).length);
+          return Math.max(
+            max,
+            this.displayWidth(
+              helper.styleSubcommandTerm(helper.subcommandTerm(command))
+            )
+          );
         }, 0);
       }
       /**
@@ -357,7 +375,10 @@ var require_help = __commonJS({
        */
       longestOptionTermLength(cmd, helper) {
         return helper.visibleOptions(cmd).reduce((max, option) => {
-          return Math.max(max, helper.optionTerm(option).length);
+          return Math.max(
+            max,
+            this.displayWidth(helper.styleOptionTerm(helper.optionTerm(option)))
+          );
         }, 0);
       }
       /**
@@ -369,7 +390,10 @@ var require_help = __commonJS({
        */
       longestGlobalOptionTermLength(cmd, helper) {
         return helper.visibleGlobalOptions(cmd).reduce((max, option) => {
-          return Math.max(max, helper.optionTerm(option).length);
+          return Math.max(
+            max,
+            this.displayWidth(helper.styleOptionTerm(helper.optionTerm(option)))
+          );
         }, 0);
       }
       /**
@@ -381,7 +405,12 @@ var require_help = __commonJS({
        */
       longestArgumentTermLength(cmd, helper) {
         return helper.visibleArguments(cmd).reduce((max, argument) => {
-          return Math.max(max, helper.argumentTerm(argument).length);
+          return Math.max(
+            max,
+            this.displayWidth(
+              helper.styleArgumentTerm(helper.argumentTerm(argument))
+            )
+          );
         }, 0);
       }
       /**
@@ -449,7 +478,11 @@ var require_help = __commonJS({
           extraInfo.push(`env: ${option.envVar}`);
         }
         if (extraInfo.length > 0) {
-          return `${option.description} (${extraInfo.join(", ")})`;
+          const extraDescription = `(${extraInfo.join(", ")})`;
+          if (option.description) {
+            return `${option.description} ${extraDescription}`;
+          }
+          return extraDescription;
         }
         return option.description;
       }
@@ -473,13 +506,48 @@ var require_help = __commonJS({
           );
         }
         if (extraInfo.length > 0) {
-          const extraDescripton = `(${extraInfo.join(", ")})`;
+          const extraDescription = `(${extraInfo.join(", ")})`;
           if (argument.description) {
-            return `${argument.description} ${extraDescripton}`;
+            return `${argument.description} ${extraDescription}`;
           }
-          return extraDescripton;
+          return extraDescription;
         }
         return argument.description;
+      }
+      /**
+       * Format a list of items, given a heading and an array of formatted items.
+       *
+       * @param {string} heading
+       * @param {string[]} items
+       * @param {Help} helper
+       * @returns string[]
+       */
+      formatItemList(heading, items, helper) {
+        if (items.length === 0) return [];
+        return [helper.styleTitle(heading), ...items, ""];
+      }
+      /**
+       * Group items by their help group heading.
+       *
+       * @param {Command[] | Option[]} unsortedItems
+       * @param {Command[] | Option[]} visibleItems
+       * @param {Function} getGroup
+       * @returns {Map<string, Command[] | Option[]>}
+       */
+      groupItems(unsortedItems, visibleItems, getGroup) {
+        const result = /* @__PURE__ */ new Map();
+        unsortedItems.forEach((item) => {
+          const group = getGroup(item);
+          if (!result.has(group)) result.set(group, []);
+        });
+        visibleItems.forEach((item) => {
+          const group = getGroup(item);
+          if (!result.has(group)) {
+            result.set(group, []);
+          }
+          result.get(group).push(item);
+        });
+        return result;
       }
       /**
        * Generate the built-in help text.
@@ -490,74 +558,141 @@ var require_help = __commonJS({
        */
       formatHelp(cmd, helper) {
         const termWidth = helper.padWidth(cmd, helper);
-        const helpWidth = helper.helpWidth || 80;
-        const itemIndentWidth = 2;
-        const itemSeparatorWidth = 2;
-        function formatItem(term, description) {
-          if (description) {
-            const fullText = `${term.padEnd(termWidth + itemSeparatorWidth)}${description}`;
-            return helper.wrap(
-              fullText,
-              helpWidth - itemIndentWidth,
-              termWidth + itemSeparatorWidth
-            );
-          }
-          return term;
+        const helpWidth = helper.helpWidth ?? 80;
+        function callFormatItem(term, description) {
+          return helper.formatItem(term, termWidth, description, helper);
         }
-        function formatList(textArray) {
-          return textArray.join("\n").replace(/^/gm, " ".repeat(itemIndentWidth));
-        }
-        let output = [`Usage: ${helper.commandUsage(cmd)}`, ""];
+        let output = [
+          `${helper.styleTitle("Usage:")} ${helper.styleUsage(helper.commandUsage(cmd))}`,
+          ""
+        ];
         const commandDescription = helper.commandDescription(cmd);
         if (commandDescription.length > 0) {
           output = output.concat([
-            helper.wrap(commandDescription, helpWidth, 0),
+            helper.boxWrap(
+              helper.styleCommandDescription(commandDescription),
+              helpWidth
+            ),
             ""
           ]);
         }
         const argumentList = helper.visibleArguments(cmd).map((argument) => {
-          return formatItem(
-            helper.argumentTerm(argument),
-            helper.argumentDescription(argument)
+          return callFormatItem(
+            helper.styleArgumentTerm(helper.argumentTerm(argument)),
+            helper.styleArgumentDescription(helper.argumentDescription(argument))
           );
         });
-        if (argumentList.length > 0) {
-          output = output.concat(["Arguments:", formatList(argumentList), ""]);
-        }
-        const optionList = helper.visibleOptions(cmd).map((option) => {
-          return formatItem(
-            helper.optionTerm(option),
-            helper.optionDescription(option)
-          );
-        });
-        if (optionList.length > 0) {
-          output = output.concat(["Options:", formatList(optionList), ""]);
-        }
-        if (this.showGlobalOptions) {
-          const globalOptionList = helper.visibleGlobalOptions(cmd).map((option) => {
-            return formatItem(
-              helper.optionTerm(option),
-              helper.optionDescription(option)
+        output = output.concat(
+          this.formatItemList("Arguments:", argumentList, helper)
+        );
+        const optionGroups = this.groupItems(
+          cmd.options,
+          helper.visibleOptions(cmd),
+          (option) => option.helpGroupHeading ?? "Options:"
+        );
+        optionGroups.forEach((options, group) => {
+          const optionList = options.map((option) => {
+            return callFormatItem(
+              helper.styleOptionTerm(helper.optionTerm(option)),
+              helper.styleOptionDescription(helper.optionDescription(option))
             );
           });
-          if (globalOptionList.length > 0) {
-            output = output.concat([
-              "Global Options:",
-              formatList(globalOptionList),
-              ""
-            ]);
-          }
-        }
-        const commandList = helper.visibleCommands(cmd).map((cmd2) => {
-          return formatItem(
-            helper.subcommandTerm(cmd2),
-            helper.subcommandDescription(cmd2)
-          );
+          output = output.concat(this.formatItemList(group, optionList, helper));
         });
-        if (commandList.length > 0) {
-          output = output.concat(["Commands:", formatList(commandList), ""]);
+        if (helper.showGlobalOptions) {
+          const globalOptionList = helper.visibleGlobalOptions(cmd).map((option) => {
+            return callFormatItem(
+              helper.styleOptionTerm(helper.optionTerm(option)),
+              helper.styleOptionDescription(helper.optionDescription(option))
+            );
+          });
+          output = output.concat(
+            this.formatItemList("Global Options:", globalOptionList, helper)
+          );
         }
+        const commandGroups = this.groupItems(
+          cmd.commands,
+          helper.visibleCommands(cmd),
+          (sub) => sub.helpGroup() || "Commands:"
+        );
+        commandGroups.forEach((commands, group) => {
+          const commandList = commands.map((sub) => {
+            return callFormatItem(
+              helper.styleSubcommandTerm(helper.subcommandTerm(sub)),
+              helper.styleSubcommandDescription(helper.subcommandDescription(sub))
+            );
+          });
+          output = output.concat(this.formatItemList(group, commandList, helper));
+        });
         return output.join("\n");
+      }
+      /**
+       * Return display width of string, ignoring ANSI escape sequences. Used in padding and wrapping calculations.
+       *
+       * @param {string} str
+       * @returns {number}
+       */
+      displayWidth(str) {
+        return stripColor(str).length;
+      }
+      /**
+       * Style the title for displaying in the help. Called with 'Usage:', 'Options:', etc.
+       *
+       * @param {string} str
+       * @returns {string}
+       */
+      styleTitle(str) {
+        return str;
+      }
+      styleUsage(str) {
+        return str.split(" ").map((word) => {
+          if (word === "[options]") return this.styleOptionText(word);
+          if (word === "[command]") return this.styleSubcommandText(word);
+          if (word[0] === "[" || word[0] === "<")
+            return this.styleArgumentText(word);
+          return this.styleCommandText(word);
+        }).join(" ");
+      }
+      styleCommandDescription(str) {
+        return this.styleDescriptionText(str);
+      }
+      styleOptionDescription(str) {
+        return this.styleDescriptionText(str);
+      }
+      styleSubcommandDescription(str) {
+        return this.styleDescriptionText(str);
+      }
+      styleArgumentDescription(str) {
+        return this.styleDescriptionText(str);
+      }
+      styleDescriptionText(str) {
+        return str;
+      }
+      styleOptionTerm(str) {
+        return this.styleOptionText(str);
+      }
+      styleSubcommandTerm(str) {
+        return str.split(" ").map((word) => {
+          if (word === "[options]") return this.styleOptionText(word);
+          if (word[0] === "[" || word[0] === "<")
+            return this.styleArgumentText(word);
+          return this.styleSubcommandText(word);
+        }).join(" ");
+      }
+      styleArgumentTerm(str) {
+        return this.styleArgumentText(str);
+      }
+      styleOptionText(str) {
+        return str;
+      }
+      styleArgumentText(str) {
+        return str;
+      }
+      styleSubcommandText(str) {
+        return str;
+      }
+      styleCommandText(str) {
+        return str;
       }
       /**
        * Calculate the pad width from the maximum term length.
@@ -575,46 +710,100 @@ var require_help = __commonJS({
         );
       }
       /**
-       * Wrap the given string to width characters per line, with lines after the first indented.
-       * Do not wrap if insufficient room for wrapping (minColumnWidth), or string is manually formatted.
+       * Detect manually wrapped and indented strings by checking for line break followed by whitespace.
+       *
+       * @param {string} str
+       * @returns {boolean}
+       */
+      preformatted(str) {
+        return /\n[^\S\r\n]/.test(str);
+      }
+      /**
+       * Format the "item", which consists of a term and description. Pad the term and wrap the description, indenting the following lines.
+       *
+       * So "TTT", 5, "DDD DDDD DD DDD" might be formatted for this.helpWidth=17 like so:
+       *   TTT  DDD DDDD
+       *        DD DDD
+       *
+       * @param {string} term
+       * @param {number} termWidth
+       * @param {string} description
+       * @param {Help} helper
+       * @returns {string}
+       */
+      formatItem(term, termWidth, description, helper) {
+        const itemIndent = 2;
+        const itemIndentStr = " ".repeat(itemIndent);
+        if (!description) return itemIndentStr + term;
+        const paddedTerm = term.padEnd(
+          termWidth + term.length - helper.displayWidth(term)
+        );
+        const spacerWidth = 2;
+        const helpWidth = this.helpWidth ?? 80;
+        const remainingWidth = helpWidth - termWidth - spacerWidth - itemIndent;
+        let formattedDescription;
+        if (remainingWidth < this.minWidthToWrap || helper.preformatted(description)) {
+          formattedDescription = description;
+        } else {
+          const wrappedDescription = helper.boxWrap(description, remainingWidth);
+          formattedDescription = wrappedDescription.replace(
+            /\n/g,
+            "\n" + " ".repeat(termWidth + spacerWidth)
+          );
+        }
+        return itemIndentStr + paddedTerm + " ".repeat(spacerWidth) + formattedDescription.replace(/\n/g, `
+${itemIndentStr}`);
+      }
+      /**
+       * Wrap a string at whitespace, preserving existing line breaks.
+       * Wrapping is skipped if the width is less than `minWidthToWrap`.
        *
        * @param {string} str
        * @param {number} width
-       * @param {number} indent
-       * @param {number} [minColumnWidth=40]
-       * @return {string}
-       *
+       * @returns {string}
        */
-      wrap(str, width, indent, minColumnWidth = 40) {
-        const indents = " \\f\\t\\v\xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF";
-        const manualIndent = new RegExp(`[\\n][${indents}]+`);
-        if (str.match(manualIndent)) return str;
-        const columnWidth = width - indent;
-        if (columnWidth < minColumnWidth) return str;
-        const leadingStr = str.slice(0, indent);
-        const columnText = str.slice(indent).replace("\r\n", "\n");
-        const indentString = " ".repeat(indent);
-        const zeroWidthSpace = "\u200B";
-        const breaks = `\\s${zeroWidthSpace}`;
-        const regex = new RegExp(
-          `
-|.{1,${columnWidth - 1}}([${breaks}]|$)|[^${breaks}]+?([${breaks}]|$)`,
-          "g"
-        );
-        const lines = columnText.match(regex) || [];
-        return leadingStr + lines.map((line, i) => {
-          if (line === "\n") return "";
-          return (i > 0 ? indentString : "") + line.trimEnd();
-        }).join("\n");
+      boxWrap(str, width) {
+        if (width < this.minWidthToWrap) return str;
+        const rawLines = str.split(/\r\n|\n/);
+        const chunkPattern = /[\s]*[^\s]+/g;
+        const wrappedLines = [];
+        rawLines.forEach((line) => {
+          const chunks = line.match(chunkPattern);
+          if (chunks === null) {
+            wrappedLines.push("");
+            return;
+          }
+          let sumChunks = [chunks.shift()];
+          let sumWidth = this.displayWidth(sumChunks[0]);
+          chunks.forEach((chunk) => {
+            const visibleWidth = this.displayWidth(chunk);
+            if (sumWidth + visibleWidth <= width) {
+              sumChunks.push(chunk);
+              sumWidth += visibleWidth;
+              return;
+            }
+            wrappedLines.push(sumChunks.join(""));
+            const nextChunk = chunk.trimStart();
+            sumChunks = [nextChunk];
+            sumWidth = this.displayWidth(nextChunk);
+          });
+          wrappedLines.push(sumChunks.join(""));
+        });
+        return wrappedLines.join("\n");
       }
     };
+    function stripColor(str) {
+      const sgrPattern = /\x1b\[\d*(;\d*)*m/g;
+      return str.replace(sgrPattern, "");
+    }
     exports.Help = Help2;
+    exports.stripColor = stripColor;
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/option.js
+// node_modules/commander/lib/option.js
 var require_option = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/option.js"(exports) {
+  "node_modules/commander/lib/option.js"(exports) {
     "use strict";
     var { InvalidArgumentError: InvalidArgumentError2 } = require_error();
     var Option2 = class {
@@ -647,6 +836,7 @@ var require_option = __commonJS({
         this.argChoices = void 0;
         this.conflictsWith = [];
         this.implied = void 0;
+        this.helpGroupHeading = void 0;
       }
       /**
        * Set the default value, and optionally supply the description to be displayed in the help.
@@ -757,11 +947,12 @@ var require_option = __commonJS({
       /**
        * @package
        */
-      _concatValue(value, previous) {
+      _collectValue(value, previous) {
         if (previous === this.defaultValue || !Array.isArray(previous)) {
           return [value];
         }
-        return previous.concat(value);
+        previous.push(value);
+        return previous;
       }
       /**
        * Only allow option value to be one of choices.
@@ -778,7 +969,7 @@ var require_option = __commonJS({
             );
           }
           if (this.variadic) {
-            return this._concatValue(arg, previous);
+            return this._collectValue(arg, previous);
           }
           return arg;
         };
@@ -797,12 +988,25 @@ var require_option = __commonJS({
       }
       /**
        * Return option name, in a camelcase format that can be used
-       * as a object attribute key.
+       * as an object attribute key.
        *
        * @return {string}
        */
       attributeName() {
-        return camelcase(this.name().replace(/^no-/, ""));
+        if (this.negate) {
+          return camelcase(this.name().replace(/^no-/, ""));
+        }
+        return camelcase(this.name());
+      }
+      /**
+       * Set the help group heading.
+       *
+       * @param {string} heading
+       * @return {Option}
+       */
+      helpGroup(heading) {
+        this.helpGroupHeading = heading;
+        return this;
       }
       /**
        * Check if `arg` matches the short or long flag.
@@ -870,14 +1074,40 @@ var require_option = __commonJS({
     function splitOptionFlags(flags) {
       let shortFlag;
       let longFlag;
-      const flagParts = flags.split(/[ |,]+/);
-      if (flagParts.length > 1 && !/^[[<]/.test(flagParts[1]))
+      const shortFlagExp = /^-[^-]$/;
+      const longFlagExp = /^--[^-]/;
+      const flagParts = flags.split(/[ |,]+/).concat("guard");
+      if (shortFlagExp.test(flagParts[0])) shortFlag = flagParts.shift();
+      if (longFlagExp.test(flagParts[0])) longFlag = flagParts.shift();
+      if (!shortFlag && shortFlagExp.test(flagParts[0]))
         shortFlag = flagParts.shift();
-      longFlag = flagParts.shift();
-      if (!shortFlag && /^-[^-]$/.test(longFlag)) {
+      if (!shortFlag && longFlagExp.test(flagParts[0])) {
         shortFlag = longFlag;
-        longFlag = void 0;
+        longFlag = flagParts.shift();
       }
+      if (flagParts[0].startsWith("-")) {
+        const unsupportedFlag = flagParts[0];
+        const baseError = `option creation failed due to '${unsupportedFlag}' in option flags '${flags}'`;
+        if (/^-[^-][^-]/.test(unsupportedFlag))
+          throw new Error(
+            `${baseError}
+- a short flag is a single dash and a single character
+  - either use a single dash and a single character (for a short flag)
+  - or use a double dash for a long option (and can have two, like '--ws, --workspace')`
+          );
+        if (shortFlagExp.test(unsupportedFlag))
+          throw new Error(`${baseError}
+- too many short flags`);
+        if (longFlagExp.test(unsupportedFlag))
+          throw new Error(`${baseError}
+- too many long flags`);
+        throw new Error(`${baseError}
+- unrecognised flag format`);
+      }
+      if (shortFlag === void 0 && longFlag === void 0)
+        throw new Error(
+          `option creation failed due to no flags found in '${flags}'.`
+        );
       return { shortFlag, longFlag };
     }
     exports.Option = Option2;
@@ -885,43 +1115,43 @@ var require_option = __commonJS({
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/suggestSimilar.js
+// node_modules/commander/lib/suggestSimilar.js
 var require_suggestSimilar = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/suggestSimilar.js"(exports) {
+  "node_modules/commander/lib/suggestSimilar.js"(exports) {
     "use strict";
     var maxDistance = 3;
-    function editDistance(a3, b3) {
-      if (Math.abs(a3.length - b3.length) > maxDistance)
-        return Math.max(a3.length, b3.length);
+    function editDistance(a, b) {
+      if (Math.abs(a.length - b.length) > maxDistance)
+        return Math.max(a.length, b.length);
       const d2 = [];
-      for (let i = 0; i <= a3.length; i++) {
+      for (let i = 0; i <= a.length; i++) {
         d2[i] = [i];
       }
-      for (let j3 = 0; j3 <= b3.length; j3++) {
-        d2[0][j3] = j3;
+      for (let j2 = 0; j2 <= b.length; j2++) {
+        d2[0][j2] = j2;
       }
-      for (let j3 = 1; j3 <= b3.length; j3++) {
-        for (let i = 1; i <= a3.length; i++) {
+      for (let j2 = 1; j2 <= b.length; j2++) {
+        for (let i = 1; i <= a.length; i++) {
           let cost = 1;
-          if (a3[i - 1] === b3[j3 - 1]) {
+          if (a[i - 1] === b[j2 - 1]) {
             cost = 0;
           } else {
             cost = 1;
           }
-          d2[i][j3] = Math.min(
-            d2[i - 1][j3] + 1,
+          d2[i][j2] = Math.min(
+            d2[i - 1][j2] + 1,
             // deletion
-            d2[i][j3 - 1] + 1,
+            d2[i][j2 - 1] + 1,
             // insertion
-            d2[i - 1][j3 - 1] + cost
+            d2[i - 1][j2 - 1] + cost
             // substitution
           );
-          if (i > 1 && j3 > 1 && a3[i - 1] === b3[j3 - 2] && a3[i - 2] === b3[j3 - 1]) {
-            d2[i][j3] = Math.min(d2[i][j3], d2[i - 2][j3 - 2] + 1);
+          if (i > 1 && j2 > 1 && a[i - 1] === b[j2 - 2] && a[i - 2] === b[j2 - 1]) {
+            d2[i][j2] = Math.min(d2[i][j2], d2[i - 2][j2 - 2] + 1);
           }
         }
       }
-      return d2[a3.length][b3.length];
+      return d2[a.length][b.length];
     }
     function suggestSimilar(word, candidates) {
       if (!candidates || candidates.length === 0) return "";
@@ -948,7 +1178,7 @@ var require_suggestSimilar = __commonJS({
           }
         }
       });
-      similar.sort((a3, b3) => a3.localeCompare(b3));
+      similar.sort((a, b) => a.localeCompare(b));
       if (searchingOptions) {
         similar = similar.map((candidate) => `--${candidate}`);
       }
@@ -966,9 +1196,9 @@ var require_suggestSimilar = __commonJS({
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/command.js
+// node_modules/commander/lib/command.js
 var require_command = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/lib/command.js"(exports) {
+  "node_modules/commander/lib/command.js"(exports) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var childProcess = __require("child_process");
@@ -977,7 +1207,7 @@ var require_command = __commonJS({
     var process2 = __require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
-    var { Help: Help2 } = require_help();
+    var { Help: Help2, stripColor } = require_help();
     var { Option: Option2, DualOptions } = require_option();
     var { suggestSimilar } = require_suggestSimilar();
     var Command2 = class _Command extends EventEmitter {
@@ -992,7 +1222,7 @@ var require_command = __commonJS({
         this.options = [];
         this.parent = null;
         this._allowUnknownOption = false;
-        this._allowExcessArguments = true;
+        this._allowExcessArguments = false;
         this.registeredArguments = [];
         this._args = this.registeredArguments;
         this.args = [];
@@ -1019,18 +1249,25 @@ var require_command = __commonJS({
         this._lifeCycleHooks = {};
         this._showHelpAfterError = false;
         this._showSuggestionAfterError = true;
+        this._savedState = null;
         this._outputConfiguration = {
           writeOut: (str) => process2.stdout.write(str),
           writeErr: (str) => process2.stderr.write(str),
+          outputError: (str, write) => write(str),
           getOutHelpWidth: () => process2.stdout.isTTY ? process2.stdout.columns : void 0,
           getErrHelpWidth: () => process2.stderr.isTTY ? process2.stderr.columns : void 0,
-          outputError: (str, write) => write(str)
+          getOutHasColors: () => useColor() ?? (process2.stdout.isTTY && process2.stdout.hasColors?.()),
+          getErrHasColors: () => useColor() ?? (process2.stderr.isTTY && process2.stderr.hasColors?.()),
+          stripColor: (str) => stripColor(str)
         };
         this._hidden = false;
         this._helpOption = void 0;
         this._addImplicitHelpCommand = void 0;
         this._helpCommand = void 0;
         this._helpConfiguration = {};
+        this._helpGroupHeading = void 0;
+        this._defaultCommandGroup = void 0;
+        this._defaultOptionGroup = void 0;
       }
       /**
        * Copy settings that are useful to have in common across root command and subcommands.
@@ -1152,21 +1389,28 @@ var require_command = __commonJS({
        *
        * The configuration properties are all functions:
        *
-       *     // functions to change where being written, stdout and stderr
+       *     // change how output being written, defaults to stdout and stderr
        *     writeOut(str)
        *     writeErr(str)
-       *     // matching functions to specify width for wrapping help
+       *     // change how output being written for errors, defaults to writeErr
+       *     outputError(str, write) // used for displaying errors and not used for displaying help
+       *     // specify width for wrapping help
        *     getOutHelpWidth()
        *     getErrHelpWidth()
-       *     // functions based on what is being written out
-       *     outputError(str, write) // used for displaying errors, and not used for displaying help
+       *     // color support, currently only used with Help
+       *     getOutHasColors()
+       *     getErrHasColors()
+       *     stripColor() // used to remove ANSI escape codes if output does not have colors
        *
        * @param {object} [configuration] - configuration options
        * @return {(Command | object)} `this` command for chaining, or stored configuration
        */
       configureOutput(configuration) {
         if (configuration === void 0) return this._outputConfiguration;
-        Object.assign(this._outputConfiguration, configuration);
+        this._outputConfiguration = {
+          ...this._outputConfiguration,
+          ...configuration
+        };
         return this;
       }
       /**
@@ -1237,16 +1481,16 @@ var require_command = __commonJS({
        *
        * @param {string} name
        * @param {string} [description]
-       * @param {(Function|*)} [fn] - custom argument processing function
+       * @param {(Function|*)} [parseArg] - custom argument processing function or default value
        * @param {*} [defaultValue]
        * @return {Command} `this` command for chaining
        */
-      argument(name, description, fn, defaultValue) {
+      argument(name, description, parseArg, defaultValue) {
         const argument = this.createArgument(name, description);
-        if (typeof fn === "function") {
-          argument.default(defaultValue).argParser(fn);
+        if (typeof parseArg === "function") {
+          argument.default(defaultValue).argParser(parseArg);
         } else {
-          argument.default(fn);
+          argument.default(parseArg);
         }
         this.addArgument(argument);
         return this;
@@ -1276,7 +1520,7 @@ var require_command = __commonJS({
        */
       addArgument(argument) {
         const previousArgument = this.registeredArguments.slice(-1)[0];
-        if (previousArgument && previousArgument.variadic) {
+        if (previousArgument?.variadic) {
           throw new Error(
             `only the last argument can be variadic '${previousArgument.name()}'`
           );
@@ -1305,10 +1549,13 @@ var require_command = __commonJS({
       helpCommand(enableOrNameAndArgs, description) {
         if (typeof enableOrNameAndArgs === "boolean") {
           this._addImplicitHelpCommand = enableOrNameAndArgs;
+          if (enableOrNameAndArgs && this._defaultCommandGroup) {
+            this._initCommandGroup(this._getHelpCommand());
+          }
           return this;
         }
-        enableOrNameAndArgs = enableOrNameAndArgs ?? "help [command]";
-        const [, helpName, helpArgs] = enableOrNameAndArgs.match(/([^ ]+) *(.*)/);
+        const nameAndArgs = enableOrNameAndArgs ?? "help [command]";
+        const [, helpName, helpArgs] = nameAndArgs.match(/([^ ]+) *(.*)/);
         const helpDescription = description ?? "display help for command";
         const helpCommand = this.createCommand(helpName);
         helpCommand.helpOption(false);
@@ -1316,6 +1563,7 @@ var require_command = __commonJS({
         if (helpDescription) helpCommand.description(helpDescription);
         this._addImplicitHelpCommand = true;
         this._helpCommand = helpCommand;
+        if (enableOrNameAndArgs || description) this._initCommandGroup(helpCommand);
         return this;
       }
       /**
@@ -1332,6 +1580,7 @@ var require_command = __commonJS({
         }
         this._addImplicitHelpCommand = true;
         this._helpCommand = helpCommand;
+        this._initCommandGroup(helpCommand);
         return this;
       }
       /**
@@ -1480,6 +1729,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error(`Cannot add option '${option.flags}'${this._name && ` to command '${this._name}'`} due to conflicting flag '${matchingFlag}'
 -  already used by option '${matchingOption.flags}'`);
         }
+        this._initOptionGroup(option);
         this.options.push(option);
       }
       /**
@@ -1503,6 +1753,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             `cannot add command '${newCmd}' as already have command '${existingCmd}'`
           );
         }
+        this._initCommandGroup(command);
         this.commands.push(command);
       }
       /**
@@ -1535,7 +1786,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           if (val !== null && option.parseArg) {
             val = this._callParseArg(option, val, oldValue, invalidValueMessage);
           } else if (val !== null && option.variadic) {
-            val = option._concatValue(val, oldValue);
+            val = option._collectValue(val, oldValue);
           }
           if (val == null) {
             if (option.negate) {
@@ -1579,8 +1830,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
         } else if (fn instanceof RegExp) {
           const regex = fn;
           fn = (val, def) => {
-            const m2 = regex.exec(val);
-            return m2 ? m2[0] : def;
+            const m = regex.exec(val);
+            return m ? m[0] : def;
           };
           option.default(defaultValue).argParser(fn);
         } else {
@@ -1599,7 +1850,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @example
        * program
        *     .option('-p, --pepper', 'add pepper')
-       *     .option('-p, --pizza-type <TYPE>', 'type of pizza') // required option-argument
+       *     .option('--pt, --pizza-type <TYPE>', 'type of pizza') // required option-argument
        *     .option('-c, --cheese [CHEESE]', 'add extra cheese', 'mozzarella') // optional option-argument with default
        *     .option('-t, --tip <VALUE>', 'add tip to purchase cost', parseFloat) // custom parse function
        *
@@ -1866,6 +2117,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command} `this` command for chaining
        */
       parse(argv, parseOptions) {
+        this._prepareForParse();
         const userArgs = this._prepareUserArgs(argv, parseOptions);
         this._parseCommand([], userArgs);
         return this;
@@ -1891,9 +2143,67 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Promise}
        */
       async parseAsync(argv, parseOptions) {
+        this._prepareForParse();
         const userArgs = this._prepareUserArgs(argv, parseOptions);
         await this._parseCommand([], userArgs);
         return this;
+      }
+      _prepareForParse() {
+        if (this._savedState === null) {
+          this.saveStateBeforeParse();
+        } else {
+          this.restoreStateBeforeParse();
+        }
+      }
+      /**
+       * Called the first time parse is called to save state and allow a restore before subsequent calls to parse.
+       * Not usually called directly, but available for subclasses to save their custom state.
+       *
+       * This is called in a lazy way. Only commands used in parsing chain will have state saved.
+       */
+      saveStateBeforeParse() {
+        this._savedState = {
+          // name is stable if supplied by author, but may be unspecified for root command and deduced during parsing
+          _name: this._name,
+          // option values before parse have default values (including false for negated options)
+          // shallow clones
+          _optionValues: { ...this._optionValues },
+          _optionValueSources: { ...this._optionValueSources }
+        };
+      }
+      /**
+       * Restore state before parse for calls after the first.
+       * Not usually called directly, but available for subclasses to save their custom state.
+       *
+       * This is called in a lazy way. Only commands used in parsing chain will have state restored.
+       */
+      restoreStateBeforeParse() {
+        if (this._storeOptionsAsProperties)
+          throw new Error(`Can not call parse again when storeOptionsAsProperties is true.
+- either make a new Command for each call to parse, or stop storing options as properties`);
+        this._name = this._savedState._name;
+        this._scriptPath = null;
+        this.rawArgs = [];
+        this._optionValues = { ...this._savedState._optionValues };
+        this._optionValueSources = { ...this._savedState._optionValueSources };
+        this.args = [];
+        this.processedArgs = [];
+      }
+      /**
+       * Throw if expected executable is missing. Add lots of help for author.
+       *
+       * @param {string} executableFile
+       * @param {string} executableDir
+       * @param {string} subcommandName
+       */
+      _checkForMissingExecutable(executableFile, executableDir, subcommandName) {
+        if (fs7.existsSync(executableFile)) return;
+        const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
+        const executableMissing = `'${executableFile}' does not exist
+ - if '${subcommandName}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
+ - if the default executable name is not suitable, use the executableFile option to supply a custom name or path
+ - ${executableDirMessage}`;
+        throw new Error(executableMissing);
       }
       /**
        * Execute a sub-command executable.
@@ -1922,7 +2232,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           let resolvedScriptPath;
           try {
             resolvedScriptPath = fs7.realpathSync(this._scriptPath);
-          } catch (err) {
+          } catch {
             resolvedScriptPath = this._scriptPath;
           }
           executableDir = path7.resolve(
@@ -1957,6 +2267,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
             proc = childProcess.spawn(executableFile, args, { stdio: "inherit" });
           }
         } else {
+          this._checkForMissingExecutable(
+            executableFile,
+            executableDir,
+            subcommand._name
+          );
           args.unshift(executableFile);
           args = incrementNodeInspectorPort(process2.execArgv).concat(args);
           proc = childProcess.spawn(process2.execPath, args, { stdio: "inherit" });
@@ -1988,12 +2303,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         });
         proc.on("error", (err) => {
           if (err.code === "ENOENT") {
-            const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
-            const executableMissing = `'${executableFile}' does not exist
- - if '${subcommand._name}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
- - if the default executable name is not suitable, use the executableFile option to supply a custom name or path
- - ${executableDirMessage}`;
-            throw new Error(executableMissing);
+            this._checkForMissingExecutable(
+              executableFile,
+              executableDir,
+              subcommand._name
+            );
           } else if (err.code === "EACCES") {
             throw new Error(`'${executableFile}' not executable`);
           }
@@ -2017,6 +2331,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       _dispatchSubcommand(commandName, operands, unknown) {
         const subCommand = this._findCommand(commandName);
         if (!subCommand) this.help({ error: true });
+        subCommand._prepareForParse();
         let promiseChain;
         promiseChain = this._chainOrCallSubCommandHook(
           promiseChain,
@@ -2097,8 +2412,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
             if (index < this.args.length) {
               value = this.args.slice(index);
               if (declaredArg.parseArg) {
-                value = value.reduce((processed, v3) => {
-                  return myParseArg(declaredArg, v3, processed);
+                value = value.reduce((processed, v) => {
+                  return myParseArg(declaredArg, v, processed);
                 }, declaredArg.defaultValue);
               }
             } else if (value === void 0) {
@@ -2123,7 +2438,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @private
        */
       _chainOrCall(promise, fn) {
-        if (promise && promise.then && typeof promise.then === "function") {
+        if (promise?.then && typeof promise.then === "function") {
           return promise.then(() => fn());
         }
         return fn();
@@ -2228,7 +2543,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           promiseChain = this._chainOrCallHooks(promiseChain, "postAction");
           return promiseChain;
         }
-        if (this.parent && this.parent.listenerCount(commandEvent)) {
+        if (this.parent?.listenerCount(commandEvent)) {
           checkForUnknownOptions();
           this._processArguments();
           this.parent.emit(commandEvent, operands, unknown);
@@ -2329,6 +2644,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * Parse options from `argv` removing known options,
        * and return argv split into operands and unknown arguments.
        *
+       * Side effects: modifies command by storing options. Does not reset state if called again.
+       *
        * Examples:
        *
        *     argv => operands, unknown
@@ -2337,26 +2654,34 @@ Expecting one of '${allowedValues.join("', '")}'`);
        *     sub --unknown uuu op => [sub], [--unknown uuu op]
        *     sub -- --unknown uuu op => [sub --unknown uuu op], []
        *
-       * @param {string[]} argv
+       * @param {string[]} args
        * @return {{operands: string[], unknown: string[]}}
        */
-      parseOptions(argv) {
+      parseOptions(args) {
         const operands = [];
         const unknown = [];
         let dest = operands;
-        const args = argv.slice();
         function maybeOption(arg) {
           return arg.length > 1 && arg[0] === "-";
         }
+        const negativeNumberArg = (arg) => {
+          if (!/^-(\d+|\d*\.\d+)(e[+-]?\d+)?$/.test(arg)) return false;
+          return !this._getCommandAndAncestors().some(
+            (cmd) => cmd.options.map((opt) => opt.short).some((short) => /^-\d$/.test(short))
+          );
+        };
         let activeVariadicOption = null;
-        while (args.length) {
-          const arg = args.shift();
+        let activeGroup = null;
+        let i = 0;
+        while (i < args.length || activeGroup) {
+          const arg = activeGroup ?? args[i++];
+          activeGroup = null;
           if (arg === "--") {
             if (dest === unknown) dest.push(arg);
-            dest.push(...args);
+            dest.push(...args.slice(i));
             break;
           }
-          if (activeVariadicOption && !maybeOption(arg)) {
+          if (activeVariadicOption && (!maybeOption(arg) || negativeNumberArg(arg))) {
             this.emit(`option:${activeVariadicOption.name()}`, arg);
             continue;
           }
@@ -2365,13 +2690,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
             const option = this._findOption(arg);
             if (option) {
               if (option.required) {
-                const value = args.shift();
+                const value = args[i++];
                 if (value === void 0) this.optionMissingArgument(option);
                 this.emit(`option:${option.name()}`, value);
               } else if (option.optional) {
                 let value = null;
-                if (args.length > 0 && !maybeOption(args[0])) {
-                  value = args.shift();
+                if (i < args.length && (!maybeOption(args[i]) || negativeNumberArg(args[i]))) {
+                  value = args[i++];
                 }
                 this.emit(`option:${option.name()}`, value);
               } else {
@@ -2388,7 +2713,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
                 this.emit(`option:${option.name()}`, arg.slice(2));
               } else {
                 this.emit(`option:${option.name()}`);
-                args.unshift(`-${arg.slice(2)}`);
+                activeGroup = `-${arg.slice(2)}`;
               }
               continue;
             }
@@ -2401,27 +2726,24 @@ Expecting one of '${allowedValues.join("', '")}'`);
               continue;
             }
           }
-          if (maybeOption(arg)) {
+          if (dest === operands && maybeOption(arg) && !(this.commands.length === 0 && negativeNumberArg(arg))) {
             dest = unknown;
           }
           if ((this._enablePositionalOptions || this._passThroughOptions) && operands.length === 0 && unknown.length === 0) {
             if (this._findCommand(arg)) {
               operands.push(arg);
-              if (args.length > 0) unknown.push(...args);
+              unknown.push(...args.slice(i));
               break;
             } else if (this._getHelpCommand() && arg === this._getHelpCommand().name()) {
-              operands.push(arg);
-              if (args.length > 0) operands.push(...args);
+              operands.push(arg, ...args.slice(i));
               break;
             } else if (this._defaultCommandName) {
-              unknown.push(arg);
-              if (args.length > 0) unknown.push(...args);
+              unknown.push(arg, ...args.slice(i));
               break;
             }
           }
           if (this._passThroughOptions) {
-            dest.push(arg);
-            if (args.length > 0) dest.push(...args);
+            dest.push(arg, ...args.slice(i));
             break;
           }
           dest.push(arg);
@@ -2774,6 +3096,69 @@ Expecting one of '${allowedValues.join("', '")}'`);
         return this;
       }
       /**
+       * Set/get the help group heading for this subcommand in parent command's help.
+       *
+       * @param {string} [heading]
+       * @return {Command | string}
+       */
+      helpGroup(heading) {
+        if (heading === void 0) return this._helpGroupHeading ?? "";
+        this._helpGroupHeading = heading;
+        return this;
+      }
+      /**
+       * Set/get the default help group heading for subcommands added to this command.
+       * (This does not override a group set directly on the subcommand using .helpGroup().)
+       *
+       * @example
+       * program.commandsGroup('Development Commands:);
+       * program.command('watch')...
+       * program.command('lint')...
+       * ...
+       *
+       * @param {string} [heading]
+       * @returns {Command | string}
+       */
+      commandsGroup(heading) {
+        if (heading === void 0) return this._defaultCommandGroup ?? "";
+        this._defaultCommandGroup = heading;
+        return this;
+      }
+      /**
+       * Set/get the default help group heading for options added to this command.
+       * (This does not override a group set directly on the option using .helpGroup().)
+       *
+       * @example
+       * program
+       *   .optionsGroup('Development Options:')
+       *   .option('-d, --debug', 'output extra debugging')
+       *   .option('-p, --profile', 'output profiling information')
+       *
+       * @param {string} [heading]
+       * @returns {Command | string}
+       */
+      optionsGroup(heading) {
+        if (heading === void 0) return this._defaultOptionGroup ?? "";
+        this._defaultOptionGroup = heading;
+        return this;
+      }
+      /**
+       * @param {Option} option
+       * @private
+       */
+      _initOptionGroup(option) {
+        if (this._defaultOptionGroup && !option.helpGroupHeading)
+          option.helpGroup(this._defaultOptionGroup);
+      }
+      /**
+       * @param {Command} cmd
+       * @private
+       */
+      _initCommandGroup(cmd) {
+        if (this._defaultCommandGroup && !cmd.helpGroup())
+          cmd.helpGroup(this._defaultCommandGroup);
+      }
+      /**
        * Set the name of the command from script filename, such as process.argv[1],
        * or require.main.filename, or __filename.
        *
@@ -2813,26 +3198,47 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       helpInformation(contextOptions) {
         const helper = this.createHelp();
-        if (helper.helpWidth === void 0) {
-          helper.helpWidth = contextOptions && contextOptions.error ? this._outputConfiguration.getErrHelpWidth() : this._outputConfiguration.getOutHelpWidth();
-        }
-        return helper.formatHelp(this, helper);
+        const context = this._getOutputContext(contextOptions);
+        helper.prepareContext({
+          error: context.error,
+          helpWidth: context.helpWidth,
+          outputHasColors: context.hasColors
+        });
+        const text = helper.formatHelp(this, helper);
+        if (context.hasColors) return text;
+        return this._outputConfiguration.stripColor(text);
       }
       /**
+       * @typedef HelpContext
+       * @type {object}
+       * @property {boolean} error
+       * @property {number} helpWidth
+       * @property {boolean} hasColors
+       * @property {function} write - includes stripColor if needed
+       *
+       * @returns {HelpContext}
        * @private
        */
-      _getHelpContext(contextOptions) {
+      _getOutputContext(contextOptions) {
         contextOptions = contextOptions || {};
-        const context = { error: !!contextOptions.error };
-        let write;
-        if (context.error) {
-          write = (arg) => this._outputConfiguration.writeErr(arg);
+        const error = !!contextOptions.error;
+        let baseWrite;
+        let hasColors;
+        let helpWidth;
+        if (error) {
+          baseWrite = (str) => this._outputConfiguration.writeErr(str);
+          hasColors = this._outputConfiguration.getErrHasColors();
+          helpWidth = this._outputConfiguration.getErrHelpWidth();
         } else {
-          write = (arg) => this._outputConfiguration.writeOut(arg);
+          baseWrite = (str) => this._outputConfiguration.writeOut(str);
+          hasColors = this._outputConfiguration.getOutHasColors();
+          helpWidth = this._outputConfiguration.getOutHelpWidth();
         }
-        context.write = contextOptions.write || write;
-        context.command = this;
-        return context;
+        const write = (str) => {
+          if (!hasColors) str = this._outputConfiguration.stripColor(str);
+          return baseWrite(str);
+        };
+        return { error, write, hasColors, helpWidth };
       }
       /**
        * Output help information for this command.
@@ -2847,23 +3253,28 @@ Expecting one of '${allowedValues.join("', '")}'`);
           deprecatedCallback = contextOptions;
           contextOptions = void 0;
         }
-        const context = this._getHelpContext(contextOptions);
-        this._getCommandAndAncestors().reverse().forEach((command) => command.emit("beforeAllHelp", context));
-        this.emit("beforeHelp", context);
-        let helpInformation = this.helpInformation(context);
+        const outputContext = this._getOutputContext(contextOptions);
+        const eventContext = {
+          error: outputContext.error,
+          write: outputContext.write,
+          command: this
+        };
+        this._getCommandAndAncestors().reverse().forEach((command) => command.emit("beforeAllHelp", eventContext));
+        this.emit("beforeHelp", eventContext);
+        let helpInformation = this.helpInformation({ error: outputContext.error });
         if (deprecatedCallback) {
           helpInformation = deprecatedCallback(helpInformation);
           if (typeof helpInformation !== "string" && !Buffer.isBuffer(helpInformation)) {
             throw new Error("outputHelp callback must return a string or a Buffer");
           }
         }
-        context.write(helpInformation);
+        outputContext.write(helpInformation);
         if (this._getHelpOption()?.long) {
           this.emit(this._getHelpOption().long);
         }
-        this.emit("afterHelp", context);
+        this.emit("afterHelp", eventContext);
         this._getCommandAndAncestors().forEach(
-          (command) => command.emit("afterAllHelp", context)
+          (command) => command.emit("afterAllHelp", eventContext)
         );
       }
       /**
@@ -2881,15 +3292,20 @@ Expecting one of '${allowedValues.join("', '")}'`);
       helpOption(flags, description) {
         if (typeof flags === "boolean") {
           if (flags) {
-            this._helpOption = this._helpOption ?? void 0;
+            if (this._helpOption === null) this._helpOption = void 0;
+            if (this._defaultOptionGroup) {
+              this._initOptionGroup(this._getHelpOption());
+            }
           } else {
             this._helpOption = null;
           }
           return this;
         }
-        flags = flags ?? "-h, --help";
-        description = description ?? "display help for command";
-        this._helpOption = this.createOption(flags, description);
+        this._helpOption = this.createOption(
+          flags ?? "-h, --help",
+          description ?? "display help for command"
+        );
+        if (flags || description) this._initOptionGroup(this._helpOption);
         return this;
       }
       /**
@@ -2914,6 +3330,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       addHelpOption(option) {
         this._helpOption = option;
+        this._initOptionGroup(option);
         return this;
       }
       /**
@@ -2925,12 +3342,20 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       help(contextOptions) {
         this.outputHelp(contextOptions);
-        let exitCode = process2.exitCode || 0;
+        let exitCode = Number(process2.exitCode ?? 0);
         if (exitCode === 0 && contextOptions && typeof contextOptions !== "function" && contextOptions.error) {
           exitCode = 1;
         }
         this._exit(exitCode, "commander.help", "(outputHelp)");
       }
+      /**
+       * // Do a little typing to coordinate emit and listener for the help text events.
+       * @typedef HelpTextEventContext
+       * @type {object}
+       * @property {boolean} error
+       * @property {Command} command
+       * @property {function} write
+       */
       /**
        * Add additional text to be displayed with the built-in help.
        *
@@ -3006,13 +3431,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         return arg;
       });
     }
+    function useColor() {
+      if (process2.env.NO_COLOR || process2.env.FORCE_COLOR === "0" || process2.env.FORCE_COLOR === "false")
+        return false;
+      if (process2.env.FORCE_COLOR || process2.env.CLICOLOR_FORCE !== void 0)
+        return true;
+      return void 0;
+    }
     exports.Command = Command2;
+    exports.useColor = useColor;
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/index.js
+// node_modules/commander/index.js
 var require_commander = __commonJS({
-  "node_modules/.pnpm/commander@12.1.0/node_modules/commander/index.js"(exports) {
+  "node_modules/commander/index.js"(exports) {
     "use strict";
     var { Argument: Argument2 } = require_argument();
     var { Command: Command2 } = require_command();
@@ -3033,9 +3466,9 @@ var require_commander = __commonJS({
   }
 });
 
-// node_modules/.pnpm/picocolors@1.1.1/node_modules/picocolors/picocolors.js
+// node_modules/picocolors/picocolors.js
 var require_picocolors = __commonJS({
-  "node_modules/.pnpm/picocolors@1.1.1/node_modules/picocolors/picocolors.js"(exports, module) {
+  "node_modules/picocolors/picocolors.js"(exports, module) {
     "use strict";
     var p = process || {};
     var argv = p.argv || [];
@@ -3055,50 +3488,50 @@ var require_picocolors = __commonJS({
       return result + string.substring(cursor);
     };
     var createColors = (enabled = isColorSupported) => {
-      let f2 = enabled ? formatter : () => String;
+      let f = enabled ? formatter : () => String;
       return {
         isColorSupported: enabled,
-        reset: f2("\x1B[0m", "\x1B[0m"),
-        bold: f2("\x1B[1m", "\x1B[22m", "\x1B[22m\x1B[1m"),
-        dim: f2("\x1B[2m", "\x1B[22m", "\x1B[22m\x1B[2m"),
-        italic: f2("\x1B[3m", "\x1B[23m"),
-        underline: f2("\x1B[4m", "\x1B[24m"),
-        inverse: f2("\x1B[7m", "\x1B[27m"),
-        hidden: f2("\x1B[8m", "\x1B[28m"),
-        strikethrough: f2("\x1B[9m", "\x1B[29m"),
-        black: f2("\x1B[30m", "\x1B[39m"),
-        red: f2("\x1B[31m", "\x1B[39m"),
-        green: f2("\x1B[32m", "\x1B[39m"),
-        yellow: f2("\x1B[33m", "\x1B[39m"),
-        blue: f2("\x1B[34m", "\x1B[39m"),
-        magenta: f2("\x1B[35m", "\x1B[39m"),
-        cyan: f2("\x1B[36m", "\x1B[39m"),
-        white: f2("\x1B[37m", "\x1B[39m"),
-        gray: f2("\x1B[90m", "\x1B[39m"),
-        bgBlack: f2("\x1B[40m", "\x1B[49m"),
-        bgRed: f2("\x1B[41m", "\x1B[49m"),
-        bgGreen: f2("\x1B[42m", "\x1B[49m"),
-        bgYellow: f2("\x1B[43m", "\x1B[49m"),
-        bgBlue: f2("\x1B[44m", "\x1B[49m"),
-        bgMagenta: f2("\x1B[45m", "\x1B[49m"),
-        bgCyan: f2("\x1B[46m", "\x1B[49m"),
-        bgWhite: f2("\x1B[47m", "\x1B[49m"),
-        blackBright: f2("\x1B[90m", "\x1B[39m"),
-        redBright: f2("\x1B[91m", "\x1B[39m"),
-        greenBright: f2("\x1B[92m", "\x1B[39m"),
-        yellowBright: f2("\x1B[93m", "\x1B[39m"),
-        blueBright: f2("\x1B[94m", "\x1B[39m"),
-        magentaBright: f2("\x1B[95m", "\x1B[39m"),
-        cyanBright: f2("\x1B[96m", "\x1B[39m"),
-        whiteBright: f2("\x1B[97m", "\x1B[39m"),
-        bgBlackBright: f2("\x1B[100m", "\x1B[49m"),
-        bgRedBright: f2("\x1B[101m", "\x1B[49m"),
-        bgGreenBright: f2("\x1B[102m", "\x1B[49m"),
-        bgYellowBright: f2("\x1B[103m", "\x1B[49m"),
-        bgBlueBright: f2("\x1B[104m", "\x1B[49m"),
-        bgMagentaBright: f2("\x1B[105m", "\x1B[49m"),
-        bgCyanBright: f2("\x1B[106m", "\x1B[49m"),
-        bgWhiteBright: f2("\x1B[107m", "\x1B[49m")
+        reset: f("\x1B[0m", "\x1B[0m"),
+        bold: f("\x1B[1m", "\x1B[22m", "\x1B[22m\x1B[1m"),
+        dim: f("\x1B[2m", "\x1B[22m", "\x1B[22m\x1B[2m"),
+        italic: f("\x1B[3m", "\x1B[23m"),
+        underline: f("\x1B[4m", "\x1B[24m"),
+        inverse: f("\x1B[7m", "\x1B[27m"),
+        hidden: f("\x1B[8m", "\x1B[28m"),
+        strikethrough: f("\x1B[9m", "\x1B[29m"),
+        black: f("\x1B[30m", "\x1B[39m"),
+        red: f("\x1B[31m", "\x1B[39m"),
+        green: f("\x1B[32m", "\x1B[39m"),
+        yellow: f("\x1B[33m", "\x1B[39m"),
+        blue: f("\x1B[34m", "\x1B[39m"),
+        magenta: f("\x1B[35m", "\x1B[39m"),
+        cyan: f("\x1B[36m", "\x1B[39m"),
+        white: f("\x1B[37m", "\x1B[39m"),
+        gray: f("\x1B[90m", "\x1B[39m"),
+        bgBlack: f("\x1B[40m", "\x1B[49m"),
+        bgRed: f("\x1B[41m", "\x1B[49m"),
+        bgGreen: f("\x1B[42m", "\x1B[49m"),
+        bgYellow: f("\x1B[43m", "\x1B[49m"),
+        bgBlue: f("\x1B[44m", "\x1B[49m"),
+        bgMagenta: f("\x1B[45m", "\x1B[49m"),
+        bgCyan: f("\x1B[46m", "\x1B[49m"),
+        bgWhite: f("\x1B[47m", "\x1B[49m"),
+        blackBright: f("\x1B[90m", "\x1B[39m"),
+        redBright: f("\x1B[91m", "\x1B[39m"),
+        greenBright: f("\x1B[92m", "\x1B[39m"),
+        yellowBright: f("\x1B[93m", "\x1B[39m"),
+        blueBright: f("\x1B[94m", "\x1B[39m"),
+        magentaBright: f("\x1B[95m", "\x1B[39m"),
+        cyanBright: f("\x1B[96m", "\x1B[39m"),
+        whiteBright: f("\x1B[97m", "\x1B[39m"),
+        bgBlackBright: f("\x1B[100m", "\x1B[49m"),
+        bgRedBright: f("\x1B[101m", "\x1B[49m"),
+        bgGreenBright: f("\x1B[102m", "\x1B[49m"),
+        bgYellowBright: f("\x1B[103m", "\x1B[49m"),
+        bgBlueBright: f("\x1B[104m", "\x1B[49m"),
+        bgMagentaBright: f("\x1B[105m", "\x1B[49m"),
+        bgCyanBright: f("\x1B[106m", "\x1B[49m"),
+        bgWhiteBright: f("\x1B[107m", "\x1B[49m")
       };
     };
     module.exports = createColors();
@@ -3106,24 +3539,24 @@ var require_picocolors = __commonJS({
   }
 });
 
-// node_modules/.pnpm/sisteransi@1.0.5/node_modules/sisteransi/src/index.js
+// node_modules/sisteransi/src/index.js
 var require_src = __commonJS({
-  "node_modules/.pnpm/sisteransi@1.0.5/node_modules/sisteransi/src/index.js"(exports, module) {
+  "node_modules/sisteransi/src/index.js"(exports, module) {
     "use strict";
     var ESC = "\x1B";
     var CSI = `${ESC}[`;
     var beep = "\x07";
     var cursor = {
-      to(x2, y3) {
-        if (!y3) return `${CSI}${x2 + 1}G`;
-        return `${CSI}${y3 + 1};${x2 + 1}H`;
+      to(x3, y2) {
+        if (!y2) return `${CSI}${x3 + 1}G`;
+        return `${CSI}${y2 + 1};${x3 + 1}H`;
       },
-      move(x2, y3) {
+      move(x3, y2) {
         let ret = "";
-        if (x2 < 0) ret += `${CSI}${-x2}D`;
-        else if (x2 > 0) ret += `${CSI}${x2}C`;
-        if (y3 < 0) ret += `${CSI}${-y3}A`;
-        else if (y3 > 0) ret += `${CSI}${y3}B`;
+        if (x3 < 0) ret += `${CSI}${-x3}D`;
+        else if (x3 > 0) ret += `${CSI}${x3}C`;
+        if (y2 < 0) ret += `${CSI}${-y2}A`;
+        else if (y2 > 0) ret += `${CSI}${y2}B`;
         return ret;
       },
       up: (count = 1) => `${CSI}${count}A`,
@@ -3162,7 +3595,7 @@ var require_src = __commonJS({
   }
 });
 
-// node_modules/.pnpm/commander@12.1.0/node_modules/commander/esm.mjs
+// node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
 var {
   program,
@@ -3185,7 +3618,7 @@ var import_picocolors16 = __toESM(require_picocolors(), 1);
 // src/constants.ts
 var VERSION = "1.0.1";
 var APP_IMAGE = "ghcr.io/learnhouse/app:latest";
-var COLLAB_IMAGE = "ghcr.io/learnhouse/collab:latest";
+var DEV_IMAGE = "ghcr.io/learnhouse/app:dev";
 var POSTGRES_IMAGE = "postgres:16-alpine";
 var POSTGRES_AI_IMAGE = "pgvector/pgvector:pg16";
 var HEALTH_CHECK_TIMEOUT_MS = 18e4;
@@ -3207,7 +3640,7 @@ var ICON = [
   "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
   "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588"
 ];
-var ICON_W = Math.max(...ICON.map((l2) => l2.length));
+var ICON_W = Math.max(...ICON.map((l) => l.length));
 function center(s, width) {
   const pad = Math.max(0, width - s.length);
   return " ".repeat(Math.floor(pad / 2)) + s;
@@ -3258,9 +3691,9 @@ async function printBanner() {
 var import_picocolors2 = __toESM(require_picocolors(), 1);
 var NPM_REGISTRY_URL = "https://registry.npmjs.org/learnhouse";
 var GHCR_BASE = "ghcr.io/learnhouse/app";
-function compareVersions(a3, b3) {
-  const pa = a3.split(".").map(Number);
-  const pb = b3.split(".").map(Number);
+function compareVersions(a, b) {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
   for (let i = 0; i < 3; i++) {
     if ((pa[i] || 0) > (pb[i] || 0)) return 1;
     if ((pa[i] || 0) < (pb[i] || 0)) return -1;
@@ -3286,7 +3719,10 @@ async function checkForUpdates() {
   } catch {
   }
 }
-async function resolveAppImage() {
+async function resolveAppImage(channel = "stable") {
+  if (channel === "dev") {
+    return { image: DEV_IMAGE, isLatest: false };
+  }
   const versionedTag = `${GHCR_BASE}:${VERSION}`;
   try {
     const tokenResp = await fetch(
@@ -3318,330 +3754,483 @@ import crypto3 from "crypto";
 import fs2 from "fs";
 import path2 from "path";
 
-// node_modules/.pnpm/@clack+core@0.3.5/node_modules/@clack/core/dist/index.mjs
-var import_sisteransi = __toESM(require_src(), 1);
+// node_modules/@clack/core/dist/index.mjs
 var import_picocolors3 = __toESM(require_picocolors(), 1);
-import { stdin as $, stdout as k } from "process";
-import * as f from "readline";
-import _ from "readline";
-import { WriteStream as U } from "tty";
-function q({ onlyFirst: e2 = false } = {}) {
-  const F = ["[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?(?:\\u0007|\\u001B\\u005C|\\u009C))", "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))"].join("|");
-  return new RegExp(F, e2 ? void 0 : "g");
+var import_sisteransi = __toESM(require_src(), 1);
+import { stdout as R, stdin as q } from "process";
+import * as k from "readline";
+import ot from "readline";
+import { ReadStream as J } from "tty";
+function B(t, e2, s) {
+  if (!s.some((u) => !u.disabled)) return t;
+  const i = t + e2, r = Math.max(s.length - 1, 0), n = i < 0 ? r : i > r ? 0 : i;
+  return s[n].disabled ? B(n, e2 < 0 ? -1 : 1, s) : n;
 }
-var J = q();
-function S(e2) {
-  if (typeof e2 != "string") throw new TypeError(`Expected a \`string\`, got \`${typeof e2}\``);
-  return e2.replace(J, "");
-}
-function T(e2) {
-  return e2 && e2.__esModule && Object.prototype.hasOwnProperty.call(e2, "default") ? e2.default : e2;
-}
-var j = { exports: {} };
-(function(e2) {
-  var u2 = {};
-  e2.exports = u2, u2.eastAsianWidth = function(t) {
-    var s = t.charCodeAt(0), C2 = t.length == 2 ? t.charCodeAt(1) : 0, D = s;
-    return 55296 <= s && s <= 56319 && 56320 <= C2 && C2 <= 57343 && (s &= 1023, C2 &= 1023, D = s << 10 | C2, D += 65536), D == 12288 || 65281 <= D && D <= 65376 || 65504 <= D && D <= 65510 ? "F" : D == 8361 || 65377 <= D && D <= 65470 || 65474 <= D && D <= 65479 || 65482 <= D && D <= 65487 || 65490 <= D && D <= 65495 || 65498 <= D && D <= 65500 || 65512 <= D && D <= 65518 ? "H" : 4352 <= D && D <= 4447 || 4515 <= D && D <= 4519 || 4602 <= D && D <= 4607 || 9001 <= D && D <= 9002 || 11904 <= D && D <= 11929 || 11931 <= D && D <= 12019 || 12032 <= D && D <= 12245 || 12272 <= D && D <= 12283 || 12289 <= D && D <= 12350 || 12353 <= D && D <= 12438 || 12441 <= D && D <= 12543 || 12549 <= D && D <= 12589 || 12593 <= D && D <= 12686 || 12688 <= D && D <= 12730 || 12736 <= D && D <= 12771 || 12784 <= D && D <= 12830 || 12832 <= D && D <= 12871 || 12880 <= D && D <= 13054 || 13056 <= D && D <= 19903 || 19968 <= D && D <= 42124 || 42128 <= D && D <= 42182 || 43360 <= D && D <= 43388 || 44032 <= D && D <= 55203 || 55216 <= D && D <= 55238 || 55243 <= D && D <= 55291 || 63744 <= D && D <= 64255 || 65040 <= D && D <= 65049 || 65072 <= D && D <= 65106 || 65108 <= D && D <= 65126 || 65128 <= D && D <= 65131 || 110592 <= D && D <= 110593 || 127488 <= D && D <= 127490 || 127504 <= D && D <= 127546 || 127552 <= D && D <= 127560 || 127568 <= D && D <= 127569 || 131072 <= D && D <= 194367 || 177984 <= D && D <= 196605 || 196608 <= D && D <= 262141 ? "W" : 32 <= D && D <= 126 || 162 <= D && D <= 163 || 165 <= D && D <= 166 || D == 172 || D == 175 || 10214 <= D && D <= 10221 || 10629 <= D && D <= 10630 ? "Na" : D == 161 || D == 164 || 167 <= D && D <= 168 || D == 170 || 173 <= D && D <= 174 || 176 <= D && D <= 180 || 182 <= D && D <= 186 || 188 <= D && D <= 191 || D == 198 || D == 208 || 215 <= D && D <= 216 || 222 <= D && D <= 225 || D == 230 || 232 <= D && D <= 234 || 236 <= D && D <= 237 || D == 240 || 242 <= D && D <= 243 || 247 <= D && D <= 250 || D == 252 || D == 254 || D == 257 || D == 273 || D == 275 || D == 283 || 294 <= D && D <= 295 || D == 299 || 305 <= D && D <= 307 || D == 312 || 319 <= D && D <= 322 || D == 324 || 328 <= D && D <= 331 || D == 333 || 338 <= D && D <= 339 || 358 <= D && D <= 359 || D == 363 || D == 462 || D == 464 || D == 466 || D == 468 || D == 470 || D == 472 || D == 474 || D == 476 || D == 593 || D == 609 || D == 708 || D == 711 || 713 <= D && D <= 715 || D == 717 || D == 720 || 728 <= D && D <= 731 || D == 733 || D == 735 || 768 <= D && D <= 879 || 913 <= D && D <= 929 || 931 <= D && D <= 937 || 945 <= D && D <= 961 || 963 <= D && D <= 969 || D == 1025 || 1040 <= D && D <= 1103 || D == 1105 || D == 8208 || 8211 <= D && D <= 8214 || 8216 <= D && D <= 8217 || 8220 <= D && D <= 8221 || 8224 <= D && D <= 8226 || 8228 <= D && D <= 8231 || D == 8240 || 8242 <= D && D <= 8243 || D == 8245 || D == 8251 || D == 8254 || D == 8308 || D == 8319 || 8321 <= D && D <= 8324 || D == 8364 || D == 8451 || D == 8453 || D == 8457 || D == 8467 || D == 8470 || 8481 <= D && D <= 8482 || D == 8486 || D == 8491 || 8531 <= D && D <= 8532 || 8539 <= D && D <= 8542 || 8544 <= D && D <= 8555 || 8560 <= D && D <= 8569 || D == 8585 || 8592 <= D && D <= 8601 || 8632 <= D && D <= 8633 || D == 8658 || D == 8660 || D == 8679 || D == 8704 || 8706 <= D && D <= 8707 || 8711 <= D && D <= 8712 || D == 8715 || D == 8719 || D == 8721 || D == 8725 || D == 8730 || 8733 <= D && D <= 8736 || D == 8739 || D == 8741 || 8743 <= D && D <= 8748 || D == 8750 || 8756 <= D && D <= 8759 || 8764 <= D && D <= 8765 || D == 8776 || D == 8780 || D == 8786 || 8800 <= D && D <= 8801 || 8804 <= D && D <= 8807 || 8810 <= D && D <= 8811 || 8814 <= D && D <= 8815 || 8834 <= D && D <= 8835 || 8838 <= D && D <= 8839 || D == 8853 || D == 8857 || D == 8869 || D == 8895 || D == 8978 || 9312 <= D && D <= 9449 || 9451 <= D && D <= 9547 || 9552 <= D && D <= 9587 || 9600 <= D && D <= 9615 || 9618 <= D && D <= 9621 || 9632 <= D && D <= 9633 || 9635 <= D && D <= 9641 || 9650 <= D && D <= 9651 || 9654 <= D && D <= 9655 || 9660 <= D && D <= 9661 || 9664 <= D && D <= 9665 || 9670 <= D && D <= 9672 || D == 9675 || 9678 <= D && D <= 9681 || 9698 <= D && D <= 9701 || D == 9711 || 9733 <= D && D <= 9734 || D == 9737 || 9742 <= D && D <= 9743 || 9748 <= D && D <= 9749 || D == 9756 || D == 9758 || D == 9792 || D == 9794 || 9824 <= D && D <= 9825 || 9827 <= D && D <= 9829 || 9831 <= D && D <= 9834 || 9836 <= D && D <= 9837 || D == 9839 || 9886 <= D && D <= 9887 || 9918 <= D && D <= 9919 || 9924 <= D && D <= 9933 || 9935 <= D && D <= 9953 || D == 9955 || 9960 <= D && D <= 9983 || D == 10045 || D == 10071 || 10102 <= D && D <= 10111 || 11093 <= D && D <= 11097 || 12872 <= D && D <= 12879 || 57344 <= D && D <= 63743 || 65024 <= D && D <= 65039 || D == 65533 || 127232 <= D && D <= 127242 || 127248 <= D && D <= 127277 || 127280 <= D && D <= 127337 || 127344 <= D && D <= 127386 || 917760 <= D && D <= 917999 || 983040 <= D && D <= 1048573 || 1048576 <= D && D <= 1114109 ? "A" : "N";
-  }, u2.characterLength = function(t) {
-    var s = this.eastAsianWidth(t);
-    return s == "F" || s == "W" || s == "A" ? 2 : 1;
-  };
-  function F(t) {
-    return t.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\uD800-\uDFFF]/g) || [];
-  }
-  u2.length = function(t) {
-    for (var s = F(t), C2 = 0, D = 0; D < s.length; D++) C2 = C2 + this.characterLength(s[D]);
-    return C2;
-  }, u2.slice = function(t, s, C2) {
-    textLen = u2.length(t), s = s || 0, C2 = C2 || 1, s < 0 && (s = textLen + s), C2 < 0 && (C2 = textLen + C2);
-    for (var D = "", i = 0, n = F(t), E2 = 0; E2 < n.length; E2++) {
-      var h2 = n[E2], o = u2.length(h2);
-      if (i >= s - (o == 2 ? 1 : 0)) if (i + o <= C2) D += h2;
-      else break;
-      i += o;
+var at = (t) => t === 161 || t === 164 || t === 167 || t === 168 || t === 170 || t === 173 || t === 174 || t >= 176 && t <= 180 || t >= 182 && t <= 186 || t >= 188 && t <= 191 || t === 198 || t === 208 || t === 215 || t === 216 || t >= 222 && t <= 225 || t === 230 || t >= 232 && t <= 234 || t === 236 || t === 237 || t === 240 || t === 242 || t === 243 || t >= 247 && t <= 250 || t === 252 || t === 254 || t === 257 || t === 273 || t === 275 || t === 283 || t === 294 || t === 295 || t === 299 || t >= 305 && t <= 307 || t === 312 || t >= 319 && t <= 322 || t === 324 || t >= 328 && t <= 331 || t === 333 || t === 338 || t === 339 || t === 358 || t === 359 || t === 363 || t === 462 || t === 464 || t === 466 || t === 468 || t === 470 || t === 472 || t === 474 || t === 476 || t === 593 || t === 609 || t === 708 || t === 711 || t >= 713 && t <= 715 || t === 717 || t === 720 || t >= 728 && t <= 731 || t === 733 || t === 735 || t >= 768 && t <= 879 || t >= 913 && t <= 929 || t >= 931 && t <= 937 || t >= 945 && t <= 961 || t >= 963 && t <= 969 || t === 1025 || t >= 1040 && t <= 1103 || t === 1105 || t === 8208 || t >= 8211 && t <= 8214 || t === 8216 || t === 8217 || t === 8220 || t === 8221 || t >= 8224 && t <= 8226 || t >= 8228 && t <= 8231 || t === 8240 || t === 8242 || t === 8243 || t === 8245 || t === 8251 || t === 8254 || t === 8308 || t === 8319 || t >= 8321 && t <= 8324 || t === 8364 || t === 8451 || t === 8453 || t === 8457 || t === 8467 || t === 8470 || t === 8481 || t === 8482 || t === 8486 || t === 8491 || t === 8531 || t === 8532 || t >= 8539 && t <= 8542 || t >= 8544 && t <= 8555 || t >= 8560 && t <= 8569 || t === 8585 || t >= 8592 && t <= 8601 || t === 8632 || t === 8633 || t === 8658 || t === 8660 || t === 8679 || t === 8704 || t === 8706 || t === 8707 || t === 8711 || t === 8712 || t === 8715 || t === 8719 || t === 8721 || t === 8725 || t === 8730 || t >= 8733 && t <= 8736 || t === 8739 || t === 8741 || t >= 8743 && t <= 8748 || t === 8750 || t >= 8756 && t <= 8759 || t === 8764 || t === 8765 || t === 8776 || t === 8780 || t === 8786 || t === 8800 || t === 8801 || t >= 8804 && t <= 8807 || t === 8810 || t === 8811 || t === 8814 || t === 8815 || t === 8834 || t === 8835 || t === 8838 || t === 8839 || t === 8853 || t === 8857 || t === 8869 || t === 8895 || t === 8978 || t >= 9312 && t <= 9449 || t >= 9451 && t <= 9547 || t >= 9552 && t <= 9587 || t >= 9600 && t <= 9615 || t >= 9618 && t <= 9621 || t === 9632 || t === 9633 || t >= 9635 && t <= 9641 || t === 9650 || t === 9651 || t === 9654 || t === 9655 || t === 9660 || t === 9661 || t === 9664 || t === 9665 || t >= 9670 && t <= 9672 || t === 9675 || t >= 9678 && t <= 9681 || t >= 9698 && t <= 9701 || t === 9711 || t === 9733 || t === 9734 || t === 9737 || t === 9742 || t === 9743 || t === 9756 || t === 9758 || t === 9792 || t === 9794 || t === 9824 || t === 9825 || t >= 9827 && t <= 9829 || t >= 9831 && t <= 9834 || t === 9836 || t === 9837 || t === 9839 || t === 9886 || t === 9887 || t === 9919 || t >= 9926 && t <= 9933 || t >= 9935 && t <= 9939 || t >= 9941 && t <= 9953 || t === 9955 || t === 9960 || t === 9961 || t >= 9963 && t <= 9969 || t === 9972 || t >= 9974 && t <= 9977 || t === 9979 || t === 9980 || t === 9982 || t === 9983 || t === 10045 || t >= 10102 && t <= 10111 || t >= 11094 && t <= 11097 || t >= 12872 && t <= 12879 || t >= 57344 && t <= 63743 || t >= 65024 && t <= 65039 || t === 65533 || t >= 127232 && t <= 127242 || t >= 127248 && t <= 127277 || t >= 127280 && t <= 127337 || t >= 127344 && t <= 127373 || t === 127375 || t === 127376 || t >= 127387 && t <= 127404 || t >= 917760 && t <= 917999 || t >= 983040 && t <= 1048573 || t >= 1048576 && t <= 1114109;
+var lt = (t) => t === 12288 || t >= 65281 && t <= 65376 || t >= 65504 && t <= 65510;
+var ht = (t) => t >= 4352 && t <= 4447 || t === 8986 || t === 8987 || t === 9001 || t === 9002 || t >= 9193 && t <= 9196 || t === 9200 || t === 9203 || t === 9725 || t === 9726 || t === 9748 || t === 9749 || t >= 9800 && t <= 9811 || t === 9855 || t === 9875 || t === 9889 || t === 9898 || t === 9899 || t === 9917 || t === 9918 || t === 9924 || t === 9925 || t === 9934 || t === 9940 || t === 9962 || t === 9970 || t === 9971 || t === 9973 || t === 9978 || t === 9981 || t === 9989 || t === 9994 || t === 9995 || t === 10024 || t === 10060 || t === 10062 || t >= 10067 && t <= 10069 || t === 10071 || t >= 10133 && t <= 10135 || t === 10160 || t === 10175 || t === 11035 || t === 11036 || t === 11088 || t === 11093 || t >= 11904 && t <= 11929 || t >= 11931 && t <= 12019 || t >= 12032 && t <= 12245 || t >= 12272 && t <= 12287 || t >= 12289 && t <= 12350 || t >= 12353 && t <= 12438 || t >= 12441 && t <= 12543 || t >= 12549 && t <= 12591 || t >= 12593 && t <= 12686 || t >= 12688 && t <= 12771 || t >= 12783 && t <= 12830 || t >= 12832 && t <= 12871 || t >= 12880 && t <= 19903 || t >= 19968 && t <= 42124 || t >= 42128 && t <= 42182 || t >= 43360 && t <= 43388 || t >= 44032 && t <= 55203 || t >= 63744 && t <= 64255 || t >= 65040 && t <= 65049 || t >= 65072 && t <= 65106 || t >= 65108 && t <= 65126 || t >= 65128 && t <= 65131 || t >= 94176 && t <= 94180 || t === 94192 || t === 94193 || t >= 94208 && t <= 100343 || t >= 100352 && t <= 101589 || t >= 101632 && t <= 101640 || t >= 110576 && t <= 110579 || t >= 110581 && t <= 110587 || t === 110589 || t === 110590 || t >= 110592 && t <= 110882 || t === 110898 || t >= 110928 && t <= 110930 || t === 110933 || t >= 110948 && t <= 110951 || t >= 110960 && t <= 111355 || t === 126980 || t === 127183 || t === 127374 || t >= 127377 && t <= 127386 || t >= 127488 && t <= 127490 || t >= 127504 && t <= 127547 || t >= 127552 && t <= 127560 || t === 127568 || t === 127569 || t >= 127584 && t <= 127589 || t >= 127744 && t <= 127776 || t >= 127789 && t <= 127797 || t >= 127799 && t <= 127868 || t >= 127870 && t <= 127891 || t >= 127904 && t <= 127946 || t >= 127951 && t <= 127955 || t >= 127968 && t <= 127984 || t === 127988 || t >= 127992 && t <= 128062 || t === 128064 || t >= 128066 && t <= 128252 || t >= 128255 && t <= 128317 || t >= 128331 && t <= 128334 || t >= 128336 && t <= 128359 || t === 128378 || t === 128405 || t === 128406 || t === 128420 || t >= 128507 && t <= 128591 || t >= 128640 && t <= 128709 || t === 128716 || t >= 128720 && t <= 128722 || t >= 128725 && t <= 128727 || t >= 128732 && t <= 128735 || t === 128747 || t === 128748 || t >= 128756 && t <= 128764 || t >= 128992 && t <= 129003 || t === 129008 || t >= 129292 && t <= 129338 || t >= 129340 && t <= 129349 || t >= 129351 && t <= 129535 || t >= 129648 && t <= 129660 || t >= 129664 && t <= 129672 || t >= 129680 && t <= 129725 || t >= 129727 && t <= 129733 || t >= 129742 && t <= 129755 || t >= 129760 && t <= 129768 || t >= 129776 && t <= 129784 || t >= 131072 && t <= 196605 || t >= 196608 && t <= 262141;
+var O = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/y;
+var y = /[\x00-\x08\x0A-\x1F\x7F-\x9F]{1,1000}/y;
+var L = /\t{1,1000}/y;
+var P = new RegExp("[\\u{1F1E6}-\\u{1F1FF}]{2}|\\u{1F3F4}[\\u{E0061}-\\u{E007A}]{2}[\\u{E0030}-\\u{E0039}\\u{E0061}-\\u{E007A}]{1,3}\\u{E007F}|(?:\\p{Emoji}\\uFE0F\\u20E3?|\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation})(?:\\u200D(?:\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation}|\\p{Emoji}\\uFE0F\\u20E3?))*", "yu");
+var M = /(?:[\x20-\x7E\xA0-\xFF](?!\uFE0F)){1,1000}/y;
+var ct = new RegExp("\\p{M}+", "gu");
+var ft = { limit: 1 / 0, ellipsis: "" };
+var X = (t, e2 = {}, s = {}) => {
+  const i = e2.limit ?? 1 / 0, r = e2.ellipsis ?? "", n = e2?.ellipsisWidth ?? (r ? X(r, ft, s).width : 0), u = s.ansiWidth ?? 0, a = s.controlWidth ?? 0, l = s.tabWidth ?? 8, E = s.ambiguousWidth ?? 1, g = s.emojiWidth ?? 2, m = s.fullWidthWidth ?? 2, A = s.regularWidth ?? 1, V2 = s.wideWidth ?? 2;
+  let h = 0, o = 0, p = t.length, v = 0, F = false, d2 = p, b = Math.max(0, i - n), C2 = 0, w = 0, c = 0, f = 0;
+  t: for (; ; ) {
+    if (w > C2 || o >= p && o > h) {
+      const ut2 = t.slice(C2, w) || t.slice(h, o);
+      v = 0;
+      for (const Y of ut2.replaceAll(ct, "")) {
+        const $ = Y.codePointAt(0) || 0;
+        if (lt($) ? f = m : ht($) ? f = V2 : E !== A && at($) ? f = E : f = A, c + f > b && (d2 = Math.min(d2, Math.max(C2, h) + v)), c + f > i) {
+          F = true;
+          break t;
+        }
+        v += Y.length, c += f;
+      }
+      C2 = w = 0;
     }
-    return D;
-  };
-})(j);
-var Q = j.exports;
-var X = T(Q);
-var DD = function() {
-  return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67)\uDB40\uDC7F|(?:\uD83E\uDDD1\uD83C\uDFFF\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFC-\uDFFF])|\uD83D\uDC68(?:\uD83C\uDFFB(?:\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFF]))|\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|[\u2695\u2696\u2708]\uFE0F|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))?|(?:\uD83C[\uDFFC-\uDFFF])\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFF]))|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])\uFE0F|\u200D(?:(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|\uD83D[\uDC66\uDC67])|\uD83C\uDFFF|\uD83C\uDFFE|\uD83C\uDFFD|\uD83C\uDFFC)?|(?:\uD83D\uDC69(?:\uD83C\uDFFB\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|(?:\uD83C[\uDFFC-\uDFFF])\u200D\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69]))|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC69(?:\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83E\uDDD1(?:\u200D(?:\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|\uD83D\uDE36\u200D\uD83C\uDF2B|\uD83C\uDFF3\uFE0F\u200D\u26A7|\uD83D\uDC3B\u200D\u2744|(?:(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC70\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD35\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD4\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uFE0F|\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\uD83C\uDFF4\u200D\u2620|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC70\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD35\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD4\uDDD6-\uDDDD])\u200D[\u2640\u2642]|[\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u2328\u23CF\u23ED-\u23EF\u23F1\u23F2\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB\u25FC\u2600-\u2604\u260E\u2611\u2618\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u2692\u2694-\u2697\u2699\u269B\u269C\u26A0\u26A7\u26B0\u26B1\u26C8\u26CF\u26D1\u26D3\u26E9\u26F0\u26F1\u26F4\u26F7\u26F8\u2702\u2708\u2709\u270F\u2712\u2714\u2716\u271D\u2721\u2733\u2734\u2744\u2747\u2763\u27A1\u2934\u2935\u2B05-\u2B07\u3030\u303D\u3297\u3299]|\uD83C[\uDD70\uDD71\uDD7E\uDD7F\uDE02\uDE37\uDF21\uDF24-\uDF2C\uDF36\uDF7D\uDF96\uDF97\uDF99-\uDF9B\uDF9E\uDF9F\uDFCD\uDFCE\uDFD4-\uDFDF\uDFF5\uDFF7]|\uD83D[\uDC3F\uDCFD\uDD49\uDD4A\uDD6F\uDD70\uDD73\uDD76-\uDD79\uDD87\uDD8A-\uDD8D\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA\uDECB\uDECD-\uDECF\uDEE0-\uDEE5\uDEE9\uDEF0\uDEF3])\uFE0F|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDE35\u200D\uD83D\uDCAB|\uD83D\uDE2E\u200D\uD83D\uDCA8|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83E\uDDD1(?:\uD83C\uDFFF|\uD83C\uDFFE|\uD83C\uDFFD|\uD83C\uDFFC|\uD83C\uDFFB)?|\uD83D\uDC69(?:\uD83C\uDFFF|\uD83C\uDFFE|\uD83C\uDFFD|\uD83C\uDFFC|\uD83C\uDFFB)?|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF6\uD83C\uDDE6|\uD83C\uDDF4\uD83C\uDDF2|\uD83D\uDC08\u200D\u2B1B|\u2764\uFE0F\u200D(?:\uD83D\uDD25|\uD83E\uDE79)|\uD83D\uDC41\uFE0F|\uD83C\uDFF3\uFE0F|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|[#\*0-9]\uFE0F\u20E3|\u2764\uFE0F|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC70\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD35\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD4\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uFE0F|\uD83C[\uDFFB-\uDFFF])|\uD83C\uDFF4|(?:[\u270A\u270B]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDC8F\uDC91\uDCAA\uDD7A\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0C\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD34\uDD36\uDD77\uDDB5\uDDB6\uDDBB\uDDD2\uDDD3\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270C\u270D]|\uD83D[\uDD74\uDD90])(?:\uFE0F|\uD83C[\uDFFB-\uDFFF])|[\u270A\u270B]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC08\uDC15\uDC3B\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDC8F\uDC91\uDCAA\uDD7A\uDD95\uDD96\uDE2E\uDE35\uDE36\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0C\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD34\uDD36\uDD77\uDDB5\uDDB6\uDDBB\uDDD2\uDDD3\uDDD5]|\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC70\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD35\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD4\uDDD6-\uDDDD]|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF]|[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF84\uDF86-\uDF93\uDFA0-\uDFC1\uDFC5\uDFC6\uDFC8\uDFC9\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC07\uDC09-\uDC14\uDC16-\uDC3A\uDC3C-\uDC3E\uDC40\uDC44\uDC45\uDC51-\uDC65\uDC6A\uDC79-\uDC7B\uDC7D-\uDC80\uDC84\uDC88-\uDC8E\uDC90\uDC92-\uDCA9\uDCAB-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDDA4\uDDFB-\uDE2D\uDE2F-\uDE34\uDE37-\uDE44\uDE48-\uDE4A\uDE80-\uDEA2\uDEA4-\uDEB3\uDEB7-\uDEBF\uDEC1-\uDEC5\uDED0-\uDED2\uDED5-\uDED7\uDEEB\uDEEC\uDEF4-\uDEFC\uDFE0-\uDFEB]|\uD83E[\uDD0D\uDD0E\uDD10-\uDD17\uDD1D\uDD20-\uDD25\uDD27-\uDD2F\uDD3A\uDD3F-\uDD45\uDD47-\uDD76\uDD78\uDD7A-\uDDB4\uDDB7\uDDBA\uDDBC-\uDDCB\uDDD0\uDDE0-\uDDFF\uDE70-\uDE74\uDE78-\uDE7A\uDE80-\uDE86\uDE90-\uDEA8\uDEB0-\uDEB6\uDEC0-\uDEC2\uDED0-\uDED6]|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5-\uDED7\uDEEB\uDEEC\uDEF4-\uDEFC\uDFE0-\uDFEB]|\uD83E[\uDD0C-\uDD3A\uDD3C-\uDD45\uDD47-\uDD78\uDD7A-\uDDCB\uDDCD-\uDDFF\uDE70-\uDE74\uDE78-\uDE7A\uDE80-\uDE86\uDE90-\uDEA8\uDEB0-\uDEB6\uDEC0-\uDEC2\uDED0-\uDED6])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26A7\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5-\uDED7\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFC\uDFE0-\uDFEB]|\uD83E[\uDD0C-\uDD3A\uDD3C-\uDD45\uDD47-\uDD78\uDD7A-\uDDCB\uDDCD-\uDDFF\uDE70-\uDE74\uDE78-\uDE7A\uDE80-\uDE86\uDE90-\uDEA8\uDEB0-\uDEB6\uDEC0-\uDEC2\uDED0-\uDED6])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0C\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDD77\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
-};
-var uD = T(DD);
-function A(e2, u2 = {}) {
-  if (typeof e2 != "string" || e2.length === 0 || (u2 = { ambiguousIsNarrow: true, ...u2 }, e2 = S(e2), e2.length === 0)) return 0;
-  e2 = e2.replace(uD(), "  ");
-  const F = u2.ambiguousIsNarrow ? 1 : 2;
-  let t = 0;
-  for (const s of e2) {
-    const C2 = s.codePointAt(0);
-    if (C2 <= 31 || C2 >= 127 && C2 <= 159 || C2 >= 768 && C2 <= 879) continue;
-    switch (X.eastAsianWidth(s)) {
-      case "F":
-      case "W":
-        t += 2;
+    if (o >= p) break;
+    if (M.lastIndex = o, M.test(t)) {
+      if (v = M.lastIndex - o, f = v * A, c + f > b && (d2 = Math.min(d2, o + Math.floor((b - c) / A))), c + f > i) {
+        F = true;
         break;
-      case "A":
-        t += F;
-        break;
-      default:
-        t += 1;
-    }
-  }
-  return t;
-}
-var d = 10;
-var M = (e2 = 0) => (u2) => `\x1B[${u2 + e2}m`;
-var P = (e2 = 0) => (u2) => `\x1B[${38 + e2};5;${u2}m`;
-var W = (e2 = 0) => (u2, F, t) => `\x1B[${38 + e2};2;${u2};${F};${t}m`;
-var r = { modifier: { reset: [0, 0], bold: [1, 22], dim: [2, 22], italic: [3, 23], underline: [4, 24], overline: [53, 55], inverse: [7, 27], hidden: [8, 28], strikethrough: [9, 29] }, color: { black: [30, 39], red: [31, 39], green: [32, 39], yellow: [33, 39], blue: [34, 39], magenta: [35, 39], cyan: [36, 39], white: [37, 39], blackBright: [90, 39], gray: [90, 39], grey: [90, 39], redBright: [91, 39], greenBright: [92, 39], yellowBright: [93, 39], blueBright: [94, 39], magentaBright: [95, 39], cyanBright: [96, 39], whiteBright: [97, 39] }, bgColor: { bgBlack: [40, 49], bgRed: [41, 49], bgGreen: [42, 49], bgYellow: [43, 49], bgBlue: [44, 49], bgMagenta: [45, 49], bgCyan: [46, 49], bgWhite: [47, 49], bgBlackBright: [100, 49], bgGray: [100, 49], bgGrey: [100, 49], bgRedBright: [101, 49], bgGreenBright: [102, 49], bgYellowBright: [103, 49], bgBlueBright: [104, 49], bgMagentaBright: [105, 49], bgCyanBright: [106, 49], bgWhiteBright: [107, 49] } };
-Object.keys(r.modifier);
-var FD = Object.keys(r.color);
-var eD = Object.keys(r.bgColor);
-[...FD, ...eD];
-function tD() {
-  const e2 = /* @__PURE__ */ new Map();
-  for (const [u2, F] of Object.entries(r)) {
-    for (const [t, s] of Object.entries(F)) r[t] = { open: `\x1B[${s[0]}m`, close: `\x1B[${s[1]}m` }, F[t] = r[t], e2.set(s[0], s[1]);
-    Object.defineProperty(r, u2, { value: F, enumerable: false });
-  }
-  return Object.defineProperty(r, "codes", { value: e2, enumerable: false }), r.color.close = "\x1B[39m", r.bgColor.close = "\x1B[49m", r.color.ansi = M(), r.color.ansi256 = P(), r.color.ansi16m = W(), r.bgColor.ansi = M(d), r.bgColor.ansi256 = P(d), r.bgColor.ansi16m = W(d), Object.defineProperties(r, { rgbToAnsi256: { value: (u2, F, t) => u2 === F && F === t ? u2 < 8 ? 16 : u2 > 248 ? 231 : Math.round((u2 - 8) / 247 * 24) + 232 : 16 + 36 * Math.round(u2 / 255 * 5) + 6 * Math.round(F / 255 * 5) + Math.round(t / 255 * 5), enumerable: false }, hexToRgb: { value: (u2) => {
-    const F = /[a-f\d]{6}|[a-f\d]{3}/i.exec(u2.toString(16));
-    if (!F) return [0, 0, 0];
-    let [t] = F;
-    t.length === 3 && (t = [...t].map((C2) => C2 + C2).join(""));
-    const s = Number.parseInt(t, 16);
-    return [s >> 16 & 255, s >> 8 & 255, s & 255];
-  }, enumerable: false }, hexToAnsi256: { value: (u2) => r.rgbToAnsi256(...r.hexToRgb(u2)), enumerable: false }, ansi256ToAnsi: { value: (u2) => {
-    if (u2 < 8) return 30 + u2;
-    if (u2 < 16) return 90 + (u2 - 8);
-    let F, t, s;
-    if (u2 >= 232) F = ((u2 - 232) * 10 + 8) / 255, t = F, s = F;
-    else {
-      u2 -= 16;
-      const i = u2 % 36;
-      F = Math.floor(u2 / 36) / 5, t = Math.floor(i / 6) / 5, s = i % 6 / 5;
-    }
-    const C2 = Math.max(F, t, s) * 2;
-    if (C2 === 0) return 30;
-    let D = 30 + (Math.round(s) << 2 | Math.round(t) << 1 | Math.round(F));
-    return C2 === 2 && (D += 60), D;
-  }, enumerable: false }, rgbToAnsi: { value: (u2, F, t) => r.ansi256ToAnsi(r.rgbToAnsi256(u2, F, t)), enumerable: false }, hexToAnsi: { value: (u2) => r.ansi256ToAnsi(r.hexToAnsi256(u2)), enumerable: false } }), r;
-}
-var sD = tD();
-var g = /* @__PURE__ */ new Set(["\x1B", "\x9B"]);
-var CD = 39;
-var b = "\x07";
-var O = "[";
-var iD = "]";
-var I = "m";
-var w = `${iD}8;;`;
-var N = (e2) => `${g.values().next().value}${O}${e2}${I}`;
-var L = (e2) => `${g.values().next().value}${w}${e2}${b}`;
-var rD = (e2) => e2.split(" ").map((u2) => A(u2));
-var y = (e2, u2, F) => {
-  const t = [...u2];
-  let s = false, C2 = false, D = A(S(e2[e2.length - 1]));
-  for (const [i, n] of t.entries()) {
-    const E2 = A(n);
-    if (D + E2 <= F ? e2[e2.length - 1] += n : (e2.push(n), D = 0), g.has(n) && (s = true, C2 = t.slice(i + 1).join("").startsWith(w)), s) {
-      C2 ? n === b && (s = false, C2 = false) : n === I && (s = false);
+      }
+      c += f, C2 = h, w = o, o = h = M.lastIndex;
       continue;
     }
-    D += E2, D === F && i < t.length - 1 && (e2.push(""), D = 0);
-  }
-  !D && e2[e2.length - 1].length > 0 && e2.length > 1 && (e2[e2.length - 2] += e2.pop());
-};
-var ED = (e2) => {
-  const u2 = e2.split(" ");
-  let F = u2.length;
-  for (; F > 0 && !(A(u2[F - 1]) > 0); ) F--;
-  return F === u2.length ? e2 : u2.slice(0, F).join(" ") + u2.slice(F).join("");
-};
-var oD = (e2, u2, F = {}) => {
-  if (F.trim !== false && e2.trim() === "") return "";
-  let t = "", s, C2;
-  const D = rD(e2);
-  let i = [""];
-  for (const [E2, h2] of e2.split(" ").entries()) {
-    F.trim !== false && (i[i.length - 1] = i[i.length - 1].trimStart());
-    let o = A(i[i.length - 1]);
-    if (E2 !== 0 && (o >= u2 && (F.wordWrap === false || F.trim === false) && (i.push(""), o = 0), (o > 0 || F.trim === false) && (i[i.length - 1] += " ", o++)), F.hard && D[E2] > u2) {
-      const B2 = u2 - o, p = 1 + Math.floor((D[E2] - B2 - 1) / u2);
-      Math.floor((D[E2] - 1) / u2) < p && i.push(""), y(i, h2, u2);
+    if (O.lastIndex = o, O.test(t)) {
+      if (c + u > b && (d2 = Math.min(d2, o)), c + u > i) {
+        F = true;
+        break;
+      }
+      c += u, C2 = h, w = o, o = h = O.lastIndex;
       continue;
     }
-    if (o + D[E2] > u2 && o > 0 && D[E2] > 0) {
-      if (F.wordWrap === false && o < u2) {
-        y(i, h2, u2);
+    if (y.lastIndex = o, y.test(t)) {
+      if (v = y.lastIndex - o, f = v * a, c + f > b && (d2 = Math.min(d2, o + Math.floor((b - c) / a))), c + f > i) {
+        F = true;
+        break;
+      }
+      c += f, C2 = h, w = o, o = h = y.lastIndex;
+      continue;
+    }
+    if (L.lastIndex = o, L.test(t)) {
+      if (v = L.lastIndex - o, f = v * l, c + f > b && (d2 = Math.min(d2, o + Math.floor((b - c) / l))), c + f > i) {
+        F = true;
+        break;
+      }
+      c += f, C2 = h, w = o, o = h = L.lastIndex;
+      continue;
+    }
+    if (P.lastIndex = o, P.test(t)) {
+      if (c + g > b && (d2 = Math.min(d2, o)), c + g > i) {
+        F = true;
+        break;
+      }
+      c += g, C2 = h, w = o, o = h = P.lastIndex;
+      continue;
+    }
+    o += 1;
+  }
+  return { width: F ? b : c, index: F ? d2 : p, truncated: F, ellipsed: F && i >= n };
+};
+var pt = { limit: 1 / 0, ellipsis: "", ellipsisWidth: 0 };
+var S = (t, e2 = {}) => X(t, pt, e2).width;
+var W = "\x1B";
+var Z = "\x9B";
+var Ft = 39;
+var j = "\x07";
+var Q = "[";
+var dt = "]";
+var tt = "m";
+var U = `${dt}8;;`;
+var et = new RegExp(`(?:\\${Q}(?<code>\\d+)m|\\${U}(?<uri>.*)${j})`, "y");
+var mt = (t) => {
+  if (t >= 30 && t <= 37 || t >= 90 && t <= 97) return 39;
+  if (t >= 40 && t <= 47 || t >= 100 && t <= 107) return 49;
+  if (t === 1 || t === 2) return 22;
+  if (t === 3) return 23;
+  if (t === 4) return 24;
+  if (t === 7) return 27;
+  if (t === 8) return 28;
+  if (t === 9) return 29;
+  if (t === 0) return 0;
+};
+var st = (t) => `${W}${Q}${t}${tt}`;
+var it = (t) => `${W}${U}${t}${j}`;
+var gt = (t) => t.map((e2) => S(e2));
+var G = (t, e2, s) => {
+  const i = e2[Symbol.iterator]();
+  let r = false, n = false, u = t.at(-1), a = u === void 0 ? 0 : S(u), l = i.next(), E = i.next(), g = 0;
+  for (; !l.done; ) {
+    const m = l.value, A = S(m);
+    a + A <= s ? t[t.length - 1] += m : (t.push(m), a = 0), (m === W || m === Z) && (r = true, n = e2.startsWith(U, g + 1)), r ? n ? m === j && (r = false, n = false) : m === tt && (r = false) : (a += A, a === s && !E.done && (t.push(""), a = 0)), l = E, E = i.next(), g += m.length;
+  }
+  u = t.at(-1), !a && u !== void 0 && u.length > 0 && t.length > 1 && (t[t.length - 2] += t.pop());
+};
+var vt = (t) => {
+  const e2 = t.split(" ");
+  let s = e2.length;
+  for (; s > 0 && !(S(e2[s - 1]) > 0); ) s--;
+  return s === e2.length ? t : e2.slice(0, s).join(" ") + e2.slice(s).join("");
+};
+var Et = (t, e2, s = {}) => {
+  if (s.trim !== false && t.trim() === "") return "";
+  let i = "", r, n;
+  const u = t.split(" "), a = gt(u);
+  let l = [""];
+  for (const [h, o] of u.entries()) {
+    s.trim !== false && (l[l.length - 1] = (l.at(-1) ?? "").trimStart());
+    let p = S(l.at(-1) ?? "");
+    if (h !== 0 && (p >= e2 && (s.wordWrap === false || s.trim === false) && (l.push(""), p = 0), (p > 0 || s.trim === false) && (l[l.length - 1] += " ", p++)), s.hard && a[h] > e2) {
+      const v = e2 - p, F = 1 + Math.floor((a[h] - v - 1) / e2);
+      Math.floor((a[h] - 1) / e2) < F && l.push(""), G(l, o, e2);
+      continue;
+    }
+    if (p + a[h] > e2 && p > 0 && a[h] > 0) {
+      if (s.wordWrap === false && p < e2) {
+        G(l, o, e2);
         continue;
       }
-      i.push("");
+      l.push("");
     }
-    if (o + D[E2] > u2 && F.wordWrap === false) {
-      y(i, h2, u2);
+    if (p + a[h] > e2 && s.wordWrap === false) {
+      G(l, o, e2);
       continue;
     }
-    i[i.length - 1] += h2;
+    l[l.length - 1] += o;
   }
-  F.trim !== false && (i = i.map((E2) => ED(E2)));
-  const n = [...i.join(`
-`)];
-  for (const [E2, h2] of n.entries()) {
-    if (t += h2, g.has(h2)) {
-      const { groups: B2 } = new RegExp(`(?:\\${O}(?<code>\\d+)m|\\${w}(?<uri>.*)${b})`).exec(n.slice(E2).join("")) || { groups: {} };
-      if (B2.code !== void 0) {
-        const p = Number.parseFloat(B2.code);
-        s = p === CD ? void 0 : p;
-      } else B2.uri !== void 0 && (C2 = B2.uri.length === 0 ? void 0 : B2.uri);
+  s.trim !== false && (l = l.map((h) => vt(h)));
+  const E = l.join(`
+`), g = E[Symbol.iterator]();
+  let m = g.next(), A = g.next(), V2 = 0;
+  for (; !m.done; ) {
+    const h = m.value, o = A.value;
+    if (i += h, h === W || h === Z) {
+      et.lastIndex = V2 + 1;
+      const F = et.exec(E)?.groups;
+      if (F?.code !== void 0) {
+        const d2 = Number.parseFloat(F.code);
+        r = d2 === Ft ? void 0 : d2;
+      } else F?.uri !== void 0 && (n = F.uri.length === 0 ? void 0 : F.uri);
     }
-    const o = sD.codes.get(Number(s));
-    n[E2 + 1] === `
-` ? (C2 && (t += L("")), s && o && (t += N(o))) : h2 === `
-` && (s && o && (t += N(s)), C2 && (t += L(C2)));
+    const p = r ? mt(r) : void 0;
+    o === `
+` ? (n && (i += it("")), r && p && (i += st(p))) : h === `
+` && (r && p && (i += st(r)), n && (i += it(n))), V2 += h.length, m = A, A = g.next();
   }
-  return t;
+  return i;
 };
-function R(e2, u2, F) {
-  return String(e2).normalize().replace(/\r\n/g, `
+function K(t, e2, s) {
+  return String(t).normalize().replaceAll(`\r
+`, `
 `).split(`
-`).map((t) => oD(t, u2, F)).join(`
+`).map((i) => Et(i, e2, s)).join(`
 `);
 }
-var nD = Object.defineProperty;
-var aD = (e2, u2, F) => u2 in e2 ? nD(e2, u2, { enumerable: true, configurable: true, writable: true, value: F }) : e2[u2] = F;
-var a = (e2, u2, F) => (aD(e2, typeof u2 != "symbol" ? u2 + "" : u2, F), F);
-function hD(e2, u2) {
-  if (e2 === u2) return;
-  const F = e2.split(`
-`), t = u2.split(`
-`), s = [];
-  for (let C2 = 0; C2 < Math.max(F.length, t.length); C2++) F[C2] !== t[C2] && s.push(C2);
-  return s;
+var At = ["up", "down", "left", "right", "space", "enter", "cancel"];
+var _ = { actions: new Set(At), aliases: /* @__PURE__ */ new Map([["k", "up"], ["j", "down"], ["h", "left"], ["l", "right"], ["", "cancel"], ["escape", "cancel"]]), messages: { cancel: "Canceled", error: "Something went wrong" }, withGuide: true };
+function H(t, e2) {
+  if (typeof t == "string") return _.aliases.get(t) === e2;
+  for (const s of t) if (s !== void 0 && H(s, e2)) return true;
+  return false;
 }
-var V = /* @__PURE__ */ Symbol("clack:cancel");
-function lD(e2) {
-  return e2 === V;
+function _t(t, e2) {
+  if (t === e2) return;
+  const s = t.split(`
+`), i = e2.split(`
+`), r = Math.max(s.length, i.length), n = [];
+  for (let u = 0; u < r; u++) s[u] !== i[u] && n.push(u);
+  return { lines: n, numLinesBefore: s.length, numLinesAfter: i.length, numLines: r };
 }
-function v(e2, u2) {
-  e2.isTTY && e2.setRawMode(u2);
+var bt = globalThis.process.platform.startsWith("win");
+var z = /* @__PURE__ */ Symbol("clack:cancel");
+function Ct(t) {
+  return t === z;
 }
-var z = /* @__PURE__ */ new Map([["k", "up"], ["j", "down"], ["h", "left"], ["l", "right"]]);
-var xD = /* @__PURE__ */ new Set(["up", "down", "left", "right", "space", "enter"]);
+function T(t, e2) {
+  const s = t;
+  s.isTTY && s.setRawMode(e2);
+}
+function Bt({ input: t = q, output: e2 = R, overwrite: s = true, hideCursor: i = true } = {}) {
+  const r = k.createInterface({ input: t, output: e2, prompt: "", tabSize: 1 });
+  k.emitKeypressEvents(t, r), t instanceof J && t.isTTY && t.setRawMode(true);
+  const n = (u, { name: a, sequence: l }) => {
+    const E = String(u);
+    if (H([E, a, l], "cancel")) {
+      i && e2.write(import_sisteransi.cursor.show), process.exit(0);
+      return;
+    }
+    if (!s) return;
+    const g = a === "return" ? 0 : -1, m = a === "return" ? -1 : 0;
+    k.moveCursor(e2, g, m, () => {
+      k.clearLine(e2, 1, () => {
+        t.once("keypress", n);
+      });
+    });
+  };
+  return i && e2.write(import_sisteransi.cursor.hide), t.once("keypress", n), () => {
+    t.off("keypress", n), i && e2.write(import_sisteransi.cursor.show), t instanceof J && t.isTTY && !bt && t.setRawMode(false), r.terminal = false, r.close();
+  };
+}
+var rt = (t) => "columns" in t && typeof t.columns == "number" ? t.columns : 80;
+var nt = (t) => "rows" in t && typeof t.rows == "number" ? t.rows : 20;
+function xt(t, e2, s, i = s) {
+  const r = rt(t ?? R);
+  return K(e2, r - s.length, { hard: true, trim: false }).split(`
+`).map((n, u) => `${u === 0 ? i : s}${n}`).join(`
+`);
+}
 var x = class {
-  constructor({ render: u2, input: F = $, output: t = k, ...s }, C2 = true) {
-    a(this, "input"), a(this, "output"), a(this, "rl"), a(this, "opts"), a(this, "_track", false), a(this, "_render"), a(this, "_cursor", 0), a(this, "state", "initial"), a(this, "value"), a(this, "error", ""), a(this, "subscribers", /* @__PURE__ */ new Map()), a(this, "_prevFrame", ""), this.opts = s, this.onKeypress = this.onKeypress.bind(this), this.close = this.close.bind(this), this.render = this.render.bind(this), this._render = u2.bind(this), this._track = C2, this.input = F, this.output = t;
+  input;
+  output;
+  _abortSignal;
+  rl;
+  opts;
+  _render;
+  _track = false;
+  _prevFrame = "";
+  _subscribers = /* @__PURE__ */ new Map();
+  _cursor = 0;
+  state = "initial";
+  error = "";
+  value;
+  userInput = "";
+  constructor(e2, s = true) {
+    const { input: i = q, output: r = R, render: n, signal: u, ...a } = e2;
+    this.opts = a, this.onKeypress = this.onKeypress.bind(this), this.close = this.close.bind(this), this.render = this.render.bind(this), this._render = n.bind(this), this._track = s, this._abortSignal = u, this.input = i, this.output = r;
+  }
+  unsubscribe() {
+    this._subscribers.clear();
+  }
+  setSubscriber(e2, s) {
+    const i = this._subscribers.get(e2) ?? [];
+    i.push(s), this._subscribers.set(e2, i);
+  }
+  on(e2, s) {
+    this.setSubscriber(e2, { cb: s });
+  }
+  once(e2, s) {
+    this.setSubscriber(e2, { cb: s, once: true });
+  }
+  emit(e2, ...s) {
+    const i = this._subscribers.get(e2) ?? [], r = [];
+    for (const n of i) n.cb(...s), n.once && r.push(() => i.splice(i.indexOf(n), 1));
+    for (const n of r) n();
   }
   prompt() {
-    const u2 = new U(0);
-    return u2._write = (F, t, s) => {
-      this._track && (this.value = this.rl.line.replace(/\t/g, ""), this._cursor = this.rl.cursor, this.emit("value", this.value)), s();
-    }, this.input.pipe(u2), this.rl = _.createInterface({ input: this.input, output: u2, tabSize: 2, prompt: "", escapeCodeTimeout: 50 }), _.emitKeypressEvents(this.input, this.rl), this.rl.prompt(), this.opts.initialValue !== void 0 && this._track && this.rl.write(this.opts.initialValue), this.input.on("keypress", this.onKeypress), v(this.input, true), this.output.on("resize", this.render), this.render(), new Promise((F, t) => {
-      this.once("submit", () => {
-        this.output.write(import_sisteransi.cursor.show), this.output.off("resize", this.render), v(this.input, false), F(this.value);
+    return new Promise((e2) => {
+      if (this._abortSignal) {
+        if (this._abortSignal.aborted) return this.state = "cancel", this.close(), e2(z);
+        this._abortSignal.addEventListener("abort", () => {
+          this.state = "cancel", this.close();
+        }, { once: true });
+      }
+      this.rl = ot.createInterface({ input: this.input, tabSize: 2, prompt: "", escapeCodeTimeout: 50, terminal: true }), this.rl.prompt(), this.opts.initialUserInput !== void 0 && this._setUserInput(this.opts.initialUserInput, true), this.input.on("keypress", this.onKeypress), T(this.input, true), this.output.on("resize", this.render), this.render(), this.once("submit", () => {
+        this.output.write(import_sisteransi.cursor.show), this.output.off("resize", this.render), T(this.input, false), e2(this.value);
       }), this.once("cancel", () => {
-        this.output.write(import_sisteransi.cursor.show), this.output.off("resize", this.render), v(this.input, false), F(V);
+        this.output.write(import_sisteransi.cursor.show), this.output.off("resize", this.render), T(this.input, false), e2(z);
       });
     });
   }
-  on(u2, F) {
-    const t = this.subscribers.get(u2) ?? [];
-    t.push({ cb: F }), this.subscribers.set(u2, t);
+  _isActionKey(e2, s) {
+    return e2 === "	";
   }
-  once(u2, F) {
-    const t = this.subscribers.get(u2) ?? [];
-    t.push({ cb: F, once: true }), this.subscribers.set(u2, t);
+  _setValue(e2) {
+    this.value = e2, this.emit("value", this.value);
   }
-  emit(u2, ...F) {
-    const t = this.subscribers.get(u2) ?? [], s = [];
-    for (const C2 of t) C2.cb(...F), C2.once && s.push(() => t.splice(t.indexOf(C2), 1));
-    for (const C2 of s) C2();
+  _setUserInput(e2, s) {
+    this.userInput = e2 ?? "", this.emit("userInput", this.userInput), s && this._track && this.rl && (this.rl.write(this.userInput), this._cursor = this.rl.cursor);
   }
-  unsubscribe() {
-    this.subscribers.clear();
+  _clearUserInput() {
+    this.rl?.write(null, { ctrl: true, name: "u" }), this._setUserInput("");
   }
-  onKeypress(u2, F) {
-    if (this.state === "error" && (this.state = "active"), F?.name && !this._track && z.has(F.name) && this.emit("cursor", z.get(F.name)), F?.name && xD.has(F.name) && this.emit("cursor", F.name), u2 && (u2.toLowerCase() === "y" || u2.toLowerCase() === "n") && this.emit("confirm", u2.toLowerCase() === "y"), u2 === "	" && this.opts.placeholder && (this.value || (this.rl.write(this.opts.placeholder), this.emit("value", this.opts.placeholder))), u2 && this.emit("key", u2.toLowerCase()), F?.name === "return") {
+  onKeypress(e2, s) {
+    if (this._track && s.name !== "return" && (s.name && this._isActionKey(e2, s) && this.rl?.write(null, { ctrl: true, name: "h" }), this._cursor = this.rl?.cursor ?? 0, this._setUserInput(this.rl?.line)), this.state === "error" && (this.state = "active"), s?.name && (!this._track && _.aliases.has(s.name) && this.emit("cursor", _.aliases.get(s.name)), _.actions.has(s.name) && this.emit("cursor", s.name)), e2 && (e2.toLowerCase() === "y" || e2.toLowerCase() === "n") && this.emit("confirm", e2.toLowerCase() === "y"), this.emit("key", e2?.toLowerCase(), s), s?.name === "return") {
       if (this.opts.validate) {
-        const t = this.opts.validate(this.value);
-        t && (this.error = t, this.state = "error", this.rl.write(this.value));
+        const i = this.opts.validate(this.value);
+        i && (this.error = i instanceof Error ? i.message : i, this.state = "error", this.rl?.write(this.userInput));
       }
       this.state !== "error" && (this.state = "submit");
     }
-    u2 === "" && (this.state = "cancel"), (this.state === "submit" || this.state === "cancel") && this.emit("finalize"), this.render(), (this.state === "submit" || this.state === "cancel") && this.close();
+    H([e2, s?.name, s?.sequence], "cancel") && (this.state = "cancel"), (this.state === "submit" || this.state === "cancel") && this.emit("finalize"), this.render(), (this.state === "submit" || this.state === "cancel") && this.close();
   }
   close() {
     this.input.unpipe(), this.input.removeListener("keypress", this.onKeypress), this.output.write(`
-`), v(this.input, false), this.rl.close(), this.emit(`${this.state}`, this.value), this.unsubscribe();
+`), T(this.input, false), this.rl?.close(), this.rl = void 0, this.emit(`${this.state}`, this.value), this.unsubscribe();
   }
   restoreCursor() {
-    const u2 = R(this._prevFrame, process.stdout.columns, { hard: true }).split(`
+    const e2 = K(this._prevFrame, process.stdout.columns, { hard: true, trim: false }).split(`
 `).length - 1;
-    this.output.write(import_sisteransi.cursor.move(-999, u2 * -1));
+    this.output.write(import_sisteransi.cursor.move(-999, e2 * -1));
   }
   render() {
-    const u2 = R(this._render(this) ?? "", process.stdout.columns, { hard: true });
-    if (u2 !== this._prevFrame) {
+    const e2 = K(this._render(this) ?? "", process.stdout.columns, { hard: true, trim: false });
+    if (e2 !== this._prevFrame) {
       if (this.state === "initial") this.output.write(import_sisteransi.cursor.hide);
       else {
-        const F = hD(this._prevFrame, u2);
-        if (this.restoreCursor(), F && F?.length === 1) {
-          const t = F[0];
-          this.output.write(import_sisteransi.cursor.move(0, t)), this.output.write(import_sisteransi.erase.lines(1));
-          const s = u2.split(`
+        const s = _t(this._prevFrame, e2), i = nt(this.output);
+        if (this.restoreCursor(), s) {
+          const r = Math.max(0, s.numLinesAfter - i), n = Math.max(0, s.numLinesBefore - i);
+          let u = s.lines.find((a) => a >= r);
+          if (u === void 0) {
+            this._prevFrame = e2;
+            return;
+          }
+          if (s.lines.length === 1) {
+            this.output.write(import_sisteransi.cursor.move(0, u - n)), this.output.write(import_sisteransi.erase.lines(1));
+            const a = e2.split(`
 `);
-          this.output.write(s[t]), this._prevFrame = u2, this.output.write(import_sisteransi.cursor.move(0, s.length - t - 1));
-          return;
-        } else if (F && F?.length > 1) {
-          const t = F[0];
-          this.output.write(import_sisteransi.cursor.move(0, t)), this.output.write(import_sisteransi.erase.down());
-          const s = u2.split(`
-`).slice(t);
-          this.output.write(s.join(`
-`)), this._prevFrame = u2;
-          return;
+            this.output.write(a[u]), this._prevFrame = e2, this.output.write(import_sisteransi.cursor.move(0, a.length - u - 1));
+            return;
+          } else if (s.lines.length > 1) {
+            if (r < n) u = r;
+            else {
+              const l = u - n;
+              l > 0 && this.output.write(import_sisteransi.cursor.move(0, l));
+            }
+            this.output.write(import_sisteransi.erase.down());
+            const a = e2.split(`
+`).slice(u);
+            this.output.write(a.join(`
+`)), this._prevFrame = e2;
+            return;
+          }
         }
         this.output.write(import_sisteransi.erase.down());
       }
-      this.output.write(u2), this.state === "initial" && (this.state = "active"), this._prevFrame = u2;
+      this.output.write(e2), this.state === "initial" && (this.state = "active"), this._prevFrame = e2;
     }
   }
 };
-var BD = class extends x {
+function wt(t, e2) {
+  if (t === void 0 || e2.length === 0) return 0;
+  const s = e2.findIndex((i) => i.value === t);
+  return s !== -1 ? s : 0;
+}
+function Dt(t, e2) {
+  return (e2.label ?? String(e2.value)).toLowerCase().includes(t.toLowerCase());
+}
+function St(t, e2) {
+  if (e2) return t ? e2 : e2[0];
+}
+var Vt = class extends x {
+  filteredOptions;
+  multiple;
+  isNavigating = false;
+  selectedValues = [];
+  focusedValue;
+  #t = 0;
+  #s = "";
+  #i;
+  #e;
+  get cursor() {
+    return this.#t;
+  }
+  get userInputWithCursor() {
+    if (!this.userInput) return import_picocolors3.default.inverse(import_picocolors3.default.hidden("_"));
+    if (this._cursor >= this.userInput.length) return `${this.userInput}\u2588`;
+    const e2 = this.userInput.slice(0, this._cursor), [s, ...i] = this.userInput.slice(this._cursor);
+    return `${e2}${import_picocolors3.default.inverse(s)}${i.join("")}`;
+  }
+  get options() {
+    return typeof this.#e == "function" ? this.#e() : this.#e;
+  }
+  constructor(e2) {
+    super(e2), this.#e = e2.options;
+    const s = this.options;
+    this.filteredOptions = [...s], this.multiple = e2.multiple === true, this.#i = e2.filter ?? Dt;
+    let i;
+    if (e2.initialValue && Array.isArray(e2.initialValue) ? this.multiple ? i = e2.initialValue : i = e2.initialValue.slice(0, 1) : !this.multiple && this.options.length > 0 && (i = [this.options[0].value]), i) for (const r of i) {
+      const n = s.findIndex((u) => u.value === r);
+      n !== -1 && (this.toggleSelected(r), this.#t = n);
+    }
+    this.focusedValue = this.options[this.#t]?.value, this.on("key", (r, n) => this.#r(r, n)), this.on("userInput", (r) => this.#n(r));
+  }
+  _isActionKey(e2, s) {
+    return e2 === "	" || this.multiple && this.isNavigating && s.name === "space" && e2 !== void 0 && e2 !== "";
+  }
+  #r(e2, s) {
+    const i = s.name === "up", r = s.name === "down", n = s.name === "return";
+    i || r ? (this.#t = B(this.#t, i ? -1 : 1, this.filteredOptions), this.focusedValue = this.filteredOptions[this.#t]?.value, this.multiple || (this.selectedValues = [this.focusedValue]), this.isNavigating = true) : n ? this.value = St(this.multiple, this.selectedValues) : this.multiple ? this.focusedValue !== void 0 && (s.name === "tab" || this.isNavigating && s.name === "space") ? this.toggleSelected(this.focusedValue) : this.isNavigating = false : (this.focusedValue && (this.selectedValues = [this.focusedValue]), this.isNavigating = false);
+  }
+  deselectAll() {
+    this.selectedValues = [];
+  }
+  toggleSelected(e2) {
+    this.filteredOptions.length !== 0 && (this.multiple ? this.selectedValues.includes(e2) ? this.selectedValues = this.selectedValues.filter((s) => s !== e2) : this.selectedValues = [...this.selectedValues, e2] : this.selectedValues = [e2]);
+  }
+  #n(e2) {
+    if (e2 !== this.#s) {
+      this.#s = e2;
+      const s = this.options;
+      e2 ? this.filteredOptions = s.filter((n) => this.#i(e2, n)) : this.filteredOptions = [...s];
+      const i = wt(this.focusedValue, this.filteredOptions);
+      this.#t = B(i, 0, this.filteredOptions);
+      const r = this.filteredOptions[this.#t];
+      r && !r.disabled ? this.focusedValue = r.value : this.focusedValue = void 0, this.multiple || (this.focusedValue !== void 0 ? this.toggleSelected(this.focusedValue) : this.deselectAll());
+    }
+  }
+};
+var kt = class extends x {
   get cursor() {
     return this.value ? 0 : 1;
   }
   get _value() {
     return this.cursor === 0;
   }
-  constructor(u2) {
-    super(u2, false), this.value = !!u2.initialValue, this.on("value", () => {
+  constructor(e2) {
+    super(e2, false), this.value = !!e2.initialValue, this.on("userInput", () => {
       this.value = this._value;
-    }), this.on("confirm", (F) => {
-      this.output.write(import_sisteransi.cursor.move(0, -1)), this.value = F, this.state = "submit", this.close();
+    }), this.on("confirm", (s) => {
+      this.output.write(import_sisteransi.cursor.move(0, -1)), this.value = s, this.state = "submit", this.close();
     }), this.on("cursor", () => {
       this.value = !this.value;
     });
   }
 };
-var fD = Object.defineProperty;
-var gD = (e2, u2, F) => u2 in e2 ? fD(e2, u2, { enumerable: true, configurable: true, writable: true, value: F }) : e2[u2] = F;
-var K = (e2, u2, F) => (gD(e2, typeof u2 != "symbol" ? u2 + "" : u2, F), F);
-var vD = class extends x {
-  constructor(u2) {
-    super(u2, false), K(this, "options"), K(this, "cursor", 0), this.options = u2.options, this.value = [...u2.initialValues ?? []], this.cursor = Math.max(this.options.findIndex(({ value: F }) => F === u2.cursorAt), 0), this.on("key", (F) => {
-      F === "a" && this.toggleAll();
-    }), this.on("cursor", (F) => {
-      switch (F) {
+var Lt = class extends x {
+  options;
+  cursor = 0;
+  get _value() {
+    return this.options[this.cursor].value;
+  }
+  get _enabledOptions() {
+    return this.options.filter((e2) => e2.disabled !== true);
+  }
+  toggleAll() {
+    const e2 = this._enabledOptions, s = this.value !== void 0 && this.value.length === e2.length;
+    this.value = s ? [] : e2.map((i) => i.value);
+  }
+  toggleInvert() {
+    const e2 = this.value;
+    if (!e2) return;
+    const s = this._enabledOptions.filter((i) => !e2.includes(i.value));
+    this.value = s.map((i) => i.value);
+  }
+  toggleValue() {
+    this.value === void 0 && (this.value = []);
+    const e2 = this.value.includes(this._value);
+    this.value = e2 ? this.value.filter((s) => s !== this._value) : [...this.value, this._value];
+  }
+  constructor(e2) {
+    super(e2, false), this.options = e2.options, this.value = [...e2.initialValues ?? []];
+    const s = Math.max(this.options.findIndex(({ value: i }) => i === e2.cursorAt), 0);
+    this.cursor = this.options[s].disabled ? B(s, 1, this.options) : s, this.on("key", (i) => {
+      i === "a" && this.toggleAll(), i === "i" && this.toggleInvert();
+    }), this.on("cursor", (i) => {
+      switch (i) {
         case "left":
         case "up":
-          this.cursor = this.cursor === 0 ? this.options.length - 1 : this.cursor - 1;
+          this.cursor = B(this.cursor, -1, this.options);
           break;
         case "down":
         case "right":
-          this.cursor = this.cursor === this.options.length - 1 ? 0 : this.cursor + 1;
+          this.cursor = B(this.cursor, 1, this.options);
           break;
         case "space":
           this.toggleValue();
@@ -3649,360 +4238,693 @@ var vD = class extends x {
       }
     });
   }
-  get _value() {
-    return this.options[this.cursor].value;
-  }
-  toggleAll() {
-    const u2 = this.value.length === this.options.length;
-    this.value = u2 ? [] : this.options.map((F) => F.value);
-  }
-  toggleValue() {
-    const u2 = this.value.includes(this._value);
-    this.value = u2 ? this.value.filter((F) => F !== this._value) : [...this.value, this._value];
-  }
 };
-var mD = Object.defineProperty;
-var dD = (e2, u2, F) => u2 in e2 ? mD(e2, u2, { enumerable: true, configurable: true, writable: true, value: F }) : e2[u2] = F;
-var Y = (e2, u2, F) => (dD(e2, typeof u2 != "symbol" ? u2 + "" : u2, F), F);
-var bD = class extends x {
-  constructor({ mask: u2, ...F }) {
-    super(F), Y(this, "valueWithCursor", ""), Y(this, "_mask", "\u2022"), this._mask = u2 ?? "\u2022", this.on("finalize", () => {
-      this.valueWithCursor = this.masked;
-    }), this.on("value", () => {
-      if (this.cursor >= this.value.length) this.valueWithCursor = `${this.masked}${import_picocolors3.default.inverse(import_picocolors3.default.hidden("_"))}`;
-      else {
-        const t = this.masked.slice(0, this.cursor), s = this.masked.slice(this.cursor);
-        this.valueWithCursor = `${t}${import_picocolors3.default.inverse(s[0])}${s.slice(1)}`;
-      }
-    });
-  }
+var Mt = class extends x {
+  _mask = "\u2022";
   get cursor() {
     return this._cursor;
   }
   get masked() {
-    return this.value.replaceAll(/./g, this._mask);
+    return this.userInput.replaceAll(/./g, this._mask);
+  }
+  get userInputWithCursor() {
+    if (this.state === "submit" || this.state === "cancel") return this.masked;
+    const e2 = this.userInput;
+    if (this.cursor >= e2.length) return `${this.masked}${import_picocolors3.default.inverse(import_picocolors3.default.hidden("_"))}`;
+    const s = this.masked, i = s.slice(0, this.cursor), r = s.slice(this.cursor);
+    return `${i}${import_picocolors3.default.inverse(r[0])}${r.slice(1)}`;
+  }
+  clear() {
+    this._clearUserInput();
+  }
+  constructor({ mask: e2, ...s }) {
+    super(s), this._mask = e2 ?? "\u2022", this.on("userInput", (i) => {
+      this._setValue(i);
+    });
   }
 };
-var wD = Object.defineProperty;
-var yD = (e2, u2, F) => u2 in e2 ? wD(e2, u2, { enumerable: true, configurable: true, writable: true, value: F }) : e2[u2] = F;
-var Z = (e2, u2, F) => (yD(e2, typeof u2 != "symbol" ? u2 + "" : u2, F), F);
-var $D = class extends x {
-  constructor(u2) {
-    super(u2, false), Z(this, "options"), Z(this, "cursor", 0), this.options = u2.options, this.cursor = this.options.findIndex(({ value: F }) => F === u2.initialValue), this.cursor === -1 && (this.cursor = 0), this.changeValue(), this.on("cursor", (F) => {
-      switch (F) {
+var Wt = class extends x {
+  options;
+  cursor = 0;
+  get _selectedValue() {
+    return this.options[this.cursor];
+  }
+  changeValue() {
+    this.value = this._selectedValue.value;
+  }
+  constructor(e2) {
+    super(e2, false), this.options = e2.options;
+    const s = this.options.findIndex(({ value: r }) => r === e2.initialValue), i = s === -1 ? 0 : s;
+    this.cursor = this.options[i].disabled ? B(i, 1, this.options) : i, this.changeValue(), this.on("cursor", (r) => {
+      switch (r) {
         case "left":
         case "up":
-          this.cursor = this.cursor === 0 ? this.options.length - 1 : this.cursor - 1;
+          this.cursor = B(this.cursor, -1, this.options);
           break;
         case "down":
         case "right":
-          this.cursor = this.cursor === this.options.length - 1 ? 0 : this.cursor + 1;
+          this.cursor = B(this.cursor, 1, this.options);
           break;
       }
       this.changeValue();
     });
   }
-  get _value() {
-    return this.options[this.cursor];
-  }
-  changeValue() {
-    this.value = this._value.value;
-  }
 };
-var TD = Object.defineProperty;
-var jD = (e2, u2, F) => u2 in e2 ? TD(e2, u2, { enumerable: true, configurable: true, writable: true, value: F }) : e2[u2] = F;
-var MD = (e2, u2, F) => (jD(e2, typeof u2 != "symbol" ? u2 + "" : u2, F), F);
-var PD = class extends x {
-  constructor(u2) {
-    super(u2), MD(this, "valueWithCursor", ""), this.on("finalize", () => {
-      this.value || (this.value = u2.defaultValue), this.valueWithCursor = this.value;
-    }), this.on("value", () => {
-      if (this.cursor >= this.value.length) this.valueWithCursor = `${this.value}${import_picocolors3.default.inverse(import_picocolors3.default.hidden("_"))}`;
-      else {
-        const F = this.value.slice(0, this.cursor), t = this.value.slice(this.cursor);
-        this.valueWithCursor = `${F}${import_picocolors3.default.inverse(t[0])}${t.slice(1)}`;
-      }
-    });
+var $t = class extends x {
+  get userInputWithCursor() {
+    if (this.state === "submit") return this.userInput;
+    const e2 = this.userInput;
+    if (this.cursor >= e2.length) return `${this.userInput}\u2588`;
+    const s = e2.slice(0, this.cursor), [i, ...r] = e2.slice(this.cursor);
+    return `${s}${import_picocolors3.default.inverse(i)}${r.join("")}`;
   }
   get cursor() {
     return this._cursor;
   }
-};
-var WD = globalThis.process.platform.startsWith("win");
-function OD({ input: e2 = $, output: u2 = k, overwrite: F = true, hideCursor: t = true } = {}) {
-  const s = f.createInterface({ input: e2, output: u2, prompt: "", tabSize: 1 });
-  f.emitKeypressEvents(e2, s), e2.isTTY && e2.setRawMode(true);
-  const C2 = (D, { name: i }) => {
-    if (String(D) === "") {
-      t && u2.write(import_sisteransi.cursor.show), process.exit(0);
-      return;
-    }
-    if (!F) return;
-    let n = i === "return" ? 0 : -1, E2 = i === "return" ? -1 : 0;
-    f.moveCursor(u2, n, E2, () => {
-      f.clearLine(u2, 1, () => {
-        e2.once("keypress", C2);
-      });
+  constructor(e2) {
+    super({ ...e2, initialUserInput: e2.initialUserInput ?? e2.initialValue }), this.on("userInput", (s) => {
+      this._setValue(s);
+    }), this.on("finalize", () => {
+      this.value || (this.value = e2.defaultValue), this.value === void 0 && (this.value = "");
     });
-  };
-  return t && u2.write(import_sisteransi.cursor.hide), e2.once("keypress", C2), () => {
-    e2.off("keypress", C2), t && u2.write(import_sisteransi.cursor.show), e2.isTTY && !WD && e2.setRawMode(false), s.terminal = false, s.close();
-  };
-}
+  }
+};
 
-// node_modules/.pnpm/@clack+prompts@0.8.2/node_modules/@clack/prompts/dist/index.mjs
+// node_modules/@clack/prompts/dist/index.mjs
 var import_picocolors4 = __toESM(require_picocolors(), 1);
 var import_sisteransi2 = __toESM(require_src(), 1);
-import h from "process";
-function K2() {
-  return h.platform !== "win32" ? h.env.TERM !== "linux" : !!h.env.CI || !!h.env.WT_SESSION || !!h.env.TERMINUS_SUBLIME || h.env.ConEmuTask === "{cmd::Cmder}" || h.env.TERM_PROGRAM === "Terminus-Sublime" || h.env.TERM_PROGRAM === "vscode" || h.env.TERM === "xterm-256color" || h.env.TERM === "alacritty" || h.env.TERMINAL_EMULATOR === "JetBrains-JediTerm";
+import N2 from "process";
+import { readdirSync as de, existsSync as $e, lstatSync as xt2 } from "fs";
+import { dirname as _t2, join as he } from "path";
+import { stripVTControlCharacters as ut } from "util";
+function me() {
+  return N2.platform !== "win32" ? N2.env.TERM !== "linux" : !!N2.env.CI || !!N2.env.WT_SESSION || !!N2.env.TERMINUS_SUBLIME || N2.env.ConEmuTask === "{cmd::Cmder}" || N2.env.TERM_PROGRAM === "Terminus-Sublime" || N2.env.TERM_PROGRAM === "vscode" || N2.env.TERM === "xterm-256color" || N2.env.TERM === "alacritty" || N2.env.TERMINAL_EMULATOR === "JetBrains-JediTerm";
 }
-var C = K2();
-var u = (s, n) => C ? s : n;
-var Y2 = u("\u25C6", "*");
-var P2 = u("\u25A0", "x");
-var V2 = u("\u25B2", "x");
-var M2 = u("\u25C7", "o");
-var Q2 = u("\u250C", "T");
-var a2 = u("\u2502", "|");
-var $2 = u("\u2514", "\u2014");
-var I2 = u("\u25CF", ">");
-var T2 = u("\u25CB", " ");
-var j2 = u("\u25FB", "[\u2022]");
-var b2 = u("\u25FC", "[+]");
-var B = u("\u25FB", "[ ]");
-var X2 = u("\u25AA", "\u2022");
-var G = u("\u2500", "-");
-var H = u("\u256E", "+");
-var ee = u("\u251C", "+");
-var te = u("\u256F", "+");
-var se = u("\u25CF", "\u2022");
-var re = u("\u25C6", "*");
-var ie = u("\u25B2", "!");
-var ne = u("\u25A0", "x");
-var y2 = (s) => {
-  switch (s) {
+var et2 = me();
+var ct2 = () => process.env.CI === "true";
+var C = (t, r) => et2 ? t : r;
+var Rt = C("\u25C6", "*");
+var dt2 = C("\u25A0", "x");
+var $t2 = C("\u25B2", "x");
+var V = C("\u25C7", "o");
+var ht2 = C("\u250C", "T");
+var d = C("\u2502", "|");
+var x2 = C("\u2514", "\u2014");
+var Ot = C("\u2510", "T");
+var Pt = C("\u2518", "\u2014");
+var Q2 = C("\u25CF", ">");
+var H2 = C("\u25CB", " ");
+var st2 = C("\u25FB", "[\u2022]");
+var U2 = C("\u25FC", "[+]");
+var q2 = C("\u25FB", "[ ]");
+var Nt = C("\u25AA", "\u2022");
+var rt2 = C("\u2500", "-");
+var mt2 = C("\u256E", "+");
+var Wt2 = C("\u251C", "+");
+var pt2 = C("\u256F", "+");
+var gt2 = C("\u2570", "+");
+var Lt2 = C("\u256D", "+");
+var ft2 = C("\u25CF", "\u2022");
+var Ft2 = C("\u25C6", "*");
+var yt2 = C("\u25B2", "!");
+var Et2 = C("\u25A0", "x");
+var W2 = (t) => {
+  switch (t) {
     case "initial":
     case "active":
-      return import_picocolors4.default.cyan(Y2);
+      return import_picocolors4.default.cyan(Rt);
     case "cancel":
-      return import_picocolors4.default.red(P2);
+      return import_picocolors4.default.red(dt2);
     case "error":
-      return import_picocolors4.default.yellow(V2);
+      return import_picocolors4.default.yellow($t2);
     case "submit":
-      return import_picocolors4.default.green(M2);
+      return import_picocolors4.default.green(V);
   }
 };
-var E = (s) => {
-  const { cursor: n, options: t, style: i } = s, r2 = s.maxItems ?? 1 / 0, o = Math.max(process.stdout.rows - 4, 0), c2 = Math.min(o, Math.max(r2, 5));
-  let l2 = 0;
-  n >= l2 + c2 - 3 ? l2 = Math.max(Math.min(n - c2 + 3, t.length - c2), 0) : n < l2 + 2 && (l2 = Math.max(n - 2, 0));
-  const d2 = c2 < t.length && l2 > 0, p = c2 < t.length && l2 + c2 < t.length;
-  return t.slice(l2, l2 + c2).map((S2, f2, x2) => {
-    const g2 = f2 === 0 && d2, m2 = f2 === x2.length - 1 && p;
-    return g2 || m2 ? import_picocolors4.default.dim("...") : i(S2, f2 + l2 === n);
-  });
+var vt2 = (t) => {
+  switch (t) {
+    case "initial":
+    case "active":
+      return import_picocolors4.default.cyan(d);
+    case "cancel":
+      return import_picocolors4.default.red(d);
+    case "error":
+      return import_picocolors4.default.yellow(d);
+    case "submit":
+      return import_picocolors4.default.green(d);
+  }
 };
-var ae = (s) => new PD({ validate: s.validate, placeholder: s.placeholder, defaultValue: s.defaultValue, initialValue: s.initialValue, render() {
-  const n = `${import_picocolors4.default.gray(a2)}
-${y2(this.state)}  ${s.message}
-`, t = s.placeholder ? import_picocolors4.default.inverse(s.placeholder[0]) + import_picocolors4.default.dim(s.placeholder.slice(1)) : import_picocolors4.default.inverse(import_picocolors4.default.hidden("_")), i = this.value ? this.valueWithCursor : t;
-  switch (this.state) {
-    case "error":
-      return `${n.trim()}
-${import_picocolors4.default.yellow(a2)}  ${i}
-${import_picocolors4.default.yellow($2)}  ${import_picocolors4.default.yellow(this.error)}
-`;
-    case "submit":
-      return `${n}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.dim(this.value || s.placeholder)}`;
-    case "cancel":
-      return `${n}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(this.value ?? ""))}${this.value?.trim() ? `
-` + import_picocolors4.default.gray(a2) : ""}`;
-    default:
-      return `${n}${import_picocolors4.default.cyan(a2)}  ${i}
-${import_picocolors4.default.cyan($2)}
-`;
-  }
-} }).prompt();
-var oe = (s) => new bD({ validate: s.validate, mask: s.mask ?? X2, render() {
-  const n = `${import_picocolors4.default.gray(a2)}
-${y2(this.state)}  ${s.message}
-`, t = this.valueWithCursor, i = this.masked;
-  switch (this.state) {
-    case "error":
-      return `${n.trim()}
-${import_picocolors4.default.yellow(a2)}  ${i}
-${import_picocolors4.default.yellow($2)}  ${import_picocolors4.default.yellow(this.error)}
-`;
-    case "submit":
-      return `${n}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.dim(i)}`;
-    case "cancel":
-      return `${n}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(i ?? ""))}${i ? `
-` + import_picocolors4.default.gray(a2) : ""}`;
-    default:
-      return `${n}${import_picocolors4.default.cyan(a2)}  ${t}
-${import_picocolors4.default.cyan($2)}
-`;
-  }
-} }).prompt();
-var ce = (s) => {
-  const n = s.active ?? "Yes", t = s.inactive ?? "No";
-  return new BD({ active: n, inactive: t, initialValue: s.initialValue ?? true, render() {
-    const i = `${import_picocolors4.default.gray(a2)}
-${y2(this.state)}  ${s.message}
-`, r2 = this.value ? n : t;
-    switch (this.state) {
-      case "submit":
-        return `${i}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.dim(r2)}`;
-      case "cancel":
-        return `${i}${import_picocolors4.default.gray(a2)}  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(r2))}
-${import_picocolors4.default.gray(a2)}`;
-      default:
-        return `${i}${import_picocolors4.default.cyan(a2)}  ${this.value ? `${import_picocolors4.default.green(I2)} ${n}` : `${import_picocolors4.default.dim(T2)} ${import_picocolors4.default.dim(n)}`} ${import_picocolors4.default.dim("/")} ${this.value ? `${import_picocolors4.default.dim(T2)} ${import_picocolors4.default.dim(t)}` : `${import_picocolors4.default.green(I2)} ${t}`}
-${import_picocolors4.default.cyan($2)}
-`;
+var pe = (t) => t === 161 || t === 164 || t === 167 || t === 168 || t === 170 || t === 173 || t === 174 || t >= 176 && t <= 180 || t >= 182 && t <= 186 || t >= 188 && t <= 191 || t === 198 || t === 208 || t === 215 || t === 216 || t >= 222 && t <= 225 || t === 230 || t >= 232 && t <= 234 || t === 236 || t === 237 || t === 240 || t === 242 || t === 243 || t >= 247 && t <= 250 || t === 252 || t === 254 || t === 257 || t === 273 || t === 275 || t === 283 || t === 294 || t === 295 || t === 299 || t >= 305 && t <= 307 || t === 312 || t >= 319 && t <= 322 || t === 324 || t >= 328 && t <= 331 || t === 333 || t === 338 || t === 339 || t === 358 || t === 359 || t === 363 || t === 462 || t === 464 || t === 466 || t === 468 || t === 470 || t === 472 || t === 474 || t === 476 || t === 593 || t === 609 || t === 708 || t === 711 || t >= 713 && t <= 715 || t === 717 || t === 720 || t >= 728 && t <= 731 || t === 733 || t === 735 || t >= 768 && t <= 879 || t >= 913 && t <= 929 || t >= 931 && t <= 937 || t >= 945 && t <= 961 || t >= 963 && t <= 969 || t === 1025 || t >= 1040 && t <= 1103 || t === 1105 || t === 8208 || t >= 8211 && t <= 8214 || t === 8216 || t === 8217 || t === 8220 || t === 8221 || t >= 8224 && t <= 8226 || t >= 8228 && t <= 8231 || t === 8240 || t === 8242 || t === 8243 || t === 8245 || t === 8251 || t === 8254 || t === 8308 || t === 8319 || t >= 8321 && t <= 8324 || t === 8364 || t === 8451 || t === 8453 || t === 8457 || t === 8467 || t === 8470 || t === 8481 || t === 8482 || t === 8486 || t === 8491 || t === 8531 || t === 8532 || t >= 8539 && t <= 8542 || t >= 8544 && t <= 8555 || t >= 8560 && t <= 8569 || t === 8585 || t >= 8592 && t <= 8601 || t === 8632 || t === 8633 || t === 8658 || t === 8660 || t === 8679 || t === 8704 || t === 8706 || t === 8707 || t === 8711 || t === 8712 || t === 8715 || t === 8719 || t === 8721 || t === 8725 || t === 8730 || t >= 8733 && t <= 8736 || t === 8739 || t === 8741 || t >= 8743 && t <= 8748 || t === 8750 || t >= 8756 && t <= 8759 || t === 8764 || t === 8765 || t === 8776 || t === 8780 || t === 8786 || t === 8800 || t === 8801 || t >= 8804 && t <= 8807 || t === 8810 || t === 8811 || t === 8814 || t === 8815 || t === 8834 || t === 8835 || t === 8838 || t === 8839 || t === 8853 || t === 8857 || t === 8869 || t === 8895 || t === 8978 || t >= 9312 && t <= 9449 || t >= 9451 && t <= 9547 || t >= 9552 && t <= 9587 || t >= 9600 && t <= 9615 || t >= 9618 && t <= 9621 || t === 9632 || t === 9633 || t >= 9635 && t <= 9641 || t === 9650 || t === 9651 || t === 9654 || t === 9655 || t === 9660 || t === 9661 || t === 9664 || t === 9665 || t >= 9670 && t <= 9672 || t === 9675 || t >= 9678 && t <= 9681 || t >= 9698 && t <= 9701 || t === 9711 || t === 9733 || t === 9734 || t === 9737 || t === 9742 || t === 9743 || t === 9756 || t === 9758 || t === 9792 || t === 9794 || t === 9824 || t === 9825 || t >= 9827 && t <= 9829 || t >= 9831 && t <= 9834 || t === 9836 || t === 9837 || t === 9839 || t === 9886 || t === 9887 || t === 9919 || t >= 9926 && t <= 9933 || t >= 9935 && t <= 9939 || t >= 9941 && t <= 9953 || t === 9955 || t === 9960 || t === 9961 || t >= 9963 && t <= 9969 || t === 9972 || t >= 9974 && t <= 9977 || t === 9979 || t === 9980 || t === 9982 || t === 9983 || t === 10045 || t >= 10102 && t <= 10111 || t >= 11094 && t <= 11097 || t >= 12872 && t <= 12879 || t >= 57344 && t <= 63743 || t >= 65024 && t <= 65039 || t === 65533 || t >= 127232 && t <= 127242 || t >= 127248 && t <= 127277 || t >= 127280 && t <= 127337 || t >= 127344 && t <= 127373 || t === 127375 || t === 127376 || t >= 127387 && t <= 127404 || t >= 917760 && t <= 917999 || t >= 983040 && t <= 1048573 || t >= 1048576 && t <= 1114109;
+var ge = (t) => t === 12288 || t >= 65281 && t <= 65376 || t >= 65504 && t <= 65510;
+var fe = (t) => t >= 4352 && t <= 4447 || t === 8986 || t === 8987 || t === 9001 || t === 9002 || t >= 9193 && t <= 9196 || t === 9200 || t === 9203 || t === 9725 || t === 9726 || t === 9748 || t === 9749 || t >= 9800 && t <= 9811 || t === 9855 || t === 9875 || t === 9889 || t === 9898 || t === 9899 || t === 9917 || t === 9918 || t === 9924 || t === 9925 || t === 9934 || t === 9940 || t === 9962 || t === 9970 || t === 9971 || t === 9973 || t === 9978 || t === 9981 || t === 9989 || t === 9994 || t === 9995 || t === 10024 || t === 10060 || t === 10062 || t >= 10067 && t <= 10069 || t === 10071 || t >= 10133 && t <= 10135 || t === 10160 || t === 10175 || t === 11035 || t === 11036 || t === 11088 || t === 11093 || t >= 11904 && t <= 11929 || t >= 11931 && t <= 12019 || t >= 12032 && t <= 12245 || t >= 12272 && t <= 12287 || t >= 12289 && t <= 12350 || t >= 12353 && t <= 12438 || t >= 12441 && t <= 12543 || t >= 12549 && t <= 12591 || t >= 12593 && t <= 12686 || t >= 12688 && t <= 12771 || t >= 12783 && t <= 12830 || t >= 12832 && t <= 12871 || t >= 12880 && t <= 19903 || t >= 19968 && t <= 42124 || t >= 42128 && t <= 42182 || t >= 43360 && t <= 43388 || t >= 44032 && t <= 55203 || t >= 63744 && t <= 64255 || t >= 65040 && t <= 65049 || t >= 65072 && t <= 65106 || t >= 65108 && t <= 65126 || t >= 65128 && t <= 65131 || t >= 94176 && t <= 94180 || t === 94192 || t === 94193 || t >= 94208 && t <= 100343 || t >= 100352 && t <= 101589 || t >= 101632 && t <= 101640 || t >= 110576 && t <= 110579 || t >= 110581 && t <= 110587 || t === 110589 || t === 110590 || t >= 110592 && t <= 110882 || t === 110898 || t >= 110928 && t <= 110930 || t === 110933 || t >= 110948 && t <= 110951 || t >= 110960 && t <= 111355 || t === 126980 || t === 127183 || t === 127374 || t >= 127377 && t <= 127386 || t >= 127488 && t <= 127490 || t >= 127504 && t <= 127547 || t >= 127552 && t <= 127560 || t === 127568 || t === 127569 || t >= 127584 && t <= 127589 || t >= 127744 && t <= 127776 || t >= 127789 && t <= 127797 || t >= 127799 && t <= 127868 || t >= 127870 && t <= 127891 || t >= 127904 && t <= 127946 || t >= 127951 && t <= 127955 || t >= 127968 && t <= 127984 || t === 127988 || t >= 127992 && t <= 128062 || t === 128064 || t >= 128066 && t <= 128252 || t >= 128255 && t <= 128317 || t >= 128331 && t <= 128334 || t >= 128336 && t <= 128359 || t === 128378 || t === 128405 || t === 128406 || t === 128420 || t >= 128507 && t <= 128591 || t >= 128640 && t <= 128709 || t === 128716 || t >= 128720 && t <= 128722 || t >= 128725 && t <= 128727 || t >= 128732 && t <= 128735 || t === 128747 || t === 128748 || t >= 128756 && t <= 128764 || t >= 128992 && t <= 129003 || t === 129008 || t >= 129292 && t <= 129338 || t >= 129340 && t <= 129349 || t >= 129351 && t <= 129535 || t >= 129648 && t <= 129660 || t >= 129664 && t <= 129672 || t >= 129680 && t <= 129725 || t >= 129727 && t <= 129733 || t >= 129742 && t <= 129755 || t >= 129760 && t <= 129768 || t >= 129776 && t <= 129784 || t >= 131072 && t <= 196605 || t >= 196608 && t <= 262141;
+var At2 = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/y;
+var it2 = /[\x00-\x08\x0A-\x1F\x7F-\x9F]{1,1000}/y;
+var nt2 = /\t{1,1000}/y;
+var wt2 = new RegExp("[\\u{1F1E6}-\\u{1F1FF}]{2}|\\u{1F3F4}[\\u{E0061}-\\u{E007A}]{2}[\\u{E0030}-\\u{E0039}\\u{E0061}-\\u{E007A}]{1,3}\\u{E007F}|(?:\\p{Emoji}\\uFE0F\\u20E3?|\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation})(?:\\u200D(?:\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation}|\\p{Emoji}\\uFE0F\\u20E3?))*", "yu");
+var at2 = /(?:[\x20-\x7E\xA0-\xFF](?!\uFE0F)){1,1000}/y;
+var Fe = new RegExp("\\p{M}+", "gu");
+var ye = { limit: 1 / 0, ellipsis: "" };
+var jt = (t, r = {}, s = {}) => {
+  const i = r.limit ?? 1 / 0, a = r.ellipsis ?? "", o = r?.ellipsisWidth ?? (a ? jt(a, ye, s).width : 0), u = s.ansiWidth ?? 0, l = s.controlWidth ?? 0, n = s.tabWidth ?? 8, c = s.ambiguousWidth ?? 1, g = s.emojiWidth ?? 2, F = s.fullWidthWidth ?? 2, p = s.regularWidth ?? 1, E = s.wideWidth ?? 2;
+  let $ = 0, m = 0, h = t.length, y2 = 0, f = false, v = h, S2 = Math.max(0, i - o), I2 = 0, B2 = 0, A = 0, w = 0;
+  t: for (; ; ) {
+    if (B2 > I2 || m >= h && m > $) {
+      const _2 = t.slice(I2, B2) || t.slice($, m);
+      y2 = 0;
+      for (const D2 of _2.replaceAll(Fe, "")) {
+        const T2 = D2.codePointAt(0) || 0;
+        if (ge(T2) ? w = F : fe(T2) ? w = E : c !== p && pe(T2) ? w = c : w = p, A + w > S2 && (v = Math.min(v, Math.max(I2, $) + y2)), A + w > i) {
+          f = true;
+          break t;
+        }
+        y2 += D2.length, A += w;
+      }
+      I2 = B2 = 0;
     }
-  } }).prompt();
+    if (m >= h) break;
+    if (at2.lastIndex = m, at2.test(t)) {
+      if (y2 = at2.lastIndex - m, w = y2 * p, A + w > S2 && (v = Math.min(v, m + Math.floor((S2 - A) / p))), A + w > i) {
+        f = true;
+        break;
+      }
+      A += w, I2 = $, B2 = m, m = $ = at2.lastIndex;
+      continue;
+    }
+    if (At2.lastIndex = m, At2.test(t)) {
+      if (A + u > S2 && (v = Math.min(v, m)), A + u > i) {
+        f = true;
+        break;
+      }
+      A += u, I2 = $, B2 = m, m = $ = At2.lastIndex;
+      continue;
+    }
+    if (it2.lastIndex = m, it2.test(t)) {
+      if (y2 = it2.lastIndex - m, w = y2 * l, A + w > S2 && (v = Math.min(v, m + Math.floor((S2 - A) / l))), A + w > i) {
+        f = true;
+        break;
+      }
+      A += w, I2 = $, B2 = m, m = $ = it2.lastIndex;
+      continue;
+    }
+    if (nt2.lastIndex = m, nt2.test(t)) {
+      if (y2 = nt2.lastIndex - m, w = y2 * n, A + w > S2 && (v = Math.min(v, m + Math.floor((S2 - A) / n))), A + w > i) {
+        f = true;
+        break;
+      }
+      A += w, I2 = $, B2 = m, m = $ = nt2.lastIndex;
+      continue;
+    }
+    if (wt2.lastIndex = m, wt2.test(t)) {
+      if (A + g > S2 && (v = Math.min(v, m)), A + g > i) {
+        f = true;
+        break;
+      }
+      A += g, I2 = $, B2 = m, m = $ = wt2.lastIndex;
+      continue;
+    }
+    m += 1;
+  }
+  return { width: f ? S2 : A, index: f ? v : h, truncated: f, ellipsed: f && i >= o };
 };
-var le = (s) => {
-  const n = (t, i) => {
-    const r2 = t.label ?? String(t.value);
-    switch (i) {
-      case "selected":
-        return `${import_picocolors4.default.dim(r2)}`;
+var Ee = { limit: 1 / 0, ellipsis: "", ellipsisWidth: 0 };
+var M2 = (t, r = {}) => jt(t, Ee, r).width;
+var ot2 = "\x1B";
+var Gt = "\x9B";
+var ve = 39;
+var Ct2 = "\x07";
+var kt2 = "[";
+var Ae = "]";
+var Vt2 = "m";
+var St2 = `${Ae}8;;`;
+var Ht = new RegExp(`(?:\\${kt2}(?<code>\\d+)m|\\${St2}(?<uri>.*)${Ct2})`, "y");
+var we = (t) => {
+  if (t >= 30 && t <= 37 || t >= 90 && t <= 97) return 39;
+  if (t >= 40 && t <= 47 || t >= 100 && t <= 107) return 49;
+  if (t === 1 || t === 2) return 22;
+  if (t === 3) return 23;
+  if (t === 4) return 24;
+  if (t === 7) return 27;
+  if (t === 8) return 28;
+  if (t === 9) return 29;
+  if (t === 0) return 0;
+};
+var Ut = (t) => `${ot2}${kt2}${t}${Vt2}`;
+var Kt = (t) => `${ot2}${St2}${t}${Ct2}`;
+var Ce = (t) => t.map((r) => M2(r));
+var It2 = (t, r, s) => {
+  const i = r[Symbol.iterator]();
+  let a = false, o = false, u = t.at(-1), l = u === void 0 ? 0 : M2(u), n = i.next(), c = i.next(), g = 0;
+  for (; !n.done; ) {
+    const F = n.value, p = M2(F);
+    l + p <= s ? t[t.length - 1] += F : (t.push(F), l = 0), (F === ot2 || F === Gt) && (a = true, o = r.startsWith(St2, g + 1)), a ? o ? F === Ct2 && (a = false, o = false) : F === Vt2 && (a = false) : (l += p, l === s && !c.done && (t.push(""), l = 0)), n = c, c = i.next(), g += F.length;
+  }
+  u = t.at(-1), !l && u !== void 0 && u.length > 0 && t.length > 1 && (t[t.length - 2] += t.pop());
+};
+var Se = (t) => {
+  const r = t.split(" ");
+  let s = r.length;
+  for (; s > 0 && !(M2(r[s - 1]) > 0); ) s--;
+  return s === r.length ? t : r.slice(0, s).join(" ") + r.slice(s).join("");
+};
+var Ie = (t, r, s = {}) => {
+  if (s.trim !== false && t.trim() === "") return "";
+  let i = "", a, o;
+  const u = t.split(" "), l = Ce(u);
+  let n = [""];
+  for (const [$, m] of u.entries()) {
+    s.trim !== false && (n[n.length - 1] = (n.at(-1) ?? "").trimStart());
+    let h = M2(n.at(-1) ?? "");
+    if ($ !== 0 && (h >= r && (s.wordWrap === false || s.trim === false) && (n.push(""), h = 0), (h > 0 || s.trim === false) && (n[n.length - 1] += " ", h++)), s.hard && l[$] > r) {
+      const y2 = r - h, f = 1 + Math.floor((l[$] - y2 - 1) / r);
+      Math.floor((l[$] - 1) / r) < f && n.push(""), It2(n, m, r);
+      continue;
+    }
+    if (h + l[$] > r && h > 0 && l[$] > 0) {
+      if (s.wordWrap === false && h < r) {
+        It2(n, m, r);
+        continue;
+      }
+      n.push("");
+    }
+    if (h + l[$] > r && s.wordWrap === false) {
+      It2(n, m, r);
+      continue;
+    }
+    n[n.length - 1] += m;
+  }
+  s.trim !== false && (n = n.map(($) => Se($)));
+  const c = n.join(`
+`), g = c[Symbol.iterator]();
+  let F = g.next(), p = g.next(), E = 0;
+  for (; !F.done; ) {
+    const $ = F.value, m = p.value;
+    if (i += $, $ === ot2 || $ === Gt) {
+      Ht.lastIndex = E + 1;
+      const f = Ht.exec(c)?.groups;
+      if (f?.code !== void 0) {
+        const v = Number.parseFloat(f.code);
+        a = v === ve ? void 0 : v;
+      } else f?.uri !== void 0 && (o = f.uri.length === 0 ? void 0 : f.uri);
+    }
+    const h = a ? we(a) : void 0;
+    m === `
+` ? (o && (i += Kt("")), a && h && (i += Ut(h))) : $ === `
+` && (a && h && (i += Ut(a)), o && (i += Kt(o))), E += $.length, F = p, p = g.next();
+  }
+  return i;
+};
+function J2(t, r, s) {
+  return String(t).normalize().replaceAll(`\r
+`, `
+`).split(`
+`).map((i) => Ie(i, r, s)).join(`
+`);
+}
+var be = (t, r, s, i, a) => {
+  let o = r, u = 0;
+  for (let l = s; l < i; l++) {
+    const n = t[l];
+    if (o = o - n.length, u++, o <= a) break;
+  }
+  return { lineCount: o, removals: u };
+};
+var X2 = (t) => {
+  const { cursor: r, options: s, style: i } = t, a = t.output ?? process.stdout, o = rt(a), u = t.columnPadding ?? 0, l = t.rowPadding ?? 4, n = o - u, c = nt(a), g = import_picocolors4.default.dim("..."), F = t.maxItems ?? Number.POSITIVE_INFINITY, p = Math.max(c - l, 0), E = Math.max(Math.min(F, p), 5);
+  let $ = 0;
+  r >= E - 3 && ($ = Math.max(Math.min(r - E + 3, s.length - E), 0));
+  let m = E < s.length && $ > 0, h = E < s.length && $ + E < s.length;
+  const y2 = Math.min($ + E, s.length), f = [];
+  let v = 0;
+  m && v++, h && v++;
+  const S2 = $ + (m ? 1 : 0), I2 = y2 - (h ? 1 : 0);
+  for (let A = S2; A < I2; A++) {
+    const w = J2(i(s[A], A === r), n, { hard: true, trim: false }).split(`
+`);
+    f.push(w), v += w.length;
+  }
+  if (v > p) {
+    let A = 0, w = 0, _2 = v;
+    const D2 = r - S2, T2 = (Y, L2) => be(f, _2, Y, L2, p);
+    m ? ({ lineCount: _2, removals: A } = T2(0, D2), _2 > p && ({ lineCount: _2, removals: w } = T2(D2 + 1, f.length))) : ({ lineCount: _2, removals: w } = T2(D2 + 1, f.length), _2 > p && ({ lineCount: _2, removals: A } = T2(0, D2))), A > 0 && (m = true, f.splice(0, A)), w > 0 && (h = true, f.splice(f.length - w, w));
+  }
+  const B2 = [];
+  m && B2.push(g);
+  for (const A of f) for (const w of A) B2.push(w);
+  return h && B2.push(g), B2;
+};
+function qt(t) {
+  return t.label ?? String(t.value ?? "");
+}
+function Jt(t, r) {
+  if (!t) return true;
+  const s = (r.label ?? String(r.value ?? "")).toLowerCase(), i = (r.hint ?? "").toLowerCase(), a = String(r.value).toLowerCase(), o = t.toLowerCase();
+  return s.includes(o) || i.includes(o) || a.includes(o);
+}
+function Be(t, r) {
+  const s = [];
+  for (const i of r) t.includes(i.value) && s.push(i);
+  return s;
+}
+var Xt = (t) => new Vt({ options: t.options, initialValue: t.initialValue ? [t.initialValue] : void 0, initialUserInput: t.initialUserInput, filter: t.filter ?? ((r, s) => Jt(r, s)), signal: t.signal, input: t.input, output: t.output, validate: t.validate, render() {
+  const r = t.withGuide ?? _.withGuide, s = r ? [`${import_picocolors4.default.gray(d)}`, `${W2(this.state)}  ${t.message}`] : [`${W2(this.state)}  ${t.message}`], i = this.userInput, a = this.options, o = t.placeholder, u = i === "" && o !== void 0, l = (n, c) => {
+    const g = qt(n), F = n.hint && n.value === this.focusedValue ? import_picocolors4.default.dim(` (${n.hint})`) : "";
+    switch (c) {
       case "active":
-        return `${import_picocolors4.default.green(I2)} ${r2} ${t.hint ? import_picocolors4.default.dim(`(${t.hint})`) : ""}`;
-      case "cancelled":
-        return `${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(r2))}`;
-      default:
-        return `${import_picocolors4.default.dim(T2)} ${import_picocolors4.default.dim(r2)}`;
+        return `${import_picocolors4.default.green(Q2)} ${g}${F}`;
+      case "inactive":
+        return `${import_picocolors4.default.dim(H2)} ${import_picocolors4.default.dim(g)}`;
+      case "disabled":
+        return `${import_picocolors4.default.gray(H2)} ${import_picocolors4.default.strikethrough(import_picocolors4.default.gray(g))}`;
     }
   };
-  return new $D({ options: s.options, initialValue: s.initialValue, render() {
-    const t = `${import_picocolors4.default.gray(a2)}
-${y2(this.state)}  ${s.message}
-`;
-    switch (this.state) {
-      case "submit":
-        return `${t}${import_picocolors4.default.gray(a2)}  ${n(this.options[this.cursor], "selected")}`;
-      case "cancel":
-        return `${t}${import_picocolors4.default.gray(a2)}  ${n(this.options[this.cursor], "cancelled")}
-${import_picocolors4.default.gray(a2)}`;
-      default:
-        return `${t}${import_picocolors4.default.cyan(a2)}  ${E({ cursor: this.cursor, options: this.options, maxItems: s.maxItems, style: (i, r2) => n(i, r2 ? "active" : "inactive") }).join(`
-${import_picocolors4.default.cyan(a2)}  `)}
-${import_picocolors4.default.cyan($2)}
-`;
+  switch (this.state) {
+    case "submit": {
+      const n = Be(this.selectedValues, a), c = n.length > 0 ? `  ${import_picocolors4.default.dim(n.map(qt).join(", "))}` : "", g = r ? import_picocolors4.default.gray(d) : "";
+      return `${s.join(`
+`)}
+${g}${c}`;
     }
-  } }).prompt();
-};
-var $e = (s) => {
-  const n = (t, i) => {
-    const r2 = t.label ?? String(t.value);
-    return i === "active" ? `${import_picocolors4.default.cyan(j2)} ${r2} ${t.hint ? import_picocolors4.default.dim(`(${t.hint})`) : ""}` : i === "selected" ? `${import_picocolors4.default.green(b2)} ${import_picocolors4.default.dim(r2)}` : i === "cancelled" ? `${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(r2))}` : i === "active-selected" ? `${import_picocolors4.default.green(b2)} ${r2} ${t.hint ? import_picocolors4.default.dim(`(${t.hint})`) : ""}` : i === "submitted" ? `${import_picocolors4.default.dim(r2)}` : `${import_picocolors4.default.dim(B)} ${import_picocolors4.default.dim(r2)}`;
-  };
-  return new vD({ options: s.options, initialValues: s.initialValues, required: s.required ?? true, cursorAt: s.cursorAt, validate(t) {
-    if (this.required && t.length === 0) return `Please select at least one option.
-${import_picocolors4.default.reset(import_picocolors4.default.dim(`Press ${import_picocolors4.default.gray(import_picocolors4.default.bgWhite(import_picocolors4.default.inverse(" space ")))} to select, ${import_picocolors4.default.gray(import_picocolors4.default.bgWhite(import_picocolors4.default.inverse(" enter ")))} to submit`))}`;
-  }, render() {
-    let t = `${import_picocolors4.default.gray(a2)}
-${y2(this.state)}  ${s.message}
-`;
-    const i = (r2, o) => {
-      const c2 = this.value.includes(r2.value);
-      return o && c2 ? n(r2, "active-selected") : c2 ? n(r2, "selected") : n(r2, o ? "active" : "inactive");
-    };
-    switch (this.state) {
-      case "submit":
-        return `${t}${import_picocolors4.default.gray(a2)}  ${this.options.filter(({ value: r2 }) => this.value.includes(r2)).map((r2) => n(r2, "submitted")).join(import_picocolors4.default.dim(", ")) || import_picocolors4.default.dim("none")}`;
-      case "cancel": {
-        const r2 = this.options.filter(({ value: o }) => this.value.includes(o)).map((o) => n(o, "cancelled")).join(import_picocolors4.default.dim(", "));
-        return `${t}${import_picocolors4.default.gray(a2)}  ${r2.trim() ? `${r2}
-${import_picocolors4.default.gray(a2)}` : ""}`;
-      }
-      case "error": {
-        const r2 = this.error.split(`
-`).map((o, c2) => c2 === 0 ? `${import_picocolors4.default.yellow($2)}  ${import_picocolors4.default.yellow(o)}` : `   ${o}`).join(`
-`);
-        return t + import_picocolors4.default.yellow(a2) + "  " + E({ options: this.options, cursor: this.cursor, maxItems: s.maxItems, style: i }).join(`
-${import_picocolors4.default.yellow(a2)}  `) + `
-` + r2 + `
-`;
-      }
-      default:
-        return `${t}${import_picocolors4.default.cyan(a2)}  ${E({ options: this.options, cursor: this.cursor, maxItems: s.maxItems, style: i }).join(`
-${import_picocolors4.default.cyan(a2)}  `)}
-${import_picocolors4.default.cyan($2)}
-`;
+    case "cancel": {
+      const n = i ? `  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(i))}` : "", c = r ? import_picocolors4.default.gray(d) : "";
+      return `${s.join(`
+`)}
+${c}${n}`;
     }
-  } }).prompt();
-};
-var he = (s = "") => {
-  process.stdout.write(`${import_picocolors4.default.gray($2)}  ${import_picocolors4.default.red(s)}
-
+    default: {
+      const n = this.state === "error" ? import_picocolors4.default.yellow : import_picocolors4.default.cyan, c = r ? `${n(d)}  ` : "", g = r ? n(x2) : "";
+      let F = "";
+      if (this.isNavigating || u) {
+        const f = u ? o : i;
+        F = f !== "" ? ` ${import_picocolors4.default.dim(f)}` : "";
+      } else F = ` ${this.userInputWithCursor}`;
+      const p = this.filteredOptions.length !== a.length ? import_picocolors4.default.dim(` (${this.filteredOptions.length} match${this.filteredOptions.length === 1 ? "" : "es"})`) : "", E = this.filteredOptions.length === 0 && i ? [`${c}${import_picocolors4.default.yellow("No matches found")}`] : [], $ = this.state === "error" ? [`${c}${import_picocolors4.default.yellow(this.error)}`] : [];
+      r && s.push(`${c.trimEnd()}`), s.push(`${c}${import_picocolors4.default.dim("Search:")}${F}${p}`, ...E, ...$);
+      const m = [`${import_picocolors4.default.dim("\u2191/\u2193")} to select`, `${import_picocolors4.default.dim("Enter:")} confirm`, `${import_picocolors4.default.dim("Type:")} to search`], h = [`${c}${m.join(" \u2022 ")}`, g], y2 = this.filteredOptions.length === 0 ? [] : X2({ cursor: this.cursor, options: this.filteredOptions, columnPadding: r ? 3 : 0, rowPadding: s.length + h.length, style: (f, v) => l(f, f.disabled ? "disabled" : v ? "active" : "inactive"), maxItems: t.maxItems, output: t.output });
+      return [...s, ...y2.map((f) => `${c}${f}`), ...h].join(`
 `);
-};
-var pe = (s = "") => {
-  process.stdout.write(`${import_picocolors4.default.gray(Q2)}  ${s}
-`);
-};
-var ge = (s = "") => {
-  process.stdout.write(`${import_picocolors4.default.gray(a2)}
-${import_picocolors4.default.gray($2)}  ${s}
-
-`);
-};
-var v2 = { message: (s = "", { symbol: n = import_picocolors4.default.gray(a2) } = {}) => {
-  const t = [`${import_picocolors4.default.gray(a2)}`];
-  if (s) {
-    const [i, ...r2] = s.split(`
-`);
-    t.push(`${n}  ${i}`, ...r2.map((o) => `${import_picocolors4.default.gray(a2)}  ${o}`));
+    }
   }
-  process.stdout.write(`${t.join(`
+} }).prompt();
+var Re = (t) => {
+  const r = t.active ?? "Yes", s = t.inactive ?? "No";
+  return new kt({ active: r, inactive: s, signal: t.signal, input: t.input, output: t.output, initialValue: t.initialValue ?? true, render() {
+    const i = t.withGuide ?? _.withGuide, a = `${i ? `${import_picocolors4.default.gray(d)}
+` : ""}${W2(this.state)}  ${t.message}
+`, o = this.value ? r : s;
+    switch (this.state) {
+      case "submit": {
+        const u = i ? `${import_picocolors4.default.gray(d)}  ` : "";
+        return `${a}${u}${import_picocolors4.default.dim(o)}`;
+      }
+      case "cancel": {
+        const u = i ? `${import_picocolors4.default.gray(d)}  ` : "";
+        return `${a}${u}${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(o))}${i ? `
+${import_picocolors4.default.gray(d)}` : ""}`;
+      }
+      default: {
+        const u = i ? `${import_picocolors4.default.cyan(d)}  ` : "", l = i ? import_picocolors4.default.cyan(x2) : "";
+        return `${a}${u}${this.value ? `${import_picocolors4.default.green(Q2)} ${r}` : `${import_picocolors4.default.dim(H2)} ${import_picocolors4.default.dim(r)}`}${t.vertical ? i ? `
+${import_picocolors4.default.cyan(d)}  ` : `
+` : ` ${import_picocolors4.default.dim("/")} `}${this.value ? `${import_picocolors4.default.dim(H2)} ${import_picocolors4.default.dim(s)}` : `${import_picocolors4.default.green(Q2)} ${s}`}
+${l}
+`;
+      }
+    }
+  } }).prompt();
+};
+var R2 = { message: (t = [], { symbol: r = import_picocolors4.default.gray(d), secondarySymbol: s = import_picocolors4.default.gray(d), output: i = process.stdout, spacing: a = 1, withGuide: o } = {}) => {
+  const u = [], l = o ?? _.withGuide, n = l ? s : "", c = l ? `${r}  ` : "", g = l ? `${s}  ` : "";
+  for (let p = 0; p < a; p++) u.push(n);
+  const F = Array.isArray(t) ? t : t.split(`
+`);
+  if (F.length > 0) {
+    const [p, ...E] = F;
+    p.length > 0 ? u.push(`${c}${p}`) : u.push(l ? r : "");
+    for (const $ of E) $.length > 0 ? u.push(`${g}${$}`) : u.push(l ? s : "");
+  }
+  i.write(`${u.join(`
 `)}
 `);
-}, info: (s) => {
-  v2.message(s, { symbol: import_picocolors4.default.blue(se) });
-}, success: (s) => {
-  v2.message(s, { symbol: import_picocolors4.default.green(re) });
-}, step: (s) => {
-  v2.message(s, { symbol: import_picocolors4.default.green(M2) });
-}, warn: (s) => {
-  v2.message(s, { symbol: import_picocolors4.default.yellow(ie) });
-}, warning: (s) => {
-  v2.warn(s);
-}, error: (s) => {
-  v2.message(s, { symbol: import_picocolors4.default.red(ne) });
+}, info: (t, r) => {
+  R2.message(t, { ...r, symbol: import_picocolors4.default.blue(ft2) });
+}, success: (t, r) => {
+  R2.message(t, { ...r, symbol: import_picocolors4.default.green(Ft2) });
+}, step: (t, r) => {
+  R2.message(t, { ...r, symbol: import_picocolors4.default.green(V) });
+}, warn: (t, r) => {
+  R2.message(t, { ...r, symbol: import_picocolors4.default.yellow(yt2) });
+}, warning: (t, r) => {
+  R2.warn(t, r);
+}, error: (t, r) => {
+  R2.message(t, { ...r, symbol: import_picocolors4.default.red(Et2) });
 } };
-var _2 = () => {
-  const s = C ? ["\u25D2", "\u25D0", "\u25D3", "\u25D1"] : ["\u2022", "o", "O", "0"], n = C ? 80 : 120;
-  let t, i, r2 = false, o = "";
-  const c2 = (g2) => {
-    const m2 = g2 > 1 ? "Something went wrong" : "Canceled";
-    r2 && x2(m2, g2);
-  }, l2 = () => c2(2), d2 = () => c2(1), p = () => {
-    process.on("uncaughtExceptionMonitor", l2), process.on("unhandledRejection", l2), process.on("SIGINT", d2), process.on("SIGTERM", d2), process.on("exit", c2);
-  }, S2 = () => {
-    process.removeListener("uncaughtExceptionMonitor", l2), process.removeListener("unhandledRejection", l2), process.removeListener("SIGINT", d2), process.removeListener("SIGTERM", d2), process.removeListener("exit", c2);
-  }, f2 = (g2 = "") => {
-    r2 = true, t = OD(), o = g2.replace(/\.+$/, ""), process.stdout.write(`${import_picocolors4.default.gray(a2)}
+var Ne = (t = "", r) => {
+  (r?.output ?? process.stdout).write(`${import_picocolors4.default.gray(x2)}  ${import_picocolors4.default.red(t)}
+
 `);
-    let m2 = 0, w2 = 0;
-    p(), i = setInterval(() => {
-      const L2 = import_picocolors4.default.magenta(s[m2]), O2 = ".".repeat(Math.floor(w2)).slice(0, 3);
-      process.stdout.write(import_sisteransi2.cursor.move(-999, 0)), process.stdout.write(import_sisteransi2.erase.down(1)), process.stdout.write(`${L2}  ${o}${O2}`), m2 = m2 + 1 < s.length ? m2 + 1 : 0, w2 = w2 < s.length ? w2 + 0.125 : 0;
-    }, n);
-  }, x2 = (g2 = "", m2 = 0) => {
-    o = g2 ?? o, r2 = false, clearInterval(i);
-    const w2 = m2 === 0 ? import_picocolors4.default.green(M2) : m2 === 1 ? import_picocolors4.default.red(P2) : import_picocolors4.default.red(V2);
-    process.stdout.write(import_sisteransi2.cursor.move(-999, 0)), process.stdout.write(import_sisteransi2.erase.down(1)), process.stdout.write(`${w2}  ${o}
-`), S2(), t();
+};
+var We = (t = "", r) => {
+  (r?.output ?? process.stdout).write(`${import_picocolors4.default.gray(ht2)}  ${t}
+`);
+};
+var Le = (t = "", r) => {
+  (r?.output ?? process.stdout).write(`${import_picocolors4.default.gray(d)}
+${import_picocolors4.default.gray(x2)}  ${t}
+
+`);
+};
+var Z2 = (t, r) => t.split(`
+`).map((s) => r(s)).join(`
+`);
+var je = (t) => {
+  const r = (i, a) => {
+    const o = i.label ?? String(i.value);
+    return a === "disabled" ? `${import_picocolors4.default.gray(q2)} ${Z2(o, (u) => import_picocolors4.default.strikethrough(import_picocolors4.default.gray(u)))}${i.hint ? ` ${import_picocolors4.default.dim(`(${i.hint ?? "disabled"})`)}` : ""}` : a === "active" ? `${import_picocolors4.default.cyan(st2)} ${o}${i.hint ? ` ${import_picocolors4.default.dim(`(${i.hint})`)}` : ""}` : a === "selected" ? `${import_picocolors4.default.green(U2)} ${Z2(o, import_picocolors4.default.dim)}${i.hint ? ` ${import_picocolors4.default.dim(`(${i.hint})`)}` : ""}` : a === "cancelled" ? `${Z2(o, (u) => import_picocolors4.default.strikethrough(import_picocolors4.default.dim(u)))}` : a === "active-selected" ? `${import_picocolors4.default.green(U2)} ${o}${i.hint ? ` ${import_picocolors4.default.dim(`(${i.hint})`)}` : ""}` : a === "submitted" ? `${Z2(o, import_picocolors4.default.dim)}` : `${import_picocolors4.default.dim(q2)} ${Z2(o, import_picocolors4.default.dim)}`;
+  }, s = t.required ?? true;
+  return new Lt({ options: t.options, signal: t.signal, input: t.input, output: t.output, initialValues: t.initialValues, required: s, cursorAt: t.cursorAt, validate(i) {
+    if (s && (i === void 0 || i.length === 0)) return `Please select at least one option.
+${import_picocolors4.default.reset(import_picocolors4.default.dim(`Press ${import_picocolors4.default.gray(import_picocolors4.default.bgWhite(import_picocolors4.default.inverse(" space ")))} to select, ${import_picocolors4.default.gray(import_picocolors4.default.bgWhite(import_picocolors4.default.inverse(" enter ")))} to submit`))}`;
+  }, render() {
+    const i = xt(t.output, t.message, `${vt2(this.state)}  `, `${W2(this.state)}  `), a = `${import_picocolors4.default.gray(d)}
+${i}
+`, o = this.value ?? [], u = (l, n) => {
+      if (l.disabled) return r(l, "disabled");
+      const c = o.includes(l.value);
+      return n && c ? r(l, "active-selected") : c ? r(l, "selected") : r(l, n ? "active" : "inactive");
+    };
+    switch (this.state) {
+      case "submit": {
+        const l = this.options.filter(({ value: c }) => o.includes(c)).map((c) => r(c, "submitted")).join(import_picocolors4.default.dim(", ")) || import_picocolors4.default.dim("none"), n = xt(t.output, l, `${import_picocolors4.default.gray(d)}  `);
+        return `${a}${n}`;
+      }
+      case "cancel": {
+        const l = this.options.filter(({ value: c }) => o.includes(c)).map((c) => r(c, "cancelled")).join(import_picocolors4.default.dim(", "));
+        if (l.trim() === "") return `${a}${import_picocolors4.default.gray(d)}`;
+        const n = xt(t.output, l, `${import_picocolors4.default.gray(d)}  `);
+        return `${a}${n}
+${import_picocolors4.default.gray(d)}`;
+      }
+      case "error": {
+        const l = `${import_picocolors4.default.yellow(d)}  `, n = this.error.split(`
+`).map((F, p) => p === 0 ? `${import_picocolors4.default.yellow(x2)}  ${import_picocolors4.default.yellow(F)}` : `   ${F}`).join(`
+`), c = a.split(`
+`).length, g = n.split(`
+`).length + 1;
+        return `${a}${l}${X2({ output: t.output, options: this.options, cursor: this.cursor, maxItems: t.maxItems, columnPadding: l.length, rowPadding: c + g, style: u }).join(`
+${l}`)}
+${n}
+`;
+      }
+      default: {
+        const l = `${import_picocolors4.default.cyan(d)}  `, n = a.split(`
+`).length;
+        return `${a}${l}${X2({ output: t.output, options: this.options, cursor: this.cursor, maxItems: t.maxItems, columnPadding: l.length, rowPadding: n + 2, style: u }).join(`
+${l}`)}
+${import_picocolors4.default.cyan(x2)}
+`;
+      }
+    }
+  } }).prompt();
+};
+var He = (t) => new Mt({ validate: t.validate, mask: t.mask ?? Nt, signal: t.signal, input: t.input, output: t.output, render() {
+  const r = t.withGuide ?? _.withGuide, s = `${r ? `${import_picocolors4.default.gray(d)}
+` : ""}${W2(this.state)}  ${t.message}
+`, i = this.userInputWithCursor, a = this.masked;
+  switch (this.state) {
+    case "error": {
+      const o = r ? `${import_picocolors4.default.yellow(d)}  ` : "", u = r ? `${import_picocolors4.default.yellow(x2)}  ` : "", l = a ?? "";
+      return t.clearOnError && this.clear(), `${s.trim()}
+${o}${l}
+${u}${import_picocolors4.default.yellow(this.error)}
+`;
+    }
+    case "submit": {
+      const o = r ? `${import_picocolors4.default.gray(d)}  ` : "", u = a ? import_picocolors4.default.dim(a) : "";
+      return `${s}${o}${u}`;
+    }
+    case "cancel": {
+      const o = r ? `${import_picocolors4.default.gray(d)}  ` : "", u = a ? import_picocolors4.default.strikethrough(import_picocolors4.default.dim(a)) : "";
+      return `${s}${o}${u}${a && r ? `
+${import_picocolors4.default.gray(d)}` : ""}`;
+    }
+    default: {
+      const o = r ? `${import_picocolors4.default.cyan(d)}  ` : "", u = r ? import_picocolors4.default.cyan(x2) : "";
+      return `${s}${o}${i}
+${u}
+`;
+    }
+  }
+} }).prompt();
+var Ue = (t) => {
+  const r = t.validate;
+  return Xt({ ...t, initialUserInput: t.initialValue ?? t.root ?? process.cwd(), maxItems: 5, validate(s) {
+    if (!Array.isArray(s)) {
+      if (!s) return "Please select a path";
+      if (r) return r(s);
+    }
+  }, options() {
+    const s = this.userInput;
+    if (s === "") return [];
+    try {
+      let i;
+      return $e(s) ? xt2(s).isDirectory() ? i = s : i = _t2(s) : i = _t2(s), de(i).map((a) => {
+        const o = he(i, a), u = xt2(o);
+        return { name: a, path: o, isDirectory: u.isDirectory() };
+      }).filter(({ path: a, isDirectory: o }) => a.startsWith(s) && (t.directory || !o)).map((a) => ({ value: a.path }));
+    } catch {
+      return [];
+    }
+  } });
+};
+var Ke = import_picocolors4.default.magenta;
+var bt2 = ({ indicator: t = "dots", onCancel: r, output: s = process.stdout, cancelMessage: i, errorMessage: a, frames: o = et2 ? ["\u25D2", "\u25D0", "\u25D3", "\u25D1"] : ["\u2022", "o", "O", "0"], delay: u = et2 ? 80 : 120, signal: l, ...n } = {}) => {
+  const c = ct2();
+  let g, F, p = false, E = false, $ = "", m, h = performance.now();
+  const y2 = rt(s), f = n?.styleFrame ?? Ke, v = (b) => {
+    const O2 = b > 1 ? a ?? _.messages.error : i ?? _.messages.cancel;
+    E = b === 1, p && (L2(O2, b), E && typeof r == "function" && r());
+  }, S2 = () => v(2), I2 = () => v(1), B2 = () => {
+    process.on("uncaughtExceptionMonitor", S2), process.on("unhandledRejection", S2), process.on("SIGINT", I2), process.on("SIGTERM", I2), process.on("exit", v), l && l.addEventListener("abort", I2);
+  }, A = () => {
+    process.removeListener("uncaughtExceptionMonitor", S2), process.removeListener("unhandledRejection", S2), process.removeListener("SIGINT", I2), process.removeListener("SIGTERM", I2), process.removeListener("exit", v), l && l.removeEventListener("abort", I2);
+  }, w = () => {
+    if (m === void 0) return;
+    c && s.write(`
+`);
+    const b = J2(m, y2, { hard: true, trim: false }).split(`
+`);
+    b.length > 1 && s.write(import_sisteransi2.cursor.up(b.length - 1)), s.write(import_sisteransi2.cursor.to(0)), s.write(import_sisteransi2.erase.down());
+  }, _2 = (b) => b.replace(/\.+$/, ""), D2 = (b) => {
+    const O2 = (performance.now() - b) / 1e3, j2 = Math.floor(O2 / 60), G2 = Math.floor(O2 % 60);
+    return j2 > 0 ? `[${j2}m ${G2}s]` : `[${G2}s]`;
+  }, T2 = n.withGuide ?? _.withGuide, Y = (b = "") => {
+    p = true, g = Bt({ output: s }), $ = _2(b), h = performance.now(), T2 && s.write(`${import_picocolors4.default.gray(d)}
+`);
+    let O2 = 0, j2 = 0;
+    B2(), F = setInterval(() => {
+      if (c && $ === m) return;
+      w(), m = $;
+      const G2 = f(o[O2]);
+      let tt2;
+      if (c) tt2 = `${G2}  ${$}...`;
+      else if (t === "timer") tt2 = `${G2}  ${$} ${D2(h)}`;
+      else {
+        const te = ".".repeat(Math.floor(j2)).slice(0, 3);
+        tt2 = `${G2}  ${$}${te}`;
+      }
+      const Zt = J2(tt2, y2, { hard: true, trim: false });
+      s.write(Zt), O2 = O2 + 1 < o.length ? O2 + 1 : 0, j2 = j2 < 4 ? j2 + 0.125 : 0;
+    }, u);
+  }, L2 = (b = "", O2 = 0, j2 = false) => {
+    if (!p) return;
+    p = false, clearInterval(F), w();
+    const G2 = O2 === 0 ? import_picocolors4.default.green(V) : O2 === 1 ? import_picocolors4.default.red(dt2) : import_picocolors4.default.red($t2);
+    $ = b ?? $, j2 || (t === "timer" ? s.write(`${G2}  ${$} ${D2(h)}
+`) : s.write(`${G2}  ${$}
+`)), A(), g();
   };
-  return { start: f2, stop: x2, message: (g2 = "") => {
-    o = g2 ?? o;
+  return { start: Y, stop: (b = "") => L2(b, 0), message: (b = "") => {
+    $ = _2(b ?? $);
+  }, cancel: (b = "") => L2(b, 1), error: (b = "") => L2(b, 2), clear: () => L2("", 0, true), get isCancelled() {
+    return E;
   } };
 };
+var zt = { light: C("\u2500", "-"), heavy: C("\u2501", "="), block: C("\u2588", "#") };
+var lt2 = (t, r) => t.includes(`
+`) ? t.split(`
+`).map((s) => r(s)).join(`
+`) : r(t);
+var Je = (t) => {
+  const r = (s, i) => {
+    const a = s.label ?? String(s.value);
+    switch (i) {
+      case "disabled":
+        return `${import_picocolors4.default.gray(H2)} ${lt2(a, import_picocolors4.default.gray)}${s.hint ? ` ${import_picocolors4.default.dim(`(${s.hint ?? "disabled"})`)}` : ""}`;
+      case "selected":
+        return `${lt2(a, import_picocolors4.default.dim)}`;
+      case "active":
+        return `${import_picocolors4.default.green(Q2)} ${a}${s.hint ? ` ${import_picocolors4.default.dim(`(${s.hint})`)}` : ""}`;
+      case "cancelled":
+        return `${lt2(a, (o) => import_picocolors4.default.strikethrough(import_picocolors4.default.dim(o)))}`;
+      default:
+        return `${import_picocolors4.default.dim(H2)} ${lt2(a, import_picocolors4.default.dim)}`;
+    }
+  };
+  return new Wt({ options: t.options, signal: t.signal, input: t.input, output: t.output, initialValue: t.initialValue, render() {
+    const s = t.withGuide ?? _.withGuide, i = `${W2(this.state)}  `, a = `${vt2(this.state)}  `, o = xt(t.output, t.message, a, i), u = `${s ? `${import_picocolors4.default.gray(d)}
+` : ""}${o}
+`;
+    switch (this.state) {
+      case "submit": {
+        const l = s ? `${import_picocolors4.default.gray(d)}  ` : "", n = xt(t.output, r(this.options[this.cursor], "selected"), l);
+        return `${u}${n}`;
+      }
+      case "cancel": {
+        const l = s ? `${import_picocolors4.default.gray(d)}  ` : "", n = xt(t.output, r(this.options[this.cursor], "cancelled"), l);
+        return `${u}${n}${s ? `
+${import_picocolors4.default.gray(d)}` : ""}`;
+      }
+      default: {
+        const l = s ? `${import_picocolors4.default.cyan(d)}  ` : "", n = s ? import_picocolors4.default.cyan(x2) : "", c = u.split(`
+`).length, g = s ? 2 : 1;
+        return `${u}${l}${X2({ output: t.output, cursor: this.cursor, options: this.options, maxItems: t.maxItems, columnPadding: l.length, rowPadding: c + g, style: (F, p) => r(F, F.disabled ? "disabled" : p ? "active" : "inactive") }).join(`
+${l}`)}
+${n}
+`;
+      }
+    }
+  } }).prompt();
+};
+var Qt = `${import_picocolors4.default.gray(d)}  `;
+var Ze = (t) => new $t({ validate: t.validate, placeholder: t.placeholder, defaultValue: t.defaultValue, initialValue: t.initialValue, output: t.output, signal: t.signal, input: t.input, render() {
+  const r = t?.withGuide ?? _.withGuide, s = `${`${r ? `${import_picocolors4.default.gray(d)}
+` : ""}${W2(this.state)}  `}${t.message}
+`, i = t.placeholder ? import_picocolors4.default.inverse(t.placeholder[0]) + import_picocolors4.default.dim(t.placeholder.slice(1)) : import_picocolors4.default.inverse(import_picocolors4.default.hidden("_")), a = this.userInput ? this.userInputWithCursor : i, o = this.value ?? "";
+  switch (this.state) {
+    case "error": {
+      const u = this.error ? `  ${import_picocolors4.default.yellow(this.error)}` : "", l = r ? `${import_picocolors4.default.yellow(d)}  ` : "", n = r ? import_picocolors4.default.yellow(x2) : "";
+      return `${s.trim()}
+${l}${a}
+${n}${u}
+`;
+    }
+    case "submit": {
+      const u = o ? `  ${import_picocolors4.default.dim(o)}` : "", l = r ? import_picocolors4.default.gray(d) : "";
+      return `${s}${l}${u}`;
+    }
+    case "cancel": {
+      const u = o ? `  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(o))}` : "", l = r ? import_picocolors4.default.gray(d) : "";
+      return `${s}${l}${u}${o.trim() ? `
+${l}` : ""}`;
+    }
+    default: {
+      const u = r ? `${import_picocolors4.default.cyan(d)}  ` : "", l = r ? import_picocolors4.default.cyan(x2) : "";
+      return `${s}${u}${a}
+${l}
+`;
+    }
+  }
+} }).prompt();
 
 // src/commands/setup.ts
 var import_picocolors7 = __toESM(require_picocolors(), 1);
@@ -4173,7 +5095,7 @@ function dockerExecInteractive(containerName, cmd) {
 
 // src/prompts/prerequisites.ts
 async function checkPrerequisites() {
-  const s = _2();
+  const s = bt2();
   s.start("Checking prerequisites");
   const checks = [
     {
@@ -4200,11 +5122,11 @@ async function checkPrerequisites() {
   }
   if (failed.length > 0) {
     s.stop("Prerequisites check failed");
-    v2.error("Missing prerequisites:");
+    R2.error("Missing prerequisites:");
     for (const msg of failed) {
-      v2.message(msg);
+      R2.message(msg);
     }
-    he("Please install the missing prerequisites and try again.");
+    Ne("Please install the missing prerequisites and try again.");
     process.exit(1);
   }
   s.stop("All prerequisites met");
@@ -4213,8 +5135,8 @@ async function checkPrerequisites() {
 // src/utils/validators.ts
 function validateEmail(value) {
   if (!value) return "Email is required";
-  const re2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!re2.test(value)) return "Please enter a valid email address";
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!re.test(value)) return "Please enter a valid email address";
   return void 0;
 }
 function validatePassword(value) {
@@ -4225,8 +5147,8 @@ function validatePassword(value) {
 function validateDomain(value) {
   if (!value) return "Domain is required";
   if (value === "localhost") return void 0;
-  const re2 = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-  if (!re2.test(value)) return "Please enter a valid domain (e.g., learnhouse.example.com)";
+  const re = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  if (!re.test(value)) return "Please enter a valid domain (e.g., learnhouse.example.com)";
   return void 0;
 }
 function validatePort(value) {
@@ -4241,21 +5163,21 @@ function validateRequired(value) {
 
 // src/prompts/domain.ts
 async function promptDomain() {
-  const domain = await ae({
+  const domain = await Ze({
     message: "What domain will LearnHouse be hosted on?",
     placeholder: "localhost",
     defaultValue: "localhost",
     validate: validateDomain
   });
-  if (lD(domain)) {
-    he();
+  if (Ct(domain)) {
+    Ne();
     process.exit(0);
   }
   let useHttps = false;
   let autoSsl = false;
   let sslEmail;
   if (domain !== "localhost") {
-    const httpsChoice = await le({
+    const httpsChoice = await Je({
       message: "HTTPS configuration?",
       options: [
         { value: "auto", label: "Automatic SSL (Let's Encrypt via Caddy)", hint: "recommended" },
@@ -4263,20 +5185,20 @@ async function promptDomain() {
         { value: "none", label: "No HTTPS (HTTP only)", hint: "not recommended for production" }
       ]
     });
-    if (lD(httpsChoice)) {
-      he();
+    if (Ct(httpsChoice)) {
+      Ne();
       process.exit(0);
     }
     if (httpsChoice === "auto") {
       useHttps = true;
       autoSsl = true;
-      const email = await ae({
+      const email = await Ze({
         message: "Email for Let's Encrypt notifications?",
         placeholder: "admin@example.com",
         validate: validateEmail
       });
-      if (lD(email)) {
-        he();
+      if (Ct(email)) {
+        Ne();
         process.exit(0);
       }
       sslEmail = email;
@@ -4286,14 +5208,14 @@ async function promptDomain() {
   }
   const defaultPort = autoSsl ? 443 : 80;
   const portMessage = autoSsl ? "HTTPS port? (Caddy needs 443 for auto SSL, and will also listen on 80 for redirect)" : "HTTP port for the web server?";
-  const port = await ae({
+  const port = await Ze({
     message: portMessage,
     placeholder: String(defaultPort),
     defaultValue: String(defaultPort),
     validate: validatePort
   });
-  if (lD(port)) {
-    he();
+  if (Ct(port)) {
+    Ne();
     process.exit(0);
   }
   return {
@@ -4359,7 +5281,7 @@ function parseRedisUrl(connString) {
 // src/prompts/database.ts
 async function promptAndVerifyPostgres() {
   while (true) {
-    const connString = await ae({
+    const connString = await Ze({
       message: "PostgreSQL connection string?",
       placeholder: "postgresql://user:password@host:5432/learnhouse",
       validate: (value) => {
@@ -4371,16 +5293,16 @@ async function promptAndVerifyPostgres() {
         return void 0;
       }
     });
-    if (lD(connString)) {
-      he();
+    if (Ct(connString)) {
+      Ne();
       process.exit(0);
     }
     const parsed = parsePostgresUrl(connString);
     if (!parsed) {
-      v2.error("Could not parse the connection string. Please check the format.");
+      R2.error("Could not parse the connection string. Please check the format.");
       continue;
     }
-    const s = _2();
+    const s = bt2();
     s.start(`Checking connection to ${parsed.host}:${parsed.port}`);
     const reachable = await checkTcpConnection(parsed.host, parsed.port);
     if (reachable) {
@@ -4388,19 +5310,19 @@ async function promptAndVerifyPostgres() {
       return connString;
     }
     s.stop(`${import_picocolors6.default.red("Connection failed")} to ${parsed.host}:${parsed.port}`);
-    const retry = await ce({
+    const retry = await Re({
       message: "Could not reach the database. Try a different connection string?",
       initialValue: true
     });
-    if (lD(retry) || !retry) {
-      he();
+    if (Ct(retry) || !retry) {
+      Ne();
       process.exit(0);
     }
   }
 }
 async function promptAndVerifyRedis() {
   while (true) {
-    const connString = await ae({
+    const connString = await Ze({
       message: "Redis connection string?",
       placeholder: "redis://user:password@host:6379/0",
       validate: (value) => {
@@ -4412,16 +5334,16 @@ async function promptAndVerifyRedis() {
         return void 0;
       }
     });
-    if (lD(connString)) {
-      he();
+    if (Ct(connString)) {
+      Ne();
       process.exit(0);
     }
     const parsed = parseRedisUrl(connString);
     if (!parsed) {
-      v2.error("Could not parse the connection string. Please check the format.");
+      R2.error("Could not parse the connection string. Please check the format.");
       continue;
     }
-    const s = _2();
+    const s = bt2();
     s.start(`Checking connection to ${parsed.host}:${parsed.port}`);
     const reachable = await checkTcpConnection(parsed.host, parsed.port);
     if (reachable) {
@@ -4429,26 +5351,26 @@ async function promptAndVerifyRedis() {
       return connString;
     }
     s.stop(`${import_picocolors6.default.red("Connection failed")} to ${parsed.host}:${parsed.port}`);
-    const retry = await ce({
+    const retry = await Re({
       message: "Could not reach Redis. Try a different connection string?",
       initialValue: true
     });
-    if (lD(retry) || !retry) {
-      he();
+    if (Ct(retry) || !retry) {
+      Ne();
       process.exit(0);
     }
   }
 }
 async function promptDatabase() {
-  const dbChoice = await le({
+  const dbChoice = await Je({
     message: "PostgreSQL database setup?",
     options: [
       { value: "local", label: "Create a new database (Docker)", hint: "recommended" },
       { value: "external", label: "Use an external database", hint: "bring your own PostgreSQL" }
     ]
   });
-  if (lD(dbChoice)) {
-    he();
+  if (Ct(dbChoice)) {
+    Ne();
     process.exit(0);
   }
   let useExternalDb = false;
@@ -4459,22 +5381,22 @@ async function promptDatabase() {
     externalDbConnectionString = await promptAndVerifyPostgres();
     useExternalDb = true;
   } else {
-    const dbImageChoice = await le({
+    const dbImageChoice = await Je({
       message: "Which PostgreSQL image?",
       options: [
         { value: "ai", label: "PostgreSQL with AI capabilities", hint: "recommended \u2014 enables AI course chatbot (RAG)" },
         { value: "standard", label: "Standard PostgreSQL", hint: "lighter image, no AI search features" }
       ]
     });
-    if (lD(dbImageChoice)) {
-      he();
+    if (Ct(dbImageChoice)) {
+      Ne();
       process.exit(0);
     }
     useAiDatabase = dbImageChoice === "ai";
     dbPassword = crypto.randomBytes(24).toString("base64url");
-    v2.message("");
-    v2.info(import_picocolors6.default.bold("Database credentials generated:"));
-    v2.message([
+    R2.message("");
+    R2.info(import_picocolors6.default.bold("Database credentials generated:"));
+    R2.message([
       "",
       `  ${import_picocolors6.default.dim("User:")}     learnhouse`,
       `  ${import_picocolors6.default.dim("Password:")} ${import_picocolors6.default.cyan(dbPassword)}`,
@@ -4484,21 +5406,21 @@ async function promptDatabase() {
       `  ${import_picocolors6.default.yellow("Copy the password now if needed \u2014 it will be saved in .env")}`,
       ""
     ].join("\n"));
-    const ack = await ce({ message: "Continue?", initialValue: true });
-    if (lD(ack) || !ack) {
-      he();
+    const ack = await Re({ message: "Continue?", initialValue: true });
+    if (Ct(ack) || !ack) {
+      Ne();
       process.exit(0);
     }
   }
-  const redisChoice = await le({
+  const redisChoice = await Je({
     message: "Redis setup?",
     options: [
       { value: "local", label: "Create a new Redis instance (Docker)", hint: "recommended" },
       { value: "external", label: "Use an external Redis", hint: "bring your own Redis" }
     ]
   });
-  if (lD(redisChoice)) {
-    he();
+  if (Ct(redisChoice)) {
+    Ne();
     process.exit(0);
   }
   let useExternalRedis = false;
@@ -4519,13 +5441,13 @@ async function promptDatabase() {
 
 // src/prompts/organization.ts
 async function promptOrganization() {
-  const orgName = await ae({
+  const orgName = await Ze({
     message: "Organization name?",
     placeholder: "My School",
     validate: validateRequired
   });
-  if (lD(orgName)) {
-    he();
+  if (Ct(orgName)) {
+    Ne();
     process.exit(0);
   }
   return {
@@ -4535,21 +5457,21 @@ async function promptOrganization() {
 
 // src/prompts/admin.ts
 async function promptAdmin() {
-  const email = await ae({
+  const email = await Ze({
     message: "Admin email address?",
     placeholder: "admin@example.com",
     validate: validateEmail
   });
-  if (lD(email)) {
-    he();
+  if (Ct(email)) {
+    Ne();
     process.exit(0);
   }
-  const password = await oe({
+  const password = await He({
     message: "Admin password? (min 8 characters)",
     validate: validatePassword
   });
-  if (lD(password)) {
-    he();
+  if (Ct(password)) {
+    Ne();
     process.exit(0);
   }
   return {
@@ -4560,7 +5482,7 @@ async function promptAdmin() {
 
 // src/prompts/features.ts
 async function promptFeatures() {
-  const selected = await $e({
+  const selected = await je({
     message: "Enable optional features? (Space to toggle, Enter to confirm)",
     options: [
       { value: "ai", label: "AI Features (Gemini)" },
@@ -4571,8 +5493,8 @@ async function promptFeatures() {
     ],
     required: false
   });
-  if (lD(selected)) {
-    he();
+  if (Ct(selected)) {
+    Ne();
     process.exit(0);
   }
   const features = selected;
@@ -4584,154 +5506,154 @@ async function promptFeatures() {
     unsplashEnabled: features.includes("unsplash")
   };
   if (config.aiEnabled) {
-    v2.info("Configure AI (Gemini)");
-    const key = await ae({
+    R2.info("Configure AI (Gemini)");
+    const key = await Ze({
       message: "Gemini API key?",
       placeholder: "AIza...",
       validate: validateRequired
     });
-    if (lD(key)) {
-      he();
+    if (Ct(key)) {
+      Ne();
       process.exit(0);
     }
     config.geminiApiKey = key;
   }
   if (config.emailEnabled) {
-    const provider = await le({
+    const provider = await Je({
       message: "Email provider?",
       options: [
         { value: "smtp", label: "SMTP (any provider)" },
         { value: "resend", label: "Resend" }
       ]
     });
-    if (lD(provider)) {
-      he();
+    if (Ct(provider)) {
+      Ne();
       process.exit(0);
     }
     config.emailProvider = provider;
     if (config.emailProvider === "resend") {
-      v2.info("Configure Email (Resend)");
-      const key = await ae({
+      R2.info("Configure Email (Resend)");
+      const key = await Ze({
         message: "Resend API key?",
         placeholder: "re_...",
         validate: validateRequired
       });
-      if (lD(key)) {
-        he();
+      if (Ct(key)) {
+        Ne();
         process.exit(0);
       }
       config.resendApiKey = key;
     } else {
-      v2.info("Configure Email (SMTP)");
-      const host = await ae({
+      R2.info("Configure Email (SMTP)");
+      const host = await Ze({
         message: "SMTP host?",
         placeholder: "smtp.gmail.com",
         validate: validateRequired
       });
-      if (lD(host)) {
-        he();
+      if (Ct(host)) {
+        Ne();
         process.exit(0);
       }
       config.smtpHost = host;
-      const port = await ae({
+      const port = await Ze({
         message: "SMTP port?",
         initialValue: "587",
         validate: validateRequired
       });
-      if (lD(port)) {
-        he();
+      if (Ct(port)) {
+        Ne();
         process.exit(0);
       }
       config.smtpPort = parseInt(port, 10);
-      const username = await ae({
+      const username = await Ze({
         message: "SMTP username?",
         validate: validateRequired
       });
-      if (lD(username)) {
-        he();
+      if (Ct(username)) {
+        Ne();
         process.exit(0);
       }
       config.smtpUsername = username;
-      const password = await oe({
+      const password = await He({
         message: "SMTP password?",
         validate: validateRequired
       });
-      if (lD(password)) {
-        he();
+      if (Ct(password)) {
+        Ne();
         process.exit(0);
       }
       config.smtpPassword = password;
-      const useTls = await ce({
+      const useTls = await Re({
         message: "Use TLS?",
         initialValue: true
       });
-      if (lD(useTls)) {
-        he();
+      if (Ct(useTls)) {
+        Ne();
         process.exit(0);
       }
       config.smtpUseTls = useTls;
     }
-    const email = await ae({
+    const email = await Ze({
       message: "System email address (From)?",
       placeholder: "noreply@yourdomain.com",
       validate: validateRequired
     });
-    if (lD(email)) {
-      he();
+    if (Ct(email)) {
+      Ne();
       process.exit(0);
     }
     config.systemEmailAddress = email;
   }
   if (config.s3Enabled) {
-    v2.info("Configure S3 Storage");
-    const bucket = await ae({
+    R2.info("Configure S3 Storage");
+    const bucket = await Ze({
       message: "S3 bucket name?",
       validate: validateRequired
     });
-    if (lD(bucket)) {
-      he();
+    if (Ct(bucket)) {
+      Ne();
       process.exit(0);
     }
     config.s3BucketName = bucket;
-    const endpoint = await ae({
+    const endpoint = await Ze({
       message: "S3 endpoint URL? (leave empty for AWS S3)",
       placeholder: "https://s3.amazonaws.com"
     });
-    if (lD(endpoint)) {
-      he();
+    if (Ct(endpoint)) {
+      Ne();
       process.exit(0);
     }
     if (endpoint) config.s3EndpointUrl = endpoint;
   }
   if (config.googleOAuthEnabled) {
-    v2.info("Configure Google OAuth");
-    const clientId = await ae({
+    R2.info("Configure Google OAuth");
+    const clientId = await Ze({
       message: "Google Client ID?",
       validate: validateRequired
     });
-    if (lD(clientId)) {
-      he();
+    if (Ct(clientId)) {
+      Ne();
       process.exit(0);
     }
     config.googleClientId = clientId;
-    const clientSecret = await ae({
+    const clientSecret = await Ze({
       message: "Google Client Secret?",
       validate: validateRequired
     });
-    if (lD(clientSecret)) {
-      he();
+    if (Ct(clientSecret)) {
+      Ne();
       process.exit(0);
     }
     config.googleClientSecret = clientSecret;
   }
   if (config.unsplashEnabled) {
-    v2.info("Configure Unsplash");
-    const key = await ae({
+    R2.info("Configure Unsplash");
+    const key = await Ze({
       message: "Unsplash Access Key?",
       validate: validateRequired
     });
-    if (lD(key)) {
-      he();
+    if (Ct(key)) {
+      Ne();
       process.exit(0);
     }
     config.unsplashAccessKey = key;
@@ -4765,8 +5687,6 @@ ${deps.join("\n")}` : "";
     depends_on:
       learnhouse-app:
         condition: service_healthy
-      learnhouse-collab:
-        condition: service_started
     networks:
       - learnhouse-network-${id}
     healthcheck:
@@ -4786,8 +5706,6 @@ ${deps.join("\n")}` : "";
     depends_on:
       learnhouse-app:
         condition: service_healthy
-      learnhouse-collab:
-        condition: service_started
     networks:
       - learnhouse-network-${id}
     healthcheck:
@@ -4855,6 +5773,7 @@ services:
     environment:
       # HOSTNAME needs to be set explicitly for the container
       - HOSTNAME=0.0.0.0
+      - LEARNHOUSE_API_URL=http://localhost:9000
 ${appDependsOn}
     networks:
       - learnhouse-network-${id}
@@ -4864,21 +5783,6 @@ ${appDependsOn}
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  learnhouse-collab:
-    image: ${COLLAB_IMAGE}
-    container_name: learnhouse-collab-${id}
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - COLLAB_PORT=4000
-      - LEARNHOUSE_API_URL=http://learnhouse-app:9000
-    depends_on:
-      learnhouse-app:
-        condition: service_healthy
-    networks:
-      - learnhouse-network-${id}
 ${proxyService}${dbService}${redisService}
 networks:
   learnhouse-network-${id}:
@@ -4968,6 +5872,7 @@ function generateEnvFile(config) {
     "# =============================================================================",
     "",
     `COLLAB_INTERNAL_KEY=${collabInternalKey}`,
+    `LEARNHOUSE_REDIS_URL=${config.useExternalRedis ? config.externalRedisConnectionString : "redis://redis:6379"}`,
     `NEXT_PUBLIC_COLLAB_URL=${config.useHttps ? "wss" : "ws"}://${config.domain}${portSuffix}/collab`,
     "",
     "# =============================================================================",
@@ -5079,22 +5984,8 @@ server {
     # Increase the maximum allowed size of the client request header fields
     client_header_buffer_size 32k;
 
-    # Proxy WebSocket connections to the collaboration server
-    location /collab {
-        proxy_pass http://learnhouse-collab:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 86400s;
-        proxy_send_timeout 86400s;
-    }
-
     # Proxy all requests to the learnhouse-app service
-    # The app container has internal nginx routing between frontend and backend
+    # The app container has internal nginx routing between frontend, backend, and collab
     location / {
         proxy_pass http://learnhouse-app:80;
         proxy_set_header Host $host;
@@ -5102,13 +5993,14 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # WebSocket support
+        # WebSocket support (needed for /collab)
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
 
-        # Timeouts for long-running requests
-        proxy_read_timeout 300s;
+        # Timeouts for long-running requests and WebSocket connections
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
         proxy_connect_timeout 75s;
     }
 }
@@ -5123,12 +6015,7 @@ function generateCaddyfile(config) {
 }
 
 ${config.domain} {
-  handle /collab* {
-    reverse_proxy learnhouse-collab:4000
-  }
-  handle {
-    reverse_proxy learnhouse-app:3000
-  }
+  reverse_proxy learnhouse-app:80
 }
 `;
 }
@@ -5225,7 +6112,7 @@ async function waitForHealth(baseUrl) {
       if (res.ok) return true;
     } catch {
     }
-    await new Promise((r2) => setTimeout(r2, HEALTH_CHECK_INTERVAL_MS));
+    await new Promise((r) => setTimeout(r, HEALTH_CHECK_INTERVAL_MS));
   }
   return false;
 }
@@ -5242,60 +6129,79 @@ var STEP_NAMES = [
 var BACK = /* @__PURE__ */ Symbol("back");
 async function confirmOrBack(message) {
   if (STEP_NAMES.length === 0) return true;
-  const result = await le({
+  const result = await Je({
     message,
     options: [
       { value: "continue", label: "Continue" },
       { value: "back", label: import_picocolors7.default.dim("Go back to previous step") }
     ]
   });
-  if (lD(result)) {
-    he();
+  if (Ct(result)) {
+    Ne();
     process.exit(0);
   }
   return result === "back" ? BACK : true;
 }
 async function stepInstallDir() {
-  const installDir = await ae({
+  const installDir = await Ue({
     message: "Where should LearnHouse be installed?",
-    placeholder: "./learnhouse",
-    defaultValue: "./learnhouse"
+    initialValue: "./learnhouse"
   });
-  if (lD(installDir)) {
-    he();
+  if (Ct(installDir)) {
+    Ne();
     process.exit(0);
   }
   return path2.resolve(installDir);
 }
 async function stepDomain() {
-  v2.step(import_picocolors7.default.cyan(`Step 2/6`) + " Domain Configuration");
+  R2.step(import_picocolors7.default.cyan(`Step 2/6`) + " Domain Configuration");
   const config = await promptDomain();
   const portAvailable = await checkPort(config.httpPort);
   if (!portAvailable) {
-    v2.warn(`Port ${config.httpPort} is already in use. You may need to free it before starting.`);
+    R2.warn(`Port ${config.httpPort} is already in use. You may need to free it before starting.`);
   }
   return config;
 }
 async function stepDatabase() {
-  v2.step(import_picocolors7.default.cyan(`Step 3/6`) + " Database & Redis");
+  R2.step(import_picocolors7.default.cyan(`Step 3/6`) + " Database & Redis");
   return await promptDatabase();
 }
 async function stepOrganization() {
-  v2.step(import_picocolors7.default.cyan(`Step 4/6`) + " Organization Setup");
+  R2.step(import_picocolors7.default.cyan(`Step 4/6`) + " Organization Setup");
   return await promptOrganization();
 }
 async function stepAdmin() {
-  v2.step(import_picocolors7.default.cyan(`Step 5/6`) + " Admin Account");
+  R2.step(import_picocolors7.default.cyan(`Step 5/6`) + " Admin Account");
   return await promptAdmin();
 }
 async function stepFeatures() {
-  v2.step(import_picocolors7.default.cyan(`Step 6/6`) + " Optional Features");
+  R2.step(import_picocolors7.default.cyan(`Step 6/6`) + " Optional Features");
   return await promptFeatures();
 }
 async function setupCommand() {
   await printBanner();
-  pe(import_picocolors7.default.cyan("LearnHouse Setup Wizard"));
+  We(import_picocolors7.default.cyan("LearnHouse Setup Wizard"));
   await checkPrerequisites();
+  const channelChoice = await Je({
+    message: "Which release channel do you want to use?",
+    options: [
+      {
+        value: "stable",
+        label: "Stable",
+        hint: "recommended \u2014 versioned release or :latest"
+      },
+      {
+        value: "dev",
+        label: "Dev",
+        hint: "latest development build (:dev tag)"
+      }
+    ]
+  });
+  if (Ct(channelChoice)) {
+    Ne();
+    process.exit(0);
+  }
+  const channel = channelChoice;
   let resolvedDir = "";
   let domainConfig = null;
   let dbConfig = null;
@@ -5307,7 +6213,7 @@ async function setupCommand() {
   while (step < totalSteps) {
     switch (step) {
       case 0: {
-        v2.step(import_picocolors7.default.cyan(`Step 1/${totalSteps}`) + " Install Directory");
+        R2.step(import_picocolors7.default.cyan(`Step 1/${totalSteps}`) + " Install Directory");
         const result = await stepInstallDir();
         if (result === BACK) {
           step = Math.max(0, step - 1);
@@ -5368,6 +6274,7 @@ async function setupCommand() {
   const config = {
     deploymentId,
     installDir: resolvedDir,
+    channel,
     ...domainConfig,
     ...dbConfig,
     ...orgConfig,
@@ -5377,9 +6284,10 @@ async function setupCommand() {
   const protocol = config.useHttps ? "https" : "http";
   const portSuffix = config.useHttps && config.httpPort === 443 || !config.useHttps && config.httpPort === 80 ? "" : `:${config.httpPort}`;
   const url = `${protocol}://${config.domain}${portSuffix}`;
-  v2.step("Configuration Summary");
-  v2.message([
+  R2.step("Configuration Summary");
+  R2.message([
     `  ${import_picocolors7.default.dim("Directory:")}     ${resolvedDir}`,
+    `  ${import_picocolors7.default.dim("Channel:")}       ${config.channel === "dev" ? import_picocolors7.default.yellow("Dev (:dev)") : import_picocolors7.default.green("Stable")}`,
     `  ${import_picocolors7.default.dim("URL:")}           ${url}`,
     `  ${import_picocolors7.default.dim("HTTPS:")}         ${config.autoSsl ? "Auto SSL (Caddy)" : config.useHttps ? "Manual" : "Disabled"}`,
     `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : config.useAiDatabase ? "Local (Docker, AI-enabled)" : "Local (Docker)"}`,
@@ -5394,7 +6302,7 @@ async function setupCommand() {
   ].join("\n"));
   let confirmed = false;
   while (!confirmed) {
-    const action = await le({
+    const action = await Je({
       message: "What would you like to do?",
       options: [
         { value: "confirm", label: "Proceed with this configuration" },
@@ -5402,20 +6310,20 @@ async function setupCommand() {
         { value: "cancel", label: import_picocolors7.default.dim("Cancel setup") }
       ]
     });
-    if (lD(action) || action === "cancel") {
-      he("Setup cancelled.");
+    if (Ct(action) || action === "cancel") {
+      Ne("Setup cancelled.");
       process.exit(0);
     }
     if (action === "edit") {
-      const stepChoice = await le({
+      const stepChoice = await Je({
         message: "Which step do you want to edit?",
         options: STEP_NAMES.map((name, i) => ({ value: i, label: `${i + 1}. ${name}` }))
       });
-      if (lD(stepChoice)) continue;
+      if (Ct(stepChoice)) continue;
       const idx = stepChoice;
       switch (idx) {
         case 0: {
-          v2.step(import_picocolors7.default.cyan(`Step 1/${totalSteps}`) + " Install Directory");
+          R2.step(import_picocolors7.default.cyan(`Step 1/${totalSteps}`) + " Install Directory");
           const result = await stepInstallDir();
           if (result !== BACK) {
             resolvedDir = result;
@@ -5452,9 +6360,10 @@ async function setupCommand() {
       const p2 = config.useHttps ? "https" : "http";
       const ps2 = config.useHttps && config.httpPort === 443 || !config.useHttps && config.httpPort === 80 ? "" : `:${config.httpPort}`;
       const url2 = `${p2}://${config.domain}${ps2}`;
-      v2.step("Updated Configuration Summary");
-      v2.message([
+      R2.step("Updated Configuration Summary");
+      R2.message([
         `  ${import_picocolors7.default.dim("Directory:")}     ${config.installDir}`,
+        `  ${import_picocolors7.default.dim("Channel:")}       ${config.channel === "dev" ? import_picocolors7.default.yellow("Dev (:dev)") : import_picocolors7.default.green("Stable")}`,
         `  ${import_picocolors7.default.dim("URL:")}           ${url2}`,
         `  ${import_picocolors7.default.dim("HTTPS:")}         ${config.autoSsl ? "Auto SSL (Caddy)" : config.useHttps ? "Manual" : "Disabled"}`,
         `  ${import_picocolors7.default.dim("Database:")}      ${config.useExternalDb ? "External" : config.useAiDatabase ? "Local (Docker, AI-enabled)" : "Local (Docker)"}`,
@@ -5471,14 +6380,14 @@ async function setupCommand() {
       confirmed = true;
     }
   }
-  const s0 = _2();
+  const s0 = bt2();
   s0.start("Resolving LearnHouse image version");
-  const { image: appImage, isLatest } = await resolveAppImage();
+  const { image: appImage, isLatest } = await resolveAppImage(config.channel);
   s0.stop(`Using image: ${appImage}`);
   if (isLatest) {
-    v2.warn("No versioned image found \u2014 using :latest tag. Pin to a version for stability.");
+    R2.warn("No versioned image found \u2014 using :latest tag. Pin to a version for stability.");
   }
-  const s = _2();
+  const s = bt2();
   s.start("Generating configuration files");
   const finalDir = config.installDir;
   fs2.mkdirSync(finalDir, { recursive: true });
@@ -5492,42 +6401,42 @@ async function setupCommand() {
   }
   writeConfig(config);
   s.stop("Configuration files generated");
-  const startNow = await ce({
+  const startNow = await Re({
     message: "Start LearnHouse now?",
     initialValue: true
   });
-  if (lD(startNow)) {
-    he();
+  if (Ct(startNow)) {
+    Ne();
     process.exit(0);
   }
   const finalProtocol = config.useHttps ? "https" : "http";
   const finalPortSuffix = config.useHttps && config.httpPort === 443 || !config.useHttps && config.httpPort === 80 ? "" : `:${config.httpPort}`;
   const finalUrl = `${finalProtocol}://${config.domain}${finalPortSuffix}`;
   if (startNow) {
-    v2.step("Starting LearnHouse");
-    const s2 = _2();
+    R2.step("Starting LearnHouse");
+    const s2 = bt2();
     s2.start("Pulling images and starting services (this may take a few minutes)");
     try {
       dockerComposeUp(finalDir);
       s2.stop("Services started");
     } catch (err) {
       s2.stop("Failed to start services");
-      v2.error("Docker Compose failed. Check the output above for details.");
-      v2.info(`You can manually start with: cd ${finalDir} && docker compose up -d`);
+      R2.error("Docker Compose failed. Check the output above for details.");
+      R2.info(`You can manually start with: cd ${finalDir} && docker compose up -d`);
       process.exit(1);
     }
-    const s3 = _2();
+    const s3 = bt2();
     s3.start("Waiting for LearnHouse to be ready (up to 3 minutes)");
     const healthy = await waitForHealth(`http://localhost:${config.httpPort}`);
     if (healthy) {
       s3.stop("LearnHouse is ready!");
     } else {
       s3.stop("Health check timed out");
-      v2.warn("LearnHouse may still be starting. Check status with:");
-      v2.message(`  cd ${finalDir} && docker compose ps`);
+      R2.warn("LearnHouse may still be starting. Check status with:");
+      R2.message(`  cd ${finalDir} && docker compose ps`);
     }
-    v2.success(import_picocolors7.default.green(import_picocolors7.default.bold("LearnHouse is installed!")));
-    v2.message([
+    R2.success(import_picocolors7.default.green(import_picocolors7.default.bold("LearnHouse is installed!")));
+    R2.message([
       "",
       `  ${import_picocolors7.default.cyan("URL:")}       ${finalUrl}`,
       `  ${import_picocolors7.default.cyan("Admin:")}     ${config.adminEmail}`,
@@ -5545,10 +6454,10 @@ async function setupCommand() {
       ""
     ].join("\n"));
   } else {
-    v2.info(`Files have been generated in ${finalDir}`);
-    v2.message(`  Start later with: cd ${finalDir} && docker compose up -d`);
+    R2.info(`Files have been generated in ${finalDir}`);
+    R2.message(`  Start later with: cd ${finalDir} && docker compose up -d`);
   }
-  ge(import_picocolors7.default.dim("Happy teaching!"));
+  Le(import_picocolors7.default.dim("Happy teaching!"));
 }
 
 // src/commands/start.ts
@@ -5557,16 +6466,16 @@ async function startCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
   if (!config) {
-    v2.error("No LearnHouse installation found in the current directory.");
-    v2.info("Run `npx learnhouse` to set up a new installation.");
+    R2.error("No LearnHouse installation found in the current directory.");
+    R2.info("Run `npx learnhouse` to set up a new installation.");
     process.exit(1);
   }
-  pe(import_picocolors8.default.cyan("Starting LearnHouse"));
+  We(import_picocolors8.default.cyan("Starting LearnHouse"));
   try {
     dockerComposeUp(config.installDir);
-    v2.success("LearnHouse is running!");
+    R2.success("LearnHouse is running!");
   } catch {
-    v2.error("Failed to start services. Check Docker output above.");
+    R2.error("Failed to start services. Check Docker output above.");
     process.exit(1);
   }
 }
@@ -5577,15 +6486,15 @@ async function stopCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
   if (!config) {
-    v2.error("No LearnHouse installation found in the current directory.");
+    R2.error("No LearnHouse installation found in the current directory.");
     process.exit(1);
   }
-  pe(import_picocolors9.default.cyan("Stopping LearnHouse"));
+  We(import_picocolors9.default.cyan("Stopping LearnHouse"));
   try {
     dockerComposeDown(config.installDir);
-    v2.success("LearnHouse stopped.");
+    R2.success("LearnHouse stopped.");
   } catch {
-    v2.error("Failed to stop services. Check Docker output above.");
+    R2.error("Failed to stop services. Check Docker output above.");
     process.exit(1);
   }
 }
@@ -5594,7 +6503,7 @@ async function stopCommand() {
 async function logsCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
-  v2.info("Streaming logs (Ctrl+C to stop)...");
+  R2.info("Streaming logs (Ctrl+C to stop)...");
   if (config?.installDir) {
     try {
       const { execSync: execSync6 } = await import("child_process");
@@ -5608,15 +6517,15 @@ async function logsCommand() {
   }
   const id = config?.deploymentId || autoDetectDeploymentId();
   if (!id) {
-    v2.error("No LearnHouse containers found. Start services first.");
+    R2.error("No LearnHouse containers found. Start services first.");
     process.exit(1);
   }
-  const containers = listDeploymentContainers(id).filter((c2) => c2.status.toLowerCase().startsWith("up"));
+  const containers = listDeploymentContainers(id).filter((c) => c.status.toLowerCase().startsWith("up"));
   if (containers.length === 0) {
-    v2.error("No running containers found. Start services first.");
+    R2.error("No running containers found. Start services first.");
     process.exit(1);
   }
-  dockerLogsMulti(containers.map((c2) => c2.name));
+  dockerLogsMulti(containers.map((c) => c.name));
 }
 
 // src/commands/config.ts
@@ -5625,21 +6534,21 @@ async function configCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
   if (!config) {
-    v2.error("No LearnHouse installation found in the current directory.");
+    R2.error("No LearnHouse installation found in the current directory.");
     process.exit(1);
   }
-  pe(import_picocolors10.default.cyan("LearnHouse Configuration"));
+  We(import_picocolors10.default.cyan("LearnHouse Configuration"));
   const protocol = config.useHttps ? "https" : "http";
   const portSuffix = config.useHttps && config.httpPort === 443 || !config.useHttps && config.httpPort === 80 ? "" : `:${config.httpPort}`;
-  v2.message([
+  R2.message([
     `  ${import_picocolors10.default.dim("Version:")}      ${config.version}`,
     `  ${import_picocolors10.default.dim("Created:")}      ${config.createdAt}`,
     `  ${import_picocolors10.default.dim("Directory:")}    ${config.installDir}`,
     `  ${import_picocolors10.default.dim("URL:")}          ${protocol}://${config.domain}${portSuffix}`,
     `  ${import_picocolors10.default.dim("Org slug:")}     ${config.orgSlug}`
   ].join("\n"));
-  v2.info(import_picocolors10.default.dim(`Full config: ${dir}/learnhouse.config.json`));
-  v2.info(import_picocolors10.default.dim(`Environment: ${config.installDir}/.env (contains secrets)`));
+  R2.info(import_picocolors10.default.dim(`Full config: ${dir}/learnhouse.config.json`));
+  R2.info(import_picocolors10.default.dim(`Environment: ${config.installDir}/.env (contains secrets)`));
 }
 
 // src/commands/backup.ts
@@ -5655,17 +6564,17 @@ async function createBackup() {
   const installDir = findInstallDir();
   const config = readConfig(installDir);
   if (!config) {
-    v2.error("No LearnHouse installation found. Run setup first.");
+    R2.error("No LearnHouse installation found. Run setup first.");
     process.exit(1);
   }
   if (config.useExternalDb) {
-    v2.error("Backup is only supported for local (Docker) databases.");
-    v2.info("For external databases, use your database provider's backup tools.");
+    R2.error("Backup is only supported for local (Docker) databases.");
+    R2.info("For external databases, use your database provider's backup tools.");
     process.exit(1);
   }
   const dbContainer = resolveDbContainer(config);
   if (!isContainerRunning(dbContainer)) {
-    v2.error("Database container is not running. Start services first.");
+    R2.error("Database container is not running. Start services first.");
     process.exit(1);
   }
   const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
@@ -5674,7 +6583,7 @@ async function createBackup() {
   const tmpDir = path3.join(backupDir, backupName);
   const archivePath = path3.join(backupDir, `${backupName}.tar.gz`);
   fs3.mkdirSync(tmpDir, { recursive: true });
-  const s = _2();
+  const s = bt2();
   s.start("Creating database dump");
   try {
     const dumpPath = path3.join(tmpDir, "database.sql");
@@ -5686,7 +6595,7 @@ async function createBackup() {
     s.stop("Database dump created");
   } catch (err) {
     s.stop("Database dump failed");
-    v2.error("Failed to create database dump. Check that the database is running.");
+    R2.error("Failed to create database dump. Check that the database is running.");
     fs3.rmSync(tmpDir, { recursive: true, force: true });
     process.exit(1);
   }
@@ -5694,7 +6603,7 @@ async function createBackup() {
   if (fs3.existsSync(envPath)) {
     fs3.copyFileSync(envPath, path3.join(tmpDir, ".env"));
   }
-  const s2 = _2();
+  const s2 = bt2();
   s2.start("Creating archive");
   try {
     execSync2(`tar -czf "${archivePath}" -C "${backupDir}" "${backupName}"`, {
@@ -5703,14 +6612,14 @@ async function createBackup() {
     s2.stop("Archive created");
   } catch {
     s2.stop("Archive creation failed");
-    v2.error("Failed to create archive.");
+    R2.error("Failed to create archive.");
     process.exit(1);
   }
   fs3.rmSync(tmpDir, { recursive: true, force: true });
   const stats = fs3.statSync(archivePath);
   const sizeMb = (stats.size / (1024 * 1024)).toFixed(1);
-  v2.success(import_picocolors11.default.green(import_picocolors11.default.bold("Backup complete!")));
-  v2.message([
+  R2.success(import_picocolors11.default.green(import_picocolors11.default.bold("Backup complete!")));
+  R2.message([
     "",
     `  ${import_picocolors11.default.dim("File:")} ${archivePath}`,
     `  ${import_picocolors11.default.dim("Size:")} ${sizeMb} MB`,
@@ -5721,37 +6630,37 @@ async function createBackup() {
 }
 async function restoreBackup(archivePath) {
   if (!fs3.existsSync(archivePath)) {
-    v2.error(`Backup file not found: ${archivePath}`);
+    R2.error(`Backup file not found: ${archivePath}`);
     process.exit(1);
   }
   const installDir = findInstallDir();
   const config = readConfig(installDir);
   if (!config) {
-    v2.error("No LearnHouse installation found. Run setup first.");
+    R2.error("No LearnHouse installation found. Run setup first.");
     process.exit(1);
   }
   if (config.useExternalDb) {
-    v2.error("Restore is only supported for local (Docker) databases.");
-    v2.info("For external databases, use your database provider's restore tools.");
+    R2.error("Restore is only supported for local (Docker) databases.");
+    R2.info("For external databases, use your database provider's restore tools.");
     process.exit(1);
   }
   const dbContainer = resolveDbContainer(config);
   if (!isContainerRunning(dbContainer)) {
-    v2.error("Database container is not running. Start services first.");
+    R2.error("Database container is not running. Start services first.");
     process.exit(1);
   }
-  v2.warn(import_picocolors11.default.yellow("This will overwrite the current database with the backup data."));
-  const confirm = await ce({
+  R2.warn(import_picocolors11.default.yellow("This will overwrite the current database with the backup data."));
+  const confirm = await Re({
     message: "Are you sure you want to restore from this backup?",
     initialValue: false
   });
-  if (lD(confirm) || !confirm) {
-    he("Restore cancelled.");
+  if (Ct(confirm) || !confirm) {
+    Ne("Restore cancelled.");
     process.exit(0);
   }
   const tmpDir = path3.join(installDir, ".restore-tmp");
   fs3.mkdirSync(tmpDir, { recursive: true });
-  const s = _2();
+  const s = bt2();
   s.start("Extracting backup archive");
   try {
     execSync2(`tar -xzf "${archivePath}" -C "${tmpDir}"`, { stdio: "pipe" });
@@ -5759,7 +6668,7 @@ async function restoreBackup(archivePath) {
   } catch {
     s.stop("Extraction failed");
     fs3.rmSync(tmpDir, { recursive: true, force: true });
-    v2.error("Failed to extract backup archive.");
+    R2.error("Failed to extract backup archive.");
     process.exit(1);
   }
   const entries = fs3.readdirSync(tmpDir);
@@ -5767,12 +6676,12 @@ async function restoreBackup(archivePath) {
     (e2) => fs3.existsSync(path3.join(tmpDir, e2, "database.sql"))
   );
   if (!backupFolder) {
-    v2.error("No database.sql found in the backup archive.");
+    R2.error("No database.sql found in the backup archive.");
     fs3.rmSync(tmpDir, { recursive: true, force: true });
     process.exit(1);
   }
   const dumpPath = path3.join(tmpDir, backupFolder, "database.sql");
-  const s2 = _2();
+  const s2 = bt2();
   s2.start("Restoring database");
   try {
     dockerExecFromFile(
@@ -5784,51 +6693,51 @@ async function restoreBackup(archivePath) {
   } catch {
     s2.stop("Database restore failed");
     fs3.rmSync(tmpDir, { recursive: true, force: true });
-    v2.error("Failed to restore database. The backup file may be corrupted.");
+    R2.error("Failed to restore database. The backup file may be corrupted.");
     process.exit(1);
   }
   const envBackup = path3.join(tmpDir, backupFolder, ".env");
   if (fs3.existsSync(envBackup)) {
-    const restoreEnv = await ce({
+    const restoreEnv = await Re({
       message: "Backup contains a .env file. Restore it? (overwrites current .env)",
       initialValue: false
     });
-    if (!lD(restoreEnv) && restoreEnv) {
+    if (!Ct(restoreEnv) && restoreEnv) {
       fs3.copyFileSync(envBackup, path3.join(installDir, ".env"));
-      v2.info(".env file restored");
+      R2.info(".env file restored");
     }
   }
   fs3.rmSync(tmpDir, { recursive: true, force: true });
-  v2.success(import_picocolors11.default.green(import_picocolors11.default.bold("Restore complete!")));
-  v2.info("You may want to restart services: npx learnhouse stop && npx learnhouse start");
+  R2.success(import_picocolors11.default.green(import_picocolors11.default.bold("Restore complete!")));
+  R2.info("You may want to restart services: npx learnhouse stop && npx learnhouse start");
 }
 async function backupCommand(archivePath, options) {
   if (options?.restore && archivePath) {
-    pe(import_picocolors11.default.cyan("LearnHouse Restore"));
+    We(import_picocolors11.default.cyan("LearnHouse Restore"));
     await restoreBackup(archivePath);
     return;
   }
-  pe(import_picocolors11.default.cyan("LearnHouse Backup"));
-  const action = await le({
+  We(import_picocolors11.default.cyan("LearnHouse Backup"));
+  const action = await Je({
     message: "What would you like to do?",
     options: [
       { value: "create", label: "Create a backup" },
       { value: "restore", label: "Restore from a backup" }
     ]
   });
-  if (lD(action)) {
-    he();
+  if (Ct(action)) {
+    Ne();
     process.exit(0);
   }
   if (action === "create") {
     await createBackup();
   } else {
-    const filePath = await ae({
+    const filePath = await Ze({
       message: "Path to backup archive (.tar.gz)",
       placeholder: "./backups/learnhouse-backup-*.tar.gz"
     });
-    if (lD(filePath)) {
-      he();
+    if (Ct(filePath)) {
+      Ne();
       process.exit(0);
     }
     await restoreBackup(filePath);
@@ -5849,12 +6758,12 @@ function showDeployments() {
       { stdio: "pipe" }
     ).toString().trim();
   } catch {
-    v2.error("Failed to query Docker. Is Docker running?");
+    R2.error("Failed to query Docker. Is Docker running?");
     process.exit(1);
   }
   if (!psOutput) {
-    v2.info("No LearnHouse deployments found.");
-    v2.message(import_picocolors12.default.dim("  Run npx learnhouse setup to create one."));
+    R2.info("No LearnHouse deployments found.");
+    R2.message(import_picocolors12.default.dim("  Run npx learnhouse setup to create one."));
     return;
   }
   const deployments = /* @__PURE__ */ new Map();
@@ -5878,20 +6787,20 @@ function showDeployments() {
     }
     deployments.get(id).containers.push({ name, status, image });
   }
-  v2.info(`Found ${import_picocolors12.default.bold(String(deployments.size))} deployment${deployments.size === 1 ? "" : "s"}`);
+  R2.info(`Found ${import_picocolors12.default.bold(String(deployments.size))} deployment${deployments.size === 1 ? "" : "s"}`);
   console.log();
   for (const [id, dep] of deployments) {
-    const running = dep.containers.filter((c2) => c2.status.toLowerCase().startsWith("up")).length;
+    const running = dep.containers.filter((c) => c.status.toLowerCase().startsWith("up")).length;
     const total = dep.containers.length;
     const statusColor = running === total ? import_picocolors12.default.green : running > 0 ? import_picocolors12.default.yellow : import_picocolors12.default.red;
     const statusText = statusColor(`${running}/${total} running`);
     console.log(`  ${import_picocolors12.default.bold(import_picocolors12.default.white(`Deployment ${id}`))}  ${statusText}`);
     console.log();
-    for (const c2 of dep.containers) {
-      const isUp = c2.status.toLowerCase().startsWith("up");
+    for (const c of dep.containers) {
+      const isUp = c.status.toLowerCase().startsWith("up");
       const icon = isUp ? import_picocolors12.default.green("\u25CF") : import_picocolors12.default.red("\u25CF");
-      const svcName = c2.name.replace(`-${id}`, "");
-      console.log(`    ${icon}  ${import_picocolors12.default.white(svcName.padEnd(24))} ${import_picocolors12.default.dim(c2.status)}`);
+      const svcName = c.name.replace(`-${id}`, "");
+      console.log(`    ${icon}  ${import_picocolors12.default.white(svcName.padEnd(24))} ${import_picocolors12.default.dim(c.status)}`);
     }
     console.log();
   }
@@ -5958,69 +6867,69 @@ async function scaleResources() {
   const dir = findInstallDir();
   const config = readConfig(dir);
   if (!config) {
-    v2.error("No LearnHouse installation found. Run setup first.");
+    R2.error("No LearnHouse installation found. Run setup first.");
     process.exit(1);
   }
-  v2.step("Current Resource Usage");
+  R2.step("Current Resource Usage");
   try {
     const stats = dockerStats(config.installDir);
-    v2.message(import_picocolors12.default.dim(stats.trim()));
+    R2.message(import_picocolors12.default.dim(stats.trim()));
   } catch {
     try {
-      const running = listDeploymentContainers(config.deploymentId).filter((c2) => c2.status.toLowerCase().startsWith("up")).map((c2) => c2.name);
+      const running = listDeploymentContainers(config.deploymentId).filter((c) => c.status.toLowerCase().startsWith("up")).map((c) => c.name);
       if (running.length > 0) {
         const stats = dockerStatsForContainers(running);
-        v2.message(import_picocolors12.default.dim(stats.trim()));
+        R2.message(import_picocolors12.default.dim(stats.trim()));
       } else {
-        v2.warn("No running containers found.");
+        R2.warn("No running containers found.");
       }
     } catch {
-      v2.warn("Could not retrieve current stats. Services may not be running.");
+      R2.warn("Could not retrieve current stats. Services may not be running.");
     }
   }
   const composePath = path4.join(config.installDir, "docker-compose.yml");
   if (!fs4.existsSync(composePath)) {
-    v2.error("docker-compose.yml not found.");
+    R2.error("docker-compose.yml not found.");
     process.exit(1);
   }
   let composeContent = fs4.readFileSync(composePath, "utf-8");
   const currentLimits = parseMemLimit(composePath);
-  v2.step("Set Memory Limits");
-  v2.info(import_picocolors12.default.dim("Examples: 256m, 512m, 1g, 2g (leave empty to skip)"));
+  R2.step("Set Memory Limits");
+  R2.info(import_picocolors12.default.dim("Examples: 256m, 512m, 1g, 2g (leave empty to skip)"));
   let changed = false;
   for (const service of SERVICES) {
     const current = currentLimits.get(service);
     const label = current ? `Memory limit for ${import_picocolors12.default.bold(service)} (current: ${current})` : `Memory limit for ${import_picocolors12.default.bold(service)} (not set)`;
-    const value = await ae({
+    const value = await Ze({
       message: label,
-      placeholder: current || "e.g. 512m",
-      defaultValue: ""
+      placeholder: current ? void 0 : "e.g. 512m",
+      defaultValue: current || ""
     });
-    if (lD(value)) {
-      he();
+    if (Ct(value)) {
+      Ne();
       process.exit(0);
     }
     const trimmed = value.trim();
     if (trimmed && trimmed.match(/^\d+[mgMG]$/)) {
       composeContent = setMemLimit(composeContent, service, trimmed);
       changed = true;
-      v2.success(`${service}: ${trimmed}`);
+      R2.success(`${service}: ${trimmed}`);
     } else if (trimmed) {
-      v2.warn(`Invalid format "${trimmed}" \u2014 skipping. Use format like 512m or 1g.`);
+      R2.warn(`Invalid format "${trimmed}" \u2014 skipping. Use format like 512m or 1g.`);
     }
   }
   if (!changed) {
-    v2.info("No changes made.");
+    R2.info("No changes made.");
     return;
   }
   fs4.writeFileSync(composePath, composeContent);
-  v2.success("docker-compose.yml updated");
-  const restart = await ce({
+  R2.success("docker-compose.yml updated");
+  const restart = await Re({
     message: "Restart services to apply limits?",
     initialValue: false
   });
-  if (!lD(restart) && restart) {
-    const s = _2();
+  if (!Ct(restart) && restart) {
+    const s = bt2();
     s.start("Restarting services");
     try {
       dockerComposeDown(config.installDir);
@@ -6028,21 +6937,21 @@ async function scaleResources() {
       s.stop("Services restarted");
     } catch {
       s.stop("Restart failed");
-      v2.error("Failed to restart services. Check Docker output above.");
+      R2.error("Failed to restart services. Check Docker output above.");
     }
   }
 }
 async function deploymentsCommand() {
-  pe(import_picocolors12.default.cyan("LearnHouse Deployments"));
-  const action = await le({
+  We(import_picocolors12.default.cyan("LearnHouse Deployments"));
+  const action = await Je({
     message: "What would you like to do?",
     options: [
       { value: "view", label: "View deployments" },
       { value: "scale", label: "Set resource limits" }
     ]
   });
-  if (lD(action)) {
-    he();
+  if (Ct(action)) {
+    Ne();
     process.exit(0);
   }
   if (action === "view") {
@@ -6050,7 +6959,7 @@ async function deploymentsCommand() {
   } else {
     await scaleResources();
   }
-  ge(import_picocolors12.default.dim("Done"));
+  Le(import_picocolors12.default.dim("Done"));
 }
 
 // src/commands/doctor.ts
@@ -6085,17 +6994,17 @@ var SECRET_ENV_VARS = [
 async function doctorCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
-  pe(import_picocolors13.default.cyan("LearnHouse Doctor"));
-  v2.step("Docker Environment");
+  We(import_picocolors13.default.cyan("LearnHouse Doctor"));
+  R2.step("Docker Environment");
   if (!isDockerInstalled()) {
     fail("Docker not installed", "Install Docker: https://docs.docker.com/get-docker/");
-    ge(import_picocolors13.default.red("Cannot continue without Docker"));
+    Le(import_picocolors13.default.red("Cannot continue without Docker"));
     process.exit(1);
   }
   pass("Docker installed");
   if (!isDockerRunning()) {
     fail("Docker daemon not running", "Start Docker Desktop or run: sudo systemctl start docker");
-    ge(import_picocolors13.default.red("Cannot continue without Docker running"));
+    Le(import_picocolors13.default.red("Cannot continue without Docker running"));
     process.exit(1);
   }
   pass("Docker daemon running");
@@ -6105,45 +7014,45 @@ async function doctorCommand() {
     fail("Docker Compose v2 not found", "Update Docker Desktop or install docker-compose-plugin");
   }
   if (!config) {
-    v2.warn("No LearnHouse installation found. Skipping deployment checks.");
-    ge(import_picocolors13.default.dim("Done"));
+    R2.warn("No LearnHouse installation found. Skipping deployment checks.");
+    Le(import_picocolors13.default.dim("Done"));
     return;
   }
   const id = config.deploymentId || autoDetectDeploymentId();
   const installDir = dir;
-  v2.step("Containers");
+  R2.step("Containers");
   const containers = listDeploymentContainers(id);
   if (containers.length === 0) {
     warn("No containers found", "Run: npx learnhouse start");
   } else {
-    for (const c2 of containers) {
-      const isUp = c2.status.toLowerCase().startsWith("up");
-      const svcName = c2.name.replace(`-${id}`, "");
+    for (const c of containers) {
+      const isUp = c.status.toLowerCase().startsWith("up");
+      const svcName = c.name.replace(`-${id}`, "");
       if (isUp) {
         pass(`${svcName} running`);
-      } else if (c2.status.toLowerCase().includes("restarting")) {
+      } else if (c.status.toLowerCase().includes("restarting")) {
         fail(`${svcName} is restarting`, "Check logs: npx learnhouse logs");
       } else {
-        fail(`${svcName} \u2014 ${c2.status}`, "Run: npx learnhouse start");
+        fail(`${svcName} \u2014 ${c.status}`, "Run: npx learnhouse start");
       }
     }
   }
-  v2.step("Restart Counts");
-  for (const c2 of containers) {
-    const count = getContainerRestartCount(c2.name);
-    const svcName = c2.name.replace(`-${id}`, "");
+  R2.step("Restart Counts");
+  for (const c of containers) {
+    const count = getContainerRestartCount(c.name);
+    const svcName = c.name.replace(`-${id}`, "");
     if (count > 3) {
       warn(`${svcName} has restarted ${count} times`, "Check container logs for crash reasons");
     } else {
       pass(`${svcName} \u2014 ${count} restarts`);
     }
   }
-  v2.step("Network");
+  R2.step("Network");
   const portFree = await checkPort(config.httpPort);
   if (portFree) {
     pass(`Port ${config.httpPort} is available`);
   } else {
-    const hasRunning = containers.some((c2) => c2.status.toLowerCase().startsWith("up"));
+    const hasRunning = containers.some((c) => c.status.toLowerCase().startsWith("up"));
     if (hasRunning) {
       pass(`Port ${config.httpPort} in use (by LearnHouse services)`);
     } else {
@@ -6159,7 +7068,7 @@ async function doctorCommand() {
       warn(`DNS resolution failed for ${config.domain}`, "Check your DNS settings or /etc/hosts");
     }
   }
-  v2.step("Disk");
+  R2.step("Disk");
   try {
     const dfOutput = execSync4("df -h . | tail -1 | awk '{print $4}'", {
       stdio: "pipe",
@@ -6179,17 +7088,17 @@ async function doctorCommand() {
   }
   try {
     const diskUsage = getDockerDiskUsage();
-    v2.message(import_picocolors13.default.dim(diskUsage.trim()));
+    R2.message(import_picocolors13.default.dim(diskUsage.trim()));
   } catch {
   }
-  v2.step("Log Analysis");
+  R2.step("Log Analysis");
   const errorPatterns = /ERROR|FATAL|Traceback/i;
-  for (const c2 of containers) {
-    if (!isContainerRunning(c2.name)) continue;
+  for (const c of containers) {
+    if (!isContainerRunning(c.name)) continue;
     try {
-      const logs = getContainerLogs(c2.name, 50);
-      const errorLines = logs.split("\n").filter((l2) => errorPatterns.test(l2));
-      const svcName = c2.name.replace(`-${id}`, "");
+      const logs = getContainerLogs(c.name, 50);
+      const errorLines = logs.split("\n").filter((l) => errorPatterns.test(l));
+      const svcName = c.name.replace(`-${id}`, "");
       if (errorLines.length > 0) {
         warn(`${svcName} \u2014 ${errorLines.length} error(s) in last 50 log lines`);
         for (const line of errorLines.slice(0, 3)) {
@@ -6199,10 +7108,10 @@ async function doctorCommand() {
         pass(`${svcName} \u2014 no errors in recent logs`);
       }
     } catch {
-      warn(`Could not read logs for ${c2.name}`);
+      warn(`Could not read logs for ${c.name}`);
     }
   }
-  v2.step("Environment File");
+  R2.step("Environment File");
   const envPath = path5.join(installDir, ".env");
   if (!fs5.existsSync(envPath)) {
     fail(".env file missing", "Run setup again: npx learnhouse setup");
@@ -6234,20 +7143,20 @@ async function doctorCommand() {
       pass("All required environment variables present");
     }
   }
-  v2.step("Image Freshness");
-  for (const c2 of containers) {
+  R2.step("Image Freshness");
+  for (const c of containers) {
     try {
       const localDigest = execSync4(
-        `docker inspect --format '{{.Image}}' ${c2.name}`,
+        `docker inspect --format '{{.Image}}' ${c.name}`,
         { stdio: "pipe" }
       ).toString().trim();
-      const svcName = c2.name.replace(`-${id}`, "");
+      const svcName = c.name.replace(`-${id}`, "");
       pass(`${svcName} \u2014 image: ${localDigest.slice(7, 19)}`);
     } catch {
     }
   }
   console.log();
-  ge(import_picocolors13.default.dim("Diagnosis complete"));
+  Le(import_picocolors13.default.dim("Diagnosis complete"));
 }
 
 // src/commands/shell.ts
@@ -6256,32 +7165,32 @@ async function shellCommand() {
   const dir = findInstallDir();
   const config = readConfig(dir);
   if (!config) {
-    v2.error("No LearnHouse installation found. Run setup first.");
+    R2.error("No LearnHouse installation found. Run setup first.");
     process.exit(1);
   }
   const id = config.deploymentId || autoDetectDeploymentId();
-  const containers = listDeploymentContainers(id || void 0).filter((c2) => c2.status.toLowerCase().startsWith("up"));
+  const containers = listDeploymentContainers(id || void 0).filter((c) => c.status.toLowerCase().startsWith("up"));
   if (containers.length === 0) {
-    v2.error("No running containers found. Start services first.");
+    R2.error("No running containers found. Start services first.");
     process.exit(1);
   }
-  const selected = await le({
+  const selected = await Je({
     message: "Select a container",
-    options: containers.map((c2) => ({
-      value: c2.name,
-      label: `${c2.name.replace(`-${id}`, "")} ${import_picocolors14.default.dim(`(${c2.name})`)}`
+    options: containers.map((c) => ({
+      value: c.name,
+      label: `${c.name.replace(`-${id}`, "")} ${import_picocolors14.default.dim(`(${c.name})`)}`
     }))
   });
-  if (lD(selected)) {
-    he();
+  if (Ct(selected)) {
+    Ne();
     process.exit(0);
   }
-  v2.info(`Connecting to ${selected}... (type "exit" to leave)`);
+  R2.info(`Connecting to ${selected}... (type "exit" to leave)`);
   dockerExecInteractive(selected, "/bin/sh");
 }
 
 // src/commands/dev.ts
-import { spawn as spawn2, execSync as execSync5 } from "child_process";
+import { spawn as spawn2, spawnSync as spawnSync2, execSync as execSync5 } from "child_process";
 var import_picocolors15 = __toESM(require_picocolors(), 1);
 import * as path6 from "path";
 import * as fs6 from "fs";
@@ -6352,10 +7261,15 @@ function isInfraRunning() {
 }
 var serviceEnv = {};
 function spawnService(command, args, cwd, label, color) {
+  const localBin = path6.join(cwd, "node_modules", ".bin");
   const child = spawn2(command, args, {
     cwd,
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, ...serviceEnv }
+    env: {
+      ...process.env,
+      ...serviceEnv,
+      PATH: `${localBin}:${process.env.PATH ?? ""}`
+    }
   });
   prefixStream(child, label, color);
   child.on("exit", (code) => {
@@ -6383,37 +7297,37 @@ function killProcess(child) {
 async function devCommand() {
   const root = findProjectRoot();
   if (!root) {
-    v2.error("Not inside a LearnHouse project.");
-    v2.info("Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).");
+    R2.error("Not inside a LearnHouse project.");
+    R2.info("Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).");
     process.exit(1);
   }
   if (!isDockerInstalled()) {
-    v2.error("Docker is not installed. Please install Docker and try again.");
+    R2.error("Docker is not installed. Please install Docker and try again.");
     process.exit(1);
   }
   if (!isDockerRunning()) {
-    v2.error("Docker is not running. Please start Docker and try again.");
+    R2.error("Docker is not running. Please start Docker and try again.");
     process.exit(1);
   }
-  pe(import_picocolors15.default.cyan("LearnHouse Dev Mode"));
+  We(import_picocolors15.default.cyan("LearnHouse Dev Mode"));
   console.log();
   const alreadyRunning = isInfraRunning();
   if (alreadyRunning) {
-    v2.success("Existing DB and Redis containers detected \u2014 reusing them");
+    R2.success("Existing DB and Redis containers detected \u2014 reusing them");
   }
   if (!alreadyRunning) {
-    const email = await ae({
+    const email = await Ze({
       message: "Admin email",
       placeholder: "admin@school.dev",
       defaultValue: "admin@school.dev"
     });
-    if (lD(email)) process.exit(0);
-    const password = await oe({
+    if (Ct(email)) process.exit(0);
+    const password = await He({
       message: "Admin password"
     });
-    if (lD(password)) process.exit(0);
+    if (Ct(password)) process.exit(0);
     if (!password) {
-      v2.error("Password is required.");
+      R2.error("Password is required.");
       process.exit(1);
     }
     serviceEnv = {
@@ -6423,7 +7337,7 @@ async function devCommand() {
       LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
       LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password
     };
-    const infraSpinner = _2();
+    const infraSpinner = bt2();
     infraSpinner.start("Starting DB and Redis containers...");
     try {
       execSync5(`docker compose -f dev/docker-compose.yml -p ${PROJECT_NAME} up -d`, {
@@ -6433,7 +7347,7 @@ async function devCommand() {
       infraSpinner.stop("Containers started");
     } catch (e2) {
       infraSpinner.stop("Failed to start containers");
-      v2.error(e2.stderr?.toString() || "docker compose up failed");
+      R2.error(e2.stderr?.toString() || "docker compose up failed");
       process.exit(1);
     }
   } else {
@@ -6443,7 +7357,7 @@ async function devCommand() {
       NEXT_PUBLIC_LEARNHOUSE_OSS: "true"
     };
   }
-  const healthSpinner = _2();
+  const healthSpinner = bt2();
   healthSpinner.start("Waiting for DB and Redis to be healthy...");
   const [dbReady, redisReady] = await Promise.all([
     waitForHealth2("DB", "docker", ["exec", "learnhouse-db-dev", "pg_isready", "-U", "learnhouse"]),
@@ -6451,11 +7365,36 @@ async function devCommand() {
   ]);
   if (!dbReady || !redisReady) {
     healthSpinner.stop("Health checks failed");
-    if (!dbReady) v2.error("Database did not become ready in time.");
-    if (!redisReady) v2.error("Redis did not become ready in time.");
+    if (!dbReady) R2.error("Database did not become ready in time.");
+    if (!redisReady) R2.error("Redis did not become ready in time.");
     process.exit(1);
   }
   healthSpinner.stop("DB and Redis are healthy");
+  const webDir = path6.join(root, "apps", "web");
+  const collabDir = path6.join(root, "apps", "collab");
+  const apiDir = path6.join(root, "apps", "api");
+  const bunProjects = [
+    { label: "web", dir: webDir },
+    { label: "collab", dir: collabDir }
+  ];
+  for (const { label, dir } of bunProjects) {
+    if (!fs6.existsSync(path6.join(dir, "node_modules"))) {
+      R2.info(`Installing ${label} dependencies...`);
+      const result = spawnSync2("bun", ["install"], { cwd: dir, stdio: "inherit", shell: true });
+      if (result.status !== 0) {
+        R2.error(`Failed to install ${label} dependencies`);
+        process.exit(1);
+      }
+    }
+  }
+  if (!fs6.existsSync(path6.join(apiDir, ".venv"))) {
+    R2.info("Installing API dependencies...");
+    const result = spawnSync2("uv", ["sync"], { cwd: apiDir, stdio: "inherit", shell: true });
+    if (result.status !== 0) {
+      R2.error("Failed to install API dependencies");
+      process.exit(1);
+    }
+  }
   let apiProc = null;
   let webProc = null;
   let collabProc = null;
@@ -6463,15 +7402,15 @@ async function devCommand() {
     return spawnService("uv", ["run", "python", "app.py"], path6.join(root, "apps", "api"), "api", import_picocolors15.default.magenta);
   };
   const startWeb = () => {
-    return spawnService("pnpm", ["dev"], path6.join(root, "apps", "web"), "web", import_picocolors15.default.cyan);
+    return spawnService("next", ["dev", "--turbopack"], path6.join(root, "apps", "web"), "web", import_picocolors15.default.cyan);
   };
   const startCollab = () => {
-    return spawnService("pnpm", ["dev"], path6.join(root, "apps", "collab"), "collab", import_picocolors15.default.yellow);
+    return spawnService("tsx", ["watch", "src/index.ts"], path6.join(root, "apps", "collab"), "collab", import_picocolors15.default.yellow);
   };
   apiProc = startApi();
   webProc = startWeb();
   collabProc = startCollab();
-  v2.success("API, Web, and Collab servers started");
+  R2.success("API, Web, and Collab servers started");
   console.log();
   console.log(import_picocolors15.default.dim("  Thank you for contributing to LearnHouse!"));
   console.log();

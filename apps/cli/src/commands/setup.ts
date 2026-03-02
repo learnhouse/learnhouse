@@ -47,10 +47,9 @@ async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
 }
 
 async function stepInstallDir(): Promise<string | typeof BACK> {
-  const installDir = await p.text({
+  const installDir = await p.path({
     message: 'Where should LearnHouse be installed?',
-    placeholder: './learnhouse',
-    defaultValue: './learnhouse',
+    initialValue: './learnhouse',
   })
   if (p.isCancel(installDir)) { p.cancel(); process.exit(0) }
   return path.resolve(installDir as string)
@@ -92,6 +91,25 @@ export async function setupCommand() {
 
   // Prerequisites (no going back from this)
   await checkPrerequisites()
+
+  // Release channel selection
+  const channelChoice = await p.select({
+    message: 'Which release channel do you want to use?',
+    options: [
+      {
+        value: 'stable',
+        label: 'Stable',
+        hint: 'recommended — versioned release or :latest',
+      },
+      {
+        value: 'dev',
+        label: 'Dev',
+        hint: 'latest development build (:dev tag)',
+      },
+    ],
+  })
+  if (p.isCancel(channelChoice)) { p.cancel(); process.exit(0) }
+  const channel = channelChoice as 'stable' | 'dev'
 
   // Step results stored here
   let resolvedDir: string = ''
@@ -155,6 +173,7 @@ export async function setupCommand() {
   const config: SetupConfig = {
     deploymentId,
     installDir: resolvedDir,
+    channel,
     ...domainConfig!,
     ...dbConfig!,
     ...orgConfig!,
@@ -170,6 +189,7 @@ export async function setupCommand() {
   p.log.step('Configuration Summary')
   p.log.message([
     `  ${pc.dim('Directory:')}     ${resolvedDir}`,
+    `  ${pc.dim('Channel:')}       ${config.channel === 'dev' ? pc.yellow('Dev (:dev)') : pc.green('Stable')}`,
     `  ${pc.dim('URL:')}           ${url}`,
     `  ${pc.dim('HTTPS:')}         ${config.autoSsl ? 'Auto SSL (Caddy)' : config.useHttps ? 'Manual' : 'Disabled'}`,
     `  ${pc.dim('Database:')}      ${config.useExternalDb ? 'External' : config.useAiDatabase ? 'Local (Docker, AI-enabled)' : 'Local (Docker)'}`,
@@ -249,6 +269,7 @@ export async function setupCommand() {
       p.log.step('Updated Configuration Summary')
       p.log.message([
         `  ${pc.dim('Directory:')}     ${config.installDir}`,
+        `  ${pc.dim('Channel:')}       ${config.channel === 'dev' ? pc.yellow('Dev (:dev)') : pc.green('Stable')}`,
         `  ${pc.dim('URL:')}           ${url2}`,
         `  ${pc.dim('HTTPS:')}         ${config.autoSsl ? 'Auto SSL (Caddy)' : config.useHttps ? 'Manual' : 'Disabled'}`,
         `  ${pc.dim('Database:')}      ${config.useExternalDb ? 'External' : config.useAiDatabase ? 'Local (Docker, AI-enabled)' : 'Local (Docker)'}`,
@@ -269,7 +290,7 @@ export async function setupCommand() {
   // Resolve Docker image version
   const s0 = p.spinner()
   s0.start('Resolving LearnHouse image version')
-  const { image: appImage, isLatest } = await resolveAppImage()
+  const { image: appImage, isLatest } = await resolveAppImage(config.channel)
   s0.stop(`Using image: ${appImage}`)
   if (isLatest) {
     p.log.warn('No versioned image found — using :latest tag. Pin to a version for stability.')

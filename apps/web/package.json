@@ -133,16 +133,14 @@
     "tailwindcss": "^4.1.16",
     "typescript": "5.9.3"
   },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3",
-      "lodash": ">=4.17.23",
-      "lodash-es": ">=4.17.23",
-      "preact": ">=10.27.3",
-      "js-yaml": ">=4.1.1",
-      "jspdf": ">=4.0.0",
-      "prosemirror-view": "1.41.6"
-    }
+  "overrides": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "lodash": ">=4.17.23",
+    "lodash-es": ">=4.17.23",
+    "preact": ">=10.27.3",
+    "js-yaml": ">=4.1.1",
+    "jspdf": ">=4.0.0",
+    "prosemirror-view": "1.41.6"
   }
 }

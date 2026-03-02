@@ -1,17 +1,17 @@
 # ───────────────────────────────────────────────
 # Stage 1: Frontend dependency install
 # ───────────────────────────────────────────────
-FROM node:24-alpine AS frontend-deps
+FROM oven/bun:1-alpine AS frontend-deps
 RUN apk update && apk add --no-cache libc6-compat && rm -rf /var/cache/apk/*
 WORKDIR /app
 
-COPY apps/web/package.json apps/web/pnpm-lock.yaml* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+COPY apps/web/package.json apps/web/bun.lock* ./
+RUN bun install --frozen-lockfile
 
 # ───────────────────────────────────────────────
 # Stage 2: Frontend build
 # ───────────────────────────────────────────────
-FROM node:24-alpine AS frontend-builder
+FROM oven/bun:1-alpine AS frontend-builder
 WORKDIR /app
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
@@ -22,7 +22,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Remove .env files to avoid leaking secrets into the build
 RUN rm -f .env*
 
-RUN corepack enable pnpm && pnpm run build
+RUN bun run build
 
 # ───────────────────────────────────────────────
 # Stage 3: Frontend production image
@@ -53,16 +53,16 @@ RUN chmod +x server-wrapper.js
 # ───────────────────────────────────────────────
 # Stage 4: Collab server build
 # ───────────────────────────────────────────────
-FROM node:24-alpine AS collab-builder
+FROM oven/bun:1-alpine AS collab-builder
 WORKDIR /app
 
-COPY apps/collab/package.json ./
-RUN npm install
+COPY apps/collab/package.json apps/collab/bun.lock* ./
+RUN bun install --frozen-lockfile
 
 COPY apps/collab/tsconfig.json ./
 COPY apps/collab/src/ ./src/
 
-RUN npm run build
+RUN bun run build
 
 # ───────────────────────────────────────────────
 # Stage 5: Final image combining frontend + backend + collab
@@ -71,15 +71,18 @@ FROM python:3.14.3-slim-bookworm AS runner
 
 # Single apt layer: nginx, curl, netcat, node, pm2
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx curl netcat-openbsd ca-certificates gnupg \
+    && apt-get install -y --no-install-recommends nginx curl netcat-openbsd ca-certificates gnupg unzip \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm install -g pm2 \
+    && curl -fsSL https://bun.sh/install | bash \
     && apt-get purge -y gnupg \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /root/.npm \
     && rm /etc/nginx/sites-enabled/default
+
+ENV PATH="/root/.bun/bin:${PATH}"
 
 # Copy the frontend standalone build
 COPY --from=frontend-runner /app /app/web
@@ -98,8 +101,8 @@ RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/api/ee; fi
 # Collab server: copy built JS + production deps
 WORKDIR /app/collab
 COPY --from=collab-builder /app/dist ./dist
-COPY apps/collab/package.json ./
-RUN npm install --omit=dev && npm cache clean --force
+COPY apps/collab/package.json apps/collab/bun.lock* ./
+RUN bun install --production
 
 # Copy configs and scripts
 WORKDIR /app

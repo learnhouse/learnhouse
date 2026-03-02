@@ -132,8 +132,8 @@ export async function scaleCommand() {
 
     const value = await p.text({
       message: label,
-      placeholder: current || 'e.g. 512m',
-      defaultValue: '',
+      placeholder: current ? undefined : 'e.g. 512m',
+      defaultValue: current || '',
     })
     if (p.isCancel(value)) { p.cancel(); process.exit(0) }
 

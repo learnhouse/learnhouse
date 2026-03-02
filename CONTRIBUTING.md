@@ -5,7 +5,7 @@
 To set up your development environment, please follow our [Development Guide](/docs/DEVELOPMENT.md). This guide includes step-by-step instructions for:
 
 - Setting up the backend (FastAPI, uv, PostgreSQL, Redis)
-- Setting up the frontend (Next.js, pnpm)
+- Setting up the frontend (Next.js, bun)
 - Using the development script
 - Managing environment variables
 - Running migrations and tests
