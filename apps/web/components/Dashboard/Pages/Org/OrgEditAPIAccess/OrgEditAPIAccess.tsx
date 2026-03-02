@@ -58,13 +58,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import APIDocumentation from './APIDocumentation'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import { PlanLevel } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 const OrgEditAPIAccess: React.FC = () => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   const [activeTab, setActiveTab] = useState('tokens')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)

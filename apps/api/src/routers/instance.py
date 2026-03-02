@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.core.events.database import get_db_session
-from src.core.ee_hooks import is_ee_available, is_multi_org_allowed
+from src.core.ee_hooks import is_multi_org_allowed
+from src.core.deployment_mode import get_deployment_mode
 from config.config import get_learnhouse_config
 
 router = APIRouter()
@@ -31,9 +32,9 @@ async def get_instance_info(db_session: Session = Depends(get_db_session)):
     top_domain = _strip_port(frontend_domain)
 
     return {
+        "mode": get_deployment_mode(),
         "multi_org_enabled": is_multi_org_allowed(),
         "default_org_slug": default_org_slug,
-        "ee_enabled": is_ee_available(),
         "frontend_domain": frontend_domain,
         "top_domain": top_domain,
     }

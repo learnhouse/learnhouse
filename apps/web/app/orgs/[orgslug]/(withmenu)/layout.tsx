@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname } from 'next/navigation'
 import { isOSSMode } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -27,8 +28,8 @@ const hexToRgba = (hex: string, alpha: number): string => {
 function OrgFooter() {
   const org = useOrg() as any
   const footerText = org?.config?.config?.general?.footer_text || ''
-  const plan = org?.config?.config?.cloud?.plan || 'free'
-  const isEnterprise = plan === 'enterprise' && !isOSSMode()
+  const plan = usePlan()
+  const isEnterprise = plan === 'enterprise'
 
   return (
     <footer className="w-full py-8 mt-12">

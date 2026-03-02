@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 export type OrgParams = {
   subpage: string
@@ -84,7 +85,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
   const SETTING_TABS = getSettingTabs(t)

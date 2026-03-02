@@ -24,7 +24,7 @@ export function AdvancedGate({
           <Lock className="text-gray-300 mb-3" size={28} weight="bold" />
           <div className="flex items-center gap-1.5 mb-1">
             <p className="text-sm font-semibold text-gray-600">{t('analytics.advanced_gate.requires')}</p>
-            <PlanBadge currentPlan={currentPlan as any} requiredPlan="pro" alwaysShow noMargin size="md" />
+            <PlanBadge currentPlan={currentPlan as any} requiredPlan="enterprise" alwaysShow noMargin size="md" />
           </div>
           <p className="text-xs text-gray-400 mt-1">{t('analytics.advanced_gate.upgrade_description')}</p>
         </div>

@@ -6,8 +6,8 @@ from sqlmodel import Session, select
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
-    _is_oss_mode,
 )
+from src.core.deployment_mode import get_deployment_mode
 from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
@@ -73,7 +73,7 @@ async def create_user(
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
     # OAuth users and OSS mode get auto-verified email
-    if is_oauth or _is_oss_mode():
+    if is_oauth or get_deployment_mode() != 'saas':
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
         user.signup_method = signup_provider if is_oauth else "email"
@@ -250,7 +250,7 @@ async def create_user_without_org(
     user.password = security_hash_password(user_object.password) if user_object.password else ""
 
     # OAuth users and OSS mode get auto-verified email
-    if is_oauth or _is_oss_mode():
+    if is_oauth or get_deployment_mode() != 'saas':
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc).isoformat()
         user.signup_method = signup_provider if is_oauth else "email"

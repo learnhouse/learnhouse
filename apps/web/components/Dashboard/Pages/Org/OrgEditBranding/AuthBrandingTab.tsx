@@ -19,6 +19,7 @@ import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import { isOSSMode } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg', 'webp'])
 
@@ -36,8 +37,8 @@ export default function AuthBrandingTab() {
 
   // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
   // In OSS mode, always show branding regardless of plan
-  const plan = org?.config?.config?.cloud?.plan || 'free'
-  const isEnterprise = plan === 'enterprise' && !isOSSMode()
+  const plan = usePlan()
+  const isEnterprise = plan === 'enterprise'
 
   const [welcomeMessage, setWelcomeMessage] = useState<string>(existingConfig.welcome_message || '')
   const [backgroundType, setBackgroundType] = useState<BackgroundType>(existingConfig.background_type || 'gradient')

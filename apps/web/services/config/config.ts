@@ -275,10 +275,29 @@ export const getUriWithoutOrg = (path: string) => {
   return path
 }
 
-// OSS mode — watermark and branding always visible
-export const isOSSMode = () => {
-  const val = getConfig('NEXT_PUBLIC_LEARNHOUSE_OSS', 'false')
-  return val.toLowerCase() === 'true'
+export type DeploymentMode = 'saas' | 'oss' | 'ee'
+
+/**
+ * Get the current deployment mode from the learnhouse_mode cookie set by middleware.
+ * Single source of truth for mode detection on the frontend.
+ * Defaults to 'oss' when cookie is absent (safe fallback — blocks EE features).
+ */
+export const getDeploymentMode = (): DeploymentMode => {
+  return (getCookieValue('learnhouse_mode') as DeploymentMode) || 'oss'
+}
+
+/**
+ * OSS mode — thin wrapper over getDeploymentMode() for backward compatibility.
+ */
+export const isOSSMode = (): boolean => {
+  return getDeploymentMode() === 'oss'
+}
+
+/**
+ * EE (Enterprise Edition) availability — thin wrapper over getDeploymentMode() for backward compatibility.
+ */
+export const isEEAvailable = (): boolean => {
+  return getDeploymentMode() === 'ee'
 }
 
 // Collaboration server WebSocket URL

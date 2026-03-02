@@ -9,6 +9,7 @@ import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import { useAnalyticsStatus } from '../useAnalyticsDashboard'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import ExportAnalyticsButton from '../AnalyticsExport'
+import { usePlan } from '@components/Hooks/usePlan'
 
 const CourseOverviewStats = dynamic(() => import('./CourseOverviewStats'))
 const CourseEnrollmentTrend = dynamic(() => import('./CourseEnrollmentTrend'))
@@ -62,7 +63,7 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const [days, setDays] = useState('30')
   const org = useOrg() as any
   const courseContext = useCourse() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const isCourseAnalyticsAvailable = isFeatureAvailable('course_analytics', currentPlan)
   const { data: analyticsStatus } = useAnalyticsStatus()
   const isConfigured = analyticsStatus?.configured === true

@@ -16,6 +16,8 @@ import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/P
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import { BadgeDollarSign } from 'lucide-react'
+import { isOSSMode } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
 
 export type PaymentsParams = {
   subpage: string
@@ -27,7 +29,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const subpage = params.subpage || 'overview'
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   const getPageTitle = () => {
     switch (subpage) {
@@ -62,6 +64,23 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const { h1, h2 } = getPageTitle()
   const paymentsEnabled = org?.config?.config?.features?.payments?.enabled !== false
 
+  // Gate 1: OSS deployment → payments is EE-only, blocked entirely
+  if (isOSSMode()) {
+    return (
+      <PlanRestrictedFeature
+        currentPlan={currentPlan}
+        requiredPlan="enterprise"
+        icon={BadgeDollarSign}
+        titleKey="common.plans.feature_restricted.payments.title"
+        descriptionKey="common.plans.feature_restricted.payments.description"
+        fullScreen
+      >
+        <></>
+      </PlanRestrictedFeature>
+    )
+  }
+
+  // Gate 2: plan-based restriction for cloud users (standard required)
   return (
     <PlanRestrictedFeature
       currentPlan={currentPlan}

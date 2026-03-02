@@ -69,9 +69,10 @@ import { cn } from '@/lib/utils'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
-import {  isFeatureAvailable, PlanLevel } from '@services/plans/plans'
-import { isOSSMode } from '@services/config/config'
+import {  isFeatureAvailable } from '@services/plans/plans'
+import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { usePlan } from '@components/Hooks/usePlan'
 
 function DashLeftMenu() {
   const org = useOrg() as any
@@ -162,11 +163,16 @@ function DashLeftMenu() {
     await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
   }
 
+
   if (!org || !session) return null
 
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
-  const oss = isOSSMode()
-  const planLabel = oss ? 'OSS' : plan
+  const plan = usePlan()
+  const rawPlan = org?.config?.config?.cloud?.plan || 'free'
+  const mode = getDeploymentMode()
+  const planLabel =
+    mode === 'ee' ? 'Enterprise Edition' :
+    mode === 'oss' ? 'OSS' :
+    plan  // SaaS: show actual plan name
 
   // Feature visibility: enabled by org AND allowed by plan
   const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
@@ -174,6 +180,7 @@ function DashLeftMenu() {
   const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
   const showBoards = org?.config?.config?.features?.boards?.enabled === true && isFeatureAvailable('boards', plan)
   const showPlaygrounds = org?.config?.config?.features?.playgrounds?.enabled === true && isFeatureAvailable('playgrounds', plan)
+  // Payments and SSO require EE package to be installed
   const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
 
   return (
@@ -213,7 +220,8 @@ function DashLeftMenu() {
               </span>
               <span className={cn(
                 "text-[9px] font-medium uppercase tracking-wider",
-                oss ? "text-green-400" :
+                mode === 'ee' ? "text-amber-400" :
+                mode === 'oss' ? "text-green-400" :
                 plan === 'enterprise' ? "text-amber-400" :
                 plan === 'pro' ? "text-purple-400" :
                 plan === 'standard' ? "text-blue-400" :
@@ -574,7 +582,7 @@ function DashLeftMenu() {
                   <HoverMenuItem asChild>
                     <Link href="/dash/analytics" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                       <ChartLine size={16} weight="fill" />
-                      <span className="flex items-center">{t('analytics.tabs.advanced')}<PlanBadge currentPlan={plan} requiredPlan="pro" variant="dark" /></span>
+                      <span className="flex items-center">{t('analytics.tabs.advanced')}<PlanBadge currentPlan={plan} requiredPlan="enterprise" variant="dark" /></span>
                     </Link>
                   </HoverMenuItem>
                 </HoverMenuContent>

@@ -31,6 +31,7 @@ import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
 import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface DocOrgMenuProps {
   meta: any
@@ -54,7 +55,7 @@ const DocOrgMenu = ({
   const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
   const topOffset = isJoinBannerVisible ? JOIN_BANNER_HEIGHT : 0
 
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const plan = usePlan()
 
   // Filter dashboard menu items by feature enabled + plan availability
   const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {

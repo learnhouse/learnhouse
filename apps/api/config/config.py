@@ -29,7 +29,7 @@ class GeneralConfig(BaseModel):
     development_mode: bool
     logfire_enabled: bool
     sentry_config: SentryConfig
-    oss_mode: bool
+    saas_mode: bool
     env: str
 
 
@@ -155,11 +155,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Environment (dev or prod)
     learnhouse_env = os.environ.get("LEARNHOUSE_ENV", "dev")
 
-    # OSS Mode (disables plan-based limits for self-hosted deployments)
-    env_oss_mode = os.environ.get("LEARNHOUSE_OSS", "None")
-    oss_mode = (
-        env_oss_mode.lower() in ("true", "1", "yes") if env_oss_mode != "None"
-        else yaml_config.get("general", {}).get("oss_mode", False)
+    # SaaS Mode (enables plan-based gating and usage limits)
+    env_saas_mode = os.environ.get("LEARNHOUSE_SAAS", "None")
+    saas_mode = (
+        env_saas_mode.lower() in ("true", "1", "yes") if env_saas_mode != "None"
+        else yaml_config.get("general", {}).get("saas_mode", False)
     )
 
     # Security Config
@@ -406,7 +406,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
             development_mode=bool(development_mode),
             logfire_enabled=bool(logfire_enabled),
             sentry_config=SentryConfig(dsn=sentry_dsn),
-            oss_mode=bool(oss_mode),
+            saas_mode=bool(saas_mode),
             env=learnhouse_env,
         ),
         hosting_config=hosting_config,

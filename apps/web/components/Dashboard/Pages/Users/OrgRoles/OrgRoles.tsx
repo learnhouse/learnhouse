@@ -15,13 +15,14 @@ import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
+import { usePlan } from '@components/Hooks/usePlan'
 
 function OrgRoles() {
     const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
-    const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+    const currentPlan = usePlan()
     const canCreateRoles = planMeetsRequirement(currentPlan, 'pro')
     const [createRoleModal, setCreateRoleModal] = React.useState(false)
     const [editRoleModal, setEditRoleModal] = React.useState(false)
