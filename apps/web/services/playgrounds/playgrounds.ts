@@ -106,6 +106,17 @@ export async function deletePlayground(
   return errorHandling(result)
 }
 
+export async function duplicatePlayground(
+  playgroundUuid: string,
+  access_token: string
+): Promise<Playground> {
+  const result = await fetch(
+    `${getAPIUrl()}playgrounds/${playgroundUuid}/duplicate`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  return errorHandling(result)
+}
+
 export async function updatePlaygroundThumbnail(
   playgroundUuid: string,
   file: File,

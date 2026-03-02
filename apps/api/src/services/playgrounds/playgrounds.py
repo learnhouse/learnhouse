@@ -297,6 +297,45 @@ async def delete_playground(
     return {"detail": "Playground deleted"}
 
 
+async def duplicate_playground(
+    request: Request,
+    playground_uuid: str,
+    current_user: PublicUser,
+    db_session: Session,
+) -> PlaygroundRead:
+    playground = db_session.exec(
+        select(Playground).where(Playground.playground_uuid == playground_uuid)
+    ).first()
+    if not playground:
+        raise HTTPException(status_code=404, detail="Playground not found")
+
+    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    pg_rights = rights.get("playgrounds", {})
+    if not pg_rights.get("action_create", False):
+        raise HTTPException(status_code=403, detail="Insufficient permissions to create playgrounds")
+
+    now = datetime.utcnow().isoformat()
+    new_playground = Playground(
+        name=f"{playground.name} (Copy)",
+        description=playground.description,
+        thumbnail_image=None,
+        access_type=playground.access_type,
+        published=False,
+        course_uuid=playground.course_uuid,
+        html_content=playground.html_content,
+        org_id=playground.org_id,
+        playground_uuid=str(uuid4()),
+        course_id=playground.course_id,
+        created_by=current_user.id,
+        creation_date=now,
+        update_date=now,
+    )
+    db_session.add(new_playground)
+    db_session.commit()
+    db_session.refresh(new_playground)
+    return _playground_to_read(new_playground, db_session)
+
+
 async def add_usergroup_to_playground(
     request: Request,
     playground_uuid: str,

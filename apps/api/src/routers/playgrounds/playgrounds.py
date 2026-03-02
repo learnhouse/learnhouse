@@ -15,6 +15,7 @@ from src.services.playgrounds.playgrounds import (
     update_playground,
     update_playground_thumbnail,
     delete_playground,
+    duplicate_playground,
     add_usergroup_to_playground,
     remove_usergroup_from_playground,
     get_playground_usergroups,
@@ -77,6 +78,16 @@ async def api_delete_playground(
     current_user: PublicUser = Depends(get_current_user),
 ) -> dict:
     return await delete_playground(request, playground_uuid, current_user, db_session)
+
+
+@router.post("/{playground_uuid}/duplicate")
+async def api_duplicate_playground(
+    request: Request,
+    playground_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> PlaygroundRead:
+    return await duplicate_playground(request, playground_uuid, current_user, db_session)
 
 
 @router.post("/{playground_uuid}/thumbnail")
