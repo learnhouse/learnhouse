@@ -10,7 +10,7 @@ dependencies = [
     "boto3>=1.42.59",
     "botocore>=1.42.59",
     "faker>=40.5.1",
-    "fastapi>=0.134.0",
+    "fastapi>=0.135.1",
     "httpx>=0.28.1",
     "google-genai>=1.65.0",
     "pwdlib[argon2]>=0.3.0",
@@ -18,7 +18,7 @@ dependencies = [
     "pydantic[email]>=2.12.5,<3.0.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "python-dotenv>=1.2.1",
+    "python-dotenv>=1.2.2",
     "python-multipart>=0.0.22",
     "pyyaml>=6.0.3",
     "redis>=7.2.1",
@@ -43,7 +43,7 @@ dependencies = [
     "defusedxml>=0.7.1",
     "llama-index-core>=0.14.15",
     "pgvector>=0.4.2",
-    "pypdf>=6.7.4",
+    "pypdf>=6.7.5",
 ]
 
 [tool.ruff]
