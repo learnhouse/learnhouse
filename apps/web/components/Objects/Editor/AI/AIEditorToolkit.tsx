@@ -1,6 +1,6 @@
 import React from 'react'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import {
   AlertTriangle,

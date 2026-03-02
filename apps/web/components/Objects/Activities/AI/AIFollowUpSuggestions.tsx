@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { Sparkles } from 'lucide-react'
 
 type AIFollowUpSuggestionsProps = {

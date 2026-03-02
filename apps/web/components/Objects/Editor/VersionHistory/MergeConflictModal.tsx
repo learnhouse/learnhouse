@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { X, Clock, User, GitMerge, Check } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import EditorPreview from '../EditorPreview'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useTranslation } from 'react-i18next'

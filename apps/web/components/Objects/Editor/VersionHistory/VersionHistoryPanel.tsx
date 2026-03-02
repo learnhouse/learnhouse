@@ -5,7 +5,7 @@ import { useActivityVersions, ActivityVersion } from '@components/Hooks/useActiv
 import { restoreActivityVersion } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import EditorPreview from '../EditorPreview'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useTranslation } from 'react-i18next'

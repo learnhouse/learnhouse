@@ -32,7 +32,7 @@ import IconPicker from '@components/Objects/Docs/IconPicker'
 import dynamic from 'next/dynamic'
 import NextLink from 'next/link'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { DividerVerticalIcon } from '@radix-ui/react-icons'
 import DocToolbar from '@components/Objects/Docs/Editor/Toolbar/DocToolbar'
 

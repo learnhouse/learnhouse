@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 type PropsType = {
   collection: any

@@ -5,7 +5,7 @@ import {
   StreamCallbacks,
 } from '@services/ai/ai'
 import { AlertTriangle, BadgeInfo, NotebookTabs, Maximize2, Minimize2, PanelRightOpen, PanelRightClose, PanelTop } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { FlaskConical, MessageCircle, X } from 'lucide-react'
 import Image from 'next/image'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
