@@ -1,6 +1,6 @@
 import { PencilLine, Rss, TentTree } from 'lucide-react'
 import React, { useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { useFormik } from 'formik'
 import * as Form from '@radix-ui/react-form'
 import FormLayout, {

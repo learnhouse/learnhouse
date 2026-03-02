@@ -5,7 +5,7 @@ import { TextIcon, LucideIcon, Image as ImageIcon, Link2, Shield, MessagesSquare
 import Link from 'next/link'
 import React, { useEffect, use } from 'react'
 import { useTranslation } from 'react-i18next'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CommunityProvider, useCommunity } from '@components/Contexts/CommunityContext'
 import CommunityEditGeneral from '@components/Dashboard/Pages/Community/CommunityEditGeneral'

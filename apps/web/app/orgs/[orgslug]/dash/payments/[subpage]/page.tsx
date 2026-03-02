@@ -1,6 +1,6 @@
 'use client'
 import React, { use } from 'react';
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'

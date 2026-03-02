@@ -2,7 +2,7 @@
 import React, { use } from 'react'
 import { PodcastProvider, usePodcast } from '@components/Contexts/PodcastContext'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { Info, ListMusic, Headphones, ArrowLeft, Rss } from 'lucide-react'
 import EditPodcastGeneral from '@components/Dashboard/Pages/Podcast/EditPodcastGeneral/EditPodcastGeneral'
 import EditPodcastEpisodes from '@components/Dashboard/Pages/Podcast/EditPodcastEpisodes/EditPodcastEpisodes'

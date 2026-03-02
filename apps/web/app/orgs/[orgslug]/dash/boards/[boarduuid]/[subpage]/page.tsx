@@ -1,7 +1,7 @@
 'use client'
 import React, { use } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { Info, Globe, Users, Image as ImageIcon, Eye } from 'lucide-react'
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'

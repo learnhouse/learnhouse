@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, type Transition, type TargetAndTransition } from 'framer-motion'
+import { motion, type Transition, type TargetAndTransition } from 'motion/react'
 import {
   ArrowLeft,
   Globe,
