@@ -12,7 +12,7 @@ import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
 import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy, FileText } from 'lucide-react'
-import { ChalkboardSimple } from '@phosphor-icons/react'
+import { ChalkboardSimple, Cube } from '@phosphor-icons/react'
 
 interface FeatureToggleProps {
   id: string
@@ -93,6 +93,7 @@ const OrgEditFeatures: React.FC = () => {
   const [podcastsEnabled, setPodcastsEnabled] = useState<boolean>(false)
   const [docsEnabled, setDocsEnabled] = useState<boolean>(false)
   const [boardsEnabled, setBoardsEnabled] = useState<boolean>(false)
+  const [playgroundsEnabled, setPlaygroundsEnabled] = useState<boolean>(false)
 
   // Loading states
   const [updatingFeature, setUpdatingFeature] = useState<string | null>(null)
@@ -129,6 +130,10 @@ const OrgEditFeatures: React.FC = () => {
       // Boards - default to false (disabled by default)
       const brdEnabled = features.boards?.enabled
       setBoardsEnabled(brdEnabled !== undefined ? brdEnabled : false)
+
+      // Playgrounds - default to false (disabled by default)
+      const pgEnabled = features.playgrounds?.enabled
+      setPlaygroundsEnabled(pgEnabled !== undefined ? pgEnabled : false)
     }
   }, [org])
 
@@ -230,6 +235,13 @@ const OrgEditFeatures: React.FC = () => {
     const success = await updateFeatureConfig('boards', enabled)
     if (success) {
       setBoardsEnabled(enabled)
+    }
+  }
+
+  const handlePlaygroundsToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('playgrounds', enabled)
+    if (success) {
+      setPlaygroundsEnabled(enabled)
     }
   }
 
@@ -362,6 +374,21 @@ const OrgEditFeatures: React.FC = () => {
             currentPlan={currentPlan}
             icon={<ChalkboardSimple size={20} className="text-gray-600" />}
             onToggle={handleBoardsToggle}
+            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
+          />
+
+          {/* Playgrounds Toggle */}
+          <FeatureToggle
+            id="playgrounds"
+            title="Playgrounds"
+            description="Create interactive AI-generated experiences for your learners"
+            enabled={playgroundsEnabled}
+            isUpdating={updatingFeature === 'playgrounds'}
+            canEdit={canEditOrgSettings}
+            requiredPlan="pro"
+            currentPlan={currentPlan}
+            icon={<Cube size={20} className="text-gray-600" />}
+            onToggle={handlePlaygroundsToggle}
             upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
         </div>

@@ -11,6 +11,7 @@ import {
   Globe,
   Lock,
   Users,
+  DownloadSimple,
 } from '@phosphor-icons/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -50,6 +51,17 @@ export default function PlaygroundViewClient({
           playground.thumbnail_image
         )
       : null
+
+  const handleDownload = useCallback(() => {
+    const html = playground.html_content || ''
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${playground.name || 'playground'}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [playground.html_content, playground.name])
 
   const toggleFullscreen = useCallback(async () => {
     if (!isFullscreen) {
@@ -161,8 +173,8 @@ export default function PlaygroundViewClient({
                 </div>
               </div>
 
-              {canEdit && (
-                <div className="px-3 pb-3">
+              <div className={`px-3 pb-3 ${canEdit ? 'space-y-2' : ''}`}>
+                {canEdit && (
                   <Link
                     href={`/editor/playground/${playground.playground_uuid}/edit`}
                     className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg text-xs font-bold bg-neutral-100 hover:bg-neutral-200 text-neutral-600 transition-colors"
@@ -170,8 +182,15 @@ export default function PlaygroundViewClient({
                     <PencilSimple size={11} weight="bold" />
                     Edit in Editor
                   </Link>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg text-xs font-bold bg-neutral-100 hover:bg-neutral-200 text-neutral-600 transition-colors"
+                >
+                  <DownloadSimple size={11} weight="bold" />
+                  Download
+                </button>
+              </div>
             </div>
 
             {/* Reactions card */}
@@ -191,16 +210,25 @@ export default function PlaygroundViewClient({
             className="relative bg-white nice-shadow rounded-lg overflow-hidden"
             style={{ height: 'calc(100vh - 200px)', minHeight: 480 }}
           >
-            {/* Fullscreen toggle — top right of preview */}
-            <button
-              onClick={toggleFullscreen}
-              className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/80 backdrop-blur-sm nice-shadow text-neutral-500 hover:text-neutral-800 transition-colors"
-            >
-              {isFullscreen
-                ? <><ArrowsInSimple size={13} weight="bold" />Exit</>
-                : <><ArrowsOutSimple size={13} weight="bold" />Fullscreen</>
-              }
-            </button>
+            {/* Toolbar — top right of preview */}
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/80 backdrop-blur-sm nice-shadow text-neutral-500 hover:text-neutral-800 transition-colors"
+              >
+                <DownloadSimple size={13} weight="bold" />
+                Download
+              </button>
+              <button
+                onClick={toggleFullscreen}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/80 backdrop-blur-sm nice-shadow text-neutral-500 hover:text-neutral-800 transition-colors"
+              >
+                {isFullscreen
+                  ? <><ArrowsInSimple size={13} weight="bold" />Exit</>
+                  : <><ArrowsOutSimple size={13} weight="bold" />Fullscreen</>
+                }
+              </button>
+            </div>
 
             {/* Iframe / empty state */}
             {playground.html_content ? (

@@ -47,6 +47,7 @@ from src.services.orgs.orgs import (
     update_org_podcasts_config,
     update_org_docs_config,
     update_org_boards_config,
+    update_org_playgrounds_config,
     update_org_color_config,
     update_org_footer_text_config,
     update_org_thumbnail,
@@ -352,6 +353,22 @@ async def api_update_org_boards_config(
     """
     return await update_org_boards_config(
         request, boards_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put("/{org_id}/config/playgrounds")
+async def api_update_org_playgrounds_config(
+    request: Request,
+    org_id: int,
+    playgrounds_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization playgrounds configuration (admin-only)
+    """
+    return await update_org_playgrounds_config(
+        request, playgrounds_enabled, org_id, current_user, db_session
     )
 
 

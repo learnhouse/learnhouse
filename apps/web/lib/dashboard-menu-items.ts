@@ -8,6 +8,7 @@ import {
   ChatsCircle,
   Book,
   ChalkboardSimple,
+  Cube,
 } from '@phosphor-icons/react'
 
 export interface DashboardMenuItem {
@@ -61,6 +62,14 @@ export const DASHBOARD_MENU_ITEMS: DashboardMenuItem[] = [
     icon: Book,
     labelKey: 'docs.documentation',
     featureKey: 'docs',
+    defaultDisabled: true,
+  },
+  {
+    id: 'playgrounds',
+    href: '/dash/playgrounds',
+    icon: Cube,
+    labelKey: 'common.playgrounds',
+    featureKey: 'playgrounds',
     defaultDisabled: true,
   },
   {
