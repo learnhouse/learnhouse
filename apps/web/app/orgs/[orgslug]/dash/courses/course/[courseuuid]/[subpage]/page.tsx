@@ -22,6 +22,7 @@ import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature';
 import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
+import { usePlan } from '@components/Hooks/usePlan'
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -34,7 +35,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const params = use(props.params);
   const router = useRouter();
   const org = useOrg() as any;
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free';
+  const currentPlan = usePlan();
   const hasCertificationsAccess = isFeatureAvailable('certifications', currentPlan);
   const hasSEOAccess = isFeatureAvailable('seo', currentPlan);
 

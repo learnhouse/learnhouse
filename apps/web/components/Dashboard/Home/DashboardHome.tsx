@@ -14,6 +14,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl } from '@services/config/config'
 import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
+import { usePlan } from '@components/Hooks/usePlan'
 import QuickStats from './QuickStats'
 import RecentCourses from './RecentCourses'
 import RecentMembers from './RecentMembers'
@@ -43,8 +44,7 @@ export default function DashboardHome() {
     { revalidateOnFocus: false }
   )
 
-  const ossMode = usageData?.oss_mode ?? false
-  const plan = ossMode ? 'oss' : (usageData?.plan || org?.config?.config?.cloud?.plan || 'free')
+  const plan = usePlan()
   const planStyle = PLAN_COLORS[plan] || PLAN_COLORS.free
 
   return (

@@ -7,9 +7,9 @@ from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.security.features_utils.usage import (
     _get_actual_usage,
     _get_actual_admin_seat_count,
-    _is_oss_mode,
     _get_redis_client,
 )
+from src.core.deployment_mode import get_deployment_mode
 from src.security.features_utils.plans import (
     PlanLevel,
     get_plan_limit,
@@ -95,18 +95,19 @@ async def get_org_usage_and_limits(
     cloud_config = org_config.config.get("cloud", {})
     org_plan: PlanLevel = cloud_config.get("plan", "free")
 
-    # Check if OSS mode (unlimited)
-    oss_mode = _is_oss_mode()
+    # Determine deployment mode
+    mode = get_deployment_mode()
+    unlimited = mode != 'saas'
 
     # Get actual usage counts
     courses_usage = _get_actual_usage("courses", org_id, db_session)
     members_usage = _get_actual_usage("members", org_id, db_session)
     admin_seats_usage = _get_actual_admin_seat_count(org_id, db_session)
 
-    # Get limits from plan
-    courses_limit = 0 if oss_mode else get_plan_limit(org_plan, "courses")
-    members_limit = 0 if oss_mode else get_plan_limit(org_plan, "members")
-    admin_seats_limit = 0 if oss_mode else get_plan_limit(org_plan, "admin_seats")
+    # Get limits from plan (unlimited in EE/OSS modes)
+    courses_limit = 0 if unlimited else get_plan_limit(org_plan, "courses")
+    members_limit = 0 if unlimited else get_plan_limit(org_plan, "members")
+    admin_seats_limit = 0 if unlimited else get_plan_limit(org_plan, "admin_seats")
 
     def calc_remaining(usage: int, limit: int) -> int | str:
         if limit == 0:
@@ -121,7 +122,7 @@ async def get_org_usage_and_limits(
     response = {
         "org_id": org_id,
         "plan": org_plan,
-        "oss_mode": oss_mode,
+        "mode": mode,
         "features": {
             "courses": {
                 "usage": courses_usage,

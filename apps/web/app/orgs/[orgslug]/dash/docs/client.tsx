@@ -17,6 +17,7 @@ import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/P
 import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface DocSpaceListClientProps {
   org_id: number
@@ -90,7 +91,7 @@ const DocSpaceListClient = ({ org_id, orgslug }: DocSpaceListClientProps) => {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

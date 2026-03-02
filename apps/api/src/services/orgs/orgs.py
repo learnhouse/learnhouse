@@ -42,7 +42,6 @@ from fastapi import HTTPException, UploadFile, status, Request
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
-from config.config import get_learnhouse_config
 
 
 async def get_organization_by_uuid(
@@ -198,7 +197,7 @@ async def create_org(
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
             api=APIOrgConfig(enabled=True, limit=0),
         ),
-        cloud=OrgCloudConfig(plan='oss' if get_learnhouse_config().general_config.oss_mode else 'free', custom_domain=False),
+        cloud=OrgCloudConfig(plan='free', custom_domain=False),
     )
 
     org_config = json.loads(org_config.model_dump_json())

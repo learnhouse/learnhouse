@@ -109,8 +109,6 @@ export function generateEnvFile(config: SetupConfig): string {
     '',
     'LEARNHOUSE_DEVELOPMENT_MODE=False',
     'LEARNHOUSE_LOGFIRE_ENABLED=False',
-    'LEARNHOUSE_OSS=True',
-    'NEXT_PUBLIC_LEARNHOUSE_OSS=True',
   )
 
   if (config.aiEnabled && config.geminiApiKey) {

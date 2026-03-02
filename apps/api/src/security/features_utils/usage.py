@@ -7,6 +7,7 @@ from src.db.courses.courses import Course
 from src.db.roles import Role, RoleTypeEnum
 from sqlalchemy import or_
 from config.config import get_learnhouse_config
+from src.core.deployment_mode import get_deployment_mode
 from typing import Literal, TypeAlias
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
@@ -37,10 +38,9 @@ REDIS_TRACKED_FEATURES = {"ai", "analytics", "api", "assignments", "collaboratio
                           "discussions", "payments", "podcasts", "storage", "usergroups"}
 
 
-def _is_oss_mode() -> bool:
-    """Check if OSS mode is enabled (disables plan-based limits)."""
-    LH_CONFIG = get_learnhouse_config()
-    return LH_CONFIG.general_config.oss_mode
+def _is_non_saas() -> bool:
+    """Check if deployment is in a non-SaaS mode (EE or OSS) — disables plan-based limits."""
+    return get_deployment_mode() != 'saas'
 
 
 def _get_redis_client():
@@ -242,7 +242,7 @@ def check_limits_with_usage(
         )
 
     # OSS mode disables plan-based limits for self-hosted deployments
-    if _is_oss_mode() and feature in PLAN_BASED_FEATURES:
+    if _is_non_saas() and feature in PLAN_BASED_FEATURES:
         return True
 
     org_plan = _get_org_plan(org_config)
@@ -362,7 +362,7 @@ def check_feature_access(
         HTTPException 403 if access is denied
     """
     # OSS mode enables all features
-    if _is_oss_mode():
+    if _is_non_saas():
         return True
 
     # Get required plan for this feature
@@ -715,7 +715,7 @@ def check_ai_credits(
             detail="AI is not enabled for this organization",
         )
 
-    if _is_oss_mode():
+    if _is_non_saas():
         return True
 
     org_plan = _get_org_plan(org_config)
@@ -800,12 +800,12 @@ def get_ai_credits_summary(org_id: int, db_session: Session) -> dict:
 
     r = _get_redis_client()
 
-    if _is_oss_mode():
+    if _is_non_saas():
         used_credits = r.get(f"ai_credits_used:{org_id}")
         used_credits_count = int(used_credits) if used_credits else 0
         return {
             "plan": org_plan,
-            "mode": "oss",
+            "mode": get_deployment_mode(),
             "base_credits": "unlimited",
             "purchased_credits": 0,
             "total_credits": "unlimited",

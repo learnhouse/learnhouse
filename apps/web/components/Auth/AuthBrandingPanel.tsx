@@ -7,6 +7,7 @@ import { getOrgLogoMediaDirectory, getOrgAuthBackgroundMediaDirectory } from '@s
 import { getUriWithOrg } from '@services/config/config'
 import { cn } from '@/lib/utils'
 import { isOSSMode } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface AuthBrandingPanelProps {
   org: any
@@ -24,8 +25,8 @@ export default function AuthBrandingPanel({ org, welcomeText }: AuthBrandingPane
 
   // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
   // In OSS mode, always show branding regardless of plan
-  const plan = org?.config?.config?.cloud?.plan || 'free'
-  const isEnterprise = plan === 'enterprise' && !isOSSMode()
+  const plan = usePlan()
+  const isEnterprise = plan === 'enterprise'
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (background_type === 'gradient' || !background_image) {

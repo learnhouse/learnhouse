@@ -39,6 +39,7 @@ import { isFeatureAvailable, planMeetsRequirement, PlanLevel } from '@services/p
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
+import { usePlan } from '@components/Hooks/usePlan'
 import {
   Tooltip,
   TooltipContent,
@@ -83,7 +84,7 @@ export const OrgMenu = (props: any) => {
   // Get primary color from org config
   const primaryColor = org?.config?.config?.general?.color || ''
   const colors = getMenuColorClasses(primaryColor)
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const plan = usePlan()
 
   // Filter dashboard menu items by feature enabled + plan availability
   const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {
@@ -176,7 +177,7 @@ export const OrgMenu = (props: any) => {
 
           <div className="flex items-center space-x-2">
             {/* Boards (Pro+ or OSS only, authenticated users only) */}
-            {org?.config?.config?.features?.boards?.enabled === true && planMeetsRequirement(org?.config?.config?.cloud?.plan || 'free', 'pro') && (
+            {org?.config?.config?.features?.boards?.enabled === true && planMeetsRequirement(plan, 'pro') && (
               <AuthenticatedClientElement checkMethod="authentication">
                 <div className="hidden md:flex">
                   <TooltipProvider delayDuration={0}>

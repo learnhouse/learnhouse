@@ -6,14 +6,13 @@ access to premium features.
 """
 
 from typing import Literal
-from config.config import get_learnhouse_config
 
 
 # Plan type definition - matches OrgCloudConfig
-PlanLevel = Literal["free", "personal", "family", "standard", "pro", "enterprise", "oss"]
+PlanLevel = Literal["free", "personal", "family", "standard", "pro", "enterprise"]
 
 # Plan hierarchy (lower index = lower tier)
-PLAN_HIERARCHY: list[PlanLevel] = ["free", "personal", "family", "standard", "pro", "enterprise", "oss"]
+PLAN_HIERARCHY: list[PlanLevel] = ["free", "personal", "family", "standard", "pro", "enterprise"]
 
 # Feature to required plan mapping
 FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
@@ -25,12 +24,12 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "seo": "standard",
     "versioning": "standard",
     "podcasts": "standard",
-    "custom_domains": "standard",
+    "custom_domains": "pro",
     "certifications": "pro",
     "docs": "pro",
     "roles": "pro",
     "api_tokens": "pro",
-    "analytics_advanced": "pro",
+    "analytics_advanced": "enterprise",
     "scorm": "enterprise",
     "audit_logs": "enterprise",
     "sso": "enterprise",
@@ -69,11 +68,6 @@ PLAN_LIMITS: dict[PlanLevel, dict[str, int]] = {
         "members": 0,  # Unlimited
         "admin_seats": 0,  # Unlimited
     },
-    "oss": {
-        "courses": 0,  # Unlimited
-        "members": 0,  # Unlimited
-        "admin_seats": 0,  # Unlimited
-    },
 }
 
 # AI credit allocation per plan
@@ -85,7 +79,6 @@ AI_CREDIT_LIMITS: dict[PlanLevel, int] = {
     "standard": 1000,  # 1,000 credits
     "pro": 3000,  # 3,000 credits
     "enterprise": -1,  # Unlimited
-    "oss": -1,  # Unlimited
 }
 
 
@@ -99,8 +92,10 @@ def get_ai_credit_limit(plan: PlanLevel) -> int:
     Returns:
         The AI credit limit (0 = no access, -1 = unlimited)
     """
-    if _is_oss_mode():
-        return -1  # Unlimited in OSS mode
+    from src.core.deployment_mode import get_deployment_mode
+    mode = get_deployment_mode()
+    if mode != 'saas':
+        return -1  # Unlimited in EE and OSS modes
     return AI_CREDIT_LIMITS.get(plan, 0)
 
 
@@ -115,15 +110,12 @@ def get_plan_limit(plan: PlanLevel, feature: str) -> int:
     Returns:
         The limit for the feature (0 means unlimited)
     """
-    if _is_oss_mode():
-        return 0  # Unlimited in OSS mode
+    from src.core.deployment_mode import get_deployment_mode
+    mode = get_deployment_mode()
+    if mode != 'saas':
+        return 0  # Unlimited in EE and OSS modes
     plan_limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
     return plan_limits.get(feature, 0)
-
-
-def _is_oss_mode() -> bool:
-    """Check if OSS mode is enabled (disables plan-based limits)."""
-    return get_learnhouse_config().general_config.oss_mode
 
 
 def plan_meets_requirement(current_plan: PlanLevel, required_plan: PlanLevel) -> bool:
@@ -137,8 +129,13 @@ def plan_meets_requirement(current_plan: PlanLevel, required_plan: PlanLevel) ->
     Returns:
         True if current_plan >= required_plan in the hierarchy
     """
-    if _is_oss_mode():
+    from src.core.deployment_mode import get_deployment_mode
+    mode = get_deployment_mode()
+    if mode == 'ee':
         return True
+    if mode == 'oss':
+        return required_plan != 'enterprise'
+    # SaaS: normal hierarchy check
     current_index = PLAN_HIERARCHY.index(current_plan)
     required_index = PLAN_HIERARCHY.index(required_plan)
     return current_index >= required_index

@@ -48,7 +48,19 @@ def check_enterprise_plan(org_id: int, db_session) -> None:
     """
     Check if the organization has an enterprise plan.
     SCORM import is only available for enterprise plan organizations.
+    In EE mode all orgs are allowed regardless of DB plan.
+    In OSS mode all orgs are blocked (SCORM is EE-only).
     """
+    from src.core.deployment_mode import get_deployment_mode
+    mode = get_deployment_mode()
+    if mode == 'ee':
+        return
+    if mode == 'oss':
+        raise HTTPException(
+            status_code=403,
+            detail="SCORM is not available in OSS mode. Enterprise Edition is required."
+        )
+    # SaaS — check plan
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     org_config = db_session.exec(statement).first()
 

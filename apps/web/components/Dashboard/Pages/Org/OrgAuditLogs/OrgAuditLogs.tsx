@@ -20,7 +20,8 @@ import {
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 const ITEMS_PER_PAGE = 20
 
@@ -93,14 +94,14 @@ const OrgAuditLogs = () => {
 
   const logs = data?.items || []
   const total = data?.total || 0
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   const handleRefresh = () => {
     mutate(logsUrl)
   }
 
   const handleExport = async () => {
-    if (currentPlan !== 'enterprise') {
+    if (!planMeetsRequirement(currentPlan, 'enterprise')) {
       toast.error(t('dashboard.organization.audit_logs.enterprise_only'))
       return
     }

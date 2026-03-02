@@ -5,6 +5,7 @@ from sqlmodel import Session
 from src.core.events.database import engine
 from src.security.auth import get_current_user
 from src.security.api_token_utils import require_non_api_token_user
+from src.security.features_utils.plan_check import require_plan
 from ee.middleware.audit import EEAuditLogMiddleware
 from ee.services.audit import flush_audit_logs_to_db
 from ee.routers import cloud_internal
@@ -21,6 +22,17 @@ logger = logging.getLogger(__name__)
 async def get_non_api_token_user(user = Depends(get_current_user)):
     """Dependency that rejects API token access."""
     return await require_non_api_token_user(user)
+
+
+async def require_non_oss_mode():
+    """Dependency that blocks access in OSS mode (superadmin, etc.)."""
+    from src.core.deployment_mode import get_deployment_mode
+    from fastapi import HTTPException
+    if get_deployment_mode() == 'oss':
+        raise HTTPException(
+            status_code=403,
+            detail="This feature is not available in OSS mode.",
+        )
 
 def register_middlewares(app: FastAPI):
     """Register Enterprise Edition middlewares."""
@@ -39,9 +51,10 @@ def register_routers(v1_router: APIRouter):
     
     # Payments
     v1_router.include_router(
-        payments.router, 
-        prefix="/payments", 
-        tags=["payments"]
+        payments.router,
+        prefix="/payments",
+        tags=["payments"],
+        dependencies=[Depends(require_plan("standard", "payments"))],
     )
     
     # EE Info
@@ -80,6 +93,7 @@ def register_routers(v1_router: APIRouter):
         superadmin.router,
         prefix="/ee/superadmin",
         tags=["ee", "superadmin"],
+        dependencies=[Depends(require_non_oss_mode)],
     )
 
     logger.info("EE Routers registered")

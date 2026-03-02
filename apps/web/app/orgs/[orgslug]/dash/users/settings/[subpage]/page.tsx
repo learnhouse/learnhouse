@@ -14,11 +14,11 @@ import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersA
 import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
 import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
-import { useEEStatus } from '@components/Hooks/useEEStatus'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 export type SettingsParams = {
   subpage: string
@@ -30,8 +30,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
-  const { isEE } = useEEStatus()
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -192,28 +191,26 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           
-          {isEE && (
-            <Link
-              href={
-                getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`
-              }
+          <Link
+            href={
+              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`
+            }
+          >
+            <div
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'audit-logs'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                } cursor-pointer`}
             >
-              <div
-                className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'audit-logs'
-                    ? 'border-b-4'
-                    : 'opacity-50'
-                  } cursor-pointer`}
-              >
-                <div className="flex items-center space-x-2.5 mx-2">
-                  <ShieldAlert size={16} />
-                  <div className="flex items-center">
-                    {t('dashboard.users.settings.tabs.audit_logs')}
-                    <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" />
-                  </div>
+              <div className="flex items-center space-x-2.5 mx-2">
+                <ShieldAlert size={16} />
+                <div className="flex items-center">
+                  {t('dashboard.users.settings.tabs.audit_logs')}
+                  <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" />
                 </div>
               </div>
-            </Link>
-          )}
+            </div>
+          </Link>
           
         </div>
       </div>
@@ -229,7 +226,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         {params.subpage == 'add' ? <OrgUsersAdd /> : ''}
         {params.subpage == 'usergroups' ? <><div className="h-6"></div><OrgUserGroups /></> : ''}
         {params.subpage == 'roles' ? <><div className="h-6"></div><OrgRoles /></> : ''}
-        {params.subpage == 'audit-logs' && isEE ? <><div className="h-6"></div><OrgAuditLogs /></> : ''}
+        {params.subpage == 'audit-logs' ? <><div className="h-6"></div><OrgAuditLogs /></> : ''}
       </motion.div>
     </div>
   )
