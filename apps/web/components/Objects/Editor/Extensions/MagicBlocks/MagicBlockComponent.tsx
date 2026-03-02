@@ -18,6 +18,7 @@ import { getMagicBlockSession } from '@services/ai/magicblocks'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { useTranslation } from 'react-i18next'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface EditorState {
   isEditable: boolean
@@ -68,7 +69,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   const accessToken = session?.data?.tokens?.access_token
 
   // Check plan for AI features
-  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
   // Get attributes from node

@@ -5,7 +5,13 @@ import os
 logger = logging.getLogger(__name__)
 
 def is_ee_available():
-    """Check if the Enterprise Edition directory exists."""
+    """
+    Check if the Enterprise Edition code is present on disk.
+
+    NOTE: This does NOT indicate the deployment mode is 'ee'.
+    SaaS deployments also ship with the EE folder present.
+    Use get_deployment_mode() from src.core.deployment_mode to determine the actual mode.
+    """
     return os.path.exists("ee")
 
 def get_ee_hooks():
@@ -48,8 +54,10 @@ def run_ee_startup(app):
         hooks.on_startup(app)
 
 def is_multi_org_allowed() -> bool:
-    """Check if multi-org mode is allowed (requires EE)."""
-    return is_ee_available()
+    """Check if multi-org mode is allowed (requires EE or SaaS)."""
+    from src.core.deployment_mode import get_deployment_mode
+    mode = get_deployment_mode()
+    return mode in ('ee', 'saas')
 
 
 async def check_ee_activity_paid_access(request, activity_id, user, db_session) -> bool:

@@ -1,8 +1,8 @@
 import asyncio
 import json
 import logging
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
+from starlette.types import ASGIApp, Receive, Scope, Send
 from ee.services.audit import queue_audit_log, resolve_org_id, is_enterprise_plan
 from src.db.users import PublicUser
 from src.core.events.database import engine
@@ -10,62 +10,95 @@ from sqlmodel import Session
 
 logger = logging.getLogger(__name__)
 
-class EEAuditLogMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Capture method early before any processing that might affect request state
-        http_method = request.method
+class EEAuditLogMiddleware:
+    """
+    Pure ASGI middleware for audit logging.
+    Using pure ASGI (instead of BaseHTTPMiddleware) avoids the known
+    RuntimeError: No response returned issue with streaming responses.
+    """
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        http_method: str = scope["method"]
+        path: str = scope["path"]
 
         # Only audit "actions" (mutations: POST, PUT, DELETE, PATCH)
         # We skip GET (reads) and OPTIONS to avoid noise
         if http_method not in ["POST", "PUT", "DELETE", "PATCH"]:
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         # Skip health checks, documentation, and static files
-        path = request.url.path
         if (
-            path.startswith("/api/v1/health") or 
-            path.startswith("/docs") or 
+            path.startswith("/api/v1/health") or
+            path.startswith("/docs") or
             path.startswith("/redoc") or
             path.startswith("/content")
         ):
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
-        # Capture request data for payload and org_id extraction
+        request = Request(scope, receive)
+
+        # Capture request body for audit logging.
+        # IMPORTANT: request.body() drains the ASGI receive stream. We only read it
+        # for content types we care about logging. When we do read it, we must replay
+        # it for the downstream app via a replacement receive callable.
+        # For all other content types we leave receive untouched.
         payload = {}
-        org_id = None
-        
+        body_bytes = b""
+        body_was_read = False
+
         try:
             content_type = request.headers.get("content-type", "")
-            
+
             if "application/json" in content_type:
-                body = await request.body()
-                if body:
+                body_bytes = await request.body()
+                body_was_read = True
+                if body_bytes:
                     try:
-                        payload = json.loads(body)
+                        payload = json.loads(body_bytes)
                     except json.JSONDecodeError:
                         pass
             elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
-                # Read and parse the form data
-                body = await request.body()
-                if body:
-                    # Parse form data manually to avoid consuming the stream
-                    from urllib.parse import parse_qs
+                body_bytes = await request.body()
+                body_was_read = True
+                if body_bytes:
                     if "application/x-www-form-urlencoded" in content_type:
-                        body_str = body.decode('utf-8')
-                        parsed = parse_qs(body_str)
-                        # Convert lists to single values for logging
+                        from urllib.parse import parse_qs
+                        parsed = parse_qs(body_bytes.decode("utf-8"))
                         payload = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
                     else:
-                        # For multipart, just note that it was multipart data
                         payload = {"_type": "multipart/form-data"}
-            
+
             # Scrub sensitive data from payload
             if isinstance(payload, dict):
                 sensitive_keys = ["password", "token", "access_token", "secret", "new_password", "old_password"]
                 payload = {k: v for k, v in payload.items() if k not in sensitive_keys}
-                
+
         except Exception as e:
             logger.error(f"Audit middleware failed to capture request data: {e}")
+
+        # If we consumed the receive stream, provide a replay so downstream sees
+        # the full body. Otherwise pass the original receive through unchanged.
+        if body_was_read:
+            body_replayed = False
+
+            async def replay_receive():
+                nonlocal body_replayed
+                if not body_replayed:
+                    body_replayed = True
+                    return {"type": "http.request", "body": body_bytes, "more_body": False}
+                return {"type": "http.disconnect"}
+
+            downstream_receive = replay_receive
+        else:
+            downstream_receive = receive
 
         # Determine resource and resource_id from path
         # Paths are usually /api/v1/{resource}/{id}/{subresource}/{subid}
@@ -135,10 +168,20 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
             if org_id:
                 is_enterprise = is_enterprise_plan(session, org_id)
 
-        # Proceed with the request
-        response: Response = await call_next(request)
+        # Wrap send to capture the response status code for audit logging.
+        status_code = 0
 
-        # Extract user if available (set by auth dependencies during call_next)
+        async def wrapped_send(message) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+            await send(message)
+
+        # Run the downstream app — streaming responses work correctly here because
+        # we are a pure ASGI middleware and do not buffer the response body.
+        await self.app(scope, downstream_receive, wrapped_send)
+
+        # Extract user if available (set by auth dependencies)
         user_id = None
         if hasattr(request.state, "user") and isinstance(request.state.user, PublicUser):
             user_id = request.state.user.id
@@ -154,10 +197,8 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
                 resource=resource,
                 method=http_method,
                 path=path,
-                status_code=response.status_code,
+                status_code=status_code,
                 payload=payload if payload else None,
                 resource_id=resource_id,
                 ip_address=request.client.host if request.client else None
             ))
-
-        return response

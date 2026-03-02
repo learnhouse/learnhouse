@@ -440,12 +440,15 @@ async def query_dashboard(
 
     # Plan gating for advanced queries
     if query_name in ADVANCED_QUERIES:
-        current_plan = get_org_plan(org_id, db_session)
-        if not plan_meets_requirement(current_plan, "pro"):
-            raise HTTPException(
-                status_code=403,
-                detail="Advanced analytics requires a Pro plan or higher.",
-            )
+        from src.security.features_utils.plan_check import _check_mode_bypass
+        bypass = _check_mode_bypass("analytics_advanced")
+        if bypass is None:  # SaaS mode — check plan
+            current_plan = get_org_plan(org_id, db_session)
+            if not plan_meets_requirement(current_plan, "enterprise"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Advanced analytics requires an Enterprise plan or higher.",
+                )
 
     sql_template, default_days = ALL_QUERIES[query_name]
     safe_org_id, safe_days = _parse_safe_params(org_id, request, default_days)

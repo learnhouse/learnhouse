@@ -18,13 +18,14 @@ import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@components/ui/badge'
+import { usePlan } from '@components/Hooks/usePlan'
 
 function OrgUserGroups() {
     const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
-    const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+    const currentPlan = usePlan()
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)

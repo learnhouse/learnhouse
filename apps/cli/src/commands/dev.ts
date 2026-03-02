@@ -176,8 +176,6 @@ export async function devCommand() {
 
     serviceEnv = {
       FORCE_COLOR: '1',
-      LEARNHOUSE_OSS: 'true',
-      NEXT_PUBLIC_LEARNHOUSE_OSS: 'true',
       LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
       LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password,
     }
@@ -199,8 +197,6 @@ export async function devCommand() {
   } else {
     serviceEnv = {
       FORCE_COLOR: '1',
-      LEARNHOUSE_OSS: 'true',
-      NEXT_PUBLIC_LEARNHOUSE_OSS: 'true',
     }
   }
 

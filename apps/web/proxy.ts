@@ -6,16 +6,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 
-// Cached instance info from backend (1-hour TTL)
+// Cached instance info from backend (30-second TTL)
 interface InstanceInfo {
   multi_org_enabled: boolean
   default_org_slug: string
-  ee_enabled: boolean
+  mode: 'saas' | 'oss' | 'ee'
   frontend_domain: string
   top_domain: string
 }
 let _instanceCache: { data: InstanceInfo; ts: number } | null = null
-const INSTANCE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+const INSTANCE_CACHE_TTL = 30 * 1000 // 30 seconds
 
 async function getInstanceInfo(): Promise<InstanceInfo> {
   if (_instanceCache && Date.now() - _instanceCache.ts < INSTANCE_CACHE_TTL) {
@@ -34,7 +34,7 @@ async function getInstanceInfo(): Promise<InstanceInfo> {
   } catch {
     // Backend unavailable — use defaults
   }
-  return { multi_org_enabled: false, default_org_slug: 'default', ee_enabled: false, frontend_domain: 'localhost:3000', top_domain: 'localhost' }
+  return { multi_org_enabled: false, default_org_slug: 'default', mode: 'oss' as const, frontend_domain: 'localhost:3000', top_domain: 'localhost' }
 }
 
 // Set instance info cookies on a response so client-side can read them synchronously
@@ -43,6 +43,7 @@ function setInstanceCookies(response: NextResponse, info: InstanceInfo) {
   response.cookies.set({ name: 'learnhouse_default_org', value: info.default_org_slug, path: '/' })
   response.cookies.set({ name: 'learnhouse_frontend_domain', value: info.frontend_domain, path: '/' })
   response.cookies.set({ name: 'learnhouse_top_domain', value: info.top_domain, path: '/' })
+  response.cookies.set({ name: 'learnhouse_mode', value: info.mode, path: '/' })
   return response
 }
 

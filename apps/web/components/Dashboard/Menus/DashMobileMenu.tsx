@@ -8,12 +8,13 @@ import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 function DashMobileMenu() {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const plan = usePlan()
 
   // Feature visibility: enabled by org AND allowed by plan
   const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)

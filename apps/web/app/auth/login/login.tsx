@@ -12,7 +12,7 @@ import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@components/Contexts/AuthContext'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL, getDeploymentMode } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import { resendVerificationEmail } from '@services/auth/auth'
@@ -58,9 +58,10 @@ const LoginClient = (props: LoginClientProps) => {
   // Check if SSO is enabled for this organization (requires enterprise plan)
   useEffect(() => {
     const checkSSO = async () => {
-      // SSO is only available for enterprise plan
+      // SSO is only available for enterprise plan (requires EE or SaaS/enterprise)
       const plan = props.org?.config?.config?.cloud?.plan
-      if (plan !== 'enterprise') {
+      const mode = getDeploymentMode()
+      if (mode === 'oss' || (mode === 'saas' && plan !== 'enterprise')) {
         setSsoEnabled(false)
         return
       }
@@ -76,7 +77,7 @@ const LoginClient = (props: LoginClientProps) => {
       }
     }
     checkSSO()
-  }, [props.org?.slug, props.org?.config?.config?.cloud?.plan])
+  }, [props.org?.slug, props.org?.config?.config?.cloud?.plan]) // eslint-disable-line
 
   const handleSSOLogin = async () => {
     setSsoLoading(true)

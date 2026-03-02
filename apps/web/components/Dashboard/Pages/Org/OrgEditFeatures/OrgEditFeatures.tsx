@@ -13,6 +13,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
 import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy, FileText } from 'lucide-react'
 import { ChalkboardSimple, Cube } from '@phosphor-icons/react'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface FeatureToggleProps {
   id: string
@@ -81,7 +82,7 @@ const OrgEditFeatures: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
 

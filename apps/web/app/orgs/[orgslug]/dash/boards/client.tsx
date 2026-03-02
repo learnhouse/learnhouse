@@ -19,6 +19,7 @@ import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/P
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface BoardListClientProps {
   org_id: number
@@ -89,7 +90,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const plan = usePlan()
 
   const isBoardsEnabled = org?.config?.config?.features?.boards?.enabled !== false
 

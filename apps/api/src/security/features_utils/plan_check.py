@@ -7,7 +7,7 @@ Provides dependency functions to enforce plan requirements at the router level.
 from fastapi import Depends, HTTPException, Request
 from sqlmodel import Session, select
 
-from config.config import get_learnhouse_config
+from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 from src.db.communities.communities import Community
@@ -15,9 +15,29 @@ from src.db.organizations import Organization
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
 
 
-def _is_oss_mode() -> bool:
-    """Check if OSS mode is enabled (disables plan-based limits)."""
-    return get_learnhouse_config().general_config.oss_mode
+def _check_mode_bypass(feature_name: str) -> bool | None:
+    """
+    Check mode-based bypass for plan dependencies.
+
+    Returns:
+        True if access should be granted without plan check
+        None if normal plan check should proceed (SaaS mode)
+
+    Raises:
+        HTTPException 403 if access is blocked (OSS + EE-only feature)
+    """
+    mode = get_deployment_mode()
+    if mode == 'ee':
+        return True
+    if mode == 'oss':
+        feature_key = feature_name.lower().replace(' ', '_')
+        if feature_key in EE_ONLY_FEATURES:
+            raise HTTPException(
+                status_code=403,
+                detail=f"{feature_name} is not available in OSS mode. Enterprise Edition is required.",
+            )
+        return True
+    return None  # SaaS — proceed with plan check
 
 
 def get_org_plan(org_id: int, db_session: Session) -> PlanLevel:
@@ -68,8 +88,9 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
 
@@ -120,8 +141,9 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
 
@@ -185,8 +207,9 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
         path_params = request.path_params
@@ -283,8 +306,9 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
 
@@ -346,8 +370,9 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
 
@@ -417,8 +442,9 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
 
@@ -482,8 +508,9 @@ def require_plan_for_docs(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        if _is_oss_mode():
-            return True
+        bypass = _check_mode_bypass(feature_name)
+        if bypass is not None:
+            return bypass
 
         org_id = None
         path_params = request.path_params

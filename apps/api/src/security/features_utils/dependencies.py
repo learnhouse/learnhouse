@@ -441,9 +441,9 @@ async def require_playgrounds_feature(
     # Check feature flag
     _check_feature_enabled("playgrounds", org_id, db_session)
 
-    # Check plan (Pro+ or OSS)
-    from config.config import get_learnhouse_config
-    if get_learnhouse_config().general_config.oss_mode:
+    # Check plan (Pro+ or non-SaaS mode)
+    from src.core.deployment_mode import get_deployment_mode
+    if get_deployment_mode() != 'saas':
         return True
 
     current_plan = get_org_plan(org_id, db_session)

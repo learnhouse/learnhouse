@@ -14,6 +14,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface CommunitiesDashClientProps {
   org_id: number
@@ -29,7 +30,7 @@ const CommunitiesDashClient = ({
   const { t } = useTranslation()
   const router = useRouter()
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null)

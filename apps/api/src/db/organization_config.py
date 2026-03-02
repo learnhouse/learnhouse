@@ -39,7 +39,7 @@ class AssignmentOrgConfig(BaseModel):
 
 
 class PaymentOrgConfig(BaseModel):
-    enabled: bool = True
+    enabled: bool = False
 
 
 class DiscussionOrgConfig(BaseModel):
