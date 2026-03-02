@@ -4107,75 +4107,6 @@ var x = class {
     }
   }
 };
-function wt(t, e2) {
-  if (t === void 0 || e2.length === 0) return 0;
-  const s = e2.findIndex((i) => i.value === t);
-  return s !== -1 ? s : 0;
-}
-function Dt(t, e2) {
-  return (e2.label ?? String(e2.value)).toLowerCase().includes(t.toLowerCase());
-}
-function St(t, e2) {
-  if (e2) return t ? e2 : e2[0];
-}
-var Vt = class extends x {
-  filteredOptions;
-  multiple;
-  isNavigating = false;
-  selectedValues = [];
-  focusedValue;
-  #t = 0;
-  #s = "";
-  #i;
-  #e;
-  get cursor() {
-    return this.#t;
-  }
-  get userInputWithCursor() {
-    if (!this.userInput) return import_picocolors3.default.inverse(import_picocolors3.default.hidden("_"));
-    if (this._cursor >= this.userInput.length) return `${this.userInput}\u2588`;
-    const e2 = this.userInput.slice(0, this._cursor), [s, ...i] = this.userInput.slice(this._cursor);
-    return `${e2}${import_picocolors3.default.inverse(s)}${i.join("")}`;
-  }
-  get options() {
-    return typeof this.#e == "function" ? this.#e() : this.#e;
-  }
-  constructor(e2) {
-    super(e2), this.#e = e2.options;
-    const s = this.options;
-    this.filteredOptions = [...s], this.multiple = e2.multiple === true, this.#i = e2.filter ?? Dt;
-    let i;
-    if (e2.initialValue && Array.isArray(e2.initialValue) ? this.multiple ? i = e2.initialValue : i = e2.initialValue.slice(0, 1) : !this.multiple && this.options.length > 0 && (i = [this.options[0].value]), i) for (const r of i) {
-      const n = s.findIndex((u) => u.value === r);
-      n !== -1 && (this.toggleSelected(r), this.#t = n);
-    }
-    this.focusedValue = this.options[this.#t]?.value, this.on("key", (r, n) => this.#r(r, n)), this.on("userInput", (r) => this.#n(r));
-  }
-  _isActionKey(e2, s) {
-    return e2 === "	" || this.multiple && this.isNavigating && s.name === "space" && e2 !== void 0 && e2 !== "";
-  }
-  #r(e2, s) {
-    const i = s.name === "up", r = s.name === "down", n = s.name === "return";
-    i || r ? (this.#t = B(this.#t, i ? -1 : 1, this.filteredOptions), this.focusedValue = this.filteredOptions[this.#t]?.value, this.multiple || (this.selectedValues = [this.focusedValue]), this.isNavigating = true) : n ? this.value = St(this.multiple, this.selectedValues) : this.multiple ? this.focusedValue !== void 0 && (s.name === "tab" || this.isNavigating && s.name === "space") ? this.toggleSelected(this.focusedValue) : this.isNavigating = false : (this.focusedValue && (this.selectedValues = [this.focusedValue]), this.isNavigating = false);
-  }
-  deselectAll() {
-    this.selectedValues = [];
-  }
-  toggleSelected(e2) {
-    this.filteredOptions.length !== 0 && (this.multiple ? this.selectedValues.includes(e2) ? this.selectedValues = this.selectedValues.filter((s) => s !== e2) : this.selectedValues = [...this.selectedValues, e2] : this.selectedValues = [e2]);
-  }
-  #n(e2) {
-    if (e2 !== this.#s) {
-      this.#s = e2;
-      const s = this.options;
-      e2 ? this.filteredOptions = s.filter((n) => this.#i(e2, n)) : this.filteredOptions = [...s];
-      const i = wt(this.focusedValue, this.filteredOptions);
-      this.#t = B(i, 0, this.filteredOptions);
-      const r = this.filteredOptions[this.#t];
-      r && !r.disabled ? this.focusedValue = r.value : this.focusedValue = void 0, this.multiple || (this.focusedValue !== void 0 ? this.toggleSelected(this.focusedValue) : this.deselectAll());
-    }
-  }
-};
 var kt = class extends x {
   get cursor() {
     return this.value ? 0 : 1;
@@ -4380,7 +4311,7 @@ var fe = (t) => t >= 4352 && t <= 4447 || t === 8986 || t === 8987 || t === 9001
 var At2 = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/y;
 var it2 = /[\x00-\x08\x0A-\x1F\x7F-\x9F]{1,1000}/y;
 var nt2 = /\t{1,1000}/y;
-var wt2 = new RegExp("[\\u{1F1E6}-\\u{1F1FF}]{2}|\\u{1F3F4}[\\u{E0061}-\\u{E007A}]{2}[\\u{E0030}-\\u{E0039}\\u{E0061}-\\u{E007A}]{1,3}\\u{E007F}|(?:\\p{Emoji}\\uFE0F\\u20E3?|\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation})(?:\\u200D(?:\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation}|\\p{Emoji}\\uFE0F\\u20E3?))*", "yu");
+var wt = new RegExp("[\\u{1F1E6}-\\u{1F1FF}]{2}|\\u{1F3F4}[\\u{E0061}-\\u{E007A}]{2}[\\u{E0030}-\\u{E0039}\\u{E0061}-\\u{E007A}]{1,3}\\u{E007F}|(?:\\p{Emoji}\\uFE0F\\u20E3?|\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation})(?:\\u200D(?:\\p{Emoji_Modifier_Base}\\p{Emoji_Modifier}?|\\p{Emoji_Presentation}|\\p{Emoji}\\uFE0F\\u20E3?))*", "yu");
 var at2 = /(?:[\x20-\x7E\xA0-\xFF](?!\uFE0F)){1,1000}/y;
 var Fe = new RegExp("\\p{M}+", "gu");
 var ye = { limit: 1 / 0, ellipsis: "" };
@@ -4434,12 +4365,12 @@ var jt = (t, r = {}, s = {}) => {
       A += w, I2 = $, B2 = m, m = $ = nt2.lastIndex;
       continue;
     }
-    if (wt2.lastIndex = m, wt2.test(t)) {
+    if (wt.lastIndex = m, wt.test(t)) {
       if (A + g > S2 && (v = Math.min(v, m)), A + g > i) {
         f = true;
         break;
       }
-      A += g, I2 = $, B2 = m, m = $ = wt2.lastIndex;
+      A += g, I2 = $, B2 = m, m = $ = wt.lastIndex;
       continue;
     }
     m += 1;
@@ -4455,8 +4386,8 @@ var Ct2 = "\x07";
 var kt2 = "[";
 var Ae = "]";
 var Vt2 = "m";
-var St2 = `${Ae}8;;`;
-var Ht = new RegExp(`(?:\\${kt2}(?<code>\\d+)m|\\${St2}(?<uri>.*)${Ct2})`, "y");
+var St = `${Ae}8;;`;
+var Ht = new RegExp(`(?:\\${kt2}(?<code>\\d+)m|\\${St}(?<uri>.*)${Ct2})`, "y");
 var we = (t) => {
   if (t >= 30 && t <= 37 || t >= 90 && t <= 97) return 39;
   if (t >= 40 && t <= 47 || t >= 100 && t <= 107) return 49;
@@ -4469,14 +4400,14 @@ var we = (t) => {
   if (t === 0) return 0;
 };
 var Ut = (t) => `${ot2}${kt2}${t}${Vt2}`;
-var Kt = (t) => `${ot2}${St2}${t}${Ct2}`;
+var Kt = (t) => `${ot2}${St}${t}${Ct2}`;
 var Ce = (t) => t.map((r) => M2(r));
 var It2 = (t, r, s) => {
   const i = r[Symbol.iterator]();
   let a = false, o = false, u = t.at(-1), l = u === void 0 ? 0 : M2(u), n = i.next(), c = i.next(), g = 0;
   for (; !n.done; ) {
     const F = n.value, p = M2(F);
-    l + p <= s ? t[t.length - 1] += F : (t.push(F), l = 0), (F === ot2 || F === Gt) && (a = true, o = r.startsWith(St2, g + 1)), a ? o ? F === Ct2 && (a = false, o = false) : F === Vt2 && (a = false) : (l += p, l === s && !c.done && (t.push(""), l = 0)), n = c, c = i.next(), g += F.length;
+    l + p <= s ? t[t.length - 1] += F : (t.push(F), l = 0), (F === ot2 || F === Gt) && (a = true, o = r.startsWith(St, g + 1)), a ? o ? F === Ct2 && (a = false, o = false) : F === Vt2 && (a = false) : (l += p, l === s && !c.done && (t.push(""), l = 0)), n = c, c = i.next(), g += F.length;
   }
   u = t.at(-1), !l && u !== void 0 && u.length > 0 && t.length > 1 && (t[t.length - 2] += t.pop());
 };
@@ -4572,59 +4503,6 @@ var X2 = (t) => {
   for (const A of f) for (const w of A) B2.push(w);
   return h && B2.push(g), B2;
 };
-function qt(t) {
-  return t.label ?? String(t.value ?? "");
-}
-function Jt(t, r) {
-  if (!t) return true;
-  const s = (r.label ?? String(r.value ?? "")).toLowerCase(), i = (r.hint ?? "").toLowerCase(), a = String(r.value).toLowerCase(), o = t.toLowerCase();
-  return s.includes(o) || i.includes(o) || a.includes(o);
-}
-function Be(t, r) {
-  const s = [];
-  for (const i of r) t.includes(i.value) && s.push(i);
-  return s;
-}
-var Xt = (t) => new Vt({ options: t.options, initialValue: t.initialValue ? [t.initialValue] : void 0, initialUserInput: t.initialUserInput, filter: t.filter ?? ((r, s) => Jt(r, s)), signal: t.signal, input: t.input, output: t.output, validate: t.validate, render() {
-  const r = t.withGuide ?? _.withGuide, s = r ? [`${import_picocolors4.default.gray(d)}`, `${W2(this.state)}  ${t.message}`] : [`${W2(this.state)}  ${t.message}`], i = this.userInput, a = this.options, o = t.placeholder, u = i === "" && o !== void 0, l = (n, c) => {
-    const g = qt(n), F = n.hint && n.value === this.focusedValue ? import_picocolors4.default.dim(` (${n.hint})`) : "";
-    switch (c) {
-      case "active":
-        return `${import_picocolors4.default.green(Q2)} ${g}${F}`;
-      case "inactive":
-        return `${import_picocolors4.default.dim(H2)} ${import_picocolors4.default.dim(g)}`;
-      case "disabled":
-        return `${import_picocolors4.default.gray(H2)} ${import_picocolors4.default.strikethrough(import_picocolors4.default.gray(g))}`;
-    }
-  };
-  switch (this.state) {
-    case "submit": {
-      const n = Be(this.selectedValues, a), c = n.length > 0 ? `  ${import_picocolors4.default.dim(n.map(qt).join(", "))}` : "", g = r ? import_picocolors4.default.gray(d) : "";
-      return `${s.join(`
-`)}
-${g}${c}`;
-    }
-    case "cancel": {
-      const n = i ? `  ${import_picocolors4.default.strikethrough(import_picocolors4.default.dim(i))}` : "", c = r ? import_picocolors4.default.gray(d) : "";
-      return `${s.join(`
-`)}
-${c}${n}`;
-    }
-    default: {
-      const n = this.state === "error" ? import_picocolors4.default.yellow : import_picocolors4.default.cyan, c = r ? `${n(d)}  ` : "", g = r ? n(x2) : "";
-      let F = "";
-      if (this.isNavigating || u) {
-        const f = u ? o : i;
-        F = f !== "" ? ` ${import_picocolors4.default.dim(f)}` : "";
-      } else F = ` ${this.userInputWithCursor}`;
-      const p = this.filteredOptions.length !== a.length ? import_picocolors4.default.dim(` (${this.filteredOptions.length} match${this.filteredOptions.length === 1 ? "" : "es"})`) : "", E = this.filteredOptions.length === 0 && i ? [`${c}${import_picocolors4.default.yellow("No matches found")}`] : [], $ = this.state === "error" ? [`${c}${import_picocolors4.default.yellow(this.error)}`] : [];
-      r && s.push(`${c.trimEnd()}`), s.push(`${c}${import_picocolors4.default.dim("Search:")}${F}${p}`, ...E, ...$);
-      const m = [`${import_picocolors4.default.dim("\u2191/\u2193")} to select`, `${import_picocolors4.default.dim("Enter:")} confirm`, `${import_picocolors4.default.dim("Type:")} to search`], h = [`${c}${m.join(" \u2022 ")}`, g], y2 = this.filteredOptions.length === 0 ? [] : X2({ cursor: this.cursor, options: this.filteredOptions, columnPadding: r ? 3 : 0, rowPadding: s.length + h.length, style: (f, v) => l(f, f.disabled ? "disabled" : v ? "active" : "inactive"), maxItems: t.maxItems, output: t.output });
-      return [...s, ...y2.map((f) => `${c}${f}`), ...h].join(`
-`);
-    }
-  }
-} }).prompt();
 var Re = (t) => {
   const r = t.active ?? "Yes", s = t.inactive ?? "No";
   return new kt({ active: r, inactive: s, signal: t.signal, input: t.input, output: t.output, initialValue: t.initialValue ?? true, render() {
@@ -4775,27 +4653,6 @@ ${u}
     }
   }
 } }).prompt();
-var Ue = (t) => {
-  const r = t.validate;
-  return Xt({ ...t, initialUserInput: t.initialValue ?? t.root ?? process.cwd(), maxItems: 5, validate(s) {
-    if (!Array.isArray(s)) {
-      if (!s) return "Please select a path";
-      if (r) return r(s);
-    }
-  }, options() {
-    const s = this.userInput;
-    if (s === "") return [];
-    try {
-      let i;
-      return $e(s) ? xt2(s).isDirectory() ? i = s : i = _t2(s) : i = _t2(s), de(i).map((a) => {
-        const o = he(i, a), u = xt2(o);
-        return { name: a, path: o, isDirectory: u.isDirectory() };
-      }).filter(({ path: a, isDirectory: o }) => a.startsWith(s) && (t.directory || !o)).map((a) => ({ value: a.path }));
-    } catch {
-      return [];
-    }
-  } });
-};
 var Ke = import_picocolors4.default.magenta;
 var bt2 = ({ indicator: t = "dots", onCancel: r, output: s = process.stdout, cancelMessage: i, errorMessage: a, frames: o = et2 ? ["\u25D2", "\u25D0", "\u25D3", "\u25D1"] : ["\u2022", "o", "O", "0"], delay: u = et2 ? 80 : 120, signal: l, ...n } = {}) => {
   const c = ct2();
@@ -6143,9 +6000,10 @@ async function confirmOrBack(message) {
   return result === "back" ? BACK : true;
 }
 async function stepInstallDir() {
-  const installDir = await Ue({
+  const installDir = await Ze({
     message: "Where should LearnHouse be installed?",
-    initialValue: "./learnhouse"
+    placeholder: "./learnhouse",
+    defaultValue: "./learnhouse"
   });
   if (Ct(installDir)) {
     Ne();
@@ -6390,16 +6248,22 @@ async function setupCommand() {
   const s = bt2();
   s.start("Generating configuration files");
   const finalDir = config.installDir;
-  fs2.mkdirSync(finalDir, { recursive: true });
-  fs2.mkdirSync(path2.join(finalDir, "extra"), { recursive: true });
-  fs2.writeFileSync(path2.join(finalDir, "docker-compose.yml"), generateDockerCompose(config, appImage));
-  fs2.writeFileSync(path2.join(finalDir, ".env"), generateEnvFile(config));
-  if (config.autoSsl) {
-    fs2.writeFileSync(path2.join(finalDir, "extra", "Caddyfile"), generateCaddyfile(config));
-  } else {
-    fs2.writeFileSync(path2.join(finalDir, "extra", "nginx.prod.conf"), generateNginxConf());
+  try {
+    fs2.mkdirSync(finalDir, { recursive: true });
+    fs2.mkdirSync(path2.join(finalDir, "extra"), { recursive: true });
+    fs2.writeFileSync(path2.join(finalDir, "docker-compose.yml"), generateDockerCompose(config, appImage));
+    fs2.writeFileSync(path2.join(finalDir, ".env"), generateEnvFile(config));
+    if (config.autoSsl) {
+      fs2.writeFileSync(path2.join(finalDir, "extra", "Caddyfile"), generateCaddyfile(config));
+    } else {
+      fs2.writeFileSync(path2.join(finalDir, "extra", "nginx.prod.conf"), generateNginxConf());
+    }
+    writeConfig(config);
+  } catch (err) {
+    s.stop("Failed to generate configuration files");
+    R2.error(err?.message ?? String(err));
+    process.exit(1);
   }
-  writeConfig(config);
   s.stop("Configuration files generated");
   const startNow = await Re({
     message: "Start LearnHouse now?",
