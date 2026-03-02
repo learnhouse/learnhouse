@@ -13,13 +13,14 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
 import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { usePlan } from '@components/Hooks/usePlan'
 
 const OrgEditAI: React.FC = () => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
 

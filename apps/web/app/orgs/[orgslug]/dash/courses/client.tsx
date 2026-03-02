@@ -30,6 +30,7 @@ import { mutate } from 'swr'
 import useSWR from 'swr'
 import toast from 'react-hot-toast'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import { usePlan } from '@components/Hooks/usePlan'
 
 type CourseProps = {
   orgslug: string
@@ -49,7 +50,7 @@ function CoursesHome(params: CourseProps) {
   const orgslug = params.orgslug
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const session = useLHSession() as any
   const access_token = session.data?.tokens?.access_token
 

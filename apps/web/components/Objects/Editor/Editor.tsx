@@ -64,6 +64,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 import VersionHistoryPanel from './VersionHistory/VersionHistoryPanel'
 import MergeConflictModal from './VersionHistory/MergeConflictModal'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface ConflictInfo {
   hasConflict: boolean
@@ -106,7 +107,7 @@ function Editor(props: Editor) {
 
   // Get current plan for feature restrictions (use OrgContext which has fresh data)
   const orgContext = useOrg() as any
-  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const canUseAI = planMeetsRequirement(currentPlan, 'standard')
   const canUseVersioning = planMeetsRequirement(currentPlan, 'standard')
 

@@ -16,6 +16,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { PlanLevel } from '@services/plans/plans'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
+import { usePlan } from '@components/Hooks/usePlan'
 
 interface CourseProps {
   orgslug: string
@@ -34,7 +35,7 @@ function Courses(props: CourseProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   // Usergroup filter — only shown on personal/family plans
   const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'

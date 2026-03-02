@@ -7,10 +7,11 @@ import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
+import { usePlan } from '@components/Hooks/usePlan'
 
 function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const org = useOrg() as any
-  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const plan = usePlan()
 
   // Check if feature is enabled AND plan allows it
   const isCommunitiesEnabled = org?.config?.config?.features?.communities?.enabled !== false

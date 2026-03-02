@@ -36,14 +36,13 @@ from src.services.podcasts.thumbnails import upload_podcast_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 from src.db.organization_config import OrganizationConfig
-from config.config import get_learnhouse_config
+from src.core.deployment_mode import get_deployment_mode
 
 
 def _is_podcasts_feature_enabled(org_id: int, db_session: Session) -> bool:
     """Check if podcasts feature is enabled for the organization."""
-    # OSS mode enables all features
-    LH_CONFIG = get_learnhouse_config()
-    if LH_CONFIG.general_config.oss_mode:
+    # EE and OSS modes enable all features
+    if get_deployment_mode() != 'saas':
         return True
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)

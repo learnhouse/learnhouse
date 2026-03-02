@@ -17,7 +17,7 @@ import {
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import {
   getSSOConfig,
   createSSOConfig,
@@ -29,6 +29,7 @@ import {
   SSOProviderInfo,
   SSOProvider,
 } from '@services/auth/sso'
+import { usePlan } from '@components/Hooks/usePlan'
 import {
   Shield,
   Settings2,
@@ -67,11 +68,11 @@ const OrgEditSSO: React.FC = () => {
   const [clientSecret, setClientSecret] = useState('')
   const [scopes, setScopes] = useState('openid email profile')
 
-  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
 
   // Load SSO configuration and providers
   useEffect(() => {
-    if (org?.id && access_token && currentPlan === 'enterprise') {
+    if (org?.id && access_token && planMeetsRequirement(currentPlan, 'enterprise')) {
       loadSSOData()
     }
   }, [org?.id, access_token, currentPlan])
@@ -215,7 +216,7 @@ const OrgEditSSO: React.FC = () => {
 
   const selectedProviderInfo = getProviderInfo(selectedProvider)
 
-  if (isLoading && currentPlan === 'enterprise') {
+  if (isLoading && planMeetsRequirement(currentPlan, 'enterprise')) {
     return (
       <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow p-8">
         <div className="flex items-center justify-center">

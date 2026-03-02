@@ -6,7 +6,8 @@ import { ChartBar, ChartLine, SquaresFour } from '@phosphor-icons/react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { usePlanInfo, useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
-import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
+import { isFeatureAvailable } from '@services/plans/plans'
+import { usePlan } from '@components/Hooks/usePlan'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import ExportAnalyticsButton from '@components/Dashboard/Analytics/AnalyticsExport'
@@ -61,7 +62,7 @@ export default function AnalyticsDashboard() {
   const [tab, setTab] = useState<Tab>('overview')
   const { data: planInfo } = usePlanInfo()
   const { data: analyticsStatus } = useAnalyticsStatus()
-  const plan: PlanLevel = planInfo?.plan ?? 'free'
+  const plan = usePlan()
   const isAnalyticsAvailable = isFeatureAvailable('analytics', plan)
   const isAdvanced = isFeatureAvailable('analytics_advanced', plan)
   const isConfigured = analyticsStatus?.configured === true
@@ -149,7 +150,7 @@ export default function AnalyticsDashboard() {
                 <div className="flex items-center">
                   {t('analytics.tabs.advanced')}
                   {!isAdvanced && (
-                    <PlanBadge currentPlan={plan} requiredPlan="pro" />
+                    <PlanBadge currentPlan={plan} requiredPlan="enterprise" />
                   )}
                 </div>
               </div>

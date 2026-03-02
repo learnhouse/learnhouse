@@ -44,6 +44,7 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import { useTranslation } from 'react-i18next'
+import { usePlan } from '@components/Hooks/usePlan'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const { t } = useTranslation()
@@ -55,7 +56,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
 
   // Get current plan for AI feature restrictions
   const orgContext = useOrg() as any
-  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const currentPlan = usePlan()
   const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
   if (!editor) {
