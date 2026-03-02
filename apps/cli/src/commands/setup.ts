@@ -47,9 +47,10 @@ async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
 }
 
 async function stepInstallDir(): Promise<string | typeof BACK> {
-  const installDir = await p.path({
+  const installDir = await p.text({
     message: 'Where should LearnHouse be installed?',
-    initialValue: './learnhouse',
+    placeholder: './learnhouse',
+    defaultValue: './learnhouse',
   })
   if (p.isCancel(installDir)) { p.cancel(); process.exit(0) }
   return path.resolve(installDir as string)
@@ -301,19 +302,25 @@ export async function setupCommand() {
   s.start('Generating configuration files')
 
   const finalDir = config.installDir
-  fs.mkdirSync(finalDir, { recursive: true })
-  fs.mkdirSync(path.join(finalDir, 'extra'), { recursive: true })
+  try {
+    fs.mkdirSync(finalDir, { recursive: true })
+    fs.mkdirSync(path.join(finalDir, 'extra'), { recursive: true })
 
-  fs.writeFileSync(path.join(finalDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
-  fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config))
+    fs.writeFileSync(path.join(finalDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
+    fs.writeFileSync(path.join(finalDir, '.env'), generateEnvFile(config))
 
-  if (config.autoSsl) {
-    fs.writeFileSync(path.join(finalDir, 'extra', 'Caddyfile'), generateCaddyfile(config))
-  } else {
-    fs.writeFileSync(path.join(finalDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
+    if (config.autoSsl) {
+      fs.writeFileSync(path.join(finalDir, 'extra', 'Caddyfile'), generateCaddyfile(config))
+    } else {
+      fs.writeFileSync(path.join(finalDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
+    }
+
+    writeConfig(config)
+  } catch (err: any) {
+    s.stop('Failed to generate configuration files')
+    p.log.error(err?.message ?? String(err))
+    process.exit(1)
   }
-
-  writeConfig(config)
 
   s.stop('Configuration files generated')
 
