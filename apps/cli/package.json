@@ -37,7 +37,7 @@
   ],
   "author": "LearnHouse",
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.0.0",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   },
