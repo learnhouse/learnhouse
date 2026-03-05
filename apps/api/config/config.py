@@ -27,7 +27,6 @@ class Judge0Config(BaseModel):
 
 class GeneralConfig(BaseModel):
     development_mode: bool
-    logfire_enabled: bool
     sentry_config: SentryConfig
     saas_mode: bool
     env: str
@@ -139,13 +138,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         env_development_mode
         if env_development_mode is not None
         else yaml_config.get("general", {}).get("development_mode")
-    )
-
-    # Logfire config
-    env_logfire_enabled = os.environ.get("LEARNHOUSE_LOGFIRE_ENABLED", "None")
-    logfire_enabled = (
-        env_logfire_enabled.lower() == "true" if env_logfire_enabled != "None"
-        else yaml_config.get("general", {}).get("logfire_enabled", False)
     )
 
     # Sentry config
@@ -404,7 +396,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         contact_email=contact_email,
         general_config=GeneralConfig(
             development_mode=bool(development_mode),
-            logfire_enabled=bool(logfire_enabled),
             sentry_config=SentryConfig(dsn=sentry_dsn),
             saas_mode=bool(saas_mode),
             env=learnhouse_env,

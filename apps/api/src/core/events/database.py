@@ -96,7 +96,6 @@ if not is_testing:
             "Error: %s", e
         )
     SQLModel.metadata.create_all(engine)
-    # Note: logfire instrumentation will be handled in app.py after configuration
 
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
