@@ -388,7 +388,9 @@ async def api_delete_user(
     """
     Delete User
     """
-    return await delete_user_by_id(request, db_session, current_user, user_id)
+    result = await delete_user_by_id(request, db_session, current_user, user_id)
+    _invalidate_session_cache(user_id)
+    return result
 
 
 @router.get("/{user_id}/courses", response_model=List[CourseRead], tags=["users"])
