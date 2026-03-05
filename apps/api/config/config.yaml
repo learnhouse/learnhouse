@@ -6,7 +6,6 @@ contact_email: hi@learnhouse.app
 
 general:
   development_mode: true
-  logfire_enabled: false
 
 security:
   # SECURITY: Set via LEARNHOUSE_AUTH_JWT_SECRET_KEY env var (required, min 32 chars).
