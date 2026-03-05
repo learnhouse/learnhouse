@@ -651,11 +651,20 @@ async def delete_user_by_id(
     # RBAC check
     await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
-    # Delete user
+    # Remove org memberships first (no CASCADE on this FK)
+    user_orgs = db_session.exec(
+        select(UserOrganization).where(UserOrganization.user_id == user_id)
+    ).all()
+    for uo in user_orgs:
+        db_session.delete(uo)
+
+    db_session.flush()
+
+    # Delete user (all other FKs have ondelete="CASCADE")
     db_session.delete(user)
     db_session.commit()
 
-    return "User deleted"
+    return {"detail": "User deleted successfully"}
 
 
 # Utils & Security functions
