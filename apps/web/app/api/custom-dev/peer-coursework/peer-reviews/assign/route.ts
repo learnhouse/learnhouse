@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assignReviewer } from '@/services/custom-dev/peer-coursework/peerActivity.service'
+import { assignReviewer } from '@services/custom-dev/peer-coursework/peerCourseworkService'
 
 export async function POST(req: NextRequest) {
   try {

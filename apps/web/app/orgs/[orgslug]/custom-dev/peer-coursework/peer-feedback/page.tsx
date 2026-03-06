@@ -1,32 +1,37 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getPeerFeedback } from '@/services/custom-dev/peer-coursework/peerCourseworkService'
 
 type FeedbackItem = {
   submission: {
     id: string
-    activityId: string
-    studentId: string
+    activity_id: string
+    course_id: string
+    student_id: string
     content: string
-    createdAt: string
+    created_at: string
   }
   reviews: {
-    reviewId: string
-    reviewerId: string
+    review_id: string
+    reviewer_id: string
     feedback: string | null
-    score: number | null
-    createdAt: string
+    created_at: string
   }[]
 }
 
 export default function PeerFeedbackPage() {
   const [studentId, setStudentId] = useState('student-a')
   const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([])
+  const [message, setMessage] = useState('')
 
   async function loadFeedback(currentStudentId: string) {
-    const res = await fetch(`/api/custom-dev/peer-coursework/peer-feedback/my?studentId=${currentStudentId}`)
-    const data = await res.json()
-    setFeedbackItems(data)
+    try {
+      const data = await getPeerFeedback(currentStudentId)
+      setFeedbackItems(data)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed to load feedback')
+    }
   }
 
   useEffect(() => {
@@ -49,9 +54,7 @@ export default function PeerFeedbackPage() {
         <option value="student-d">student-d</option>
       </select>
 
-      {feedbackItems.length === 0 && (
-        <p>No submissions found for this student yet.</p>
-      )}
+      {feedbackItems.length === 0 && <p>No submissions found for this student yet.</p>}
 
       <div className="space-y-8">
         {feedbackItems.map((item) => (
@@ -64,15 +67,13 @@ export default function PeerFeedbackPage() {
 
             <h3 className="font-semibold mb-3">Feedback Received</h3>
 
-            {item.reviews.length === 0 && (
-              <p>No feedback yet.</p>
-            )}
+            {item.reviews.length === 0 && <p>No feedback yet.</p>}
 
             <div className="space-y-4">
               {item.reviews.map((review) => (
-                <div key={review.reviewId} className="border rounded p-3">
+                <div key={review.review_id} className="border rounded p-3">
                   <p className="font-medium mb-2">
-                    Reviewer: {review.reviewerId}
+                    Reviewer: {review.reviewer_id}
                   </p>
 
                   <div className="whitespace-pre-wrap">
@@ -84,6 +85,8 @@ export default function PeerFeedbackPage() {
           </div>
         ))}
       </div>
+
+      {message && <p className="mt-4">{message}</p>}
     </div>
   )
 }

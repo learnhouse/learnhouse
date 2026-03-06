@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { submitPeerSubmission } from '@/services/custom-dev/peer-coursework/peerCourseworkService'
 
 export default function PeerSubmitPage() {
   const [studentId, setStudentId] = useState('student-a')
@@ -8,34 +9,25 @@ export default function PeerSubmitPage() {
   const [message, setMessage] = useState('')
 
   async function handleSubmit() {
-    setMessage('')
-
-    const res = await fetch('/api/custom-dev/peer-coursework/peer-submissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        activityId: 'activity-1',
-        studentId,
+    try {
+      await submitPeerSubmission({
+        course_id: 'course-1',
+        activity_id: 'activity-1',
+        student_id: studentId,
         content,
-      }),
-    })
+      } as any)
 
-    const data = await res.json()
-
-    if (!res.ok) {
-      setMessage(data.error || 'Submission failed')
-      return
+      setMessage('Submission successful')
+      setContent('')
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Submission failed')
     }
-
-    setMessage('Submission successful')
-    setContent('')
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Submit Work</h1>
 
-      <label className="block mb-2 font-medium">Student ID</label>
       <select
         className="border rounded px-3 py-2 mb-4 w-full"
         value={studentId}
@@ -45,10 +37,8 @@ export default function PeerSubmitPage() {
         <option value="student-b">student-b</option>
         <option value="student-c">student-c</option>
         <option value="student-d">student-d</option>
-
       </select>
 
-      <label className="block mb-2 font-medium">Your Work</label>
       <textarea
         className="border rounded px-3 py-2 w-full min-h-[180px]"
         value={content}

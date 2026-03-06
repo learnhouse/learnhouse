@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFeedbackForStudent } from '@/services/custom-dev/peer-coursework/peerActivity.service'
+import { getFeedbackForStudent } from '@services/custom-dev/peer-coursework/peerCourseworkService'
 
 export async function GET(req: NextRequest) {
   const studentId = req.nextUrl.searchParams.get('studentId')

@@ -1,18 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getAssignedPeerReviews, submitPeerReview } from '@/services/custom-dev/peer-coursework/peerCourseworkService'
 
 type AssignedReview = {
-  reviewId: string
-  submissionId: string
+  review_id: string
+  submission_id: string
   feedback: string | null
-  score: number | null
   submission?: {
     id: string
-    activityId: string
-    studentId: string
+    activity_id: string
+    course_id: string
+    student_id: string
     content: string
-    createdAt: string
+    created_at: string
   }
 }
 
@@ -23,9 +24,12 @@ export default function PeerReviewsPage() {
   const [message, setMessage] = useState('')
 
   async function loadReviews(currentReviewerId: string) {
-    const res = await fetch(`/api/custom-dev/peer-coursework/peer-reviews/my?reviewerId=${currentReviewerId}`)
-    const data = await res.json()
-    setAssignedReviews(data)
+    try {
+      const data = await getAssignedPeerReviews(currentReviewerId)
+      setAssignedReviews(data)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed to load assigned reviews')
+    }
   }
 
   useEffect(() => {
@@ -37,25 +41,18 @@ export default function PeerReviewsPage() {
 
     const feedback = feedbackMap[submissionId] || ''
 
-    const res = await fetch('/api/custom-dev/peer-coursework/peer-reviews/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        submissionId,
-        reviewerId,
+    try {
+      await submitPeerReview({
+        submission_id: submissionId,
+        reviewer_id: reviewerId,
         feedback,
-      }),
-    })
+      } as any)
 
-    const data = await res.json()
-
-    if (!res.ok) {
-      setMessage(data.error || 'Failed to submit review')
-      return
+      setMessage('Review submitted successfully')
+      loadReviews(reviewerId)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed to submit review')
     }
-
-    setMessage('Review submitted successfully')
-    loadReviews(reviewerId)
   }
 
   return (
@@ -74,15 +71,13 @@ export default function PeerReviewsPage() {
         <option value="student-d">student-d</option>
       </select>
 
-      {assignedReviews.length === 0 && (
-        <p>No assigned reviews yet.</p>
-      )}
+      {assignedReviews.length === 0 && <p>No assigned reviews yet.</p>}
 
       <div className="space-y-6">
         {assignedReviews.map((item) => (
-          <div key={item.reviewId} className="border rounded p-4">
+          <div key={item.review_id} className="border rounded p-4">
             <p className="font-semibold mb-2">
-              Submission by: {item.submission?.studentId}
+              Submission by: {item.submission?.student_id}
             </p>
 
             <div className="border rounded p-3 bg-gray-50 mb-4 whitespace-pre-wrap">
@@ -92,17 +87,17 @@ export default function PeerReviewsPage() {
             <textarea
               className="border rounded px-3 py-2 w-full min-h-[120px]"
               placeholder="Write feedback here..."
-              value={feedbackMap[item.submissionId] ?? item.feedback ?? ''}
+              value={feedbackMap[item.submission_id] ?? item.feedback ?? ''}
               onChange={(e) =>
                 setFeedbackMap((prev) => ({
                   ...prev,
-                  [item.submissionId]: e.target.value,
+                  [item.submission_id]: e.target.value,
                 }))
               }
             />
 
             <button
-              onClick={() => handleSubmitReview(item.submissionId)}
+              onClick={() => handleSubmitReview(item.submission_id)}
               className="mt-3 bg-black text-white px-4 py-2 rounded"
             >
               Submit Review

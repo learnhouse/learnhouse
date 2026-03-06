@@ -24,6 +24,7 @@ from src.routers.docs import docspaces as docspaces_router_module
 from src.routers.docs import docsections as docsections_router_module
 from src.routers.docs import docgroups as docgroups_router_module
 from src.routers.docs import docpages as docpages_router_module
+from src.routers.courses.peer_coursework import router as peer_coursework_router
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
@@ -274,3 +275,6 @@ v1_router.include_router(
     tags=["stream"],
     dependencies=[Depends(get_non_api_token_user)]
 )
+
+#Peer Review Routes
+v1_router.include_router(peer_coursework_router)

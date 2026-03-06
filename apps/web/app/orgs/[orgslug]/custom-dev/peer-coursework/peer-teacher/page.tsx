@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getPeerSubmissions, assignPeerReviewer } from '@/services/custom-dev/peer-coursework/peerCourseworkService'
 
 type Submission = {
   id: string
-  activityId: string
-  studentId: string
+  activity_id: string
+  course_id: string
+  student_id: string
   content: string
-  createdAt: string
+  created_at: string
 }
 
 export default function PeerTeacherPage() {
@@ -16,9 +18,12 @@ export default function PeerTeacherPage() {
   const [message, setMessage] = useState('')
 
   async function loadSubmissions() {
-    const res = await fetch('/api/custom-dev/peer-coursework/peer-submissions')
-    const data = await res.json()
-    setSubmissions(data)
+    try {
+      const data = await getPeerSubmissions('course-1')
+      setSubmissions(data)
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed to load submissions')
+    }
   }
 
   useEffect(() => {
@@ -35,44 +40,34 @@ export default function PeerTeacherPage() {
       return
     }
 
-    const res = await fetch('/api/custom-dev/peer-coursework/peer-reviews/assign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        submissionId,
-        reviewerId,
-      }),
-    })
+    try {
+      await assignPeerReviewer({
+        submission_id: submissionId,
+        reviewer_id: reviewerId,
+      } as any)
 
-    const data = await res.json()
-
-    if (!res.ok) {
-      setMessage(data.error || 'Failed to assign reviewer')
-      return
+      setMessage('Reviewer assigned successfully')
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Failed to assign reviewer')
     }
-
-    setMessage('Reviewer assigned successfully')
   }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Teacher Peer Review Assignment</h1>
 
-      {submissions.length === 0 && (
-        <p>No submissions yet. Go to /peer-submit first and submit student work.</p>
-      )}
+      {submissions.length === 0 && <p>No submissions yet.</p>}
 
       <div className="space-y-6">
         {submissions.map((submission) => (
           <div key={submission.id} className="border rounded p-4">
-            <p className="font-semibold mb-2">Student: {submission.studentId}</p>
+            <p className="font-semibold mb-2">Student: {submission.student_id}</p>
 
             <div className="border rounded p-3 bg-gray-50 mb-4 whitespace-pre-wrap">
               {submission.content}
             </div>
 
             <label className="block mb-2 font-medium">Assign Reviewer</label>
-            
             <select
               className="border rounded px-3 py-2 w-full mb-3"
               value={reviewerMap[submission.id] || ''}
@@ -84,20 +79,16 @@ export default function PeerTeacherPage() {
               }
             >
               <option value="">Select reviewer</option>
-
-              {submission.studentId !== 'student-a' && (
+              {submission.student_id !== 'student-a' && (
                 <option value="student-a">student-a</option>
               )}
-
-              {submission.studentId !== 'student-b' && (
+              {submission.student_id !== 'student-b' && (
                 <option value="student-b">student-b</option>
               )}
-
-              {submission.studentId !== 'student-c' && (
+              {submission.student_id !== 'student-c' && (
                 <option value="student-c">student-c</option>
               )}
-
-              {submission.studentId !== 'student-d' && (
+              {submission.student_id !== 'student-d' && (
                 <option value="student-d">student-d</option>
               )}
             </select>
