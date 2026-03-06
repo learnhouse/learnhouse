@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 function Home() {
   return (
     <div>
+      <h1>Insight1 Education LMS</h1>
       <HomeClient/>
     </div>
   )

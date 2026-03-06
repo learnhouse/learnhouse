@@ -131,6 +131,7 @@
     "eslint-plugin-unused-imports": "^4.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   },
   "overrides": {
