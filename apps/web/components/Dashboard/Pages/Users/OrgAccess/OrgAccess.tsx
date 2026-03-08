@@ -55,11 +55,17 @@ function OrgAccess() {
 
   async function getOrgJoinMethod() {
     if (org) {
-      if (org.config.config.features.members.signup_mode == 'open') {
-        setJoinMethod('open')
+      const config = org.config?.config
+      const isV2 = config?.config_version?.startsWith('2')
+      let signupMode: string
+
+      if (isV2) {
+        signupMode = config?.admin_toggles?.members?.signup_mode || 'open'
       } else {
-        setJoinMethod('inviteOnly')
+        signupMode = config?.features?.members?.signup_mode || 'open'
       }
+
+      setJoinMethod(signupMode === 'open' ? 'open' : 'inviteOnly')
     }
   }
 

@@ -17,7 +17,7 @@ import {
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import {
   getSSOConfig,
   createSSOConfig,
@@ -69,13 +69,15 @@ const OrgEditSSO: React.FC = () => {
   const [scopes, setScopes] = useState('openid email profile')
 
   const currentPlan = usePlan()
+  const rf = org?.config?.config?.resolved_features
+  const ssoEnabled = rf?.sso?.enabled === true
 
   // Load SSO configuration and providers
   useEffect(() => {
-    if (org?.id && access_token && planMeetsRequirement(currentPlan, 'enterprise')) {
+    if (org?.id && access_token && ssoEnabled) {
       loadSSOData()
     }
-  }, [org?.id, access_token, currentPlan])
+  }, [org?.id, access_token, ssoEnabled])
 
   const loadSSOData = async () => {
     setIsLoading(true)
@@ -216,7 +218,7 @@ const OrgEditSSO: React.FC = () => {
 
   const selectedProviderInfo = getProviderInfo(selectedProvider)
 
-  if (isLoading && planMeetsRequirement(currentPlan, 'enterprise')) {
+  if (isLoading && ssoEnabled) {
     return (
       <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow p-8">
         <div className="flex items-center justify-center">
@@ -229,7 +231,7 @@ const OrgEditSSO: React.FC = () => {
   return (
     <PlanRestrictedFeature
       currentPlan={currentPlan}
-      requiredPlan="enterprise"
+      requiredPlan={(rf?.sso?.required_plan || 'enterprise') as PlanLevel}
       icon={Shield}
       titleKey="common.plans.feature_restricted.sso.title"
       descriptionKey="common.plans.feature_restricted.sso.description"

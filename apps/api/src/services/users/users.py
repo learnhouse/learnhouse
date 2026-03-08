@@ -298,13 +298,20 @@ async def create_user_without_org(
 
     user_read = UserRead.model_validate(user)
 
-    # Send account creation email for OAuth users (they're already verified)
-    # Non-OAuth users without org can't receive verification emails since they need org context
-    # So we just send the welcome email
-    send_account_creation_email(
-        user=user_read,
-        email=user_read.email,
-    )
+    # OAuth users get welcome email (already verified)
+    # Non-OAuth SaaS users get verification email (no org needed)
+    if is_oauth or get_deployment_mode() != 'saas':
+        send_account_creation_email(
+            user=user_read,
+            email=user_read.email,
+        )
+    else:
+        from src.services.users.email_verification import send_verification_email
+        try:
+            await send_verification_email(request, db_session, user, org_id=None)
+        except Exception:
+            # Don't fail user creation if email fails
+            pass
 
     return user_read
 

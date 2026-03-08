@@ -27,15 +27,17 @@ const hexToRgba = (hex: string, alpha: number): string => {
 
 function OrgFooter() {
   const org = useOrg() as any
-  const footerText = org?.config?.config?.general?.footer_text || ''
+  const footerText = org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || ''
   const plan = usePlan()
-  const isEnterprise = plan === 'enterprise'
+  const watermarkConfig = org?.config?.config?.customization?.general?.watermark ?? org?.config?.config?.general?.watermark
+  const isFree = plan === 'free'
+  const showWatermark = isOSSMode() || isFree || watermarkConfig !== false
 
   return (
     <footer className="w-full py-8 mt-12">
       <div className="flex flex-col items-center justify-center space-y-4">
         {footerText && <p className="text-sm text-gray-500">{footerText}</p>}
-        {!isEnterprise && (
+        {showWatermark && (
           <Link href="https://learnhouse.app" target="_blank" rel="noopener noreferrer">
             <Image
               src="/lrn.svg"
@@ -54,7 +56,7 @@ function OrgFooter() {
 
 function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
   const org = useOrg() as any
-  const primaryColor = org?.config?.config?.general?.color || ''
+  const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
   const pathname = usePathname()
 
   // Doc space pages use their own DocOrgMenu — hide the standard OrgMenu and footer

@@ -60,7 +60,7 @@ import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
 import VersionHistoryPanel from './VersionHistory/VersionHistoryPanel'
 import MergeConflictModal from './VersionHistory/MergeConflictModal'
@@ -105,11 +105,12 @@ function Editor(props: Editor) {
   const [remoteContent, setRemoteContent] = React.useState<any>(null)
   const [isLoadingRemote, setIsLoadingRemote] = React.useState(false)
 
-  // Get current plan for feature restrictions (use OrgContext which has fresh data)
+  // Get feature flags from resolved_features (API is source of truth)
   const orgContext = useOrg() as any
   const currentPlan = usePlan()
-  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
-  const canUseVersioning = planMeetsRequirement(currentPlan, 'standard')
+  const rf = orgContext?.config?.config?.resolved_features
+  const canUseAI = rf?.ai?.enabled === true
+  const canUseVersioning = rf?.versioning?.enabled === true
 
 
   React.useEffect(() => {
@@ -430,7 +431,7 @@ function Editor(props: Editor) {
                         />
                       </i>
                       <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
-                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
+                      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
                     </div>
                   )}
                 </div>
@@ -458,7 +459,7 @@ function Editor(props: Editor) {
                   <ToolTip content={t('editor.versioning.version_history')}>
                     <div className="flex bg-gray-100 h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-gray-400 rounded-lg cursor-not-allowed opacity-70 gap-1.5">
                       <History size={15} className="opacity-50" />
-                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
+                      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.versioning?.required_plan || 'pro') as PlanLevel} size="sm" />
                     </div>
                   </ToolTip>
                 )}

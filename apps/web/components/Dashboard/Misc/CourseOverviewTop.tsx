@@ -43,7 +43,7 @@ export function CourseOverviewTop({
     ? getCourseMetaCacheKey(courseStructure.course_uuid, withUnpublishedActivities)
     : null
 
-  const isAIEnabled = org?.config?.config?.features?.ai?.enabled !== false
+  const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 
   const indexCourseForAI = useCallback(async () => {
     if (isIndexing || !courseStructure?.course_uuid) return

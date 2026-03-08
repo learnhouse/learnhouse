@@ -96,7 +96,7 @@ const DocSpaceListClient = ({ org_id, orgslug }: DocSpaceListClientProps) => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const isDocsEnabled = org?.config?.config?.features?.docs?.enabled !== false
+  const isDocsEnabled = org?.config?.config?.resolved_features?.docs?.enabled ?? org?.config?.config?.features?.docs?.enabled !== false
 
   const { data: docspaces } = useSWR(
     isDocsEnabled && access_token

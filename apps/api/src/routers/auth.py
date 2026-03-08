@@ -419,7 +419,7 @@ async def api_verify_email(
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
-    org_id: int
+    org_id: Optional[int] = None
 
 
 @router.post("/resend-verification")

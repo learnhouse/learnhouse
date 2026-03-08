@@ -1,7 +1,8 @@
 """
 Email verification service for verifying user email addresses.
 
-Uses Redis to store verification tokens with 24-hour TTL.
+Uses Redis to store verification tokens with 1-hour TTL.
+Supports both org-based and org-less (platform) signups.
 """
 from datetime import datetime, timezone
 import json
@@ -20,6 +21,9 @@ from src.services.security.rate_limiting import check_verification_resend_rate_l
 
 # Token expiration time in seconds (1 hour)
 TOKEN_TTL_SECONDS = 60 * 60
+
+# Sentinel value for users who sign up without an organization
+NO_ORG_UUID = "none"
 
 
 def get_redis_connection() -> redis.Redis:
@@ -53,7 +57,7 @@ async def send_verification_email(
     request: Request,
     db_session: Session,
     user: User,
-    org_id: int,
+    org_id: int | None = None,
 ) -> str:
     """
     Generate a verification token, store in Redis, and send verification email.
@@ -62,20 +66,26 @@ async def send_verification_email(
         request: FastAPI request
         db_session: Database session
         user: User to send verification email to
-        org_id: Organization ID
+        org_id: Organization ID (None for platform signups without org)
 
     Returns:
         Success message
     """
-    # Get organization
-    statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = None
+    org_read = None
+    org_uuid = NO_ORG_UUID
 
-    if not org:
-        raise HTTPException(
-            status_code=400,
-            detail="Organization not found",
-        )
+    if org_id is not None:
+        statement = select(Organization).where(Organization.id == org_id)
+        org = db_session.exec(statement).first()
+
+        if not org:
+            raise HTTPException(
+                status_code=400,
+                detail="Organization not found",
+            )
+        org_uuid = org.org_uuid
+        org_read = OrganizationRead.model_validate(org)
 
     # Get Redis connection
     r = get_redis_connection()
@@ -87,20 +97,18 @@ async def send_verification_email(
     verification_data = {
         "token": token,
         "user_uuid": user.user_uuid,
-        "org_uuid": org.org_uuid,
+        "org_uuid": org_uuid,
         "email": user.email,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "expires_at": (datetime.now(timezone.utc).timestamp() + TOKEN_TTL_SECONDS),
     }
 
     # Store in Redis with TTL
-    # Key format: email_verification:{user_uuid}:org:{org_uuid}:token:{token}
-    redis_key = f"email_verification:{user.user_uuid}:org:{org.org_uuid}:token:{token}"
+    redis_key = f"email_verification:{user.user_uuid}:org:{org_uuid}:token:{token}"
     r.setex(redis_key, TOKEN_TTL_SECONDS, json.dumps(verification_data))
 
-    # Convert to Read models for email function
+    # Convert to Read model for email function
     user_read = UserRead.model_validate(user)
-    org_read = OrganizationRead.model_validate(org)
 
     # Send verification email
     base_url = get_base_url_from_request(request)
@@ -136,7 +144,7 @@ async def verify_email_token(
         db_session: Database session
         token: Verification token
         user_uuid: User UUID
-        org_uuid: Organization UUID
+        org_uuid: Organization UUID (or "none" for platform signups)
 
     Returns:
         Success message
@@ -206,7 +214,7 @@ async def resend_verification_email(
     request: Request,
     db_session: Session,
     email: EmailStr,
-    org_id: int,
+    org_id: int | None = None,
 ) -> str:
     """
     Resend verification email with rate limiting.
@@ -215,7 +223,7 @@ async def resend_verification_email(
         request: FastAPI request
         db_session: Database session
         email: User email
-        org_id: Organization ID
+        org_id: Organization ID (None for platform signups without org)
 
     Returns:
         Success message

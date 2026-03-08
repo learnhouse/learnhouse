@@ -69,7 +69,6 @@ import { cn } from '@/lib/utils'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
-import {  isFeatureAvailable } from '@services/plans/plans'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -167,21 +166,22 @@ function DashLeftMenu() {
   if (!org || !session) return null
 
   const plan = usePlan()
-  const rawPlan = org?.config?.config?.cloud?.plan || 'free'
   const mode = getDeploymentMode()
   const planLabel =
     mode === 'ee' ? 'Enterprise Edition' :
     mode === 'oss' ? 'OSS' :
     plan  // SaaS: show actual plan name
 
-  // Feature visibility: enabled by org AND allowed by plan
-  const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
-  const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
-  const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
-  const showBoards = org?.config?.config?.features?.boards?.enabled === true && isFeatureAvailable('boards', plan)
-  const showPlaygrounds = org?.config?.config?.features?.playgrounds?.enabled === true && isFeatureAvailable('playgrounds', plan)
-  // Payments and SSO require EE package to be installed
-  const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
+  // Feature visibility from API resolved_features
+  const rf = org?.config?.config?.resolved_features
+  const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
+
+  const showCommunities = isEnabled('communities')
+  const showPodcasts = isEnabled('podcasts')
+  const showDocs = isEnabled('docs')
+  const showBoards = isEnabled('boards')
+  const showPlaygrounds = isEnabled('playgrounds')
+  const showPayments = isEnabled('payments')
 
   return (
     <TooltipProvider delayDuration={0}>

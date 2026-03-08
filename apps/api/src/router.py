@@ -11,6 +11,7 @@ from src.routers.ai import ai, magicblocks, courseplanning, rag
 from src.routers.boards import boards_playground
 from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
+from src.routers.orgs import packs
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
@@ -94,6 +95,19 @@ v1_router.include_router(
     custom_domains.internal_router,
     prefix="/internal",
     tags=["custom-domains-internal"],
+)
+# Internal packs endpoint (protected by platform key)
+v1_router.include_router(
+    packs.internal_router,
+    prefix="/internal/packs",
+    tags=["packs-internal"],
+)
+# Org-facing packs endpoint (user auth, admin only)
+v1_router.include_router(
+    packs.router,
+    prefix="/orgs",
+    tags=["packs"],
+    dependencies=[Depends(get_non_api_token_user)],
 )
 v1_router.include_router(
     blocks.router,

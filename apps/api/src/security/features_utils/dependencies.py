@@ -95,11 +95,7 @@ def _check_feature_enabled(
 ) -> bool:
     """
     Internal helper to check if a feature is enabled for an organization.
-
-    Args:
-        feature: The feature name to check
-        org_id: The organization ID
-        db_session: Database session
+    Uses resolve_feature() for unified 4-layer resolution.
 
     Returns:
         True if enabled
@@ -107,6 +103,8 @@ def _check_feature_enabled(
     Raises:
         HTTPException 403 if feature is disabled
     """
+    from src.security.features_utils.resolve import resolve_feature
+
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     org_config = db_session.exec(statement).first()
 
@@ -116,8 +114,9 @@ def _check_feature_enabled(
             detail="Organization has no config",
         )
 
-    feature_config = org_config.config.get("features", {}).get(feature, {})
-    if feature_config.get("enabled") == False:
+    resolved = resolve_feature(feature, org_config.config or {}, org_id)
+
+    if not resolved["enabled"]:
         raise HTTPException(
             status_code=403,
             detail=f"{feature.capitalize()} feature is not enabled for this organization",

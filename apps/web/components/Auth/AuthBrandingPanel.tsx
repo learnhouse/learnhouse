@@ -15,7 +15,7 @@ interface AuthBrandingPanelProps {
 }
 
 export default function AuthBrandingPanel({ org, welcomeText }: AuthBrandingPanelProps) {
-  const authBranding = org?.config?.config?.general?.auth_branding || {}
+  const authBranding = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
   const {
     welcome_message = '',
     background_type = 'gradient',

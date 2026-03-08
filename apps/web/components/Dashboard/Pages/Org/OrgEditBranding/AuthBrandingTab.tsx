@@ -33,7 +33,7 @@ export default function AuthBrandingTab() {
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
 
-  const existingConfig = org?.config?.config?.general?.auth_branding || {}
+  const existingConfig = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
 
   // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
   // In OSS mode, always show branding regardless of plan
@@ -50,7 +50,7 @@ export default function AuthBrandingTab() {
   const [localBackgroundPreview, setLocalBackgroundPreview] = useState<string | null>(null)
 
   useEffect(() => {
-    const config = org?.config?.config?.general?.auth_branding
+    const config = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding
     if (config) {
       setWelcomeMessage(config.welcome_message || '')
       setBackgroundType(config.background_type || 'gradient')

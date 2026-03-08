@@ -80,7 +80,7 @@ const OrgEditGeneral: React.FC = () => {
   const org = useOrg() as any
 
   // Footer text state
-  const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.general?.footer_text || '')
+  const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
   const [isFooterSaving, setIsFooterSaving] = React.useState(false)
 
   const initialValues: OrganizationValues = {
@@ -232,7 +232,6 @@ const OrgEditGeneral: React.FC = () => {
                       />
                       <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.footer_text_desc')}</p>
                     </div>
-
 
                   </div>
                 </div>

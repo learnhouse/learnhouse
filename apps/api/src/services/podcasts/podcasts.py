@@ -36,14 +36,11 @@ from src.services.podcasts.thumbnails import upload_podcast_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 from src.db.organization_config import OrganizationConfig
-from src.core.deployment_mode import get_deployment_mode
 
 
 def _is_podcasts_feature_enabled(org_id: int, db_session: Session) -> bool:
     """Check if podcasts feature is enabled for the organization."""
-    # EE and OSS modes enable all features
-    if get_deployment_mode() != 'saas':
-        return True
+    from src.security.features_utils.resolve import resolve_feature
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     org_config = db_session.exec(statement).first()
@@ -51,9 +48,8 @@ def _is_podcasts_feature_enabled(org_id: int, db_session: Session) -> bool:
     if org_config is None:
         return False
 
-    features = org_config.config.get("features", {})
-    podcasts_config = features.get("podcasts", {})
-    return podcasts_config.get("enabled", False)
+    resolved = resolve_feature("podcasts", org_config.config or {}, org_id)
+    return resolved["enabled"]
 
 
 async def _user_can_view_unpublished_podcast(

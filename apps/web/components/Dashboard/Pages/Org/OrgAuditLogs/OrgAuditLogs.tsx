@@ -20,7 +20,7 @@ import {
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import { usePlan } from '@components/Hooks/usePlan'
 
 const ITEMS_PER_PAGE = 20
@@ -95,13 +95,14 @@ const OrgAuditLogs = () => {
   const logs = data?.items || []
   const total = data?.total || 0
   const currentPlan = usePlan()
+  const rf = org?.config?.config?.resolved_features
 
   const handleRefresh = () => {
     mutate(logsUrl)
   }
 
   const handleExport = async () => {
-    if (!planMeetsRequirement(currentPlan, 'enterprise')) {
+    if (rf?.audit_logs?.enabled !== true) {
       toast.error(t('dashboard.organization.audit_logs.enterprise_only'))
       return
     }
@@ -169,7 +170,7 @@ const OrgAuditLogs = () => {
   return (
     <PlanRestrictedFeature
       currentPlan={currentPlan}
-      requiredPlan="enterprise"
+      requiredPlan={(rf?.audit_logs?.required_plan || 'enterprise') as PlanLevel}
       icon={ShieldCheck}
       titleKey="common.plans.feature_restricted.audit_logs.title"
       descriptionKey="common.plans.feature_restricted.audit_logs.description"
