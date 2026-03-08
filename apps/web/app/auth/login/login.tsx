@@ -59,7 +59,8 @@ const LoginClient = (props: LoginClientProps) => {
   useEffect(() => {
     const checkSSO = async () => {
       // SSO is only available for enterprise plan (requires EE or SaaS/enterprise)
-      const plan = props.org?.config?.config?.cloud?.plan
+      const orgConfig = props.org?.config?.config
+      const plan = orgConfig?.plan ?? orgConfig?.cloud?.plan
       const mode = getDeploymentMode()
       if (mode === 'oss' || (mode === 'saas' && plan !== 'enterprise')) {
         setSsoEnabled(false)
@@ -77,7 +78,7 @@ const LoginClient = (props: LoginClientProps) => {
       }
     }
     checkSSO()
-  }, [props.org?.slug, props.org?.config?.config?.cloud?.plan]) // eslint-disable-line
+  }, [props.org?.slug, props.org?.config?.config?.plan, props.org?.config?.config?.cloud?.plan]) // eslint-disable-line
 
   const handleSSOLogin = async () => {
     setSsoLoading(true)

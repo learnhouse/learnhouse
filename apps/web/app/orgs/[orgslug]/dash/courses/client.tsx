@@ -55,7 +55,7 @@ function CoursesHome(params: CourseProps) {
   const access_token = session.data?.tokens?.access_token
 
   // Check if courses feature is enabled
-  const isCoursesEnabled = org?.config?.config?.features?.courses?.enabled !== false
+  const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
 
   // SWR for courses data - only fetch if feature is enabled
   const { data: coursesData, mutate: mutateCourses } = useSWR(

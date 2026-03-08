@@ -60,6 +60,8 @@ const DocOrgMenu = ({
   // Filter dashboard menu items by feature enabled + plan availability
   const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {
     if (!item.featureKey) return true
+    const resolved = org?.config?.config?.resolved_features?.[item.featureKey]
+    if (resolved) return resolved.enabled && isFeatureAvailable(item.featureKey, plan)
     const featureConfig = org?.config?.config?.features?.[item.featureKey]
     const isEnabled = item.defaultDisabled ? featureConfig?.enabled === true : featureConfig?.enabled !== false
     return isEnabled && isFeatureAvailable(item.featureKey, plan)

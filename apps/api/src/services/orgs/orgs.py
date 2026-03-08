@@ -5,24 +5,8 @@ from typing import Literal, Optional
 from uuid import uuid4
 from sqlmodel import Session, select
 from src.db.organization_config import (
-    AIOrgConfig,
-    APIOrgConfig,
-    AnalyticsOrgConfig,
-    AssignmentOrgConfig,
-    CollaborationOrgConfig,
-    CollectionsOrgConfig,
-    CommunitiesOrgConfig,
-    CourseOrgConfig,
-    DiscussionOrgConfig,
-    MemberOrgConfig,
-    OrgCloudConfig,
-    OrgFeatureConfig,
-    OrgGeneralConfig,
     OrganizationConfig,
     OrganizationConfigBase,
-    PaymentOrgConfig,
-    StorageOrgConfig,
-    UserGroupOrgConfig,
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
@@ -42,6 +26,30 @@ from fastapi import HTTPException, UploadFile, status, Request
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
+
+
+def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
+    """Build OrganizationRead with resolved_features attached."""
+    from src.security.features_utils.resolve import resolve_all_features
+
+    config = OrganizationConfig.model_validate(org_config) if org_config else {}
+    org_read = OrganizationRead(**org.model_dump(), config=config)
+
+    # Attach resolved_features as extra data on the config
+    if org_config and org_config.config:
+        resolved = resolve_all_features(org_config.config, org.id or 0)
+        # Inject into the config dict so it's returned in the response
+        config_dict = org_config.config.copy() if org_config.config else {}
+        config_dict["resolved_features"] = resolved
+        org_read.config = OrganizationConfig(
+            id=org_config.id,
+            org_id=org_config.org_id,
+            config=config_dict,
+            creation_date=org_config.creation_date,
+            update_date=org_config.update_date,
+        )
+
+    return org_read
 
 
 async def get_organization_by_uuid(
@@ -73,11 +81,7 @@ async def get_organization_by_uuid(
     if org_config is None:
         logging.error(f"Organization {org_uuid} has no config")
 
-    config = OrganizationConfig.model_validate(org_config) if org_config else {}
-
-    org = OrganizationRead(**org.model_dump(), config=config)
-
-    return org
+    return _build_org_read_with_resolved(org, org_config)
 
 
 async def get_organization_by_slug(
@@ -111,11 +115,7 @@ async def get_organization_by_slug(
     if org_config is None:
         logging.error(f"Organization {org_slug} has no config")
 
-    config = OrganizationConfig.model_validate(org_config) if org_config else {}
-
-    org = OrganizationRead(**org.model_dump(), config=config)
-
-    return org
+    return _build_org_read_with_resolved(org, org_config)
 
 
 async def create_org(
@@ -173,31 +173,10 @@ async def create_org(
     db_session.commit()
     db_session.refresh(user_org)
 
-    org_config = org_config = OrganizationConfigBase(
-        config_version="1.1å",
-        general=OrgGeneralConfig(
-            enabled=True,
-            color="",
-            watermark=True,
-        ),
-        features=OrgFeatureConfig(
-            courses=CourseOrgConfig(enabled=True, limit=0),
-            members=MemberOrgConfig(
-                enabled=True, signup_mode="open", admin_limit=0, limit=0
-            ),
-            usergroups=UserGroupOrgConfig(enabled=True, limit=0),
-            storage=StorageOrgConfig(enabled=True, limit=0),
-            ai=AIOrgConfig(enabled=True, limit=0, model=""),
-            assignments=AssignmentOrgConfig(enabled=True, limit=0),
-            payments=PaymentOrgConfig(enabled=True),
-            discussions=DiscussionOrgConfig(enabled=True, limit=0),
-            communities=CommunitiesOrgConfig(enabled=True),
-            collections=CollectionsOrgConfig(enabled=True),
-            analytics=AnalyticsOrgConfig(enabled=True, limit=0),
-            collaboration=CollaborationOrgConfig(enabled=True, limit=0),
-            api=APIOrgConfig(enabled=True, limit=0),
-        ),
-        cloud=OrgCloudConfig(plan='free', custom_domain=False),
+    from src.db.organization_config import OrganizationConfigV2Base
+    org_config = OrganizationConfigV2Base(
+        config_version="2.0",
+        plan="free",
     )
 
     org_config = json.loads(org_config.model_dump_json())
@@ -485,13 +464,15 @@ async def update_org_favicon(
             detail="Organization config not found",
         )
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    if "general" not in updated_config:
-        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "auth_branding": {}}
-
-    updated_config["general"]["favicon_image"] = name_in_disk
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["favicon_image"] = name_in_disk
+    else:
+        if "general" not in updated_config:
+            updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "favicon_image": "", "auth_branding": {}}
+        updated_config["general"]["favicon_image"] = name_in_disk
 
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
@@ -687,6 +668,16 @@ async def get_orgs_by_user(
 
 
 # Config related
+def _deep_copy_config(org_config: OrganizationConfig) -> dict:
+    """Deep copy config dict so SQLAlchemy detects changes."""
+    return json.loads(json.dumps(org_config.config or {}))
+
+
+def _is_v2_config(config: dict) -> bool:
+    """Check if config is v2 format."""
+    return config.get("config_version", "1.0").startswith("2")
+
+
 async def update_org_signup_mechanism(
     request: Request,
     signup_mechanism: Literal["open", "inviteOnly"],
@@ -721,25 +712,17 @@ async def update_org_signup_mechanism(
             detail="Organization config not found",
         )
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Handle backward compatibility - ensure features.members exists
-    if "features" not in updated_config:
-        updated_config["features"] = {}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("admin_toggles", {}).setdefault("members", {})
+        updated_config["admin_toggles"]["members"]["signup_mode"] = signup_mechanism
+    else:
+        updated_config.setdefault("features", {}).setdefault("members", {
+            "enabled": True, "signup_mode": "open", "admin_limit": 1, "limit": 10
+        })
+        updated_config["features"]["members"]["signup_mode"] = signup_mechanism
 
-    if "members" not in updated_config["features"]:
-        updated_config["features"]["members"] = {
-            "enabled": True,
-            "signup_mode": "open",
-            "admin_limit": 1,
-            "limit": 10
-        }
-
-    # Update config
-    updated_config["features"]["members"]["signup_mode"] = signup_mechanism
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -785,29 +768,23 @@ async def update_org_ai_config(
             detail="Organization config not found",
         )
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Handle backward compatibility - add ai config if it doesn't exist
-    if "features" not in updated_config:
-        updated_config["features"] = {}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("admin_toggles", {}).setdefault("ai", {})
+        if ai_enabled is not None:
+            updated_config["admin_toggles"]["ai"]["disabled"] = not ai_enabled
+        if copilot_enabled is not None:
+            updated_config["admin_toggles"]["ai"]["copilot_enabled"] = copilot_enabled
+    else:
+        updated_config.setdefault("features", {}).setdefault("ai", {"enabled": True, "limit": 10})
+        if ai_enabled is not None:
+            updated_config["features"]["ai"]["enabled"] = ai_enabled
+        if copilot_enabled is not None:
+            updated_config["features"]["ai"]["copilot_enabled"] = copilot_enabled
+        if "model" in updated_config["features"]["ai"]:
+            del updated_config["features"]["ai"]["model"]
 
-    if "ai" not in updated_config["features"]:
-        updated_config["features"]["ai"] = {"enabled": True, "limit": 10}
-
-    # Update config
-    if ai_enabled is not None:
-        updated_config["features"]["ai"]["enabled"] = ai_enabled
-
-    # Update copilot setting if provided
-    if copilot_enabled is not None:
-        updated_config["features"]["ai"]["copilot_enabled"] = copilot_enabled
-
-    # Clean up deprecated model field if present
-    if "model" in updated_config["features"]["ai"]:
-        del updated_config["features"]["ai"]["model"]
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -818,54 +795,41 @@ async def update_org_ai_config(
     return {"detail": "AI configuration updated"}
 
 
-async def update_org_communities_config(
+async def _update_feature_toggle(
     request: Request,
-    communities_enabled: bool,
+    feature: str,
+    enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
-):
+    v1_default: dict | None = None,
+) -> dict:
+    """Generic helper for updating a feature's enabled/disabled state."""
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = db_session.exec(statement).first()
 
     if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization config not found")
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Handle backward compatibility - add communities config if it doesn't exist
-    if "features" not in updated_config:
-        updated_config["features"] = {}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("admin_toggles", {}).setdefault(feature, {})
+        updated_config["admin_toggles"][feature]["disabled"] = not enabled
+    else:
+        updated_config.setdefault("features", {})
+        if feature not in updated_config["features"]:
+            updated_config["features"][feature] = v1_default or {"enabled": True}
+        updated_config["features"][feature]["enabled"] = enabled
 
-    if "communities" not in updated_config["features"]:
-        updated_config["features"]["communities"] = {"enabled": True}
-
-    # Update config
-    updated_config["features"]["communities"]["enabled"] = communities_enabled
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -873,7 +837,20 @@ async def update_org_communities_config(
     db_session.commit()
     db_session.refresh(org_config)
 
-    return {"detail": "Communities configuration updated"}
+    return {"detail": f"{feature.capitalize()} configuration updated"}
+
+
+async def update_org_communities_config(
+    request: Request,
+    communities_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    return await _update_feature_toggle(
+        request, "communities", communities_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": True},
+    )
 
 
 async def update_org_payments_config(
@@ -883,55 +860,10 @@ async def update_org_payments_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "payments" not in updated_config["features"]:
-        updated_config["features"]["payments"] = {"enabled": False}
-
-    # Update config
-    updated_config["features"]["payments"]["enabled"] = payments_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Payments configuration updated"}
+    return await _update_feature_toggle(
+        request, "payments", payments_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": False},
+    )
 
 
 async def update_org_collections_config(
@@ -941,55 +873,10 @@ async def update_org_collections_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "collections" not in updated_config["features"]:
-        updated_config["features"]["collections"] = {"enabled": True}
-
-    # Update config
-    updated_config["features"]["collections"]["enabled"] = collections_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Collections configuration updated"}
+    return await _update_feature_toggle(
+        request, "collections", collections_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": True},
+    )
 
 
 async def update_org_courses_config(
@@ -999,55 +886,10 @@ async def update_org_courses_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "courses" not in updated_config["features"]:
-        updated_config["features"]["courses"] = {"enabled": True, "limit": 100}
-
-    # Update config
-    updated_config["features"]["courses"]["enabled"] = courses_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Courses configuration updated"}
+    return await _update_feature_toggle(
+        request, "courses", courses_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": True, "limit": 100},
+    )
 
 
 async def update_org_podcasts_config(
@@ -1057,55 +899,10 @@ async def update_org_podcasts_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "podcasts" not in updated_config["features"]:
-        updated_config["features"]["podcasts"] = {"enabled": False, "limit": 10}
-
-    # Update config
-    updated_config["features"]["podcasts"]["enabled"] = podcasts_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Podcasts configuration updated"}
+    return await _update_feature_toggle(
+        request, "podcasts", podcasts_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": False, "limit": 10},
+    )
 
 
 async def update_org_docs_config(
@@ -1115,55 +912,10 @@ async def update_org_docs_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "docs" not in updated_config["features"]:
-        updated_config["features"]["docs"] = {"enabled": False, "limit": 5}
-
-    # Update config
-    updated_config["features"]["docs"]["enabled"] = docs_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Docs configuration updated"}
+    return await _update_feature_toggle(
+        request, "docs", docs_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": False, "limit": 5},
+    )
 
 
 async def update_org_boards_config(
@@ -1173,55 +925,10 @@ async def update_org_boards_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "boards" not in updated_config["features"]:
-        updated_config["features"]["boards"] = {"enabled": False, "limit": 10}
-
-    # Update config
-    updated_config["features"]["boards"]["enabled"] = boards_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Boards configuration updated"}
+    return await _update_feature_toggle(
+        request, "boards", boards_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": False, "limit": 10},
+    )
 
 
 async def update_org_playgrounds_config(
@@ -1231,55 +938,10 @@ async def update_org_playgrounds_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
-
-    # Get org config
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
-
-    if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
-
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
-
-    # Handle backward compatibility
-    if "features" not in updated_config:
-        updated_config["features"] = {}
-
-    if "playgrounds" not in updated_config["features"]:
-        updated_config["features"]["playgrounds"] = {"enabled": False, "limit": 10}
-
-    # Update config
-    updated_config["features"]["playgrounds"]["enabled"] = playgrounds_enabled
-
-    # Update the database with the new dictionary
-    org_config.config = updated_config
-    org_config.update_date = str(datetime.now())
-
-    db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
-
-    return {"detail": "Playgrounds configuration updated"}
+    return await _update_feature_toggle(
+        request, "playgrounds", playgrounds_enabled, org_id, current_user, db_session,
+        v1_default={"enabled": False, "limit": 10},
+    )
 
 
 async def update_org_color_config(
@@ -1290,43 +952,28 @@ async def update_org_color_config(
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = db_session.exec(statement).first()
 
     if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization config not found")
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Handle backward compatibility
-    if "general" not in updated_config:
-        updated_config["general"] = {"enabled": True, "color": "", "watermark": True}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["color"] = color
+    else:
+        updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
+        updated_config["general"]["color"] = color
 
-    # Update config
-    updated_config["general"]["color"] = color
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -1345,43 +992,28 @@ async def update_org_footer_text_config(
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = db_session.exec(statement).first()
 
     if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization config not found")
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Handle backward compatibility
-    if "general" not in updated_config:
-        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["footer_text"] = footer_text
+    else:
+        updated_config.setdefault("general", {"enabled": True, "color": "", "footer_text": "", "watermark": True})
+        updated_config["general"]["footer_text"] = footer_text
 
-    # Update config
-    updated_config["general"]["footer_text"] = footer_text
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -1392,6 +1024,51 @@ async def update_org_footer_text_config(
     return {"detail": "Footer text configuration updated"}
 
 
+async def update_org_watermark_config(
+    request: Request,
+    watermark_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    org = db_session.exec(statement).first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = db_session.exec(statement).first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    updated_config = _deep_copy_config(org_config)
+
+    # Free plan always shows watermark
+    plan = updated_config.get("plan", updated_config.get("cloud", {}).get("plan", "free"))
+    if plan == "free" and not watermark_enabled:
+        raise HTTPException(status_code=403, detail="Watermark cannot be disabled on the free plan")
+
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["watermark"] = watermark_enabled
+    else:
+        updated_config.setdefault("general", {})
+        updated_config["general"]["watermark"] = watermark_enabled
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Watermark configuration updated"}
+
+
 async def update_org_auth_branding_config(
     request: Request,
     auth_branding: AuthBrandingConfig,
@@ -1400,43 +1077,29 @@ async def update_org_auth_branding_config(
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = db_session.exec(statement).first()
 
     if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
-        raise HTTPException(
-            status_code=404,
-            detail="Organization config not found",
-        )
+        raise HTTPException(status_code=404, detail="Organization config not found")
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
+    branding_data = json.loads(auth_branding.model_dump_json())
 
-    # Handle backward compatibility
-    if "general" not in updated_config:
-        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "auth_branding": {}}
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["auth_branding"] = branding_data
+    else:
+        updated_config.setdefault("general", {"enabled": True, "color": "", "footer_text": "", "watermark": True, "auth_branding": {}})
+        updated_config["general"]["auth_branding"] = branding_data
 
-    # Update auth branding config
-    updated_config["general"]["auth_branding"] = json.loads(auth_branding.model_dump_json())
-
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -1510,11 +1173,14 @@ async def get_org_join_mechanism(
             detail="Organization config not found",
         )
 
-    config = org_config.config
+    config = org_config.config or {}
+    version = config.get("config_version", "1.0")
 
-    # Get the signup mechanism
-    config = OrganizationConfigBase(**config)
-    signup_mechanism = config.features.members.signup_mode
+    if version.startswith("2"):
+        signup_mechanism = config.get("admin_toggles", {}).get("members", {}).get("signup_mode", "open")
+    else:
+        parsed = OrganizationConfigBase(**config)
+        signup_mechanism = parsed.features.members.signup_mode
 
     return signup_mechanism
 
@@ -1566,14 +1232,14 @@ async def update_org_landing(
             detail="Organization config not found",
         )
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    # This preserves all existing config values and only updates the landing field
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
 
-    # Update the landing object
-    updated_config["landing"] = landing_object
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["landing"] = landing_object
+    else:
+        updated_config["landing"] = landing_object
 
-    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -1646,11 +1312,14 @@ async def update_org_seo_config(
             detail="Organization config not found",
         )
 
-    # Create a deep copy to ensure SQLAlchemy detects the change
-    updated_config = json.loads(json.dumps(org_config.config))
+    updated_config = _deep_copy_config(org_config)
+    seo_data = json.loads(seo_config.model_dump_json())
 
-    # Update SEO config
-    updated_config["seo"] = json.loads(seo_config.model_dump_json())
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {})
+        updated_config["customization"]["seo"] = seo_data
+    else:
+        updated_config["seo"] = seo_data
 
     # Update the database with the new dictionary
     org_config.config = updated_config

@@ -62,7 +62,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   }
 
   const { h1, h2 } = getPageTitle()
-  const paymentsEnabled = org?.config?.config?.features?.payments?.enabled !== false
+  const paymentsEnabled = org?.config?.config?.resolved_features?.payments?.enabled ?? org?.config?.config?.features?.payments?.enabled !== false
 
   // Gate 1: OSS deployment → payments is EE-only, blocked entirely
   if (isOSSMode()) {

@@ -9,7 +9,7 @@ import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import { Pencil, Shield, X, Globe, Lock, Eye, Check, XCircle } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -23,7 +23,8 @@ function OrgRoles() {
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
     const currentPlan = usePlan()
-    const canCreateRoles = planMeetsRequirement(currentPlan, 'pro')
+    const rf = org?.config?.config?.resolved_features
+    const canCreateRoles = rf?.roles?.enabled === true
     const [createRoleModal, setCreateRoleModal] = React.useState(false)
     const [editRoleModal, setEditRoleModal] = React.useState(false)
     const [viewRightsModal, setViewRightsModal] = React.useState(false)
@@ -412,7 +413,7 @@ function OrgRoles() {
                                 <Lock className="w-4 h-4" />
                                 <span>{t('dashboard.users.roles.actions.create')}</span>
                             </button>
-                            <PlanBadge currentPlan={currentPlan} requiredPlan="pro" />
+                            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.roles?.required_plan || 'pro') as PlanLevel} />
                         </div>
                     )}
                 </div>

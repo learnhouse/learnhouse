@@ -32,8 +32,9 @@ export const FeatureDisabledBanner: React.FC<{
   const { t } = useTranslation()
   const org = useOrg() as any
 
+  const resolved = org?.config?.config?.resolved_features?.[featureName]
   const featureConfig = org?.config?.config?.features?.[featureName]
-  const isFeatureEnabled = featureConfig?.enabled !== false
+  const isFeatureEnabled = resolved ? resolved.enabled : featureConfig?.enabled !== false
 
   if (isFeatureEnabled) {
     return null
@@ -78,8 +79,9 @@ const FeatureDisabledView: React.FC<FeatureDisabledViewProps> = ({
 
   // Check if the feature is enabled
   // Default to true if not explicitly set to false (for backward compatibility)
+  const resolved = org?.config?.config?.resolved_features?.[featureName]
   const featureConfig = org?.config?.config?.features?.[featureName]
-  const isFeatureEnabled = featureConfig?.enabled !== false
+  const isFeatureEnabled = resolved ? resolved.enabled : featureConfig?.enabled !== false
 
   if (isFeatureEnabled) {
     return <>{children}</>

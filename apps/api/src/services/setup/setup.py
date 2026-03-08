@@ -1,28 +1,12 @@
+import logging
 from datetime import datetime
 import json
 from uuid import uuid4
 from fastapi import HTTPException
 from sqlmodel import Session, select
 from src.db.organization_config import (
-    AIOrgConfig,
-    APIOrgConfig,
-    AnalyticsOrgConfig,
-    AssignmentOrgConfig,
-    CollaborationOrgConfig,
-    CourseOrgConfig,
-    DiscussionOrgConfig,
-    DocsOrgConfig,
-    BoardsOrgConfig,
-    MemberOrgConfig,
-    OrgCloudConfig,
-    OrgFeatureConfig,
-    OrgGeneralConfig,
     OrganizationConfig,
-    OrganizationConfigBase,
-    PaymentOrgConfig,
-    PodcastsOrgConfig,
-    StorageOrgConfig,
-    UserGroupOrgConfig,
+    OrganizationConfigV2Base,
 )
 from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import DashboardPermission, Permission, PermissionsWithOwn, Rights, Role, RoleTypeEnum
@@ -34,27 +18,12 @@ from src.security.rbac.constants import ADMIN_ROLE_ID
 
 # Install Default roles
 def install_default_elements(db_session: Session):
-    """ """
-    # remove all default roles
-    statement = select(Role).where(Role.role_type == RoleTypeEnum.TYPE_GLOBAL)
-    roles = db_session.exec(statement).all()
+    """Upsert global default roles. Existing roles are updated in place to
+    preserve FK references from userorganization."""
 
-    for role in roles:
-        db_session.delete(role)
+    logger = logging.getLogger(__name__)
 
-    db_session.commit()
-
-    # Check if default roles already exist
-    statement = select(Role).where(Role.role_type == RoleTypeEnum.TYPE_GLOBAL)
-    roles = db_session.exec(statement).all()
-
-    if roles and len(roles) == 4:
-        raise HTTPException(
-            status_code=409,
-            detail="Default roles already exist",
-        )
-
-    # Create default roles
+    # Build the desired role definitions
     role_global_admin = Role(
         name="Admin",
         description="Full platform control",
@@ -488,22 +457,27 @@ def install_default_elements(db_session: Session):
     )
 
     # Serialize rights to JSON
-    role_global_admin.rights = role_global_admin.rights.model_dump()  # type: ignore
-    role_global_maintainer.rights = role_global_maintainer.rights.model_dump()  # type: ignore
-    role_global_instructor.rights = role_global_instructor.rights.model_dump()  # type: ignore
-    role_global_user.rights = role_global_user.rights.model_dump()  # type: ignore
+    desired_roles = [role_global_admin, role_global_maintainer, role_global_instructor, role_global_user]
+    for role in desired_roles:
+        role.rights = role.rights.model_dump()  # type: ignore
 
-    # Insert roles in DB
-    db_session.add(role_global_admin)
-    db_session.add(role_global_maintainer)
-    db_session.add(role_global_instructor)
-    db_session.add(role_global_user)
+    # Upsert: update existing roles in place, create missing ones
+    for desired in desired_roles:
+        existing = db_session.get(Role, desired.id)
+        if existing:
+            existing.name = desired.name
+            existing.description = desired.description
+            existing.role_type = desired.role_type
+            existing.role_uuid = desired.role_uuid
+            existing.rights = desired.rights
+            existing.update_date = str(datetime.now())
+            db_session.add(existing)
+            logger.info(f"Updated existing global role: {desired.name} (id={desired.id})")
+        else:
+            db_session.add(desired)
+            logger.info(f"Created new global role: {desired.name} (id={desired.id})")
 
-    # commit changes
     db_session.commit()
-
-    # refresh roles
-    db_session.refresh(role_global_admin)
 
     return True
 
@@ -521,37 +495,10 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
     db_session.commit()
     db_session.refresh(org)
 
-    # Org Config
-    org_config = OrganizationConfigBase(
-        config_version="1.3",
-        general=OrgGeneralConfig(
-            enabled=True,
-            color="",
-            watermark=True,
-        ),
-        features=OrgFeatureConfig(
-            courses=CourseOrgConfig(enabled=True, limit=0),
-            members=MemberOrgConfig(
-                enabled=True, signup_mode="open", admin_limit=0, limit=0
-            ),
-            usergroups=UserGroupOrgConfig(enabled=True, limit=0),
-            storage=StorageOrgConfig(enabled=True, limit=0),
-            ai=AIOrgConfig(enabled=True, limit=0, model=""),
-            assignments=AssignmentOrgConfig(enabled=True, limit=0),
-            payments=PaymentOrgConfig(enabled=False),
-            discussions=DiscussionOrgConfig(enabled=True, limit=0),
-            analytics=AnalyticsOrgConfig(enabled=True, limit=0),
-            collaboration=CollaborationOrgConfig(enabled=True, limit=0),
-            api=APIOrgConfig(enabled=True, limit=0),
-            podcasts=PodcastsOrgConfig(enabled=True, limit=0),
-            docs=DocsOrgConfig(enabled=True, limit=5),
-            boards=BoardsOrgConfig(enabled=False, limit=10),
-        ),
-        cloud=OrgCloudConfig(
-            plan='free',
-            custom_domain=False
-        ),
-        landing={}
+    # Org Config (v2 format)
+    org_config = OrganizationConfigV2Base(
+        config_version="2.0",
+        plan="free",
     )
 
     org_config = json.loads(org_config.model_dump_json())

@@ -70,7 +70,9 @@ def check_enterprise_plan(org_id: int, db_session) -> None:
             detail="Organization configuration not found"
         )
 
-    plan = org_config.config.get("cloud", {}).get("plan", "free")
+    config = org_config.config or {}
+    version = config.get("config_version", "1.0")
+    plan = config.get("plan", "free") if version.startswith("2") else config.get("cloud", {}).get("plan", "free")
     if plan != "enterprise":
         raise HTTPException(
             status_code=403,

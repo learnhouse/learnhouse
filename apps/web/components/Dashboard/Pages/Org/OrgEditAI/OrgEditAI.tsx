@@ -29,11 +29,25 @@ const OrgEditAI: React.FC = () => {
   const [isUpdating, setIsUpdating] = React.useState<boolean>(false)
 
   React.useEffect(() => {
-    if (org?.config?.config?.features?.ai?.enabled !== undefined) {
-      setAiEnabled(org.config.config.features.ai.enabled)
+    const config = org?.config?.config
+    if (!config) return
+
+    const isV2 = config.config_version?.startsWith('2')
+
+    // Read AI enabled state
+    if (config.resolved_features?.ai) {
+      setAiEnabled(config.resolved_features.ai.enabled)
+    } else if (isV2 && config.admin_toggles?.ai) {
+      setAiEnabled(!config.admin_toggles.ai.disabled)
+    } else if (config.features?.ai?.enabled !== undefined) {
+      setAiEnabled(config.features.ai.enabled)
     }
-    if (org?.config?.config?.features?.ai?.copilot_enabled !== undefined) {
-      setCopilotEnabled(org.config.config.features.ai.copilot_enabled)
+
+    // Read copilot enabled state
+    if (isV2 && config.admin_toggles?.ai?.copilot_enabled !== undefined) {
+      setCopilotEnabled(config.admin_toggles.ai.copilot_enabled)
+    } else if (config.features?.ai?.copilot_enabled !== undefined) {
+      setCopilotEnabled(config.features.ai.copilot_enabled)
     }
   }, [org])
 

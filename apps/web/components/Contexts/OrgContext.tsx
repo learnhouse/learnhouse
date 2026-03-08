@@ -37,7 +37,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     }
   )
 
-  const isOrgActive = useMemo(() => org?.config?.config?.general?.enabled !== false, [org])
+  const isOrgActive = useMemo(() => (org?.config?.config?.active ?? org?.config?.config?.general?.enabled) !== false, [org])
   const isUserPartOfTheOrg = useMemo(() => {
     // If user is not authenticated, treat them as "part of org" for viewing purposes
     if (session.status !== 'authenticated') return true

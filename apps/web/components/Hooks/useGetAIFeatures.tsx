@@ -10,9 +10,18 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
   const [isEnabled, setisEnabled] = React.useState(false)
 
   function checkAvailableAIFeaturesOnOrg(feature: string) {
-    const config = org?.config?.config?.features.ai.enabled
+    const config = org?.config?.config
+    const isV2 = config?.config_version?.startsWith('2')
 
-    return config
+    if (isV2) {
+      // v2: prefer resolved_features, then admin_toggles
+      if (config?.resolved_features?.ai) {
+        return config.resolved_features.ai.enabled
+      }
+      return !config?.admin_toggles?.ai?.disabled
+    }
+    // v1 fallback
+    return config?.features?.ai?.enabled
   }
 
   React.useEffect(() => {

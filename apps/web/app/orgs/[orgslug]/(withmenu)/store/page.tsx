@@ -44,7 +44,7 @@ export default async function StorePage({ params }: { params: PageParams }) {
   const { orgslug } = await params
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
 
-  const paymentsEnabled = org?.config?.config?.features?.payments?.enabled !== false
+  const paymentsEnabled = org?.config?.config?.resolved_features?.payments?.enabled ?? org?.config?.config?.features?.payments?.enabled !== false
 
   if (!paymentsEnabled) {
     return (

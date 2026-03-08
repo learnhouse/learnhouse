@@ -64,9 +64,12 @@ def get_org_plan(org_id: int, db_session: Session) -> PlanLevel:
             detail="Organization configuration not found",
         )
 
-    # Default to 'free' if cloud config or plan is missing
-    cloud_config = org_config.config.get("cloud", {})
-    return cloud_config.get("plan", "free")
+    # Support both v1 (cloud.plan) and v2 (plan) config formats
+    config = org_config.config or {}
+    version = config.get("config_version", "1.0")
+    if version.startswith("2"):
+        return config.get("plan", "free")
+    return config.get("cloud", {}).get("plan", "free")
 
 
 def require_plan(required_plan: PlanLevel, feature_name: str):

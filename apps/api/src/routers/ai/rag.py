@@ -174,10 +174,18 @@ async def api_rag_chat(
         select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     ).first()
     if org_config and org_config.config:
-        ai_config = org_config.config.get("features", {}).get("ai", {})
-        if not ai_config.get("enabled", True):
+        from src.security.features_utils.resolve import resolve_feature
+        resolved_ai = resolve_feature("ai", org_config.config, org_id)
+        if not resolved_ai["enabled"]:
             raise HTTPException(status_code=403, detail="AI features are disabled for this organization")
-        if not ai_config.get("copilot_enabled", True):
+        # Check copilot_enabled from admin toggles (v2) or features.ai (v1)
+        config = org_config.config
+        version = config.get("config_version", "1.0")
+        if version.startswith("2"):
+            copilot_enabled = config.get("admin_toggles", {}).get("ai", {}).get("copilot_enabled", True)
+        else:
+            copilot_enabled = config.get("features", {}).get("ai", {}).get("copilot_enabled", True)
+        if not copilot_enabled:
             raise HTTPException(status_code=403, detail="Copilot is disabled for this organization")
 
     # Check AI credits

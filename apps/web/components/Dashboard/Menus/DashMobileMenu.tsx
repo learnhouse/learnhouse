@@ -7,19 +7,18 @@ import { useTranslation } from 'react-i18next'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
-import { isFeatureAvailable, PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
 
 function DashMobileMenu() {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
-  const plan = usePlan()
 
-  // Feature visibility: enabled by org AND allowed by plan
-  const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
-  const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
-  const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
+  // Feature visibility from API resolved_features
+  const rf = org?.config?.config?.resolved_features
+  const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
+  const showCommunities = isEnabled('communities')
+  const showPodcasts = isEnabled('podcasts')
+  const showPayments = isEnabled('payments')
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg text-white shadow-xl">

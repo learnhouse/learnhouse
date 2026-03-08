@@ -15,7 +15,7 @@ import MagicBlockPreview from './MagicBlockPreview'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import type { MagicBlockContext, MagicBlockMessage } from './types'
 import { getMagicBlockSession } from '@services/ai/magicblocks'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { useTranslation } from 'react-i18next'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -70,7 +70,8 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
 
   // Check plan for AI features
   const currentPlan = usePlan()
-  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
+  const rf = orgContext?.config?.config?.resolved_features
+  const canUseAI = rf?.ai?.enabled === true
 
   // Get attributes from node
   const blockUuid = node.attrs.blockUuid || `magic_${uuidv4()}`
@@ -317,7 +318,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80 flex items-center gap-2 justify-center">
                       {t('editor.blocks.magic_block_content.title')}
-                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" alwaysShow />
+                      <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" alwaysShow />
                     </p>
                     <p className="text-sm text-white/50">
                       {t('editor.blocks.magic_block_content.upgrade_required')}

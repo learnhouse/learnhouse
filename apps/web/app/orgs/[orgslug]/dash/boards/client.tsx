@@ -92,7 +92,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const access_token = session?.data?.tokens?.access_token
   const plan = usePlan()
 
-  const isBoardsEnabled = org?.config?.config?.features?.boards?.enabled !== false
+  const isBoardsEnabled = org?.config?.config?.resolved_features?.boards?.enabled ?? org?.config?.config?.features?.boards?.enabled !== false
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
