@@ -27,7 +27,6 @@ FeatureSet: TypeAlias = Literal[
     "assignments",
     "collaboration",
     "courses",
-    "docs",
     "members",
     "payments",
     "podcasts",

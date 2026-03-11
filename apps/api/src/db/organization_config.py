@@ -78,11 +78,6 @@ class PodcastsOrgConfig(BaseModel):
     limit: int = 10
 
 
-class DocsOrgConfig(BaseModel):
-    enabled: bool = False
-    limit: int = 5
-
-
 class BoardsOrgConfig(BaseModel):
     enabled: bool = False
     limit: int = 10
@@ -108,7 +103,6 @@ class OrgFeatureConfig(BaseModel):
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
-    docs: DocsOrgConfig = DocsOrgConfig()
     boards: BoardsOrgConfig = BoardsOrgConfig()
     playgrounds: PlaygroundsOrgConfig = PlaygroundsOrgConfig()
 
@@ -187,7 +181,6 @@ class SeoOrgConfig(BaseModel):
     google_site_verification: str = ""
     twitter_handle: str = ""
     noindex_communities: bool = False
-    noindex_docs: bool = False
 
 
 class CustomizationConfig(BaseModel):

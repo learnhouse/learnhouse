@@ -9,12 +9,12 @@ from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS, get_pla
 
 
 # Features that are always on (no admin toggle — cannot be disabled)
-ALWAYS_ON_FEATURES = {"courses", "storage", "usergroups", "assignments", "docs"}
+ALWAYS_ON_FEATURES = {"courses", "storage", "usergroups", "assignments"}
 
 # All known features
 ALL_FEATURES = [
     "ai", "analytics", "api", "assignments", "audit_logs", "boards", "collaboration",
-    "collections", "communities", "courses", "docs",
+    "collections", "communities", "courses",
     "members", "payments", "playgrounds", "podcasts", "roles", "scorm",
     "sso", "storage", "usergroups", "versioning",
 ]

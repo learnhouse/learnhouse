@@ -14,15 +14,15 @@ _api_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 
 if _api_root not in sys.path:
     sys.path.insert(0, _api_root)
 
-from datetime import datetime
-from sqlmodel import Session, select
-from src.db.organization_config import OrganizationConfig
-from src.security.features_utils.plans import PLAN_FEATURE_CONFIGS
+from datetime import datetime  # noqa: E402
+from sqlmodel import Session, select  # noqa: E402
+from src.db.organization_config import OrganizationConfig  # noqa: E402
+from src.security.features_utils.plans import PLAN_FEATURE_CONFIGS  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 # Features that have admin toggle entries in v2
-# (storage, usergroups, docs, assignments, courses are always-on — no toggle)
+# (storage, usergroups, assignments, courses are always-on — no toggle)
 ALL_FEATURES = [
     "ai", "analytics", "api", "boards", "collaboration",
     "collections", "communities", "members", "payments", "playgrounds", "podcasts",
@@ -96,7 +96,6 @@ def _v2_migrate_config(config: dict) -> dict:
             "google_site_verification": "",
             "twitter_handle": "",
             "noindex_communities": False,
-            "noindex_docs": False,
         },
         "landing": v1_landing,
     }
