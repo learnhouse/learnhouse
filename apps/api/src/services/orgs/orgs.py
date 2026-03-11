@@ -905,19 +905,6 @@ async def update_org_podcasts_config(
     )
 
 
-async def update_org_docs_config(
-    request: Request,
-    docs_enabled: bool,
-    org_id: int,
-    current_user: PublicUser | AnonymousUser,
-    db_session: Session,
-):
-    return await _update_feature_toggle(
-        request, "docs", docs_enabled, org_id, current_user, db_session,
-        v1_default={"enabled": False, "limit": 5},
-    )
-
-
 async def update_org_boards_config(
     request: Request,
     boards_enabled: bool,

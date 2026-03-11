@@ -4,7 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import useSWR, { mutate } from 'swr';
 import toast from 'react-hot-toast';
-import { BookOpen, FileText, Mic, Puzzle, X, Plus, Loader2 } from 'lucide-react';
+import { BookOpen, Mic, Puzzle, X, Plus, Loader2 } from 'lucide-react';
 import { getOrgCourses } from '@services/courses/courses';
 import { getOfferResources, addOfferResource, removeOfferResource } from '@services/payments/groups';
 
@@ -15,7 +15,6 @@ interface OfferResourcesPanelProps {
 
 function resourceIcon(uuid: string) {
   if (uuid.startsWith('course_')) return <BookOpen size={14} className="text-indigo-500" />;
-  if (uuid.startsWith('docspace_')) return <FileText size={14} className="text-blue-400" />;
   if (uuid.startsWith('podcast_')) return <Mic size={14} className="text-pink-400" />;
   return <Puzzle size={14} className="text-gray-400" />;
 }

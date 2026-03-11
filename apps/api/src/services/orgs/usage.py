@@ -108,8 +108,6 @@ async def get_org_usage_and_limits(
     # Get limits via resolve_feature (handles mode, overrides, packs)
     courses_resolved = resolve_feature("courses", config, org_id)
     members_resolved = resolve_feature("members", config, org_id)
-    admin_seats_resolved = resolve_feature("members", config, org_id)  # admin_seats use member resolution
-
     courses_limit = courses_resolved["limit"]
     members_limit = members_resolved["limit"]
     members_plan_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "members")

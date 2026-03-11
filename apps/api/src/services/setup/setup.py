@@ -109,15 +109,6 @@ def install_default_elements(db_session: Session):
                 action_delete=True,
                 action_delete_own=True,
             ),
-            docspaces=PermissionsWithOwn(
-                action_create=True,
-                action_read=True,
-                action_read_own=True,
-                action_update=True,
-                action_update_own=True,
-                action_delete=True,
-                action_delete_own=True,
-            ),
             boards=PermissionsWithOwn(
                 action_create=True,
                 action_read=True,
@@ -209,15 +200,6 @@ def install_default_elements(db_session: Session):
                 action_delete_own=True,
             ),
             podcasts=PermissionsWithOwn(
-                action_create=True,
-                action_read=True,
-                action_read_own=True,
-                action_update=True,
-                action_update_own=True,
-                action_delete=True,
-                action_delete_own=True,
-            ),
-            docspaces=PermissionsWithOwn(
                 action_create=True,
                 action_read=True,
                 action_read_own=True,
@@ -325,15 +307,6 @@ def install_default_elements(db_session: Session):
                 action_delete=False,
                 action_delete_own=True,
             ),
-            docspaces=PermissionsWithOwn(
-                action_create=True,
-                action_read=True,
-                action_read_own=True,
-                action_update=False,
-                action_update_own=True,
-                action_delete=False,
-                action_delete_own=True,
-            ),
             boards=PermissionsWithOwn(
                 action_create=True,
                 action_read=True,
@@ -425,15 +398,6 @@ def install_default_elements(db_session: Session):
                 action_delete_own=True,
             ),
             podcasts=PermissionsWithOwn(
-                action_create=False,
-                action_read=True,
-                action_read_own=True,
-                action_update=False,
-                action_update_own=False,
-                action_delete=False,
-                action_delete_own=False,
-            ),
-            docspaces=PermissionsWithOwn(
                 action_create=False,
                 action_read=True,
                 action_read_own=True,

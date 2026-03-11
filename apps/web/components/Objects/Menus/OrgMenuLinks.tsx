@@ -1,6 +1,6 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { Books, SquaresFour, ChatsCircle, Headphones, FileText, Cube, ShoppingBag } from '@phosphor-icons/react'
+import { Books, SquaresFour, ChatsCircle, Headphones, Cube, ShoppingBag } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +17,6 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const isCollectionsEnabled = isEnabled('collections')
   const showCommunities = isEnabled('communities')
   const showPodcasts = isEnabled('podcasts')
-  const showDocs = isEnabled('docs')
   const showPlaygrounds = isEnabled('playgrounds')
   const showStore = isEnabled('payments')
 
@@ -44,14 +43,6 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           <LinkItem
             link="/podcasts"
             type="podcasts"
-            orgslug={props.orgslug}
-            primaryColor={props.primaryColor}
-          ></LinkItem>
-        )}
-        {showDocs && (
-          <LinkItem
-            link="/docs"
-            type="docs"
             orgslug={props.orgslug}
             primaryColor={props.primaryColor}
           ></LinkItem>
@@ -118,13 +109,6 @@ const LinkItem = (props: any) => {
           <>
             <ChatsCircle size={20} weight="fill" />{' '}
             <span>{t('communities.title')}</span>
-          </>
-        )}
-
-        {props.type == 'docs' && (
-          <>
-            <FileText size={20} weight="fill" />{' '}
-            <span>{t('docs.docs')}</span>
           </>
         )}
 
