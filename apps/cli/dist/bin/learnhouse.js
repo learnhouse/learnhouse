@@ -1202,8 +1202,8 @@ var require_command = __commonJS({
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
     var childProcess = __require("child_process");
-    var path7 = __require("path");
-    var fs7 = __require("fs");
+    var path8 = __require("path");
+    var fs8 = __require("fs");
     var process2 = __require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
@@ -2197,7 +2197,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} subcommandName
        */
       _checkForMissingExecutable(executableFile, executableDir, subcommandName) {
-        if (fs7.existsSync(executableFile)) return;
+        if (fs8.existsSync(executableFile)) return;
         const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
         const executableMissing = `'${executableFile}' does not exist
  - if '${subcommandName}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
@@ -2215,11 +2215,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path7.resolve(baseDir, baseName);
-          if (fs7.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path7.extname(baseName))) return void 0;
+          const localBin = path8.resolve(baseDir, baseName);
+          if (fs8.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path8.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
-            (ext) => fs7.existsSync(`${localBin}${ext}`)
+            (ext) => fs8.existsSync(`${localBin}${ext}`)
           );
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
@@ -2231,21 +2231,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs7.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs8.realpathSync(this._scriptPath);
           } catch {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path7.resolve(
-            path7.dirname(resolvedScriptPath),
+          executableDir = path8.resolve(
+            path8.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path7.basename(
+            const legacyName = path8.basename(
               this._scriptPath,
-              path7.extname(this._scriptPath)
+              path8.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -2256,7 +2256,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path7.extname(executableFile));
+        launchWithNode = sourceExt.includes(path8.extname(executableFile));
         let proc;
         if (process2.platform !== "win32") {
           if (launchWithNode) {
@@ -3171,7 +3171,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path7.basename(filename, path7.extname(filename));
+        this._name = path8.basename(filename, path8.extname(filename));
         return this;
       }
       /**
@@ -3185,9 +3185,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path8) {
-        if (path8 === void 0) return this._executableDir;
-        this._executableDir = path8;
+      executableDir(path9) {
+        if (path9 === void 0) return this._executableDir;
+        this._executableDir = path9;
         return this;
       }
       /**
@@ -3613,7 +3613,7 @@ var {
 } = import_index.default;
 
 // bin/learnhouse.ts
-var import_picocolors16 = __toESM(require_picocolors(), 1);
+var import_picocolors17 = __toESM(require_picocolors(), 1);
 
 // src/constants.ts
 var VERSION = "1.0.1";
@@ -5737,9 +5737,7 @@ function generateEnvFile(config) {
     "# =============================================================================",
     "",
     "LEARNHOUSE_DEVELOPMENT_MODE=False",
-    "LEARNHOUSE_LOGFIRE_ENABLED=False",
-    "LEARNHOUSE_OSS=True",
-    "NEXT_PUBLIC_LEARNHOUSE_OSS=True"
+    "LEARNHOUSE_LOGFIRE_ENABLED=False"
   );
   if (config.aiEnabled && config.geminiApiKey) {
     lines.push(
@@ -7055,20 +7053,246 @@ async function shellCommand() {
 
 // src/commands/dev.ts
 import { spawn as spawn2, spawnSync as spawnSync2, execSync as execSync5 } from "child_process";
-var import_picocolors15 = __toESM(require_picocolors(), 1);
-import * as path6 from "path";
+var import_picocolors16 = __toESM(require_picocolors(), 1);
+import * as path7 from "path";
+import * as fs7 from "fs";
+
+// src/services/env-check.ts
 import * as fs6 from "fs";
+import * as path6 from "path";
+import * as crypto4 from "crypto";
+var import_picocolors15 = __toESM(require_picocolors(), 1);
+function generateJwtSecret() {
+  return crypto4.randomBytes(32).toString("base64url");
+}
+var API_ENV = {
+  label: "API",
+  envFile: "apps/api/.env",
+  vars: [
+    {
+      name: "LEARNHOUSE_AUTH_JWT_SECRET_KEY",
+      required: true,
+      description: "JWT signing secret (min 32 chars)",
+      defaultValue: generateJwtSecret
+    },
+    {
+      name: "COLLAB_INTERNAL_KEY",
+      required: true,
+      description: "Shared key for collab \u2194 API auth",
+      defaultValue: "dev-collab-internal-key-change-in-prod"
+    }
+  ]
+};
+var WEB_ENV = {
+  label: "Web",
+  envFile: "apps/web/.env.local",
+  vars: [
+    {
+      name: "NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL",
+      required: true,
+      description: "Backend API URL",
+      defaultValue: "http://localhost:1338/"
+    }
+  ]
+};
+var COLLAB_ENV = {
+  label: "Collab",
+  envFile: "apps/collab/.env",
+  vars: [
+    {
+      name: "COLLAB_PORT",
+      required: true,
+      description: "WebSocket server port",
+      defaultValue: "4000"
+    },
+    {
+      name: "LEARNHOUSE_API_URL",
+      required: true,
+      description: "LearnHouse API base URL",
+      defaultValue: "http://localhost:1338"
+    },
+    {
+      name: "LEARNHOUSE_AUTH_JWT_SECRET_KEY",
+      required: true,
+      description: "JWT secret (must match API)",
+      defaultValue: ""
+      // filled from API value at write-time
+    },
+    {
+      name: "COLLAB_INTERNAL_KEY",
+      required: true,
+      description: "Internal key (must match API)",
+      defaultValue: ""
+      // filled from API value at write-time
+    }
+  ]
+};
+var ALL_APPS = [API_ENV, WEB_ENV, COLLAB_ENV];
+function parseEnvFile(filePath) {
+  const vars = /* @__PURE__ */ new Map();
+  if (!fs6.existsSync(filePath)) return vars;
+  for (const line of fs6.readFileSync(filePath, "utf-8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+      value = value.slice(1, -1);
+    }
+    const cIdx = value.indexOf(" #");
+    if (cIdx !== -1) value = value.slice(0, cIdx).trim();
+    vars.set(key, value);
+  }
+  return vars;
+}
+function appendToEnvFile(filePath, newVars) {
+  let content = "";
+  if (fs6.existsSync(filePath)) {
+    content = fs6.readFileSync(filePath, "utf-8");
+    if (content.length > 0 && !content.endsWith("\n")) content += "\n";
+  }
+  for (const [key, value] of newVars) {
+    content += `${key}=${value}
+`;
+  }
+  const dir = path6.dirname(filePath);
+  if (!fs6.existsSync(dir)) fs6.mkdirSync(dir, { recursive: true });
+  fs6.writeFileSync(filePath, content);
+}
+function resolveDefault(v) {
+  return typeof v.defaultValue === "function" ? v.defaultValue() : v.defaultValue;
+}
+async function checkDevEnv(root) {
+  const missing = [];
+  for (const app of ALL_APPS) {
+    const existing = parseEnvFile(path6.join(root, app.envFile));
+    for (const v of app.vars) {
+      const val = existing.get(v.name);
+      if (v.required && (!val || val.length === 0)) {
+        missing.push({ app, envVar: v });
+      }
+    }
+  }
+  if (missing.length === 0) {
+    R2.success("Environment files look good");
+    return true;
+  }
+  R2.warning(`Found ${missing.length} missing env variable${missing.length > 1 ? "s" : ""}:`);
+  console.log();
+  const byApp = /* @__PURE__ */ new Map();
+  for (const m of missing) {
+    const list = byApp.get(m.app.label) ?? [];
+    list.push(m);
+    byApp.set(m.app.label, list);
+  }
+  for (const [label, vars] of byApp) {
+    console.log(`  ${import_picocolors15.default.bold(label)} ${import_picocolors15.default.dim(`(${vars[0].app.envFile})`)}`);
+    for (const m of vars) {
+      console.log(`    ${import_picocolors15.default.red("\u2717")} ${import_picocolors15.default.cyan(m.envVar.name)} \u2014 ${import_picocolors15.default.dim(m.envVar.description)}`);
+    }
+    console.log();
+  }
+  const action = await Je({
+    message: "How would you like to proceed?",
+    options: [
+      { value: "defaults", label: "Apply dev defaults and continue", hint: "writes only the missing vars" },
+      { value: "abort", label: "Abort \u2014 I'll set them up manually" }
+    ]
+  });
+  if (Ct(action) || action === "abort") {
+    R2.info("Set the missing variables and run the command again.");
+    return false;
+  }
+  const apiFile = path6.join(root, API_ENV.envFile);
+  const apiExisting = parseEnvFile(apiFile);
+  const jwtSecret = apiExisting.get("LEARNHOUSE_AUTH_JWT_SECRET_KEY") || generateJwtSecret();
+  const collabKey = apiExisting.get("COLLAB_INTERNAL_KEY") || "dev-collab-internal-key-change-in-prod";
+  for (const app of ALL_APPS) {
+    const filePath = path6.join(root, app.envFile);
+    const existing = parseEnvFile(filePath);
+    const toWrite = /* @__PURE__ */ new Map();
+    for (const v of app.vars) {
+      const val = existing.get(v.name);
+      if (!v.required || val && val.length > 0) continue;
+      if (v.name === "LEARNHOUSE_AUTH_JWT_SECRET_KEY") {
+        toWrite.set(v.name, jwtSecret);
+      } else if (v.name === "COLLAB_INTERNAL_KEY") {
+        toWrite.set(v.name, collabKey);
+      } else {
+        toWrite.set(v.name, resolveDefault(v));
+      }
+    }
+    if (toWrite.size > 0) {
+      appendToEnvFile(filePath, toWrite);
+      const names = [...toWrite.keys()].map((k2) => import_picocolors15.default.cyan(k2)).join(", ");
+      R2.success(`${import_picocolors15.default.bold(app.label)}: wrote ${names} \u2192 ${import_picocolors15.default.dim(app.envFile)}`);
+    }
+  }
+  console.log();
+  return true;
+}
+
+// src/commands/dev.ts
 var PROJECT_NAME = "learnhouse-dev";
+var DEV_COMPOSE = `name: learnhouse-dev
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: learnhouse-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=learnhouse
+      - POSTGRES_PASSWORD=learnhouse
+      - POSTGRES_DB=learnhouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - learnhouse_db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnhouse"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+  redis:
+    image: redis:8.6.1-alpine
+    container_name: learnhouse-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - learnhouse_redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+volumes:
+  learnhouse_db_dev_data:
+  learnhouse_redis_dev_data:
+`;
 function findProjectRoot() {
   let dir = process.cwd();
   while (true) {
-    if (fs6.existsSync(path6.join(dir, "dev", "docker-compose.yml")) && fs6.existsSync(path6.join(dir, "apps", "api")) && fs6.existsSync(path6.join(dir, "apps", "web"))) {
+    if (fs7.existsSync(path7.join(dir, "apps", "api")) && fs7.existsSync(path7.join(dir, "apps", "web"))) {
       return dir;
     }
-    const parent = path6.dirname(dir);
+    const parent = path7.dirname(dir);
     if (parent === dir) return null;
     dir = parent;
   }
+}
+function getDevComposePath(root) {
+  const dotDir = path7.join(root, ".learnhouse");
+  if (!fs7.existsSync(dotDir)) fs7.mkdirSync(dotDir, { recursive: true });
+  const composePath = path7.join(dotDir, "docker-compose.dev.yml");
+  fs7.writeFileSync(composePath, DEV_COMPOSE);
+  return composePath;
 }
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -7084,7 +7308,7 @@ async function waitForHealth2(label, command, args, maxAttempts = 30) {
   }
   return false;
 }
-var CONTROLS_BAR = import_picocolors15.default.dim("\u2500".repeat(60)) + "\n" + import_picocolors15.default.dim("  ") + import_picocolors15.default.bold("ra") + import_picocolors15.default.dim(" restart api  ") + import_picocolors15.default.bold("rw") + import_picocolors15.default.dim(" restart web  ") + import_picocolors15.default.bold("rc") + import_picocolors15.default.dim(" restart collab  ") + import_picocolors15.default.bold("rb") + import_picocolors15.default.dim(" restart all  ") + import_picocolors15.default.bold("q") + import_picocolors15.default.dim(" quit") + "\n" + import_picocolors15.default.dim("\u2500".repeat(60));
+var CONTROLS_BAR = import_picocolors16.default.dim("\u2500".repeat(60)) + "\n" + import_picocolors16.default.dim("  ") + import_picocolors16.default.bold("ra") + import_picocolors16.default.dim(" restart api  ") + import_picocolors16.default.bold("rw") + import_picocolors16.default.dim(" restart web  ") + import_picocolors16.default.bold("rc") + import_picocolors16.default.dim(" restart collab  ") + import_picocolors16.default.bold("rb") + import_picocolors16.default.dim(" restart all  ") + import_picocolors16.default.bold("q") + import_picocolors16.default.dim(" quit") + "\n" + import_picocolors16.default.dim("\u2500".repeat(60));
 var lineCount = 0;
 var CONTROLS_INTERVAL = 50;
 function printControls() {
@@ -7125,7 +7349,7 @@ function isInfraRunning() {
 }
 var serviceEnv = {};
 function spawnService(command, args, cwd, label, color) {
-  const localBin = path6.join(cwd, "node_modules", ".bin");
+  const localBin = path7.join(cwd, "node_modules", ".bin");
   const child = spawn2(command, args, {
     cwd,
     stdio: ["ignore", "pipe", "pipe"],
@@ -7158,12 +7382,31 @@ function killProcess(child) {
     }, 5e3);
   });
 }
-async function devCommand() {
+async function devCommand(opts) {
   const root = findProjectRoot();
   if (!root) {
     R2.error("Not inside a LearnHouse project.");
     R2.info("Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).");
     process.exit(1);
+  }
+  We(import_picocolors16.default.cyan("LearnHouse Dev Mode"));
+  const envOk = await checkDevEnv(root);
+  if (!envOk) process.exit(1);
+  const eePath = path7.join(root, "apps", "api", "ee");
+  const eeDisabledPath = path7.join(root, "apps", "api", ".ee-disabled");
+  let eeWasHidden = false;
+  if (fs7.existsSync(eeDisabledPath) && !fs7.existsSync(eePath)) {
+    fs7.renameSync(eeDisabledPath, eePath);
+  }
+  if (!opts.ee && fs7.existsSync(eePath)) {
+    fs7.renameSync(eePath, eeDisabledPath);
+    eeWasHidden = true;
+  } else if (opts.ee) {
+    if (fs7.existsSync(eePath)) {
+      R2.info(`Running in ${import_picocolors16.default.bold("EE")} mode`);
+    } else {
+      R2.warning("--ee was passed but no ee/ folder found \u2014 running in OSS mode");
+    }
   }
   if (!isDockerInstalled()) {
     R2.error("Docker is not installed. Please install Docker and try again.");
@@ -7173,8 +7416,8 @@ async function devCommand() {
     R2.error("Docker is not running. Please start Docker and try again.");
     process.exit(1);
   }
-  We(import_picocolors15.default.cyan("LearnHouse Dev Mode"));
   console.log();
+  const composePath = getDevComposePath(root);
   const alreadyRunning = isInfraRunning();
   if (alreadyRunning) {
     R2.success("Existing DB and Redis containers detected \u2014 reusing them");
@@ -7196,15 +7439,13 @@ async function devCommand() {
     }
     serviceEnv = {
       FORCE_COLOR: "1",
-      LEARNHOUSE_OSS: "true",
-      NEXT_PUBLIC_LEARNHOUSE_OSS: "true",
       LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
       LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password
     };
     const infraSpinner = bt2();
     infraSpinner.start("Starting DB and Redis containers...");
     try {
-      execSync5(`docker compose -f dev/docker-compose.yml -p ${PROJECT_NAME} up -d`, {
+      execSync5(`docker compose -f ${composePath} -p ${PROJECT_NAME} up -d`, {
         cwd: root,
         stdio: "pipe"
       });
@@ -7216,9 +7457,7 @@ async function devCommand() {
     }
   } else {
     serviceEnv = {
-      FORCE_COLOR: "1",
-      LEARNHOUSE_OSS: "true",
-      NEXT_PUBLIC_LEARNHOUSE_OSS: "true"
+      FORCE_COLOR: "1"
     };
   }
   const healthSpinner = bt2();
@@ -7234,15 +7473,15 @@ async function devCommand() {
     process.exit(1);
   }
   healthSpinner.stop("DB and Redis are healthy");
-  const webDir = path6.join(root, "apps", "web");
-  const collabDir = path6.join(root, "apps", "collab");
-  const apiDir = path6.join(root, "apps", "api");
+  const webDir = path7.join(root, "apps", "web");
+  const collabDir = path7.join(root, "apps", "collab");
+  const apiDir = path7.join(root, "apps", "api");
   const bunProjects = [
     { label: "web", dir: webDir },
     { label: "collab", dir: collabDir }
   ];
   for (const { label, dir } of bunProjects) {
-    if (!fs6.existsSync(path6.join(dir, "node_modules"))) {
+    if (!fs7.existsSync(path7.join(dir, "node_modules"))) {
       R2.info(`Installing ${label} dependencies...`);
       const result = spawnSync2("bun", ["install"], { cwd: dir, stdio: "inherit", shell: true });
       if (result.status !== 0) {
@@ -7251,7 +7490,7 @@ async function devCommand() {
       }
     }
   }
-  if (!fs6.existsSync(path6.join(apiDir, ".venv"))) {
+  if (!fs7.existsSync(path7.join(apiDir, ".venv"))) {
     R2.info("Installing API dependencies...");
     const result = spawnSync2("uv", ["sync"], { cwd: apiDir, stdio: "inherit", shell: true });
     if (result.status !== 0) {
@@ -7263,35 +7502,38 @@ async function devCommand() {
   let webProc = null;
   let collabProc = null;
   const startApi = () => {
-    return spawnService("uv", ["run", "python", "app.py"], path6.join(root, "apps", "api"), "api", import_picocolors15.default.magenta);
+    return spawnService("uv", ["run", "python", "app.py"], path7.join(root, "apps", "api"), "api", import_picocolors16.default.magenta);
   };
   const startWeb = () => {
-    return spawnService("next", ["dev", "--turbopack"], path6.join(root, "apps", "web"), "web", import_picocolors15.default.cyan);
+    return spawnService("next", ["dev", "--turbopack"], path7.join(root, "apps", "web"), "web", import_picocolors16.default.cyan);
   };
   const startCollab = () => {
-    return spawnService("tsx", ["watch", "src/index.ts"], path6.join(root, "apps", "collab"), "collab", import_picocolors15.default.yellow);
+    return spawnService("tsx", ["watch", "src/index.ts"], path7.join(root, "apps", "collab"), "collab", import_picocolors16.default.yellow);
   };
   apiProc = startApi();
   webProc = startWeb();
   collabProc = startCollab();
   R2.success("API, Web, and Collab servers started");
   console.log();
-  console.log(import_picocolors15.default.dim("  Thank you for contributing to LearnHouse!"));
+  console.log(import_picocolors16.default.dim("  Thank you for contributing to LearnHouse!"));
   console.log();
   printControls();
   let shuttingDown = false;
   const shutdown = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
-    console.log("\n" + import_picocolors15.default.dim("Shutting down dev servers..."));
+    console.log("\n" + import_picocolors16.default.dim("Shutting down dev servers..."));
     if (process.stdin.isTTY && process.stdin.isRaw) {
       process.stdin.setRawMode(false);
     }
     process.stdin.pause();
     await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)]);
-    console.log(import_picocolors15.default.dim("DB and Redis containers are still running for next session."));
-    console.log(import_picocolors15.default.dim("To stop them: docker compose -f dev/docker-compose.yml -p learnhouse-dev down"));
-    console.log(import_picocolors15.default.dim("Thanks for building with LearnHouse!"));
+    if (eeWasHidden && fs7.existsSync(eeDisabledPath) && !fs7.existsSync(eePath)) {
+      fs7.renameSync(eeDisabledPath, eePath);
+    }
+    console.log(import_picocolors16.default.dim("DB and Redis containers are still running for next session."));
+    console.log(import_picocolors16.default.dim("To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down"));
+    console.log(import_picocolors16.default.dim("Thanks for building with LearnHouse!"));
     process.exit(0);
   };
   process.on("SIGINT", shutdown);
@@ -7320,22 +7562,22 @@ async function devCommand() {
       if (pendingR) {
         pendingR = false;
         if (key === "a") {
-          console.log(import_picocolors15.default.magenta("\n  Restarting API...\n"));
+          console.log(import_picocolors16.default.magenta("\n  Restarting API...\n"));
           await killProcess(apiProc);
           apiProc = startApi();
           printControls();
         } else if (key === "w") {
-          console.log(import_picocolors15.default.cyan("\n  Restarting Web...\n"));
+          console.log(import_picocolors16.default.cyan("\n  Restarting Web...\n"));
           await killProcess(webProc);
           webProc = startWeb();
           printControls();
         } else if (key === "c") {
-          console.log(import_picocolors15.default.yellow("\n  Restarting Collab...\n"));
+          console.log(import_picocolors16.default.yellow("\n  Restarting Collab...\n"));
           await killProcess(collabProc);
           collabProc = startCollab();
           printControls();
         } else if (key === "b") {
-          console.log(import_picocolors15.default.yellow("\n  Restarting all...\n"));
+          console.log(import_picocolors16.default.yellow("\n  Restarting all...\n"));
           await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)]);
           apiProc = startApi();
           webProc = startWeb();
@@ -7364,13 +7606,13 @@ var COMMANDS = [
 ];
 async function showWelcome() {
   await printBanner();
-  console.log(import_picocolors16.default.bold(import_picocolors16.default.white("  Available commands:\n")));
+  console.log(import_picocolors17.default.bold(import_picocolors17.default.white("  Available commands:\n")));
   for (const cmd of COMMANDS) {
-    console.log(`    ${import_picocolors16.default.cyan(cmd.name.padEnd(14))} ${import_picocolors16.default.dim(cmd.desc)}`);
+    console.log(`    ${import_picocolors17.default.cyan(cmd.name.padEnd(14))} ${import_picocolors17.default.dim(cmd.desc)}`);
   }
   console.log();
-  console.log(import_picocolors16.default.dim("  Run a command with: npx learnhouse <command>"));
-  console.log(import_picocolors16.default.dim("  Get started with:   npx learnhouse setup"));
+  console.log(import_picocolors17.default.dim("  Run a command with: npx learnhouse <command>"));
+  console.log(import_picocolors17.default.dim("  Get started with:   npx learnhouse setup"));
   console.log();
 }
 var program2 = new Command();
@@ -7384,7 +7626,7 @@ program2.command("backup").description("Backup & restore LearnHouse database").a
 program2.command("deployments").description("Manage deployments & resource limits").action(deploymentsCommand);
 program2.command("doctor").description("Diagnose common issues with LearnHouse").action(doctorCommand);
 program2.command("shell").description("Open a shell in a LearnHouse container").action(shellCommand);
-program2.command("dev").description("Start development environment (DB + Redis in Docker, API + Web locally)").action(devCommand);
+program2.command("dev").description("Start development environment (DB + Redis in Docker, API + Web locally)").option("--ee", "Enable Enterprise Edition features (keeps ee/ folder)").action(devCommand);
 var updateCheck = checkForUpdates();
 program2.parseAsync().then(() => updateCheck.catch(() => {
 }));
