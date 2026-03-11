@@ -4,6 +4,7 @@ import pc from 'picocolors'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
+import { checkDevEnv } from '../services/env-check.js'
 
 const PROJECT_NAME = 'learnhouse-dev'
 
@@ -175,12 +176,40 @@ function killProcess(child: ChildProcess | null): Promise<void> {
   })
 }
 
-export async function devCommand() {
+export async function devCommand(opts: { ee?: boolean }) {
   const root = findProjectRoot()
   if (!root) {
     p.log.error('Not inside a LearnHouse project.')
     p.log.info('Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).')
     process.exit(1)
+  }
+
+  p.intro(pc.cyan('LearnHouse Dev Mode'))
+
+  // Check env files before anything else
+  const envOk = await checkDevEnv(root)
+  if (!envOk) process.exit(1)
+
+  // EE folder management — hide ee/ when --ee is not passed so the API
+  // starts in OSS mode (is_ee_available() checks os.path.exists("ee"))
+  const eePath = path.join(root, 'apps', 'api', 'ee')
+  const eeDisabledPath = path.join(root, 'apps', 'api', '.ee-disabled')
+  let eeWasHidden = false
+
+  // Recover from a previous crash that left .ee-disabled behind
+  if (fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
+    fs.renameSync(eeDisabledPath, eePath)
+  }
+
+  if (!opts.ee && fs.existsSync(eePath)) {
+    fs.renameSync(eePath, eeDisabledPath)
+    eeWasHidden = true
+  } else if (opts.ee) {
+    if (fs.existsSync(eePath)) {
+      p.log.info(`Running in ${pc.bold('EE')} mode`)
+    } else {
+      p.log.warning('--ee was passed but no ee/ folder found — running in OSS mode')
+    }
   }
 
   if (!isDockerInstalled()) {
@@ -192,8 +221,6 @@ export async function devCommand() {
     p.log.error('Docker is not running. Please start Docker and try again.')
     process.exit(1)
   }
-
-  p.intro(pc.cyan('LearnHouse Dev Mode'))
   console.log()
 
   const composePath = getDevComposePath(root)
@@ -338,6 +365,11 @@ export async function devCommand() {
     process.stdin.pause()
 
     await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
+
+    // Restore ee/ folder if we hid it
+    if (eeWasHidden && fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
+      fs.renameSync(eeDisabledPath, eePath)
+    }
 
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
     console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
