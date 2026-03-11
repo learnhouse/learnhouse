@@ -11,7 +11,6 @@ from src.core.deployment_mode import get_deployment_mode, EE_ONLY_FEATURES
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 from src.db.communities.communities import Community
-from src.db.organizations import Organization
 from src.security.features_utils.plans import PlanLevel, plan_meets_requirement
 
 
