@@ -53,9 +53,29 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Generate CLI changelog
+        id: changelog
+        run: |
+          # Find the previous cli-v* tag
+          PREV_TAG=$(git tag --list 'cli-v*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
+          if [ -z "$PREV_TAG" ]; then
+            # First release — show all CLI commits
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+          # Only include commits that touched apps/cli/
+          NOTES=$(git log "$RANGE" --pretty=format:"- %s (%h)" -- apps/cli/)
+          if [ -z "$NOTES" ]; then
+            NOTES="- Maintenance release"
+          fi
+          # Write to file to preserve newlines
+          echo "$NOTES" > /tmp/cli-changelog.md
+        working-directory: ${{ github.workspace }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: CLI ${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          body_path: /tmp/cli-changelog.md
