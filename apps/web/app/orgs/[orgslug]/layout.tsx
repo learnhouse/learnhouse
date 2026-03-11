@@ -18,7 +18,7 @@ export async function generateMetadata({
       revalidate: 86400,
       tags: ['organizations'],
     })
-    const faviconImage = org?.config?.config?.general?.favicon_image
+    const faviconImage = org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image
     if (faviconImage) {
       return {
         icons: { icon: getOrgFaviconMediaDirectory(org.org_uuid, faviconImage) },

@@ -23,6 +23,7 @@ import {
   ChatCircle,
   SquaresFour,
   ChalkboardSimple,
+  Signpost,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import {
@@ -35,11 +36,10 @@ import {
 } from "@components/ui/dropdown-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS, DashboardMenuItem } from '@/lib/dashboard-menu-items'
-import { isFeatureAvailable, planMeetsRequirement, PlanLevel } from '@services/plans/plans'
+import { isFeatureAvailable } from '@services/plans/plans'
 import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
-import { usePlan } from '@components/Hooks/usePlan'
 import {
   Tooltip,
   TooltipContent,
@@ -81,17 +81,17 @@ export const OrgMenu = (props: any) => {
   }
   const topOffset = isJoinBannerVisible ? JOIN_BANNER_HEIGHT : 0
 
-  // Get primary color from org config
-  const primaryColor = org?.config?.config?.general?.color || ''
+  // Get primary color from org config (v2: customization.general.color, v1: general.color)
+  const config = org?.config?.config
+  const primaryColor = config?.customization?.general?.color || config?.general?.color || ''
   const colors = getMenuColorClasses(primaryColor)
-  const plan = usePlan()
 
-  // Filter dashboard menu items by feature enabled + plan availability
+  // Filter dashboard menu items by resolved_features from API
+  const rf = config?.resolved_features
   const visibleDashboardItems = DASHBOARD_MENU_ITEMS.filter((item: DashboardMenuItem) => {
     if (!item.featureKey) return true
-    const featureConfig = org?.config?.config?.features?.[item.featureKey]
-    const isEnabled = item.defaultDisabled ? featureConfig?.enabled === true : featureConfig?.enabled !== false
-    return isEnabled && isFeatureAvailable(item.featureKey, plan)
+    if (rf?.[item.featureKey]) return rf[item.featureKey].enabled
+    return isFeatureAvailable(item.featureKey)
   })
 
   useEffect(() => {
@@ -176,8 +176,29 @@ export const OrgMenu = (props: any) => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Boards (Pro+ or OSS only, authenticated users only) */}
-            {org?.config?.config?.features?.boards?.enabled === true && planMeetsRequirement(plan, 'pro') && (
+            {/* Progress / Trail */}
+            <AuthenticatedClientElement checkMethod="authentication">
+              <div className="hidden md:flex">
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={getUriWithOrg(orgslug, '/trail')}
+                        className={`p-2 rounded-lg transition-colors ${colors.iconBtn}`}
+                        aria-label={t('courses.progress')}
+                      >
+                        <Signpost size={20} weight="fill" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      {t('courses.progress')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </AuthenticatedClientElement>
+            {/* Boards */}
+            {rf?.boards?.enabled && (
               <AuthenticatedClientElement checkMethod="authentication">
                 <div className="hidden md:flex">
                   <TooltipProvider delayDuration={0}>
@@ -200,7 +221,7 @@ export const OrgMenu = (props: any) => {
               </AuthenticatedClientElement>
             )}
             {/* AI Copilot */}
-            {org?.config?.config?.features?.ai?.enabled !== false && org?.config?.config?.features?.ai?.copilot_enabled !== false && (
+            {rf?.ai?.enabled && config?.admin_toggles?.ai?.copilot_enabled !== false && (
               <AuthenticatedClientElement checkMethod="authentication">
                 <div className="hidden md:flex">
                   <CopilotMenuButton

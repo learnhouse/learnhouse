@@ -126,7 +126,7 @@ export default function OrgEditBranding() {
   const [selectedService, setSelectedService] = useState<VideoService>(null)
 
   // Theme state
-  const [primaryColor, setPrimaryColor] = useState<string>(org?.config?.config?.general?.color || '')
+  const [primaryColor, setPrimaryColor] = useState<string>(org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || '')
   const [isThemeSaving, setIsThemeSaving] = useState(false)
 
   // Socials initial values
@@ -567,7 +567,7 @@ export default function OrgEditBranding() {
                           "border-2 border-gray-100 hover:border-blue-200 transition-all duration-300",
                           isFaviconUploading && "opacity-50"
                         )}
-                        style={{ backgroundImage: `url(${localFavicon || (org?.config?.config?.general?.favicon_image ? getOrgFaviconMediaDirectory(org?.org_uuid, org?.config?.config?.general?.favicon_image) : '')})` }}
+                        style={{ backgroundImage: `url(${localFavicon || ((org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image) ? getOrgFaviconMediaDirectory(org?.org_uuid, org?.config?.config?.customization?.general?.favicon_image || org?.config?.config?.general?.favicon_image) : '')})` }}
                       />
                       <p className="text-xs text-gray-400">Favicon preview (32×32)</p>
                     </div>

@@ -3,6 +3,8 @@ import { getAPIUrl } from '@services/config/config'
 export interface FeatureUsage {
   usage: number
   limit: number | 'unlimited'
+  plan_limit?: number | 'unlimited'
+  purchased?: number
   remaining: number | 'unlimited'
   limit_reached: boolean
 }

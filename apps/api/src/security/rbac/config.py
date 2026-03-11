@@ -59,16 +59,6 @@ RESOURCE_CONFIGS: dict[str, ResourceConfig] = {
         uuid_field="board_uuid",
     ),
 
-    "docspaces": ResourceConfig(
-        resource_type="docspaces",
-        uuid_prefix="docspace_",
-        has_published_field=True,
-        supports_usergroups=True,
-        supports_authorship=True,
-        model_name="DocSpace",
-        uuid_field="docspace_uuid",
-    ),
-
     # ============================================
     # CHILD RESOURCES (inherit access from parent)
     # ============================================
@@ -104,39 +94,6 @@ RESOURCE_CONFIGS: dict[str, ResourceConfig] = {
         uuid_field="episode_uuid",
         parent_resource_type="podcasts",
         parent_id_field="podcast_id",
-    ),
-    "docsections": ResourceConfig(
-        resource_type="docsections",
-        uuid_prefix="docsection_",
-        has_published_field=False,
-        supports_usergroups=False,
-        supports_authorship=False,
-        model_name="DocSection",
-        uuid_field="docsection_uuid",
-        parent_resource_type="docspaces",
-        parent_id_field="docspace_id",
-    ),
-    "docgroups": ResourceConfig(
-        resource_type="docgroups",
-        uuid_prefix="docgroup_",
-        has_published_field=False,
-        supports_usergroups=False,
-        supports_authorship=False,
-        model_name="DocGroup",
-        uuid_field="docgroup_uuid",
-        parent_resource_type="docsections",
-        parent_id_field="docsection_id",
-    ),
-    "docpages": ResourceConfig(
-        resource_type="docpages",
-        uuid_prefix="docpage_",
-        has_published_field=False,
-        supports_usergroups=False,
-        supports_authorship=False,
-        model_name="DocPage",
-        uuid_field="docpage_uuid",
-        parent_resource_type="docsections",
-        parent_id_field="docsection_id",
     ),
     "discussions": ResourceConfig(
         resource_type="discussions",

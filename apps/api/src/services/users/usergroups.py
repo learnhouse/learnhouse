@@ -67,10 +67,6 @@ async def _validate_resource_exists_and_belongs_to_org(
         from src.db.collections import Collection
         statement = select(Collection).where(Collection.collection_uuid == resource_uuid)
         resource = db_session.exec(statement).first()
-    elif config.resource_type == "docspaces":
-        from src.db.docs.docspaces import DocSpace
-        statement = select(DocSpace).where(DocSpace.docspace_uuid == resource_uuid)
-        resource = db_session.exec(statement).first()
     elif config.resource_type == "boards":
         from src.db.boards import Board
         statement = select(Board).where(Board.board_uuid == resource_uuid)

@@ -122,6 +122,10 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if request.headers.get("x-internal-key"):
             return True
 
+        # Platform service-to-service calls use a shared key, not cookies
+        if request.headers.get("x-platform-key"):
+            return True
+
         return False
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:

@@ -11,9 +11,11 @@ import { toast } from 'react-hot-toast'
 import { Button } from "@components/ui/button"
 import { Label } from "@components/ui/label"
 import { Textarea } from "@components/ui/textarea"
+import { Switch } from '@components/ui/switch'
 import { Code2, Plus, Trash2, PencilLine, AlertTriangle } from "lucide-react"
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
+import { usePlan } from '@components/Hooks/usePlan'
 import {
   Tooltip,
   TooltipContent,
@@ -42,9 +44,45 @@ const OrgEditOther: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const plan = usePlan()
+  const isFree = plan === 'free'
   const [selectedView, setSelectedView] = React.useState<'list' | 'edit'>('list')
   const [scripts, setScripts] = React.useState<Script[]>([])
   const [currentScript, setCurrentScript] = React.useState<Script | null>(null)
+
+  // Watermark state
+  const [watermarkEnabled, setWatermarkEnabled] = React.useState<boolean>(
+    (org?.config?.config?.customization?.general?.watermark ?? org?.config?.config?.general?.watermark) !== false
+  )
+  const [isWatermarkSaving, setIsWatermarkSaving] = React.useState(false)
+
+  const updateWatermark = async (enabled: boolean) => {
+    if (isFree && !enabled) {
+      toast.error(t('dashboard.organization.settings.watermark_free_plan'))
+      return
+    }
+    setIsWatermarkSaving(true)
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
+    try {
+      const response = await fetch(`${getAPIUrl()}orgs/${org.id}/config/watermark?watermark_enabled=${enabled}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`,
+        },
+      })
+      if (!response.ok) throw new Error('Failed to update watermark')
+      setWatermarkEnabled(enabled)
+      await revalidateTags(['organizations'], org.slug)
+      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
+    } catch {
+      setWatermarkEnabled(!enabled)
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
+    } finally {
+      setIsWatermarkSaving(false)
+    }
+  }
 
   // Initialize scripts from org
   React.useEffect(() => {
@@ -116,7 +154,28 @@ const OrgEditOther: React.FC = () => {
   }
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
+    <div className="sm:mx-10 mx-0 space-y-4">
+      {/* Watermark Toggle */}
+      <div className="bg-white rounded-xl nice-shadow p-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label className="text-base font-medium">{t('dashboard.organization.settings.watermark_label')}</Label>
+            <p className="text-sm text-gray-500">
+              {isFree
+                ? t('dashboard.organization.settings.watermark_free_plan')
+                : t('dashboard.organization.settings.watermark_desc')}
+            </p>
+          </div>
+          <Switch
+            checked={watermarkEnabled}
+            onCheckedChange={updateWatermark}
+            disabled={isWatermarkSaving || isFree}
+          />
+        </div>
+      </div>
+
+      {/* Scripts Section */}
+      <div className="bg-white rounded-xl nice-shadow">
       <div className="pt-0.5">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
           <div className="flex items-center justify-between">
@@ -278,7 +337,8 @@ const OrgEditOther: React.FC = () => {
         )}
       </div>
     </div>
+    </div>
   )
 }
 
-export default OrgEditOther 
+export default OrgEditOther

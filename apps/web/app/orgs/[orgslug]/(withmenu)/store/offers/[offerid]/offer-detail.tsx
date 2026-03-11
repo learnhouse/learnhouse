@@ -8,7 +8,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getOfferCheckoutSession } from '@services/payments/offers'
 import {
   ArrowLeft, RefreshCcw, SquareCheck, Sparkles, BookOpen,
-  FileText, Mic, Puzzle, AlertCircle, Loader2, ShoppingBag
+  Mic, Puzzle, AlertCircle, Loader2, ShoppingBag
 } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
@@ -33,7 +33,6 @@ interface OfferDetailClientProps {
 function resourceIcon(type: string, size = 14) {
   switch (type) {
     case 'course': return <BookOpen size={size} className="text-indigo-500" />
-    case 'docspace': return <FileText size={size} className="text-blue-400" />
     case 'podcast': return <Mic size={size} className="text-pink-400" />
     default: return <Puzzle size={size} className="text-gray-400" />
   }

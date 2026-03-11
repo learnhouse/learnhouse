@@ -11,7 +11,13 @@ from src.core.deployment_mode import get_deployment_mode
 from typing import Literal, TypeAlias
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
-from src.security.features_utils.plans import PlanLevel, get_plan_limit, get_ai_credit_limit, plan_meets_requirement, get_required_plan_for_feature
+from src.security.features_utils.plans import (
+    PlanLevel,
+    get_plan_limit,
+    get_ai_credit_limit,
+    plan_meets_requirement,
+    get_required_plan_for_feature,
+)
 
 FeatureSet: TypeAlias = Literal[
     "admin_seats",
@@ -21,8 +27,6 @@ FeatureSet: TypeAlias = Literal[
     "assignments",
     "collaboration",
     "courses",
-    "discussions",
-    "docs",
     "members",
     "payments",
     "podcasts",
@@ -35,7 +39,7 @@ PLAN_BASED_FEATURES = {"courses", "members", "admin_seats"}
 
 # Features that use Redis for usage tracking (non-billing, rate limiting)
 REDIS_TRACKED_FEATURES = {"ai", "analytics", "api", "assignments", "collaboration",
-                          "discussions", "payments", "podcasts", "storage", "usergroups"}
+                          "payments", "podcasts", "storage", "usergroups"}
 
 
 def _is_non_saas() -> bool:
@@ -58,9 +62,12 @@ def _get_redis_client():
 
 
 def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
-    """Get the organization's current plan."""
-    cloud_config = org_config.config.get("cloud", {})
-    return cloud_config.get("plan", "free")
+    """Get the organization's current plan (supports v1 and v2 config)."""
+    config = org_config.config or {}
+    version = config.get("config_version", "1.0")
+    if version.startswith("2"):
+        return config.get("plan", "free")
+    return config.get("cloud", {}).get("plan", "free")
 
 
 # ============================================================================
@@ -179,15 +186,7 @@ def check_feature_enabled(
     """
     Check if a feature is enabled for an organization.
 
-    This is a lightweight check that only verifies the feature flag,
-    not usage limits. Use this for read operations where you want to
-    block access when the feature is disabled, but don't need to check
-    usage limits (e.g., viewing courses, not creating them).
-
-    Args:
-        feature: The feature key (e.g., 'courses', 'collections')
-        org_id: The organization ID
-        db_session: Database session
+    Uses resolve_feature() for v2 configs, falls back to plan-based check for v1.
 
     Returns:
         True if the feature is enabled
@@ -195,10 +194,10 @@ def check_feature_enabled(
     Raises:
         HTTPException 403 if feature is disabled
     """
-    # Get the Organization Config
+    from src.security.features_utils.resolve import resolve_feature
+
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
         raise HTTPException(
@@ -206,9 +205,9 @@ def check_feature_enabled(
             detail="Organization has no config",
         )
 
-    # Check if the feature is enabled
-    feature_config = org_config.config.get("features", {}).get(feature, {})
-    if feature_config.get("enabled") == False:
+    resolved = resolve_feature(feature, org_config.config or {}, org_id)
+
+    if not resolved["enabled"]:
         raise HTTPException(
             status_code=403,
             detail=f"{feature.capitalize()} is not enabled for this organization",
@@ -222,11 +221,12 @@ def check_limits_with_usage(
     org_id: int,
     db_session: Session,
 ):
-    """Check if usage is within limits for a feature."""
-    # Get the Organization Config
+    """Check if usage is within limits for a feature.
+    Uses resolve_feature() for unified 4-layer resolution."""
+    from src.security.features_utils.resolve import resolve_feature
+
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
         raise HTTPException(
@@ -234,39 +234,38 @@ def check_limits_with_usage(
             detail="Organization has no config",
         )
 
+    resolved = resolve_feature(feature, org_config.config or {}, org_id)
+
     # Check if the feature is enabled
-    if org_config.config["features"][feature]["enabled"] == False:
+    if not resolved["enabled"]:
         raise HTTPException(
             status_code=403,
             detail=f"{feature.capitalize()} is not enabled for this organization",
         )
 
-    # OSS mode disables plan-based limits for self-hosted deployments
-    if _is_non_saas() and feature in PLAN_BASED_FEATURES:
+    # Unlimited (limit=0) — no usage check needed
+    if resolved["limit"] == 0:
         return True
 
     org_plan = _get_org_plan(org_config)
+    feature_limit = resolved["limit"]
 
     # Plan-based features - check actual DB count
     if feature in PLAN_BASED_FEATURES:
-        feature_limit = get_plan_limit(org_plan, feature)
         current_usage = _get_actual_usage(feature, org_id, db_session)
 
-        if feature_limit > 0 and current_usage >= feature_limit:
+        if current_usage >= feature_limit:
             # For non-free plans, allow overage (tracked via events for billing)
             if org_plan not in ("free",):
                 return True
             else:
-                # Free plan - hard limit
                 raise HTTPException(
                     status_code=403,
                     detail=f"Usage Limit has been reached for {feature.capitalize()}",
                 )
         return True
 
-    # Redis-tracked features (non-billing)
-    feature_limit = org_config.config["features"][feature]["limit"]
-
+    # Redis-tracked features
     if feature_limit > 0:
         r = _get_redis_client()
         feature_usage = r.get(f"{feature}_usage:{org_id}")
@@ -691,6 +690,17 @@ def is_role_dashboard_enabled(role: Role) -> bool:
 
 
 # ============================================================================
+# Purchased Member Seats (Redis)
+# ============================================================================
+
+def get_purchased_member_seats(org_id: int) -> int:
+    """Get purchased member seats from Redis."""
+    r = _get_redis_client()
+    val = r.get(f"member_seats_purchased:{org_id}")
+    return int(val) if val else 0
+
+
+# ============================================================================
 # AI Credit Management Functions (Redis)
 # ============================================================================
 
@@ -699,9 +709,10 @@ def check_ai_credits(
     db_session: Session,
 ) -> bool:
     """Check if the organization has AI credits available."""
+    from src.security.features_utils.resolve import resolve_feature
+
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = db_session.exec(statement).first()
 
     if org_config is None:
         raise HTTPException(
@@ -709,7 +720,9 @@ def check_ai_credits(
             detail="Organization has no config",
         )
 
-    if org_config.config["features"]["ai"]["enabled"] == False:
+    resolved = resolve_feature("ai", org_config.config or {}, org_id)
+
+    if not resolved["enabled"]:
         raise HTTPException(
             status_code=403,
             detail="AI is not enabled for this organization",
@@ -732,10 +745,16 @@ def check_ai_credits(
             detail="AI credits are not available on the free plan. Please upgrade to Standard or Pro.",
         )
 
+    # Include override extra_limit
+    config = org_config.config or {}
+    extra = 0
+    if config.get("config_version", "1.0").startswith("2"):
+        extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0)
+
     purchased_credits = r.get(f"ai_credits_purchased:{org_id}")
     purchased_credits_count = int(purchased_credits) if purchased_credits else 0
 
-    total_credits = base_credits + purchased_credits_count
+    total_credits = base_credits + extra + purchased_credits_count
 
     used_credits = r.get(f"ai_credits_used:{org_id}")
     used_credits_count = int(used_credits) if used_credits else 0
@@ -770,14 +789,7 @@ def deduct_ai_credit(
 def add_ai_credits(org_id: int, amount: int) -> int:
     """Add purchased AI credits to the organization."""
     r = _get_redis_client()
-
-    purchased_credits = r.get(f"ai_credits_purchased:{org_id}")
-    purchased_credits_count = int(purchased_credits) if purchased_credits else 0
-
-    new_purchased_count = purchased_credits_count + amount
-    r.set(f"ai_credits_purchased:{org_id}", new_purchased_count)
-
-    return new_purchased_count
+    return r.incrby(f"ai_credits_purchased:{org_id}", amount)
 
 
 def reset_ai_credits_usage(org_id: int) -> bool:

@@ -6,13 +6,16 @@ import {
   Users,
   ShieldCheck,
   Lightning,
+  Package,
+  ArrowSquareOut,
 } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { usePlan } from '@components/Hooks/usePlan'
+import { OrgPacksResponse } from '@services/packs/packs'
 
 
 interface AICreditsSummary {
@@ -70,7 +73,15 @@ export default function OrgEditUsage() {
     { revalidateOnFocus: false }
   )
 
+  const { data: packsData } = useSWR<OrgPacksResponse>(
+    token && orgId ? `${getAPIUrl()}orgs/${orgId}/packs` : null,
+    (url) => swrFetcher(url, token),
+    { revalidateOnFocus: false }
+  )
+
   const ossMode = usageData?.oss_mode ?? false
+  const mode = getDeploymentMode()
+  const isSaaS = mode === 'saas'
   const plan = usePlan()
   const planStyle = PLAN_COLORS[plan] || PLAN_COLORS.free
   const features = usageData?.features
@@ -155,12 +166,17 @@ export default function OrgEditUsage() {
                         style={{ width: `${barPercent}%` }}
                       />
                     </div>
+                    {!isUnlimited && meter.label === 'Members' && (features?.members?.purchased ?? 0) > 0 && (
+                      <p className="text-xs text-gray-400 mt-1.5">
+                        Plan: {features?.members?.plan_limit ?? 0} + Purchased: {features?.members?.purchased} = {meter.limit}
+                      </p>
+                    )}
                     {!isUnlimited && meter.limit_reached && (
                       <p className="text-xs text-red-500 mt-1.5">
                         Limit reached
                       </p>
                     )}
-                    {!isUnlimited && !meter.limit_reached && (
+                    {!isUnlimited && !meter.limit_reached && !(meter.label === 'Members' && (features?.members?.purchased ?? 0) > 0) && (
                       <p className="text-xs text-gray-400 mt-1.5">
                         {meter.remaining} remaining
                       </p>
@@ -192,6 +208,71 @@ export default function OrgEditUsage() {
           </div>
           <div className="p-6">
             <AICreditsDetail credits={aiCredits} />
+          </div>
+        </div>
+      )}
+
+      {/* Active Packs */}
+      {packsData && packsData.active_packs.length > 0 && (
+        <div className="bg-white rounded-xl nice-shadow">
+          <div className="border-b px-6 py-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800">Active Packs</h3>
+            <Package size={20} weight="duotone" className="text-gray-400" />
+          </div>
+          <div className="p-6">
+            <div className="space-y-3">
+              {packsData.active_packs.map((pack) => {
+                const catalogItem = packsData.available_packs.find(
+                  (p) => p.pack_id === pack.pack_id
+                )
+                return (
+                  <div
+                    key={pack.id}
+                    className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">
+                        {catalogItem?.label ?? pack.pack_id}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {pack.pack_type === 'ai_credits'
+                          ? 'AI Credits'
+                          : 'Member Seats'}{' '}
+                        &middot; {pack.quantity}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                      Active
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buy More — SaaS only */}
+      {isSaaS && (
+        <div className="bg-white rounded-xl nice-shadow">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800">
+                Need more capacity?
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Purchase additional AI credits or member seats.
+              </p>
+            </div>
+            <a
+              href="https://learnhouse.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Buy More
+              <ArrowSquareOut size={14} weight="bold" />
+            </a>
           </div>
         </div>
       )}

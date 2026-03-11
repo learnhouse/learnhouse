@@ -30,7 +30,7 @@ function Trail(params: any) {
   const [quittingProgress, setQuittingProgress] = useState(0)
 
   // Check if courses feature is enabled
-  const isCoursesEnabled = org?.config?.config?.features?.courses?.enabled !== false
+  const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
 
   // Only fetch trail data if courses feature is enabled
   const { data: trail, error: error, mutate } = useSWR(

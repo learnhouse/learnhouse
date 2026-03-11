@@ -94,7 +94,10 @@ class EEAuditLogMiddleware:
                 if not body_replayed:
                     body_replayed = True
                     return {"type": "http.request", "body": body_bytes, "more_body": False}
-                return {"type": "http.disconnect"}
+                # Delegate to the original receive so Starlette blocks until
+                # the real client disconnects instead of seeing a fake
+                # disconnect that aborts the response mid-flight.
+                return await receive()
 
             downstream_receive = replay_receive
         else:

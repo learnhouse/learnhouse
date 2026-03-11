@@ -6,7 +6,6 @@ import {
   BookOpen,
   Users,
   ChatCircle,
-  FileText,
   Microphone,
   Chalkboard,
 } from '@phosphor-icons/react'
@@ -21,7 +20,13 @@ export default function ContentOverview() {
   const token = session?.data?.tokens?.access_token
   const orgslug = org?.slug
   const orgId = org?.id
+  const rf = org?.config?.config?.resolved_features
   const features = org?.config?.config?.features
+  const isEnabled = (feature: string, defaultDisabled = false) => {
+    if (rf?.[feature]) return rf[feature].enabled
+    const v1 = features?.[feature]
+    return defaultDisabled ? v1?.enabled === true : v1?.enabled !== false
+  }
 
   // Courses
   const { data: coursesData } = useSWR(
@@ -42,7 +47,7 @@ export default function ContentOverview() {
   )
 
   // Communities
-  const communitiesEnabled = features?.communities?.enabled !== false
+  const communitiesEnabled = isEnabled('communities')
   const { data: communitiesData } = useSWR(
     communitiesEnabled && token && orgId
       ? `${getAPIUrl()}communities/org/${orgId}/page/1/limit/500`
@@ -51,18 +56,8 @@ export default function ContentOverview() {
     { revalidateOnFocus: false }
   )
 
-  // Docs
-  const docsEnabled = features?.docs?.enabled === true
-  const { data: docsData } = useSWR(
-    docsEnabled && token && orgslug
-      ? `${getAPIUrl()}docs/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
-
   // Podcasts
-  const podcastsEnabled = features?.podcasts?.enabled === true
+  const podcastsEnabled = isEnabled('podcasts', true)
   const { data: podcastsData } = useSWR(
     podcastsEnabled && token && orgslug
       ? `${getAPIUrl()}podcasts/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
@@ -72,7 +67,7 @@ export default function ContentOverview() {
   )
 
   // Boards
-  const boardsEnabled = features?.boards?.enabled === true
+  const boardsEnabled = isEnabled('boards', true)
   const { data: boardsData } = useSWR(
     boardsEnabled && token && orgId
       ? `${getAPIUrl()}boards/org/${orgId}`
@@ -84,7 +79,6 @@ export default function ContentOverview() {
   const courses: any[] = coursesData ?? []
   const totalMembers = membersData?.total ?? 0
   const communities: any[] = communitiesData ?? []
-  const docs: any[] = docsData ?? []
   const podcasts: any[] = podcastsData ?? []
   const boards: any[] = boardsData ?? []
 
@@ -121,16 +115,6 @@ export default function ContentOverview() {
       iconBg: 'bg-violet-50',
       href: '/dash/communities',
       show: communitiesEnabled,
-    },
-    {
-      label: 'Doc Spaces',
-      value: docs.length,
-      sub: `${docs.filter((d: any) => d.published).length} published`,
-      icon: FileText,
-      iconColor: 'text-emerald-500',
-      iconBg: 'bg-emerald-50',
-      href: '/dash/docs',
-      show: docsEnabled,
     },
     {
       label: 'Podcasts',

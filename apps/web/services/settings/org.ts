@@ -133,7 +133,6 @@ export interface SeoOrgConfig {
   google_site_verification: string
   twitter_handle: string
   noindex_communities: boolean
-  noindex_docs: boolean
 }
 
 export async function updateOrgSeoConfig(

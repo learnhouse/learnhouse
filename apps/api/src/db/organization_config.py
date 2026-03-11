@@ -4,7 +4,10 @@ from sqlalchemy import JSON, BigInteger, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 
 
-# Features
+# ============================================================================
+# v1 Feature models (kept for backward compat with existing code imports)
+# ============================================================================
+
 class CourseOrgConfig(BaseModel):
     enabled: bool = True
     limit: int = 10
@@ -71,13 +74,8 @@ class APIOrgConfig(BaseModel):
 
 
 class PodcastsOrgConfig(BaseModel):
-    enabled: bool = False  # Disabled by default, requires standard+ plan
-    limit: int = 10
-
-
-class DocsOrgConfig(BaseModel):
     enabled: bool = False
-    limit: int = 5
+    limit: int = 10
 
 
 class BoardsOrgConfig(BaseModel):
@@ -105,20 +103,97 @@ class OrgFeatureConfig(BaseModel):
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
-    docs: DocsOrgConfig = DocsOrgConfig()
     boards: BoardsOrgConfig = BoardsOrgConfig()
     playgrounds: PlaygroundsOrgConfig = PlaygroundsOrgConfig()
 
 
-# Auth Branding
+# ============================================================================
+# v2 Admin Toggle models
+# ============================================================================
+
+class AIAdminToggle(BaseModel):
+    disabled: bool = False
+    copilot_enabled: bool = True
+
+
+class MembersAdminToggle(BaseModel):
+    disabled: bool = False
+    signup_mode: Literal["open", "inviteOnly"] = "open"
+
+
+class FeatureAdminToggle(BaseModel):
+    disabled: bool = False
+
+
+class AdminToggles(BaseModel):
+    ai: AIAdminToggle = AIAdminToggle()
+    analytics: FeatureAdminToggle = FeatureAdminToggle()
+    api: FeatureAdminToggle = FeatureAdminToggle()
+    boards: FeatureAdminToggle = FeatureAdminToggle()
+    collaboration: FeatureAdminToggle = FeatureAdminToggle()
+    collections: FeatureAdminToggle = FeatureAdminToggle()
+    communities: FeatureAdminToggle = FeatureAdminToggle()
+    members: MembersAdminToggle = MembersAdminToggle()
+    payments: FeatureAdminToggle = FeatureAdminToggle()
+    playgrounds: FeatureAdminToggle = FeatureAdminToggle()
+    podcasts: FeatureAdminToggle = FeatureAdminToggle()
+
+
+# ============================================================================
+# v2 Overrides model
+# ============================================================================
+
+class FeatureOverride(BaseModel):
+    extra_limit: int = 0
+    force_enabled: bool = False
+
+
+class Overrides(BaseModel):
+    note: str = ""
+
+
+# ============================================================================
+# Auth Branding (shared between v1 and v2)
+# ============================================================================
+
 class AuthBrandingConfig(BaseModel):
-    welcome_message: str = ""  # Custom welcome text
+    welcome_message: str = ""
     background_type: Literal["gradient", "custom", "unsplash"] = "gradient"
-    background_image: str = ""  # Filename (custom) or URL (unsplash)
+    background_image: str = ""
     text_color: Literal["light", "dark"] = "light"
 
 
-# General
+# ============================================================================
+# v2 Customization models
+# ============================================================================
+
+class GeneralCustomization(BaseModel):
+    color: str = ""
+    footer_text: str = ""
+    favicon_image: str = ""
+    watermark: bool = True
+
+
+class SeoOrgConfig(BaseModel):
+    default_meta_title_suffix: str = ""
+    default_meta_description: str = ""
+    default_og_image: str = ""
+    google_site_verification: str = ""
+    twitter_handle: str = ""
+    noindex_communities: bool = False
+
+
+class CustomizationConfig(BaseModel):
+    general: GeneralCustomization = GeneralCustomization()
+    auth_branding: AuthBrandingConfig = AuthBrandingConfig()
+    seo: SeoOrgConfig = SeoOrgConfig()
+    landing: dict = Field(default_factory=dict)
+
+
+# ============================================================================
+# v1 General & Cloud (kept for backward compat)
+# ============================================================================
+
 class OrgGeneralConfig(BaseModel):
     enabled: bool = True
     color: str = ""
@@ -128,24 +203,15 @@ class OrgGeneralConfig(BaseModel):
     auth_branding: AuthBrandingConfig = AuthBrandingConfig()
 
 
-# Cloud
 class OrgCloudConfig(BaseModel):
-    plan: Literal["free", "personal", "family", "standard", "pro", "enterprise", "oss"] = "free"
+    plan: Literal["free", "personal", "personal-family", "standard", "pro", "enterprise", "oss"] = "free"
     custom_domain: bool = False
 
 
-# SEO
-class SeoOrgConfig(BaseModel):
-    default_meta_title_suffix: str = ""
-    default_meta_description: str = ""
-    default_og_image: str = ""
-    google_site_verification: str = ""
-    twitter_handle: str = ""
-    noindex_communities: bool = False
-    noindex_docs: bool = False
+# ============================================================================
+# v1 Main Config (kept for backward compat with existing code)
+# ============================================================================
 
-
-# Main Config
 class OrganizationConfigBase(BaseModel):
     config_version: str = "1.4"
     general: OrgGeneralConfig
@@ -154,6 +220,23 @@ class OrganizationConfigBase(BaseModel):
     landing: dict = Field(default_factory=dict)
     seo: SeoOrgConfig = SeoOrgConfig()
 
+
+# ============================================================================
+# v2 Main Config
+# ============================================================================
+
+class OrganizationConfigV2Base(BaseModel):
+    config_version: str = "2.0"
+    active: bool = True
+    plan: str = "free"
+    admin_toggles: AdminToggles = AdminToggles()
+    overrides: dict = Field(default_factory=dict)
+    customization: CustomizationConfig = CustomizationConfig()
+
+
+# ============================================================================
+# SQLModel table (unchanged — config is a JSON blob)
+# ============================================================================
 
 class OrganizationConfig(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

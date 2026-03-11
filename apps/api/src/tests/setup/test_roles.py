@@ -51,7 +51,6 @@ class TestRightsModel:
             "communities": self.get_valid_permission(),
             "discussions": self.get_valid_permission_with_own(),
             "podcasts": self.get_valid_permission_with_own(),
-            "docspaces": self.get_valid_permission_with_own(),
             "boards": self.get_valid_permission_with_own(),
             "playgrounds": self.get_valid_permission_with_own(),
         }
@@ -254,7 +253,6 @@ class TestDefaultRolesValidation:
         "communities",
         "discussions",
         "podcasts",
-        "docspaces",
         "boards",
         "playgrounds",
     ]
@@ -563,7 +561,6 @@ class TestRightsFieldConsistency:
             "communities",
             "discussions",
             "podcasts",
-            "docspaces",
             "boards",
             "playgrounds",
         }
