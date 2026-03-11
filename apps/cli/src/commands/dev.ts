@@ -7,11 +7,51 @@ import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
 
 const PROJECT_NAME = 'learnhouse-dev'
 
+const DEV_COMPOSE = `name: learnhouse-dev
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: learnhouse-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=learnhouse
+      - POSTGRES_PASSWORD=learnhouse
+      - POSTGRES_DB=learnhouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - learnhouse_db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnhouse"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+  redis:
+    image: redis:8.6.1-alpine
+    container_name: learnhouse-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - learnhouse_redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+volumes:
+  learnhouse_db_dev_data:
+  learnhouse_redis_dev_data:
+`
+
 function findProjectRoot(): string | null {
   let dir = process.cwd()
   while (true) {
     if (
-      fs.existsSync(path.join(dir, 'dev', 'docker-compose.yml')) &&
       fs.existsSync(path.join(dir, 'apps', 'api')) &&
       fs.existsSync(path.join(dir, 'apps', 'web'))
     ) {
@@ -21,6 +61,14 @@ function findProjectRoot(): string | null {
     if (parent === dir) return null
     dir = parent
   }
+}
+
+function getDevComposePath(root: string): string {
+  const dotDir = path.join(root, '.learnhouse')
+  if (!fs.existsSync(dotDir)) fs.mkdirSync(dotDir, { recursive: true })
+  const composePath = path.join(dotDir, 'docker-compose.dev.yml')
+  fs.writeFileSync(composePath, DEV_COMPOSE)
+  return composePath
 }
 
 function sleep(ms: number): Promise<void> {
@@ -148,6 +196,8 @@ export async function devCommand() {
   p.intro(pc.cyan('LearnHouse Dev Mode'))
   console.log()
 
+  const composePath = getDevComposePath(root)
+
   // Check if infrastructure is already running
   const alreadyRunning = isInfraRunning()
 
@@ -184,7 +234,7 @@ export async function devCommand() {
     const infraSpinner = p.spinner()
     infraSpinner.start('Starting DB and Redis containers...')
     try {
-      execSync(`docker compose -f dev/docker-compose.yml -p ${PROJECT_NAME} up -d`, {
+      execSync(`docker compose -f ${composePath} -p ${PROJECT_NAME} up -d`, {
         cwd: root,
         stdio: 'pipe',
       })
@@ -290,7 +340,7 @@ export async function devCommand() {
     await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
 
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
-    console.log(pc.dim('To stop them: docker compose -f dev/docker-compose.yml -p learnhouse-dev down'))
+    console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
     console.log(pc.dim('Thanks for building with LearnHouse!'))
     process.exit(0)
   }
