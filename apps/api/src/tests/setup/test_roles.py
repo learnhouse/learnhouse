@@ -189,7 +189,7 @@ class TestRightsModel:
         assert "communities" in dumped
         assert "discussions" in dumped
         assert "podcasts" in dumped
-        assert len(dumped) == 15  # All 15 fields
+        assert len(dumped) == 14  # All 14 fields
 
 
 class TestPermissionModels:

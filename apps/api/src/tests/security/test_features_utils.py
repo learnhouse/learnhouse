@@ -151,6 +151,8 @@ class TestFeaturesUtils:
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class, \
              patch('src.core.deployment_mode.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'), \
              patch('src.security.features_utils.usage._get_actual_usage', return_value=30):
 
             mock_config_instance = Mock()
