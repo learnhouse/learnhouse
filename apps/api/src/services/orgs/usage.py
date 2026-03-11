@@ -8,6 +8,7 @@ from src.security.features_utils.usage import (
     _get_actual_usage,
     _get_actual_admin_seat_count,
     _get_redis_client,
+    get_purchased_member_seats,
 )
 from src.core.deployment_mode import get_deployment_mode
 from src.security.features_utils.plans import (
@@ -91,23 +92,27 @@ async def get_org_usage_and_limits(
             detail="Organization config not found",
         )
 
-    # Get plan from config
-    cloud_config = org_config.config.get("cloud", {})
-    org_plan: PlanLevel = cloud_config.get("plan", "free")
+    from src.security.features_utils.resolve import resolve_feature, _get_plan_from_config
+
+    config = org_config.config or {}
+    org_plan: PlanLevel = _get_plan_from_config(config)
 
     # Determine deployment mode
     mode = get_deployment_mode()
-    unlimited = mode != 'saas'
 
     # Get actual usage counts
     courses_usage = _get_actual_usage("courses", org_id, db_session)
     members_usage = _get_actual_usage("members", org_id, db_session)
     admin_seats_usage = _get_actual_admin_seat_count(org_id, db_session)
 
-    # Get limits from plan (unlimited in EE/OSS modes)
-    courses_limit = 0 if unlimited else get_plan_limit(org_plan, "courses")
-    members_limit = 0 if unlimited else get_plan_limit(org_plan, "members")
-    admin_seats_limit = 0 if unlimited else get_plan_limit(org_plan, "admin_seats")
+    # Get limits via resolve_feature (handles mode, overrides, packs)
+    courses_resolved = resolve_feature("courses", config, org_id)
+    members_resolved = resolve_feature("members", config, org_id)
+    courses_limit = courses_resolved["limit"]
+    members_limit = members_resolved["limit"]
+    members_plan_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "members")
+    members_purchased = 0 if mode != 'saas' else get_purchased_member_seats(org_id)
+    admin_seats_limit = 0 if mode != 'saas' else get_plan_limit(org_plan, "admin_seats")
 
     def calc_remaining(usage: int, limit: int) -> int | str:
         if limit == 0:
@@ -133,6 +138,8 @@ async def get_org_usage_and_limits(
             "members": {
                 "usage": members_usage,
                 "limit": members_limit if members_limit > 0 else "unlimited",
+                "plan_limit": members_plan_limit if members_plan_limit > 0 else "unlimited",
+                "purchased": members_purchased,
                 "remaining": calc_remaining(members_usage, members_limit),
                 "limit_reached": is_limit_reached(members_usage, members_limit),
             },

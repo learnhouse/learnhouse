@@ -38,7 +38,6 @@ const OrgEditSEO: React.FC = () => {
     google_site_verification: seoConfig.google_site_verification || '',
     twitter_handle: seoConfig.twitter_handle || '',
     noindex_communities: seoConfig.noindex_communities || false,
-    noindex_docs: seoConfig.noindex_docs || false,
   }
 
   const sitemapUrl = getCanonicalUrl(org?.slug, '/sitemap.xml')
@@ -335,20 +334,6 @@ const OrgEditSEO: React.FC = () => {
                     checked={values.noindex_communities}
                     onCheckedChange={(checked) =>
                       setFieldValue('noindex_communities', checked)
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Hide Documentation</Label>
-                    <p className="text-sm text-gray-500">
-                      Hide documentation pages from search engines
-                    </p>
-                  </div>
-                  <Switch
-                    checked={values.noindex_docs}
-                    onCheckedChange={(checked) =>
-                      setFieldValue('noindex_docs', checked)
                     }
                   />
                 </div>

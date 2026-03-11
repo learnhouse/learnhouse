@@ -4,14 +4,55 @@ import pc from 'picocolors'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
 import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
+import { checkDevEnv } from '../services/env-check.js'
 
 const PROJECT_NAME = 'learnhouse-dev'
+
+const DEV_COMPOSE = `name: learnhouse-dev
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: learnhouse-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=learnhouse
+      - POSTGRES_PASSWORD=learnhouse
+      - POSTGRES_DB=learnhouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - learnhouse_db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnhouse"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+  redis:
+    image: redis:8.6.1-alpine
+    container_name: learnhouse-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - learnhouse_redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+volumes:
+  learnhouse_db_dev_data:
+  learnhouse_redis_dev_data:
+`
 
 function findProjectRoot(): string | null {
   let dir = process.cwd()
   while (true) {
     if (
-      fs.existsSync(path.join(dir, 'dev', 'docker-compose.yml')) &&
       fs.existsSync(path.join(dir, 'apps', 'api')) &&
       fs.existsSync(path.join(dir, 'apps', 'web'))
     ) {
@@ -21,6 +62,14 @@ function findProjectRoot(): string | null {
     if (parent === dir) return null
     dir = parent
   }
+}
+
+function getDevComposePath(root: string): string {
+  const dotDir = path.join(root, '.learnhouse')
+  if (!fs.existsSync(dotDir)) fs.mkdirSync(dotDir, { recursive: true })
+  const composePath = path.join(dotDir, 'docker-compose.dev.yml')
+  fs.writeFileSync(composePath, DEV_COMPOSE)
+  return composePath
 }
 
 function sleep(ms: number): Promise<void> {
@@ -127,12 +176,40 @@ function killProcess(child: ChildProcess | null): Promise<void> {
   })
 }
 
-export async function devCommand() {
+export async function devCommand(opts: { ee?: boolean }) {
   const root = findProjectRoot()
   if (!root) {
     p.log.error('Not inside a LearnHouse project.')
     p.log.info('Run this command from within the learnhouse monorepo (must contain dev/docker-compose.yml, apps/api/, and apps/web/).')
     process.exit(1)
+  }
+
+  p.intro(pc.cyan('LearnHouse Dev Mode'))
+
+  // Check env files before anything else
+  const envOk = await checkDevEnv(root)
+  if (!envOk) process.exit(1)
+
+  // EE folder management — hide ee/ when --ee is not passed so the API
+  // starts in OSS mode (is_ee_available() checks os.path.exists("ee"))
+  const eePath = path.join(root, 'apps', 'api', 'ee')
+  const eeDisabledPath = path.join(root, 'apps', 'api', '.ee-disabled')
+  let eeWasHidden = false
+
+  // Recover from a previous crash that left .ee-disabled behind
+  if (fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
+    fs.renameSync(eeDisabledPath, eePath)
+  }
+
+  if (!opts.ee && fs.existsSync(eePath)) {
+    fs.renameSync(eePath, eeDisabledPath)
+    eeWasHidden = true
+  } else if (opts.ee) {
+    if (fs.existsSync(eePath)) {
+      p.log.info(`Running in ${pc.bold('EE')} mode`)
+    } else {
+      p.log.warning('--ee was passed but no ee/ folder found — running in OSS mode')
+    }
   }
 
   if (!isDockerInstalled()) {
@@ -144,9 +221,9 @@ export async function devCommand() {
     p.log.error('Docker is not running. Please start Docker and try again.')
     process.exit(1)
   }
-
-  p.intro(pc.cyan('LearnHouse Dev Mode'))
   console.log()
+
+  const composePath = getDevComposePath(root)
 
   // Check if infrastructure is already running
   const alreadyRunning = isInfraRunning()
@@ -184,7 +261,7 @@ export async function devCommand() {
     const infraSpinner = p.spinner()
     infraSpinner.start('Starting DB and Redis containers...')
     try {
-      execSync(`docker compose -f dev/docker-compose.yml -p ${PROJECT_NAME} up -d`, {
+      execSync(`docker compose -f ${composePath} -p ${PROJECT_NAME} up -d`, {
         cwd: root,
         stdio: 'pipe',
       })
@@ -289,8 +366,13 @@ export async function devCommand() {
 
     await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
 
+    // Restore ee/ folder if we hid it
+    if (eeWasHidden && fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
+      fs.renameSync(eeDisabledPath, eePath)
+    }
+
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
-    console.log(pc.dim('To stop them: docker compose -f dev/docker-compose.yml -p learnhouse-dev down'))
+    console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
     console.log(pc.dim('Thanks for building with LearnHouse!'))
     process.exit(0)
   }

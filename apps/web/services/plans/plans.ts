@@ -1,13 +1,13 @@
 /**
- * Plan-based feature restriction utilities for the frontend.
+ * Plan utilities for the frontend.
  *
- * Mirrors the backend plan hierarchy and provides utilities for
- * checking feature availability based on organization plan.
+ * All plan data (feature configs, limits, requirements) lives in the API.
+ * The frontend reads `resolved_features` from the org config returned by the API.
  *
- * Single source of truth:
- *   - Plan access    → DB plan (hierarchy below)
- *   - Deployment mode → learnhouse_mode cookie (set by proxy from backend /instance/info)
- *     'saas': plan-based gating | 'ee': all features | 'oss': EE features blocked
+ * This file only provides:
+ *   - PlanLevel type
+ *   - Plan hierarchy for UI comparisons (plan badges, upgrade prompts)
+ *   - Deployment mode helpers (OSS/EE bypass)
  */
 
 import { getDeploymentMode } from '@services/config/config'
@@ -20,97 +20,6 @@ export const PLAN_HIERARCHY: PlanLevel[] = ['free', 'personal', 'family', 'stand
 
 // Features blocked in OSS mode — require EE or SaaS/enterprise plan
 const OSS_BLOCKED_FEATURES = new Set(['sso', 'audit_logs', 'payments', 'analytics_advanced', 'scorm'])
-
-// Feature to required plan mapping
-export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
-  usergroups: 'personal',
-  ai: 'personal',
-  boards: 'personal',
-  playgrounds: 'pro',
-  payments: 'standard',
-  communities: 'standard',
-  seo: 'standard',
-  versioning: 'standard',
-  podcasts: 'standard',
-  custom_domains: 'pro',
-  analytics: 'standard',
-  certifications: 'pro',
-  docs: 'pro',
-  roles: 'pro',
-  api_tokens: 'pro',
-  analytics_advanced: 'enterprise',
-  course_analytics: 'pro',
-  scorm: 'enterprise',
-  audit_logs: 'enterprise',
-  sso: 'enterprise',
-}
-
-// Plan-based resource limits (0 = unlimited)
-// NOTE: These are fallback values. Always fetch from /orgs/{org_id}/usage API for accurate limits.
-export const PLAN_LIMITS: Record<PlanLevel, Record<string, number>> = {
-  free: {
-    courses: 3,
-    members: 30,
-    admin_seats: 1,
-  },
-  personal: {
-    courses: 0, // Unlimited
-    members: 1,
-    admin_seats: 1,
-  },
-  family: {
-    courses: 0, // Unlimited
-    members: 4,
-    admin_seats: 4,
-  },
-  standard: {
-    courses: 0, // Unlimited
-    members: 500,
-    admin_seats: 2,
-  },
-  pro: {
-    courses: 0, // Unlimited
-    members: 2000,
-    admin_seats: 10,
-  },
-  enterprise: {
-    courses: 0, // Unlimited
-    members: 0, // Unlimited
-    admin_seats: 0, // Unlimited
-  },
-  // 'oss' is a display-only plan value — limits are always unlimited in OSS mode
-  oss: {
-    courses: 0, // Unlimited
-    members: 0, // Unlimited
-    admin_seats: 0, // Unlimited
-  },
-}
-
-/**
- * Get the limit for a specific resource based on plan.
- */
-export function getPlanLimit(plan: PlanLevel, resource: string): number {
-  return PLAN_LIMITS[plan]?.[resource] ?? 0
-}
-
-/**
- * Check if the current usage is at or over the plan limit.
- * Uses the DB plan only — no env var bypass.
- */
-export function isLimitReached(plan: PlanLevel, resource: string, currentUsage: number): boolean {
-  const limit = getPlanLimit(plan, resource)
-  if (limit === 0) return false // 0 = unlimited (includes 'oss' and 'enterprise' plans)
-  return currentUsage >= limit
-}
-
-/**
- * Get remaining quota for a resource.
- */
-export function getRemainingQuota(plan: PlanLevel, resource: string, currentUsage: number): number {
-  const limit = getPlanLimit(plan, resource)
-  if (limit === 0) return -1 // Unlimited
-  return Math.max(0, limit - currentUsage)
-}
 
 /**
  * Check if the current plan meets or exceeds the required plan level.
@@ -127,26 +36,19 @@ export function planMeetsRequirement(
 }
 
 /**
- * Get the required plan level for a specific feature.
- */
-export function getRequiredPlanForFeature(featureKey: string): PlanLevel | undefined {
-  return FEATURE_PLAN_REQUIREMENTS[featureKey]
-}
-
-/**
- * Check if a feature is available for the given plan.
+ * Check if a feature is available based on deployment mode.
  *
- * Uses 3-mode logic:
+ * In SaaS mode, feature availability is determined by `resolved_features`
+ * from the API — this function only handles mode-level bypass:
  * - OSS: EE-only features blocked, all others allowed
  * - EE: all features allowed
- * - SaaS: normal plan hierarchy check
+ * - SaaS: always returns true (callers should check resolved_features)
  */
-export function isFeatureAvailable(featureKey: string, currentPlan: PlanLevel): boolean {
+export function isFeatureAvailable(featureKey: string, _currentPlan?: PlanLevel): boolean {
   const mode = getDeploymentMode()
   if (mode === 'oss') return !OSS_BLOCKED_FEATURES.has(featureKey)
   if (mode === 'ee') return true
-  // SaaS: normal plan check
-  const required = getRequiredPlanForFeature(featureKey)
-  if (!required) return true
-  return planMeetsRequirement(currentPlan, required)
+  // SaaS: resolved_features from the API is the source of truth.
+  // Return true here — callers gate on resolved_features separately.
+  return true
 }

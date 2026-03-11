@@ -3,9 +3,10 @@ import React from 'react'
 import { PenLine, Sparkles, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
 import Image from 'next/image'
 import lrnaiIcon from 'public/lrnai_icon.png'
+import { useOrg } from '@components/Contexts/OrgContext'
 
 interface CourseCreationTypeSelectorProps {
   onSelectType: (type: 'scratch' | 'ai') => void
@@ -14,7 +15,9 @@ interface CourseCreationTypeSelectorProps {
 
 function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreationTypeSelectorProps) {
   const { t } = useTranslation()
-  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
+  const org = useOrg() as any
+  const rf = org?.config?.config?.resolved_features
+  const canUseAI = rf?.ai?.enabled === true
 
   return (
     <div className="min-w-[450px] py-2">
@@ -66,7 +69,7 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
             <h3 className={`font-semibold ${canUseAI ? 'text-gray-900' : 'text-gray-500'}`}>
               {t('courses.create.with_ai')}
             </h3>
-            <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
+            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.ai?.required_plan || 'standard') as PlanLevel} size="sm" />
           </div>
           <p className={`text-sm text-center ${canUseAI ? 'text-gray-500' : 'text-gray-400'}`}>
             {t('courses.create.with_ai_description')}

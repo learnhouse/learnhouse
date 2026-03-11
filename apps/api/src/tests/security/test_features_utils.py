@@ -10,6 +10,15 @@ from src.security.features_utils.usage import (
 from src.db.organization_config import OrganizationConfig
 
 
+def _make_saas_patches():
+    """Return common patches for SaaS mode tests."""
+    return [
+        patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'),
+        patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'),
+        patch('src.security.features_utils.plans.get_deployment_mode', return_value='saas'),
+    ]
+
+
 class TestFeaturesUtils:
     """Test cases for features_utils/usage.py module"""
 
@@ -20,23 +29,15 @@ class TestFeaturesUtils:
 
     @pytest.fixture
     def mock_org_config(self):
-        """Create a mock organization config"""
+        """Create a mock organization config with v2 format and standard plan."""
         config = Mock(spec=OrganizationConfig)
         config.org_id = 1
         config.config = {
-            "features": {
-                "ai": {"enabled": True, "limit": 100},
-                "analytics": {"enabled": True, "limit": 50},
-                "api": {"enabled": True, "limit": 0},  # Unlimited
-                "assignments": {"enabled": True, "limit": 25},
-                "collaboration": {"enabled": True, "limit": 10},
-                "courses": {"enabled": True, "limit": 5},
-                "discussions": {"enabled": True, "limit": 20},
-                "members": {"enabled": True, "limit": 100},
-                "payments": {"enabled": True, "limit": 0},  # Unlimited
-                "storage": {"enabled": True, "limit": 1000},
-                "usergroups": {"enabled": True, "limit": 15},
-            }
+            "config_version": "2.0",
+            "plan": "standard",
+            "admin_toggles": {},
+            "overrides": {},
+            "customization": {},
         }
         return config
 
@@ -52,183 +53,177 @@ class TestFeaturesUtils:
         """Test that FeatureSet type alias includes all expected features"""
         expected_features = [
             "ai", "analytics", "api", "assignments", "collaboration",
-            "courses", "discussions", "members", "payments", "storage", "usergroups"
+            "courses", "members", "payments", "storage", "usergroups"
         ]
-        
-        # This test verifies that the FeatureSet type alias is properly defined
-        # by checking that all expected features are valid
         for feature in expected_features:
-            # Type checking is handled by the type system, so we just verify the features exist
             assert feature in ["ai", "analytics", "api", "assignments", "collaboration",
-                             "courses", "discussions", "members", "payments", "storage", "usergroups"]
+                             "courses", "members", "payments", "storage", "usergroups"]
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_success(self, mock_db_session, mock_org_config):
-        """Test successful feature limit check"""
-        with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
+        """Test successful feature limit check (EE mode — all features enabled & unlimited)"""
+        with patch('src.security.features_utils.resolve.get_deployment_mode', return_value='ee'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='ee'), \
+             patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"5"  # Current usage
+            mock_redis.get.return_value = b"5"
             mock_redis_class.return_value = mock_redis
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
             result = check_limits_with_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
+            # In EE mode, limit=0 (unlimited) so returns True immediately
             assert result is True
-            mock_redis.get.assert_called_once_with("ai_usage:1")
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_feature_disabled(self, mock_db_session, mock_org_config):
-        """Test feature limit check when feature is disabled"""
-        # Disable the feature
-        mock_org_config.config["features"]["ai"]["enabled"] = False
-        
-        # Mock database query
-        mock_db_session.exec.return_value.first.return_value = mock_org_config
-        
-        with pytest.raises(HTTPException) as exc_info:
-            check_limits_with_usage(
-                feature="ai",
-                org_id=1,
-                db_session=mock_db_session
-            )
-        
-        assert exc_info.value.status_code == 403
-        assert "Ai is not enabled for this organization" in exc_info.value.detail
+        """Test feature limit check when feature is disabled via admin toggle"""
+        mock_org_config.config["admin_toggles"]["ai"] = {"disabled": True}
+
+        with patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'):
+            mock_db_session.exec.return_value.first.return_value = mock_org_config
+
+            with pytest.raises(HTTPException) as exc_info:
+                check_limits_with_usage(
+                    feature="ai",
+                    org_id=1,
+                    db_session=mock_db_session
+                )
+
+            assert exc_info.value.status_code == 403
+            assert "Ai is not enabled for this organization" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_no_org_config(self, mock_db_session):
         """Test feature limit check when organization has no config"""
-        # Mock database query to return None
         mock_db_session.exec.return_value.first.return_value = None
-        
+
         with pytest.raises(HTTPException) as exc_info:
             check_limits_with_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-        
+
         assert exc_info.value.status_code == 404
         assert "Organization has no config" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_no_redis_connection(self, mock_db_session, mock_org_config):
         """Test feature limit check when Redis connection is not available"""
-        with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config:
-            # Mock config with no Redis connection
+        with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
+             patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'):
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = None
             mock_config.return_value = mock_config_instance
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
             with pytest.raises(HTTPException) as exc_info:
                 check_limits_with_usage(
                     feature="ai",
                     org_id=1,
                     db_session=mock_db_session
                 )
-            
+
             assert exc_info.value.status_code == 500
             assert "Redis connection string not found" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_limit_reached(self, mock_db_session, mock_org_config):
         """Test feature limit check when limit is reached"""
+        # Use free plan so overage is not allowed
+        mock_org_config.config["plan"] = "free"
+
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
-             patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+             patch('redis.Redis.from_url') as mock_redis_class, \
+             patch('src.core.deployment_mode.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage._get_actual_usage', return_value=30):
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis with usage at limit
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"100"  # At limit
+            mock_redis.get.return_value = None  # No purchased extras
             mock_redis_class.return_value = mock_redis
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
+            # Free plan has members limit=30, mock usage=30 → limit reached
             with pytest.raises(HTTPException) as exc_info:
                 check_limits_with_usage(
-                    feature="ai",
+                    feature="members",
                     org_id=1,
                     db_session=mock_db_session
                 )
-            
+
             assert exc_info.value.status_code == 403
-            assert "Usage Limit has been reached for Ai" in exc_info.value.detail
+            assert "Usage Limit has been reached for Members" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_unlimited_feature(self, mock_db_session, mock_org_config):
         """Test feature limit check for unlimited feature (limit = 0)"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
-             patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+             patch('redis.Redis.from_url') as mock_redis_class, \
+             patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'):
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"1000"  # High usage
+            mock_redis.get.return_value = b"1000"
             mock_redis_class.return_value = mock_redis
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
             result = check_limits_with_usage(
-                feature="api",  # Unlimited feature
+                feature="analytics",  # Unlimited (limit=0) on standard plan
                 org_id=1,
                 db_session=mock_db_session
             )
-            
-            # For unlimited features (limit=0), the function returns True or None
-            assert result is True or result is None
+
+            assert result is True
 
     @pytest.mark.asyncio
     async def test_check_limits_with_usage_no_previous_usage(self, mock_db_session, mock_org_config):
         """Test feature limit check when no previous usage exists"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
-             patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+             patch('redis.Redis.from_url') as mock_redis_class, \
+             patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'):
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis with no previous usage
+
             mock_redis = Mock()
-            mock_redis.get.return_value = None
+            mock_redis.get.return_value = None  # No usage
             mock_redis_class.return_value = mock_redis
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
             result = check_limits_with_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
             assert result is True
 
     @pytest.mark.asyncio
@@ -236,24 +231,22 @@ class TestFeaturesUtils:
         """Test successful feature usage increase"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"5"  # Current usage
+            mock_redis.get.return_value = b"5"
             mock_redis.set.return_value = True
             mock_redis_class.return_value = mock_redis
-            
+
             result = increase_feature_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
             assert result is True
             mock_redis.get.assert_called_once_with("ai_usage:1")
             mock_redis.set.assert_called_once_with("ai_usage:1", 6)
@@ -263,24 +256,22 @@ class TestFeaturesUtils:
         """Test feature usage increase when no previous usage exists"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis with no previous usage
+
             mock_redis = Mock()
             mock_redis.get.return_value = None
             mock_redis.set.return_value = True
             mock_redis_class.return_value = mock_redis
-            
+
             result = increase_feature_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
             assert result is True
             mock_redis.set.assert_called_once_with("ai_usage:1", 1)
 
@@ -289,24 +280,22 @@ class TestFeaturesUtils:
         """Test successful feature usage decrease"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"5"  # Current usage
+            mock_redis.get.return_value = b"5"
             mock_redis.set.return_value = True
             mock_redis_class.return_value = mock_redis
-            
+
             result = decrease_feature_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
             assert result is True
             mock_redis.get.assert_called_once_with("ai_usage:1")
             mock_redis.set.assert_called_once_with("ai_usage:1", 4)
@@ -316,59 +305,54 @@ class TestFeaturesUtils:
         """Test feature usage decrease when no previous usage exists"""
         with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis with no previous usage
+
             mock_redis = Mock()
             mock_redis.get.return_value = None
             mock_redis.set.return_value = True
             mock_redis_class.return_value = mock_redis
-            
+
             result = decrease_feature_usage(
                 feature="ai",
                 org_id=1,
                 db_session=mock_db_session
             )
-            
+
             assert result is True
-            # Usage should not go below 0
             mock_redis.set.assert_called_once_with("ai_usage:1", 0)
 
     @pytest.mark.asyncio
     async def test_all_features_covered(self, mock_db_session, mock_org_config):
-        """Test that all features in FeatureSet are covered"""
+        """Test that all features in FeatureSet are covered (EE mode — all enabled)"""
         features = [
             "ai", "analytics", "api", "assignments", "collaboration",
-            "courses", "discussions", "members", "payments", "storage", "usergroups"
+            "courses", "members", "payments", "storage", "usergroups"
         ]
-        
-        with patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
+
+        with patch('src.security.features_utils.resolve.get_deployment_mode', return_value='ee'), \
+             patch('src.security.features_utils.usage.get_deployment_mode', return_value='ee'), \
+             patch('src.security.features_utils.usage.get_learnhouse_config') as mock_config, \
              patch('redis.Redis.from_url') as mock_redis_class:
-            
-            # Mock config
+
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
             mock_config.return_value = mock_config_instance
-            
-            # Mock Redis
+
             mock_redis = Mock()
-            mock_redis.get.return_value = b"0"  # No usage
+            mock_redis.get.return_value = b"0"
             mock_redis.set.return_value = True
             mock_redis_class.return_value = mock_redis
-            
-            # Mock database query
+
             mock_db_session.exec.return_value.first.return_value = mock_org_config
-            
+
             for feature in features:
-                # Test that each feature can be processed without errors
                 result = check_limits_with_usage(
                     feature=feature,  # type: ignore
                     org_id=1,
                     db_session=mock_db_session
                 )
-                # For enabled features, result should be True or None (for unlimited)
-                assert result is True or result is None 
+                # In EE mode, all features are enabled and unlimited
+                assert result is True

@@ -681,18 +681,6 @@ class ResourceAccessChecker:
             parent = self.db_session.exec(statement).first()
             return parent.collection_uuid if parent else None
 
-        elif parent_config.resource_type == "docspaces":
-            from src.db.docs.docspaces import DocSpace
-            statement = select(DocSpace).where(DocSpace.id == parent_id)
-            parent = self.db_session.exec(statement).first()
-            return parent.docspace_uuid if parent else None
-
-        elif parent_config.resource_type == "docsections":
-            from src.db.docs.docsections import DocSection
-            statement = select(DocSection).where(DocSection.id == parent_id)
-            parent = self.db_session.exec(statement).first()
-            return parent.docsection_uuid if parent else None
-
         return None
 
     async def _is_public_and_published(
@@ -825,26 +813,6 @@ class ResourceAccessChecker:
         elif config.resource_type == "discussions":
             from src.db.communities.discussions import Discussion
             statement = select(Discussion).where(Discussion.discussion_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
-
-        elif config.resource_type == "docspaces":
-            from src.db.docs.docspaces import DocSpace
-            statement = select(DocSpace).where(DocSpace.docspace_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
-
-        elif config.resource_type == "docsections":
-            from src.db.docs.docsections import DocSection
-            statement = select(DocSection).where(DocSection.docsection_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
-
-        elif config.resource_type == "docgroups":
-            from src.db.docs.docgroups import DocGroup
-            statement = select(DocGroup).where(DocGroup.docgroup_uuid == resource_uuid)
-            resource = self.db_session.exec(statement).first()
-
-        elif config.resource_type == "docpages":
-            from src.db.docs.docpages import DocPage
-            statement = select(DocPage).where(DocPage.docpage_uuid == resource_uuid)
             resource = self.db_session.exec(statement).first()
 
         self._resource_cache[resource_uuid] = resource

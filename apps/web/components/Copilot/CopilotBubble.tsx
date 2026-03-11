@@ -54,9 +54,11 @@ interface CopilotBubbleProps {
 
 export default function CopilotBubble(props: CopilotBubbleProps) {
   const org = useOrg() as any
-  const isCopilotEnabled =
-    org?.config?.config?.features?.ai?.enabled !== false &&
-    org?.config?.config?.features?.ai?.copilot_enabled !== false
+  const config = org?.config?.config
+  const isV2 = config?.config_version?.startsWith('2')
+  const isCopilotEnabled = isV2
+    ? (config?.resolved_features?.ai?.enabled !== false && config?.admin_toggles?.ai?.copilot_enabled !== false)
+    : (config?.features?.ai?.enabled !== false && config?.features?.ai?.copilot_enabled !== false)
 
   if (!isCopilotEnabled) return null
 

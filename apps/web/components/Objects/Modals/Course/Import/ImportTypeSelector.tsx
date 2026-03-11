@@ -3,7 +3,8 @@ import React from 'react'
 import { FileArchive, GraduationCap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { PlanLevel } from '@services/plans/plans'
+import { useOrg } from '@components/Contexts/OrgContext'
 
 interface ImportTypeSelectorProps {
   onSelectType: (type: 'scorm' | 'learnhouse') => void
@@ -12,7 +13,9 @@ interface ImportTypeSelectorProps {
 
 function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorProps) {
   const { t } = useTranslation()
-  const canUseScorm = planMeetsRequirement(currentPlan, 'enterprise')
+  const org = useOrg() as any
+  const rf = org?.config?.config?.resolved_features
+  const canUseScorm = rf?.scorm?.enabled === true
 
   return (
     <div className="min-w-[400px] py-2">
@@ -38,7 +41,7 @@ function ImportTypeSelector({ onSelectType, currentPlan }: ImportTypeSelectorPro
             <h3 className={`font-semibold ${canUseScorm ? 'text-gray-900' : 'text-gray-500'}`}>
               {t('courses.import.scorm_package')}
             </h3>
-            <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" size="sm" />
+            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.scorm?.required_plan || 'enterprise') as PlanLevel} size="sm" />
           </div>
           <p className={`text-sm text-center ${canUseScorm ? 'text-gray-500' : 'text-gray-400'}`}>
             {t('courses.import.scorm_description')}

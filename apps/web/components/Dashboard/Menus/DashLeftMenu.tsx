@@ -69,7 +69,6 @@ import { cn } from '@/lib/utils'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
-import {  isFeatureAvailable } from '@services/plans/plans'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -167,21 +166,21 @@ function DashLeftMenu() {
   if (!org || !session) return null
 
   const plan = usePlan()
-  const rawPlan = org?.config?.config?.cloud?.plan || 'free'
   const mode = getDeploymentMode()
   const planLabel =
     mode === 'ee' ? 'Enterprise Edition' :
     mode === 'oss' ? 'OSS' :
     plan  // SaaS: show actual plan name
 
-  // Feature visibility: enabled by org AND allowed by plan
-  const showCommunities = org?.config?.config?.features?.communities?.enabled !== false && isFeatureAvailable('communities', plan)
-  const showPodcasts = org?.config?.config?.features?.podcasts?.enabled === true && isFeatureAvailable('podcasts', plan)
-  const showDocs = org?.config?.config?.features?.docs?.enabled === true && isFeatureAvailable('docs', plan)
-  const showBoards = org?.config?.config?.features?.boards?.enabled === true && isFeatureAvailable('boards', plan)
-  const showPlaygrounds = org?.config?.config?.features?.playgrounds?.enabled === true && isFeatureAvailable('playgrounds', plan)
-  // Payments and SSO require EE package to be installed
-  const showPayments = org?.config?.config?.features?.payments?.enabled !== false && isFeatureAvailable('payments', plan)
+  // Feature visibility from API resolved_features
+  const rf = org?.config?.config?.resolved_features
+  const isEnabled = (feature: string) => rf?.[feature]?.enabled === true
+
+  const showCommunities = isEnabled('communities')
+  const showPodcasts = isEnabled('podcasts')
+  const showBoards = isEnabled('boards')
+  const showPlaygrounds = isEnabled('playgrounds')
+  const showPayments = isEnabled('payments')
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -375,14 +374,6 @@ function DashLeftMenu() {
                 href="/dash/podcasts"
                 icon={<Headphones size={20} weight="fill" />}
                 label={t('podcasts.podcasts')}
-                isCollapsed={isCollapsed}
-              />
-            )}
-            {showDocs && (
-              <MenuLink
-                href="/dash/docs"
-                icon={<Book size={20} weight="fill" />}
-                label="Documentation"
                 isCollapsed={isCollapsed}
               />
             )}
@@ -610,7 +601,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
-            {(!showCommunities || !showPodcasts || !showDocs || !showBoards || !showPlaygrounds || !showPayments) && (
+            {(!showCommunities || !showPodcasts || !showBoards || !showPlaygrounds || !showPayments) && (
               <HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
@@ -634,14 +625,6 @@ function DashLeftMenu() {
                         <Link href="/dash/podcasts" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
                           <Headphones size={16} weight="fill" />
                           <span>{t('podcasts.podcasts')}</span>
-                        </Link>
-                      </HoverMenuItem>
-                    )}
-                    {!showDocs && (
-                      <HoverMenuItem asChild>
-                        <Link href="/dash/docs" className="flex items-center gap-2 px-3 py-2 text-sm text-white/30 hover:text-white/50 hover:bg-white/[0.05] cursor-pointer transition-colors">
-                          <Book size={16} weight="fill" />
-                          <span>Documentation</span>
                         </Link>
                       </HoverMenuItem>
                     )}

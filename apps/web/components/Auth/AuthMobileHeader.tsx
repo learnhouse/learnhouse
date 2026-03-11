@@ -11,7 +11,7 @@ interface AuthMobileHeaderProps {
 }
 
 export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
-  const authBranding = org?.config?.config?.general?.auth_branding || {}
+  const authBranding = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
   const {
     background_type = 'gradient',
     background_image = '',

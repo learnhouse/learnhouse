@@ -11,7 +11,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy, FileText } from 'lucide-react'
+import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones } from 'lucide-react'
 import { ChalkboardSimple, Cube } from '@phosphor-icons/react'
 import { usePlan } from '@components/Hooks/usePlan'
 
@@ -22,11 +22,10 @@ interface FeatureToggleProps {
   enabled: boolean
   isUpdating: boolean
   canEdit: boolean
-  requiredPlan: PlanLevel
+  requiredPlan?: string | null
   currentPlan: PlanLevel
   icon: React.ReactNode
   onToggle: (enabled: boolean) => void
-  upgradeMessage?: string
 }
 
 const FeatureToggle: React.FC<FeatureToggleProps> = ({
@@ -40,9 +39,9 @@ const FeatureToggle: React.FC<FeatureToggleProps> = ({
   currentPlan,
   icon,
   onToggle,
-  upgradeMessage,
 }) => {
-  const planAllowed = planMeetsRequirement(currentPlan, requiredPlan)
+  const { t } = useTranslation()
+  const planAllowed = !requiredPlan || planMeetsRequirement(currentPlan, requiredPlan as PlanLevel)
   const isDisabled = isUpdating || !canEdit || !planAllowed
 
   return (
@@ -54,16 +53,18 @@ const FeatureToggle: React.FC<FeatureToggleProps> = ({
         <div className="space-y-0.5">
           <div className="flex items-center">
             <h4 className="text-base font-medium text-gray-800">{title}</h4>
-            <PlanBadge
-              currentPlan={currentPlan}
-              requiredPlan={requiredPlan}
-            />
+            {requiredPlan && (
+              <PlanBadge
+                currentPlan={currentPlan}
+                requiredPlan={requiredPlan as PlanLevel}
+              />
+            )}
           </div>
           <p className="text-sm text-gray-500">{description}</p>
-          {!planAllowed && upgradeMessage && (
+          {!planAllowed && requiredPlan && (
             <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
               <Lock size={10} />
-              {upgradeMessage}
+              {t('dashboard.organization.features.upgrade_notice', { plan: requiredPlan })}
             </p>
           )}
         </div>
@@ -86,60 +87,32 @@ const OrgEditFeatures: React.FC = () => {
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
 
+  // resolved_features from the API (source of truth for enabled state + required_plan)
+  const rf = org?.config?.config?.resolved_features
+
   // Feature states
-  const [coursesEnabled, setCoursesEnabled] = useState<boolean>(true)
+  const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
   const [communitiesEnabled, setCommunitiesEnabled] = useState<boolean>(true)
   const [paymentsEnabled, setPaymentsEnabled] = useState<boolean>(false)
-  const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
   const [podcastsEnabled, setPodcastsEnabled] = useState<boolean>(false)
-  const [docsEnabled, setDocsEnabled] = useState<boolean>(false)
   const [boardsEnabled, setBoardsEnabled] = useState<boolean>(false)
   const [playgroundsEnabled, setPlaygroundsEnabled] = useState<boolean>(false)
 
   // Loading states
   const [updatingFeature, setUpdatingFeature] = useState<string | null>(null)
 
-  // Initialize feature states from org config
+  // Initialize feature states from resolved_features
   useEffect(() => {
-    if (org?.config?.config?.features) {
-      const features = org.config.config.features
-
-      // Courses - default to true for backward compatibility
-      const coursEnabled = features.courses?.enabled
-      setCoursesEnabled(coursEnabled !== undefined ? coursEnabled : true)
-
-      // Communities - default to true for backward compatibility
-      const commEnabled = features.communities?.enabled
-      setCommunitiesEnabled(commEnabled !== undefined ? commEnabled : true)
-
-      // Payments
-      const payEnabled = features.payments?.enabled
-      setPaymentsEnabled(payEnabled !== undefined ? payEnabled : false)
-
-      // Collections - default to true
-      const collEnabled = features.collections?.enabled
-      setCollectionsEnabled(collEnabled !== undefined ? collEnabled : true)
-
-      // Podcasts - default to false (disabled by default)
-      const podEnabled = features.podcasts?.enabled
-      setPodcastsEnabled(podEnabled !== undefined ? podEnabled : false)
-
-      // Docs - default to false (disabled by default)
-      const docEnabled = features.docs?.enabled
-      setDocsEnabled(docEnabled !== undefined ? docEnabled : false)
-
-      // Boards - default to false (disabled by default)
-      const brdEnabled = features.boards?.enabled
-      setBoardsEnabled(brdEnabled !== undefined ? brdEnabled : false)
-
-      // Playgrounds - default to false (disabled by default)
-      const pgEnabled = features.playgrounds?.enabled
-      setPlaygroundsEnabled(pgEnabled !== undefined ? pgEnabled : false)
-    }
-  }, [org])
+    if (!rf) return
+    setCollectionsEnabled(rf.collections?.enabled ?? true)
+    setCommunitiesEnabled(rf.communities?.enabled ?? false)
+    setPaymentsEnabled(rf.payments?.enabled ?? false)
+    setPodcastsEnabled(rf.podcasts?.enabled ?? false)
+    setBoardsEnabled(rf.boards?.enabled ?? false)
+    setPlaygroundsEnabled(rf.playgrounds?.enabled ?? false)
+  }, [rf])
 
   const updateFeatureConfig = async (feature: string, enabled: boolean) => {
-    // Early check for admin status
     if (!canEditOrgSettings) {
       toast.error(t('dashboard.organization.features.toasts.admin_only'))
       return false
@@ -190,60 +163,34 @@ const OrgEditFeatures: React.FC = () => {
     }
   }
 
-  const handleCoursesToggle = async (enabled: boolean) => {
-    const success = await updateFeatureConfig('courses', enabled)
-    if (success) {
-      setCoursesEnabled(enabled)
-    }
+  const handleCollectionsToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('collections', enabled)
+    if (success) setCollectionsEnabled(enabled)
   }
 
   const handleCommunitiesToggle = async (enabled: boolean) => {
     const success = await updateFeatureConfig('communities', enabled)
-    if (success) {
-      setCommunitiesEnabled(enabled)
-    }
+    if (success) setCommunitiesEnabled(enabled)
   }
 
   const handlePaymentsToggle = async (enabled: boolean) => {
     const success = await updateFeatureConfig('payments', enabled)
-    if (success) {
-      setPaymentsEnabled(enabled)
-    }
-  }
-
-  const handleCollectionsToggle = async (enabled: boolean) => {
-    const success = await updateFeatureConfig('collections', enabled)
-    if (success) {
-      setCollectionsEnabled(enabled)
-    }
+    if (success) setPaymentsEnabled(enabled)
   }
 
   const handlePodcastsToggle = async (enabled: boolean) => {
     const success = await updateFeatureConfig('podcasts', enabled)
-    if (success) {
-      setPodcastsEnabled(enabled)
-    }
-  }
-
-  const handleDocsToggle = async (enabled: boolean) => {
-    const success = await updateFeatureConfig('docs', enabled)
-    if (success) {
-      setDocsEnabled(enabled)
-    }
+    if (success) setPodcastsEnabled(enabled)
   }
 
   const handleBoardsToggle = async (enabled: boolean) => {
     const success = await updateFeatureConfig('boards', enabled)
-    if (success) {
-      setBoardsEnabled(enabled)
-    }
+    if (success) setBoardsEnabled(enabled)
   }
 
   const handlePlaygroundsToggle = async (enabled: boolean) => {
     const success = await updateFeatureConfig('playgrounds', enabled)
-    if (success) {
-      setPlaygroundsEnabled(enabled)
-    }
+    if (success) setPlaygroundsEnabled(enabled)
   }
 
   return (
@@ -273,19 +220,18 @@ const OrgEditFeatures: React.FC = () => {
             </div>
           )}
 
-          {/* Courses Toggle */}
+          {/* Collections Toggle */}
           <FeatureToggle
-            id="courses"
-            title={t('dashboard.organization.features.toggles.courses.title')}
-            description={t('dashboard.organization.features.toggles.courses.description')}
-            enabled={coursesEnabled}
-            isUpdating={updatingFeature === 'courses'}
+            id="collections"
+            title={t('dashboard.organization.features.toggles.collections.title')}
+            description={t('dashboard.organization.features.toggles.collections.description')}
+            enabled={collectionsEnabled}
+            isUpdating={updatingFeature === 'collections'}
             canEdit={canEditOrgSettings}
-            requiredPlan="free"
+            requiredPlan={rf?.collections?.required_plan}
             currentPlan={currentPlan}
-            icon={<BookCopy size={20} className="text-gray-600" />}
-            onToggle={handleCoursesToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'free' })}
+            icon={<FolderOpen size={20} className="text-gray-600" />}
+            onToggle={handleCollectionsToggle}
           />
 
           {/* Communities Toggle */}
@@ -296,11 +242,10 @@ const OrgEditFeatures: React.FC = () => {
             enabled={communitiesEnabled}
             isUpdating={updatingFeature === 'communities'}
             canEdit={canEditOrgSettings}
-            requiredPlan="standard"
+            requiredPlan={rf?.communities?.required_plan}
             currentPlan={currentPlan}
             icon={<Users size={20} className="text-gray-600" />}
             onToggle={handleCommunitiesToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'standard' })}
           />
 
           {/* Payments Toggle */}
@@ -311,26 +256,10 @@ const OrgEditFeatures: React.FC = () => {
             enabled={paymentsEnabled}
             isUpdating={updatingFeature === 'payments'}
             canEdit={canEditOrgSettings}
-            requiredPlan="standard"
+            requiredPlan={rf?.payments?.required_plan}
             currentPlan={currentPlan}
             icon={<CreditCard size={20} className="text-gray-600" />}
             onToggle={handlePaymentsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'standard' })}
-          />
-
-          {/* Collections Toggle */}
-          <FeatureToggle
-            id="collections"
-            title={t('dashboard.organization.features.toggles.collections.title')}
-            description={t('dashboard.organization.features.toggles.collections.description')}
-            enabled={collectionsEnabled}
-            isUpdating={updatingFeature === 'collections'}
-            canEdit={canEditOrgSettings}
-            requiredPlan="free"
-            currentPlan={currentPlan}
-            icon={<FolderOpen size={20} className="text-gray-600" />}
-            onToggle={handleCollectionsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'free' })}
           />
 
           {/* Podcasts Toggle */}
@@ -341,26 +270,10 @@ const OrgEditFeatures: React.FC = () => {
             enabled={podcastsEnabled}
             isUpdating={updatingFeature === 'podcasts'}
             canEdit={canEditOrgSettings}
-            requiredPlan="standard"
+            requiredPlan={rf?.podcasts?.required_plan}
             currentPlan={currentPlan}
             icon={<Headphones size={20} className="text-gray-600" />}
             onToggle={handlePodcastsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'standard' })}
-          />
-
-          {/* Documentation Toggle */}
-          <FeatureToggle
-            id="docs"
-            title="Documentation"
-            description="Create documentation spaces with sections, groups, and pages"
-            enabled={docsEnabled}
-            isUpdating={updatingFeature === 'docs'}
-            canEdit={canEditOrgSettings}
-            requiredPlan="pro"
-            currentPlan={currentPlan}
-            icon={<FileText size={20} className="text-gray-600" />}
-            onToggle={handleDocsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
 
           {/* Boards Toggle */}
@@ -371,11 +284,10 @@ const OrgEditFeatures: React.FC = () => {
             enabled={boardsEnabled}
             isUpdating={updatingFeature === 'boards'}
             canEdit={canEditOrgSettings}
-            requiredPlan="pro"
+            requiredPlan={rf?.boards?.required_plan}
             currentPlan={currentPlan}
             icon={<ChalkboardSimple size={20} className="text-gray-600" />}
             onToggle={handleBoardsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
 
           {/* Playgrounds Toggle */}
@@ -386,11 +298,10 @@ const OrgEditFeatures: React.FC = () => {
             enabled={playgroundsEnabled}
             isUpdating={updatingFeature === 'playgrounds'}
             canEdit={canEditOrgSettings}
-            requiredPlan="pro"
+            requiredPlan={rf?.playgrounds?.required_plan}
             currentPlan={currentPlan}
             icon={<Cube size={20} className="text-gray-600" />}
             onToggle={handlePlaygroundsToggle}
-            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'pro' })}
           />
         </div>
       </div>

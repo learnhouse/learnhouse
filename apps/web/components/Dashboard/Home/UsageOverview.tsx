@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Chalkboard,
   ChatCircle,
-  FileText,
   Microphone,
   ArrowRight,
   Lightning,
@@ -104,13 +103,6 @@ export default function UsageOverview() {
       icon: ChatCircle,
       enabled: orgFeatures?.communities?.enabled !== false,
       href: '/dash/communities',
-    },
-    {
-      key: 'docs',
-      label: 'Docs',
-      icon: FileText,
-      enabled: orgFeatures?.docs?.enabled === true,
-      href: '/dash/docs',
     },
     {
       key: 'podcasts',

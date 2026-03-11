@@ -3,7 +3,6 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgCollections } from '@services/courses/collections'
 import { getOrgPodcasts } from '@services/podcasts/podcasts'
 import { getCommunities } from '@services/communities/communities'
-import { getOrgDocSpaces } from '@services/docs/docspaces'
 import { NextRequest, NextResponse } from 'next/server'
 
 function getBaseUrlFromRequest(request: NextRequest): string {
@@ -45,7 +44,6 @@ export async function GET(request: NextRequest) {
         { loc: `${baseUrl}collections`, priority: 0.9, changefreq: 'weekly' },
         { loc: `${baseUrl}podcasts`, priority: 0.9, changefreq: 'weekly' },
         { loc: `${baseUrl}communities`, priority: 0.9, changefreq: 'weekly' },
-        { loc: `${baseUrl}docs`, priority: 0.9, changefreq: 'weekly' },
       ]
       break
     }
@@ -129,18 +127,6 @@ export async function GET(request: NextRequest) {
       }
       break
     }
-    case 'docs': {
-      const docspaces = await getOrgDocSpaces(orgSlug, null).catch(() => [])
-      for (const space of docspaces) {
-        sitemapUrls.push({
-          loc: `${baseUrl}docs/${space.slug}`,
-          priority: 0.7,
-          changefreq: 'weekly',
-          lastmod: space.update_date,
-        })
-      }
-      break
-    }
     default: {
       return NextResponse.json({ error: 'Invalid sitemap type' }, { status: 400 })
     }
@@ -159,7 +145,7 @@ interface SitemapUrl {
   lastmod?: string
 }
 
-const SITEMAP_TYPES = ['pages', 'courses', 'activities', 'collections', 'podcasts', 'communities', 'docs']
+const SITEMAP_TYPES = ['pages', 'courses', 'activities', 'collections', 'podcasts', 'communities']
 
 function generateSitemapIndex(baseUrl: string): string {
   const sitemaps = SITEMAP_TYPES.map(type => `

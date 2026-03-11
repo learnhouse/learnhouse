@@ -33,9 +33,12 @@ function SignUpClient(props: SignUpClientProps) {
 
   useEffect(() => {
     if (props.org.config) {
-      setJoinMethod(
-        props.org?.config?.config?.features.members.signup_mode
-      )
+      const config = props.org?.config?.config
+      const isV2 = config?.config_version?.startsWith('2')
+      const signupMode = isV2
+        ? config?.admin_toggles?.members?.signup_mode
+        : config?.features?.members?.signup_mode
+      setJoinMethod(signupMode || 'open')
     }
     if (inviteCodeParam) {
       setInviteCode(inviteCodeParam)

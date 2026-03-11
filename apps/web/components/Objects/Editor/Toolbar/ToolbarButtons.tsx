@@ -42,9 +42,7 @@ import Image from 'next/image'
 import LinkInputTooltip from './LinkInputTooltip'
 import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import { useTranslation } from 'react-i18next'
-import { usePlan } from '@components/Hooks/usePlan'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const { t } = useTranslation()
@@ -54,10 +52,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
-  // Get current plan for AI feature restrictions
+  // Get AI feature from resolved_features
   const orgContext = useOrg() as any
-  const currentPlan = usePlan()
-  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
+  const rf = orgContext?.config?.config?.resolved_features
+  const canUseAI = rf?.ai?.enabled === true
 
   if (!editor) {
     return null
