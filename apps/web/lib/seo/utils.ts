@@ -5,7 +5,7 @@ export function getCanonicalUrl(orgslug: string, path: string): string {
 }
 
 export function getOrgSeoConfig(org: any) {
-  return org?.config?.config?.seo || {}
+  return org?.config?.config?.customization?.seo || org?.config?.config?.seo || {}
 }
 
 export function buildPageTitle(pageTitle: string, orgName: string, seoConfig: any): string {

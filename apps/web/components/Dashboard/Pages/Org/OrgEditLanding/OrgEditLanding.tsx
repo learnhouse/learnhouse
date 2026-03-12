@@ -140,10 +140,11 @@ const OrgEditLanding = () => {
   const [selectedSection, setSelectedSection] = React.useState<number | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
 
-  // Initialize landing data from org config
+  // Initialize landing data from org config (v2: customization.landing, v1: landing)
   React.useEffect(() => {
-    if (org?.config?.config?.landing) {
-      const landingConfig = org.config.config.landing
+    const rawLanding = org?.config?.config?.customization?.landing || org?.config?.config?.landing
+    if (rawLanding) {
+      const landingConfig = rawLanding
       setLandingData({
         sections: landingConfig.sections || [],
         enabled: landingConfig.enabled || false
