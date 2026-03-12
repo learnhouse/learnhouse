@@ -85,6 +85,7 @@ function AccountSecurity() {
                   <Label htmlFor="old_password">{t('user.settings.password.current_password')}</Label>
                   <Input
                     type="password"
+                    autoComplete="current-password"
                     id="old_password"
                     name="old_password"
                     onChange={handleChange}
@@ -99,6 +100,7 @@ function AccountSecurity() {
                   <Label htmlFor="new_password">{t('user.settings.password.new_password')}</Label>
                   <Input
                     type="password"
+                    autoComplete="new-password"
                     id="new_password"
                     name="new_password"
                     onChange={handleChange}
