@@ -135,7 +135,7 @@ async def update_payments_offer(
     if not offer:
         raise HTTPException(status_code=404, detail="Payments offer not found")
 
-    for key, value in offer_update.model_dump().items():
+    for key, value in offer_update.model_dump(exclude_unset=True).items():
         setattr(offer, key, value)
     offer.update_date = datetime.now()
 

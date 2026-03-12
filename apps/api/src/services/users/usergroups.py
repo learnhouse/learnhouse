@@ -334,8 +334,10 @@ async def update_usergroup_by_id(
         org_id=usergroup.org_id,
     )
 
-    usergroup.name = usergroup_update.name
-    usergroup.description = usergroup_update.description
+    if usergroup_update.name is not None:
+        usergroup.name = usergroup_update.name
+    if usergroup_update.description is not None:
+        usergroup.description = usergroup_update.description
     usergroup.update_date = str(datetime.now())
 
     db_session.add(usergroup)
