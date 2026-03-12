@@ -241,7 +241,7 @@ class StripePaymentProvider(IPaymentProvider):
         payment_config = db_session.exec(
             select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
         ).first()
-        is_express = payment_config and payment_config.mode == PaymentsModeEnum.EXPRESS
+        is_express = payment_config and payment_config.mode == PaymentsModeEnum.express
 
         try:
             checkout_params: dict[str, Any] = {
@@ -401,7 +401,7 @@ class StripePaymentProvider(IPaymentProvider):
                     config = db_session.exec(
                         select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
                     ).first()
-                    if config and config.mode == PaymentsModeEnum.EXPRESS:
+                    if config and config.mode == PaymentsModeEnum.express:
                         config_data = config.model_dump()
                         config_data.update({
                             "enabled": True,
@@ -627,7 +627,7 @@ class StripePaymentProvider(IPaymentProvider):
             config_data.update({
                 "enabled": True,
                 "active": False,
-                "mode": PaymentsModeEnum.EXPRESS,
+                "mode": PaymentsModeEnum.express,
                 "provider_specific_id": acct_id,
                 "provider_config": {**existing_config.provider_config, "onboarding_completed": False},
             })
