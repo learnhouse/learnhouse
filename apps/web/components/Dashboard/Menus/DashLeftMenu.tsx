@@ -184,7 +184,8 @@ function DashLeftMenu() {
 
   return (
     <TooltipProvider delayDuration={0}>
-    <div
+    <nav
+      aria-label="Dashboard sidebar navigation"
       className={cn(
         "flex flex-col text-white h-screen sticky top-0 z-overlay border-r border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
         isCollapsed ? "w-[72px]" : "w-64"
@@ -852,7 +853,7 @@ function DashLeftMenu() {
           </HoverMenu>
         </div>
       </div>
-    </div>
+    </nav>
 
       {/* Feedback Modal */}
       <FeedbackModal
