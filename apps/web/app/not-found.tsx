@@ -25,14 +25,14 @@ export default function NotFound() {
         </p>
       </div>
       <div className='pt-8 flex flex-col items-center'>
-        <button className="flex w-fit h-[50px] text-xl space-x-2 bg-black px-6 py-2 text-md rounded-lg font-bold text-white items-center shadow-md">
-          <Link className='flex gap-2' href="/" >
-            Go back to homepage
-            <ArrowRight className='tracking-tight group-hover:translate-x-0.5 
-        transition-transform duration-150 ease-in-out ml-1' />
-          </Link>
-        </button>
-      </div>
+      <Link
+        href="/"
+        className="flex w-fit h-[50px] text-xl space-x-2 bg-black px-6 py-2 text-md rounded-lg font-bold text-white items-center shadow-md gap-2"
+      >
+        Go back to homepage
+        <ArrowRight className="tracking-tight transition-transform duration-150 ease-in-out ml-1" />
+      </Link>
+    </div>
     </div>
   )
 }
