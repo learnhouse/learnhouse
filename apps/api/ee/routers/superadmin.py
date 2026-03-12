@@ -139,6 +139,9 @@ def _get_org_plan(org_config: OrganizationConfig | None) -> str:
     if org_config and org_config.config:
         config_data = org_config.config
         if isinstance(config_data, dict):
+            version = config_data.get("config_version", "1.0")
+            if version.startswith("2"):
+                return config_data.get("plan", "free")
             return config_data.get("cloud", {}).get("plan", "free")
     return "free"
 
@@ -337,10 +340,13 @@ async def list_all_organizations(
             (Organization.email.ilike(search_filter))
         )
     if plan:
-        # PostgreSQL JSON: config->'cloud'->>'plan' = 'pro'
-        plan_expr = OrganizationConfig.config["cloud"]["plan"].as_string()
+        # Support both v2 (config->>'plan') and v1 (config->'cloud'->>'plan')
+        from sqlalchemy import func as sa_func
+        v2_plan = OrganizationConfig.config["plan"].as_string()
+        v1_plan = OrganizationConfig.config["cloud"]["plan"].as_string()
+        plan_expr = sa_func.coalesce(v2_plan, v1_plan)
         if plan == "free":
-            # Orgs with no config or no cloud.plan are implicitly "free"
+            # Orgs with no config or no plan are implicitly "free"
             from sqlalchemy import or_
             filters.append(or_(plan_expr == "free", plan_expr.is_(None)))
         elif plan == "paid":
@@ -509,7 +515,11 @@ async def _list_orgs_by_visits(
             (Organization.email.ilike(search_filter))
         )
     if plan:
-        plan_expr = OrganizationConfig.config["cloud"]["plan"].as_string()
+        # Support both v2 (config->>'plan') and v1 (config->'cloud'->>'plan')
+        from sqlalchemy import func as sa_func
+        v2_plan = OrganizationConfig.config["plan"].as_string()
+        v1_plan = OrganizationConfig.config["cloud"]["plan"].as_string()
+        plan_expr = sa_func.coalesce(v2_plan, v1_plan)
         if plan == "free":
             from sqlalchemy import or_
             id_stmt = id_stmt.where(or_(plan_expr == "free", plan_expr.is_(None)))
@@ -792,9 +802,13 @@ async def update_org_plan(
 
     # Deep copy to ensure SQLAlchemy detects the change
     config = copy.deepcopy(org_config.config or {})
-    if "cloud" not in config:
-        config["cloud"] = {}
-    config["cloud"]["plan"] = body.plan
+    version = config.get("config_version", "1.0")
+    if version.startswith("2"):
+        config["plan"] = body.plan
+    else:
+        if "cloud" not in config:
+            config["cloud"] = {}
+        config["cloud"]["plan"] = body.plan
     org_config.config = config
     org_config.update_date = datetime.now().isoformat()
     flag_modified(org_config, "config")

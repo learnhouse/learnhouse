@@ -88,7 +88,7 @@ export default function UsageOverview() {
     : []
 
   // Feature flags
-  const orgFeatures = org?.config?.config?.features
+  const orgFeatures = org?.config?.config?.resolved_features || org?.config?.config?.features
   const enabledFeatures = [
     {
       key: 'courses',
