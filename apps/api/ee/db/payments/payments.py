@@ -18,15 +18,15 @@ class PaymentProviderEnum(str, Enum):
 
 
 class PaymentsModeEnum(str, Enum):
-    STANDARD = "standard"  # org connects their own Stripe account via OAuth
-    EXPRESS = "express"    # LearnHouse creates a Stripe Express account on the org's behalf
+    standard = "standard"  # org connects their own Stripe account via OAuth
+    express = "express"    # LearnHouse creates a Stripe Express account on the org's behalf
 
 
 class PaymentsConfigBase(SQLModel):
     enabled: bool = True
     active: bool = False
     provider: PaymentProviderEnum = PaymentProviderEnum.STRIPE
-    mode: PaymentsModeEnum = Field(default=PaymentsModeEnum.STANDARD)
+    mode: PaymentsModeEnum = Field(default=PaymentsModeEnum.standard)
     provider_specific_id: str | None = None
     provider_config: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
