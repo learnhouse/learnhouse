@@ -201,6 +201,7 @@ function OpenSignUpComponent() {
                 onBlur={formik.handleBlur}
                 value={formik.values.password}
                 type="password"
+                autoComplete="new-password"
                 required
               />
             </Form.Control>

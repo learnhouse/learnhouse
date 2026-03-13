@@ -29,7 +29,7 @@ const OrgEditSEO: React.FC = () => {
   const [ogImageFile, setOgImageFile] = useState<File | null>(null)
   const [ogImagePreview, setOgImagePreview] = useState<string | null>(null)
 
-  const seoConfig = org?.config?.config?.seo || {}
+  const seoConfig = org?.config?.config?.customization?.seo || org?.config?.config?.seo || {}
 
   const initialValues: SeoOrgConfig = {
     default_meta_title_suffix: seoConfig.default_meta_title_suffix || '',

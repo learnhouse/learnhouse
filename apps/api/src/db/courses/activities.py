@@ -68,12 +68,13 @@ class ActivityCreate(ActivityBase):
     pass
 
 
-class ActivityUpdate(ActivityBase):
+class ActivityUpdate(SQLModel):
     name: Optional[str] = None
-    content: dict = Field(default_factory=dict)
+    content: Optional[dict] = None
     activity_type: Optional[ActivityTypeEnum] = None
     activity_sub_type: Optional[ActivitySubTypeEnum] = None
     details: Optional[dict] = None
+    published: Optional[bool] = None
     published_version: Optional[int] = None
     version: Optional[int] = None
 

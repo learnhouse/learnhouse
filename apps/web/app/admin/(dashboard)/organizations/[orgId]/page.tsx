@@ -934,8 +934,8 @@ function PlanTab({
     }
   }
 
-  // Feature limits from config
-  const features = config?.features || {}
+  // Feature limits from config (v2: resolved_features, v1: features)
+  const features = config?.resolved_features || config?.features || {}
 
   return (
     <div className="space-y-6">

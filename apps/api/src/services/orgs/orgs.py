@@ -214,7 +214,7 @@ async def create_org_with_config(
     org_object: OrganizationCreate,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
-    submitted_config: OrganizationConfigBase,
+    submitted_config: dict | OrganizationConfigBase,
 ):
     # EE gating: only allow multiple orgs with Enterprise Edition
     existing_org_count = db_session.exec(select(Organization)).all()
@@ -265,9 +265,11 @@ async def create_org_with_config(
     db_session.commit()
     db_session.refresh(user_org)
 
-    org_config = submitted_config
-
-    org_config = json.loads(org_config.model_dump_json())
+    # Support both dict (v2) and Pydantic model (v1) inputs
+    if isinstance(submitted_config, dict):
+        org_config = submitted_config
+    else:
+        org_config = json.loads(submitted_config.model_dump_json())
 
     # OrgSettings
     org_settings = OrganizationConfig(
@@ -349,7 +351,7 @@ async def update_org(
 
 async def update_org_with_config_no_auth(
     request: Request,
-    orgconfig: OrganizationConfigBase,
+    orgconfig: dict | OrganizationConfigBase,
     org_id: int,
     db_session: Session,
 ):
@@ -377,10 +379,14 @@ async def update_org_with_config_no_auth(
             detail="Organization config not found",
         )
 
-    updated_config = orgconfig
+    # Support both dict (v2) and Pydantic model (v1) inputs
+    if isinstance(orgconfig, dict):
+        config_dict = orgconfig
+    else:
+        config_dict = json.loads(orgconfig.model_dump_json())
 
     # Update the database
-    org_config.config = json.loads(updated_config.model_dump_json())
+    org_config.config = config_dict
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
@@ -1166,8 +1172,7 @@ async def get_org_join_mechanism(
     if version.startswith("2"):
         signup_mechanism = config.get("admin_toggles", {}).get("members", {}).get("signup_mode", "open")
     else:
-        parsed = OrganizationConfigBase(**config)
-        signup_mechanism = parsed.features.members.signup_mode
+        signup_mechanism = config.get("features", {}).get("members", {}).get("signup_mode", "open")
 
     return signup_mechanism
 

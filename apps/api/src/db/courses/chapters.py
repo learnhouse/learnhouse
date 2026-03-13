@@ -30,12 +30,12 @@ class ChapterCreate(ChapterBase):
     pass
 
 
-class ChapterUpdate(ChapterBase):
+class ChapterUpdate(SQLModel):
     name: Optional[str] = None
-    description: Optional[str] = ""
-    thumbnail_image: Optional[str] = ""
+    description: Optional[str] = None
+    thumbnail_image: Optional[str] = None
     course_id: Optional[int] = None
-    org_id: Optional[int] = None  # type: ignore
+    org_id: Optional[int] = None
 
 
 class ChapterRead(ChapterBase):

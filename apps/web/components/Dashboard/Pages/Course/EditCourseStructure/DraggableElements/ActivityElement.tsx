@@ -83,7 +83,6 @@ function ActivityElement(props: ActivitiyElementProps) {
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.updating'))
     await updateActivity(
       {
-        ...props.activity,
         published: !props.activity.published,
       },
       props.activity.activity_uuid,
@@ -103,13 +102,8 @@ function ActivityElement(props: ActivitiyElementProps) {
     ) {
       setIsUpdatingName(true)
       
-      let modifiedActivityCopy = {
-        ...props.activity,
-        name: modifiedActivity.activityName,
-      }
-
       try {
-        await updateActivity(modifiedActivityCopy, activityUUID, access_token)
+        await updateActivity({ name: modifiedActivity.activityName }, activityUUID, access_token)
         mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
         await revalidateTags(['courses'], props.orgslug)
         toast.success(t('dashboard.courses.structure.activity.toasts.name_update_success'))

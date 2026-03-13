@@ -13,6 +13,7 @@ from src.db.courses.chapters import Chapter
 from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.chapter_activities import ChapterActivity
+from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
@@ -261,6 +262,18 @@ async def finalize_course_plan(
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
+
+    # Make the current user the creator of the course
+    resource_author = ResourceAuthor(
+        resource_uuid=course.course_uuid,
+        user_id=current_user.id,
+        authorship=ResourceAuthorshipEnum.CREATOR,
+        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db_session.add(resource_author)
+    db_session.commit()
 
     created_chapters = []
 
