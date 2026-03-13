@@ -17,7 +17,7 @@ from src.db.users import User, UserRead
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
-from src.db.organization_config import OrganizationConfig, OrganizationConfigBase
+from src.db.organization_config import OrganizationConfig
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 from src.security.security import security_hash_password
 from src.services.users.emails import send_account_creation_email
@@ -63,8 +63,10 @@ async def check_org_has_enterprise_plan(
         return False
 
     try:
-        config = OrganizationConfigBase(**org_config.config)
-        return config.cloud.plan == "enterprise"
+        config_dict = org_config.config or {}
+        version = config_dict.get("config_version", "1.0")
+        plan = config_dict.get("plan", "free") if version.startswith("2") else config_dict.get("cloud", {}).get("plan", "free")
+        return plan == "enterprise"
     except Exception:
         return False
 

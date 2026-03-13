@@ -134,9 +134,6 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   }, [props.activity.activity_uuid, access_token]);
 
   async function setContent(content: any, forceOverwrite: boolean = false) {
-    let activity = { ...props.activity }
-    activity.content = content
-
     // Check for conflicts before saving (unless force overwrite)
     if (!forceOverwrite) {
       const conflictInfo = await checkForConflicts();
@@ -152,7 +149,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     }
 
     const result = await toast.promise(
-      updateActivity(activity, activity.activity_uuid, access_token).then(res => {
+      updateActivity({ content }, props.activity.activity_uuid, access_token).then(res => {
         if (!res.success) {
           throw res;
         }

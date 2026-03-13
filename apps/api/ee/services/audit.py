@@ -6,7 +6,7 @@ from typing import Any, Optional, Dict
 from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from ee.db.audit_logs import AuditLog
-from src.db.organization_config import OrganizationConfig, OrganizationConfigBase
+from src.db.organization_config import OrganizationConfig
 
 logger = logging.getLogger(__name__)
 LH_CONFIG = get_learnhouse_config()
@@ -22,8 +22,10 @@ def is_enterprise_plan(session: Session, org_id: int) -> bool:
         if not org_config:
             return False
         
-        config = OrganizationConfigBase(**org_config.config)
-        return config.cloud.plan == "enterprise"
+        config_dict = org_config.config or {}
+        version = config_dict.get("config_version", "1.0")
+        plan = config_dict.get("plan", "free") if version.startswith("2") else config_dict.get("cloud", {}).get("plan", "free")
+        return plan == "enterprise"
     except Exception as e:
         logger.error(f"Error checking enterprise plan for org {org_id}: {e}")
         return False

@@ -6,7 +6,7 @@ from src.core.events.database import get_db_session
 from ee.db.audit_logs import AuditLog, AuditLogRead, AuditLogPaginated
 from src.db.users import User, PublicUser
 from src.db.organizations import Organization
-from src.db.organization_config import OrganizationConfig, OrganizationConfigBase
+from src.db.organization_config import OrganizationConfig
 from src.security.auth import get_current_user
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
@@ -35,8 +35,10 @@ async def verify_org_admin_and_plan(
     
     from src.core.deployment_mode import get_deployment_mode
     if get_deployment_mode() != 'ee':
-        config = OrganizationConfigBase(**org_config.config)
-        if config.cloud.plan != "enterprise":
+        config_dict = org_config.config or {}
+        version = config_dict.get("config_version", "1.0")
+        plan = config_dict.get("plan", "free") if version.startswith("2") else config_dict.get("cloud", {}).get("plan", "free")
+        if plan != "enterprise":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Audit logs are only available on the Enterprise plan"

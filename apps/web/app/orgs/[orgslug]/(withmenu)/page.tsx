@@ -99,8 +99,9 @@ const OrgHomePage = async (params: any) => {
     { revalidate: 0, tags: ['courses'] }
   )
 
-  // Check if custom landing is enabled
-  const hasCustomLanding = org.config?.config?.landing?.enabled 
+  // Check if custom landing is enabled (v2: customization.landing, v1: landing)
+  const landingConfig = org.config?.config?.customization?.landing || org.config?.config?.landing
+  const hasCustomLanding = landingConfig?.enabled
 
   const logoUrl = org?.logo_image ? getOrgLogoMediaDirectory(org.org_uuid, org.logo_image) : undefined
   const orgJsonLd = {
@@ -116,8 +117,8 @@ const OrgHomePage = async (params: any) => {
     <div className="w-full">
       <JsonLd data={orgJsonLd} />
       {hasCustomLanding ? (
-        <LandingCustom 
-          landing={org.config.config.landing}
+        <LandingCustom
+          landing={landingConfig}
           orgslug={orgslug}
         />
       ) : (

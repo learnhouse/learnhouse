@@ -306,6 +306,7 @@ const LoginClient = (props: LoginClientProps) => {
                     onBlur={formik.handleBlur}
                     value={formik.values.password}
                     type="password"
+                    autoComplete="current-password"
                   />
                 </Form.Control>
               </FormField>

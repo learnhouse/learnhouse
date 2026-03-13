@@ -49,12 +49,7 @@ function Activity(props: any) {
       modifiedActivity?.activityId === activityId &&
       selectedActivity !== undefined
     ) {
-      let modifiedActivityCopy = {
-        ...props.activity,
-        name: modifiedActivity.activityName,
-      }
-      
-      await updateActivity(modifiedActivityCopy, activityId, session.data?.tokens?.access_token)
+      await updateActivity({ name: modifiedActivity.activityName }, activityId, session.data?.tokens?.access_token)
       await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}?with_unpublished_activities=${withUnpublishedActivities}`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()

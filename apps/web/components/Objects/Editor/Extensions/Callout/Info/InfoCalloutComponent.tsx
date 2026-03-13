@@ -45,11 +45,11 @@ function InfoCalloutComponent(props: any) {
   return (
     <NodeViewWrapper>
       <div
-        className={`w-full flex relative my-4 items-center rounded-xl shadow-inner ${getVariantClasses()} ${getSizeClasses()} max-sm:${options.size === 'sm' ? 'flex-row items-center' : 'flex-col items-start'}`}
+        className={`w-full flex relative my-4 items-start rounded-xl shadow-inner ${getVariantClasses()} ${getSizeClasses()} max-sm:${options.size === 'sm' ? 'flex-row items-center' : 'flex-col items-start'}`}
         contentEditable={isEditable || undefined}
         suppressContentEditableWarning={true}
       >
-        <div className={`flex items-center justify-center shrink-0 mr-2 pl-2 max-sm:mr-1 max-sm:pl-1.5 [&_svg]:w-5 [&_svg]:h-5 [&_svg]:min-w-5 ${options.size !== 'sm' ? 'max-sm:pt-2 max-sm:self-start' : 'max-sm:self-center'}`}>
+        <div className={`flex items-center justify-center shrink-0 mr-2 pl-2 pt-3 max-sm:mr-1 max-sm:pl-1.5 [&_svg]:w-5 [&_svg]:h-5 [&_svg]:min-w-5 ${options.size !== 'sm' ? 'max-sm:pt-2 max-sm:self-start' : 'max-sm:self-center'}`}>
           <Info />
         </div>
         <div className="w-full break-words grow">

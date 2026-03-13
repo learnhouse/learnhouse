@@ -99,7 +99,7 @@ export function CourseOverviewTop({
     try {
       await updateCourse(
         courseStructure.course_uuid,
-        { ...courseStructure, published: newPublishedStatus },
+        { published: newPublishedStatus },
         session.data?.tokens?.access_token
       )
 

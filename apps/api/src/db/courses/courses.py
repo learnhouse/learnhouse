@@ -78,15 +78,15 @@ class CourseCreate(CourseBase):
     pass
 
 
-class CourseUpdate(CourseBase):
-    name: str
+class CourseUpdate(SQLModel):
+    name: Optional[str] = None
     description: Optional[str] = None
     about: Optional[str] = None
     learnings: Optional[str] = None
     tags: Optional[str] = None
-    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
-    thumbnail_image: Optional[str] = Field(default="")
-    thumbnail_video: Optional[str] = Field(default="")
+    thumbnail_type: Optional[ThumbnailType] = None
+    thumbnail_image: Optional[str] = None
+    thumbnail_video: Optional[str] = None
     public: Optional[bool] = None
     published: Optional[bool] = None
     open_to_contributors: Optional[bool] = None
