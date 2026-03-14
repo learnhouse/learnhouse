@@ -22,7 +22,7 @@ import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import { Button } from '@components/ui/button';
-import { getUriWithoutOrg } from '@services/config/config';
+import { getMainDomainUri } from '@services/config/config';
 import { SiStripe } from '@icons-pack/react-simple-icons';
 
 // ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
         await initializePaymentConfig(orgId, { provider: provider.id, enabled: true }, provider.id, accessToken);
         await mutate([`/payments/${orgId}/config`, accessToken]);
       }
-      const redirectUri = getUriWithoutOrg(provider.callbackPath);
+      const redirectUri = getMainDomainUri(provider.callbackPath);
       const url = await provider.getConnectUrl(orgId, accessToken, redirectUri);
       window.open(url, '_blank');
     } catch {
