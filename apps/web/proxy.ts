@@ -103,6 +103,15 @@ export default async function proxy(req: NextRequest) {
   const default_org = instanceInfo.default_org_slug
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
+
+  // SaaS mode: redirect learnhouse.io / www.learnhouse.io → learnhouse.app
+  if (instanceInfo.mode === 'saas' && fullhost) {
+    const bare = stripPort(fullhost)
+    if (bare === 'learnhouse.io' || bare === 'www.learnhouse.io') {
+      const target = new URL(`https://learnhouse.app${pathname}${search}`)
+      return NextResponse.redirect(target, 301)
+    }
+  }
   // Check both old and new cookie names for backward compatibility
   const cookie_orgslug = req.cookies.get('learnhouse_orgslug')?.value || req.cookies.get('learnhouse_current_orgslug')?.value
 
