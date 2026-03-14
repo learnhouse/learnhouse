@@ -435,8 +435,8 @@ const CopilotMenuButton = ({
   const accessToken = session?.data?.tokens?.access_token
 
   const { data: sessions } = useSWR<RAGChatSession[]>(
-    accessToken ? 'menu-rag-sessions' : null,
-    () => fetchRAGChatSessions(accessToken),
+    accessToken && orgslug ? ['menu-rag-sessions', orgslug] : null,
+    () => fetchRAGChatSessions(accessToken, orgslug),
     { revalidateOnFocus: false }
   )
 
