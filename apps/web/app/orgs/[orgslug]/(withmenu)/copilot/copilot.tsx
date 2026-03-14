@@ -125,8 +125,8 @@ export function CopilotChat({ orgslug }: CopilotProps) {
     data: sessionsData,
     mutate: mutateSessions,
   } = useSWR(
-    accessToken ? 'rag-sessions' : null,
-    () => fetchRAGChatSessions(accessToken),
+    accessToken && orgslug ? ['rag-sessions', orgslug] : null,
+    () => fetchRAGChatSessions(accessToken, orgslug),
     { revalidateOnFocus: false }
   )
   const sessions: RAGChatSession[] = sessionsData || []
