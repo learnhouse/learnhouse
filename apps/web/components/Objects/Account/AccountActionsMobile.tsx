@@ -21,7 +21,7 @@ export function AccountActionsMobile({ orgslug, currentSubpage }: AccountActions
   const { t } = useTranslation()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav aria-label="Account mobile actions" className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-2">
         <div className="flex items-center justify-around">
           {NAV_ITEMS.map((item) => {
@@ -46,7 +46,7 @@ export function AccountActionsMobile({ orgslug, currentSubpage }: AccountActions
           })}
         </div>
       </div>
-    </div>
+    </nav>
   )
 }
 
