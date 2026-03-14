@@ -275,6 +275,17 @@ export const getUriWithoutOrg = (path: string) => {
   return path
 }
 
+/**
+ * Build a URI on the main domain (not the org subdomain).
+ * Useful for OAuth redirect URIs where only one fixed URI can be registered
+ * (e.g., Stripe Connect requires exact redirect_uri matching).
+ */
+export const getMainDomainUri = (path: string) => {
+  const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+  const domain = getLEARNHOUSE_DOMAIN()
+  return `${protocol}${domain}${path}`
+}
+
 export type DeploymentMode = 'saas' | 'oss' | 'ee'
 
 /**
