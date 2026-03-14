@@ -499,9 +499,11 @@ export interface RAGChatSession {
 }
 
 export async function fetchRAGChatSessions(
-  accessToken: string
+  accessToken: string,
+  orgSlug?: string
 ): Promise<RAGChatSession[]> {
-  const res = await fetch(`${getAPIUrl()}ai/rag/sessions`, {
+  const params = orgSlug ? `?org_slug=${encodeURIComponent(orgSlug)}` : ''
+  const res = await fetch(`${getAPIUrl()}ai/rag/sessions${params}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!res.ok) return []
