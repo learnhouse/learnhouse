@@ -77,6 +77,7 @@ async def rag_chat_event_generator(
     course_uuid: Optional[str] = None,
     is_new_session: bool = False,
     mode: str = "course_only",
+    org_id: Optional[int] = None,
 ):
     """Convert async generator to SSE format with source references."""
     full_response = ""
@@ -89,7 +90,7 @@ async def rag_chat_event_generator(
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
 
         # Save the message exchange to history (including sources for persistence)
-        save_message_to_history(aichat_uuid, user_message, full_response, user_id=user_id, course_uuid=course_uuid, sources=sources if sources else None, mode=mode)
+        save_message_to_history(aichat_uuid, user_message, full_response, user_id=user_id, course_uuid=course_uuid, sources=sources if sources else None, mode=mode, org_id=org_id)
 
         # Send sources event before done
         if sources:
@@ -218,6 +219,7 @@ async def api_rag_chat(
             course_uuid=chat_request.course_uuid,
             is_new_session=is_new_session,
             mode=chat_request.mode,
+            org_id=org_id,
         ),
         media_type="text/event-stream",
         headers={
@@ -270,9 +272,18 @@ async def api_rag_index(
 @router.get("/rag/sessions")
 async def api_rag_sessions(
     current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+    org_slug: Optional[str] = None,
 ):
-    """List all chat sessions for the current user."""
-    sessions = get_user_chat_sessions(current_user.id)
+    """List all chat sessions for the current user, optionally filtered by org."""
+    org_id = None
+    if org_slug:
+        org = db_session.exec(
+            select(Organization).where(Organization.slug == org_slug)
+        ).first()
+        if org:
+            org_id = org.id
+    sessions = get_user_chat_sessions(current_user.id, org_id=org_id)
     return {"sessions": sessions}
 
 
