@@ -105,7 +105,7 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
         "aichat_uuid": session_id
     }
 
-def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str, user_id: Optional[int] = None, course_uuid: Optional[str] = None, sources: Optional[list] = None, mode: str = "course_only"):
+def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: str, user_id: Optional[int] = None, course_uuid: Optional[str] = None, sources: Optional[list] = None, mode: str = "course_only", org_id: Optional[int] = None):
     """Save a message exchange to Redis history. Auto-creates session metadata on first message."""
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
@@ -151,7 +151,7 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
             title = user_message[:50].strip()
             if len(user_message) > 50:
                 title += "..."
-            save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode)
+            save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode, org_id=org_id)
 
     except Exception as e:
         print(f"Failed to save message to Redis: {e}")
@@ -169,7 +169,7 @@ def _get_redis():
     return redis.from_url(conn)
 
 
-def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only"):
+def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only", org_id: Optional[int] = None):
     """Store session metadata and add to user's session index."""
     r = _get_redis()
     if not r:
@@ -179,6 +179,7 @@ def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uu
         meta = {
             "aichat_uuid": aichat_uuid,
             "user_id": user_id,
+            "org_id": org_id,
             "title": title,
             "course_uuid": course_uuid,
             "created_at": now.isoformat(),
@@ -223,8 +224,8 @@ def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str
         return None
 
 
-def get_user_chat_sessions(user_id: int) -> list[dict]:
-    """Return all chat sessions for a user, newest first."""
+def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[dict]:
+    """Return all chat sessions for a user, newest first. Optionally filter by org_id."""
     r = _get_redis()
     if not r:
         return []
@@ -243,6 +244,9 @@ def get_user_chat_sessions(user_id: int) -> list[dict]:
                 expired_uuids.append(uuid_str)
                 continue
             meta = json.loads(meta_data.decode("utf-8") if isinstance(meta_data, bytes) else meta_data)
+            # Filter by org_id if provided
+            if org_id is not None and meta.get("org_id") != org_id:
+                continue
             sessions.append(meta)
 
         # Clean up expired entries from the sorted set

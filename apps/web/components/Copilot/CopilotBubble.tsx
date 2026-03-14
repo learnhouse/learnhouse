@@ -96,8 +96,8 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const loadedSessionRef = useRef<string | null>(null)
 
   const { data: sessionsData, mutate: mutateSessions } = useSWR(
-    accessToken ? 'bubble-rag-sessions' : null,
-    () => fetchRAGChatSessions(accessToken),
+    accessToken && orgslug ? ['bubble-rag-sessions', orgslug] : null,
+    () => fetchRAGChatSessions(accessToken, orgslug),
     { revalidateOnFocus: false }
   )
   const sessions: RAGChatSession[] = sessionsData || []
