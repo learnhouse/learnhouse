@@ -21,7 +21,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const showStore = isEnabled('payments')
 
   return (
-    <nav aria-label="Organization menu links" className='pl-1'>
+    <div className='pl-1'>
       <ul className="flex space-x-5">
         {isCoursesEnabled && (
           <LinkItem
@@ -72,7 +72,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           ></LinkItem>
         )}
       </ul>
-    </nav>
+    </div>
   )
 }
 const LinkItem = (props: any) => {
