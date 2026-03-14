@@ -294,13 +294,13 @@ function DashLeftMenu() {
                 <span className="relative flex items-center justify-center">
                   <BookOpen size={20} weight="fill" />
                   {isCollapsed && (
-                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
                   )}
                 </span>
                 {!isCollapsed && (
                   <>
                     <span className="text-sm font-medium flex-1 text-left">{t('courses.courses')}</span>
-                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
               </button>
@@ -350,13 +350,13 @@ function DashLeftMenu() {
                 <span className="relative flex items-center justify-center">
                   <Files size={20} weight="fill" />
                   {isCollapsed && (
-                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
                   )}
                 </span>
                 {!isCollapsed && (
                   <>
                     <span className="text-sm font-medium flex-1 text-left">{t('common.assignments')}</span>
-                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
               </button>
@@ -441,13 +441,13 @@ function DashLeftMenu() {
                 <span className="relative flex items-center justify-center">
                   <Users size={20} weight="fill" />
                   {isCollapsed && (
-                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
                   )}
                 </span>
                 {!isCollapsed && (
                   <>
                     <span className="text-sm font-medium flex-1 text-left">{t('common.users')}</span>
-                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
               </button>
@@ -546,13 +546,13 @@ function DashLeftMenu() {
                 <span className="relative flex items-center justify-center">
                   <Buildings size={20} weight="fill" />
                   {isCollapsed && (
-                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
                   )}
                 </span>
                 {!isCollapsed && (
                   <>
                     <span className="text-sm font-medium flex-1 text-left">{t('common.organization')}</span>
-                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
               </button>
@@ -588,13 +588,13 @@ function DashLeftMenu() {
                 <span className="relative flex items-center justify-center">
                   <ChartBar size={20} weight="fill" />
                   {isCollapsed && (
-                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
                   )}
                 </span>
                 {!isCollapsed && (
                   <>
                     <span className="text-sm font-medium flex-1 text-left">Analytics</span>
-                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
               </button>
@@ -664,13 +664,13 @@ function DashLeftMenu() {
                   <span className="relative flex items-center justify-center">
                     <DotsThree size={20} weight="bold" />
                     {isCollapsed && (
-                      <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/20" />
+                      <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/20" />
                     )}
                   </span>
                   {!isCollapsed && (
                     <>
                       <span className="text-sm font-medium flex-1 text-left">Other</span>
-                      <CaretDown size={14} weight="bold" className="text-white/20" />
+                      <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/20" />
                     </>
                   )}
                 </button>

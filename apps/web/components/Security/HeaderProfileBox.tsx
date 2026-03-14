@@ -205,7 +205,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                     </div>
                     <p className={`text-xs ${colors.profileMuted}`}>{session.data.user.email}</p>
                   </div>
-                  <CaretDown size={16} weight="fill" className={colors.profileMuted} />
+                  <CaretDown aria-hidden="true" size={16} weight="fill" className={colors.profileMuted} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
@@ -276,4 +276,3 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
     </div>
   )
 }
-
