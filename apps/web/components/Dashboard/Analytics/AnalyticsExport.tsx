@@ -89,7 +89,7 @@ export default function ExportAnalyticsButton({
         {downloading
           ? t('analytics.export.downloading')
           : t('analytics.export.button')}
-        {!downloading && <CaretDown size={10} />}
+        {!downloading && <CaretDown aria-hidden="true" size={10} />}
       </button>
 
       {open && (
