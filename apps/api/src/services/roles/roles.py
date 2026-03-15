@@ -486,6 +486,15 @@ async def update_role(
     db_session.commit()
     db_session.refresh(role)
 
+    # Invalidate session cache for all users with this role
+    from src.db.user_organizations import UserOrganization
+    from src.routers.users import _invalidate_session_cache
+    affected_users = db_session.exec(
+        select(UserOrganization.user_id).where(UserOrganization.role_id == role.id)
+    ).all()
+    for uid in affected_users:
+        _invalidate_session_cache(uid)
+
     role = RoleRead(**role.model_dump())
 
     return role
@@ -527,6 +536,15 @@ async def delete_role(
     # RBAC check — scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
     require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_delete")
+
+    # Invalidate session cache for all users with this role before deleting
+    from src.db.user_organizations import UserOrganization
+    from src.routers.users import _invalidate_session_cache
+    affected_users = db_session.exec(
+        select(UserOrganization.user_id).where(UserOrganization.role_id == role.id)
+    ).all()
+    for uid in affected_users:
+        _invalidate_session_cache(uid)
 
     db_session.delete(role)
     db_session.commit()

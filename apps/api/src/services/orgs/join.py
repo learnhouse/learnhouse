@@ -113,6 +113,9 @@ async def join_org(
             db_session.add(user_organization)
             db_session.commit()
 
+            from src.routers.users import _invalidate_session_cache
+            _invalidate_session_cache(user.id)
+
             # Add user to UserGroup if invite code is linked to one
             if inviteCode.get("usergroup_id"):
                 await add_users_to_usergroup(
@@ -146,6 +149,9 @@ async def join_org(
 
             db_session.add(user_organization)
             db_session.commit()
+
+            from src.routers.users import _invalidate_session_cache
+            _invalidate_session_cache(user.id)
 
             increase_feature_usage("members", org.id, db_session)
 
