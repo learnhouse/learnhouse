@@ -13,7 +13,16 @@ interface BreadcrumbsProps {
 }
 
 const ChevronDivider = () => (
-  <svg width="8" height="100%" viewBox="0 0 8 28" fill="none" className="h-full text-gray-200" preserveAspectRatio="none">
+  <svg
+    width="8"
+    height="100%"
+    viewBox="0 0 8 28"
+    fill="none"
+    className="h-full text-gray-200"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path d="M1 0 L7 14 L1 28" stroke="currentColor" strokeWidth="1" fill="none" />
   </svg>
 )
