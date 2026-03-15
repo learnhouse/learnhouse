@@ -342,7 +342,7 @@
     --z-nav: 50;
     --z-nav-menu: 51;
     --z-dropdown: 100;
-    --z-popover: 110;
+    --z-popover: 250;
     --z-overlay: 120;
     --z-editor-toolbar: 130;
     --z-editor-bubble: 135;

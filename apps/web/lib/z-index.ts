@@ -38,9 +38,9 @@ export const Z_INDEX = {
   NAV: 9999,
   NAV_MENU: 10000,
 
-  // Dropdowns and popovers (110-115)
+  // Dropdowns and popovers
   DROPDOWN: 110,
-  POPOVER: 115,
+  POPOVER: 250,
 
   // Overlays (120-125)
   OVERLAY: 120,
