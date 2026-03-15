@@ -294,6 +294,9 @@ async def remove_user_from_org(
     db_session.delete(user_org)
     db_session.commit()
 
+    from src.routers.users import _invalidate_session_cache
+    _invalidate_session_cache(user_id)
+
     decrease_feature_usage("members", org_id, db_session)
 
     return {"detail": "User removed from org"}
@@ -347,6 +350,10 @@ async def remove_batch_users_from_org(
             removed_count += 1
 
     db_session.commit()
+
+    from src.routers.users import _invalidate_session_cache
+    for uid in user_ids:
+        _invalidate_session_cache(uid)
 
     for _ in range(removed_count):
         decrease_feature_usage("members", org_id, db_session)
@@ -432,6 +439,9 @@ async def update_user_role(
     db_session.add(user_org)
     db_session.commit()
     db_session.refresh(user_org)
+
+    from src.routers.users import _invalidate_session_cache
+    _invalidate_session_cache(user_org.user_id)
 
     return {"detail": "User role updated"}
 

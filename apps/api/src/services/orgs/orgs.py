@@ -173,6 +173,10 @@ async def create_org(
     db_session.commit()
     db_session.refresh(user_org)
 
+    # Invalidate session cache so the new org role is picked up immediately
+    from src.routers.users import _invalidate_session_cache
+    _invalidate_session_cache(int(current_user.id))
+
     from src.db.organization_config import OrganizationConfigV2Base
     org_config = OrganizationConfigV2Base(
         config_version="2.0",
@@ -264,6 +268,10 @@ async def create_org_with_config(
     db_session.add(user_org)
     db_session.commit()
     db_session.refresh(user_org)
+
+    # Invalidate session cache so the new org role is picked up immediately
+    from src.routers.users import _invalidate_session_cache
+    _invalidate_session_cache(int(current_user.id))
 
     # Support both dict (v2) and Pydantic model (v1) inputs
     if isinstance(submitted_config, dict):
@@ -592,6 +600,14 @@ async def delete_org(
         f"AUDIT: Organization deletion - org_id={org_id}, org_uuid={org_uuid}, "
         f"org_name={org_name}, deleted_by_user_id={user_id}"
     )
+
+    # Invalidate session cache for all users in this org before deletion
+    from src.routers.users import _invalidate_session_cache
+    affected_users = db_session.exec(
+        select(UserOrganization.user_id).where(UserOrganization.org_id == org_id)
+    ).all()
+    for uid in affected_users:
+        _invalidate_session_cache(uid)
 
     # Delete the organization
     # Related data (UserOrganization, Courses, Collections, etc.) will be

@@ -708,6 +708,9 @@ async def add_user_to_organization(
     db_session.commit()
     db_session.refresh(user_org)
 
+    from src.routers.users import _invalidate_session_cache
+    _invalidate_session_cache(user.id)
+
     return user_org
 
 
