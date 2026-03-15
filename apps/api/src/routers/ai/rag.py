@@ -189,9 +189,9 @@ async def api_rag_chat(
         if not copilot_enabled:
             raise HTTPException(status_code=403, detail="Copilot is disabled for this organization")
 
-    # Check AI credits
+    # Check AI credits — RAG chat makes 2 API calls (embedding + generation)
     check_ai_credits(org_id, db_session)
-    deduct_ai_credit(org_id, db_session)
+    deduct_ai_credit(org_id, db_session, amount=2)
 
     # Get or create chat session
     is_new_session = chat_request.aichat_uuid is None
