@@ -77,7 +77,7 @@ async def start_boards_playground_session(
 
     # Check AI credits and deduct
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    deduct_ai_credit(org.id, db_session, amount=3)
 
     # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)
@@ -144,7 +144,7 @@ async def iterate_boards_playground_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    deduct_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 

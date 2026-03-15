@@ -224,7 +224,7 @@ PLAN_LIMITS: dict[str, dict[str, int]] = {
 # 0 = no access, -1 = unlimited
 AI_CREDIT_LIMITS: dict[str, int] = {
     "free": 0,
-    "personal": 1000,
+    "personal": 500,
     "personal-family": 3000,
     "standard": 1000,
     "pro": 3000,

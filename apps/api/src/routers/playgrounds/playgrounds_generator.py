@@ -114,7 +114,7 @@ async def start_playground_session(
         raise HTTPException(status_code=403, detail="Insufficient permissions to generate content")
 
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    deduct_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 
@@ -195,7 +195,7 @@ async def iterate_playground_session(
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    deduct_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 

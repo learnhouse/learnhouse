@@ -117,10 +117,11 @@ async def start_course_planning_session(
 
     # Check limits and usage
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
 
-    # Get AI model
+    # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
+    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Create new session with language
     session = create_course_planning_session(org_id=org.id, language=session_request.language)
@@ -181,10 +182,11 @@ async def iterate_course_planning_session(
 
     # Check limits and usage
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
 
-    # Get AI model
+    # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
+    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Use provided plan or session's current plan
     current_plan = message_request.current_plan or session.current_plan
@@ -423,10 +425,11 @@ async def generate_activity_content(
 
     # Check limits and usage
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
 
-    # Get AI model
+    # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
+    credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Get current content if iterating
     current_content = None
