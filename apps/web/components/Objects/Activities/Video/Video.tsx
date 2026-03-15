@@ -3,6 +3,7 @@ import YouTube from 'react-youtube'
 import { getActivityVideoStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import LearnHousePlayer from './LearnHousePlayer'
+import getYouTubeID from 'get-youtube-id'
 
 interface VideoDetails {
   startTime?: number
@@ -34,7 +35,6 @@ function VideoActivity({ activity, course, orgUuid }: VideoActivityProps) {
 
   React.useEffect(() => {
     if (activity?.content?.uri) {
-      var getYouTubeID = require('get-youtube-id')
       setVideoId(getYouTubeID(activity.content.uri))
     }
   }, [activity, org])
