@@ -214,8 +214,10 @@ export default async function proxy(req: NextRequest) {
   }
 
   // Auth callbacks - pass through without org rewrite
-  if (pathname.startsWith('/auth/sso/') || pathname.startsWith('/auth/callback/')) {
-    return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
+  if (pathname.startsWith('/auth/sso/') || pathname.startsWith('/auth/callback/') || pathname.startsWith('/auth/token-exchange')) {
+    const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
+    setInstanceCookies(response, instanceInfo)
+    return response
   }
 
   // Dynamic Pages Editor
