@@ -1,84 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { isSubdomainOf, isSameHost, isLocalhost, stripPort } from '@services/utils/ts/hostUtils'
 import { getConfig } from '@services/config/config'
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_MAX_AGE,
+  getCookieDomain,
+  getCookieOptions,
+} from '@services/auth/cookies'
 
 const BACKEND_URL = (getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL') || 'http://localhost:1338').replace(/\/+$/, '')
-
-// Cookie configuration
-const ACCESS_TOKEN_COOKIE = 'access_token_cookie'
-const REFRESH_TOKEN_COOKIE = 'refresh_token_cookie'
-const ACCESS_TOKEN_MAX_AGE = 8 * 60 * 60 // 8 hours
-const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 // 30 days
 
 // Paths that return tokens in response body (relative to /api/v1/auth/)
 const TOKEN_RESPONSE_PATHS = ['login', 'refresh', 'oauth', 'signup']
 
 function shouldExtractTokens(path: string): boolean {
   return TOKEN_RESPONSE_PATHS.some(p => path.startsWith(p))
-}
-
-/**
- * Read the frontend domain config. Server-side route handlers can't use
- * getCookieValue (client-only), so we read from the request cookies that
- * the middleware set, falling back to env var / config getter, then default.
- */
-function getDomainFromRequest(request: NextRequest): { domain: string; topDomain: string } {
-  // 1. Env var (always works if set — backward compat)
-  const envDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
-  const envTopDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN')
-  if (envDomain) {
-    return {
-      domain: envDomain,
-      topDomain: stripPort(envTopDomain || envDomain),
-    }
-  }
-
-  // 2. Request cookies (set by middleware from backend instance info)
-  const cookieDomain = request.cookies.get('learnhouse_frontend_domain')?.value
-  const cookieTopDomain = request.cookies.get('learnhouse_top_domain')?.value
-  if (cookieDomain) {
-    return {
-      domain: cookieDomain,
-      topDomain: stripPort(cookieTopDomain || cookieDomain),
-    }
-  }
-
-  // 3. Default (localhost — gives host-only cookies, correct for dev)
-  return { domain: 'localhost', topDomain: 'localhost' }
-}
-
-/**
- * Determine the cookie domain for auth tokens.
- * - Subdomains of LEARNHOUSE_DOMAIN or the bare domain itself → `.TOP_DOMAIN`
- *   (enables SSO across all org subdomains)
- * - Localhost → undefined (host-only, browsers reject domain on localhost)
- * - Custom domains → undefined (host-only, browsers reject cross-domain cookies)
- */
-function getCookieDomain(request: NextRequest): string | undefined {
-  const host = request.headers.get('host')
-  const { domain, topDomain } = getDomainFromRequest(request)
-
-  if (isLocalhost(host)) return undefined
-  // Browsers reject Domain=.localhost (public suffix), so use host-only cookies
-  if (topDomain === 'localhost') return undefined
-  if (isSubdomainOf(host, domain) || isSameHost(host, domain)) {
-    return `.${topDomain}`
-  }
-  // Custom domain — can't set cross-domain cookies
-  return undefined
-}
-
-function getCookieOptions(request: NextRequest) {
-  const isSecure = request.nextUrl.protocol === 'https:'
-  const domain = getCookieDomain(request)
-  return {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'lax' as const,
-    path: '/',
-    ...(domain ? { domain } : {}),
-  }
 }
 
 async function proxyRequest(
