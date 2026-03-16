@@ -475,6 +475,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) }
                   }}
+                  aria-label="Ask about your courses"
                   placeholder={isLoadingSession ? 'Loading...' : isWaiting ? 'Thinking...' : 'Ask about your courses...'}
                   disabled={isInputDisabled}
                   className="flex-1 min-w-0 bg-transparent outline-none text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:opacity-40"

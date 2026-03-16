@@ -532,6 +532,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                     onChange={handleChange}
                     disabled={isInputDisabled}
                     value={aiChatBotState.chatInputValue}
+                    aria-label={t('ai.ask_ai_placeholder')}
                     placeholder={t('ai.ask_ai_placeholder')}
                     type="text"
                     className={inputClass}
@@ -1126,6 +1127,7 @@ function AISidePanelInline(props: AISidePanelProps) {
                 onChange={handleChange}
                 disabled={isInputDisabled}
                 value={aiChatBotState.chatInputValue}
+                aria-label={t('ai.ask_ai_placeholder')}
                 placeholder={t('ai.ask_ai_placeholder')}
                 type="text"
                 className={inputClass}

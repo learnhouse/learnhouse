@@ -109,6 +109,7 @@ export default function BoardsPublicClient({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={t('boards.search_placeholder', 'Search boards...')}
                 placeholder={t('boards.search_placeholder', 'Search boards...')}
                 className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
               />

@@ -30,6 +30,7 @@ const LinkInputTooltip: React.FC<LinkInputTooltipProps> = ({ onSave, onCancel, c
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
         <input
           type="text"
+          aria-label="Enter URL"
           placeholder="Enter URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
