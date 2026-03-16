@@ -264,6 +264,7 @@ function SearchPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={t('search.search_placeholder')}
                 placeholder={t('search.search_placeholder')}
                 className="w-full h-12 pl-12 pr-4 rounded-xl nice-shadow bg-white 
                          focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 

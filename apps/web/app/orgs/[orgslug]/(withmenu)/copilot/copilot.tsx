@@ -624,6 +624,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            aria-label="Ask about your courses"
             placeholder={isLoadingSession ? 'Loading conversation...' : isWaiting ? 'Thinking...' : chatMode === 'general' ? 'Ask anything...' : 'Ask about your courses...'}
             disabled={isInputDisabled}
             className="flex-1 bg-transparent outline-none text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:opacity-40"
