@@ -114,7 +114,7 @@ export function DiscussionDetail({
           {isAuthor && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <button aria-label="Discussion detail" className="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                   <MoreVertical size={18} />
                 </button>
               </DropdownMenuTrigger>

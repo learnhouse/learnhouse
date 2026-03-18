@@ -294,6 +294,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
           <div className="flex items-center justify-between px-3 h-11 border-b border-neutral-100 dark:border-neutral-800/60 flex-shrink-0">
             <div className="flex items-center gap-1.5">
               <button
+                aria-label="Toggle conversations list"
                 onClick={() => setShowSessions(!showSessions)}
                 className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
                 title="Conversations"
@@ -306,6 +307,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
             </div>
             <div className="flex items-center gap-0.5">
               <button
+                aria-label="New chat"
                 onClick={handleNewChat}
                 className="p-1.5 rounded-lg text-neutral-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-all"
                 title="New chat"
@@ -313,6 +315,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
                 <Plus size={14} />
               </button>
               <button
+                aria-label="Close copilot"
                 onClick={() => onOpenChange(false)}
                 className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
               >
@@ -437,6 +440,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
               {/* Input bar */}
               <div className="flex items-center gap-1 px-2.5 py-2 border-t border-neutral-100 dark:border-neutral-800/60 flex-shrink-0">
                 <button
+                  aria-label="Select chat mode"
                   onClick={() => setChatMode(chatMode === 'course_only' ? 'general' : 'course_only')}
                   className={`flex items-center gap-1 px-1.5 py-1.5 text-xs rounded-lg transition-all flex-shrink-0 ${
                     chatMode === 'general'
@@ -451,6 +455,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
                 {messages.length > 0 && (
                   <div className="relative flex-shrink-0" ref={dropdownRef}>
                     <button
+                      aria-label="Select course"
                       onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
                       className="flex items-center gap-0.5 px-1.5 py-1.5 text-xs rounded-lg text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
                     >
@@ -480,6 +485,7 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
                   className="flex-1 min-w-0 bg-transparent outline-none text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 disabled:opacity-40"
                 />
                 <button
+                  aria-label="Send message"
                   onClick={() => sendMessage(input)}
                   disabled={isInputDisabled || !input.trim()}
                   className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:bg-neutral-200 dark:disabled:bg-neutral-700 disabled:cursor-not-allowed text-white transition-colors"

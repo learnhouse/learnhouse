@@ -209,7 +209,7 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
         <div className={`flex-shrink-0 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-gray-100 rounded transition-colors">
+              <button aria-label="Comment actions" className="p-1 hover:bg-gray-100 rounded transition-colors">
                 <MoreHorizontal size={16} className="text-gray-400" />
               </button>
             </DropdownMenuTrigger>
