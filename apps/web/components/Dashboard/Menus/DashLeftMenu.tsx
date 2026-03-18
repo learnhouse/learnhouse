@@ -235,6 +235,7 @@ function DashLeftMenu() {
 
         {!isCollapsed && (
           <button
+            aria-label="Collapse sidebar"
             onClick={toggleCollapse}
             className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
           >
@@ -287,6 +288,7 @@ function DashLeftMenu() {
               }
             >
               <button
+                aria-label="Open courses menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
                   isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -343,6 +345,7 @@ function DashLeftMenu() {
               }
             >
               <button
+                aria-label="Open assignments menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
                   isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -434,6 +437,7 @@ function DashLeftMenu() {
               }
             >
               <button
+                aria-label="Open users menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
                   isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -539,6 +543,7 @@ function DashLeftMenu() {
               }
             >
               <button
+                aria-label="Open organization menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
                   isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -581,6 +586,7 @@ function DashLeftMenu() {
               }
             >
               <button
+                aria-label="Analytics"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
                   isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -657,6 +663,7 @@ function DashLeftMenu() {
                 }
               >
                 <button
+                  aria-label="Other"
                   className={cn(
                     "flex items-center w-full rounded-lg text-white/30 hover:text-white/50 hover:bg-white/[0.05] transition-all",
                     isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
@@ -689,6 +696,7 @@ function DashLeftMenu() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
+                  aria-label="Expand sidebar"
                   onClick={toggleCollapse}
                   className="flex items-center justify-center w-full h-10 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
                 >
@@ -729,7 +737,7 @@ function DashLeftMenu() {
               </HoverMenuContent>
             }
           >
-            <button className={cn(
+            <button aria-label="Open language menu" className={cn(
               "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
               isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
             )}>
@@ -794,7 +802,7 @@ function DashLeftMenu() {
               </HoverMenuContent>
             }
           >
-            <button className={cn(
+            <button aria-label="Open help menu" className={cn(
               "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
               isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
             )}>
