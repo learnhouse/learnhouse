@@ -8,7 +8,9 @@ import redis
 from config.config import get_learnhouse_config
 from src.services.users.password_reset import (
     change_password_with_reset_code,
+    change_password_with_reset_code_platform,
     send_reset_password_code,
+    send_reset_password_code_platform,
 )
 from src.services.security.rate_limiting import check_password_reset_rate_limit
 from src.services.orgs.orgs import get_org_join_mechanism
@@ -374,6 +376,58 @@ async def api_send_password_reset_email(
     """
     return await send_reset_password_code(
         request, db_session, current_user, org_id, email
+    )
+
+
+class PlatformResetPasswordRequest(BaseModel):
+    new_password: str
+    reset_code: str
+
+
+@router.post("/reset_password/platform/send_reset_code/{email}", tags=["users"])
+async def api_send_password_reset_email_platform(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    email: EmailStr,
+):
+    """
+    Send password reset code (platform-level, no org required).
+    """
+    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+
+    return await send_reset_password_code_platform(
+        request, db_session, current_user, email
+    )
+
+
+@router.post("/reset_password/platform/change_password/{email}", tags=["users"])
+async def api_change_password_with_reset_code_platform(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    email: EmailStr,
+    body: PlatformResetPasswordRequest,
+):
+    """
+    Change password using a reset code (platform-level, no org required).
+    """
+    is_allowed, retry_after = check_password_reset_rate_limit(email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+
+    return await change_password_with_reset_code_platform(
+        request, db_session, current_user, body.new_password, email, body.reset_code
     )
 
 

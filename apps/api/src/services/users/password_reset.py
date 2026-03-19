@@ -13,6 +13,7 @@ from src.security.security import security_hash_password
 from config.config import get_learnhouse_config
 from src.services.users.emails import (
     send_password_reset_email,
+    send_password_reset_email_platform,
 )
 from src.services.email.utils import get_base_url_from_request
 from src.db.users import (
@@ -22,6 +23,26 @@ from src.db.users import (
     UserRead,
 )
 from src.services.security.password_validation import validate_password_complexity
+
+
+def _get_redis_connection():
+    """Get Redis connection from config."""
+    LH_CONFIG = get_learnhouse_config()
+    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+
+    if not redis_conn_string:
+        raise HTTPException(
+            status_code=500,
+            detail="Redis connection string not found",
+        )
+
+    r = redis.Redis.from_url(redis_conn_string)
+    if not r:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not connect to Redis",
+        )
+    return r
 
 
 def generate_secure_reset_code(length: int = 8) -> str:
@@ -266,6 +287,160 @@ async def change_password_with_reset_code(
     db_session.refresh(user)
 
     # Delete reset code (one-time use)
+    r.delete(matched_key)
+
+    logging.info(f"Password successfully changed for user: {user.user_uuid}")
+    return "Password changed"
+
+
+async def send_reset_password_code_platform(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    email: EmailStr,
+):
+    """
+    Send a password reset code to the user's email (platform-level, no org required).
+
+    SECURITY NOTES:
+    - Uses cryptographically secure code generation (secrets module)
+    - Returns generic message to prevent user enumeration
+    - Logs attempts for security audit
+    """
+    statement = select(User).where(User.email == email)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        logging.info(f"Password reset requested for non-existent email: {email[:3]}***")
+        return "If an account with that email exists, a reset code has been sent"
+
+    r = _get_redis_connection()
+
+    generated_reset_code = generate_secure_reset_code(length=8)
+    reset_email_invite_uuid = f"reset_email_invite_code_{uuid.uuid4()}"
+
+    ttl = 60 * 60 * 1  # 1 hour in seconds
+
+    resetCodeObject = {
+        "reset_code": generated_reset_code,
+        "reset_email_invite_uuid": reset_email_invite_uuid,
+        "reset_code_expires": int(datetime.now().timestamp()) + ttl,
+        "reset_code_type": "password_reset",
+        "created_at": datetime.now().isoformat(),
+        "created_by": user.user_uuid,
+    }
+
+    r.set(
+        f"{reset_email_invite_uuid}:user:{user.user_uuid}:platform:code:{generated_reset_code}",
+        json.dumps(resetCodeObject),
+        ex=ttl,
+    )
+
+    user_read = UserRead.model_validate(user)
+
+    base_url = get_base_url_from_request(request)
+    isEmailSent = send_password_reset_email_platform(
+        generated_reset_code=generated_reset_code,
+        user=user_read,
+        email=user_read.email,
+        base_url=base_url,
+    )
+
+    if not isEmailSent:
+        logging.error(f"Failed to send password reset email to user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=500,
+            detail="Issue with sending reset code",
+        )
+
+    logging.info(f"Password reset code sent to user: {user.user_uuid}")
+    return "If an account with that email exists, a reset code has been sent"
+
+
+async def change_password_with_reset_code_platform(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    new_password: str,
+    email: EmailStr,
+    reset_code: str,
+):
+    """
+    Change password using a reset code (platform-level, no org required).
+
+    SECURITY NOTES:
+    - Validates password complexity before changing
+    - Uses generic error messages to prevent user/code enumeration
+    - Deletes reset code after successful use (one-time use)
+    """
+    validation_result = validate_password_complexity(new_password)
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "WEAK_PASSWORD",
+                "message": "Password does not meet security requirements",
+                "errors": validation_result.errors,
+                "requirements": validation_result.requirements,
+            },
+        )
+
+    statement = select(User).where(User.email == email)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        logging.warning(f"Password change attempted for non-existent email: {email[:3]}***")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid reset code or email",
+        )
+
+    r = _get_redis_connection()
+
+    if not reset_code.isalnum():
+        logging.warning(f"Invalid reset code format for user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset code",
+        )
+
+    reset_code_pattern = f"*:user:{user.user_uuid}:platform:code:{reset_code}"
+    matched_key = None
+    for key in r.scan_iter(match=reset_code_pattern, count=10):
+        matched_key = key
+        break
+
+    if not matched_key:
+        logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset code",
+        )
+
+    reset_code_value = r.get(matched_key)
+
+    if reset_code_value is None:
+        logging.warning(f"Reset code value missing for user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset code",
+        )
+    reset_code_object = json.loads(reset_code_value)
+
+    if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
+        r.delete(matched_key)
+        logging.info(f"Expired reset code used for user: {user.user_uuid}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset code",
+        )
+
+    user.password = security_hash_password(new_password)
+    db_session.add(user)
+
+    db_session.commit()
+    db_session.refresh(user)
+
     r.delete(matched_key)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")

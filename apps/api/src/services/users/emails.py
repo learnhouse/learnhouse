@@ -125,6 +125,42 @@ def send_password_reset_email(
     )
 
 
+def send_password_reset_email_platform(
+    generated_reset_code: str,
+    user: UserRead,
+    email: EmailStr,
+    base_url: str,
+):
+    safe_username = html.escape(user.username)
+    safe_code = html.escape(generated_reset_code)
+    safe_email = quote(str(email), safe='')
+    safe_code_param = quote(generated_reset_code, safe='')
+    reset_url = f"{base_url}/reset-password?email={safe_email}&amp;resetCode={safe_code_param}"
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">Reset your password</h1>
+        <p style="{STYLES['p']}">
+            Hi {safe_username}, we received a request to reset your password. Use the code below or click the button.
+        </p>
+        <div style="margin: 28px 0;">
+            <span style="{STYLES['code']}">{safe_code}</span>
+        </div>
+        <a href="{reset_url}" style="{STYLES['button']}">
+            Reset Password
+        </a>
+    """
+
+    return send_email(
+        to=email,
+        subject="Reset your password",
+        body=_email_layout(
+            title="Reset Password",
+            body_content=body_content,
+            footer_note="If you didn't request a password reset, you can safely ignore this email. This link will expire in 1 hour.",
+        ),
+    )
+
+
 def send_email_verification_email(
     token: str,
     user: UserRead,
