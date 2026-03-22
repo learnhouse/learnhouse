@@ -11,6 +11,10 @@ from src.security.features_utils.plans import FEATURE_PLAN_REQUIREMENTS, get_pla
 # Features that are always on (no admin toggle — cannot be disabled)
 ALWAYS_ON_FEATURES = {"courses", "storage", "usergroups", "assignments"}
 
+# Always-on features that have plan-based limits (not unlimited)
+# These are always enabled but their limit comes from the plan config
+ALWAYS_ON_WITH_LIMITS = {"courses"}
+
 # All known features
 ALL_FEATURES = [
     "ai", "analytics", "api", "assignments", "audit_logs", "boards", "collaboration",
@@ -80,9 +84,26 @@ def resolve_feature(feature: str, config: dict, org_id: int = 0) -> dict:
     mode = get_deployment_mode()
     required_plan = FEATURE_PLAN_REQUIREMENTS.get(feature)
 
-    # Always-on features: enabled in all modes, unlimited, no admin toggle
-    if feature in ALWAYS_ON_FEATURES:
+    # Always-on features without limits: enabled in all modes, unlimited, no admin toggle
+    if feature in ALWAYS_ON_FEATURES and feature not in ALWAYS_ON_WITH_LIMITS:
         return {"enabled": True, "limit": 0, "required_plan": required_plan}
+
+    # Always-on features WITH plan limits: enabled in all modes, but limit comes from plan
+    if feature in ALWAYS_ON_WITH_LIMITS:
+        if mode in ("ee", "oss"):
+            return {"enabled": True, "limit": 0, "required_plan": required_plan}
+        # SaaS: always enabled, but respect the plan limit + overrides + packs
+        plan = _get_plan_from_config(config)
+        plan_config = get_plan_feature_config(plan, feature)
+        plan_limit = plan_config.get("limit", 0)
+        overrides = _get_overrides(config, feature)
+        extra_limit = overrides.get("extra_limit", 0)
+        purchased_extra = _get_purchased_extra(org_id, feature) if org_id else 0
+        if plan_limit == 0:
+            effective_limit = 0
+        else:
+            effective_limit = plan_limit + extra_limit + purchased_extra
+        return {"enabled": True, "limit": effective_limit, "required_plan": required_plan}
 
     admin_toggle = _get_admin_toggle(config, feature)
     admin_disabled = admin_toggle.get("disabled", False)
