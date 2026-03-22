@@ -3,6 +3,7 @@ from src.routers import analytics as analytics_router_module
 from src.routers import code_execution
 from src.routers import health
 from src.routers import instance
+from src.routers import plans
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
@@ -227,6 +228,9 @@ v1_router.include_router(
 
 # Instance info (public, no auth)
 v1_router.include_router(instance.router, prefix="/instance", tags=["instance"])
+
+# Plan limits (public, no auth — used by frontend pricing pages)
+v1_router.include_router(plans.router, prefix="/plans", tags=["plans"])
 
 # Register EE Routers if available
 register_ee_routers(v1_router)
