@@ -11,11 +11,23 @@ if (SENTRY_DSN) {
     environment: LEARNHOUSE_ENV,
     sendDefaultPii: true,
     enableLogs: true,
-    tracesSampleRate: LEARNHOUSE_ENV === "dev" ? 1.0 : 0.5,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
+    tracesSampleRate: LEARNHOUSE_ENV === "dev" ? 1.0 : 0.1,
+    replaysSessionSampleRate: 0.0,
+    replaysOnErrorSampleRate: 0.1,
     integrations: [
       Sentry.replayIntegration(),
     ],
+    beforeSend(event, hint) {
+      const msg =
+        (hint?.originalException as Error)?.message ??
+        event?.exception?.values?.[0]?.value ??
+        "";
+
+      if (msg.includes("Failed to find Server Action")) return null;
+      if (msg.includes("Organization not found")) return null;
+      if (msg.includes("Organization has no config")) return null;
+
+      return event;
+    },
   });
 }

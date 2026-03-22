@@ -27,8 +27,8 @@ if learnhouse_config.general_config.sentry_config.dsn:
         environment=learnhouse_config.general_config.env,
         send_default_pii=False,
         enable_logs=True,
-        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
-        profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.5,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
         profile_lifecycle="trace",
     )
 
