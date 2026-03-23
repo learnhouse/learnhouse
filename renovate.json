@@ -87,7 +87,7 @@
     },
     {
       "matchManagers": ["pep621"],
-      "rangeStrategy": "bump"
+      "rangeStrategy": "pin"
     },
     {
       "matchUpdateTypes": ["minor", "patch"],
