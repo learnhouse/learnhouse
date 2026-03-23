@@ -241,6 +241,7 @@ export function FeedbackModal({
               <textarea
                 value={feedbackMessage}
                 onChange={(e) => setFeedbackMessage(e.target.value)}
+                aria-label={t('common.help_menu.feedback_placeholder')}
                 placeholder={t('common.help_menu.feedback_placeholder')}
                 className={cn(
                   'w-full h-28 px-3 py-2 rounded-lg resize-none',

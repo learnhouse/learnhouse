@@ -369,6 +369,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           value={searchQuery}
           onChange={handleSearchChange}
           onFocus={() => setShowResults(true)}
+          aria-label={t('search.search_placeholder')}
           placeholder={t('search.search_placeholder')}
           className={`w-full h-9 pl-11 pr-4 rounded-xl
                      focus:outline-none focus:ring-1 transition-all text-sm

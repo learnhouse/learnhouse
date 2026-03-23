@@ -156,6 +156,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => !newComment && setIsFocused(false)}
                   onKeyDown={handleKeyDown}
+                  aria-label={t('communities.comments.write_reply')}
                   placeholder={t('communities.comments.write_reply')}
                   rows={isFocused || newComment ? 2 : 1}
                   className="w-full px-3 py-2 text-sm bg-transparent outline-none resize-none placeholder:text-gray-400"
