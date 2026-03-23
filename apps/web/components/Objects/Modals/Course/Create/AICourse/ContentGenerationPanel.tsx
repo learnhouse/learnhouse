@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Loader2, BookOpen, FileText, Sparkles, Check, ChevronDown, ChevronRight, Play } from 'lucide-react'
+import { Loader2, BookOpen, FileText, Sparkles, Check, ChevronDown, ChevronRight, Play, RotateCcw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -340,6 +340,19 @@ function ContentGenerationPanel({
                           <Loader2 className="w-4 h-4 animate-spin" />
                           <span className="text-xs">{t('courses.create.ai.generating_short')}</span>
                         </div>
+                      ) : hasError ? (
+                        <button
+                          onClick={() => handleGenerateContent(
+                            activity.activity_uuid,
+                            activity.name,
+                            activity.description,
+                            chapter.name
+                          )}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-xs text-red-300 hover:text-red-200 transition-colors ring-1 ring-inset ring-red-500/20"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          {t('courses.create.ai.retry')}
+                        </button>
                       ) : (
                         <button
                           onClick={() => handleGenerateContent(

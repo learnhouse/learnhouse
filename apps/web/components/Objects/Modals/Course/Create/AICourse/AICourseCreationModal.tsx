@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { X, ArrowRight, Check, FlaskConical, Loader2 } from 'lucide-react'
+import { X, Loader2, ArrowUpRight } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
@@ -28,8 +28,6 @@ interface AICourseCreationModalProps {
   accessToken: string
 }
 
-type WizardStep = 'planning' | 'content'
-
 const MAX_PLANNING_ITERATIONS = 10
 
 function AICourseCreationModal({
@@ -42,7 +40,6 @@ function AICourseCreationModal({
   const { t, i18n } = useTranslation()
   const router = useRouter()
 
-  const [step, setStep] = React.useState<WizardStep>('planning')
   const [sessionUuid, setSessionUuid] = React.useState<string | null>(null)
   const [messages, setMessages] = React.useState<CoursePlanningMessage[]>([])
   const [iterationCount, setIterationCount] = React.useState(0)
@@ -51,16 +48,15 @@ function AICourseCreationModal({
   const [currentPlan, setCurrentPlan] = React.useState<CoursePlan | null>(null)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Content step state
   const [createdChapters, setCreatedChapters] = React.useState<CreatedChapter[]>([])
   const [courseUuid, setCourseUuid] = React.useState<string | null>(null)
   const [isFinalizingPlan, setIsFinalizingPlan] = React.useState(false)
   const [hasVideoAttachment, setHasVideoAttachment] = React.useState(false)
 
-  // Reset state when modal opens
+  const isCourseCreated = courseUuid !== null
+
   React.useEffect(() => {
     if (isOpen) {
-      setStep('planning')
       setSessionUuid(null)
       setMessages([])
       setIterationCount(0)
@@ -81,19 +77,16 @@ function AICourseCreationModal({
     setError(null)
     setStreamingContent('')
 
-    // Track if video attachment is being sent
     if (attachments?.some(a => a.type === 'youtube')) {
       setHasVideoAttachment(true)
     }
 
-    // Build user message content with attachment info
     let displayMessage = message
     if (attachments && attachments.length > 0) {
       const attachmentNames = attachments.map(a => a.name).join(', ')
       displayMessage = `${message}\n\n[Attachments: ${attachmentNames}]`
     }
 
-    // Add user message immediately
     const userMessage: CoursePlanningMessage = { role: 'user', content: displayMessage }
     setMessages((prev) => [...prev, userMessage])
 
@@ -105,7 +98,6 @@ function AICourseCreationModal({
       setSessionUuid(newSessionUuid)
       setIterationCount((prev) => prev + 1)
 
-      // Extract plan from streaming content
       setTimeout(() => {
         setStreamingContent((current) => {
           const parsedPlan = parseCoursePlanFromStream(current)
@@ -113,7 +105,6 @@ function AICourseCreationModal({
             setCurrentPlan(parsedPlan)
           }
 
-          // Add AI message
           const aiMessage: CoursePlanningMessage = { role: 'model', content: current }
           setMessages((prev) => [...prev, aiMessage])
           setStreamingContent('')
@@ -133,28 +124,16 @@ function AICourseCreationModal({
 
     try {
       if (!sessionUuid) {
-        // Start new session with user's language
         await startCoursePlanningSession(
-          orgId,
-          message,
-          accessToken,
-          onChunk,
-          onComplete,
-          onError,
-          i18n.language,
-          attachments
+          orgId, message, accessToken,
+          onChunk, onComplete, onError,
+          i18n.language, attachments
         )
       } else {
-        // Continue existing session
         await iterateCoursePlanning(
-          sessionUuid,
-          message,
-          accessToken,
-          onChunk,
-          onComplete,
-          onError,
-          currentPlan,
-          attachments
+          sessionUuid, message, accessToken,
+          onChunk, onComplete, onError,
+          currentPlan, attachments
         )
       }
     } catch (err) {
@@ -166,7 +145,7 @@ function AICourseCreationModal({
     setCurrentPlan(updatedPlan)
   }
 
-  const handleContinueToContent = async () => {
+  const handleCreateCourse = async () => {
     if (!sessionUuid || !currentPlan) return
 
     setIsFinalizingPlan(true)
@@ -178,20 +157,9 @@ function AICourseCreationModal({
       if (result.success && result.data) {
         setCourseUuid(result.data.course_uuid)
         setCreatedChapters(result.data.chapters)
-
-        if (ENABLE_ACTIVITY_CONTENT_GENERATION) {
-          // Go to content generation step
-          setStep('content')
-          toast.success(t('courses.create.ai.course_structure_created'))
-        } else {
-          // Skip content generation, finish directly
-          toast.success(t('courses.create.ai.course_created_success'))
-          onClose()
-          const courseId = result.data.course_uuid.replace('course_', '')
-          router.push(`/dash/courses/course/${courseId}/content`)
-        }
+        toast.success(t('courses.create.ai.course_created_success'))
       } else {
-        setError(result.error || 'Failed to create course structure')
+        setError(result.error || 'Failed to create course')
         toast.error(result.error || t('courses.create.ai.failed_to_create'))
       }
     } catch (err) {
@@ -203,16 +171,13 @@ function AICourseCreationModal({
     }
   }
 
-  const handleFinish = () => {
+  const handleOpenInEditor = () => {
     if (!courseUuid) return
-
     onClose()
-    // Remove 'course_' prefix for URL
     const courseId = courseUuid.replace('course_', '')
     router.push(`/dash/courses/course/${courseId}/content`)
   }
 
-  // Use portal to render outside of DOM tree
   if (typeof document === 'undefined') return null
 
   return createPortal(
@@ -248,71 +213,35 @@ function AICourseCreationModal({
             }}
             className="relative w-[95vw] max-w-[1400px] h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-inset ring-white/10 backdrop-blur-md min-h-0"
           >
-            {/* Header */}
+            {/* Header - clean, minimal */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Image
-                    className="outline outline-1 outline-neutral-200/20 rounded-lg"
-                    width={24}
-                    src={lrnaiIcon}
-                    alt="AI Course"
-                  />
-                  <span className="text-sm font-semibold text-white/70">
-                    {t('courses.create.ai.title')}
-                  </span>
-                </div>
-                <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
-                  <FlaskConical size={14} />
-                  <span className="text-xs font-semibold antialiased">
-                    {t('common.experimental')}
-                  </span>
-                </div>
-                {/* Step indicator */}
-                <div className="flex items-center gap-2 ml-4">
-                  <div className={cn(
-                    "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors",
-                    step === 'planning'
-                      ? "bg-purple-500/20 text-purple-300"
-                      : "bg-green-500/20 text-green-300"
-                  )}>
-                    {step === 'planning' ? (
-                      <>
-                        {ENABLE_ACTIVITY_CONTENT_GENERATION && (
-                          <span className="w-5 h-5 flex items-center justify-center bg-purple-500/30 rounded-full">1</span>
-                        )}
-                        {t('courses.create.ai.step_planning')}
-                      </>
-                    ) : (
-                      <>
-                        <Check size={14} />
-                        {t('courses.create.ai.step_planning')}
-                      </>
-                    )}
-                  </div>
-                  {ENABLE_ACTIVITY_CONTENT_GENERATION && (
-                    <>
-                      <ArrowRight size={14} className="text-white/30" />
-                      <div className={cn(
-                        "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors",
-                        step === 'content'
-                          ? "bg-purple-500/20 text-purple-300"
-                          : "bg-white/5 text-white/30"
-                      )}>
-                        <span className="w-5 h-5 flex items-center justify-center bg-white/10 rounded-full">2</span>
-                        {t('courses.create.ai.step_content')}
-                      </div>
-                    </>
-                  )}
-                </div>
+              <div className="flex items-center gap-3">
+                <Image
+                  className="outline outline-1 outline-neutral-200/20 rounded-lg"
+                  width={24}
+                  src={lrnaiIcon}
+                  alt="AI Course"
+                />
+                <span className="text-sm font-semibold text-white/70">
+                  {t('courses.create.ai.title')}
+                </span>
               </div>
               <div className="flex items-center gap-3">
-                {step === 'planning' && currentPlan && (
+                {isCourseCreated && (
                   <button
-                    onClick={handleContinueToContent}
+                    onClick={handleOpenInEditor}
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold bg-green-500/20 text-green-300 hover:bg-green-500/30 outline outline-1 outline-green-500/30 transition-all"
+                  >
+                    {t('courses.create.ai.open_in_editor')}
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {!isCourseCreated && currentPlan && (
+                  <button
+                    onClick={handleCreateCourse}
                     disabled={isFinalizingPlan || isLoading}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all delay-75 ease-linear",
+                      "flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold transition-all",
                       ENABLE_ACTIVITY_CONTENT_GENERATION
                         ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 outline outline-1 outline-purple-500/30"
                         : "bg-green-500/20 text-green-300 hover:bg-green-500/30 outline outline-1 outline-green-500/30",
@@ -324,26 +253,9 @@ function AICourseCreationModal({
                         <Loader2 className="w-4 h-4 animate-spin" />
                         {t('courses.create.ai.creating_structure')}
                       </>
-                    ) : ENABLE_ACTIVITY_CONTENT_GENERATION ? (
-                      <>
-                        <ArrowRight className="w-4 h-4" />
-                        {t('courses.create.ai.continue_to_content')}
-                      </>
                     ) : (
-                      <>
-                        <Check className="w-4 h-4" />
-                        {t('courses.create.ai.create_course')}
-                      </>
+                      t('courses.create.ai.create_course')
                     )}
-                  </button>
-                )}
-                {step === 'content' && (
-                  <button
-                    onClick={handleFinish}
-                    className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold bg-green-500/20 text-green-300 hover:bg-green-500/30 outline outline-1 outline-green-500/30 transition-all"
-                  >
-                    <Check className="w-4 h-4" />
-                    {t('courses.create.ai.finish_and_edit')}
                   </button>
                 )}
                 <X
@@ -356,17 +268,19 @@ function AICourseCreationModal({
 
             {/* Error banner */}
             {error && (
-              <div className="px-6 py-3 bg-red-500/20 outline outline-1 outline-red-500 text-red-200 text-sm flex-shrink-0">
-                {error}
+              <div className="px-6 py-3 bg-red-500/20 outline outline-1 outline-red-500 text-red-200 text-sm flex-shrink-0 flex items-center justify-between">
+                <span>{error}</span>
+                <button onClick={() => setError(null)} className="p-1 hover:bg-white/10 rounded">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
             {/* Content - Two panel layout */}
             <div className="flex-1 flex min-h-0">
-              {/* Left panel - Preview */}
+              {/* Left panel - Unified plan & content */}
               <div className="flex-1 border-r border-white/5 relative overflow-hidden">
                 <AICoursePreview
-                  step={step}
                   plan={currentPlan}
                   createdChapters={createdChapters}
                   courseUuid={courseUuid}
@@ -375,6 +289,10 @@ function AICourseCreationModal({
                   onUpdatePlan={handleUpdatePlan}
                   isLoading={isLoading}
                   streamingContent={streamingContent}
+                  isCourseCreated={isCourseCreated}
+                  onCreateCourse={handleCreateCourse}
+                  isCreatingCourse={isFinalizingPlan}
+                  onOpenInEditor={handleOpenInEditor}
                 />
               </div>
 
@@ -386,8 +304,8 @@ function AICourseCreationModal({
                   maxIterations={MAX_PLANNING_ITERATIONS}
                   isLoading={isLoading}
                   onSendMessage={handleSendMessage}
-                  step={step}
                   hasVideoAttachment={hasVideoAttachment}
+                  isCourseCreated={isCourseCreated}
                 />
               </div>
             </div>
