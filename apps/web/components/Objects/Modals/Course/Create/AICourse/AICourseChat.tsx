@@ -13,8 +13,8 @@ interface AICourseChatProps {
   maxIterations: number
   isLoading: boolean
   onSendMessage: (message: string, attachments?: Attachment[]) => void
-  step: 'planning' | 'content'
   hasVideoAttachment?: boolean
+  isCourseCreated?: boolean
 }
 
 const SUGGESTION_CHIPS = [
@@ -32,8 +32,8 @@ function AICourseChat({
   maxIterations,
   isLoading,
   onSendMessage,
-  step,
   hasVideoAttachment = false,
+  isCourseCreated = false,
 }: AICourseChatProps) {
   const { t } = useTranslation()
   const [inputValue, setInputValue] = React.useState('')
@@ -47,42 +47,29 @@ function AICourseChat({
   const attachMenuRef = React.useRef<HTMLDivElement>(null)
   const loadingTimerRef = React.useRef<NodeJS.Timeout | null>(null)
 
-  const canSendMessage = !isLoading && iterationCount < maxIterations && (inputValue.trim() || attachments.length > 0)
+  const canSendMessage = !isLoading && !isCourseCreated && iterationCount < maxIterations && (inputValue.trim() || attachments.length > 0)
   const isExhausted = iterationCount >= maxIterations
   const currentHasVideo = attachments.some(a => a.type === 'youtube') || hasVideoAttachment
 
-  // Track loading duration
   React.useEffect(() => {
     if (isLoading) {
       setLoadingDuration(0)
-      loadingTimerRef.current = setInterval(() => {
-        setLoadingDuration(prev => prev + 1)
-      }, 1000)
+      loadingTimerRef.current = setInterval(() => setLoadingDuration(prev => prev + 1), 1000)
     } else {
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current)
-        loadingTimerRef.current = null
-      }
+      if (loadingTimerRef.current) { clearInterval(loadingTimerRef.current); loadingTimerRef.current = null }
       setLoadingDuration(0)
     }
-    return () => {
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current)
-      }
-    }
+    return () => { if (loadingTimerRef.current) clearInterval(loadingTimerRef.current) }
   }, [isLoading])
 
-  // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Focus input on mount
   React.useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
-  // Close attach menu when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
@@ -103,9 +90,8 @@ function AICourseChat({
   }
 
   const handleSuggestionClick = (prompt: string) => {
-    if (!isLoading && iterationCount < maxIterations) {
-      setInputValue(prompt)
-      inputRef.current?.focus()
+    if (!isLoading && !isCourseCreated && iterationCount < maxIterations) {
+      onSendMessage(prompt)
     }
   }
 
@@ -122,14 +108,8 @@ function AICourseChat({
 
     Array.from(files).forEach((file) => {
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      const attachment: Attachment = {
-        id,
-        type,
-        name: file.name,
-        file,
-      }
+      const attachment: Attachment = { id, type, name: file.name, file }
 
-      // Create preview for images and videos
       if (type === 'image' || type === 'video') {
         const reader = new FileReader()
         reader.onload = (event) => {
@@ -144,26 +124,23 @@ function AICourseChat({
     })
 
     setShowAttachMenu(false)
-    e.target.value = '' // Reset input
+    e.target.value = ''
   }
 
   const handleYoutubeAdd = () => {
     if (!youtubeUrl.trim()) return
-
-    // Extract video ID and validate YouTube URL
     const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i
     const match = youtubeUrl.match(youtubeRegex)
 
     if (match && match[1]) {
       const videoId = match[1]
-      const attachment: Attachment = {
+      setAttachments((prev) => [...prev, {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'youtube',
         name: `YouTube: ${videoId}`,
         url: youtubeUrl.trim(),
         preview: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-      }
-      setAttachments((prev) => [...prev, attachment])
+      }])
       setYoutubeUrl('')
       setShowYoutubeInput(false)
       setShowAttachMenu(false)
@@ -184,34 +161,19 @@ function AICourseChat({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with iteration counter */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <Image
-            className="outline outline-1 outline-neutral-200/20 rounded-lg"
-            width={20}
-            src={lrnaiIcon}
-            alt="AI Chat"
-          />
-          <span className="font-semibold text-sm text-white/70">
-            {t('courses.create.ai.chat_title')}
-          </span>
-        </div>
-        <div className={cn(
-          "text-xs font-semibold px-3 py-1 rounded-full",
-          isExhausted
-            ? "bg-red-500/20 text-red-300 outline outline-1 outline-red-500/30"
-            : "bg-white/5 text-white/40 outline outline-1 outline-neutral-100/10"
-        )}>
-          {iterationCount}/{maxIterations} {t('courses.create.ai.iterations')}
-        </div>
-      </div>
-
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-        {/* Show suggestions if no messages yet */}
-        {messages.length === 0 && !isLoading && step === 'planning' && (
-          <div className="space-y-4 pt-4">
+        {/* Empty state with suggestions */}
+        {messages.length === 0 && !isLoading && (
+          <div className="space-y-4 pt-8">
+            <div className="flex justify-center">
+              <Image
+                className="outline outline-1 outline-neutral-200/20 rounded-lg"
+                width={28}
+                src={lrnaiIcon}
+                alt="AI"
+              />
+            </div>
             <p className="text-sm text-white/50 text-center">
               {t('courses.create.ai.chat_description')}
             </p>
@@ -229,23 +191,11 @@ function AICourseChat({
           </div>
         )}
 
-        {/* Content step message */}
-        {step === 'content' && messages.length > 0 && (
-          <div className="bg-purple-500/10 rounded-xl p-4 ring-1 ring-inset ring-purple-500/20">
-            <p className="text-sm text-purple-300">
-              {t('courses.create.ai.content_step_hint')}
-            </p>
-          </div>
-        )}
-
         {/* Message bubbles */}
         {messages.map((message, index) => (
           <div
             key={index}
-            className={cn(
-              "flex",
-              message.role === 'user' ? "justify-end" : "justify-start"
-            )}
+            className={cn("flex", message.role === 'user' ? "justify-end" : "justify-start")}
           >
             <div
               className={cn(
@@ -276,9 +226,7 @@ function AICourseChat({
           <div className="flex justify-start">
             <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-3 ring-1 ring-inset ring-white/10 max-w-[85%]">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-                </div>
+                <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
                 <div className="flex flex-col gap-1">
                   <span className="text-sm text-white/70 font-medium">
                     {currentHasVideo && loadingDuration < 10
@@ -325,8 +273,8 @@ function AICourseChat({
           <div className="text-center text-sm text-white/50 py-2">
             {t('courses.create.ai.max_iterations_reached')}
           </div>
-        ) : step === 'content' ? (
-          <div className="text-center text-sm text-white/50 py-2">
+        ) : isCourseCreated ? (
+          <div className="text-center text-sm text-white/40 py-2">
             {t('courses.create.ai.content_step_info')}
           </div>
         ) : (
@@ -370,7 +318,6 @@ function AICourseChat({
 
             {/* Input container */}
             <div className="relative bg-white/[0.03] rounded-2xl ring-1 ring-inset ring-white/10 focus-within:ring-purple-500/30 transition-all">
-              {/* Text input */}
               <textarea
                 ref={inputRef}
                 value={inputValue}
@@ -429,10 +376,7 @@ function AICourseChat({
                             className="w-full px-3 py-2.5 text-sm bg-white/5 rounded-lg text-white placeholder:text-white/30 ring-1 ring-inset ring-white/10 focus:outline-none focus:ring-purple-500/30"
                             autoFocus
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                                handleYoutubeAdd()
-                              }
+                              if (e.key === 'Enter') { e.preventDefault(); handleYoutubeAdd() }
                             }}
                           />
                           <div className="flex gap-2">
@@ -458,9 +402,7 @@ function AICourseChat({
                             type="button"
                             onClick={() => {
                               const input = document.createElement('input')
-                              input.type = 'file'
-                              input.accept = 'image/*'
-                              input.multiple = true
+                              input.type = 'file'; input.accept = 'image/*'; input.multiple = true
                               input.onchange = (e) => handleFileSelect(e as any, 'image')
                               input.click()
                             }}
@@ -491,9 +433,7 @@ function AICourseChat({
                             type="button"
                             onClick={() => {
                               const input = document.createElement('input')
-                              input.type = 'file'
-                              input.accept = '.pdf,.doc,.docx,.txt,.md'
-                              input.multiple = true
+                              input.type = 'file'; input.accept = '.pdf,.doc,.docx,.txt,.md'; input.multiple = true
                               input.onchange = (e) => handleFileSelect(e as any, 'file')
                               input.click()
                             }}
@@ -540,7 +480,6 @@ function AICourseChat({
               </div>
             </div>
 
-            {/* Hint about video processing */}
             {attachments.some(a => a.type === 'youtube') && (
               <p className="text-xs text-amber-400/60 text-center">
                 {t('courses.create.ai.video_hint') || 'Videos may take 1-2 minutes to process'}

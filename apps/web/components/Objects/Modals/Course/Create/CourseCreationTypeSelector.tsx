@@ -50,16 +50,16 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
         >
           <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-colors ${
             canUseAI
-              ? 'bg-purple-100 group-hover:bg-purple-200'
+              ? 'rotating-gradient-bg'
               : 'bg-gray-100'
           }`}>
             {canUseAI ? (
               <Image
                 src={lrnaiIcon}
                 alt="AI"
-                width={32}
-                height={32}
-                className="rounded-lg"
+                width={28}
+                height={28}
+                className="drop-shadow-md"
               />
             ) : (
               <Lock size={28} className="text-gray-400" />
