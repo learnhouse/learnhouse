@@ -7,6 +7,7 @@ import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
+import { useBoardSelection } from '../BoardSelectionContext'
 
 function normalizeUrl(input: string): string {
   const trimmed = input.trim()
@@ -50,6 +51,10 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  const { isSelected: isMultiSelected } = useBoardSelection()
+  const multiSelected = getPos ? isMultiSelected(getPos()) : false
+  const isBlockSelected = selected || multiSelected
 
   const { handleDragStart, handleResizeStart } = useDragResize({
     x, y, width, height,
@@ -239,7 +244,7 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
       {/* Full iframe */}
       <div
         className="bg-white overflow-hidden rounded-2xl relative w-full h-full"
-        style={{ overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+        style={{ overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}
       >
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
