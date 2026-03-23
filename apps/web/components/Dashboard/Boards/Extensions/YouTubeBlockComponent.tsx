@@ -8,6 +8,7 @@ import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
+import { useBoardSelection } from '../BoardSelectionContext'
 
 // Extend window for YT API
 declare global {
@@ -63,6 +64,10 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
   const playerRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const playerDivId = useRef(`yt-player-${Math.random().toString(36).slice(2, 10)}`)
+
+  const { isSelected: isMultiSelected } = useBoardSelection()
+  const multiSelected = getPos ? isMultiSelected(getPos()) : false
+  const isBlockSelected = selected || multiSelected
 
   // --- Yjs sync ---
   const ydoc = useBoardYdoc()
@@ -259,7 +264,7 @@ export default function YouTubeBlockComponent({ node, updateAttributes, selected
       {/* YouTube player — full block */}
       <div
         className="overflow-hidden rounded-2xl"
-        style={{ width: '100%', height: '100%', overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+        style={{ width: '100%', height: '100%', overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}
       >
         <div id={playerDivId.current} style={{ width: '100%', height: '100%' }} />
       </div>

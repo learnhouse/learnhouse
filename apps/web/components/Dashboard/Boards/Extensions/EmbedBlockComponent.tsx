@@ -13,6 +13,7 @@ import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
+import { useBoardSelection } from '../BoardSelectionContext'
 
 /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -84,6 +85,10 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
   const codeInputRef = useRef<HTMLTextAreaElement>(null)
 
   const hasEmbed = !!(embedUrl || embedCode)
+
+  const { isSelected: isMultiSelected } = useBoardSelection()
+  const multiSelected = getPos ? isMultiSelected(getPos()) : false
+  const isBlockSelected = selected || multiSelected
 
   const { handleDragStart, handleResizeStart } = useDragResize({
     x, y, width, height,
@@ -276,7 +281,7 @@ export default function EmbedBlockComponent({ node, updateAttributes, selected, 
   const renderEmbedContent = () => (
     <div
       className="mx-4 mb-4 mt-1.5 overflow-hidden rounded-xl border border-neutral-100 nice-shadow relative"
-      style={{ height: height - 80, overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+      style={{ height: height - 80, overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}
     >
       {embedType === 'url' && iframeSrc ? (
         <iframe

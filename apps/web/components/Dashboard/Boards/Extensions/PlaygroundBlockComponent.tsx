@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
+import { useBoardSelection } from '../BoardSelectionContext'
 import {
   startBoardsPlaygroundSession,
   iterateBoardsPlayground,
@@ -121,6 +122,10 @@ export default function PlaygroundBlockComponent({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  const { isSelected: isMultiSelected } = useBoardSelection()
+  const multiSelected = getPos ? isMultiSelected(getPos()) : false
+  const isBlockSelected = selected || multiSelected
 
   const boardCtx = editor?.storage?.boardContext
   const accessToken: string = boardCtx?.accessToken || ''
@@ -301,7 +306,7 @@ export default function PlaygroundBlockComponent({
       className="rounded-2xl"
     >
       {/* Floating toolbar — appears on hover or when selected */}
-      <div className={`absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 transition-opacity pointer-events-none ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`absolute inset-x-0 top-0 z-20 flex justify-center pt-2.5 transition-opacity pointer-events-none ${isBlockSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-sm nice-shadow pointer-events-auto cursor-grab active:cursor-grabbing"
           onMouseDown={handleDragStart}
@@ -324,7 +329,7 @@ export default function PlaygroundBlockComponent({
       {/* Full iframe */}
       <div
         className="bg-white overflow-hidden rounded-2xl relative w-full h-full"
-        style={{ overscrollBehavior: 'contain', pointerEvents: selected ? 'auto' : 'none' }}
+        style={{ overscrollBehavior: 'contain', pointerEvents: isBlockSelected ? 'auto' : 'none' }}
       >
         {srcdoc && (
           <iframe

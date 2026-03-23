@@ -6,6 +6,7 @@ import BoardBlockWrapper from './BoardBlockWrapper'
 import DragHandle from './DragHandle'
 import ResizeHandle from './ResizeHandle'
 import { useDragResize } from './useDragResize'
+import { useBoardSelection } from '../BoardSelectionContext'
 import { getOrgPodcasts, getPodcastMeta } from '@services/podcasts/podcasts'
 import type { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/podcasts'
 import { formatDuration } from '@services/podcasts/episodes'
@@ -17,6 +18,10 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
   const orgslug: string = boardCtx?.orgslug || ''
   const accessToken: string = boardCtx?.accessToken || ''
   const orgUUID: string = boardCtx?.orgUuid || ''
+
+  const { isSelected: isMultiSelected } = useBoardSelection()
+  const multiSelected = getPos ? isMultiSelected(getPos()) : false
+  const isBlockSelected = selected || multiSelected
 
   // Picker state
   const [podcasts, setPodcasts] = useState<Podcast[]>([])
@@ -268,7 +273,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
           <div
             className="w-full h-1.5 bg-neutral-700 rounded-full cursor-pointer group"
             onClick={handleSeek}
-            style={{ pointerEvents: selected ? 'auto' : 'none' }}
+            style={{ pointerEvents: isBlockSelected ? 'auto' : 'none' }}
           >
             <div
               className="h-full bg-neutral-300 rounded-full transition-all group-hover:bg-white"
@@ -281,7 +286,7 @@ export default function PodcastBlockComponent({ node, updateAttributes, selected
             <button
               onClick={togglePlay}
               className="w-8 h-8 rounded-full bg-neutral-200 hover:bg-white flex items-center justify-center transition-colors"
-              style={{ pointerEvents: selected ? 'auto' : 'none' }}
+              style={{ pointerEvents: isBlockSelected ? 'auto' : 'none' }}
             >
               {isPlaying ? (
                 <Pause size={14} weight="fill" className="text-neutral-900" />
