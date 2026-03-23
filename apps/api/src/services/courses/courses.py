@@ -1,5 +1,6 @@
 from typing import List
 from uuid import uuid4
+import logging
 from sqlmodel import Session, select, or_, and_, text, func
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
@@ -35,6 +36,8 @@ from src.security.superadmin import is_user_superadmin
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 async def _user_can_view_unpublished_course(
@@ -1072,7 +1075,7 @@ def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
                         Key=new_key,
                     )
         except Exception as e:
-            print(f"Error copying S3 directory {src_dir} -> {dst_dir}: {e}")
+            logger.error("Error copying S3 directory %s -> %s: %s", src_dir, dst_dir, e, exc_info=True)
     else:
         if os.path.exists(src_dir):
             shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)

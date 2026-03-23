@@ -1,5 +1,6 @@
 from typing import Optional, AsyncGenerator
 from uuid import uuid4
+import logging
 import redis
 import json
 import asyncio
@@ -11,6 +12,8 @@ from src.services.ai.schemas.magicblocks import (
     MagicBlockSessionData,
     MagicBlockMessage,
 )
+
+logger = logging.getLogger(__name__)
 
 LH_CONFIG = get_learnhouse_config()
 
@@ -29,7 +32,7 @@ def get_redis_connection():
         try:
             return redis.from_url(redis_conn_string)
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
+            logger.error("Failed to connect to Redis: %s", e, exc_info=True)
     return None
 
 
@@ -49,7 +52,7 @@ def get_magicblock_session(session_uuid: str) -> Optional[MagicBlockSessionData]
                 data = json.loads(session_data)
             return MagicBlockSessionData(**data)
     except Exception as e:
-        print(f"Failed to get MagicBlock session: {e}")
+        logger.error("Failed to get MagicBlock session: %s", e, exc_info=True)
 
     return None
 
@@ -88,7 +91,7 @@ def save_magicblock_session(session: MagicBlockSessionData) -> bool:
         r.setex(key, SESSION_TTL, json.dumps(session.model_dump()))
         return True
     except Exception as e:
-        print(f"Failed to save MagicBlock session: {e}")
+        logger.error("Failed to save MagicBlock session: %s", e, exc_info=True)
         return False
 
 

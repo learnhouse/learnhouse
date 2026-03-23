@@ -1,5 +1,6 @@
 from typing import Optional, AsyncGenerator, List
 from uuid import uuid4
+import logging
 import redis
 import json
 import asyncio
@@ -14,6 +15,8 @@ from src.services.ai.schemas.courseplanning import (
     CoursePlanningMessage,
     AttachmentData,
 )
+
+logger = logging.getLogger(__name__)
 
 LH_CONFIG = get_learnhouse_config()
 
@@ -36,7 +39,7 @@ def get_redis_connection():
         try:
             return redis.from_url(redis_conn_string)
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
+            logger.error("Failed to connect to Redis: %s", e, exc_info=True)
     return None
 
 
@@ -56,7 +59,7 @@ def get_course_planning_session(session_uuid: str) -> Optional[CoursePlanningSes
                 data = json.loads(session_data)
             return CoursePlanningSessionData(**data)
     except Exception as e:
-        print(f"Failed to get course planning session: {e}")
+        logger.error("Failed to get course planning session: %s", e, exc_info=True)
 
     return None
 
@@ -93,7 +96,7 @@ def save_course_planning_session(session: CoursePlanningSessionData) -> bool:
         r.setex(key, SESSION_TTL, json.dumps(session.model_dump()))
         return True
     except Exception as e:
-        print(f"Failed to save course planning session: {e}")
+        logger.error("Failed to save course planning session: %s", e, exc_info=True)
         return False
 
 
@@ -736,7 +739,7 @@ def extract_plan_from_response(response: str) -> Optional[CoursePlan]:
         data = json.loads(cleaned)
         return CoursePlan(**data)
     except Exception as e:
-        print(f"Failed to parse course plan: {e}")
+        logger.error("Failed to parse course plan: %s", e, exc_info=True)
         return None
 
 
@@ -771,5 +774,5 @@ def extract_content_from_response(response: str) -> Optional[dict]:
         # Parse and return the JSON
         return json.loads(cleaned)
     except Exception as e:
-        print(f"Failed to parse activity content: {e}")
+        logger.error("Failed to parse activity content: %s", e, exc_info=True)
         return None
