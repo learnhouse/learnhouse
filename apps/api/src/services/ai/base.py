@@ -1,12 +1,15 @@
 from typing import Optional, Dict, Any, AsyncGenerator
 from uuid import uuid4
 from datetime import datetime, timezone
+import logging
 import redis
 import json
 import asyncio
 from google import genai
 
 from config.config import get_learnhouse_config
+
+logger = logging.getLogger(__name__)
 
 LH_CONFIG = get_learnhouse_config()
 
@@ -94,10 +97,10 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
                 else:
                     message_history = []
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}, using empty history")
+            logger.error("Failed to connect to Redis: %s, using empty history", e, exc_info=True)
             message_history = []
     else:
-        print("Redis connection string not found, using empty history")
+        logger.warning("Redis connection string not found, using empty history")
         message_history = []
 
     return {
@@ -154,7 +157,7 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
             save_chat_session_meta(aichat_uuid, user_id, title, course_uuid, mode=mode, org_id=org_id)
 
     except Exception as e:
-        print(f"Failed to save message to Redis: {e}")
+        logger.error("Failed to save message to Redis: %s", e, exc_info=True)
 
 
 CHAT_TTL = 2160000  # 25 days in seconds
@@ -190,7 +193,7 @@ def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uu
         r.zadd(f"user_chats:{user_id}", {aichat_uuid: now.timestamp()})
         r.expire(f"user_chats:{user_id}", CHAT_TTL)
     except Exception as e:
-        print(f"Failed to save chat session meta: {e}")
+        logger.error("Failed to save chat session meta: %s", e, exc_info=True)
 
 
 def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str] = None, favorite: Optional[bool] = None) -> Optional[dict]:
@@ -220,7 +223,7 @@ def update_chat_session_meta(aichat_uuid: str, user_id: int, title: Optional[str
 
         return meta
     except Exception as e:
-        print(f"Failed to update chat session meta: {e}")
+        logger.error("Failed to update chat session meta: %s", e, exc_info=True)
         return None
 
 
@@ -255,7 +258,7 @@ def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[d
 
         return sessions
     except Exception as e:
-        print(f"Failed to get user chat sessions: {e}")
+        logger.error("Failed to get user chat sessions: %s", e, exc_info=True)
         return []
 
 
@@ -279,7 +282,7 @@ def get_chat_messages(aichat_uuid: str, user_id: int) -> Optional[list[dict]]:
             return []
         return json.loads(history_data.decode("utf-8") if isinstance(history_data, bytes) else history_data)
     except Exception as e:
-        print(f"Failed to get chat messages: {e}")
+        logger.error("Failed to get chat messages: %s", e, exc_info=True)
         return None
 
 
@@ -301,7 +304,7 @@ def delete_chat_session(aichat_uuid: str, user_id: int) -> bool:
         r.zrem(f"user_chats:{user_id}", aichat_uuid)
         return True
     except Exception as e:
-        print(f"Failed to delete chat session: {e}")
+        logger.error("Failed to delete chat session: %s", e, exc_info=True)
         return False
 
 
@@ -325,7 +328,7 @@ def generate_chat_title(user_message: str, ai_response: str) -> str:
             if title:
                 return title[:60]
     except Exception as e:
-        print(f"Failed to generate chat title: {e}")
+        logger.error("Failed to generate chat title: %s", e, exc_info=True)
     # Fallback to truncated message
     fallback = user_message[:50].strip()
     if len(user_message) > 50:
@@ -435,5 +438,5 @@ Questions:"""
         return []
 
     except Exception as e:
-        print(f"Failed to generate follow-up suggestions: {e}")
+        logger.error("Failed to generate follow-up suggestions: %s", e, exc_info=True)
         return []

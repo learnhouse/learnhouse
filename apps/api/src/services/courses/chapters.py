@@ -294,7 +294,6 @@ async def DEPRECEATED_get_course_chapters(
         chapter_activityIds = []
 
         for activity in chapter.activities:
-            print("test", activity)
             chapter_activityIds.append(activity.activity_uuid)
 
         chapters[chapter.chapter_uuid] = {

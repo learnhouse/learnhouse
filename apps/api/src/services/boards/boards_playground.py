@@ -1,5 +1,6 @@
 from typing import Optional, AsyncGenerator
 from uuid import uuid4
+import logging
 import redis
 import json
 import asyncio
@@ -11,6 +12,8 @@ from src.services.boards.schemas.boards_playground import (
     BoardsPlaygroundSessionData,
     BoardsPlaygroundMessage,
 )
+
+logger = logging.getLogger(__name__)
 
 LH_CONFIG = get_learnhouse_config()
 
@@ -25,7 +28,7 @@ def get_redis_connection():
         try:
             return redis.from_url(redis_conn_string)
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
+            logger.error("Failed to connect to Redis: %s", e, exc_info=True)
     return None
 
 
@@ -43,7 +46,7 @@ def get_boards_playground_session(session_uuid: str) -> Optional[BoardsPlaygroun
                 data = json.loads(session_data)
             return BoardsPlaygroundSessionData(**data)
     except Exception as e:
-        print(f"Failed to get Boards Playground session: {e}")
+        logger.error("Failed to get Boards Playground session: %s", e, exc_info=True)
     return None
 
 
@@ -76,7 +79,7 @@ def save_boards_playground_session(session: BoardsPlaygroundSessionData) -> bool
         r.setex(key, SESSION_TTL, json.dumps(session.model_dump()))
         return True
     except Exception as e:
-        print(f"Failed to save Boards Playground session: {e}")
+        logger.error("Failed to save Boards Playground session: %s", e, exc_info=True)
         return False
 
 

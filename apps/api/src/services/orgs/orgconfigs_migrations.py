@@ -187,4 +187,4 @@ if __name__ == "__main__":
     from src.core.events.database import engine
     with Session(engine) as session:
         count = _v2_migrate_all_configs(session)
-        print(f"Done — {count} config(s) migrated to v2.")
+        logger.info("Done — %s config(s) migrated to v2.", count)
