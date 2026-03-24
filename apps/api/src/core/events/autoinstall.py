@@ -1,9 +1,12 @@
+import logging
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session, select
 
 from cli import install
 from config.config import get_learnhouse_config
 from src.db.organizations import Organization
+
+logger = logging.getLogger(__name__)
 
 
 def auto_install():
@@ -19,7 +22,7 @@ def auto_install():
     orgs = db_session.exec(select(Organization)).all()
 
     if len(orgs) == 0:
-        print("No organizations found. Starting auto-installation 🏗️")
+        logger.info("No organizations found. Starting auto-installation 🏗️")
         install(short=True)
 
     if orgs: 
@@ -27,11 +30,11 @@ def auto_install():
             default_org = db_session.exec(select(Organization).where(Organization.slug == 'default')).first()
 
             if not default_org:
-                print("No default organization found. Starting auto-installation 🏗️")
+                logger.info("No default organization found. Starting auto-installation 🏗️")
                 install(short=True)
 
     else: 
-        print("Organizations found. Skipping auto-installation 🚀")
+        logger.info("Organizations found. Skipping auto-installation 🚀")
 
             
             
