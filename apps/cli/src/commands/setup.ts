@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
@@ -47,23 +48,27 @@ async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
 }
 
 async function stepInstallDir(): Promise<string | typeof BACK> {
-  // Suggest a non-conflicting default if ./learnhouse already exists
-  const defaultDir = fs.existsSync(path.join(process.cwd(), 'learnhouse', 'learnhouse.config.json'))
-    ? './learnhouse-new'
-    : './learnhouse'
+  const baseDir = path.join(os.homedir(), '.learnhouse')
 
-  const installDir = await p.text({
-    message: 'Where should LearnHouse be installed?',
-    placeholder: defaultDir,
-    defaultValue: defaultDir,
+  p.log.info(`All installations are stored in ${pc.cyan('~/.learnhouse/<name>')}`)
+
+  const name = await p.text({
+    message: 'Name for this installation:',
+    placeholder: 'default',
+    defaultValue: 'default',
+    validate: (value) => {
+      if (!value) return 'Name is required'
+      if (/[/\\]/.test(value)) return 'Name cannot contain slashes'
+      return undefined
+    },
   })
-  if (p.isCancel(installDir)) { p.cancel(); process.exit(0) }
+  if (p.isCancel(name)) { p.cancel(); process.exit(0) }
 
-  const resolved = path.resolve(installDir as string)
+  const resolved = path.join(baseDir, name as string)
 
   // Warn if target already contains a deployment
   if (fs.existsSync(path.join(resolved, 'learnhouse.config.json'))) {
-    p.log.warn(`${resolved} already contains a LearnHouse installation.`)
+    p.log.warn(`~/.learnhouse/${name} already contains a LearnHouse installation.`)
     const overwrite = await p.confirm({
       message: 'Overwrite existing installation?',
       initialValue: false,
@@ -73,6 +78,9 @@ async function stepInstallDir(): Promise<string | typeof BACK> {
       process.exit(0)
     }
   }
+
+  // Ensure the directory exists
+  fs.mkdirSync(resolved, { recursive: true })
 
   return resolved
 }
