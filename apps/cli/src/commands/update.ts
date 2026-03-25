@@ -38,7 +38,7 @@ export async function updateCommand(options: { version?: string }) {
   const dir = findInstallDir()
   const config = readConfig(dir)
   if (!config) {
-    p.log.error('No LearnHouse installation found in the current directory.')
+    p.log.error('No LearnHouse installation found. Run `npx learnhouse setup` first.')
     process.exit(1)
   }
 

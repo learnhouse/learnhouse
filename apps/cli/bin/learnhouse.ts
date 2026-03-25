@@ -14,15 +14,23 @@ import { doctorCommand } from '../src/commands/doctor.js'
 import { shellCommand } from '../src/commands/shell.js'
 import { devCommand } from '../src/commands/dev.js'
 import { updateCommand } from '../src/commands/update.js'
+import { statusCommand } from '../src/commands/status.js'
+import { healthCommand } from '../src/commands/health.js'
+import { envCommand } from '../src/commands/env.js'
+import { restoreCommand } from '../src/commands/restore.js'
 
 const COMMANDS: { name: string; desc: string }[] = [
   { name: 'setup', desc: 'Interactive setup wizard' },
   { name: 'start', desc: 'Start services' },
   { name: 'stop', desc: 'Stop services' },
   { name: 'update', desc: 'Update to latest or specific version' },
+  { name: 'status', desc: 'Show service status' },
+  { name: 'health', desc: 'Run health checks' },
   { name: 'logs', desc: 'Stream logs' },
   { name: 'config', desc: 'Show configuration' },
-  { name: 'backup', desc: 'Backup & restore database' },
+  { name: 'env', desc: 'Edit environment variables' },
+  { name: 'backup', desc: 'Backup database' },
+  { name: 'restore', desc: 'Restore database from backup' },
   { name: 'deployments', desc: 'Manage deployments & resources' },
   { name: 'doctor', desc: 'Diagnose issues' },
   { name: 'shell', desc: 'Container shell access' },
@@ -101,6 +109,27 @@ program
   .description('Update LearnHouse to latest or a specific version')
   .option('-v, --version <version>', 'Target version (e.g. 1.0.0)')
   .action(updateCommand)
+
+program
+  .command('status')
+  .description('Show service status')
+  .action(statusCommand)
+
+program
+  .command('health')
+  .description('Run health checks')
+  .action(healthCommand)
+
+program
+  .command('env')
+  .description('Edit environment variables')
+  .action(envCommand)
+
+program
+  .command('restore')
+  .description('Restore database from a backup archive')
+  .argument('<archive>', 'Path to backup archive')
+  .action(restoreCommand)
 
 program
   .command('dev')
