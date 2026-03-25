@@ -13,11 +13,13 @@ import { deploymentsCommand } from '../src/commands/deployments.js'
 import { doctorCommand } from '../src/commands/doctor.js'
 import { shellCommand } from '../src/commands/shell.js'
 import { devCommand } from '../src/commands/dev.js'
+import { updateCommand } from '../src/commands/update.js'
 
 const COMMANDS: { name: string; desc: string }[] = [
   { name: 'setup', desc: 'Interactive setup wizard' },
   { name: 'start', desc: 'Start services' },
   { name: 'stop', desc: 'Stop services' },
+  { name: 'update', desc: 'Update to latest or specific version' },
   { name: 'logs', desc: 'Stream logs' },
   { name: 'config', desc: 'Show configuration' },
   { name: 'backup', desc: 'Backup & restore database' },
@@ -93,6 +95,12 @@ program
   .command('shell')
   .description('Open a shell in a LearnHouse container')
   .action(shellCommand)
+
+program
+  .command('update')
+  .description('Update LearnHouse to latest or a specific version')
+  .option('-v, --version <version>', 'Target version (e.g. 1.0.0)')
+  .action(updateCommand)
 
 program
   .command('dev')

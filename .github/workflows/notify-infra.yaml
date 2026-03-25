@@ -6,7 +6,7 @@ on:
       - main
       - dev
     tags:
-      - 'v*'
+      - '[0-9]*'
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
