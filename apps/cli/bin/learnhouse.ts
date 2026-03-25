@@ -14,15 +14,23 @@ import { doctorCommand } from '../src/commands/doctor.js'
 import { shellCommand } from '../src/commands/shell.js'
 import { devCommand } from '../src/commands/dev.js'
 import { updateCommand } from '../src/commands/update.js'
+import { statusCommand } from '../src/commands/status.js'
+import { healthCommand } from '../src/commands/health.js'
+import { envCommand } from '../src/commands/env.js'
+import { restoreCommand } from '../src/commands/restore.js'
 
 const COMMANDS: { name: string; desc: string }[] = [
   { name: 'setup', desc: 'Interactive setup wizard' },
   { name: 'start', desc: 'Start services' },
   { name: 'stop', desc: 'Stop services' },
   { name: 'update', desc: 'Update to latest or specific version' },
+  { name: 'status', desc: 'Show service status' },
+  { name: 'health', desc: 'Run health checks' },
   { name: 'logs', desc: 'Stream logs' },
   { name: 'config', desc: 'Show configuration' },
-  { name: 'backup', desc: 'Backup & restore database' },
+  { name: 'env', desc: 'Edit environment variables' },
+  { name: 'backup', desc: 'Backup database' },
+  { name: 'restore', desc: 'Restore database from backup' },
   { name: 'deployments', desc: 'Manage deployments & resources' },
   { name: 'doctor', desc: 'Diagnose issues' },
   { name: 'shell', desc: 'Container shell access' },
@@ -52,6 +60,14 @@ program
 program
   .command('setup')
   .description('Interactive setup wizard for LearnHouse')
+  .option('--ci', 'Non-interactive mode with defaults (for CI/automation)')
+  .option('--name <name>', 'Installation name (default: "default")')
+  .option('--domain <domain>', 'Domain name (default: "localhost")')
+  .option('--port <port>', 'HTTP port (default: 80)', parseInt)
+  .option('--admin-email <email>', 'Admin email (default: "admin@school.dev")')
+  .option('--admin-password <password>', 'Admin password (required in --ci mode)')
+  .option('--channel <channel>', 'Release channel: stable or dev (default: "stable")')
+  .option('--no-start', 'Skip starting services after setup')
   .action(setupCommand)
 
 program
@@ -100,7 +116,30 @@ program
   .command('update')
   .description('Update LearnHouse to latest or a specific version')
   .option('-v, --version <version>', 'Target version (e.g. 1.0.0)')
+  .option('--migrate', 'Run database migrations automatically')
+  .option('--no-migrate', 'Skip database migrations')
   .action(updateCommand)
+
+program
+  .command('status')
+  .description('Show service status')
+  .action(statusCommand)
+
+program
+  .command('health')
+  .description('Run health checks')
+  .action(healthCommand)
+
+program
+  .command('env')
+  .description('Edit environment variables')
+  .action(envCommand)
+
+program
+  .command('restore')
+  .description('Restore database from a backup archive')
+  .argument('<archive>', 'Path to backup archive')
+  .action(restoreCommand)
 
 program
   .command('dev')
