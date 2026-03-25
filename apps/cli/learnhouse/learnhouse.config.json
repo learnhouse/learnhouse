@@ -1,9 +1,0 @@
-{
-  "version": "0.1.0",
-  "createdAt": "2026-02-11T18:15:40.417Z",
-  "installDir": "/Users/swve/Documents/projects/learnhouse/learnhouse/apps/cli/learnhouse",
-  "domain": "localhost",
-  "httpPort": 80,
-  "useHttps": false,
-  "orgSlug": "default"
-}

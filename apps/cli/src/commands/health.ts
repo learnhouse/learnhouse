@@ -25,6 +25,10 @@ export async function healthCommand() {
   p.intro(pc.cyan('LearnHouse Health Check'))
 
   const id = config.deploymentId || autoDetectDeploymentId()
+  if (!id) {
+    p.log.error('No deployment found. Start services first.')
+    process.exit(1)
+  }
 
   // 1. Container status
   p.log.step('Container Status')

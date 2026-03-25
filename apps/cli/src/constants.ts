@@ -1,4 +1,4 @@
-export const VERSION = '1.1.0'
+export const VERSION = '1.2.0'
 export const APP_IMAGE = 'ghcr.io/learnhouse/app:latest'
 export const DEV_IMAGE = 'ghcr.io/learnhouse/app:dev'
 export const NGINX_IMAGE = 'nginx:alpine'

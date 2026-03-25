@@ -4,7 +4,7 @@ import { execSync } from 'node:child_process'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { readConfig, findInstallDir } from '../services/config-store.js'
-import { isContainerRunning, dockerExecFromFile } from '../services/docker.js'
+import { autoDetectDeploymentId, isContainerRunning, dockerExecFromFile } from '../services/docker.js'
 
 export async function restoreCommand(archivePath: string) {
   if (!archivePath) {
@@ -32,7 +32,13 @@ export async function restoreCommand(archivePath: string) {
     process.exit(1)
   }
 
-  const dbContainer = `learnhouse-db-${config.deploymentId}`
+  const id = config.deploymentId || autoDetectDeploymentId()
+  if (!id) {
+    p.log.error('No deployment found. Start services first.')
+    process.exit(1)
+  }
+
+  const dbContainer = `learnhouse-db-${id}`
   if (!isContainerRunning(dbContainer)) {
     p.log.error('Database container is not running. Start services first.')
     process.exit(1)

@@ -12,7 +12,12 @@ export async function shellCommand() {
   }
 
   const id = config.deploymentId || autoDetectDeploymentId()
-  const containers = listDeploymentContainers(id || undefined)
+  if (!id) {
+    p.log.error('No deployment found. Start services first.')
+    process.exit(1)
+  }
+
+  const containers = listDeploymentContainers(id)
     .filter((c) => c.status.toLowerCase().startsWith('up'))
 
   if (containers.length === 0) {

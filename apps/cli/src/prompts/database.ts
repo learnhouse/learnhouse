@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { validateRequired } from '../utils/validators.js'
 import { checkTcpConnection, parsePostgresUrl, parseRedisUrl } from '../utils/network.js'

@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp, dockerStats, dockerStatsForContainers, listDeploymentContainers } from '../services/docker.js'
+import { autoDetectDeploymentId, dockerComposeDown, dockerComposeUp, dockerStats, dockerStatsForContainers, listDeploymentContainers } from '../services/docker.js'
 
 interface Deployment {
   id: string
@@ -167,7 +167,8 @@ async function scaleResources() {
     p.log.message(pc.dim(stats.trim()))
   } catch {
     try {
-      const running = listDeploymentContainers(config.deploymentId)
+      const id = config.deploymentId || autoDetectDeploymentId()
+      const running = listDeploymentContainers(id || undefined)
         .filter((c) => c.status.toLowerCase().startsWith('up'))
         .map((c) => c.name)
       if (running.length > 0) {
@@ -181,7 +182,7 @@ async function scaleResources() {
     }
   }
 
-  const composePath = path.join(config.installDir, 'docker-compose.yml')
+  const composePath = path.join(config.installDir || dir, 'docker-compose.yml')
   if (!fs.existsSync(composePath)) {
     p.log.error('docker-compose.yml not found.')
     process.exit(1)

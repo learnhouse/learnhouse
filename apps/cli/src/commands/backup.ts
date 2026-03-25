@@ -1,13 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { readConfig, findInstallDir } from '../services/config-store.js'
 import { autoDetectDeploymentId, isContainerRunning, dockerExecToFile, dockerExecFromFile } from '../services/docker.js'
 
-function resolveDbContainer(config: { deploymentId?: string }): string {
+function resolveDbContainer(config: { deploymentId?: string }): string | null {
   const id = config.deploymentId || autoDetectDeploymentId()
+  if (!id) return null
   return `learnhouse-db-${id}`
 }
 
@@ -27,7 +28,7 @@ async function createBackup() {
   }
 
   const dbContainer = resolveDbContainer(config)
-  if (!isContainerRunning(dbContainer)) {
+  if (!dbContainer || !isContainerRunning(dbContainer)) {
     p.log.error('Database container is not running. Start services first.')
     process.exit(1)
   }
@@ -117,7 +118,7 @@ async function restoreBackup(archivePath: string) {
   }
 
   const dbContainer = resolveDbContainer(config)
-  if (!isContainerRunning(dbContainer)) {
+  if (!dbContainer || !isContainerRunning(dbContainer)) {
     p.log.error('Database container is not running. Start services first.')
     process.exit(1)
   }

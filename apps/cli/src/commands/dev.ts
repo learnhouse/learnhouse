@@ -1,5 +1,5 @@
 import { spawn, spawnSync, execSync, type ChildProcess } from 'node:child_process'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import * as path from 'node:path'
 import * as fs from 'node:fs'
