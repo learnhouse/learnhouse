@@ -11,8 +11,8 @@ export function isDockerInstalled(): boolean {
 
 export function isDockerComposeV2(): boolean {
   try {
-    execSync('docker compose version', { stdio: 'pipe' })
-    return true
+    const output = execSync('docker compose version', { stdio: 'pipe' }).toString()
+    return output.includes('v2')
   } catch {
     return false
   }
