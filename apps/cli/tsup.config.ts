@@ -16,5 +16,5 @@ export default defineConfig({
       'const require = __createRequire(import.meta.url);',
     ].join('\n'),
   },
-  noExternal: [/@clack\/prompts/, /picocolors/, /commander/],
+  noExternal: [/@clack\//, /picocolors/, /commander/],
 })

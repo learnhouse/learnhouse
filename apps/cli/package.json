@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance",
   "type": "module",
   "bin": {
@@ -42,6 +42,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@clack/core": "^1.0.1",
     "@clack/prompts": "^1.0.0",
     "commander": "^14.0.0",
     "picocolors": "^1.1.1"
