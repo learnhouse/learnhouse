@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
-import { isDockerInstalled, isDockerComposeV2, isDockerRunning } from '../services/docker.js'
+import { isDockerInstalled, isDockerRunning } from '../services/docker.js'
 
 export async function checkPrerequisites(): Promise<void> {
   const s = p.spinner()
@@ -11,11 +11,6 @@ export async function checkPrerequisites(): Promise<void> {
       name: 'Docker Engine',
       check: isDockerInstalled,
       failMsg: `Docker is not installed. Install it from ${pc.underline('https://docs.docker.com/get-docker/')}`,
-    },
-    {
-      name: 'Docker Compose v2',
-      check: isDockerComposeV2,
-      failMsg: `Docker Compose v2 is required. Install it from ${pc.underline('https://docs.docker.com/compose/install/')}`,
     },
     {
       name: 'Docker daemon',

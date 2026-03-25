@@ -51,6 +51,7 @@ The setup wizard walks you through domain, database, admin account, and optional
 ```bash
 npx learnhouse start       # Start services
 npx learnhouse stop        # Stop services
+npx learnhouse update      # Update to latest version
 npx learnhouse logs        # Stream logs
 npx learnhouse backup      # Backup database
 npx learnhouse doctor      # Diagnose issues
