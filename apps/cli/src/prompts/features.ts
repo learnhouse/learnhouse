@@ -1,4 +1,4 @@
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import { validateRequired } from '../utils/validators.js'
 
 export interface FeaturesConfig {

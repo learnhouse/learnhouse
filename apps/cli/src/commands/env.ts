@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
 import { dockerComposeDown, dockerComposeUp } from '../services/docker.js'

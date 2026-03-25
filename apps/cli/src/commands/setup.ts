@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import type { SetupConfig } from '../types.js'
 import { printBanner } from '../ui/banner.js'
@@ -47,13 +47,34 @@ async function confirmOrBack(message: string): Promise<typeof BACK | boolean> {
 }
 
 async function stepInstallDir(): Promise<string | typeof BACK> {
+  // Suggest a non-conflicting default if ./learnhouse already exists
+  const defaultDir = fs.existsSync(path.join(process.cwd(), 'learnhouse', 'learnhouse.config.json'))
+    ? './learnhouse-new'
+    : './learnhouse'
+
   const installDir = await p.text({
     message: 'Where should LearnHouse be installed?',
-    placeholder: './learnhouse',
-    defaultValue: './learnhouse',
+    placeholder: defaultDir,
+    defaultValue: defaultDir,
   })
   if (p.isCancel(installDir)) { p.cancel(); process.exit(0) }
-  return path.resolve(installDir as string)
+
+  const resolved = path.resolve(installDir as string)
+
+  // Warn if target already contains a deployment
+  if (fs.existsSync(path.join(resolved, 'learnhouse.config.json'))) {
+    p.log.warn(`${resolved} already contains a LearnHouse installation.`)
+    const overwrite = await p.confirm({
+      message: 'Overwrite existing installation?',
+      initialValue: false,
+    })
+    if (p.isCancel(overwrite) || !overwrite) {
+      p.cancel('Setup cancelled.')
+      process.exit(0)
+    }
+  }
+
+  return resolved
 }
 
 async function stepDomain() {

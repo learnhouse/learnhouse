@@ -59,9 +59,21 @@ function collectCandidates(dir: string, depth: number, results: string[]): void 
 
 function pickBest(candidates: string[]): string | null {
   if (candidates.length === 0) return null
-  // Prefer complete installs (has deploymentId + .env)
-  const complete = candidates.find(isCompleteInstall)
-  if (complete) return complete
+  // Prefer complete installs (has deploymentId + .env), most recent first
+  const completeInstalls = candidates.filter(isCompleteInstall)
+  if (completeInstalls.length > 0) {
+    // Sort by createdAt descending so the newest deployment wins
+    completeInstalls.sort((a, b) => {
+      try {
+        const configA = JSON.parse(fs.readFileSync(path.join(a, CONFIG_FILENAME), 'utf-8'))
+        const configB = JSON.parse(fs.readFileSync(path.join(b, CONFIG_FILENAME), 'utf-8'))
+        return (configB.createdAt || '').localeCompare(configA.createdAt || '')
+      } catch {
+        return 0
+      }
+    })
+    return completeInstalls[0]
+  }
   return candidates[0]
 }
 
@@ -81,18 +93,22 @@ export function findInstallDir(): string {
   const best = pickBest(candidates)
   if (best) return best
 
-  // 4. Walk up the directory tree
+  // 4. Walk up the directory tree — prefer complete installs
   let current = cwd
+  let fallbackDir: string | null = null
   while (true) {
     const parent = path.dirname(current)
     if (parent === current) break // reached root
     if (isCompleteInstall(parent)) return parent
     const parentSub = path.join(parent, 'learnhouse')
     if (isCompleteInstall(parentSub)) return parentSub
-    // Fall back to any config
-    if (fs.existsSync(path.join(parent, CONFIG_FILENAME))) return parent
+    // Remember first dir with any config as fallback
+    if (!fallbackDir && fs.existsSync(path.join(parent, CONFIG_FILENAME))) {
+      fallbackDir = parent
+    }
     current = parent
   }
+  if (fallbackDir) return fallbackDir
 
   return cwd
 }

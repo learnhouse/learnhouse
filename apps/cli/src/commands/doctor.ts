@@ -80,6 +80,12 @@ export async function doctorCommand() {
   const id = config.deploymentId || autoDetectDeploymentId()
   const installDir = dir // use the directory where config was found
 
+  if (!id) {
+    p.log.warn('No deployment ID found. Skipping container checks.')
+    p.outro(pc.dim('Done'))
+    return
+  }
+
   // 3. Container status
   p.log.step('Containers')
   const containers = listDeploymentContainers(id)

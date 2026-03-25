@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import * as p from '@clack/prompts'
+import * as p from '../utils/prompt.js'
 import pc from 'picocolors'
 import { findInstallDir, readConfig } from '../services/config-store.js'
-import { dockerComposeDown, dockerComposeUp, dockerStats, dockerStatsForContainers, listDeploymentContainers } from '../services/docker.js'
+import { autoDetectDeploymentId, dockerComposeDown, dockerComposeUp, dockerStats, dockerStatsForContainers, listDeploymentContainers } from '../services/docker.js'
 
 const SERVICES = ['learnhouse-app', 'db', 'redis'] as const
 
@@ -95,7 +95,8 @@ export async function scaleCommand() {
     p.log.message(pc.dim(stats.trim()))
   } catch {
     try {
-      const running = listDeploymentContainers(config.deploymentId)
+      const id = config.deploymentId || autoDetectDeploymentId()
+      const running = listDeploymentContainers(id || undefined)
         .filter((c) => c.status.toLowerCase().startsWith('up'))
         .map((c) => c.name)
       if (running.length > 0) {
