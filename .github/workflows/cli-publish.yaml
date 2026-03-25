@@ -3,7 +3,7 @@ name: Publish CLI to npm
 on:
   push:
     tags:
-      - 'cli-v*'
+      - 'cli-[0-9]*'
 
 permissions:
   contents: write
@@ -37,7 +37,7 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#cli-v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF_NAME#cli-}" >> $GITHUB_OUTPUT
 
       - name: Verify version matches package.json
         run: |
@@ -53,29 +53,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Generate CLI changelog
-        id: changelog
-        run: |
-          # Find the previous cli-v* tag
-          PREV_TAG=$(git tag --list 'cli-v*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
-          if [ -z "$PREV_TAG" ]; then
-            # First release — show all CLI commits
-            RANGE="HEAD"
-          else
-            RANGE="${PREV_TAG}..HEAD"
-          fi
-          # Only include commits that touched apps/cli/
-          NOTES=$(git log "$RANGE" --pretty=format:"- %s (%h)" -- apps/cli/)
-          if [ -z "$NOTES" ]; then
-            NOTES="- Maintenance release"
-          fi
-          # Write to file to preserve newlines
-          echo "$NOTES" > /tmp/cli-changelog.md
-        working-directory: ${{ github.workspace }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: CLI ${{ steps.version.outputs.version }}
-          body_path: /tmp/cli-changelog.md
+      # GitHub Release is created by the release script (authored by you, not the bot)
