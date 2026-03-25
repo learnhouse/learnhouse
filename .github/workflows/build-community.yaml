@@ -5,10 +5,12 @@ on:
     branches:
       - prod
       - dev
+      - main
   pull_request:
     branches:
       - prod
       - dev
+      - main
 
 permissions:
   contents: read
@@ -105,10 +107,6 @@ jobs:
 
           TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${BRANCH}-${SHA_SHORT}"
           TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${BRANCH}"
-
-          if [ "${{ github.ref_name }}" == "prod" ]; then
-            TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          fi
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
