@@ -34,7 +34,7 @@ async function resolveTag(version: string): Promise<boolean> {
   }
 }
 
-export async function updateCommand(options: { version?: string }) {
+export async function updateCommand(options: { version?: string; migrate?: boolean }) {
   const dir = findInstallDir()
   const config = readConfig(dir)
   if (!config) {
@@ -94,25 +94,31 @@ export async function updateCommand(options: { version?: string }) {
     dockerComposeUp(config.installDir)
     s.stop('Services restarted')
 
-    // Ask user about database migrations
-    p.log.info('')
-    p.log.warn(
-      pc.bold('This update may include database migrations.'),
-    )
-    p.log.info(
-      `Before proceeding, check the release notes at ${pc.cyan('https://docs.learnhouse.app')} for migration guides and breaking changes.`,
-    )
-    p.log.info('')
+    // Database migrations
+    let shouldMigrate: boolean
+    if (options.migrate === true) {
+      shouldMigrate = true
+    } else if (options.migrate === false) {
+      shouldMigrate = false
+    } else {
+      // Interactive — ask the user
+      p.log.info('')
+      p.log.warn(
+        pc.bold('This update may include database migrations.'),
+      )
+      p.log.info(
+        `Before proceeding, check the release notes at ${pc.cyan('https://docs.learnhouse.app')} for migration guides and breaking changes.`,
+      )
+      p.log.info('')
 
-    const runMigrations = await p.confirm({
-      message: 'Run database migrations now?',
-      initialValue: false,
-    })
+      const runMigrations = await p.confirm({
+        message: 'Run database migrations now?',
+        initialValue: false,
+      })
+      shouldMigrate = !p.isCancel(runMigrations) && !!runMigrations
+    }
 
-    if (p.isCancel(runMigrations)) {
-      p.log.info('Skipped database migrations. You can run them later with:')
-      p.log.info('  docker exec <container> sh -c "cd /app/api && uv run alembic upgrade head"')
-    } else if (runMigrations) {
+    if (shouldMigrate) {
       s.start('Running database migrations')
       try {
         const appContainer = getAppContainerName(config.installDir)
