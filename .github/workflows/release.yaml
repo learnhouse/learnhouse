@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: learnhouse/app
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare platform pair
+        id: prep
+        run: |
+          echo "platform_pair=$(echo '${{ matrix.platform }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            LEARNHOUSE_PUBLIC=true
+          cache-from: type=gha,scope=release-${{ steps.prep.outputs.platform_pair }}
+          cache-to: type=gha,mode=max,scope=release-${{ steps.prep.outputs.platform_pair }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ steps.prep.outputs.platform_pair }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Create release and push manifest
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Generate image tags
+        id: meta
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${VERSION}"
+          TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+          TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          TAGS=$(echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | xargs -I{} echo "-t {}" | tr '\n' ' ')
+          docker buildx imagetools create $TAGS \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find previous v* tag (exclude cli-v* and current tag)
+          PREV_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          # Group commits by type
+          FEATURES=$(git log "$RANGE" --pretty=format:"- %s (%h)" --grep="^feat" || true)
+          FIXES=$(git log "$RANGE" --pretty=format:"- %s (%h)" --grep="^fix" || true)
+          OTHERS=$(git log "$RANGE" --pretty=format:"- %s (%h)" --invert-grep --grep="^feat" --grep="^fix" --grep="^chore" --grep="^docs" --grep="^ci" --grep="^style" --grep="^refactor" --grep="^test" || true)
+
+          {
+            echo "## What's Changed"
+            echo ""
+            if [ -n "$FEATURES" ]; then
+              echo "### Features"
+              echo "$FEATURES"
+              echo ""
+            fi
+            if [ -n "$FIXES" ]; then
+              echo "### Bug Fixes"
+              echo "$FIXES"
+              echo ""
+            fi
+            if [ -n "$OTHERS" ]; then
+              echo "### Other Changes"
+              echo "$OTHERS"
+              echo ""
+            fi
+            echo "---"
+            echo ""
+            echo "**Docker image:** \`ghcr.io/learnhouse/app:${{ steps.version.outputs.version }}\`"
+          } > /tmp/changelog.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: v${{ steps.version.outputs.version }}
+          body_path: /tmp/changelog.md
+          make_latest: true
