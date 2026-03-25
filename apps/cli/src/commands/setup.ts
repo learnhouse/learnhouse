@@ -115,7 +115,94 @@ async function stepFeatures() {
   return await promptFeatures()
 }
 
-export async function setupCommand() {
+export interface SetupOptions {
+  ci?: boolean
+  name?: string
+  domain?: string
+  port?: number
+  adminEmail?: string
+  adminPassword?: string
+  channel?: string
+  start?: boolean
+}
+
+export async function setupCommand(options: SetupOptions) {
+  // ─── CI / non-interactive mode ──────────────────────────────
+  if (options.ci) {
+    if (!options.adminPassword) {
+      console.error('Error: --admin-password is required in --ci mode')
+      process.exit(1)
+    }
+
+    await checkPrerequisites()
+
+    const installName = options.name || 'default'
+    const baseDir = path.join(os.homedir(), '.learnhouse')
+    const resolvedDir = path.join(baseDir, installName)
+    fs.mkdirSync(resolvedDir, { recursive: true })
+
+    const deploymentId = crypto.randomBytes(4).toString('hex')
+    const channel = (options.channel === 'dev' ? 'dev' : 'stable') as 'stable' | 'dev'
+
+    const config: SetupConfig = {
+      deploymentId,
+      installDir: resolvedDir,
+      channel,
+      domain: options.domain || 'localhost',
+      useHttps: false,
+      httpPort: options.port || 80,
+      autoSsl: false,
+      useExternalDb: false,
+      useAiDatabase: false,
+      useExternalRedis: false,
+      orgName: 'Default',
+      adminEmail: options.adminEmail || 'admin@school.dev',
+      adminPassword: options.adminPassword,
+      aiEnabled: false,
+      emailEnabled: false,
+      s3Enabled: false,
+      googleOAuthEnabled: false,
+      unsplashEnabled: false,
+    }
+
+    console.log(`Setting up LearnHouse in ~/.learnhouse/${installName}`)
+
+    const { image: appImage } = await resolveAppImage(config.channel)
+    console.log(`Using image: ${appImage}`)
+
+    fs.mkdirSync(resolvedDir, { recursive: true })
+    fs.mkdirSync(path.join(resolvedDir, 'extra'), { recursive: true })
+    fs.writeFileSync(path.join(resolvedDir, 'docker-compose.yml'), generateDockerCompose(config, appImage))
+    fs.writeFileSync(path.join(resolvedDir, '.env'), generateEnvFile(config))
+    fs.writeFileSync(path.join(resolvedDir, 'extra', 'nginx.prod.conf'), generateNginxConf())
+    writeConfig(config)
+
+    console.log('Configuration files generated')
+
+    if (options.start !== false) {
+      console.log('Starting services...')
+      try {
+        dockerComposeUp(resolvedDir)
+        const healthy = await waitForHealth(`http://localhost:${config.httpPort}`)
+        if (healthy) {
+          console.log('LearnHouse is ready!')
+        } else {
+          console.log('Health check timed out — services may still be starting')
+        }
+      } catch {
+        console.error('Failed to start services')
+        process.exit(1)
+      }
+    }
+
+    const portSuffix = config.httpPort === 80 ? '' : `:${config.httpPort}`
+    console.log(`URL: http://${config.domain}${portSuffix}`)
+    console.log(`Admin: ${config.adminEmail}`)
+    console.log(`Install dir: ${resolvedDir}`)
+    return
+  }
+
+  // ─── Interactive mode ───────────────────────────────────────
   await printBanner()
   p.intro(pc.cyan('LearnHouse Setup Wizard'))
 

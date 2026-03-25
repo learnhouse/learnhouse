@@ -13,6 +13,9 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "prepublishOnly": "tsup",
+    "test": "bun run build && vitest run tests/unit.test.ts",
+    "test:e2e": "bun run build && vitest run tests/e2e.test.ts",
+    "test:all": "bun run build && vitest run",
     "version:patch": "node scripts/bump-version.js patch",
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major"
@@ -39,7 +42,8 @@
   "devDependencies": {
     "@types/node": "^25.0.0",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.1"
   },
   "dependencies": {
     "@clack/core": "^1.0.1",
