@@ -12,7 +12,7 @@ from src.routers.local_content import router as local_content_router
 
 
 ########################
-# Pre-Alpha Version 0.1.0
+# Version 1.0.0
 # Author: @swve
 # (c) LearnHouse 2022
 ########################
@@ -38,7 +38,7 @@ app = FastAPI(
     description=learnhouse_config.site_description,
     docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
     redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
-    version="0.1.0",
+    version="1.0.0",
 )
 
 app.add_middleware(
