@@ -29,7 +29,7 @@ body:
     attributes:
       label: Version
       description: What version of our software are you running?
-      placeholder: ex. 0.1.0
+      placeholder: ex. 1.0.0
     validations:
       required: true
   - type: dropdown
