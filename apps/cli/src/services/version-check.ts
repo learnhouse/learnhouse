@@ -44,7 +44,7 @@ export async function checkForUpdates(): Promise<void> {
  * Resolve the Docker image tag for the LearnHouse app.
  *
  * - channel 'dev'    → always returns ghcr.io/learnhouse/app:dev
- * - channel 'stable' → tries versioned tag (e.g. :1.0.1), falls back to :latest
+ * - channel 'stable' → fetches the latest app release tag from GitHub, falls back to :latest
  */
 export async function resolveAppImage(
   channel: 'stable' | 'dev' = 'stable',
@@ -53,21 +53,35 @@ export async function resolveAppImage(
     return { image: DEV_IMAGE, isLatest: false }
   }
 
-  const versionedTag = `${GHCR_BASE}:${VERSION}`
-
-  // Check if the versioned tag exists via GHCR token-less API
   try {
-    // Get anonymous token
+    // Get the latest app release tag from GitHub (excludes cli-* tags)
+    const releasesResp = await fetch(
+      'https://api.github.com/repos/learnhouse/learnhouse/releases',
+      {
+        signal: AbortSignal.timeout(5000),
+        headers: { Accept: 'application/vnd.github+json' },
+      },
+    )
+    if (!releasesResp.ok) throw new Error('GitHub API failed')
+
+    const releases = await releasesResp.json() as { tag_name: string; draft: boolean; prerelease: boolean }[]
+    const appRelease = releases.find(
+      (r) => !r.draft && !r.prerelease && !r.tag_name.startsWith('cli-'),
+    )
+    if (!appRelease) throw new Error('No app release found')
+
+    const appVersion = appRelease.tag_name
+
+    // Verify the Docker image exists for this version
     const tokenResp = await fetch(
-      `https://ghcr.io/token?scope=repository:learnhouse/app:pull`,
+      'https://ghcr.io/token?scope=repository:learnhouse/app:pull',
       { signal: AbortSignal.timeout(5000) },
     )
-    if (!tokenResp.ok) throw new Error('token fetch failed')
+    if (!tokenResp.ok) throw new Error('GHCR token failed')
     const { token } = await tokenResp.json() as { token: string }
 
-    // Check manifest for versioned tag
     const manifestResp = await fetch(
-      `https://ghcr.io/v2/learnhouse/app/manifests/${VERSION}`,
+      `https://ghcr.io/v2/learnhouse/app/manifests/${appVersion}`,
       {
         signal: AbortSignal.timeout(5000),
         headers: {
@@ -78,7 +92,7 @@ export async function resolveAppImage(
     )
 
     if (manifestResp.ok) {
-      return { image: versionedTag, isLatest: false }
+      return { image: `${GHCR_BASE}:${appVersion}`, isLatest: false }
     }
   } catch {
     // Network error — fall through to latest
