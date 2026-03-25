@@ -1,6 +1,6 @@
 # LearnHouse CLI
 
-The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance. Handles setup, configuration, Docker orchestration, SSL, database management, and more.
+The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance.
 
 <img width="915" height="871" alt="image" src="https://github.com/user-attachments/assets/957c6cea-3efb-4cab-a643-55df3ac4c6aa" />
 
@@ -20,82 +20,81 @@ curl -fsSL https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli
 irm https://raw.githubusercontent.com/learnhouse/learnhouse/main/apps/cli/install.ps1 | iex
 ```
 
-This installs Docker and Node.js if needed, then launches the CLI.
-
-### If you already have Docker and Node.js
+### Using npx
 
 ```bash
-npx learnhouse@latest
+npx learnhouse@latest setup
+```
+
+### Install a specific version
+
+```bash
+npx learnhouse@1.0.0 setup
 ```
 
 ## Requirements
 
 - **Node.js** >= 18
-- **Docker** with Docker Compose v2
+- **Docker**
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `learnhouse setup` | Interactive setup wizard — domain, database, admin account, optional features |
+| `learnhouse setup` | Interactive setup wizard |
 | `learnhouse start` | Start all services |
 | `learnhouse stop` | Stop all services |
-| `learnhouse logs` | Stream logs from all containers (full history + follow) |
+| `learnhouse update` | Update to the latest version |
+| `learnhouse update --version <x.y.z>` | Update to a specific version |
+| `learnhouse logs` | Stream service logs |
 | `learnhouse config` | Show current configuration |
-| `learnhouse backup` | Backup or restore the database |
+| `learnhouse status` | Show service status |
+| `learnhouse health` | Run health checks |
+| `learnhouse backup` | Backup database |
+| `learnhouse restore <archive>` | Restore database from a backup |
 | `learnhouse deployments` | View deployments and set resource limits |
-| `learnhouse doctor` | Run diagnostics — checks Docker, containers, ports, DNS, disk, logs, env |
-| `learnhouse shell` | Open an interactive shell in a running container |
+| `learnhouse doctor` | Diagnose common issues |
+| `learnhouse shell` | Open a shell in a running container |
+| `learnhouse env` | Edit environment variables |
+| `learnhouse dev` | Start local development environment |
 
-## Setup Wizard
+## Setup
 
 The setup wizard walks through:
 
 1. **Install directory** — where files are generated
-2. **Domain** — hostname, port, HTTPS/SSL configuration
-3. **Database & Redis** — local (Docker) or external connection strings
-4. **Organization** — name for your LearnHouse instance
+2. **Domain** — hostname, port, HTTPS/SSL
+3. **Database & Redis** — local (Docker) or external
+4. **Organization** — name for your instance
 5. **Admin account** — email and password
-6. **Optional features** — AI (Gemini), email (Resend), S3 storage, Google OAuth, Unsplash
+6. **Features** — AI, email, S3, OAuth, Unsplash
 
-You can go back to any previous step during setup, and edit any step from the summary before confirming.
+You can go back to any step, and edit from the summary before confirming.
 
-At the end, the wizard generates `docker-compose.yml`, `.env`, and proxy configs, then optionally starts everything.
-
-## Managing Your Instance
+## Updating
 
 ```bash
-# Start / stop
-npx learnhouse start
-npx learnhouse stop
-
-# View logs
-npx learnhouse logs
-
-# Backup database
+# Back up first
 npx learnhouse backup
 
-# Diagnose issues
-npx learnhouse doctor
+# Update to latest
+npx learnhouse update
 
-# Open a shell in a container
-npx learnhouse shell
-
-# Set memory limits
-npx learnhouse deployments
+# Or a specific version
+npx learnhouse update --version 1.2.0
 ```
 
-## What Gets Generated
+The update command pulls the new image, restarts services, and asks if you want to run database migrations. Check [docs.learnhouse.app](https://docs.learnhouse.app) for migration guides before proceeding.
 
-After setup, your install directory contains:
+## Generated Files
 
 ```
 learnhouse/
-  docker-compose.yml    # Service definitions
-  .env                  # All configuration
-  learnhouse.config.json # CLI metadata
+  docker-compose.yml       # Service definitions
+  .env                     # Configuration
+  learnhouse.config.json   # CLI metadata
   extra/
-    nginx.prod.conf     # Nginx config (or Caddyfile for auto-SSL)
+    nginx.prod.conf        # Reverse proxy (or Caddyfile for auto-SSL)
 ```
 
 ## License
