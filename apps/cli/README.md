@@ -97,6 +97,55 @@ learnhouse/
     nginx.prod.conf        # Reverse proxy (or Caddyfile for auto-SSL)
 ```
 
+## CI / Non-interactive Mode
+
+All commands support non-interactive usage for CI pipelines:
+
+```bash
+# Setup without prompts
+npx learnhouse setup --ci \
+  --name production \
+  --domain example.com \
+  --port 80 \
+  --admin-email admin@example.com \
+  --admin-password secretpass123
+
+# Update with auto-migration
+npx learnhouse update --version 1.2.0 --migrate
+
+# Update without migrations
+npx learnhouse update --no-migrate
+
+# Setup without starting services
+npx learnhouse setup --ci --admin-password pass123 --no-start
+```
+
+## Testing
+
+```bash
+# Unit tests (no Docker required)
+bun run test
+
+# E2E tests (requires Docker)
+bun run test:e2e
+
+# All tests
+bun run test:all
+```
+
+**Unit tests** cover template generation (docker-compose, .env, nginx, caddyfile) and config store operations.
+
+**E2E tests** run the full lifecycle with real Docker containers: setup → start → status → health → doctor → stop → restart. They use `--ci` mode to run without prompts.
+
+**Not yet tested:**
+- Interactive commands (backup create/restore, env editor, shell, deployments scaling)
+- `update` with actual version swap between two published images
+- `update --migrate` with pending Alembic migrations
+- `logs` (streams indefinitely)
+- `dev` mode (requires full monorepo source)
+- Multi-installation discovery (`findInstallDir` with multiple `~/.learnhouse/*` entries)
+- Error recovery (Docker daemon down, port conflicts, corrupted config)
+
 ## License
 
 GPL-3.0
