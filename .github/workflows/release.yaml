@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]*'
 
 permissions:
   contents: write
@@ -95,14 +95,13 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
       - name: Generate image tags
         id: meta
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v${VERSION}"
-          TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}"
           TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
@@ -115,47 +114,251 @@ jobs:
 
       - name: Generate changelog
         id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Find previous v* tag (exclude cli-v* and current tag)
-          PREV_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
+          PREV_TAG=$(git tag --list '[0-9]*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
           if [ -z "$PREV_TAG" ]; then
             RANGE="HEAD"
           else
             RANGE="${PREV_TAG}..HEAD"
           fi
 
-          # Group commits by type
-          FEATURES=$(git log "$RANGE" --pretty=format:"- %s (%h)" --grep="^feat" || true)
-          FIXES=$(git log "$RANGE" --pretty=format:"- %s (%h)" --grep="^fix" || true)
-          OTHERS=$(git log "$RANGE" --pretty=format:"- %s (%h)" --invert-grep --grep="^feat" --grep="^fix" --grep="^chore" --grep="^docs" --grep="^ci" --grep="^style" --grep="^refactor" --grep="^test" || true)
+          # Detect database migrations
+          if [ -n "$PREV_TAG" ]; then
+            NEW_MIGRATIONS=$(git diff --name-only "$PREV_TAG"..HEAD -- 'apps/api/migrations/versions/*.py' | grep -v '__pycache__' || true)
+          else
+            NEW_MIGRATIONS=$(git ls-tree -r --name-only HEAD -- 'apps/api/migrations/versions/' | grep '\.py$' || true)
+          fi
+          MIGRATION_COUNT=$(echo "$NEW_MIGRATIONS" | sed '/^$/d' | wc -l | tr -d ' ')
 
+          # Group commits by type
+          FEATURES=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^feat" || true)
+          FIXES=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^fix" || true)
+          PERF=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^perf" || true)
+          REFACTOR=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^refactor" || true)
+          DOCS=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^docs" || true)
+          CHORE=$(git log "$RANGE" --pretty=format:"- %s (\`%h\`)" --grep="^chore" || true)
+
+          # Resolve GitHub usernames — one API call per unique author email
+          resolve_usernames() {
+            local range="$1"
+            local emails
+            emails=$(git log "$range" --pretty=format:"%aE" | sort -u || true)
+            local usernames=""
+            while IFS= read -r email; do
+              [ -z "$email" ] && continue
+              local sha
+              sha=$(git log "$range" --pretty=format:"%H" --author="$email" -1)
+              local username
+              username=$(gh api "repos/${{ github.repository }}/commits/${sha}" --jq '.author.login // empty' 2>/dev/null || true)
+              [ -z "$username" ] && continue
+              usernames="${usernames}${username}"$'\n'
+            done <<< "$emails"
+            echo "$usernames" | sed '/^$/d' | sort -f
+          }
+
+          ALL_USERNAMES=$(resolve_usernames "$RANGE")
+
+          if [ -n "$PREV_TAG" ]; then
+            PREV_USERNAMES=$(resolve_usernames "$PREV_TAG")
+            NEW_USERNAMES=$(comm -23 <(echo "$ALL_USERNAMES") <(echo "$PREV_USERNAMES") || true)
+          else
+            NEW_USERNAMES="$ALL_USERNAMES"
+          fi
+
+          # Build the changelog
+          VERSION="${{ steps.version.outputs.version }}"
           {
-            echo "## What's Changed"
+            echo "# 🚀 LearnHouse ${VERSION}"
             echo ""
+            if [ "$MIGRATION_COUNT" -gt 0 ]; then
+              echo "> [!WARNING]"
+              echo "> **This release includes ${MIGRATION_COUNT} database migration(s).** Back up your database before upgrading."
+              echo ">"
+              while IFS= read -r migration; do
+                [ -z "$migration" ] && continue
+                FILENAME=$(basename "$migration")
+                echo "> - \`${FILENAME}\`"
+              done <<< "$NEW_MIGRATIONS"
+              echo ""
+            fi
             if [ -n "$FEATURES" ]; then
-              echo "### Features"
+              echo "## ✨ Features"
+              echo ""
               echo "$FEATURES"
               echo ""
             fi
             if [ -n "$FIXES" ]; then
-              echo "### Bug Fixes"
+              echo "## 🐛 Bug Fixes"
+              echo ""
               echo "$FIXES"
               echo ""
             fi
-            if [ -n "$OTHERS" ]; then
-              echo "### Other Changes"
-              echo "$OTHERS"
+            if [ -n "$PERF" ]; then
+              echo "## ⚡ Performance"
+              echo ""
+              echo "$PERF"
+              echo ""
+            fi
+            if [ -n "$REFACTOR" ]; then
+              echo "## ♻️ Refactoring"
+              echo ""
+              echo "$REFACTOR"
+              echo ""
+            fi
+            if [ -n "$DOCS" ]; then
+              echo "## 📚 Documentation"
+              echo ""
+              echo "$DOCS"
+              echo ""
+            fi
+            if [ -n "$CHORE" ]; then
+              echo "## 🔧 Maintenance"
+              echo ""
+              echo "$CHORE"
               echo ""
             fi
             echo "---"
             echo ""
-            echo "**Docker image:** \`ghcr.io/learnhouse/app:${{ steps.version.outputs.version }}\`"
+            if [ -n "$NEW_USERNAMES" ]; then
+              echo "## 🎉 New Contributors"
+              echo ""
+              while IFS= read -r user; do
+                [ -z "$user" ] && continue
+                echo "- @${user} made their first contribution!"
+              done <<< "$NEW_USERNAMES"
+              echo ""
+            fi
+            if [ -n "$ALL_USERNAMES" ]; then
+              echo "## 👥 Contributors"
+              echo ""
+              CONTRIBUTOR_LIST=""
+              while IFS= read -r user; do
+                [ -z "$user" ] && continue
+                if [ -n "$CONTRIBUTOR_LIST" ]; then
+                  CONTRIBUTOR_LIST="${CONTRIBUTOR_LIST}, @${user}"
+                else
+                  CONTRIBUTOR_LIST="@${user}"
+                fi
+              done <<< "$ALL_USERNAMES"
+              echo "$CONTRIBUTOR_LIST"
+              echo ""
+            fi
+            echo "---"
+            echo ""
+            echo "## 📦 Getting Started"
+            echo ""
+            echo "**New installation:**"
+            echo ""
+            echo "\`\`\`bash"
+            echo "npx learnhouse setup"
+            echo "\`\`\`"
+            echo ""
+            echo "**Upgrade to this version:**"
+            echo ""
+            echo "\`\`\`bash"
+            echo "# Back up your database first"
+            echo "npx learnhouse backup"
+            echo ""
+            echo "# Update to this specific version"
+            echo "npx learnhouse update --version ${VERSION}"
+            echo "\`\`\`"
+            echo ""
+            echo "**Docker image:**"
+            echo ""
+            echo "\`\`\`bash"
+            echo "docker pull ghcr.io/learnhouse/app:${VERSION}"
+            echo "\`\`\`"
+            echo ""
+            echo "**Full Changelog:** https://github.com/learnhouse/learnhouse/compare/${PREV_TAG:-}...${VERSION}"
           } > /tmp/changelog.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: v${{ steps.version.outputs.version }}
+          name: LearnHouse ${{ steps.version.outputs.version }}
           body_path: /tmp/changelog.md
           make_latest: true
+
+  notify:
+    name: Announce release
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Build Discord message
+        id: discord
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PREV_TAG=$(git tag --list '[0-9]*' --sort=-v:refname | grep -v "$GITHUB_REF_NAME" | head -n1)
+
+          # Count features and fixes
+          FEAT_COUNT=0
+          FIX_COUNT=0
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+          FEAT_COUNT=$(git log "$RANGE" --grep="^feat" --oneline | wc -l | tr -d ' ')
+          FIX_COUNT=$(git log "$RANGE" --grep="^fix" --oneline | wc -l | tr -d ' ')
+
+          # Check for migrations
+          if [ -n "$PREV_TAG" ]; then
+            MIGRATION_COUNT=$(git diff --name-only "$PREV_TAG"..HEAD -- 'apps/api/migrations/versions/*.py' | grep -v '__pycache__' | wc -l | tr -d ' ')
+          else
+            MIGRATION_COUNT=$(git ls-tree -r --name-only HEAD -- 'apps/api/migrations/versions/' | grep '\.py$' | wc -l | tr -d ' ')
+          fi
+
+          # Build description
+          DESC="**${FEAT_COUNT}** new feature(s), **${FIX_COUNT}** bug fix(es)"
+          if [ "$MIGRATION_COUNT" -gt 0 ]; then
+            DESC="${DESC}\n\n⚠️ **Includes ${MIGRATION_COUNT} database migration(s)** — back up before upgrading"
+          fi
+
+          # Write the JSON payload
+          cat > /tmp/discord.json << PAYLOAD
+          {
+            "embeds": [{
+              "title": "🚀 LearnHouse ${VERSION} released!",
+              "url": "https://github.com/${{ github.repository }}/releases/tag/${VERSION}",
+              "description": "${DESC}",
+              "color": 5814783,
+              "fields": [
+                {
+                  "name": "📦 Docker",
+                  "value": "\`docker pull ghcr.io/learnhouse/app:${VERSION}\`",
+                  "inline": false
+                },
+                {
+                  "name": "📋 Release Notes",
+                  "value": "[View on GitHub](https://github.com/${{ github.repository }}/releases/tag/${VERSION})",
+                  "inline": true
+                }
+              ],
+              "footer": {
+                "text": "LearnHouse"
+              },
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }]
+          }
+          PAYLOAD
+
+      - name: Send to Discord
+        if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -sf -H "Content-Type: application/json" \
+            -d @/tmp/discord.json \
+            "$DISCORD_WEBHOOK_URL"
