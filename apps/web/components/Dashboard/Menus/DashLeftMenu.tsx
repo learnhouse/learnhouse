@@ -247,15 +247,18 @@ function DashLeftMenu() {
       {/* Main Navigation - Vertically Centered */}
       <div className="flex-1 flex flex-col justify-center py-4 px-3">
         <AdminAuthorization authorizationMode="component">
-          <div className="space-y-1">
-            <MenuLink
-              href="/dash"
-              icon={<House size={20} weight="fill" />}
-              label={t('common.home')}
-              isCollapsed={isCollapsed}
-            />
+          <ul className="space-y-1 list-none m-0 p-0">
+            <li>
+              <MenuLink
+                href="/dash"
+                icon={<House size={20} weight="fill" />}
+                label={t('common.home')}
+                isCollapsed={isCollapsed}
+              />
+            </li>
 
             {/* Courses with hover menu */}
+            <li>
             <HoverMenu
               content={
                 <HoverMenuContent className="w-64">
@@ -308,8 +311,10 @@ function DashLeftMenu() {
                 )}
               </button>
             </HoverMenu>
+            </li>
 
             {/* Assignments with hover menu */}
+            <li>
             <HoverMenu
               content={
                 <HoverMenuContent className="w-72">
@@ -365,40 +370,41 @@ function DashLeftMenu() {
                 )}
               </button>
             </HoverMenu>
+            </li>
             {showCommunities && (
-              <MenuLink
+              <li><MenuLink
                 href="/dash/communities"
                 icon={<ChatsCircle size={20} weight="fill" />}
                 label={t('communities.title')}
                 isCollapsed={isCollapsed}
-              />
+              /></li>
             )}
             {showPodcasts && (
-              <MenuLink
+              <li><MenuLink
                 href="/dash/podcasts"
                 icon={<Headphones size={20} weight="fill" />}
                 label={t('podcasts.podcasts')}
                 isCollapsed={isCollapsed}
-              />
+              /></li>
             )}
             {showBoards && (
-              <MenuLink
+              <li><MenuLink
                 href="/dash/boards"
                 icon={<ChalkboardSimple size={20} weight="fill" />}
                 label="Boards"
                 isCollapsed={isCollapsed}
-              />
+              /></li>
             )}
             {showPlaygrounds && (
-              <MenuLink
+              <li><MenuLink
                 href="/dash/playgrounds"
                 icon={<Cube size={20} weight="fill" />}
                 label="Playgrounds"
                 isCollapsed={isCollapsed}
-              />
+              /></li>
             )}
             {/* Users with hover menu */}
-            <HoverMenu
+            <li><HoverMenu
               content={
                 <HoverMenuContent className="w-64">
                   <HoverMenuLabel className="text-white/70 font-medium">{t('common.users')}</HoverMenuLabel>
@@ -456,19 +462,19 @@ function DashLeftMenu() {
                   </>
                 )}
               </button>
-            </HoverMenu>
+            </HoverMenu></li>
 
             {showPayments && (
-              <MenuLink
+              <li><MenuLink
                 href="/dash/payments/overview"
                 icon={<CurrencyCircleDollar size={20} weight="fill" />}
                 label={t('common.payments')}
                 isCollapsed={isCollapsed}
-              />
+              /></li>
             )}
 
             {/* Organization with hover menu */}
-            <HoverMenu
+            <li><HoverMenu
               content={
                 <HoverMenuContent className="w-64">
                   <HoverMenuLabel className="text-white/70 font-medium">{t('common.organization')}</HoverMenuLabel>
@@ -562,10 +568,10 @@ function DashLeftMenu() {
                   </>
                 )}
               </button>
-            </HoverMenu>
+            </HoverMenu></li>
 
             {/* Analytics with hover menu */}
-            <HoverMenu
+            <li><HoverMenu
               content={
                 <HoverMenuContent className="w-64">
                   <HoverMenuLabel className="text-white/70 font-medium">Analytics</HoverMenuLabel>
@@ -605,11 +611,11 @@ function DashLeftMenu() {
                   </>
                 )}
               </button>
-            </HoverMenu>
+            </HoverMenu></li>
 
             {/* Disabled features shown in an "Other" hover menu */}
             {(!showCommunities || !showPodcasts || !showBoards || !showPlaygrounds || !showPayments) && (
-              <HoverMenu
+              <li><HoverMenu
                 content={
                   <HoverMenuContent className="w-64">
                     <HoverMenuLabel className="flex items-center justify-between text-white/70 font-medium">
@@ -682,18 +688,18 @@ function DashLeftMenu() {
                     </>
                   )}
                 </button>
-              </HoverMenu>
+              </HoverMenu></li>
             )}
-          </div>
+          </ul>
         </AdminAuthorization>
       </div>
 
       {/* Bottom Section */}
       <div className="border-t border-white/[0.08] py-3 px-3 shrink-0">
-        <div className="space-y-1">
+        <ul className="space-y-1 list-none m-0 p-0">
           {/* Expand button when collapsed */}
           {isCollapsed && (
-            <Tooltip>
+            <li><Tooltip>
               <TooltipTrigger asChild>
                 <button
                   aria-label="Expand sidebar"
@@ -706,11 +712,11 @@ function DashLeftMenu() {
               <TooltipContent side="right" className="z-tooltip bg-[#1a1a1b] border-white/10 text-white text-xs px-2 py-1 shadow-lg shadow-black/20">
                 {t('common.expand')}
               </TooltipContent>
-            </Tooltip>
+            </Tooltip></li>
           )}
 
           {/* Language Switcher with hover menu */}
-          <HoverMenu
+          <li><HoverMenu
             align="end"
             content={
               <HoverMenuContent className="w-64 max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -746,10 +752,10 @@ function DashLeftMenu() {
                 <span className="text-sm font-medium">{t('common.language')}</span>
               )}
             </button>
-          </HoverMenu>
+          </HoverMenu></li>
 
           {/* Help with hover menu */}
-          <HoverMenu
+          <li><HoverMenu
             align="end"
             content={
               <HoverMenuContent className="w-56">
@@ -811,10 +817,10 @@ function DashLeftMenu() {
                 <span className="text-sm font-medium">{t('common.help')}</span>
               )}
             </button>
-          </HoverMenu>
+          </HoverMenu></li>
 
           {/* User Menu with hover menu */}
-          <HoverMenu
+          <li><HoverMenu
             align="end"
             content={
               <HoverMenuContent className="w-56">
@@ -858,8 +864,8 @@ function DashLeftMenu() {
                 </div>
               )}
             </button>
-          </HoverMenu>
-        </div>
+          </HoverMenu></li>
+        </ul>
       </div>
     </nav>
 
