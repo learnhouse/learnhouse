@@ -55,6 +55,10 @@ from ee.services.payments.payments_groups import (
 
 router = APIRouter()
 
+# Separate router for webhook endpoints — these must NOT be behind the
+# require_plan dependency because Stripe calls them without any org_id.
+webhook_router = APIRouter()
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
@@ -591,14 +595,14 @@ async def api_create_billing_portal_session(
 # Webhooks
 # ---------------------------------------------------------------------------
 
-@router.post("/stripe/webhook")
+@webhook_router.post("/stripe/webhook")
 async def api_handle_stripe_webhook(
     request: Request,
     db_session: Session = Depends(get_db_session),
 ):
     return await handle_stripe_webhook(request, "standard", db_session)
 
-@router.post("/stripe/webhook/connect")
+@webhook_router.post("/stripe/webhook/connect")
 async def api_handle_stripe_webhook_connect(
     request: Request,
     db_session: Session = Depends(get_db_session),

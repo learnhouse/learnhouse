@@ -49,7 +49,14 @@ def register_routers(v1_router: APIRouter):
         dependencies=[Depends(cloud_internal.check_internal_cloud_key)],
     )
     
-    # Payments
+    # Payments — webhook routes are registered separately without the plan
+    # dependency because Stripe sends webhooks without any org_id parameter.
+    # The plan gate on the main router was returning 400 on every webhook call.
+    v1_router.include_router(
+        payments.webhook_router,
+        prefix="/payments",
+        tags=["payments"],
+    )
     v1_router.include_router(
         payments.router,
         prefix="/payments",
