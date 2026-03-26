@@ -350,9 +350,11 @@ class StripePaymentProvider(IPaymentProvider):
             event_type = event.type
             event_data = event.data.object
 
-            stripe_account_id = event.account
+            stripe_account_id = getattr(event, "account", None)
             if not stripe_account_id:
-                raise HTTPException(status_code=400, detail="Stripe account ID not found")
+                # Platform-level event (no connected account) — nothing to process
+                logger.info(f"Ignoring platform-level Stripe event: {event_type}")
+                return {"status": "ignored", "message": f"Platform event: {event_type}"}
 
             org_id = await get_org_id_from_stripe_account(stripe_account_id, db_session)
 
