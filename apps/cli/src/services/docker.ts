@@ -18,6 +18,15 @@ export function isDockerRunning(): boolean {
   }
 }
 
+export function isDockerComposeV2(): boolean {
+  try {
+    execSync('docker compose version', { stdio: 'pipe' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function dockerComposeUp(cwd: string, pull = false): void {
   const cmd = pull ? 'docker compose up -d --pull always' : 'docker compose up -d'
   execSync(cmd, {
