@@ -108,10 +108,26 @@ function ActivityShareDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white nice-shadow text-neutral-600 hover:text-neutral-800 transition-colors text-sm font-medium"
       >
         <Share2 size={14} />

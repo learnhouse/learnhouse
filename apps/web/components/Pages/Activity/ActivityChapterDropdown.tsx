@@ -35,6 +35,21 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
     };
   }, []);
 
+  // Close dropdown on Escape key
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
@@ -74,6 +89,8 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
         className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-2 p-2.5 text-gray-700 hover:bg-gray-50 transition delay-150 duration-300 ease-in-out"
         aria-label="View all activities"
         title="View all activities"
