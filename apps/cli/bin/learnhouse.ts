@@ -145,6 +145,8 @@ program
   .command('dev')
   .description('Start development environment (DB + Redis in Docker, API + Web locally)')
   .option('--ee', 'Enable Enterprise Edition features (keeps ee/ folder)')
+  .option('--admin-email <email>', 'Admin email (default: admin@school.dev)')
+  .option('--admin-password <password>', 'Admin password (skips interactive prompt)')
   .action(devCommand)
 
 // Non-blocking update check — runs in background, prints warning if outdated
