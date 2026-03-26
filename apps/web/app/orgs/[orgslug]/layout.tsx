@@ -35,13 +35,13 @@ export default async function RootLayout(props: {
   const params = await props.params
 
   return (
-    <div>
+    <main>
       <OrgProvider orgslug={params.orgslug}>
         <NextTopLoader color="#2e2e2e" initialPosition={0.3} height={4} easing={'ease'} speed={500} showSpinner={false} />
         <Toast />
         {props.children}
         <Footer />
       </OrgProvider>
-    </div>
+    </main>
   )
 }

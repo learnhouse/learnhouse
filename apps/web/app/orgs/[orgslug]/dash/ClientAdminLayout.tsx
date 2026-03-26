@@ -24,7 +24,7 @@ function ClientAdminLayout({
                     ) : (
                         <DashLeftMenu />
                     )}
-                    <div className="flex w-full relative isolate">{children}</div>
+                    <main className="flex w-full relative isolate">{children}</main>
                 </div>
             </AdminAuthorization>
         </SessionProvider>
