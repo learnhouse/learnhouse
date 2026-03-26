@@ -176,7 +176,7 @@ function killProcess(child: ChildProcess | null): Promise<void> {
   })
 }
 
-export async function devCommand(opts: { ee?: boolean }) {
+export async function devCommand(opts: { ee?: boolean; adminEmail?: string; adminPassword?: string }) {
   const root = findProjectRoot()
   if (!root) {
     p.log.error('Not inside a LearnHouse project.')
@@ -232,29 +232,32 @@ export async function devCommand(opts: { ee?: boolean }) {
     p.log.success('Existing DB and Redis containers detected — reusing them')
   }
 
-  // Only ask for admin credentials on first setup
+  // Resolve admin credentials: CLI flags take priority, then interactive prompts (first setup only)
+  let adminEmail = opts.adminEmail
+  let adminPassword = opts.adminPassword
+
   if (!alreadyRunning) {
-    const email = await p.text({
-      message: 'Admin email',
-      placeholder: 'admin@school.dev',
-      defaultValue: 'admin@school.dev',
-    })
-    if (p.isCancel(email)) process.exit(0)
-
-    const password = await p.password({
-      message: 'Admin password',
-    })
-    if (p.isCancel(password)) process.exit(0)
-
-    if (!password) {
-      p.log.error('Password is required.')
-      process.exit(1)
+    if (!adminEmail) {
+      const emailInput = await p.text({
+        message: 'Admin email',
+        placeholder: 'admin@school.dev',
+        defaultValue: 'admin@school.dev',
+      })
+      if (p.isCancel(emailInput)) process.exit(0)
+      adminEmail = emailInput
     }
 
-    serviceEnv = {
-      FORCE_COLOR: '1',
-      LEARNHOUSE_INITIAL_ADMIN_EMAIL: email,
-      LEARNHOUSE_INITIAL_ADMIN_PASSWORD: password,
+    if (!adminPassword) {
+      const passwordInput = await p.password({
+        message: 'Admin password',
+      })
+      if (p.isCancel(passwordInput)) process.exit(0)
+      adminPassword = passwordInput as string
+    }
+
+    if (!adminPassword) {
+      p.log.error('Password is required.')
+      process.exit(1)
     }
 
     // Start infrastructure
@@ -271,10 +274,12 @@ export async function devCommand(opts: { ee?: boolean }) {
       p.log.error(e.stderr?.toString() || 'docker compose up failed')
       process.exit(1)
     }
-  } else {
-    serviceEnv = {
-      FORCE_COLOR: '1',
-    }
+  }
+
+  serviceEnv = {
+    FORCE_COLOR: '1',
+    ...(adminEmail && { LEARNHOUSE_INITIAL_ADMIN_EMAIL: adminEmail }),
+    ...(adminPassword && { LEARNHOUSE_INITIAL_ADMIN_PASSWORD: adminPassword }),
   }
 
   // Health checks
