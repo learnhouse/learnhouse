@@ -8,6 +8,7 @@ import {
   autoDetectDeploymentId,
   isDockerInstalled,
   isDockerRunning,
+  isDockerComposeV2,
   isContainerRunning,
   getContainerRestartCount,
   getContainerLogs,
@@ -62,6 +63,13 @@ export async function doctorCommand() {
     process.exit(1)
   }
   pass('Docker daemon running')
+
+  // 2. Docker Compose v2
+  if (isDockerComposeV2()) {
+    pass('Docker Compose v2 available')
+  } else {
+    fail('Docker Compose v2 not found', 'Update Docker Desktop or install docker-compose-plugin')
+  }
 
   if (!config) {
     p.log.warn('No LearnHouse installation found. Skipping deployment checks.')
