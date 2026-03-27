@@ -106,6 +106,19 @@ export async function updateOrgFooterTextConfig(
   return res
 }
 
+export async function updateOrgFontConfig(
+  org_id: string,
+  font: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/font?font=${encodeURIComponent(font)}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export interface AuthBrandingConfig {
   welcome_message: string
   background_type: 'gradient' | 'custom' | 'unsplash'

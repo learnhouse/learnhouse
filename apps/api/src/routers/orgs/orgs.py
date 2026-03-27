@@ -48,6 +48,7 @@ from src.services.orgs.orgs import (
     update_org_boards_config,
     update_org_playgrounds_config,
     update_org_color_config,
+    update_org_font_config,
     update_org_footer_text_config,
     update_org_watermark_config,
     update_org_thumbnail,
@@ -369,6 +370,22 @@ async def api_update_org_color_config(
     """
     return await update_org_color_config(
         request, color, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/font")
+async def api_update_org_font_config(
+    request: Request,
+    org_id: int,
+    font: str = "",
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization font configuration
+    """
+    return await update_org_font_config(
+        request, font, org_id, current_user, db_session
     )
 
 
