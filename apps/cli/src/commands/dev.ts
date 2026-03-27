@@ -190,21 +190,9 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
   const envOk = await checkDevEnv(root)
   if (!envOk) process.exit(1)
 
-  // EE folder management — hide ee/ when --ee is not passed so the API
-  // starts in OSS mode (is_ee_available() checks os.path.exists("ee"))
+  // EE mode — controlled via LEARNHOUSE_DISABLE_EE env var instead of moving folders
   const eePath = path.join(root, 'apps', 'api', 'ee')
-  const eeDisabledPath = path.join(root, 'apps', 'api', '.ee-disabled')
-  let eeWasHidden = false
-
-  // Recover from a previous crash that left .ee-disabled behind
-  if (fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
-    fs.renameSync(eeDisabledPath, eePath)
-  }
-
-  if (!opts.ee && fs.existsSync(eePath)) {
-    fs.renameSync(eePath, eeDisabledPath)
-    eeWasHidden = true
-  } else if (opts.ee) {
+  if (opts.ee) {
     if (fs.existsSync(eePath)) {
       p.log.info(`Running in ${pc.bold('EE')} mode`)
     } else {
@@ -280,6 +268,7 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     FORCE_COLOR: '1',
     ...(adminEmail && { LEARNHOUSE_INITIAL_ADMIN_EMAIL: adminEmail }),
     ...(adminPassword && { LEARNHOUSE_INITIAL_ADMIN_PASSWORD: adminPassword }),
+    ...(!opts.ee && { LEARNHOUSE_DISABLE_EE: '1' }),
   }
 
   // Health checks
@@ -370,11 +359,6 @@ export async function devCommand(opts: { ee?: boolean; adminEmail?: string; admi
     process.stdin.pause()
 
     await Promise.all([killProcess(apiProc), killProcess(webProc), killProcess(collabProc)])
-
-    // Restore ee/ folder if we hid it
-    if (eeWasHidden && fs.existsSync(eeDisabledPath) && !fs.existsSync(eePath)) {
-      fs.renameSync(eeDisabledPath, eePath)
-    }
 
     console.log(pc.dim('DB and Redis containers are still running for next session.'))
     console.log(pc.dim('To stop them: docker compose -f .learnhouse/docker-compose.dev.yml -p learnhouse-dev down'))
