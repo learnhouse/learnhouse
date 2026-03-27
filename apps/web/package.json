@@ -25,6 +25,7 @@
     "@codemirror/lang-wast": "^6.0.2",
     "@codemirror/lang-xml": "^6.1.0",
     "@codemirror/legacy-modes": "^6.5.2",
+    "@codemirror/lint": "^6.9.5",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5",
     "@emoji-mart/data": "^1.2.1",
