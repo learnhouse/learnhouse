@@ -1,5 +1,5 @@
 'use client';
-import { use } from "react";
+import { use, useEffect } from "react";
 import '@styles/globals.css'
 import { SessionProvider } from '@components/Contexts/AuthContext'
 import Watermark from '@components/Objects/Watermark'
@@ -15,6 +15,7 @@ import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname } from 'next/navigation'
 import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
+import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -57,7 +58,42 @@ function OrgFooter() {
 function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
   const org = useOrg() as any
   const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
+  const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
   const pathname = usePathname()
+
+  // Inject Google Font stylesheet into document head
+  useEffect(() => {
+    if (!customFont || customFont === DEFAULT_FONT) return
+
+    const fontId = `gfont-${customFont.replace(/\s/g, '-')}`
+    if (document.getElementById(fontId)) return
+
+    // Add preconnect hints
+    const preconnect1 = document.createElement('link')
+    preconnect1.rel = 'preconnect'
+    preconnect1.href = 'https://fonts.googleapis.com'
+    document.head.appendChild(preconnect1)
+
+    const preconnect2 = document.createElement('link')
+    preconnect2.rel = 'preconnect'
+    preconnect2.href = 'https://fonts.gstatic.com'
+    preconnect2.crossOrigin = 'anonymous'
+    document.head.appendChild(preconnect2)
+
+    // Add font stylesheet
+    const link = document.createElement('link')
+    link.id = fontId
+    link.rel = 'stylesheet'
+    link.href = getGoogleFontUrl(customFont)
+    document.head.appendChild(link)
+
+    return () => {
+      document.head.removeChild(preconnect1)
+      document.head.removeChild(preconnect2)
+      const existing = document.getElementById(fontId)
+      if (existing) document.head.removeChild(existing)
+    }
+  }, [customFont])
 
   const pathParts = pathname?.split('/').filter(Boolean) || []
 
@@ -69,7 +105,8 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
     <div
       className="flex flex-col min-h-screen"
       style={{
-        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent'
+        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
+        ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
       }}
     >
       <PageViewTracker />

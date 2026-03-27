@@ -8,7 +8,8 @@ import { getOrgLogoMediaDirectory, getOrgPreviewMediaDirectory, getOrgThumbnailM
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
 import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
-import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization, updateOrgColorConfig, uploadOrganizationFavicon } from '@services/settings/org'
+import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization, updateOrgColorConfig, updateOrgFontConfig, uploadOrganizationFavicon } from '@services/settings/org'
+import FontSelector from './FontSelector'
 import { cn } from '@/lib/utils'
 import { Input } from "@components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog"
@@ -127,6 +128,7 @@ export default function OrgEditBranding() {
 
   // Theme state
   const [primaryColor, setPrimaryColor] = useState<string>(org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || '')
+  const [selectedFont, setSelectedFont] = useState<string>(org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || '')
   const [isThemeSaving, setIsThemeSaving] = useState(false)
 
   // Socials initial values
@@ -409,7 +411,10 @@ export default function OrgEditBranding() {
     setIsThemeSaving(true)
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
-      await updateOrgColorConfig(org.id, primaryColor, access_token)
+      await Promise.all([
+        updateOrgColorConfig(org.id, primaryColor, access_token),
+        updateOrgFontConfig(org.id, selectedFont, access_token),
+      ])
       await revalidateTags(['organizations'], org.slug)
       mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
@@ -945,6 +950,13 @@ export default function OrgEditBranding() {
               <p className="text-xs text-gray-400 mt-3">{t('dashboard.organization.theme.primary_color_desc')}</p>
             </div>
 
+            {/* Font Selector */}
+            <div className="flex-1 bg-gray-50/50 rounded-xl p-5">
+              <FontSelector value={selectedFont} onChange={setSelectedFont} />
+            </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-6 mt-6">
             {/* Preview */}
             <div className="flex-1">
               <Label className="text-sm font-medium text-gray-700 mb-3 block">{t('dashboard.organization.theme.preview')}</Label>
