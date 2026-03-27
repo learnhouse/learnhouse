@@ -80,7 +80,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
         className="flex flex-col min-h-screen"
         style={{
           backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
-          ...(customFont ? { '--font-custom': `'${customFont}'` } as React.CSSProperties : {}),
+          ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
         }}
       >
       <PageViewTracker />
