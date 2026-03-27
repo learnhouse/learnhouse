@@ -36,6 +36,7 @@ import { uploadSqliteDb } from '@services/blocks/CodePlayground/sqlite'
 import { getAPIUrl } from '@services/config/config'
 import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
 import SubmissionHistory from './SubmissionHistory'
+import CodeDiff from './CodeDiff'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
@@ -461,6 +462,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [attemptCount, setAttemptCount] = useState(0)
   const [showSolution, setShowSolution] = useState(false)
   const [solutionExtensions, setSolutionExtensions] = useState<any[]>([])
+  const [solutionView, setSolutionView] = useState<'diff' | 'solution'>('diff')
 
   // Editor: Advanced settings toggle
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -1169,9 +1171,29 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
               )}
               {showSolution && canRevealSolution && (
-                <div className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
-                  {solutionExtensions.length > 0 && (
-                    <CodeMirror value={solutionCode} extensions={solutionExtensions} editable={false} height="auto" maxHeight="300px" style={cmStyles} basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: false }} />
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setSolutionView('diff')}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'diff' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
+                    >
+                      Diff
+                    </button>
+                    <button
+                      onClick={() => setSolutionView('solution')}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'solution' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
+                    >
+                      Solution
+                    </button>
+                  </div>
+                  {solutionView === 'diff' ? (
+                    <CodeDiff studentCode={code} solutionCode={solutionCode} />
+                  ) : (
+                    <div className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
+                      {solutionExtensions.length > 0 && (
+                        <CodeMirror value={solutionCode} extensions={solutionExtensions} editable={false} height="auto" maxHeight="300px" style={cmStyles} basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: false }} />
+                      )}
+                    </div>
                   )}
                 </div>
               )}
