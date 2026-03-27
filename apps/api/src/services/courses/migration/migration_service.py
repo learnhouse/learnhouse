@@ -7,6 +7,7 @@ import os
 import re
 import json
 import shutil
+import asyncio
 import logging
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -31,7 +32,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipStatusEnum,
 )
 from src.services.courses.transfer.storage_utils import (
-    upload_to_s3,
+    upload_file_to_s3,
     is_s3_enabled,
 )
 from src.services.courses.migration.models import (
@@ -43,12 +44,19 @@ from src.services.courses.migration.models import (
     MigrationCreateResult,
 )
 
+import time
+
 logger = logging.getLogger(__name__)
 
 TEMP_MIGRATION_DIR = "content/temp/migrations"
 _TEMP_BASE_REAL = os.path.realpath(TEMP_MIGRATION_DIR)
-MAX_TOTAL_UPLOAD_SIZE = 500 * 1024 * 1024  # 500MB total across all files
-MAX_SINGLE_FILE_SIZE = 200 * 1024 * 1024  # 200MB per file
+MAX_TOTAL_UPLOAD_SIZE = 20 * 1024 * 1024 * 1024  # 20GB total across all files
+MAX_SINGLE_FILE_SIZE = 5 * 1024 * 1024 * 1024  # 5GB per file
+STREAM_CHUNK_SIZE = 8 * 1024 * 1024  # 8MB read/write chunks
+MAX_CONCURRENT_UPLOADS = 3  # Max simultaneous upload requests
+
+# Semaphore to limit concurrent upload processing
+_upload_semaphore = asyncio.Semaphore(MAX_CONCURRENT_UPLOADS)
 
 # Regex for validating UUID strings (used in temp_id and file_id)
 _UUID_RE = re.compile(
@@ -85,6 +93,24 @@ EXTENSION_TO_BLOCK_TYPE = {
 }
 
 
+def cleanup_old_temp_migrations(max_age_minutes: int = 60) -> None:
+    """Remove migration temp directories older than max_age_minutes."""
+    if not os.path.exists(TEMP_MIGRATION_DIR):
+        return
+    current_time = time.time()
+    max_age_seconds = max_age_minutes * 60
+    for entry in os.listdir(TEMP_MIGRATION_DIR):
+        entry_path = os.path.join(TEMP_MIGRATION_DIR, entry)
+        if os.path.isdir(entry_path):
+            try:
+                mtime = os.path.getmtime(entry_path)
+                if current_time - mtime > max_age_seconds:
+                    shutil.rmtree(entry_path, ignore_errors=True)
+                    logger.info("Cleaned up stale migration: %s", entry)
+            except OSError:
+                pass
+
+
 def _require_uuid(value: str, name: str = "value") -> None:
     """Raise if value is not a valid UUID."""
     if not _UUID_RE.match(value):
@@ -110,7 +136,16 @@ async def upload_migration_files(
     """Upload files to temporary storage for migration.
 
     Supports chunked uploads: pass existing_temp_id to append to a previous batch.
+    Limited to MAX_CONCURRENT_UPLOADS simultaneous requests to prevent disk exhaustion.
     """
+    async with _upload_semaphore:
+        return await _upload_migration_files_inner(files, existing_temp_id)
+
+
+async def _upload_migration_files_inner(
+    files: list[UploadFile],
+    existing_temp_id: str | None = None,
+) -> MigrationUploadResponse:
     existing_files: list[dict] = []
 
     if existing_temp_id:
@@ -134,6 +169,7 @@ async def upload_migration_files(
     os.makedirs(temp_real, exist_ok=True)
 
     uploaded_files: list[UploadedFileInfo] = []
+    skipped_files: list[str] = []
     # Count existing file sizes toward the limit
     total_size = sum(fi.get("size", 0) for fi in existing_files)
 
@@ -143,29 +179,53 @@ async def upload_migration_files(
 
         ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
         if ext not in ALLOWED_EXTENSIONS:
+            skipped_files.append(f"{file.filename}: unsupported format")
             continue
 
         file_id = str(uuid4())
         safe_filename = f"{file_id}.{ext}"
         file_real = _resolve_within(temp_real, safe_filename)
 
-        data = await file.read()
+        # Stream file to disk in chunks to avoid loading into memory
+        file_size = 0
+        size_exceeded = False
+        try:
+            with open(file_real, "wb") as f:
+                while True:
+                    chunk = await file.read(STREAM_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    file_size += len(chunk)
+                    if file_size > MAX_SINGLE_FILE_SIZE:
+                        size_exceeded = True
+                        break
+                    f.write(chunk)
+        except OSError as e:
+            # Disk full or I/O error — clean up partial file
+            if os.path.exists(file_real):
+                os.remove(file_real)
+            raise ValueError(f"Disk write failed: {e}") from e
+        finally:
+            # Release python-multipart's SpooledTemporaryFile in /tmp
+            await file.close()
 
-        if len(data) > MAX_SINGLE_FILE_SIZE:
+        if size_exceeded:
+            os.remove(file_real)
+            skipped_files.append(f"{file.filename}: exceeds {MAX_SINGLE_FILE_SIZE // (1024**3)}GB limit")
             continue
-        total_size += len(data)
-        if total_size > MAX_TOTAL_UPLOAD_SIZE:
-            break
 
-        with open(file_real, "wb") as f:
-            f.write(data)
+        total_size += file_size
+        if total_size > MAX_TOTAL_UPLOAD_SIZE:
+            os.remove(file_real)
+            skipped_files.append(f"{file.filename}: total upload size exceeded")
+            break
 
         uploaded_files.append(
             UploadedFileInfo(
                 file_id=file_id,
                 filename=file.filename,
                 file_type=file.content_type or "",
-                size=len(data),
+                size=file_size,
                 extension=ext,
             )
         )
@@ -181,7 +241,9 @@ async def upload_migration_files(
     with open(manifest_real, "w") as f:
         json.dump(manifest, f)
 
-    return MigrationUploadResponse(temp_id=temp_id, files=uploaded_files)
+    return MigrationUploadResponse(
+        temp_id=temp_id, files=uploaded_files, skipped=skipped_files
+    )
 
 
 async def suggest_structure(
@@ -376,11 +438,12 @@ async def create_course_from_migration(
         )
         db_session.add(author)
 
-        # Create course content directory — all components are server-generated UUIDs
+        # Create course content directory (only needed for local filesystem storage)
         course_dir = os.path.join(
             "content", "orgs", org_uuid, "courses", course_uuid
         )
-        os.makedirs(course_dir, exist_ok=True)
+        if not is_s3_enabled():
+            os.makedirs(course_dir, exist_ok=True)
 
         chapters_created = 0
         activities_created = 0
@@ -420,7 +483,8 @@ async def create_course_from_migration(
                 activity_dir = os.path.join(
                     course_dir, "activities", activity_uuid
                 )
-                os.makedirs(activity_dir, exist_ok=True)
+                if not is_s3_enabled():
+                    os.makedirs(activity_dir, exist_ok=True)
 
                 block_to_add = None
 
@@ -452,20 +516,6 @@ async def create_course_from_migration(
                         ActivityTypeEnum.TYPE_VIDEO,
                         ActivityTypeEnum.TYPE_DOCUMENT,
                     ):
-                        files_dir = os.path.join(activity_dir, "files")
-                        os.makedirs(files_dir, exist_ok=True)
-                        dst_real = os.path.realpath(
-                            os.path.join(files_dir, f"{new_file_id}.{ext}")
-                        )
-                        if not dst_real.startswith(
-                            os.path.realpath(files_dir) + os.sep
-                        ):
-                            continue
-                        with open(src_real, "rb") as sf, open(
-                            dst_real, "wb"
-                        ) as df:
-                            df.write(sf.read())
-
                         content = {
                             "file_id": new_file_id,
                             "file_format": ext,
@@ -473,8 +523,20 @@ async def create_course_from_migration(
 
                         if is_s3_enabled():
                             s3_key = f"orgs/{org_uuid}/courses/{course_uuid}/activities/{activity_uuid}/files/{new_file_id}.{ext}"
-                            with open(dst_real, "rb") as f:
-                                upload_to_s3(s3_key, f.read())
+                            ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
+                            if not ok:
+                                raise RuntimeError(f"S3 upload failed for {s3_key}")
+                        else:
+                            files_dir = os.path.join(activity_dir, "files")
+                            os.makedirs(files_dir, exist_ok=True)
+                            dst_real = os.path.realpath(
+                                os.path.join(files_dir, f"{new_file_id}.{ext}")
+                            )
+                            if not dst_real.startswith(
+                                os.path.realpath(files_dir) + os.sep
+                            ):
+                                continue
+                            await asyncio.to_thread(shutil.copy2, src_real, dst_real)
 
                     elif activity_type == ActivityTypeEnum.TYPE_DYNAMIC:
                         block_uuid = f"block_{uuid4()}"
@@ -483,26 +545,6 @@ async def create_course_from_migration(
                                 ext, ("imageBlock", BlockTypeEnum.BLOCK_IMAGE)
                             )
                         )
-                        block_dir = os.path.join(
-                            activity_dir,
-                            "dynamic",
-                            "blocks",
-                            block_type_folder,
-                            block_uuid,
-                        )
-                        os.makedirs(block_dir, exist_ok=True)
-
-                        dst_real = os.path.realpath(
-                            os.path.join(block_dir, f"{new_file_id}.{ext}")
-                        )
-                        if not dst_real.startswith(
-                            os.path.realpath(block_dir) + os.sep
-                        ):
-                            continue
-                        with open(src_real, "rb") as sf, open(
-                            dst_real, "wb"
-                        ) as df:
-                            df.write(sf.read())
 
                         block_content = {
                             "file_id": new_file_id,
@@ -536,8 +578,26 @@ async def create_course_from_migration(
                                 f"/{block_type_folder}/{block_uuid}"
                                 f"/{new_file_id}.{ext}"
                             )
-                            with open(dst_real, "rb") as f:
-                                upload_to_s3(s3_key, f.read())
+                            ok = await asyncio.to_thread(upload_file_to_s3, s3_key, src_real)
+                            if not ok:
+                                raise RuntimeError(f"S3 upload failed for {s3_key}")
+                        else:
+                            block_dir = os.path.join(
+                                activity_dir,
+                                "dynamic",
+                                "blocks",
+                                block_type_folder,
+                                block_uuid,
+                            )
+                            os.makedirs(block_dir, exist_ok=True)
+                            dst_real = os.path.realpath(
+                                os.path.join(block_dir, f"{new_file_id}.{ext}")
+                            )
+                            if not dst_real.startswith(
+                                os.path.realpath(block_dir) + os.sep
+                            ):
+                                continue
+                            await asyncio.to_thread(shutil.copy2, src_real, dst_real)
 
                 activity = Activity(
                     name=act_node.name,
@@ -589,6 +649,8 @@ async def create_course_from_migration(
     except Exception as e:
         db_session.rollback()
         logger.error("Migration course creation failed: %s", e, exc_info=True)
+        # Clean up temp files on failure so they don't accumulate
+        shutil.rmtree(temp_real, ignore_errors=True)
         return MigrationCreateResult(
             course_uuid="",
             course_name=structure.course_name,

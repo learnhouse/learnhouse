@@ -65,16 +65,17 @@ class EEAuditLogMiddleware:
                         payload = json.loads(body_bytes)
                     except json.JSONDecodeError:
                         pass
-            elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+            elif "multipart/form-data" in content_type:
+                # Never read multipart bodies — they can be gigabytes of file
+                # data. We only need to know the content type for the audit log.
+                payload = {"_type": "multipart/form-data"}
+            elif "application/x-www-form-urlencoded" in content_type:
                 body_bytes = await request.body()
                 body_was_read = True
                 if body_bytes:
-                    if "application/x-www-form-urlencoded" in content_type:
-                        from urllib.parse import parse_qs
-                        parsed = parse_qs(body_bytes.decode("utf-8"))
-                        payload = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
-                    else:
-                        payload = {"_type": "multipart/form-data"}
+                    from urllib.parse import parse_qs
+                    parsed = parse_qs(body_bytes.decode("utf-8"))
+                    payload = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
 
             # Scrub sensitive data from payload
             if isinstance(payload, dict):

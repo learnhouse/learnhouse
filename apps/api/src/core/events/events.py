@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Callable
 from fastapi import FastAPI
@@ -9,6 +10,19 @@ from src.core.events.logs import create_logs_dir
 from src.core.ee_hooks import run_ee_startup
 
 logger = logging.getLogger(__name__)
+
+_cleanup_task = None
+
+
+async def _periodic_migration_cleanup():
+    """Run migration temp cleanup every 10 minutes."""
+    from src.services.courses.migration.migration_service import cleanup_old_temp_migrations
+    while True:
+        await asyncio.sleep(600)  # 10 minutes
+        try:
+            cleanup_old_temp_migrations()
+        except Exception as e:
+            logger.warning("Periodic migration cleanup failed: %s", e)
 
 
 def _reconcile_packs():
@@ -54,6 +68,12 @@ def startup_app(app: FastAPI) -> Callable:
         # Reconcile pack credits (Redis ↔ DB)
         _reconcile_packs()
 
+        # Clean up stale migration temp directories (on startup + every 10 min)
+        from src.services.courses.migration.migration_service import cleanup_old_temp_migrations
+        cleanup_old_temp_migrations()
+        global _cleanup_task
+        _cleanup_task = asyncio.create_task(_periodic_migration_cleanup())
+
         # Start Enterprise Edition Startup tasks if available
         run_ee_startup(app)
 
@@ -62,6 +82,8 @@ def startup_app(app: FastAPI) -> Callable:
 
 def shutdown_app(app: FastAPI) -> Callable:
     async def close_app() -> None:
+        if _cleanup_task:
+            _cleanup_task.cancel()
         await close_database(app)
 
     return close_app

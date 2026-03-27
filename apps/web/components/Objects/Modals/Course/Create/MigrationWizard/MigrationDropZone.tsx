@@ -9,6 +9,11 @@ const ACCEPTED_EXTENSIONS = [
 
 const ACCEPT_STRING = '.mp4,.webm,.mov,.pdf,.png,.jpg,.jpeg,.webp,.mp3,.wav'
 
+const MAX_SINGLE_FILE_GB = 5
+const MAX_TOTAL_GB = 20
+const MAX_SINGLE_FILE_SIZE = MAX_SINGLE_FILE_GB * 1024 * 1024 * 1024
+const MAX_TOTAL_SIZE = MAX_TOTAL_GB * 1024 * 1024 * 1024
+
 interface MigrationDropZoneProps {
   files: File[]
   onFilesChange: (files: File[]) => void
@@ -41,12 +46,33 @@ export default function MigrationDropZone({
   const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
 
+  const [sizeWarning, setSizeWarning] = useState('')
+
   const handleFiles = useCallback(
     (newFiles: FileList | File[]) => {
+      setSizeWarning('')
+      const warnings: string[] = []
+      const existingTotal = files.reduce((sum, f) => sum + f.size, 0)
+      let runningTotal = existingTotal
+
       const valid = Array.from(newFiles).filter((f) => {
         const ext = f.name.split('.').pop()?.toLowerCase() || ''
-        return ACCEPTED_EXTENSIONS.includes(ext)
+        if (!ACCEPTED_EXTENSIONS.includes(ext)) return false
+        if (f.size > MAX_SINGLE_FILE_SIZE) {
+          warnings.push(`${f.name}: exceeds ${MAX_SINGLE_FILE_GB}GB limit`)
+          return false
+        }
+        if (runningTotal + f.size > MAX_TOTAL_SIZE) {
+          warnings.push(`${f.name}: would exceed ${MAX_TOTAL_GB}GB total limit`)
+          return false
+        }
+        runningTotal += f.size
+        return true
       })
+
+      if (warnings.length > 0) {
+        setSizeWarning(warnings.join(', '))
+      }
       onFilesChange([...files, ...valid])
     },
     [files, onFilesChange]
@@ -135,6 +161,10 @@ export default function MigrationDropZone({
           )}
         </div>
       </div>
+
+      {sizeWarning && (
+        <p className="text-xs text-red-500 px-1">{sizeWarning}</p>
+      )}
 
       {files.length > 0 && (
         <div className="space-y-1.5 max-h-48 overflow-y-auto">

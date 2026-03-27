@@ -8,11 +8,6 @@ export interface UploadedFileInfo {
   extension: string
 }
 
-export interface MigrationUploadResponse {
-  temp_id: string
-  files: UploadedFileInfo[]
-}
-
 export interface MigrationActivityNode {
   name: string
   activity_type: string
@@ -46,7 +41,16 @@ export type UploadProgressCallback = (
   currentFile: string
 ) => void
 
-const CHUNK_SIZE = 5 // Upload 5 files at a time
+export interface MigrationUploadResponse {
+  temp_id: string
+  files: UploadedFileInfo[]
+  skipped: string[]
+}
+
+// Batch ceiling: keep each request under ~200MB to avoid gateway timeouts.
+// Large files (>100MB) are sent individually.
+const BATCH_MAX_BYTES = 200 * 1024 * 1024
+const LARGE_FILE_THRESHOLD = 100 * 1024 * 1024
 
 export async function uploadMigrationFiles(
   files: File[],
@@ -54,15 +58,43 @@ export async function uploadMigrationFiles(
   access_token: string,
   onProgress?: UploadProgressCallback
 ): Promise<MigrationUploadResponse> {
-  // Upload files in small batches to avoid timeout on large uploads
   let tempId: string | null = null
   let allUploadedFiles: UploadedFileInfo[] = []
+  let allSkipped: string[] = []
 
-  for (let i = 0; i < files.length; i += CHUNK_SIZE) {
-    const batch = files.slice(i, i + CHUNK_SIZE)
+  // Build batches by byte size: large files go solo, small files are grouped
+  const batches: File[][] = []
+  let currentBatch: File[] = []
+  let currentBatchSize = 0
 
+  for (const file of files) {
+    if (file.size > LARGE_FILE_THRESHOLD) {
+      // Flush any pending small-file batch first
+      if (currentBatch.length > 0) {
+        batches.push(currentBatch)
+        currentBatch = []
+        currentBatchSize = 0
+      }
+      batches.push([file])
+    } else {
+      if (currentBatchSize + file.size > BATCH_MAX_BYTES && currentBatch.length > 0) {
+        batches.push(currentBatch)
+        currentBatch = []
+        currentBatchSize = 0
+      }
+      currentBatch.push(file)
+      currentBatchSize += file.size
+    }
+  }
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch)
+  }
+
+  let filesUploaded = 0
+
+  for (const batch of batches) {
     if (onProgress) {
-      onProgress(i, files.length, batch[0]?.name || '')
+      onProgress(filesUploaded, files.length, batch[0]?.name || '')
     }
 
     const formData = new FormData()
@@ -70,7 +102,6 @@ export async function uploadMigrationFiles(
       formData.append('files', file)
     }
 
-    // On subsequent batches, include temp_id to append to existing package
     const tempIdParam = tempId ? `&temp_id=${tempId}` : ''
     const response = await fetch(
       `${getAPIUrl()}courses/migrate/upload?org_id=${org_id}${tempIdParam}`,
@@ -88,6 +119,8 @@ export async function uploadMigrationFiles(
     const result: MigrationUploadResponse = await response.json()
     tempId = result.temp_id
     allUploadedFiles = [...allUploadedFiles, ...result.files]
+    allSkipped = [...allSkipped, ...result.skipped]
+    filesUploaded += batch.length
   }
 
   if (onProgress) {
@@ -97,6 +130,7 @@ export async function uploadMigrationFiles(
   return {
     temp_id: tempId!,
     files: allUploadedFiles,
+    skipped: allSkipped,
   }
 }
 
