@@ -56,7 +56,7 @@ function EvaluateAssignment({ user_id }: any) {
                             </div>
                             <div className='flex space-x-2'>
                                 <div
-                                    onClick={() => alert(task.hint)}
+                                    onClick={() => toast(task.hint, { icon: 'ℹ️' })}
                                     className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                                     <Info size={13} />
                                     <p className='text-xs font-semibold'>{t('dashboard.assignments.submissions.hint')}</p>

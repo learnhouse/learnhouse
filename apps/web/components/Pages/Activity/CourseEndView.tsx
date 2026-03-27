@@ -1,4 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 import { Trophy, ArrowLeft, BookOpen, Target, Download, Shield } from 'lucide-react';
@@ -371,7 +372,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
 
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      toast.error('Failed to generate PDF. Please try again.');
     }
   };
 
