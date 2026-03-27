@@ -45,6 +45,7 @@ from src.services.trail.trail import check_trail_presence
 from src.services.courses.certifications import check_course_completion_and_create_certificate
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
@@ -1247,6 +1248,15 @@ async def create_assignment_submission(
         properties={
             "assignment_uuid": assignment_uuid,
             "course_uuid": course.course_uuid,
+        },
+    )
+    await dispatch_webhooks(
+        event_name=analytics_events.ASSIGNMENT_SUBMITTED,
+        org_id=course.org_id,
+        data={
+            "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
+            "assignment": {"assignment_uuid": assignment_uuid},
+            "course": {"course_uuid": course.course_uuid, "name": course.name},
         },
     )
 
