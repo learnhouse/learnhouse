@@ -1,12 +1,18 @@
 import asyncio
+import base64
+import io
 import logging
+import os
+import zipfile
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Form
 from pydantic import BaseModel
+from typing import Optional
 import httpx
 
 from config.config import get_learnhouse_config
 from src.security.auth import get_current_user
+from src.services.utils.upload_content import upload_file
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +21,17 @@ router = APIRouter()
 
 JUDGE0_TIMEOUT = 30.0
 
+# SQL language ID (Judge0)
+SQL_LANGUAGE_ID = 82
+# We run SQL via Python's sqlite3 module
+PYTHON3_LANGUAGE_ID = 71
+
 
 class ExecuteRequest(BaseModel):
     language_id: int
     source_code: str
     stdin: str = ""
+    sqlite_db_path: Optional[str] = None
 
 
 class TestCase(BaseModel):
@@ -33,6 +45,7 @@ class ExecuteBatchRequest(BaseModel):
     language_id: int
     source_code: str
     test_cases: list[TestCase]
+    sqlite_db_path: Optional[str] = None
 
 
 def _get_judge0_config():
@@ -54,7 +67,74 @@ def _judge0_headers(judge0_cfg) -> dict:
     return headers
 
 
-async def _submit_single(judge0_cfg, language_id: int, source_code: str, stdin: str) -> dict:
+def _wrap_sql_in_python(sql: str) -> str:
+    """Wrap raw SQL in a Python script that executes it against db.sqlite3."""
+    escaped = sql.replace("\\", "\\\\").replace("'", "\\'")
+    return f"""import sqlite3, sys
+
+conn = sqlite3.connect('db.sqlite3')
+cursor = conn.cursor()
+sql = '''{escaped}'''
+
+for statement in sql.strip().split(';'):
+    statement = statement.strip()
+    if not statement:
+        continue
+    cursor.execute(statement)
+    if cursor.description:
+        cols = [d[0] for d in cursor.description]
+        print('|'.join(cols))
+        for row in cursor.fetchall():
+            print('|'.join(str(v) for v in row))
+
+conn.close()
+"""
+
+
+def _read_storage_file(file_path: str) -> bytes:
+    """Read a file from storage (filesystem or S3)."""
+    config = get_learnhouse_config()
+    content_delivery = config.hosting_config.content_delivery.type
+    full_path = f"content/{file_path}"
+
+    if content_delivery == "filesystem":
+        if not os.path.isfile(full_path):
+            raise HTTPException(status_code=404, detail="SQLite database file not found")
+        with open(full_path, "rb") as f:
+            return f.read()
+    elif content_delivery == "s3api":
+        import boto3
+        from botocore.exceptions import ClientError
+
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=config.hosting_config.content_delivery.s3api.endpoint_url,
+        )
+        bucket = config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
+        try:
+            response = s3.get_object(Bucket=bucket, Key=full_path)
+            return response["Body"].read()
+        except ClientError:
+            raise HTTPException(status_code=404, detail="SQLite database file not found")
+    else:
+        raise HTTPException(status_code=500, detail="Unknown storage backend")
+
+
+def _make_additional_files_zip(db_bytes: bytes) -> str:
+    """Create a base64-encoded zip containing the SQLite db as db.sqlite3."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("db.sqlite3", db_bytes)
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+async def _submit_single(
+    judge0_cfg,
+    language_id: int,
+    source_code: str,
+    stdin: str,
+    additional_files: Optional[str] = None,
+) -> dict:
     """Single submission with wait=true."""
     url = f"{judge0_cfg.api_url}/submissions?wait=true"
     payload = {
@@ -62,6 +142,8 @@ async def _submit_single(judge0_cfg, language_id: int, source_code: str, stdin: 
         "source_code": source_code,
         "stdin": stdin,
     }
+    if additional_files:
+        payload["additional_files"] = additional_files
     headers = _judge0_headers(judge0_cfg)
     logger.info(f"Judge0 POST {url} headers={list(headers.keys())}")
     async with httpx.AsyncClient(timeout=JUDGE0_TIMEOUT) as client:
@@ -73,13 +155,39 @@ async def _submit_single(judge0_cfg, language_id: int, source_code: str, stdin: 
         return resp.json()
 
 
+def _prepare_sql_execution(
+    source_code: str, sqlite_db_path: Optional[str]
+) -> tuple[int, str, Optional[str]]:
+    """If SQL with a db, wrap in Python and prepare additional_files. Returns (lang_id, code, additional_files)."""
+    if not sqlite_db_path:
+        return SQL_LANGUAGE_ID, source_code, None
+    db_bytes = _read_storage_file(sqlite_db_path)
+    return (
+        PYTHON3_LANGUAGE_ID,
+        _wrap_sql_in_python(source_code),
+        _make_additional_files_zip(db_bytes),
+    )
+
+
 @router.post("/execute")
 async def execute_code(
     body: ExecuteRequest,
     _current_user=Depends(get_current_user),
 ):
     judge0_cfg = _get_judge0_config()
-    result = await _submit_single(judge0_cfg, body.language_id, body.source_code, body.stdin)
+
+    language_id = body.language_id
+    source_code = body.source_code
+    additional_files = None
+
+    if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
+        language_id, source_code, additional_files = _prepare_sql_execution(
+            body.source_code, body.sqlite_db_path
+        )
+
+    result = await _submit_single(
+        judge0_cfg, language_id, source_code, body.stdin, additional_files
+    )
     return result
 
 
@@ -90,10 +198,18 @@ async def execute_batch(
 ):
     judge0_cfg = _get_judge0_config()
 
-    # Run all test cases concurrently using single submissions
+    language_id = body.language_id
+    source_code = body.source_code
+    additional_files = None
+
+    if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
+        language_id, source_code, additional_files = _prepare_sql_execution(
+            body.source_code, body.sqlite_db_path
+        )
+
     async def run_test(tc: TestCase) -> dict:
         r = await _submit_single(
-            judge0_cfg, body.language_id, body.source_code, tc.stdin
+            judge0_cfg, language_id, source_code, tc.stdin, additional_files
         )
         status = r.get("status", {})
         actual = (r.get("stdout") or "").rstrip("\n")
@@ -114,3 +230,33 @@ async def execute_batch(
 
     results = await asyncio.gather(*[run_test(tc) for tc in body.test_cases])
     return {"results": list(results)}
+
+
+@router.post("/upload-sqlite")
+async def upload_sqlite_db(
+    request: Request,
+    file_object: UploadFile,
+    activity_uuid: str = Form(),
+    block_id: str = Form(),
+    org_uuid: str = Form(),
+    course_uuid: str = Form(),
+    _current_user=Depends(get_current_user),
+):
+    """Upload a SQLite database file for a code playground block."""
+    directory = f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/codePlayground/{block_id}"
+
+    filename = await upload_file(
+        file=file_object,
+        directory=directory,
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["database"],
+        filename_prefix="sqlite_db",
+    )
+
+    file_path = f"orgs/{org_uuid}/{directory}/{filename}"
+
+    return {
+        "file_path": file_path,
+        "file_name": file_object.filename,
+    }
