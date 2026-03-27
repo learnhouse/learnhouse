@@ -14,6 +14,7 @@ from src.routers.orgs import ai_credits
 from src.routers.orgs import custom_domains
 from src.routers.orgs import packs
 from src.routers.courses import chapters, collections, courses, assignments, certifications
+from src.routers.courses import migration as migration_router_module
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
@@ -113,6 +114,12 @@ v1_router.include_router(
     dependencies=[Depends(get_non_api_token_user)]
 )
 v1_router.include_router(courses.router, prefix="/courses", tags=["courses"])
+v1_router.include_router(
+    migration_router_module.router,
+    prefix="/courses",
+    tags=["migration"],
+    dependencies=[Depends(get_non_api_token_user)]
+)
 v1_router.include_router(search.router, prefix="/search", tags=["search"])
 v1_router.include_router(
     assignments.router,
