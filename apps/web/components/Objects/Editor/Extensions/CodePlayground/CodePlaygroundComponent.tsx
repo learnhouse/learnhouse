@@ -38,6 +38,9 @@ import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
 import SubmissionHistory from './SubmissionHistory'
 import CodeDiff from './CodeDiff'
 import { parseBlankRegions, getBlankRegionExtensions } from './FillInTheBlank'
+import { createPlaygroundKeymap } from './keymap'
+import { linter, lintGutter } from '@codemirror/lint'
+import { parseErrors, errorsToDiagnostics } from './errorAnnotations'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
@@ -482,6 +485,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
   const sqliteInputRef = useRef<HTMLInputElement>(null)
 
+  // Feature 9: Line-level error annotations
+  const parsedErrorsRef = useRef<ReturnType<typeof parseErrors>>([])
+  const cmViewRef = useRef<any>(null)
+
   // Feature: Timed Challenge
   const [challengeStarted, setChallengeStarted] = useState(false)
   const [challengeTimeLeft, setChallengeTimeLeft] = useState(timedDurationMs)
@@ -531,11 +538,29 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           }
         }
 
+        const keymapExt = createPlaygroundKeymap({
+          onRun: () => runCodeRef.current(),
+          onReset: () => resetCodeRef.current(),
+        })
+        exts.push(keymapExt)
+
+        // Feature 9: Line-level error annotations
+        const lintExt = linter((view) => {
+          return errorsToDiagnostics(parsedErrorsRef.current, view.state.doc)
+        })
+        exts.push(lintExt, lintGutter())
+
         setExtensions(exts)
       }
       loadExtensions()
     }
   }, [languageId, isEditable, starterCode])
+
+  // Feature 9: Clear error annotations when code changes
+  useEffect(() => {
+    parsedErrorsRef.current = []
+    if (cmViewRef.current) cmViewRef.current.dispatch({})
+  }, [code])
 
   // Load solution CodeMirror extensions
   useEffect(() => {
@@ -799,6 +824,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           },
         ]
         setResults(newResults)
+        parsedErrorsRef.current = parseErrors(data.stderr || null, data.compile_output || null)
+        if (cmViewRef.current) cmViewRef.current.dispatch({})
         setActiveTab('output')
 
         // Save submission (learner mode only)
@@ -840,6 +867,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         })
         const data = await resp.json()
         setResults(data.results)
+        const firstResult = data.results?.[0]
+        parsedErrorsRef.current = parseErrors(firstResult?.stderr || null, firstResult?.compile_output || null)
+        if (cmViewRef.current) cmViewRef.current.dispatch({})
         setActiveTab('output')
 
         // Save submission (learner mode only)
@@ -866,6 +896,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       setIsRunning(false)
     }
   }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId, timedMode, challengeExpired])
+
+  const runCodeRef = useRef(runCode)
+  const resetCodeRef = useRef(resetCode)
+  useEffect(() => { runCodeRef.current = runCode }, [runCode])
+  useEffect(() => { resetCodeRef.current = resetCode }, [resetCode])
 
   const passedCount = results?.filter((r) => r.passed).length ?? 0
   const totalCount = results?.length ?? 0
@@ -1715,6 +1750,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <div className={`flex-1 overflow-hidden ${cmClassName}`}>
               {extensions.length > 0 && (
                 <CodeMirror
+                  onCreateEditor={(view: any) => { cmViewRef.current = view }}
                   value={code}
                   onChange={
                     isEditable
@@ -1760,6 +1796,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   )}
                   {isEditable ? 'Test Run' : 'Run Code'}
                 </button>
+                <span className="text-[10px] text-neutral-500 hidden sm:inline">
+                  {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter
+                </span>
                 {isRunning && (
                   <span className="text-[11px] font-mono text-neutral-500">
                     {(elapsedMs / 1000).toFixed(1)}s / {(timeLimitMs / 1000).toFixed(0)}s
