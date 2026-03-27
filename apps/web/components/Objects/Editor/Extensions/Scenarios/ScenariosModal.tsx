@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, Save, GitBranch, Image } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { ButtonBlack } from '@components/Objects/StyledElements/Form/Form'
@@ -72,7 +73,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
   const addNewScenario = () => {
     if (scenarios.length >= 40) {
-      alert('Maximum of 40 scenarios allowed')
+      toast.error('Maximum of 40 scenarios allowed')
       return
     }
 
@@ -91,7 +92,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
   const deleteScenario = (scenarioId: string) => {
     if (scenarios.length <= 1) {
-      alert('At least one scenario is required')
+      toast.error('At least one scenario is required')
       return
     }
     
@@ -122,7 +123,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   const addOption = (scenarioId: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId)
     if (!scenario || scenario.options.length >= 4) {
-      alert('Maximum of 4 options per scenario')
+      toast.error('Maximum of 4 options per scenario')
       return
     }
 
@@ -140,7 +141,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
   const deleteOption = (scenarioId: string, optionId: string) => {
     const scenario = scenarios.find(s => s.id === scenarioId)
     if (!scenario || scenario.options.length <= 1) {
-      alert('At least one option is required per scenario')
+      toast.error('At least one option is required per scenario')
       return
     }
 
