@@ -49,6 +49,21 @@ export default Node.create({
       timeLimitMs: {
         default: 10000,
       },
+      sqliteDbPath: {
+        default: '',
+      },
+      sqliteDbName: {
+        default: '',
+      },
+      timedMode: {
+        default: false,
+      },
+      timedDurationMs: {
+        default: 300000, // 5 minutes default
+      },
+      additionalFiles: {
+        default: [],  // Array of { name: string, content: string }
+      },
     }
   },
 
