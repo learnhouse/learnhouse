@@ -1645,7 +1645,8 @@
             "assignments": "งานที่มอบหมาย",
             "dynamic": "ไดนามิก",
             "dynamic_page": "หน้าไดนามิก",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "กำลังลบกิจกรรม...",

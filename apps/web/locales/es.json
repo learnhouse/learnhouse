@@ -1853,7 +1853,8 @@
             "assignments": "Tareas",
             "dynamic": "Dinámico",
             "dynamic_page": "Página dinámica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Eliminando actividad...",

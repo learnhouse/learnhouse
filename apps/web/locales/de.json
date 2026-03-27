@@ -1853,7 +1853,8 @@
             "assignments": "Aufgaben",
             "dynamic": "Dynamisch",
             "dynamic_page": "Dynamische Seite",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Aktivität wird gelöscht...",

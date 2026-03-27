@@ -275,6 +275,10 @@ const ACTIVITIES = {
   'TYPE_SCORM': {
     displayNameKey: 'scorm',
     Icon: Package
+  },
+  'TYPE_LIVE_SESSION': {
+    displayNameKey: 'live_session',
+    Icon: Video
   }
 }
 

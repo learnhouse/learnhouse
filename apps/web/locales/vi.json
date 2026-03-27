@@ -1645,7 +1645,8 @@
             "assignments": "Bài tập",
             "dynamic": "Động",
             "dynamic_page": "Trang động",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",

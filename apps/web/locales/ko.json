@@ -1661,7 +1661,8 @@
             "assignments": "과제",
             "dynamic": "동적",
             "dynamic_page": "동적 페이지",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",

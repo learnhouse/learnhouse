@@ -1652,7 +1652,8 @@
             "assignments": "Opdrachten",
             "dynamic": "Dynamisch",
             "dynamic_page": "Dynamische Pagina",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",

@@ -1651,7 +1651,8 @@
             "assignments": "Tarefas",
             "dynamic": "Dinâmico",
             "dynamic_page": "Página Dinâmica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Excluindo atividade...",

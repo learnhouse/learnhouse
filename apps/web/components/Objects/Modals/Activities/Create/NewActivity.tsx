@@ -9,6 +9,8 @@ import VideoModal from './NewActivityModal/VideoActivityModal'
 import Image from 'next/image'
 import DocumentPdfModal from './NewActivityModal/DocumentActivityModal'
 import Assignment from './NewActivityModal/AssignmentActivityModal'
+import LiveSessionModal from './NewActivityModal/LiveSessionActivityModal'
+import { Video as VideoIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 function NewActivityModal({
@@ -74,6 +76,18 @@ function NewActivityModal({
               {t('dashboard.courses.structure.activity.types.assignments')}
             </div>
           </ActivityOption>
+          <ActivityOption
+            onClick={() => {
+              setSelectedView('livesession')
+            }}
+          >
+            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-center text-center bg-white hover:cursor-pointer">
+              <VideoIcon className="size-8 text-red-400" />
+            </div>
+            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+              {t('dashboard.courses.structure.activity.types.live_session')}
+            </div>
+          </ActivityOption>
         </div>
       )}
 
@@ -110,6 +124,14 @@ function NewActivityModal({
           closeModal={closeModal}
         />)
       }
+
+      {selectedView === 'livesession' && (
+        <LiveSessionModal
+          chapterId={chapterId}
+          course={course}
+          closeModal={closeModal}
+        />
+      )}
     </>
   )
 }

@@ -1655,7 +1655,8 @@
             "assignments": "Compiti",
             "dynamic": "Dinamica",
             "dynamic_page": "Pagina dinamica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Eliminazione attività...",

@@ -1649,7 +1649,8 @@
             "assignments": "Tugas",
             "dynamic": "Dinamis",
             "dynamic_page": "Halaman Dinamis",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Menghapus aktivitas...",

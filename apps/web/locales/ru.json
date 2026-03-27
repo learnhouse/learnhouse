@@ -1645,7 +1645,8 @@
             "assignments": "Задания",
             "dynamic": "Динамическое",
             "dynamic_page": "Динамическая страница",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Удаление занятия...",

@@ -1646,7 +1646,8 @@
             "assignments": "Zadania",
             "dynamic": "Dynamiczna",
             "dynamic_page": "Strona dynamiczna",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Usuwanie aktywności...",

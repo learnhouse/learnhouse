@@ -1646,7 +1646,8 @@
             "assignments": "Ödevler",
             "dynamic": "Dinamik",
             "dynamic_page": "Dinamik Sayfa",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",

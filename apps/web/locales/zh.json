@@ -1661,7 +1661,8 @@
             "assignments": "作业合集",
             "dynamic": "动态内容",
             "dynamic_page": "动态页面",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "live_session": "Live Session"
           },
           "toasts": {
             "deleting": "正在删除活动...",
