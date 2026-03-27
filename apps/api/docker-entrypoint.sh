@@ -73,5 +73,5 @@ HOST=${HOSTNAME:-0.0.0.0}
 echo "Starting LearnHouse backend on ${HOST}:${PORT}..."
 
 # Start the FastAPI application
-exec uv run uvicorn app:app --host "$HOST" --port "$PORT"
+exec uv run uvicorn app:app --host "$HOST" --port "$PORT" --timeout-keep-alive 600
 

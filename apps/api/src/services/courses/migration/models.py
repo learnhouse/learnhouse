@@ -17,6 +17,7 @@ class MigrationUploadResponse(BaseModel):
     """Response from bulk file upload."""
     temp_id: str
     files: list[UploadedFileInfo]
+    skipped: list[str] = []
 
 
 class MigrationActivityNode(BaseModel):

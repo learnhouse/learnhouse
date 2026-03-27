@@ -87,6 +87,13 @@ export default function MigrationClient({ orgslug }: MigrationClientProps) {
       setTempId(uploadResult.temp_id)
       setUploadedFiles(uploadResult.files)
 
+      if (uploadResult.skipped.length > 0) {
+        toast.error(
+          `${uploadResult.skipped.length} file(s) skipped:\n${uploadResult.skipped.join('\n')}`,
+          { duration: 8000 }
+        )
+      }
+
       if (useAI) {
         setAiLoading(true)
         try {
