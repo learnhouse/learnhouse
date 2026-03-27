@@ -441,6 +441,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const timeLimitMs: number = node.attrs.timeLimitMs ?? 10000
   const sqliteDbPath: string = node.attrs.sqliteDbPath || ''
   const sqliteDbName: string = node.attrs.sqliteDbName || ''
+  const timedMode: boolean = node.attrs.timedMode || false
+  const timedDurationMs: number = node.attrs.timedDurationMs ?? 300000
 
   const isSqlLanguage = languageId === 82
 
@@ -475,6 +477,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   // SQLite upload
   const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
   const sqliteInputRef = useRef<HTMLInputElement>(null)
+
+  // Feature: Timed Challenge
+  const [challengeStarted, setChallengeStarted] = useState(false)
+  const [challengeTimeLeft, setChallengeTimeLeft] = useState(timedDurationMs)
+  const [challengeExpired, setChallengeExpired] = useState(false)
+  const challengeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Student custom test cases
   const [studentTestCases, setStudentTestCases] = useState<TestCase[]>([])
@@ -551,6 +559,24 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [isRunning])
+
+  // Feature: Timed Challenge countdown
+  useEffect(() => {
+    if (!timedMode || !challengeStarted || challengeExpired) return
+    challengeTimerRef.current = setInterval(() => {
+      setChallengeTimeLeft((prev) => {
+        if (prev <= 1000) {
+          setChallengeExpired(true)
+          if (challengeTimerRef.current) clearInterval(challengeTimerRef.current)
+          return 0
+        }
+        return prev - 1000
+      })
+    }, 1000)
+    return () => {
+      if (challengeTimerRef.current) clearInterval(challengeTimerRef.current)
+    }
+  }, [timedMode, challengeStarted, challengeExpired])
 
   // Feature 14: Confetti size tracking
   useEffect(() => {
@@ -697,6 +723,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   }, [updateAttributes])
 
   const runCode = useCallback(async () => {
+    if (timedMode && challengeExpired && !isEditable) return
     if (isRunning || !accessToken) return
     setIsRunning(true)
     setResults(null)
@@ -804,7 +831,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     } finally {
       setIsRunning(false)
     }
-  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId])
+  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId, timedMode, challengeExpired])
 
   const passedCount = results?.filter((r) => r.passed).length ?? 0
   const totalCount = results?.length ?? 0
@@ -1060,6 +1087,31 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     </select>
                   </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Timed Challenge</label>
+                    <p className="text-[10px] text-neutral-400">Add a countdown timer to the challenge.</p>
+                  </div>
+                  <button
+                    onClick={() => updateAttributes({ timedMode: !timedMode })}
+                    className={`w-10 h-5 rounded-full transition-colors ${timedMode ? 'bg-blue-500' : 'bg-neutral-200'}`}
+                  >
+                    <span className={`block w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${timedMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                {timedMode && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Duration (minutes)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={Math.round(timedDurationMs / 60000)}
+                      onChange={(e) => updateAttributes({ timedDurationMs: (parseInt(e.target.value) || 5) * 60000 })}
+                      className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors nice-shadow"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1471,7 +1523,22 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         )}
 
         {/* ── Split Layout ───────────────────────────────────── */}
-        <div className="flex" style={{ height: 560 }}>
+        <div className="flex relative" style={{ height: 560 }}>
+          {timedMode && !isEditable && !challengeStarted && (
+            <div className="absolute inset-0 z-20 bg-[#1a1b26]/95 flex flex-col items-center justify-center gap-4">
+              <Clock size={32} className="text-neutral-400" />
+              <span className="text-[14px] font-semibold text-neutral-200">Timed Challenge</span>
+              <span className="text-[12px] text-neutral-400">
+                You have {Math.floor(timedDurationMs / 60000)} minutes to complete this challenge.
+              </span>
+              <button
+                onClick={() => { setChallengeStarted(true); setChallengeTimeLeft(timedDurationMs) }}
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/15 text-neutral-200 rounded-lg text-[13px] font-semibold transition-all"
+              >
+                Start Challenge
+              </button>
+            </div>
+          )}
           {/* ── Left: Code ─────────────────────────────────────── */}
           <Resizable
             defaultSize={{ width: '60%', height: '100%' }}
@@ -1606,6 +1673,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     <CheckCircle2 size={13} className="text-emerald-400" />
                     <span className="text-[12px] font-semibold text-emerald-400">All passed</span>
                   </div>
+                )}
+                {timedMode && challengeStarted && !isEditable && (
+                  <span className={`text-[12px] font-mono font-semibold ${challengeTimeLeft < 30000 ? 'text-red-400' : 'text-neutral-400'}`}>
+                    {Math.floor(challengeTimeLeft / 60000)}:{String(Math.floor((challengeTimeLeft % 60000) / 1000)).padStart(2, '0')}
+                  </span>
                 )}
               </div>
             </div>

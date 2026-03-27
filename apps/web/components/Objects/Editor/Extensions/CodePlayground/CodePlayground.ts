@@ -55,6 +55,12 @@ export default Node.create({
       sqliteDbName: {
         default: '',
       },
+      timedMode: {
+        default: false,
+      },
+      timedDurationMs: {
+        default: 300000, // 5 minutes default
+      },
     }
   },
 
