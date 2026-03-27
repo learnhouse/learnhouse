@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { PenLine, Sparkles, Lock } from 'lucide-react'
+import { PenLine, Sparkles, Lock, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
@@ -9,7 +9,7 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
 
 interface CourseCreationTypeSelectorProps {
-  onSelectType: (type: 'scratch' | 'ai') => void
+  onSelectType: (type: 'scratch' | 'ai' | 'migrate') => void
   currentPlan: PlanLevel
 }
 
@@ -20,8 +20,8 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
   const canUseAI = rf?.ai?.enabled === true
 
   return (
-    <div className="min-w-[450px] py-2">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="min-w-[650px] py-2">
+      <div className="grid grid-cols-3 gap-4">
         {/* Start from scratch option */}
         <button
           onClick={() => onSelectType('scratch')}
@@ -73,6 +73,22 @@ function CourseCreationTypeSelector({ onSelectType, currentPlan }: CourseCreatio
           </div>
           <p className={`text-sm text-center ${canUseAI ? 'text-gray-500' : 'text-gray-400'}`}>
             {t('courses.create.with_ai_description')}
+          </p>
+        </button>
+
+        {/* Start from existing content option */}
+        <button
+          onClick={() => onSelectType('migrate')}
+          className="group flex flex-col items-center p-6 rounded-xl border-2 border-gray-200 bg-white hover:border-black hover:shadow-lg transition-all duration-200"
+        >
+          <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
+            <Upload size={28} className="text-emerald-600" />
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-1">
+            {t('courses.create.from_existing')}
+          </h3>
+          <p className="text-sm text-gray-500 text-center">
+            {t('courses.create.from_existing_description')}
           </p>
         </button>
       </div>

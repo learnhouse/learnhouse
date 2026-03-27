@@ -5,6 +5,13 @@ function generateSecret(): string {
   return crypto.randomBytes(32).toString('base64')
 }
 
+function quoteEnvValue(value: string): string {
+  if (/[\s#$'"\\`!]/.test(value)) {
+    return `'${value.replace(/'/g, "'\\''")}'`
+  }
+  return value
+}
+
 export function generateEnvFile(config: SetupConfig): string {
   const protocol = config.useHttps ? 'https' : 'http'
   const portSuffix = (config.useHttps && config.httpPort === 443) || (!config.useHttps && config.httpPort === 80)
@@ -50,7 +57,7 @@ export function generateEnvFile(config: SetupConfig): string {
   ]
 
   if (config.unsplashEnabled && config.unsplashAccessKey) {
-    lines.push(`NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${config.unsplashAccessKey}`)
+    lines.push(`NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${quoteEnvValue(config.unsplashAccessKey!)}`)
   }
 
   lines.push(
@@ -65,8 +72,8 @@ export function generateEnvFile(config: SetupConfig): string {
 
   if (config.googleOAuthEnabled && config.googleClientId && config.googleClientSecret) {
     lines.push(
-      `LEARNHOUSE_GOOGLE_CLIENT_ID=${config.googleClientId}`,
-      `LEARNHOUSE_GOOGLE_CLIENT_SECRET=${config.googleClientSecret}`,
+      `LEARNHOUSE_GOOGLE_CLIENT_ID=${quoteEnvValue(config.googleClientId!)}`,
+      `LEARNHOUSE_GOOGLE_CLIENT_SECRET=${quoteEnvValue(config.googleClientSecret!)}`,
     )
   }
 
@@ -77,10 +84,10 @@ export function generateEnvFile(config: SetupConfig): string {
     '# =============================================================================',
     '',
     `LEARNHOUSE_SQL_CONNECTION_STRING=${config.useExternalDb
-      ? config.externalDbConnectionString
+      ? quoteEnvValue(config.externalDbConnectionString!)
       : `postgresql://learnhouse:${config.dbPassword}@db:5432/learnhouse`}`,
     `LEARNHOUSE_REDIS_CONNECTION_STRING=${config.useExternalRedis
-      ? config.externalRedisConnectionString
+      ? quoteEnvValue(config.externalRedisConnectionString!)
       : 'redis://redis:6379/learnhouse'}`,
     `LEARNHOUSE_COOKIE_DOMAIN=${cookieDomain}`,
     'LEARNHOUSE_PORT=9000',
@@ -90,8 +97,8 @@ export function generateEnvFile(config: SetupConfig): string {
     '# =============================================================================',
     '',
     `LEARNHOUSE_AUTH_JWT_SECRET_KEY=${jwtSecret}`,
-    `LEARNHOUSE_INITIAL_ADMIN_EMAIL=${config.adminEmail}`,
-    `LEARNHOUSE_INITIAL_ADMIN_PASSWORD=${config.adminPassword}`,
+    `LEARNHOUSE_INITIAL_ADMIN_EMAIL=${quoteEnvValue(config.adminEmail)}`,
+    `LEARNHOUSE_INITIAL_ADMIN_PASSWORD=${quoteEnvValue(config.adminPassword)}`,
     '',
     '# =============================================================================',
     '# Collaboration Server',

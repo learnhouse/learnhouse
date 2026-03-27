@@ -281,6 +281,53 @@ def upload_to_s3(file_path: str, content: bytes) -> bool:
         return False
 
 
+MIME_TYPES_BY_EXT = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+}
+
+
+def _mime_type_for_key(key: str) -> str:
+    """Guess MIME type from an S3 key's extension."""
+    import os
+    ext = os.path.splitext(key)[1].lower()
+    return MIME_TYPES_BY_EXT.get(ext, "application/octet-stream")
+
+
+def upload_file_to_s3(s3_key: str, local_path: str) -> bool:
+    """
+    Upload a local file to S3 using multipart upload (streams from disk,
+    no full-file memory load). Boto3 automatically uses multipart for
+    files above its threshold (~8MB). Sets Content-Type from extension.
+    """
+    s3_client = get_storage_client()
+    if not s3_client:
+        return False
+
+    try:
+        s3_client.upload_file(
+            Filename=local_path,
+            Bucket=get_s3_bucket_name(),
+            Key=s3_key,
+            ExtraArgs={"ContentType": _mime_type_for_key(s3_key)},
+        )
+        return True
+    except ClientError as e:
+        logger.error("S3 upload error for %s: %s", s3_key, e)
+        return False
+    except Exception as e:
+        logger.error("Error uploading to S3: %s", e)
+        return False
+
+
 def delete_storage_directory(dir_path: str) -> bool:
     """
     Delete an entire directory from storage (S3 or local filesystem).
