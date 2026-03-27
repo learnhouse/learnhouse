@@ -1,5 +1,5 @@
 'use client';
-import { use } from "react";
+import { use, useEffect } from "react";
 import '@styles/globals.css'
 import { SessionProvider } from '@components/Contexts/AuthContext'
 import Watermark from '@components/Objects/Watermark'
@@ -61,6 +61,40 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
   const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
   const pathname = usePathname()
 
+  // Inject Google Font stylesheet into document head
+  useEffect(() => {
+    if (!customFont || customFont === DEFAULT_FONT) return
+
+    const fontId = `gfont-${customFont.replace(/\s/g, '-')}`
+    if (document.getElementById(fontId)) return
+
+    // Add preconnect hints
+    const preconnect1 = document.createElement('link')
+    preconnect1.rel = 'preconnect'
+    preconnect1.href = 'https://fonts.googleapis.com'
+    document.head.appendChild(preconnect1)
+
+    const preconnect2 = document.createElement('link')
+    preconnect2.rel = 'preconnect'
+    preconnect2.href = 'https://fonts.gstatic.com'
+    preconnect2.crossOrigin = 'anonymous'
+    document.head.appendChild(preconnect2)
+
+    // Add font stylesheet
+    const link = document.createElement('link')
+    link.id = fontId
+    link.rel = 'stylesheet'
+    link.href = getGoogleFontUrl(customFont)
+    document.head.appendChild(link)
+
+    return () => {
+      document.head.removeChild(preconnect1)
+      document.head.removeChild(preconnect2)
+      const existing = document.getElementById(fontId)
+      if (existing) document.head.removeChild(existing)
+    }
+  }, [customFont])
+
   const pathParts = pathname?.split('/').filter(Boolean) || []
 
   // Pages that use a full-bleed layout (no footer/watermark)
@@ -68,21 +102,13 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
   const isFullBleedPage = noFooterPaths.some((p) => pathParts.includes(p))
 
   return (
-    <>
-      {customFont && customFont !== DEFAULT_FONT && (
-        <>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link href={getGoogleFontUrl(customFont)} rel="stylesheet" />
-        </>
-      )}
-      <div
-        className="flex flex-col min-h-screen"
-        style={{
-          backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
-          ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
-        }}
-      >
+    <div
+      className="flex flex-col min-h-screen"
+      style={{
+        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
+        ...(customFont ? { fontFamily: `'${customFont}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif` } : {}),
+      }}
+    >
       <PageViewTracker />
       <OrgJoinBanner />
       <OrgMenu orgslug={orgslug} />
@@ -92,7 +118,6 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
       {!isFullBleedPage && <OrgFooter />}
       {!isFullBleedPage && <Watermark />}
     </div>
-    </>
   )
 }
 
