@@ -533,6 +533,8 @@
       "from_scratch_description": "Manually create your course structure and content",
       "with_ai": "Start with AI",
       "with_ai_description": "Let AI help you plan and generate your course content",
+      "from_existing": "From Existing Content",
+      "from_existing_description": "Upload files from another platform and organize them into a course",
       "ai": {
         "title": "AI Course Creator",
         "creating_structure": "Creating...",
@@ -4041,5 +4043,41 @@
         "range": "{{from}}–{{to}} of {{total}}"
       }
     }
+  },
+  "migration": {
+    "title": "Migrate Content",
+    "subtitle": "Upload your files and organize them into a course",
+    "drop_files": "Drop your files here or click to browse",
+    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "course_name": "Course Name",
+    "course_name_placeholder": "e.g. Python Basics for Beginners",
+    "description": "One-liner Description",
+    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
+    "organize_with_ai": "Organize with AI",
+    "organize_manually": "Organize Manually",
+    "unassigned_files": "Unassigned Files",
+    "all_files_assigned": "All files assigned",
+    "course_structure": "Course Structure",
+    "add_chapter": "Add Chapter",
+    "add_activity": "Add Activity",
+    "new_chapter": "New Chapter",
+    "new_activity": "New Activity",
+    "drop_file_here": "Drop a file here",
+    "create_course": "Create Course",
+    "creating_course": "Creating your course...",
+    "creating_description": "Uploading files and setting up chapters and activities",
+    "course_created": "Course created successfully!",
+    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
+    "go_to_course": "Go to Course",
+    "creation_failed": "Course creation failed",
+    "creation_error_generic": "Something went wrong. Please try again.",
+    "try_again": "Try Again",
+    "ai_failed": "AI suggestion failed, falling back to manual organization",
+    "upload_failed": "File upload failed",
+    "click_to_add_more": "Click to add more files",
+    "uploading_files": "Uploading files",
+    "step_upload": "Upload",
+    "step_organize": "Organize",
+    "step_complete": "Complete"
   }
 }

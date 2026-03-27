@@ -11,10 +11,10 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import React, { useState, useMemo } from 'react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { Download, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -178,10 +178,15 @@ function CoursesHome(params: CourseProps) {
     mutateCourses()
   }
 
-  const handleCreationTypeSelect = (type: 'scratch' | 'ai') => {
+  const router = useRouter()
+
+  const handleCreationTypeSelect = (type: 'scratch' | 'ai' | 'migrate') => {
     if (type === 'ai') {
       setNewCourseModal(false)
       setAiCourseModalOpen(true)
+    } else if (type === 'migrate') {
+      setNewCourseModal(false)
+      router.push(getUriWithOrg(orgslug, '/dash/courses/migrate'))
     } else {
       setCreationType('scratch')
     }
