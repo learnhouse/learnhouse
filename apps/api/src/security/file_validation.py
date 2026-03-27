@@ -122,6 +122,12 @@ FILE_TYPES = {
         'max_size': None,  # No limit
         'validator': validate_zip_content
     },
+    'database': {
+        'extensions': ['.sqlite', '.db', '.sqlite3'],
+        'mime_types': ['application/vnd.sqlite3', 'application/x-sqlite3', 'application/octet-stream'],
+        'max_size': 50 * 1024 * 1024,  # 50MB limit for database files
+        'validator': lambda content: content[:16].startswith(b'SQLite format 3\x00')
+    },
     'office': {
         'extensions': ['.docx', '.pptx'],
         'mime_types': [

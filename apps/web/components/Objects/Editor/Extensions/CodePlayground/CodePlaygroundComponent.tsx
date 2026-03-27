@@ -24,11 +24,23 @@ import {
   Lock,
   Eye,
   Settings2,
+  Database,
+  Upload,
+  History,
 } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useCourse } from '@components/Contexts/CourseContext'
+import { uploadSqliteDb } from '@services/blocks/CodePlayground/sqlite'
 import { getAPIUrl } from '@services/config/config'
 import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
+import SubmissionHistory from './SubmissionHistory'
+import CodeDiff from './CodeDiff'
+import { parseBlankRegions, getBlankRegionExtensions } from './FillInTheBlank'
+import { createPlaygroundKeymap } from './keymap'
+import { linter, lintGutter } from '@codemirror/lint'
+import { parseErrors, errorsToDiagnostics } from './errorAnnotations'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
@@ -95,6 +107,81 @@ async function getLanguageExtension(codemirrorLang: string) {
     case 'php': {
       const { php } = await import('@codemirror/lang-php')
       return php()
+    }
+    case 'sql': {
+      const { sql } = await import('@codemirror/lang-sql')
+      return sql()
+    }
+    case 'xml': {
+      const { xml } = await import('@codemirror/lang-xml')
+      return xml()
+    }
+    case 'markdown': {
+      const { markdown } = await import('@codemirror/lang-markdown')
+      return markdown()
+    }
+    case 'wast': {
+      const { wast } = await import('@codemirror/lang-wast')
+      return wast()
+    }
+    case 'sass': {
+      const { sass } = await import('@codemirror/lang-sass')
+      return sass()
+    }
+    case 'perl': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { perl } = await import('@codemirror/legacy-modes/mode/perl')
+      return StreamLanguage.define(perl)
+    }
+    case 'r': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { r } = await import('@codemirror/legacy-modes/mode/r')
+      return StreamLanguage.define(r)
+    }
+    case 'haskell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { haskell } = await import(
+        '@codemirror/legacy-modes/mode/haskell'
+      )
+      return StreamLanguage.define(haskell)
+    }
+    case 'lua': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { lua } = await import('@codemirror/legacy-modes/mode/lua')
+      return StreamLanguage.define(lua)
+    }
+    case 'clojure': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { clojure } = await import(
+        '@codemirror/legacy-modes/mode/clojure'
+      )
+      return StreamLanguage.define(clojure)
+    }
+    case 'shell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { shell } = await import('@codemirror/legacy-modes/mode/shell')
+      return StreamLanguage.define(shell)
+    }
+    case 'pascal': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { pascal } = await import(
+        '@codemirror/legacy-modes/mode/pascal'
+      )
+      return StreamLanguage.define(pascal)
+    }
+    case 'fortran': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { fortran } = await import(
+        '@codemirror/legacy-modes/mode/fortran'
+      )
+      return StreamLanguage.define(fortran)
+    }
+    case 'powershell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { powerShell } = await import(
+        '@codemirror/legacy-modes/mode/powershell'
+      )
+      return StreamLanguage.define(powerShell)
     }
     default: {
       const { javascript } = await import('@codemirror/lang-javascript')
@@ -207,7 +294,7 @@ interface TestResult {
   memory: number | null
 }
 
-type RightTab = 'description' | 'tests' | 'output'
+type RightTab = 'description' | 'tests' | 'output' | 'history'
 type Difficulty = 'easy' | 'medium' | 'hard'
 
 const DIFFICULTY_CONFIG: Record<
@@ -340,6 +427,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const { node, updateAttributes } = props
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
+  const org = useOrg() as any
+  const course = useCourse() as any
   const isEditable = editorState?.isEditable ?? true
   const accessToken = session?.data?.tokens?.access_token
 
@@ -355,6 +444,16 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const timeComplexity: string = node.attrs.timeComplexity || ''
   const spaceComplexity: string = node.attrs.spaceComplexity || ''
   const timeLimitMs: number = node.attrs.timeLimitMs ?? 10000
+  const sqliteDbPath: string = node.attrs.sqliteDbPath || ''
+  const sqliteDbName: string = node.attrs.sqliteDbName || ''
+  const timedMode: boolean = node.attrs.timedMode || false
+  const timedDurationMs: number = node.attrs.timedDurationMs ?? 300000
+  const additionalFiles: { name: string; content: string }[] = node.attrs.additionalFiles || []
+
+  const isSqlLanguage = languageId === 82
+
+  const blockId = node.attrs.id || 'unknown'
+  const activityUuid = props.extension?.options?.activity?.activity_uuid || ''
 
   const [code, setCode] = useState(starterCode)
   const [results, setResults] = useState<TestResult[] | null>(null)
@@ -368,6 +467,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [attemptCount, setAttemptCount] = useState(0)
   const [showSolution, setShowSolution] = useState(false)
   const [solutionExtensions, setSolutionExtensions] = useState<any[]>([])
+  const [solutionView, setSolutionView] = useState<'diff' | 'solution'>('diff')
 
   // Editor: Advanced settings toggle
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -380,6 +480,26 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [showConfetti, setShowConfetti] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+
+  // SQLite upload
+  const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
+  const sqliteInputRef = useRef<HTMLInputElement>(null)
+
+  // File tabs: 'main' for the primary code, or index into additionalFiles
+  const [activeFileTab, setActiveFileTab] = useState<'main' | number>('main')
+
+  // Feature 9: Line-level error annotations
+  const parsedErrorsRef = useRef<ReturnType<typeof parseErrors>>([])
+  const cmViewRef = useRef<any>(null)
+
+  // Feature: Timed Challenge
+  const [challengeStarted, setChallengeStarted] = useState(false)
+  const [challengeTimeLeft, setChallengeTimeLeft] = useState(timedDurationMs)
+  const [challengeExpired, setChallengeExpired] = useState(false)
+  const challengeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Student custom test cases
+  const [studentTestCases, setStudentTestCases] = useState<TestCase[]>([])
 
   // Feature 17: Copy output
   const outputCopy = useCopyToClipboard()
@@ -412,11 +532,38 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           }
         }
 
+        // Feature: Fill-in-the-blank mode (viewer mode only)
+        if (!isEditable && starterCode) {
+          const blankRegions = parseBlankRegions(starterCode)
+          if (blankRegions.length > 0) {
+            const blankExts = getBlankRegionExtensions(starterCode)
+            exts.push(...blankExts)
+          }
+        }
+
+        const keymapExt = createPlaygroundKeymap({
+          onRun: () => runCodeRef.current(),
+          onReset: () => resetCodeRef.current(),
+        })
+        exts.push(keymapExt)
+
+        // Feature 9: Line-level error annotations
+        const lintExt = linter((view) => {
+          return errorsToDiagnostics(parsedErrorsRef.current, view.state.doc)
+        })
+        exts.push(lintExt, lintGutter())
+
         setExtensions(exts)
       }
       loadExtensions()
     }
   }, [languageId, isEditable, starterCode])
+
+  // Feature 9: Clear error annotations when code changes
+  useEffect(() => {
+    parsedErrorsRef.current = []
+    if (cmViewRef.current) cmViewRef.current.dispatch({})
+  }, [code])
 
   // Load solution CodeMirror extensions
   useEffect(() => {
@@ -453,6 +600,24 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [isRunning])
+
+  // Feature: Timed Challenge countdown
+  useEffect(() => {
+    if (!timedMode || !challengeStarted || challengeExpired) return
+    challengeTimerRef.current = setInterval(() => {
+      setChallengeTimeLeft((prev) => {
+        if (prev <= 1000) {
+          setChallengeExpired(true)
+          if (challengeTimerRef.current) clearInterval(challengeTimerRef.current)
+          return 0
+        }
+        return prev - 1000
+      })
+    }, 1000)
+    return () => {
+      if (challengeTimerRef.current) clearInterval(challengeTimerRef.current)
+    }
+  }, [timedMode, challengeStarted, challengeExpired])
 
   // Feature 14: Confetti size tracking
   useEffect(() => {
@@ -515,6 +680,23 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     [testCases, updateAttributes]
   )
 
+  const addStudentTestCase = useCallback(() => {
+    setStudentTestCases((prev) => [
+      ...prev,
+      { id: uuidv4(), label: `My Test ${prev.length + 1}`, stdin: '', expectedStdout: '' },
+    ])
+  }, [])
+
+  const removeStudentTestCase = useCallback((id: string) => {
+    setStudentTestCases((prev) => prev.filter((tc) => tc.id !== id))
+  }, [])
+
+  const updateStudentTestCase = useCallback((id: string, field: keyof TestCase, value: string) => {
+    setStudentTestCases((prev) =>
+      prev.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc))
+    )
+  }, [])
+
   const addHint = useCallback(() => {
     updateAttributes({ hints: [...hints, ''] })
   }, [hints, updateAttributes])
@@ -544,23 +726,82 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     })
   }, [])
 
+  const addAdditionalFile = useCallback(() => {
+    updateAttributes({
+      additionalFiles: [...additionalFiles, { name: 'data.txt', content: '' }],
+    })
+  }, [additionalFiles, updateAttributes])
+
+  const removeAdditionalFile = useCallback((index: number) => {
+    updateAttributes({
+      additionalFiles: additionalFiles.filter((_, i) => i !== index),
+    })
+    setActiveFileTab((prev) => {
+      if (prev === index) return 'main'
+      if (typeof prev === 'number' && prev > index) return prev - 1
+      return prev
+    })
+  }, [additionalFiles, updateAttributes])
+
+  const updateAdditionalFile = useCallback((index: number, field: 'name' | 'content', value: string) => {
+    const updated = additionalFiles.map((f, i) =>
+      i === index ? { ...f, [field]: value } : f
+    )
+    updateAttributes({ additionalFiles: updated })
+  }, [additionalFiles, updateAttributes])
+
   const resetCode = useCallback(() => {
     setCode(starterCode)
     setResults(null)
   }, [starterCode])
 
+  const handleSqliteUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !accessToken) return
+    setIsUploadingSqlite(true)
+    try {
+      const activityUuid = props.extension?.options?.activity?.activity_uuid
+      const orgUuid = org?.org_uuid
+      const courseUuid = course?.courseStructure?.course_uuid
+      const blockId = node.attrs.id || uuidv4()
+      if (!activityUuid || !orgUuid || !courseUuid) {
+        console.error('Missing context for SQLite upload')
+        return
+      }
+      const result = await uploadSqliteDb(
+        file, activityUuid, blockId, orgUuid, courseUuid, accessToken
+      )
+      updateAttributes({
+        sqliteDbPath: result.file_path,
+        sqliteDbName: result.file_name,
+      })
+    } catch (err) {
+      console.error('SQLite upload error:', err)
+    } finally {
+      setIsUploadingSqlite(false)
+      if (sqliteInputRef.current) sqliteInputRef.current.value = ''
+    }
+  }, [accessToken, org, course, props.extension, node.attrs.id, updateAttributes])
+
+  const removeSqliteDb = useCallback(() => {
+    updateAttributes({ sqliteDbPath: '', sqliteDbName: '' })
+  }, [updateAttributes])
+
   const runCode = useCallback(async () => {
+    if (timedMode && challengeExpired && !isEditable) return
     if (isRunning || !accessToken) return
     setIsRunning(true)
     setResults(null)
 
+    const allTestCases = [...testCases, ...studentTestCases]
+
     // Feature 3: Increment attempt count when running with test cases
-    if (testCases.length > 0 && !isEditable) {
+    if (allTestCases.length > 0 && !isEditable) {
       setAttemptCount((prev) => prev + 1)
     }
 
     try {
-      if (testCases.length === 0) {
+      if (allTestCases.length === 0) {
         const resp = await fetch(`${getAPIUrl()}code/execute`, {
           method: 'POST',
           headers: {
@@ -571,6 +812,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             language_id: languageId,
             source_code: code,
             stdin: '',
+            ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
+            ...(additionalFiles.length > 0 ? { additional_files: additionalFiles.map((f) => ({ name: f.name, content: f.content })) } : {}),
           }),
         })
         const data = await resp.json()
@@ -589,7 +832,27 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           },
         ]
         setResults(newResults)
+        parsedErrorsRef.current = parseErrors(data.stderr || null, data.compile_output || null)
+        if (cmViewRef.current) cmViewRef.current.dispatch({})
         setActiveTab('output')
+
+        // Save submission (learner mode only)
+        if (!isEditable && activityUuid && accessToken) {
+          const allResults = newResults
+          const totalTests = allResults.length
+          const passedTests = allResults.filter((r: any) => r.passed).length
+          const execTime = allResults[0]?.time ? Math.round(parseFloat(allResults[0].time) * 1000) : null
+          fetch(`${getAPIUrl()}code/submissions/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({
+              activity_uuid: activityUuid, block_id: blockId, language_id: languageId,
+              source_code: code, results: { items: allResults },
+              passed: passedTests === totalTests && totalTests > 0,
+              total_tests: totalTests, passed_tests: passedTests, execution_time_ms: execTime,
+            }),
+          }).catch(console.error)
+        }
       } else {
         const resp = await fetch(`${getAPIUrl()}code/execute-batch`, {
           method: 'POST',
@@ -600,24 +863,52 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           body: JSON.stringify({
             language_id: languageId,
             source_code: code,
-            test_cases: testCases.map((tc) => ({
+            test_cases: allTestCases.map((tc) => ({
               id: tc.id,
               label: tc.label,
               stdin: tc.stdin,
               expected_stdout: tc.expectedStdout,
             })),
+            ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
+            ...(additionalFiles.length > 0 ? { additional_files: additionalFiles.map((f) => ({ name: f.name, content: f.content })) } : {}),
           }),
         })
         const data = await resp.json()
         setResults(data.results)
+        const firstResult = data.results?.[0]
+        parsedErrorsRef.current = parseErrors(firstResult?.stderr || null, firstResult?.compile_output || null)
+        if (cmViewRef.current) cmViewRef.current.dispatch({})
         setActiveTab('output')
+
+        // Save submission (learner mode only)
+        if (!isEditable && activityUuid && accessToken) {
+          const allResults = data.results
+          const totalTests = allResults.length
+          const passedTests = allResults.filter((r: any) => r.passed).length
+          const execTime = allResults[0]?.time ? Math.round(parseFloat(allResults[0].time) * 1000) : null
+          fetch(`${getAPIUrl()}code/submissions/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({
+              activity_uuid: activityUuid, block_id: blockId, language_id: languageId,
+              source_code: code, results: { items: allResults },
+              passed: passedTests === totalTests && totalTests > 0,
+              total_tests: totalTests, passed_tests: passedTests, execution_time_ms: execTime,
+            }),
+          }).catch(console.error)
+        }
       }
     } catch (err) {
       console.error('Code execution error:', err)
     } finally {
       setIsRunning(false)
     }
-  }, [isRunning, accessToken, testCases, languageId, code, isEditable])
+  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId, timedMode, challengeExpired])
+
+  const runCodeRef = useRef(runCode)
+  const resetCodeRef = useRef(resetCode)
+  useEffect(() => { runCodeRef.current = runCode }, [runCode])
+  useEffect(() => { resetCodeRef.current = resetCode }, [resetCode])
 
   const passedCount = results?.filter((r) => r.passed).length ?? 0
   const totalCount = results?.length ?? 0
@@ -696,7 +987,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <span className="w-2 h-2 rounded-full bg-neutral-400 animate-pulse" />
       ) : null,
     },
+    { id: 'history' as RightTab, icon: <History size={13} />, label: 'History' },
   ]
+
+  const visibleTabs = isEditable ? tabs.filter(t => t.id !== 'history') : tabs
 
   // ── Copy button helper ──────────────────────────────────────────
   const CopyButton: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
@@ -775,6 +1069,51 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             ))}
           </div>
 
+          {/* SQLite Database Upload (SQL only) */}
+          {isSqlLanguage && (
+            <div>
+              <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1.5 block">
+                SQLite Database
+              </label>
+              {sqliteDbPath ? (
+                <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2.5 nice-shadow">
+                  <Database size={14} className="text-neutral-500 shrink-0" />
+                  <span className="text-[12px] text-neutral-700 truncate flex-1">{sqliteDbName || 'database.sqlite'}</span>
+                  <button
+                    onClick={removeSqliteDb}
+                    className="p-1 hover:bg-red-50 rounded transition-colors shrink-0"
+                  >
+                    <Trash2 size={12} className="text-red-400" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => sqliteInputRef.current?.click()}
+                  className="flex flex-col items-center gap-2 bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-lg px-3 py-4 cursor-pointer hover:border-neutral-300 hover:bg-neutral-100 transition-all"
+                >
+                  {isUploadingSqlite ? (
+                    <Loader2 size={16} className="text-neutral-400 animate-spin" />
+                  ) : (
+                    <Upload size={16} className="text-neutral-400" />
+                  )}
+                  <span className="text-[11px] text-neutral-400">
+                    {isUploadingSqlite ? 'Uploading...' : 'Upload .sqlite / .db file'}
+                  </span>
+                </div>
+              )}
+              <input
+                ref={sqliteInputRef}
+                type="file"
+                accept=".sqlite,.db,.sqlite3"
+                onChange={handleSqliteUpload}
+                className="hidden"
+              />
+              <p className="text-[10px] text-neutral-400 mt-1">
+                Students' SQL queries will run against this database.
+              </p>
+            </div>
+          )}
+
           {/* Advanced */}
           <div className="border-t border-neutral-100 pt-3">
             <button
@@ -825,6 +1164,62 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     </select>
                   </div>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Timed Challenge</label>
+                    <p className="text-[10px] text-neutral-400">Add a countdown timer to the challenge.</p>
+                  </div>
+                  <button
+                    onClick={() => updateAttributes({ timedMode: !timedMode })}
+                    className={`w-10 h-5 rounded-full transition-colors ${timedMode ? 'bg-blue-500' : 'bg-neutral-200'}`}
+                  >
+                    <span className={`block w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${timedMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                {timedMode && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Duration (minutes)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={Math.round(timedDurationMs / 60000)}
+                      onChange={(e) => updateAttributes({ timedDurationMs: (parseInt(e.target.value) || 5) * 60000 })}
+                      className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 outline-none focus:border-neutral-300 transition-colors nice-shadow"
+                    />
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Additional Files</label>
+                    <button onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
+                      <Plus size={11} /> Add File
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mb-2">Files available to the student's code (e.g., data.txt, utils.py).</p>
+                  {additionalFiles.map((file, i) => (
+                    <div key={i} className="mb-2 rounded-lg border border-neutral-200 p-2.5 bg-neutral-50/50">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <input
+                          value={file.name}
+                          onChange={(e) => updateAdditionalFile(i, 'name', e.target.value)}
+                          className="flex-1 text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-neutral-300"
+                          placeholder="filename.ext"
+                        />
+                        <button onClick={() => removeAdditionalFile(i)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                          <Trash2 size={11} className="text-red-400" />
+                        </button>
+                      </div>
+                      <textarea
+                        value={file.content}
+                        onChange={(e) => updateAdditionalFile(i, 'content', e.target.value)}
+                        className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-neutral-300 resize-none"
+                        rows={4}
+                        placeholder="File contents..."
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -841,6 +1236,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <div className="text-[13px] text-neutral-400 italic text-center py-8">No description provided.</div>
           )}
 
+          {isSqlLanguage && sqliteDbPath && (
+            <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
+              <Database size={10} className="text-neutral-400" />
+              Runs against: {sqliteDbName || 'database.sqlite'}
+            </div>
+          )}
+
           {(timeComplexity || spaceComplexity) && (
             <div className="flex flex-wrap items-center gap-2">
               {timeComplexity && (
@@ -855,6 +1257,18 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   Memory: {getComplexityLabel(spaceComplexity)}
                 </span>
               )}
+            </div>
+          )}
+
+          {additionalFiles.length > 0 && (
+            <div className="space-y-1">
+              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Available Files</span>
+              {additionalFiles.map((f, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
+                  <FileText size={10} className="text-neutral-400" />
+                  {f.name}
+                </div>
+              ))}
             </div>
           )}
 
@@ -875,9 +1289,29 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 </div>
               )}
               {showSolution && canRevealSolution && (
-                <div className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
-                  {solutionExtensions.length > 0 && (
-                    <CodeMirror value={solutionCode} extensions={solutionExtensions} editable={false} height="auto" maxHeight="300px" style={cmStyles} basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: false }} />
+                <div className="space-y-2">
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setSolutionView('diff')}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'diff' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
+                    >
+                      Diff
+                    </button>
+                    <button
+                      onClick={() => setSolutionView('solution')}
+                      className={`text-[10px] font-semibold px-2 py-1 rounded transition-colors ${solutionView === 'solution' ? 'bg-neutral-200 text-neutral-700' : 'text-neutral-400 hover:text-neutral-600'}`}
+                    >
+                      Solution
+                    </button>
+                  </div>
+                  {solutionView === 'diff' ? (
+                    <CodeDiff studentCode={code} solutionCode={solutionCode} />
+                  ) : (
+                    <div className={`rounded-lg overflow-hidden border border-neutral-200 nice-shadow ${cmClassName}`}>
+                      {solutionExtensions.length > 0 && (
+                        <CodeMirror value={solutionCode} extensions={solutionExtensions} editable={false} height="auto" maxHeight="300px" style={cmStyles} basicSetup={{ lineNumbers: true, foldGutter: false, highlightActiveLine: false }} />
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -984,10 +1418,97 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           })}
         </div>
       )}
+      {!isEditable && (
+        <div className="mt-4 pt-3 border-t border-neutral-100">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+              Your Test Cases
+            </label>
+            <button
+              onClick={addStudentTestCase}
+              className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors"
+            >
+              <Plus size={11} /> Add
+            </button>
+          </div>
+          {studentTestCases.length === 0 && (
+            <p className="text-[11px] text-neutral-400 italic">Add your own test cases to verify edge cases.</p>
+          )}
+          {studentTestCases.map((tc) => (
+            <div key={tc.id} className="mb-3 rounded-lg border border-blue-100 bg-blue-50/20 p-2.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <input
+                  value={tc.label}
+                  onChange={(e) => updateStudentTestCase(tc.id, 'label', e.target.value)}
+                  className="flex-1 text-[12px] font-medium text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-blue-300"
+                />
+                <button onClick={() => removeStudentTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                  <Trash2 size={11} className="text-red-400" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <div>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Input (stdin)</label>
+                  <textarea
+                    value={tc.stdin}
+                    onChange={(e) => updateStudentTestCase(tc.id, 'stdin', e.target.value)}
+                    className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
+                    rows={2}
+                    placeholder="Input..."
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Expected Output</label>
+                  <textarea
+                    value={tc.expectedStdout}
+                    onChange={(e) => updateStudentTestCase(tc.id, 'expectedStdout', e.target.value)}
+                    className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
+                    rows={2}
+                    placeholder="Expected output..."
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 
   // ── Tab: Output ───────────────────────────────────────────────
+  const renderSqlTable = (stdout: string) => {
+    const lines = stdout.trim().split('\n').filter(Boolean)
+    if (lines.length < 1) return null
+    const headers = lines[0].split('|')
+    const rows = lines.slice(1).map((line) => line.split('|'))
+    return (
+      <div className="overflow-x-auto rounded-lg border border-white/10 nice-shadow">
+        <table className="w-full text-[12px] font-mono">
+          <thead>
+            <tr className="bg-white/[0.06]">
+              {headers.map((h, i) => (
+                <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-neutral-300 uppercase tracking-wider border-b border-white/10">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className={ri % 2 === 0 ? 'bg-white/[0.02]' : 'bg-white/[0.05]'}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-3 py-1.5 text-white/80 border-b border-white/5">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const renderOutputTab = () => {
     const renderTerminal = (stdout: string | null | undefined, stderr: string | null | undefined, compileOut: string | null | undefined, time: string | null | undefined, label: string, copyText: string | null | undefined) => (
       <div className="bg-[#1e1e2e] rounded-lg overflow-hidden nice-shadow">
@@ -1001,7 +1522,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           <div className="ml-auto">{copyText && <CopyButton text={copyText} />}</div>
         </div>
         <div className="p-3.5">
-          {stdout && <pre className="text-[13px] font-mono text-white/90 whitespace-pre-wrap leading-relaxed">{stdout}</pre>}
+          {stdout && isSqlLanguage && stdout.includes('|') ? (
+            renderSqlTable(stdout)
+          ) : stdout ? (
+            <pre className="text-[13px] font-mono text-white/90 whitespace-pre-wrap leading-relaxed">{stdout}</pre>
+          ) : null}
           {stderr && <pre className="text-[12px] font-mono text-red-400 whitespace-pre-wrap mt-2">{stderr}</pre>}
           {compileOut && <pre className="text-[12px] font-mono text-amber-400 whitespace-pre-wrap mt-2">{compileOut}</pre>}
           {!stdout && !stderr && !compileOut && <pre className="text-[12px] font-mono text-neutral-500 italic">(no output)</pre>}
@@ -1065,7 +1590,34 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">Output</label>
                       <CopyButton text={r.actual_stdout || ''} />
                     </div>
-                    <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || '(no output)'}</pre>
+                    {isSqlLanguage && r.actual_stdout && r.actual_stdout.includes('|') ? (
+                      <div className="overflow-x-auto rounded-lg border border-neutral-200 nice-shadow">
+                        <table className="w-full text-[11px] font-mono">
+                          <thead>
+                            <tr className="bg-neutral-50">
+                              {r.actual_stdout.trim().split('\n')[0].split('|').map((h, i) => (
+                                <th key={i} className="px-2.5 py-1.5 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {r.actual_stdout.trim().split('\n').slice(1).filter(Boolean).map((line, ri) => (
+                              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-neutral-50/50'}>
+                                {line.split('|').map((cell, ci) => (
+                                  <td key={ci} className="px-2.5 py-1 text-neutral-700 border-b border-neutral-100">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || '(no output)'}</pre>
+                    )}
                   </div>
                 )}
                 {!r.passed && r.expected_stdout && (
@@ -1111,9 +1663,41 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         )}
 
         {/* ── Split Layout ───────────────────────────────────── */}
-        <div className="flex" style={{ height: 560 }}>
+        <div className="flex relative" style={{ height: 560 }}>
+          {timedMode && !isEditable && !challengeStarted && (
+            <div className="absolute inset-0 z-20 bg-[#1a1b26]/95 flex flex-col items-center justify-center gap-4">
+              <Clock size={32} className="text-neutral-400" />
+              <span className="text-[14px] font-semibold text-neutral-200">Timed Challenge</span>
+              <span className="text-[12px] text-neutral-400">
+                You have {Math.floor(timedDurationMs / 60000)} minutes to complete this challenge.
+              </span>
+              <button
+                onClick={() => { setChallengeStarted(true); setChallengeTimeLeft(timedDurationMs) }}
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/15 text-neutral-200 rounded-lg text-[13px] font-semibold transition-all"
+              >
+                Start Challenge
+              </button>
+            </div>
+          )}
           {/* ── Left: Code ─────────────────────────────────────── */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[#1a1b26]">
+          <Resizable
+            defaultSize={{ width: '60%', height: '100%' }}
+            minWidth={300}
+            maxWidth="80%"
+            enable={{ right: true }}
+            handleStyles={{
+              right: {
+                width: 8,
+                right: -4,
+                cursor: 'col-resize',
+              },
+            }}
+            handleClasses={{
+              right: 'group',
+            }}
+            className="flex flex-col min-w-0 bg-[#1a1b26] relative"
+          >
+            <div className="absolute right-0 top-0 bottom-0 w-[3px] z-10 hover:bg-blue-500/40 transition-colors bg-white/[0.06]" />
             {/* Header bar — dark */}
             <div className="flex items-center justify-between px-4 border-b border-white/[0.06] shrink-0">
               <div className="flex items-center gap-2.5 py-3">
@@ -1170,17 +1754,64 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
               </div>
             </div>
+            {/* File tabs — VS Code style */}
+            {additionalFiles.length > 0 && (
+              <div className="flex items-center bg-[#16161e] border-b border-white/[0.06] overflow-x-auto shrink-0">
+                <button
+                  onClick={() => setActiveFileTab('main')}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                    activeFileTab === 'main'
+                      ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
+                      : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <Code2 size={12} />
+                  main
+                </button>
+                {additionalFiles.map((file, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFileTab(i)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                      activeFileTab === i
+                        ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
+                        : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <FileText size={12} />
+                    {file.name || `file-${i + 1}`}
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Editor — dark Tokyo Night theme area */}
             <div className={`flex-1 overflow-hidden ${cmClassName}`}>
-              {extensions.length > 0 && (
+              {activeFileTab === 'main' ? (
+                extensions.length > 0 && (
+                  <CodeMirror
+                    onCreateEditor={(view: any) => { cmViewRef.current = view }}
+                    value={code}
+                    onChange={
+                      isEditable
+                        ? handleStarterCodeChange
+                        : (val: string) => setCode(val)
+                    }
+                    extensions={extensions}
+                    height="100%"
+                    style={{ ...cmStyles, height: '100%' }}
+                    basicSetup={{
+                      lineNumbers: true,
+                      foldGutter: false,
+                      highlightActiveLine: true,
+                      autocompletion: true,
+                    }}
+                  />
+                )
+              ) : (
                 <CodeMirror
-                  value={code}
-                  onChange={
-                    isEditable
-                      ? handleStarterCodeChange
-                      : (val: string) => setCode(val)
-                  }
-                  extensions={extensions}
+                  value={additionalFiles[activeFileTab as number]?.content || ''}
+                  onChange={isEditable ? (val: string) => updateAdditionalFile(activeFileTab as number, 'content', val) : undefined}
+                  editable={isEditable}
                   height="100%"
                   style={{ ...cmStyles, height: '100%' }}
                   basicSetup={{
@@ -1219,6 +1850,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   )}
                   {isEditable ? 'Test Run' : 'Run Code'}
                 </button>
+                <span className="text-[10px] text-neutral-500 hidden sm:inline">
+                  {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter
+                </span>
                 {isRunning && (
                   <span className="text-[11px] font-mono text-neutral-500">
                     {(elapsedMs / 1000).toFixed(1)}s / {(timeLimitMs / 1000).toFixed(0)}s
@@ -1230,29 +1864,22 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     <span className="text-[12px] font-semibold text-emerald-400">All passed</span>
                   </div>
                 )}
+                {timedMode && challengeStarted && !isEditable && (
+                  <span className={`text-[12px] font-mono font-semibold ${challengeTimeLeft < 30000 ? 'text-red-400' : 'text-neutral-400'}`}>
+                    {Math.floor(challengeTimeLeft / 60000)}:{String(Math.floor((challengeTimeLeft % 60000) / 1000)).padStart(2, '0')}
+                  </span>
+                )}
               </div>
             </div>
-          </div>
+          </Resizable>
 
           {/* ── Right: Tabbed Panel ──────────────────────────── */}
-          <Resizable
-            defaultSize={{ width: 380, height: '100%' }}
-            minWidth={280}
-            maxWidth={600}
-            enable={{ left: true }}
-            handleStyles={{
-              left: {
-                width: 8,
-                left: -4,
-                cursor: 'col-resize',
-              },
-            }}
-            className="border-l border-neutral-200/60 bg-white relative"
-            style={{ display: 'flex', flexDirection: 'column' }}
+          <div
+            className="flex-1 min-w-[240px] border-l border-neutral-200/60 bg-white flex flex-col"
           >
             {/* Tab bar */}
             <div className="flex items-center border-b border-neutral-200/60 bg-white px-1 shrink-0">
-              {tabs.map((tab) => (
+              {visibleTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -1277,8 +1904,18 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {activeTab === 'description' && renderDescriptionTab()}
               {activeTab === 'tests' && renderTestsTab()}
               {activeTab === 'output' && renderOutputTab()}
+              {activeTab === 'history' && (
+                <div className="p-5 overflow-y-auto h-full">
+                  <SubmissionHistory
+                    activityUuid={activityUuid}
+                    blockId={blockId}
+                    accessToken={accessToken}
+                    onRestoreCode={(restoredCode) => setCode(restoredCode)}
+                  />
+                </div>
+              )}
             </div>
-          </Resizable>
+          </div>
         </div>
       </div>
     </NodeViewWrapper>
