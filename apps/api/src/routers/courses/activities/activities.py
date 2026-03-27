@@ -25,6 +25,10 @@ from src.services.courses.activities.video import (
     create_external_video_activity,
     create_video_activity,
 )
+from src.services.courses.activities.live_session import (
+    LiveSessionCreate,
+    create_live_session_activity,
+)
 
 router = APIRouter()
 
@@ -242,4 +246,22 @@ async def api_create_documentpdf_activity(
     """
     return await create_documentpdf_activity(
         request, name, chapter_id, current_user, db_session, pdf_file
+    )
+
+
+# Live session activity
+
+
+@router.post("/live_session")
+async def api_create_live_session_activity(
+    request: Request,
+    live_session: LiveSessionCreate,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    """
+    Create new live session activity
+    """
+    return await create_live_session_activity(
+        request, live_session, current_user, db_session
     )
