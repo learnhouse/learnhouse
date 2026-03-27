@@ -13,6 +13,7 @@ from src.db.users import AnonymousUser, PublicUser
 from src.services.courses.certifications import check_course_completion_and_create_certificate
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 def _build_trail_read(
@@ -277,6 +278,15 @@ async def add_activity_to_trail(
                 "activity_type": activity.activity_type if activity.activity_type else "",
             },
         )
+        await dispatch_webhooks(
+            event_name=analytics_events.ACTIVITY_COMPLETED,
+            org_id=course.org_id,
+            data={
+                "user": {"user_uuid": user.user_uuid, "email": user.email, "username": user.username},
+                "activity": {"activity_uuid": activity_uuid, "activity_type": activity.activity_type or ""},
+                "course": {"course_uuid": course.course_uuid, "name": course.name},
+            },
+        )
 
     # Check if all activities in the course are completed and create certificate if so
     course_was_completed = False
@@ -291,6 +301,14 @@ async def add_activity_to_trail(
             org_id=course.org_id,
             user_id=user.id,
             properties={"course_uuid": course.course_uuid},
+        )
+        await dispatch_webhooks(
+            event_name=analytics_events.COURSE_COMPLETED,
+            org_id=course.org_id,
+            data={
+                "user": {"user_uuid": user.user_uuid, "email": user.email, "username": user.username},
+                "course": {"course_uuid": course.course_uuid, "name": course.name},
+            },
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
@@ -409,6 +427,14 @@ async def add_course_to_trail(
         org_id=course.org_id,
         user_id=user.id,
         properties={"course_uuid": course.course_uuid},
+    )
+    await dispatch_webhooks(
+        event_name=analytics_events.COURSE_ENROLLED,
+        org_id=course.org_id,
+        data={
+            "user": {"user_uuid": user.user_uuid, "email": user.email, "username": user.username},
+            "course": {"course_uuid": course.course_uuid, "name": course.name},
+        },
     )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
