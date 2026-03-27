@@ -25,7 +25,7 @@
     "url": "https://github.com/learnhouse/learnhouse.git",
     "directory": "apps/cli"
   },
-  "homepage": "https://github.com/learnhouse/learnhouse/tree/main/apps/cli",
+  "homepage": "https://learnhouse.app",
   "bugs": {
     "url": "https://github.com/learnhouse/learnhouse/issues"
   },
