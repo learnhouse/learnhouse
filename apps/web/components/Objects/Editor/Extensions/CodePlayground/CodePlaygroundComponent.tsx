@@ -37,6 +37,7 @@ import { getAPIUrl } from '@services/config/config'
 import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
 import SubmissionHistory from './SubmissionHistory'
 import CodeDiff from './CodeDiff'
+import { parseBlankRegions, getBlankRegionExtensions } from './FillInTheBlank'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
@@ -518,6 +519,15 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           if (lockedLines.size > 0) {
             const lockedExts = await getLockedRegionExtensions(starterCode)
             exts.push(...lockedExts)
+          }
+        }
+
+        // Feature: Fill-in-the-blank mode (viewer mode only)
+        if (!isEditable && starterCode) {
+          const blankRegions = parseBlankRegions(starterCode)
+          if (blankRegions.length > 0) {
+            const blankExts = getBlankRegionExtensions(starterCode)
+            exts.push(...blankExts)
           }
         }
 
