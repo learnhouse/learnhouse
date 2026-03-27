@@ -98,16 +98,38 @@ conn.close()
 """
 
 
+def _validate_storage_path(file_path: str) -> str:
+    """Validate and sanitize a storage file path to prevent path traversal."""
+    if '..' in file_path or file_path.startswith('/') or '\x00' in file_path:
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    normalized = file_path.replace('\\', '/')
+    if '..' in normalized:
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    full_path = f"content/{normalized}"
+    # Resolve to absolute and verify containment within content/
+    base_real = os.path.realpath("content")
+    full_real = os.path.realpath(full_path)
+    if not full_real.startswith(base_real + os.sep) and full_real != base_real:
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    return full_path
+
+
 def _read_storage_file(file_path: str) -> bytes:
     """Read a file from storage (filesystem or S3)."""
     config = get_learnhouse_config()
     content_delivery = config.hosting_config.content_delivery.type
-    full_path = f"content/{file_path}"
+    safe_path = _validate_storage_path(file_path)
 
     if content_delivery == "filesystem":
-        if not os.path.isfile(full_path):
+        # Resolve to canonical absolute path and re-verify containment (CodeQL requires
+        # the realpath check to be visible immediately before the file operation).
+        base_real = os.path.realpath("content")
+        resolved = os.path.realpath(safe_path)  # noqa: S108
+        if not resolved.startswith(base_real + os.sep):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        if not os.path.isfile(resolved):
             raise HTTPException(status_code=404, detail="SQLite database file not found")
-        with open(full_path, "rb") as f:
+        with open(resolved, "rb") as f:
             return f.read()
     elif content_delivery == "s3api":
         import boto3
@@ -119,7 +141,7 @@ def _read_storage_file(file_path: str) -> bytes:
         )
         bucket = config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
         try:
-            response = s3.get_object(Bucket=bucket, Key=full_path)
+            response = s3.get_object(Bucket=bucket, Key=safe_path)
             return response["Body"].read()
         except ClientError:
             raise HTTPException(status_code=404, detail="SQLite database file not found")

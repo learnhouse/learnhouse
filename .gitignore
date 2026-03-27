@@ -57,3 +57,6 @@ apps/web/runtime-config.json
 # LearnHouse CLI generated files
 .learnhouse/
 .ee-disabled
+
+# Claude Code
+.claude/
