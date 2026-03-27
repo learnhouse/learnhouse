@@ -61,6 +61,9 @@ export default Node.create({
       timedDurationMs: {
         default: 300000, // 5 minutes default
       },
+      additionalFiles: {
+        default: [],  // Array of { name: string, content: string }
+      },
     }
   },
 
