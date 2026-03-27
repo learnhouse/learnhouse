@@ -26,6 +26,7 @@ import {
   Settings2,
   Database,
   Upload,
+  History,
 } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -34,6 +35,7 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { uploadSqliteDb } from '@services/blocks/CodePlayground/sqlite'
 import { getAPIUrl } from '@services/config/config'
 import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
+import SubmissionHistory from './SubmissionHistory'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { Resizable } from 're-resizable'
@@ -287,7 +289,7 @@ interface TestResult {
   memory: number | null
 }
 
-type RightTab = 'description' | 'tests' | 'output'
+type RightTab = 'description' | 'tests' | 'output' | 'history'
 type Difficulty = 'easy' | 'medium' | 'hard'
 
 const DIFFICULTY_CONFIG: Record<
@@ -441,6 +443,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const sqliteDbName: string = node.attrs.sqliteDbName || ''
 
   const isSqlLanguage = languageId === 82
+
+  const blockId = node.attrs.id || 'unknown'
+  const activityUuid = props.extension?.options?.activity?.activity_uuid || ''
 
   const [code, setCode] = useState(starterCode)
   const [results, setResults] = useState<TestResult[] | null>(null)
@@ -713,6 +718,24 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         ]
         setResults(newResults)
         setActiveTab('output')
+
+        // Save submission (learner mode only)
+        if (!isEditable && activityUuid && accessToken) {
+          const allResults = newResults
+          const totalTests = allResults.length
+          const passedTests = allResults.filter((r: any) => r.passed).length
+          const execTime = allResults[0]?.time ? Math.round(parseFloat(allResults[0].time) * 1000) : null
+          fetch(`${getAPIUrl()}code/submissions/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({
+              activity_uuid: activityUuid, block_id: blockId, language_id: languageId,
+              source_code: code, results: { items: allResults },
+              passed: passedTests === totalTests && totalTests > 0,
+              total_tests: totalTests, passed_tests: passedTests, execution_time_ms: execTime,
+            }),
+          }).catch(console.error)
+        }
       } else {
         const resp = await fetch(`${getAPIUrl()}code/execute-batch`, {
           method: 'POST',
@@ -735,13 +758,31 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         const data = await resp.json()
         setResults(data.results)
         setActiveTab('output')
+
+        // Save submission (learner mode only)
+        if (!isEditable && activityUuid && accessToken) {
+          const allResults = data.results
+          const totalTests = allResults.length
+          const passedTests = allResults.filter((r: any) => r.passed).length
+          const execTime = allResults[0]?.time ? Math.round(parseFloat(allResults[0].time) * 1000) : null
+          fetch(`${getAPIUrl()}code/submissions/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({
+              activity_uuid: activityUuid, block_id: blockId, language_id: languageId,
+              source_code: code, results: { items: allResults },
+              passed: passedTests === totalTests && totalTests > 0,
+              total_tests: totalTests, passed_tests: passedTests, execution_time_ms: execTime,
+            }),
+          }).catch(console.error)
+        }
       }
     } catch (err) {
       console.error('Code execution error:', err)
     } finally {
       setIsRunning(false)
     }
-  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath])
+  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath, activityUuid, blockId])
 
   const passedCount = results?.filter((r) => r.passed).length ?? 0
   const totalCount = results?.length ?? 0
@@ -820,7 +861,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <span className="w-2 h-2 rounded-full bg-neutral-400 animate-pulse" />
       ) : null,
     },
+    { id: 'history' as RightTab, icon: <History size={13} />, label: 'History' },
   ]
+
+  const visibleTabs = isEditable ? tabs.filter(t => t.id !== 'history') : tabs
 
   // ── Copy button helper ──────────────────────────────────────────
   const CopyButton: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
@@ -1497,7 +1541,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           >
             {/* Tab bar */}
             <div className="flex items-center border-b border-neutral-200/60 bg-white px-1 shrink-0">
-              {tabs.map((tab) => (
+              {visibleTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -1522,6 +1566,16 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {activeTab === 'description' && renderDescriptionTab()}
               {activeTab === 'tests' && renderTestsTab()}
               {activeTab === 'output' && renderOutputTab()}
+              {activeTab === 'history' && (
+                <div className="p-5 overflow-y-auto h-full">
+                  <SubmissionHistory
+                    activityUuid={activityUuid}
+                    blockId={blockId}
+                    accessToken={accessToken}
+                    onRestoreCode={(restoredCode) => setCode(restoredCode)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

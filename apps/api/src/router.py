@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.routers import analytics as analytics_router_module
 from src.routers import code_execution
+from src.routers import code_submissions
 from src.routers import health
 from src.routers import instance
 from src.routers import plans
@@ -223,6 +224,13 @@ v1_router.include_router(
     code_execution.router,
     prefix="/code",
     tags=["code-execution"],
+    dependencies=[Depends(get_non_api_token_user)],
+)
+
+v1_router.include_router(
+    code_submissions.router,
+    prefix="/code/submissions",
+    tags=["code_submissions"],
     dependencies=[Depends(get_non_api_token_user)],
 )
 
