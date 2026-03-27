@@ -444,6 +444,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const sqliteDbName: string = node.attrs.sqliteDbName || ''
   const timedMode: boolean = node.attrs.timedMode || false
   const timedDurationMs: number = node.attrs.timedDurationMs ?? 300000
+  const additionalFiles: { name: string; content: string }[] = node.attrs.additionalFiles || []
 
   const isSqlLanguage = languageId === 82
 
@@ -687,6 +688,25 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     })
   }, [])
 
+  const addAdditionalFile = useCallback(() => {
+    updateAttributes({
+      additionalFiles: [...additionalFiles, { name: 'data.txt', content: '' }],
+    })
+  }, [additionalFiles, updateAttributes])
+
+  const removeAdditionalFile = useCallback((index: number) => {
+    updateAttributes({
+      additionalFiles: additionalFiles.filter((_, i) => i !== index),
+    })
+  }, [additionalFiles, updateAttributes])
+
+  const updateAdditionalFile = useCallback((index: number, field: 'name' | 'content', value: string) => {
+    const updated = additionalFiles.map((f, i) =>
+      i === index ? { ...f, [field]: value } : f
+    )
+    updateAttributes({ additionalFiles: updated })
+  }, [additionalFiles, updateAttributes])
+
   const resetCode = useCallback(() => {
     setCode(starterCode)
     setResults(null)
@@ -750,6 +770,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             source_code: code,
             stdin: '',
             ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
+            ...(additionalFiles.length > 0 ? { additional_files: additionalFiles.map((f) => ({ name: f.name, content: f.content })) } : {}),
           }),
         })
         const data = await resp.json()
@@ -804,6 +825,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               expected_stdout: tc.expectedStdout,
             })),
             ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
+            ...(additionalFiles.length > 0 ? { additional_files: additionalFiles.map((f) => ({ name: f.name, content: f.content })) } : {}),
           }),
         })
         const data = await resp.json()
@@ -1114,6 +1136,37 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     />
                   </div>
                 )}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Additional Files</label>
+                    <button onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
+                      <Plus size={11} /> Add File
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mb-2">Files available to the student's code (e.g., data.txt, utils.py).</p>
+                  {additionalFiles.map((file, i) => (
+                    <div key={i} className="mb-2 rounded-lg border border-neutral-200 p-2.5 bg-neutral-50/50">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <input
+                          value={file.name}
+                          onChange={(e) => updateAdditionalFile(i, 'name', e.target.value)}
+                          className="flex-1 text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-neutral-300"
+                          placeholder="filename.ext"
+                        />
+                        <button onClick={() => removeAdditionalFile(i)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                          <Trash2 size={11} className="text-red-400" />
+                        </button>
+                      </div>
+                      <textarea
+                        value={file.content}
+                        onChange={(e) => updateAdditionalFile(i, 'content', e.target.value)}
+                        className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-neutral-300 resize-none"
+                        rows={4}
+                        placeholder="File contents..."
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1151,6 +1204,18 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   Memory: {getComplexityLabel(spaceComplexity)}
                 </span>
               )}
+            </div>
+          )}
+
+          {additionalFiles.length > 0 && (
+            <div className="space-y-1">
+              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Available Files</span>
+              {additionalFiles.map((f, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
+                  <FileText size={10} className="text-neutral-400" />
+                  {f.name}
+                </div>
+              ))}
             </div>
           )}
 

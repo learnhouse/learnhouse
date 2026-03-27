@@ -27,11 +27,17 @@ SQL_LANGUAGE_ID = 82
 PYTHON3_LANGUAGE_ID = 71
 
 
+class AdditionalFile(BaseModel):
+    name: str
+    content: str
+
+
 class ExecuteRequest(BaseModel):
     language_id: int
     source_code: str
     stdin: str = ""
     sqlite_db_path: Optional[str] = None
+    additional_files: Optional[list[AdditionalFile]] = None
 
 
 class TestCase(BaseModel):
@@ -46,6 +52,7 @@ class ExecuteBatchRequest(BaseModel):
     source_code: str
     test_cases: list[TestCase]
     sqlite_db_path: Optional[str] = None
+    additional_files: Optional[list[AdditionalFile]] = None
 
 
 def _get_judge0_config():
@@ -120,11 +127,18 @@ def _read_storage_file(file_path: str) -> bytes:
         raise HTTPException(status_code=500, detail="Unknown storage backend")
 
 
-def _make_additional_files_zip(db_bytes: bytes) -> str:
-    """Create a base64-encoded zip containing the SQLite db as db.sqlite3."""
+def _make_additional_files_zip(
+    db_bytes: bytes | None = None,
+    text_files: list[dict] | None = None,
+) -> str:
+    """Create a base64-encoded zip containing optional SQLite db and/or text files."""
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("db.sqlite3", db_bytes)
+        if db_bytes:
+            zf.writestr("db.sqlite3", db_bytes)
+        if text_files:
+            for f in text_files:
+                zf.writestr(f["name"], f["content"])
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
@@ -155,20 +169,6 @@ async def _submit_single(
         return resp.json()
 
 
-def _prepare_sql_execution(
-    source_code: str, sqlite_db_path: Optional[str]
-) -> tuple[int, str, Optional[str]]:
-    """If SQL with a db, wrap in Python and prepare additional_files. Returns (lang_id, code, additional_files)."""
-    if not sqlite_db_path:
-        return SQL_LANGUAGE_ID, source_code, None
-    db_bytes = _read_storage_file(sqlite_db_path)
-    return (
-        PYTHON3_LANGUAGE_ID,
-        _wrap_sql_in_python(source_code),
-        _make_additional_files_zip(db_bytes),
-    )
-
-
 @router.post("/execute")
 async def execute_code(
     body: ExecuteRequest,
@@ -178,15 +178,22 @@ async def execute_code(
 
     language_id = body.language_id
     source_code = body.source_code
-    additional_files = None
+    additional_files_b64 = None
+
+    zip_files = None
+    if body.additional_files:
+        zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        language_id, source_code, additional_files = _prepare_sql_execution(
-            body.source_code, body.sqlite_db_path
-        )
+        db_bytes = _read_storage_file(body.sqlite_db_path)
+        language_id = PYTHON3_LANGUAGE_ID
+        source_code = _wrap_sql_in_python(body.source_code)
+        additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)
+    elif zip_files:
+        additional_files_b64 = _make_additional_files_zip(text_files=zip_files)
 
     result = await _submit_single(
-        judge0_cfg, language_id, source_code, body.stdin, additional_files
+        judge0_cfg, language_id, source_code, body.stdin, additional_files_b64
     )
     return result
 
@@ -200,16 +207,23 @@ async def execute_batch(
 
     language_id = body.language_id
     source_code = body.source_code
-    additional_files = None
+    additional_files_b64 = None
+
+    zip_files = None
+    if body.additional_files:
+        zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
-        language_id, source_code, additional_files = _prepare_sql_execution(
-            body.source_code, body.sqlite_db_path
-        )
+        db_bytes = _read_storage_file(body.sqlite_db_path)
+        language_id = PYTHON3_LANGUAGE_ID
+        source_code = _wrap_sql_in_python(body.source_code)
+        additional_files_b64 = _make_additional_files_zip(db_bytes=db_bytes, text_files=zip_files)
+    elif zip_files:
+        additional_files_b64 = _make_additional_files_zip(text_files=zip_files)
 
     async def run_test(tc: TestCase) -> dict:
         r = await _submit_single(
-            judge0_cfg, language_id, source_code, tc.stdin, additional_files
+            judge0_cfg, language_id, source_code, tc.stdin, additional_files_b64
         )
         status = r.get("status", {})
         actual = (r.get("stdout") or "").rstrip("\n")
