@@ -1,6 +1,8 @@
 # LearnHouse CLI
 
-The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance.
+The official [LearnHouse](https://learnhouse.app) CLI — deploy, manage, and operate your LearnHouse instance.
+
+[Website](https://learnhouse.app) | [Documentation](https://docs.learnhouse.app) | [GitHub](https://github.com/learnhouse/learnhouse)
 
 <img width="915" height="871" alt="image" src="https://github.com/user-attachments/assets/957c6cea-3efb-4cab-a643-55df3ac4c6aa" />
 
