@@ -49,6 +49,12 @@ export default Node.create({
       timeLimitMs: {
         default: 10000,
       },
+      sqliteDbPath: {
+        default: '',
+      },
+      sqliteDbName: {
+        default: '',
+      },
     }
   },
 

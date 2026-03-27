@@ -24,9 +24,14 @@ import {
   Lock,
   Eye,
   Settings2,
+  Database,
+  Upload,
 } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useCourse } from '@components/Contexts/CourseContext'
+import { uploadSqliteDb } from '@services/blocks/CodePlayground/sqlite'
 import { getAPIUrl } from '@services/config/config'
 import { PLAYGROUND_LANGUAGES, getLanguageById } from './languages'
 import dynamic from 'next/dynamic'
@@ -95,6 +100,81 @@ async function getLanguageExtension(codemirrorLang: string) {
     case 'php': {
       const { php } = await import('@codemirror/lang-php')
       return php()
+    }
+    case 'sql': {
+      const { sql } = await import('@codemirror/lang-sql')
+      return sql()
+    }
+    case 'xml': {
+      const { xml } = await import('@codemirror/lang-xml')
+      return xml()
+    }
+    case 'markdown': {
+      const { markdown } = await import('@codemirror/lang-markdown')
+      return markdown()
+    }
+    case 'wast': {
+      const { wast } = await import('@codemirror/lang-wast')
+      return wast()
+    }
+    case 'sass': {
+      const { sass } = await import('@codemirror/lang-sass')
+      return sass()
+    }
+    case 'perl': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { perl } = await import('@codemirror/legacy-modes/mode/perl')
+      return StreamLanguage.define(perl)
+    }
+    case 'r': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { r } = await import('@codemirror/legacy-modes/mode/r')
+      return StreamLanguage.define(r)
+    }
+    case 'haskell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { haskell } = await import(
+        '@codemirror/legacy-modes/mode/haskell'
+      )
+      return StreamLanguage.define(haskell)
+    }
+    case 'lua': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { lua } = await import('@codemirror/legacy-modes/mode/lua')
+      return StreamLanguage.define(lua)
+    }
+    case 'clojure': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { clojure } = await import(
+        '@codemirror/legacy-modes/mode/clojure'
+      )
+      return StreamLanguage.define(clojure)
+    }
+    case 'shell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { shell } = await import('@codemirror/legacy-modes/mode/shell')
+      return StreamLanguage.define(shell)
+    }
+    case 'pascal': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { pascal } = await import(
+        '@codemirror/legacy-modes/mode/pascal'
+      )
+      return StreamLanguage.define(pascal)
+    }
+    case 'fortran': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { fortran } = await import(
+        '@codemirror/legacy-modes/mode/fortran'
+      )
+      return StreamLanguage.define(fortran)
+    }
+    case 'powershell': {
+      const { StreamLanguage } = await import('@codemirror/language')
+      const { powerShell } = await import(
+        '@codemirror/legacy-modes/mode/powershell'
+      )
+      return StreamLanguage.define(powerShell)
     }
     default: {
       const { javascript } = await import('@codemirror/lang-javascript')
@@ -340,6 +420,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const { node, updateAttributes } = props
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
+  const org = useOrg() as any
+  const course = useCourse() as any
   const isEditable = editorState?.isEditable ?? true
   const accessToken = session?.data?.tokens?.access_token
 
@@ -355,6 +437,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const timeComplexity: string = node.attrs.timeComplexity || ''
   const spaceComplexity: string = node.attrs.spaceComplexity || ''
   const timeLimitMs: number = node.attrs.timeLimitMs ?? 10000
+  const sqliteDbPath: string = node.attrs.sqliteDbPath || ''
+  const sqliteDbName: string = node.attrs.sqliteDbName || ''
+
+  const isSqlLanguage = languageId === 82
 
   const [code, setCode] = useState(starterCode)
   const [results, setResults] = useState<TestResult[] | null>(null)
@@ -380,6 +466,10 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [showConfetti, setShowConfetti] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+
+  // SQLite upload
+  const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
+  const sqliteInputRef = useRef<HTMLInputElement>(null)
 
   // Feature 17: Copy output
   const outputCopy = useCopyToClipboard()
@@ -549,6 +639,38 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     setResults(null)
   }, [starterCode])
 
+  const handleSqliteUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !accessToken) return
+    setIsUploadingSqlite(true)
+    try {
+      const activityUuid = props.extension?.options?.activity?.activity_uuid
+      const orgUuid = org?.org_uuid
+      const courseUuid = course?.courseStructure?.course_uuid
+      const blockId = node.attrs.id || uuidv4()
+      if (!activityUuid || !orgUuid || !courseUuid) {
+        console.error('Missing context for SQLite upload')
+        return
+      }
+      const result = await uploadSqliteDb(
+        file, activityUuid, blockId, orgUuid, courseUuid, accessToken
+      )
+      updateAttributes({
+        sqliteDbPath: result.file_path,
+        sqliteDbName: result.file_name,
+      })
+    } catch (err) {
+      console.error('SQLite upload error:', err)
+    } finally {
+      setIsUploadingSqlite(false)
+      if (sqliteInputRef.current) sqliteInputRef.current.value = ''
+    }
+  }, [accessToken, org, course, props.extension, node.attrs.id, updateAttributes])
+
+  const removeSqliteDb = useCallback(() => {
+    updateAttributes({ sqliteDbPath: '', sqliteDbName: '' })
+  }, [updateAttributes])
+
   const runCode = useCallback(async () => {
     if (isRunning || !accessToken) return
     setIsRunning(true)
@@ -571,6 +693,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             language_id: languageId,
             source_code: code,
             stdin: '',
+            ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
           }),
         })
         const data = await resp.json()
@@ -606,6 +729,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               stdin: tc.stdin,
               expected_stdout: tc.expectedStdout,
             })),
+            ...(isSqlLanguage && sqliteDbPath ? { sqlite_db_path: sqliteDbPath } : {}),
           }),
         })
         const data = await resp.json()
@@ -617,7 +741,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     } finally {
       setIsRunning(false)
     }
-  }, [isRunning, accessToken, testCases, languageId, code, isEditable])
+  }, [isRunning, accessToken, testCases, languageId, code, isEditable, isSqlLanguage, sqliteDbPath])
 
   const passedCount = results?.filter((r) => r.passed).length ?? 0
   const totalCount = results?.length ?? 0
@@ -775,6 +899,51 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             ))}
           </div>
 
+          {/* SQLite Database Upload (SQL only) */}
+          {isSqlLanguage && (
+            <div>
+              <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1.5 block">
+                SQLite Database
+              </label>
+              {sqliteDbPath ? (
+                <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2.5 nice-shadow">
+                  <Database size={14} className="text-neutral-500 shrink-0" />
+                  <span className="text-[12px] text-neutral-700 truncate flex-1">{sqliteDbName || 'database.sqlite'}</span>
+                  <button
+                    onClick={removeSqliteDb}
+                    className="p-1 hover:bg-red-50 rounded transition-colors shrink-0"
+                  >
+                    <Trash2 size={12} className="text-red-400" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => sqliteInputRef.current?.click()}
+                  className="flex flex-col items-center gap-2 bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-lg px-3 py-4 cursor-pointer hover:border-neutral-300 hover:bg-neutral-100 transition-all"
+                >
+                  {isUploadingSqlite ? (
+                    <Loader2 size={16} className="text-neutral-400 animate-spin" />
+                  ) : (
+                    <Upload size={16} className="text-neutral-400" />
+                  )}
+                  <span className="text-[11px] text-neutral-400">
+                    {isUploadingSqlite ? 'Uploading...' : 'Upload .sqlite / .db file'}
+                  </span>
+                </div>
+              )}
+              <input
+                ref={sqliteInputRef}
+                type="file"
+                accept=".sqlite,.db,.sqlite3"
+                onChange={handleSqliteUpload}
+                className="hidden"
+              />
+              <p className="text-[10px] text-neutral-400 mt-1">
+                Students' SQL queries will run against this database.
+              </p>
+            </div>
+          )}
+
           {/* Advanced */}
           <div className="border-t border-neutral-100 pt-3">
             <button
@@ -839,6 +1008,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             </div>
           ) : (
             <div className="text-[13px] text-neutral-400 italic text-center py-8">No description provided.</div>
+          )}
+
+          {isSqlLanguage && sqliteDbPath && (
+            <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
+              <Database size={10} className="text-neutral-400" />
+              Runs against: {sqliteDbName || 'database.sqlite'}
+            </div>
           )}
 
           {(timeComplexity || spaceComplexity) && (
@@ -988,6 +1164,39 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   )
 
   // ── Tab: Output ───────────────────────────────────────────────
+  const renderSqlTable = (stdout: string) => {
+    const lines = stdout.trim().split('\n').filter(Boolean)
+    if (lines.length < 1) return null
+    const headers = lines[0].split('|')
+    const rows = lines.slice(1).map((line) => line.split('|'))
+    return (
+      <div className="overflow-x-auto rounded-lg border border-white/10 nice-shadow">
+        <table className="w-full text-[12px] font-mono">
+          <thead>
+            <tr className="bg-white/[0.06]">
+              {headers.map((h, i) => (
+                <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-neutral-300 uppercase tracking-wider border-b border-white/10">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, ri) => (
+              <tr key={ri} className={ri % 2 === 0 ? 'bg-white/[0.02]' : 'bg-white/[0.05]'}>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-3 py-1.5 text-white/80 border-b border-white/5">
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   const renderOutputTab = () => {
     const renderTerminal = (stdout: string | null | undefined, stderr: string | null | undefined, compileOut: string | null | undefined, time: string | null | undefined, label: string, copyText: string | null | undefined) => (
       <div className="bg-[#1e1e2e] rounded-lg overflow-hidden nice-shadow">
@@ -1001,7 +1210,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           <div className="ml-auto">{copyText && <CopyButton text={copyText} />}</div>
         </div>
         <div className="p-3.5">
-          {stdout && <pre className="text-[13px] font-mono text-white/90 whitespace-pre-wrap leading-relaxed">{stdout}</pre>}
+          {stdout && isSqlLanguage && stdout.includes('|') ? (
+            renderSqlTable(stdout)
+          ) : stdout ? (
+            <pre className="text-[13px] font-mono text-white/90 whitespace-pre-wrap leading-relaxed">{stdout}</pre>
+          ) : null}
           {stderr && <pre className="text-[12px] font-mono text-red-400 whitespace-pre-wrap mt-2">{stderr}</pre>}
           {compileOut && <pre className="text-[12px] font-mono text-amber-400 whitespace-pre-wrap mt-2">{compileOut}</pre>}
           {!stdout && !stderr && !compileOut && <pre className="text-[12px] font-mono text-neutral-500 italic">(no output)</pre>}
@@ -1065,7 +1278,34 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       <label className="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">Output</label>
                       <CopyButton text={r.actual_stdout || ''} />
                     </div>
-                    <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || '(no output)'}</pre>
+                    {isSqlLanguage && r.actual_stdout && r.actual_stdout.includes('|') ? (
+                      <div className="overflow-x-auto rounded-lg border border-neutral-200 nice-shadow">
+                        <table className="w-full text-[11px] font-mono">
+                          <thead>
+                            <tr className="bg-neutral-50">
+                              {r.actual_stdout.trim().split('\n')[0].split('|').map((h, i) => (
+                                <th key={i} className="px-2.5 py-1.5 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {r.actual_stdout.trim().split('\n').slice(1).filter(Boolean).map((line, ri) => (
+                              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-neutral-50/50'}>
+                                {line.split('|').map((cell, ci) => (
+                                  <td key={ci} className="px-2.5 py-1 text-neutral-700 border-b border-neutral-100">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <pre className="text-[11px] font-mono text-neutral-700 bg-white border border-neutral-100 rounded-lg p-2 whitespace-pre-wrap nice-shadow">{r.actual_stdout || '(no output)'}</pre>
+                    )}
                   </div>
                 )}
                 {!r.passed && r.expected_stdout && (
@@ -1113,7 +1353,24 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         {/* ── Split Layout ───────────────────────────────────── */}
         <div className="flex" style={{ height: 560 }}>
           {/* ── Left: Code ─────────────────────────────────────── */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[#1a1b26]">
+          <Resizable
+            defaultSize={{ width: '60%', height: '100%' }}
+            minWidth={300}
+            maxWidth="80%"
+            enable={{ right: true }}
+            handleStyles={{
+              right: {
+                width: 8,
+                right: -4,
+                cursor: 'col-resize',
+              },
+            }}
+            handleClasses={{
+              right: 'group',
+            }}
+            className="flex flex-col min-w-0 bg-[#1a1b26] relative"
+          >
+            <div className="absolute right-0 top-0 bottom-0 w-[3px] z-10 hover:bg-blue-500/40 transition-colors bg-white/[0.06]" />
             {/* Header bar — dark */}
             <div className="flex items-center justify-between px-4 border-b border-white/[0.06] shrink-0">
               <div className="flex items-center gap-2.5 py-3">
@@ -1232,23 +1489,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
               </div>
             </div>
-          </div>
+          </Resizable>
 
           {/* ── Right: Tabbed Panel ──────────────────────────── */}
-          <Resizable
-            defaultSize={{ width: 380, height: '100%' }}
-            minWidth={280}
-            maxWidth={600}
-            enable={{ left: true }}
-            handleStyles={{
-              left: {
-                width: 8,
-                left: -4,
-                cursor: 'col-resize',
-              },
-            }}
-            className="border-l border-neutral-200/60 bg-white relative"
-            style={{ display: 'flex', flexDirection: 'column' }}
+          <div
+            className="flex-1 min-w-[240px] border-l border-neutral-200/60 bg-white flex flex-col"
           >
             {/* Tab bar */}
             <div className="flex items-center border-b border-neutral-200/60 bg-white px-1 shrink-0">
@@ -1278,7 +1523,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               {activeTab === 'tests' && renderTestsTab()}
               {activeTab === 'output' && renderOutputTab()}
             </div>
-          </Resizable>
+          </div>
         </div>
       </div>
     </NodeViewWrapper>
