@@ -15,6 +15,7 @@ import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname } from 'next/navigation'
 import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
+import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -57,6 +58,7 @@ function OrgFooter() {
 function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgslug: string }) {
   const org = useOrg() as any
   const primaryColor = org?.config?.config?.customization?.general?.color || org?.config?.config?.general?.color || ''
+  const customFont = org?.config?.config?.customization?.general?.font || org?.config?.config?.general?.font || ''
   const pathname = usePathname()
 
   const pathParts = pathname?.split('/').filter(Boolean) || []
@@ -66,12 +68,21 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
   const isFullBleedPage = noFooterPaths.some((p) => pathParts.includes(p))
 
   return (
-    <div
-      className="flex flex-col min-h-screen"
-      style={{
-        backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent'
-      }}
-    >
+    <>
+      {customFont && customFont !== DEFAULT_FONT && (
+        <>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link href={getGoogleFontUrl(customFont)} rel="stylesheet" />
+        </>
+      )}
+      <div
+        className="flex flex-col min-h-screen"
+        style={{
+          backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent',
+          ...(customFont ? { '--font-custom': `'${customFont}'` } as React.CSSProperties : {}),
+        }}
+      >
       <PageViewTracker />
       <OrgJoinBanner />
       <OrgMenu orgslug={orgslug} />
@@ -81,6 +92,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
       {!isFullBleedPage && <OrgFooter />}
       {!isFullBleedPage && <Watermark />}
     </div>
+    </>
   )
 }
 
