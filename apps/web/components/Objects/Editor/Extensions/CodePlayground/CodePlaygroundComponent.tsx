@@ -476,6 +476,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
   const sqliteInputRef = useRef<HTMLInputElement>(null)
 
+  // Student custom test cases
+  const [studentTestCases, setStudentTestCases] = useState<TestCase[]>([])
+
   // Feature 17: Copy output
   const outputCopy = useCopyToClipboard()
 
@@ -610,6 +613,23 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     [testCases, updateAttributes]
   )
 
+  const addStudentTestCase = useCallback(() => {
+    setStudentTestCases((prev) => [
+      ...prev,
+      { id: uuidv4(), label: `My Test ${prev.length + 1}`, stdin: '', expectedStdout: '' },
+    ])
+  }, [])
+
+  const removeStudentTestCase = useCallback((id: string) => {
+    setStudentTestCases((prev) => prev.filter((tc) => tc.id !== id))
+  }, [])
+
+  const updateStudentTestCase = useCallback((id: string, field: keyof TestCase, value: string) => {
+    setStudentTestCases((prev) =>
+      prev.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc))
+    )
+  }, [])
+
   const addHint = useCallback(() => {
     updateAttributes({ hints: [...hints, ''] })
   }, [hints, updateAttributes])
@@ -681,13 +701,15 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     setIsRunning(true)
     setResults(null)
 
+    const allTestCases = [...testCases, ...studentTestCases]
+
     // Feature 3: Increment attempt count when running with test cases
-    if (testCases.length > 0 && !isEditable) {
+    if (allTestCases.length > 0 && !isEditable) {
       setAttemptCount((prev) => prev + 1)
     }
 
     try {
-      if (testCases.length === 0) {
+      if (allTestCases.length === 0) {
         const resp = await fetch(`${getAPIUrl()}code/execute`, {
           method: 'POST',
           headers: {
@@ -746,7 +768,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           body: JSON.stringify({
             language_id: languageId,
             source_code: code,
-            test_cases: testCases.map((tc) => ({
+            test_cases: allTestCases.map((tc) => ({
               id: tc.id,
               label: tc.label,
               stdin: tc.stdin,
@@ -1202,6 +1224,60 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               </div>
             )
           })}
+        </div>
+      )}
+      {!isEditable && (
+        <div className="mt-4 pt-3 border-t border-neutral-100">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+              Your Test Cases
+            </label>
+            <button
+              onClick={addStudentTestCase}
+              className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors"
+            >
+              <Plus size={11} /> Add
+            </button>
+          </div>
+          {studentTestCases.length === 0 && (
+            <p className="text-[11px] text-neutral-400 italic">Add your own test cases to verify edge cases.</p>
+          )}
+          {studentTestCases.map((tc) => (
+            <div key={tc.id} className="mb-3 rounded-lg border border-blue-100 bg-blue-50/20 p-2.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <input
+                  value={tc.label}
+                  onChange={(e) => updateStudentTestCase(tc.id, 'label', e.target.value)}
+                  className="flex-1 text-[12px] font-medium text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-blue-300"
+                />
+                <button onClick={() => removeStudentTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded transition-colors">
+                  <Trash2 size={11} className="text-red-400" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <div>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Input (stdin)</label>
+                  <textarea
+                    value={tc.stdin}
+                    onChange={(e) => updateStudentTestCase(tc.id, 'stdin', e.target.value)}
+                    className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
+                    rows={2}
+                    placeholder="Input..."
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-semibold text-neutral-400 uppercase">Expected Output</label>
+                  <textarea
+                    value={tc.expectedStdout}
+                    onChange={(e) => updateStudentTestCase(tc.id, 'expectedStdout', e.target.value)}
+                    className="w-full text-[11px] font-mono text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1.5 outline-none focus:border-blue-300 resize-none"
+                    rows={2}
+                    placeholder="Expected output..."
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
