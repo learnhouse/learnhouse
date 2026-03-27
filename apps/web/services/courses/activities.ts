@@ -223,3 +223,24 @@ export async function restoreActivityVersion(
   const res = await getResponseMetadata(result)
   return res
 }
+
+export async function createLiveSessionActivity(
+  data: {
+    name: string
+    chapter_id: string
+    url: string
+    start_datetime: string
+    end_datetime: string
+    timezone: string
+    recurrence_rule?: string
+    recurrence_end_date?: string
+  },
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/live_session`,
+    RequestBodyWithAuthHeader('POST', data, null, access_token)
+  )
+  const res = await result.json()
+  return res
+}
