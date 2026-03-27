@@ -485,6 +485,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const [isUploadingSqlite, setIsUploadingSqlite] = useState(false)
   const sqliteInputRef = useRef<HTMLInputElement>(null)
 
+  // File tabs: 'main' for the primary code, or index into additionalFiles
+  const [activeFileTab, setActiveFileTab] = useState<'main' | number>('main')
+
   // Feature 9: Line-level error annotations
   const parsedErrorsRef = useRef<ReturnType<typeof parseErrors>>([])
   const cmViewRef = useRef<any>(null)
@@ -732,6 +735,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const removeAdditionalFile = useCallback((index: number) => {
     updateAttributes({
       additionalFiles: additionalFiles.filter((_, i) => i !== index),
+    })
+    setActiveFileTab((prev) => {
+      if (prev === index) return 'main'
+      if (typeof prev === 'number' && prev > index) return prev - 1
+      return prev
     })
   }, [additionalFiles, updateAttributes])
 
@@ -1746,18 +1754,64 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
               </div>
             </div>
+            {/* File tabs — VS Code style */}
+            {additionalFiles.length > 0 && (
+              <div className="flex items-center bg-[#16161e] border-b border-white/[0.06] overflow-x-auto shrink-0">
+                <button
+                  onClick={() => setActiveFileTab('main')}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                    activeFileTab === 'main'
+                      ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
+                      : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
+                  }`}
+                >
+                  <Code2 size={12} />
+                  main
+                </button>
+                {additionalFiles.map((file, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFileTab(i)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                      activeFileTab === i
+                        ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
+                        : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <FileText size={12} />
+                    {file.name || `file-${i + 1}`}
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Editor — dark Tokyo Night theme area */}
             <div className={`flex-1 overflow-hidden ${cmClassName}`}>
-              {extensions.length > 0 && (
+              {activeFileTab === 'main' ? (
+                extensions.length > 0 && (
+                  <CodeMirror
+                    onCreateEditor={(view: any) => { cmViewRef.current = view }}
+                    value={code}
+                    onChange={
+                      isEditable
+                        ? handleStarterCodeChange
+                        : (val: string) => setCode(val)
+                    }
+                    extensions={extensions}
+                    height="100%"
+                    style={{ ...cmStyles, height: '100%' }}
+                    basicSetup={{
+                      lineNumbers: true,
+                      foldGutter: false,
+                      highlightActiveLine: true,
+                      autocompletion: true,
+                    }}
+                  />
+                )
+              ) : (
                 <CodeMirror
-                  onCreateEditor={(view: any) => { cmViewRef.current = view }}
-                  value={code}
-                  onChange={
-                    isEditable
-                      ? handleStarterCodeChange
-                      : (val: string) => setCode(val)
-                  }
-                  extensions={extensions}
+                  value={additionalFiles[activeFileTab as number]?.content || ''}
+                  onChange={isEditable ? (val: string) => updateAdditionalFile(activeFileTab as number, 'content', val) : undefined}
+                  editable={isEditable}
                   height="100%"
                   style={{ ...cmStyles, height: '100%' }}
                   basicSetup={{

@@ -24,11 +24,10 @@ interface Submission {
 }
 
 interface HistoryResponse {
-  items: Submission[]
+  submissions: Submission[]
   total: number
   page: number
   limit: number
-  total_pages: number
 }
 
 interface Props {
@@ -104,7 +103,7 @@ export default function SubmissionHistory({
     )
   }
 
-  if (!data || data.items.length === 0) {
+  if (!data || data.submissions.length === 0) {
     return (
       <div className="text-sm text-neutral-400 text-center py-8">
         No submissions yet. Run your code to create a submission.
@@ -114,7 +113,7 @@ export default function SubmissionHistory({
 
   return (
     <div className="space-y-2">
-      {data.items.map((sub) => {
+      {data.submissions.map((sub) => {
         const isExpanded = expandedId === sub.id
         const date = new Date(sub.created_at)
         const dateStr = date.toLocaleDateString(undefined, {
@@ -187,29 +186,32 @@ export default function SubmissionHistory({
       })}
 
       {/* Pagination */}
-      {data.total_pages > 1 && (
-        <div className="flex items-center justify-between pt-3">
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-            className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft size={14} />
-            Previous
-          </button>
-          <span className="text-[11px] text-neutral-400">
-            Page {data.page} of {data.total_pages}
-          </span>
-          <button
-            disabled={page >= data.total_pages}
-            onClick={() => setPage((p) => p + 1)}
-            className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            Next
-            <ChevronRight size={14} />
-          </button>
-        </div>
-      )}
+      {data.total > limit && (() => {
+        const totalPages = Math.ceil(data.total / limit)
+        return (
+          <div className="flex items-center justify-between pt-3">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={14} />
+              Previous
+            </button>
+            <span className="text-[11px] text-neutral-400">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )
+      })()}
     </div>
   )
 }
