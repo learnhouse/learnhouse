@@ -22,6 +22,21 @@ ok()    { echo -e "${GREEN}✓${RESET} $1"; }
 warn()  { echo -e "${YELLOW}!${RESET} $1"; }
 fail()  { echo -e "${RED}✗${RESET} $1"; exit 1; }
 
+need_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    fail "$1 is required but not installed."
+  fi
+}
+
+# Helper: run a command with sudo only when not already root
+maybe_sudo() {
+  if [ "$(id -u)" -eq 0 ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
 # ── Detect OS ────────────────────────────────────────────────
 
 OS="$(uname -s)"
@@ -33,22 +48,51 @@ case "$OS" in
   *)      fail "Unsupported OS: $OS. Use install.ps1 for Windows." ;;
 esac
 
+# Detect Linux package manager
+PKG=""
+if [ "$PLATFORM" = "linux" ]; then
+  if command -v apt-get >/dev/null 2>&1; then
+    PKG="apt"
+  elif command -v dnf >/dev/null 2>&1; then
+    PKG="dnf"
+  elif command -v yum >/dev/null 2>&1; then
+    PKG="yum"
+  elif command -v pacman >/dev/null 2>&1; then
+    PKG="pacman"
+  elif command -v zypper >/dev/null 2>&1; then
+    PKG="zypper"
+  fi
+fi
+
 echo ""
 echo -e "${BOLD}LearnHouse Installer${RESET}"
 echo -e "${DIM}Platform: $PLATFORM ($ARCH)${RESET}"
 echo ""
 
+# ── Ensure curl is available (Linux) ─────────────────────────
+
+if [ "$PLATFORM" = "linux" ] && ! command -v curl >/dev/null 2>&1; then
+  info "Installing curl..."
+  case "$PKG" in
+    apt)    maybe_sudo apt-get update -qq && maybe_sudo apt-get install -y -qq curl ;;
+    dnf)    maybe_sudo dnf install -y -q curl ;;
+    yum)    maybe_sudo yum install -y -q curl ;;
+    pacman) maybe_sudo pacman -Sy --noconfirm curl ;;
+    zypper) maybe_sudo zypper install -y curl ;;
+    *)      fail "curl is required. Install it manually and re-run." ;;
+  esac
+fi
+
 # ── Check / Install Docker ──────────────────────────────────
 
-if command -v docker &>/dev/null; then
+if command -v docker >/dev/null 2>&1; then
   DOCKER_VERSION=$(docker --version 2>/dev/null | head -1)
   ok "Docker already installed — $DOCKER_VERSION"
 else
   info "Docker not found. Installing..."
 
   if [ "$PLATFORM" = "macos" ]; then
-    # macOS — use Homebrew
-    if ! command -v brew &>/dev/null; then
+    if ! command -v brew >/dev/null 2>&1; then
       fail "Homebrew is required to install Docker on macOS. Install it first: https://brew.sh"
     fi
     info "Installing Docker via Homebrew..."
@@ -58,8 +102,7 @@ else
     warn "Open Docker Desktop from Applications, then re-run this script."
     echo ""
 
-    # Check if Docker daemon is running
-    if ! docker info &>/dev/null 2>&1; then
+    if ! docker info >/dev/null 2>&1; then
       warn "Docker daemon is not running. Start Docker Desktop first."
       echo -e "${DIM}  Open Docker from Applications or run: open -a Docker${RESET}"
       echo ""
@@ -69,32 +112,33 @@ else
     fi
 
   elif [ "$PLATFORM" = "linux" ]; then
-    # Linux — use Docker's official convenience script
-    if command -v curl &>/dev/null; then
-      info "Installing Docker via official install script..."
-      curl -fsSL https://get.docker.com | sh
-    elif command -v wget &>/dev/null; then
-      info "Installing Docker via official install script..."
-      wget -qO- https://get.docker.com | sh
-    else
-      fail "curl or wget is required to install Docker."
+    need_cmd curl
+    info "Installing Docker via official install script..."
+    curl -fsSL https://get.docker.com | maybe_sudo sh
+
+    # Enable and start the Docker daemon
+    if command -v systemctl >/dev/null 2>&1; then
+      maybe_sudo systemctl enable docker
+      maybe_sudo systemctl start docker
+      ok "Docker daemon enabled and started"
     fi
 
-    # Add current user to docker group
+    # Add current user to docker group so sudo isn't needed
     if [ "$(id -u)" -ne 0 ]; then
-      if command -v sudo &>/dev/null; then
-        sudo usermod -aG docker "$USER"
-        warn "Added $USER to the docker group. Log out and back in for it to take effect."
-      fi
+      maybe_sudo usermod -aG docker "$USER"
+      warn "Added $USER to the docker group."
+      warn "Group change will apply to new shells. Continuing with sudo for now."
     fi
 
     ok "Docker installed"
   fi
 fi
 
-# Verify Docker daemon is running
-if docker info &>/dev/null 2>&1; then
+# Verify Docker daemon is running (try without sudo first, then with)
+if docker info >/dev/null 2>&1; then
   ok "Docker daemon is running"
+elif maybe_sudo docker info >/dev/null 2>&1; then
+  ok "Docker daemon is running (requires sudo until next login)"
 else
   warn "Docker is installed but the daemon is not running."
   if [ "$PLATFORM" = "macos" ]; then
@@ -106,33 +150,41 @@ fi
 
 # ── Check / Install Docker Compose v2 ───────────────────────
 
-if docker compose version &>/dev/null 2>&1; then
+if docker compose version >/dev/null 2>&1 || maybe_sudo docker compose version >/dev/null 2>&1; then
   ok "Docker Compose v2 available"
 else
-  warn "Docker Compose v2 not found. It's included with Docker Desktop."
   if [ "$PLATFORM" = "linux" ]; then
     info "Installing docker-compose-plugin..."
-    if command -v apt-get &>/dev/null; then
-      sudo apt-get update -qq && sudo apt-get install -y -qq docker-compose-plugin
-    elif command -v dnf &>/dev/null; then
-      sudo dnf install -y docker-compose-plugin
-    elif command -v yum &>/dev/null; then
-      sudo yum install -y docker-compose-plugin
+    case "$PKG" in
+      apt)    maybe_sudo apt-get update -qq && maybe_sudo apt-get install -y -qq docker-compose-plugin ;;
+      dnf)    maybe_sudo dnf install -y docker-compose-plugin ;;
+      yum)    maybe_sudo yum install -y docker-compose-plugin ;;
+      pacman) maybe_sudo pacman -Sy --noconfirm docker-compose ;;
+      zypper) maybe_sudo zypper install -y docker-compose ;;
+      *)      warn "Could not auto-install Docker Compose. See: https://docs.docker.com/compose/install/linux/" ;;
+    esac
+
+    if docker compose version >/dev/null 2>&1 || maybe_sudo docker compose version >/dev/null 2>&1; then
+      ok "Docker Compose v2 installed"
     else
-      warn "Could not auto-install. See: https://docs.docker.com/compose/install/linux/"
+      warn "Docker Compose v2 could not be installed. See: https://docs.docker.com/compose/install/linux/"
     fi
+  else
+    warn "Docker Compose v2 not found. It's included with Docker Desktop."
   fi
 fi
 
 # ── Check / Install Node.js ─────────────────────────────────
 
-if command -v node &>/dev/null; then
+NEED_NODE=false
+
+if command -v node >/dev/null 2>&1; then
   NODE_VERSION=$(node --version 2>/dev/null)
   NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/v//' | cut -d. -f1)
   if [ "$NODE_MAJOR" -ge 18 ]; then
     ok "Node.js already installed — $NODE_VERSION"
   else
-    warn "Node.js $NODE_VERSION is too old (need ≥18). Installing newer version..."
+    warn "Node.js $NODE_VERSION is too old (need >=18). Installing newer version..."
     NEED_NODE=true
   fi
 else
@@ -140,9 +192,9 @@ else
   NEED_NODE=true
 fi
 
-if [ "${NEED_NODE:-false}" = "true" ]; then
+if [ "$NEED_NODE" = "true" ]; then
   if [ "$PLATFORM" = "macos" ]; then
-    if command -v brew &>/dev/null; then
+    if command -v brew >/dev/null 2>&1; then
       info "Installing Node.js 20 via Homebrew..."
       brew install node@20
       brew link --overwrite node@20 2>/dev/null || true
@@ -152,45 +204,100 @@ if [ "${NEED_NODE:-false}" = "true" ]; then
     fi
 
   elif [ "$PLATFORM" = "linux" ]; then
-    # Use NodeSource for reliable Node.js install
-    if command -v curl &>/dev/null; then
-      info "Installing Node.js 20 via NodeSource..."
-      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-      sudo apt-get install -y -qq nodejs 2>/dev/null || {
-        # Fallback for non-Debian systems
-        if command -v dnf &>/dev/null; then
-          curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-          sudo dnf install -y nodejs
-        else
-          fail "Could not auto-install Node.js. Install manually: https://nodejs.org"
-        fi
-      }
-      ok "Node.js installed"
+    need_cmd curl
+
+    # Map arch for Node.js binary download
+    case "$ARCH" in
+      x86_64)  NODE_ARCH="x64" ;;
+      aarch64) NODE_ARCH="arm64" ;;
+      armv7l)  NODE_ARCH="armv7l" ;;
+      *)       NODE_ARCH="$ARCH" ;;
+    esac
+
+    NODE_INSTALL_VERSION="20"
+
+    # Try distro package manager first (Ubuntu/Debian ship recent enough Node)
+    INSTALLED_VIA_PKG=false
+
+    if [ "$PKG" = "apt" ]; then
+      # Check if the distro's nodejs package is recent enough
+      APT_NODE_VER=$(apt-cache show nodejs 2>/dev/null | grep -m1 '^Version:' | sed 's/[^0-9]*//' | cut -d. -f1 || echo "0")
+      if [ "$APT_NODE_VER" -ge 18 ] 2>/dev/null; then
+        info "Installing Node.js via apt (v${APT_NODE_VER})..."
+        maybe_sudo apt-get update -qq
+        maybe_sudo apt-get install -y -qq nodejs npm
+        INSTALLED_VIA_PKG=true
+      fi
+    elif [ "$PKG" = "dnf" ]; then
+      DNF_NODE_VER=$(dnf info nodejs 2>/dev/null | grep -m1 'Version' | awk '{print $3}' | cut -d. -f1 || echo "0")
+      if [ "$DNF_NODE_VER" -ge 18 ] 2>/dev/null; then
+        info "Installing Node.js via dnf (v${DNF_NODE_VER})..."
+        maybe_sudo dnf install -y nodejs npm
+        INSTALLED_VIA_PKG=true
+      fi
+    elif [ "$PKG" = "pacman" ]; then
+      info "Installing Node.js via pacman..."
+      maybe_sudo pacman -Sy --noconfirm nodejs npm
+      INSTALLED_VIA_PKG=true
+    elif [ "$PKG" = "zypper" ]; then
+      info "Installing Node.js via zypper..."
+      maybe_sudo zypper install -y nodejs npm
+      INSTALLED_VIA_PKG=true
+    fi
+
+    # If package manager didn't work or version is too old, download binary
+    if [ "$INSTALLED_VIA_PKG" = "false" ]; then
+      info "Installing Node.js ${NODE_INSTALL_VERSION} via official binary..."
+      # Fetch the latest v20 version
+      NODE_FULL_VER=$(curl -fsSL "https://nodejs.org/dist/latest-v${NODE_INSTALL_VERSION}.x/" | grep -oP 'node-v\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+      if [ -z "$NODE_FULL_VER" ]; then
+        fail "Could not determine latest Node.js ${NODE_INSTALL_VERSION} version. Install manually: https://nodejs.org"
+      fi
+      NODE_TARBALL="node-v${NODE_FULL_VER}-linux-${NODE_ARCH}.tar.xz"
+      NODE_URL="https://nodejs.org/dist/v${NODE_FULL_VER}/${NODE_TARBALL}"
+
+      info "Downloading ${NODE_TARBALL}..."
+      TMPDIR=$(mktemp -d)
+      curl -fsSL "$NODE_URL" -o "$TMPDIR/$NODE_TARBALL"
+      maybe_sudo tar -xJf "$TMPDIR/$NODE_TARBALL" -C /usr/local --strip-components=1
+      rm -rf "$TMPDIR"
+    fi
+
+    # Verify it worked
+    if command -v node >/dev/null 2>&1; then
+      ok "Node.js installed — $(node --version)"
     else
-      fail "curl is required to install Node.js."
+      fail "Node.js installation failed. Install manually: https://nodejs.org"
     fi
   fi
 fi
 
 # ── Check npm / npx ─────────────────────────────────────────
 
-if command -v npx &>/dev/null; then
+if command -v npx >/dev/null 2>&1; then
   ok "npx available"
 else
-  fail "npx not found. It should come with Node.js. Try reinstalling Node.js."
+  # npm might have been installed but not in PATH yet (binary install)
+  if [ -x /usr/local/bin/npx ]; then
+    export PATH="/usr/local/bin:$PATH"
+    ok "npx available"
+  else
+    fail "npx not found. It should come with Node.js. Try reinstalling Node.js."
+  fi
 fi
-
-# ── Summary ──────────────────────────────────────────────────
-
-echo ""
-echo -e "${GREEN}${BOLD}All dependencies installed!${RESET}"
-echo ""
-echo -e "${DIM}  Run LearnHouse with:${RESET}"
-echo -e "  ${CYAN}npx learnhouse@latest${RESET}"
-echo ""
 
 # ── Launch ───────────────────────────────────────────────────
 
-echo -e "${CYAN}Launching LearnHouse...${RESET}"
 echo ""
-npx learnhouse@latest
+echo -e "${GREEN}${BOLD}All dependencies are ready!${RESET}"
+echo ""
+echo -e "${CYAN}Launching LearnHouse setup...${RESET}"
+echo ""
+
+# When piped from curl (curl ... | bash), stdin is the pipe so interactive
+# prompts won't work. Reattach stdin to the terminal via /dev/tty.
+if [ ! -t 0 ]; then
+  exec npx learnhouse@latest setup </dev/tty
+else
+  exec npx learnhouse@latest setup
+fi
