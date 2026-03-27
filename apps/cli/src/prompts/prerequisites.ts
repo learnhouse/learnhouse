@@ -21,8 +21,13 @@ export async function checkPrerequisites(): Promise<void> {
 
   const failed: string[] = []
   for (const { name, check, failMsg } of checks) {
-    if (!check()) {
-      failed.push(`${pc.red('x')} ${name}: ${failMsg}`)
+    try {
+      if (!check()) {
+        failed.push(`${pc.red('x')} ${name}: ${failMsg}`)
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : failMsg
+      failed.push(`${pc.red('x')} ${name}: ${msg}`)
     }
   }
 
