@@ -5,6 +5,7 @@ import { getTaskRefFileDir } from '@services/media/media';
 import TaskFileObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFileObject';
 import TaskQuizObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskQuizObject'
 import TaskFormObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFormObject'
+import toast from 'react-hot-toast';
 import { Backpack, Calendar, Download, EllipsisVertical, Info } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect } from 'react'
@@ -70,7 +71,7 @@ function AssignmentStudentActivity() {
               </div>
               <div className='flex flex-wrap gap-2'>
                 <div
-                  onClick={() => alert(task.hint)}
+                  onClick={() => toast(task.hint, { icon: 'ℹ️' })}
                   className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                   <Info size={13} />
                   <p className='text-xs font-semibold'>{t('assignments.hint')}</p>
