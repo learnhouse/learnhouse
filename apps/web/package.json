@@ -105,6 +105,7 @@
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
     "require-in-the-middle": "^8.0.1",
+    "rrule": "^2.8.1",
     "screenfull": "^6.0.2",
     "sharp": "^0.34.4",
     "swr": "^2.3.6",
@@ -140,7 +141,6 @@
     "lodash-es": ">=4.17.23",
     "preact": ">=10.27.3",
     "js-yaml": ">=4.1.1",
-    "jspdf": ">=4.0.0",
     "prosemirror-view": "1.41.7"
   }
 }
