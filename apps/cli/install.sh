@@ -37,6 +37,8 @@ maybe_sudo() {
   fi
 }
 
+DOCKER_GROUP_CHANGED=false
+
 # ── Detect OS ────────────────────────────────────────────────
 
 OS="$(uname -s)"
@@ -126,8 +128,8 @@ else
     # Add current user to docker group so sudo isn't needed
     if [ "$(id -u)" -ne 0 ]; then
       maybe_sudo usermod -aG docker "$USER"
-      warn "Added $USER to the docker group."
-      warn "Group change will apply to new shells. Continuing with sudo for now."
+      DOCKER_GROUP_CHANGED=true
+      ok "Added $USER to the docker group"
     fi
 
     ok "Docker installed"
@@ -294,10 +296,18 @@ echo ""
 echo -e "${CYAN}Launching LearnHouse setup...${RESET}"
 echo ""
 
-# When piped from curl (curl ... | bash), stdin is the pipe so interactive
-# prompts won't work. Reattach stdin to the terminal via /dev/tty.
+# Build the launch command — reattach stdin from /dev/tty when piped from curl
 if [ ! -t 0 ]; then
-  exec npx learnhouse@latest setup </dev/tty
+  LAUNCH_CMD="npx learnhouse@latest setup </dev/tty"
 else
-  exec npx learnhouse@latest setup
+  LAUNCH_CMD="npx learnhouse@latest setup"
+fi
+
+# If we just added the user to the docker group, use sg to pick up the new
+# group membership in the current session (avoids "permission denied" on the
+# Docker socket without requiring a re-login).
+if [ "${DOCKER_GROUP_CHANGED:-false}" = "true" ]; then
+  exec sg docker -c "$LAUNCH_CMD"
+else
+  eval "exec $LAUNCH_CMD"
 fi

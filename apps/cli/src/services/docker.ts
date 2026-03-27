@@ -13,7 +13,15 @@ export function isDockerRunning(): boolean {
   try {
     execSync('docker info', { stdio: 'pipe' })
     return true
-  } catch {
+  } catch (err: unknown) {
+    const stderr = err instanceof Error && 'stderr' in err
+      ? (err as { stderr: Buffer }).stderr?.toString() ?? ''
+      : ''
+    if (stderr.includes('permission denied')) {
+      throw new Error(
+        'Docker permission denied. Run: sudo usermod -aG docker $USER && newgrp docker'
+      )
+    }
     return false
   }
 }
