@@ -172,6 +172,7 @@ class GeneralCustomization(BaseModel):
     footer_text: str = ""
     favicon_image: str = ""
     watermark: bool = True
+    font: str = ""
 
 
 class SeoOrgConfig(BaseModel):
