@@ -7,8 +7,8 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.42.74",
-    "botocore==1.42.74",
+    "boto3==1.42.76",
+    "botocore==1.42.76",
     "faker==40.11.1",
     "fastapi==0.135.2",
     "httpx==0.28.1",
@@ -22,7 +22,7 @@ dependencies = [
     "python-multipart==0.0.22",
     "pyyaml==6.0.3",
     "redis==7.4.0",
-    "requests==2.32.5",
+    "requests==2.33.0",
     "resend==2.26.0",
     "sqlmodel==0.0.37",
     "tiktoken==0.12.0",
@@ -40,7 +40,7 @@ dependencies = [
     "workos==5.46.0",
     "dnspython==2.8.0",
     "defusedxml==0.7.1",
-    "llama-index-core==0.14.18",
+    "llama-index-core==0.14.19",
     "pgvector==0.4.2",
     "pypdf==6.9.2",
 ]
