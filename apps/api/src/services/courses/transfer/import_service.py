@@ -39,7 +39,7 @@ from .models import (
     ImportResult,
     ImportCourseResult,
 )
-from .storage_utils import upload_directory_to_s3, upload_to_s3, upload_file_to_s3, is_s3_enabled, delete_storage_file, delete_storage_directory
+from .storage_utils import upload_directory_to_s3, upload_file_to_s3, is_s3_enabled, delete_storage_file, delete_storage_directory
 
 
 # Temp storage for analyzed packages
