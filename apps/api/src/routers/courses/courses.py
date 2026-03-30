@@ -1,7 +1,7 @@
 from typing import List
 import os
 from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query, BackgroundTasks
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from sqlmodel import Session
 from src.core.events.database import get_db_session

@@ -7,6 +7,7 @@ Follows the same pattern as upload_content.py and frontend media.ts:
 - When content_delivery is "s3api", files are on S3/R2 (and may also be local)
 """
 
+import functools
 import logging
 import os
 import threading
@@ -22,8 +23,9 @@ _s3_client = None
 _s3_client_lock = threading.Lock()
 
 
+@functools.cache
 def get_content_delivery_type() -> str:
-    """Get the configured content delivery type."""
+    """Get the configured content delivery type (cached — config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.type
 
@@ -34,10 +36,7 @@ def get_storage_client():
     Caches the client for reuse across calls.
     """
     global _s3_client
-    learnhouse_config = get_learnhouse_config()
-    content_delivery = learnhouse_config.hosting_config.content_delivery.type
-
-    if content_delivery != "s3api":
+    if get_content_delivery_type() != "s3api":
         return None
 
     if _s3_client is not None:
@@ -46,6 +45,7 @@ def get_storage_client():
     with _s3_client_lock:
         if _s3_client is not None:
             return _s3_client
+        learnhouse_config = get_learnhouse_config()
         _s3_client = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
@@ -53,14 +53,16 @@ def get_storage_client():
         return _s3_client
 
 
+@functools.cache
 def get_s3_bucket_name() -> str:
-    """Get the S3 bucket name from config."""
+    """Get the S3 bucket name from config (cached — config doesn't change at runtime)."""
     learnhouse_config = get_learnhouse_config()
     return learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
 
 
+@functools.cache
 def is_s3_enabled() -> bool:
-    """Check if S3 storage is enabled."""
+    """Check if S3 storage is enabled (cached)."""
     return get_content_delivery_type() == "s3api"
 
 
@@ -179,9 +181,12 @@ def list_directory(dir_path: str) -> list[str]:
                 logger.error("Error listing S3 directory: %s", e)
         return files
     else:
-        # List from local filesystem
+        # List from local filesystem (files only, matching S3 behavior)
         if os.path.exists(dir_path) and os.path.isdir(dir_path):
-            return os.listdir(dir_path)
+            return [
+                f for f in os.listdir(dir_path)
+                if os.path.isfile(os.path.join(dir_path, f))
+            ]
         return []
 
 
@@ -312,7 +317,6 @@ MIME_TYPES_BY_EXT = {
 
 def _mime_type_for_key(key: str) -> str:
     """Guess MIME type from an S3 key's extension."""
-    import os
     ext = os.path.splitext(key)[1].lower()
     return MIME_TYPES_BY_EXT.get(ext, "application/octet-stream")
 
