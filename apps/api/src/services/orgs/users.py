@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
+import csv
+import io
 import json
 import logging
 
 import redis
 from fastapi import HTTPException, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import aliased
 from sqlmodel import Session, select, func
 from src.security.features_utils.usage import decrease_feature_usage
@@ -242,6 +245,151 @@ async def get_organization_users(
         result["all_total"] = all_total
 
     return result
+
+
+async def export_organization_users_csv(
+    request: Request,
+    org_id: str,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    search: str = "",
+    usergroup_id: int | None = None,
+    usergroup_filter: str | None = None,
+    sort_order: str = "desc",
+    role_id: int | None = None,
+    status: str | None = None,
+):
+    """
+    Export all organization users as CSV.
+    Reuses the same auth/filtering logic as get_organization_users but without pagination.
+    """
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    statement = select(Organization).where(Organization.id == org_id)
+    org = db_session.exec(statement).first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    if not is_org_member(current_user.id, org.id, db_session):
+        raise HTTPException(status_code=403, detail="You must be a member of this organization")
+
+    from src.security.superadmin import is_user_superadmin
+    if not is_user_superadmin(current_user.id, db_session):
+        await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
+    base_statement = (
+        select(User)
+        .join(UserOrganization)
+        .join(Organization)
+        .where(Organization.id == org_id)
+    )
+
+    if search:
+        search_pattern = f"%{search}%"
+        base_statement = base_statement.where(
+            (User.first_name.ilike(search_pattern))
+            | (User.last_name.ilike(search_pattern))
+            | (User.username.ilike(search_pattern))
+            | (User.email.ilike(search_pattern))
+        )
+
+    if role_id is not None:
+        base_statement = base_statement.where(UserOrganization.role_id == role_id)
+
+    if status == "verified":
+        base_statement = base_statement.where(User.email_verified == True)  # noqa: E712
+    elif status == "unverified":
+        base_statement = base_statement.where(User.email_verified == False)  # noqa: E712
+
+    if usergroup_id is not None and usergroup_filter:
+        if usergroup_filter == "in_group":
+            base_statement = base_statement.join(
+                UserGroupUser,
+                (UserGroupUser.user_id == User.id) & (UserGroupUser.usergroup_id == usergroup_id),
+            )
+        elif usergroup_filter == "not_in_group":
+            ugu_alias = aliased(UserGroupUser)
+            base_statement = base_statement.outerjoin(
+                ugu_alias,
+                (ugu_alias.user_id == User.id) & (ugu_alias.usergroup_id == usergroup_id),
+            ).where(ugu_alias.id == None)  # noqa: E711
+
+    if sort_order == "asc":
+        base_statement = base_statement.order_by(UserOrganization.id.asc())
+    else:
+        base_statement = base_statement.order_by(UserOrganization.id.desc())
+
+    users = db_session.exec(base_statement).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Name", "Username", "Email", "Groups", "Role", "Joined", "Email Verified", "Signup Method", "Last Login"])
+
+    if users:
+        user_ids = [user.id for user in users]
+
+        user_orgs = db_session.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id.in_(user_ids),  # type: ignore
+                UserOrganization.org_id == org_id,
+            )
+        ).all()
+        user_org_map = {uo.user_id: uo for uo in user_orgs}
+
+        role_ids = list({uo.role_id for uo in user_orgs if uo.role_id is not None})
+        role_map = {}
+        if role_ids:
+            roles = db_session.exec(select(Role).where(Role.id.in_(role_ids))).all()  # type: ignore
+            role_map = {role.id: role for role in roles}
+
+        usergroup_results = db_session.exec(
+            select(UserGroupUser, UserGroup)
+            .join(UserGroup, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
+            .where(
+                UserGroupUser.user_id.in_(user_ids),  # type: ignore
+                UserGroupUser.org_id == org_id,
+            )
+        ).all()
+        user_usergroups_map: dict[int, list[str]] = {}
+        for ugu, ug in usergroup_results:
+            user_usergroups_map.setdefault(ugu.user_id, []).append(ug.name)
+
+        def fmt_date(d):
+            if not d:
+                return ""
+            try:
+                dt = datetime.fromisoformat(str(d)) if not isinstance(d, datetime) else d
+                return dt.strftime("%b %d, %Y")
+            except Exception:
+                return str(d)
+
+        for user in users:
+            user_org = user_org_map.get(user.id)
+            if not user_org:
+                continue
+            role = role_map.get(user_org.role_id)
+            groups = "; ".join(user_usergroups_map.get(user.id, []))
+
+            writer.writerow([
+                f"{user.first_name or ''} {user.last_name or ''}".strip(),
+                user.username or "",
+                user.email or "",
+                groups,
+                role.name if role else "",
+                fmt_date(user_org.creation_date),
+                "Yes" if user.email_verified else "No",
+                user.signup_method or "",
+                fmt_date(user.last_login_at) if hasattr(user, "last_login_at") else "",
+            ])
+
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=users-export.csv"},
+    )
 
 
 async def remove_user_from_org(

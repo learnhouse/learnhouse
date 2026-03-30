@@ -8,7 +8,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter } from 'lucide-react'
+import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
 import React, { useState, useCallback, useRef, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -211,6 +211,51 @@ function OrgUsers() {
     setSelectedUserIds(new Set())
   }
 
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExportCSV = async () => {
+    if (!org || !access_token) return
+    setIsExporting(true)
+    const toastId = toast.loading('Exporting users...')
+
+    try {
+      const params = new URLSearchParams()
+      params.append('sort_order', sortOrder)
+      if (searchValue) params.append('search', searchValue)
+      if (filterRole) params.append('role_id', filterRole)
+      if (filterStatus) params.append('status', filterStatus)
+      if (filterGroupId) {
+        params.append('usergroup_id', filterGroupId)
+        params.append('usergroup_filter', 'in_group')
+      }
+
+      const url = `${getAPIUrl()}orgs/${org.id}/users/export?${params.toString()}`
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      })
+
+      if (!res.ok) {
+        throw new Error('Export failed')
+      }
+
+      const blob = await res.blob()
+      const downloadUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `users-${org.slug}-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(downloadUrl)
+
+      toast.success('Users exported successfully', { id: toastId })
+    } catch {
+      toast.error('Failed to export users', { id: toastId })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div>
       <Toast></Toast>
@@ -239,6 +284,15 @@ function OrgUsers() {
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
                 </div>
+                <button
+                  onClick={handleExportCSV}
+                  disabled={isExporting || total === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  title="Export users as CSV"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export</span>
+                </button>
               </div>
             </div>
 

@@ -287,7 +287,8 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button
+              <Link
+                href="/dash/courses"
                 aria-label="Open courses menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
@@ -306,7 +307,7 @@ function DashLeftMenu() {
                     <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
-              </button>
+              </Link>
             </HoverMenu>
 
             {/* Assignments with hover menu */}
@@ -344,7 +345,8 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button
+              <Link
+                href="/dash/assignments"
                 aria-label="Open assignments menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
@@ -363,7 +365,7 @@ function DashLeftMenu() {
                     <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
-              </button>
+              </Link>
             </HoverMenu>
             {showCommunities && (
               <MenuLink
@@ -436,7 +438,8 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button
+              <Link
+                href="/dash/users/settings/users"
                 aria-label="Open users menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
@@ -455,7 +458,7 @@ function DashLeftMenu() {
                     <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
-              </button>
+              </Link>
             </HoverMenu>
 
             {showPayments && (
@@ -542,7 +545,8 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button
+              <Link
+                href="/dash/org/settings/general"
                 aria-label="Open organization menu"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
@@ -561,7 +565,7 @@ function DashLeftMenu() {
                     <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
-              </button>
+              </Link>
             </HoverMenu>
 
             {/* Analytics with hover menu */}
@@ -585,7 +589,8 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <button
+              <Link
+                href="/dash/analytics"
                 aria-label="Analytics"
                 className={cn(
                   "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
@@ -604,7 +609,7 @@ function DashLeftMenu() {
                     <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
                   </>
                 )}
-              </button>
+              </Link>
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}

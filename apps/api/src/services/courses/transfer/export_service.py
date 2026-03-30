@@ -4,9 +4,9 @@ Handles exporting courses as ZIP packages
 Supports both local filesystem and S3/R2 cloud storage
 """
 
-import io
 import json
 import os
+import tempfile
 import zipfile
 from datetime import datetime
 from typing import Optional
@@ -33,11 +33,11 @@ async def export_course(
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
-) -> bytes:
+) -> str:
     """
     Export a single course as a ZIP file.
 
-    Returns ZIP file contents as bytes.
+    Returns path to the temporary ZIP file on disk.
     """
     return await export_courses_batch(
         request=request,
@@ -52,11 +52,11 @@ async def export_courses_batch(
     course_uuids: list[str],
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
-) -> bytes:
+) -> str:
     """
     Export multiple courses as a single ZIP file.
 
-    Returns ZIP file contents as bytes.
+    Returns path to the temporary ZIP file on disk (caller must delete after use).
     """
     if not course_uuids:
         raise HTTPException(status_code=400, detail="No courses specified for export")
@@ -66,7 +66,6 @@ async def export_courses_batch(
     org: Optional[Organization] = None
 
     for course_uuid in course_uuids:
-        # Get course
         statement = select(Course).where(Course.course_uuid == course_uuid)
         course = db_session.exec(statement).first()
 
@@ -76,10 +75,8 @@ async def export_courses_batch(
                 detail=f"Course not found: {course_uuid}",
             )
 
-        # RBAC check - user needs read access to export
         await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-        # Get organization (should be same for all courses in batch)
         if org is None:
             org_statement = select(Organization).where(Organization.id == course.org_id)
             org = db_session.exec(org_statement).first()
@@ -93,46 +90,48 @@ async def export_courses_batch(
 
         courses_to_export.append(course)
 
-    # Create ZIP in memory
-    zip_buffer = io.BytesIO()
+    # Write ZIP to a temp file on disk instead of holding it all in memory
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".zip", prefix="learnhouse-export-")
+    os.close(tmp_fd)
 
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        manifest_courses = []
+    try:
+        with zipfile.ZipFile(tmp_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            manifest_courses = []
 
-        for course in courses_to_export:
-            course_path = f"courses/{course.course_uuid}"
+            for course in courses_to_export:
+                course_path = f"courses/{course.course_uuid}"
 
-            # Export course data
-            _export_course_to_zip(
-                zip_file=zip_file,
-                course=course,
-                course_path=course_path,
-                org=org,
-                db_session=db_session,
+                _export_course_to_zip(
+                    zip_file=zip_file,
+                    course=course,
+                    course_path=course_path,
+                    org=org,
+                    db_session=db_session,
+                )
+
+                manifest_courses.append(ExportCourseInfo(
+                    course_uuid=course.course_uuid,
+                    name=course.name,
+                    path=course_path,
+                ))
+
+            manifest = ExportManifest(
+                version="1.0.0",
+                format="learnhouse-course-export",
+                created_at=datetime.now().isoformat(),
+                courses=manifest_courses,
             )
 
-            manifest_courses.append(ExportCourseInfo(
-                course_uuid=course.course_uuid,
-                name=course.name,
-                path=course_path,
-            ))
+            zip_file.writestr(
+                "manifest.json",
+                json.dumps(manifest.model_dump(), indent=2),
+            )
 
-        # Create manifest
-        manifest = ExportManifest(
-            version="1.0.0",
-            format="learnhouse-course-export",
-            created_at=datetime.now().isoformat(),
-            courses=manifest_courses,
-        )
-
-        # Write manifest to ZIP
-        zip_file.writestr(
-            "manifest.json",
-            json.dumps(manifest.model_dump(), indent=2),
-        )
-
-    zip_buffer.seek(0)
-    return zip_buffer.getvalue()
+        return tmp_path
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
 
 
 def _export_course_to_zip(
