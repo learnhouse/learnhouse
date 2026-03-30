@@ -339,7 +339,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
   return (
     <>
       {/* Top right bar */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-none">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-none board-topright">
         {/* Main bar: avatars + clock + timer btn + share */}
         <div
           className="flex items-center gap-2 rounded-xl px-2 py-1.5 nice-shadow pointer-events-auto"
