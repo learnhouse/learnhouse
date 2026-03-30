@@ -39,7 +39,7 @@ from .models import (
     ImportResult,
     ImportCourseResult,
 )
-from .storage_utils import upload_directory_to_s3, upload_to_s3, is_s3_enabled, delete_storage_file
+from .storage_utils import upload_directory_to_s3, upload_to_s3, upload_file_to_s3, is_s3_enabled, delete_storage_file, delete_storage_directory
 
 
 # Temp storage for analyzed packages
@@ -98,23 +98,6 @@ async def analyze_import_package(
     # RBAC check - user needs create permission for courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
-    # Read file content
-    content = await zip_file.read()
-
-    # Validate file size
-    if len(content) > MAX_PACKAGE_SIZE:
-        raise HTTPException(
-            status_code=413,
-            detail=f"Package too large. Maximum size is {MAX_PACKAGE_SIZE / 1024 / 1024:.0f}MB"
-        )
-
-    # Validate ZIP format
-    if not validate_zip(content):
-        raise HTTPException(
-            status_code=415,
-            detail="Invalid file format. Package must be a ZIP file."
-        )
-
     # Create temp directory for extraction
     temp_id = str(uuid4())
     temp_dir = os.path.join(TEMP_IMPORT_DIR, temp_id)
@@ -122,10 +105,32 @@ async def analyze_import_package(
     try:
         os.makedirs(temp_dir, exist_ok=True)
 
-        # Save the original ZIP
+        # Stream uploaded file to disk instead of reading it all into memory
         zip_path = os.path.join(temp_dir, "package.zip")
+        total_size = 0
+        header_bytes = b""
+
         with open(zip_path, 'wb') as f:
-            f.write(content)
+            while True:
+                chunk = await zip_file.read(64 * 1024)  # 64KB chunks
+                if not chunk:
+                    break
+                if not header_bytes:
+                    header_bytes = chunk[:4]
+                total_size += len(chunk)
+                if total_size > MAX_PACKAGE_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"Package too large. Maximum size is {MAX_PACKAGE_SIZE / 1024 / 1024:.0f}MB"
+                    )
+                f.write(chunk)
+
+        # Validate ZIP format from the bytes we already have
+        if not validate_zip(header_bytes):
+            raise HTTPException(
+                status_code=415,
+                detail="Invalid file format. Package must be a ZIP file."
+            )
 
         # Extract ZIP with security checks
         extract_dir = os.path.join(temp_dir, "extracted")
@@ -133,8 +138,9 @@ async def analyze_import_package(
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             # Check for zip bomb
-            total_size = sum(info.file_size for info in zip_ref.infolist())
-            if total_size > len(content) * MAX_COMPRESSION_RATIO:
+            compressed_size = os.path.getsize(zip_path)
+            uncompressed_size = sum(info.file_size for info in zip_ref.infolist())
+            if uncompressed_size > compressed_size * MAX_COMPRESSION_RATIO:
                 raise HTTPException(
                     status_code=400,
                     detail="Invalid package: Suspicious compression ratio"
@@ -158,6 +164,9 @@ async def analyze_import_package(
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     with zip_ref.open(info) as source, open(target_path, 'wb') as target:
                         shutil.copyfileobj(source, target)
+
+        # Delete the original ZIP now that extraction is done — free disk space
+        os.unlink(zip_path)
 
         # Find and parse manifest.json
         manifest_path = os.path.join(extract_dir, "manifest.json")
@@ -273,25 +282,36 @@ async def import_courses(
     # RBAC check - user needs create permission for courses
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
-    # Verify temp package exists
+    # Atomically claim the temp package by renaming it — prevents race if
+    # two requests try to import the same temp_id simultaneously
     temp_dir = os.path.join(TEMP_IMPORT_DIR, temp_id)
-    if not os.path.exists(temp_dir):
+    work_dir = os.path.join(TEMP_IMPORT_DIR, f"{temp_id}-importing")
+    try:
+        os.rename(temp_dir, work_dir)
+    except FileNotFoundError:
         raise HTTPException(
             status_code=404,
             detail="Package not found. Please upload and analyze again."
         )
+    except OSError:
+        raise HTTPException(
+            status_code=409,
+            detail="This package is already being imported."
+        )
 
-    extract_dir = os.path.join(temp_dir, "extracted")
+    extract_dir = os.path.join(work_dir, "extracted")
     manifest_path = os.path.join(extract_dir, "manifest.json")
 
     with open(manifest_path, 'r') as f:
         manifest = json.load(f)
 
     # Build a map of course_uuid to path
-    course_paths = {
-        entry["course_uuid"]: os.path.join(extract_dir, entry["path"])
-        for entry in manifest.get("courses", [])
-    }
+    course_paths = {}
+    for entry in manifest.get("courses", []):
+        cid = entry.get("course_uuid")
+        cpath = entry.get("path")
+        if cid and cpath:
+            course_paths[cid] = os.path.join(extract_dir, cpath)
 
     results = []
     successful = 0
@@ -313,14 +333,36 @@ async def import_courses(
             # Check usage limits
             check_limits_with_usage("courses", org_id, db_session)
 
-            # Import the course
-            new_course = await _import_single_course(
-                course_path=course_paths[course_uuid],
-                organization=organization,
-                current_user=current_user,
-                options=options,
-                db_session=db_session,
-            )
+            # Pre-generate the course UUID so we can clean up files on failure
+            new_course_uuid = f"course_{uuid4()}"
+            content_base = "content/orgs"
+            new_course_content_path = f"{content_base}/{organization.org_uuid}/courses/{new_course_uuid}"
+
+            # Use a savepoint so we can rollback just this course on failure
+            # without losing previously imported courses in the batch
+            nested = db_session.begin_nested()
+            try:
+                new_course = await _import_single_course(
+                    course_path=course_paths[course_uuid],
+                    organization=organization,
+                    current_user=current_user,
+                    options=options,
+                    db_session=db_session,
+                    new_course_uuid=new_course_uuid,
+                )
+                nested.commit()
+            except Exception:
+                nested.rollback()
+                # Clean up any files/S3 objects written for the failed course
+                delete_storage_directory(new_course_content_path)
+                raise
+
+            # Commit the outer transaction so the course is persisted
+            db_session.commit()
+
+            # Track usage AFTER commit — increase_feature_usage calls commit()
+            # internally, so it must not run inside the savepoint
+            increase_feature_usage("courses", organization.id, db_session)
 
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
@@ -331,6 +373,8 @@ async def import_courses(
             successful += 1
 
         except Exception as e:
+            # Reset session to a clean state so the next iteration can work
+            db_session.rollback()
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
                 new_uuid="",
@@ -340,8 +384,8 @@ async def import_courses(
             ))
             failed += 1
 
-    # Clean up temp directory after import
-    shutil.rmtree(temp_dir, ignore_errors=True)
+    # Clean up working directory after import
+    shutil.rmtree(work_dir, ignore_errors=True)
 
     return ImportResult(
         total_courses=len(options.course_uuids),
@@ -357,6 +401,7 @@ async def _import_single_course(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     options: ImportOptions,
     db_session: Session,
+    new_course_uuid: str,
 ) -> Course:
     """
     Import a single course from the extracted package.
@@ -364,9 +409,6 @@ async def _import_single_course(
     # Load course data
     with open(os.path.join(course_path, "course.json"), 'r') as f:
         course_data = json.load(f)
-
-    # Generate new course UUID
-    new_course_uuid = f"course_{uuid4()}"
 
     # Apply name prefix if specified
     course_name = course_data.get("name", "Untitled Course")
@@ -422,8 +464,8 @@ async def _import_single_course(
 
                 # Upload to S3 if configured
                 if is_s3_enabled():
-                    with open(dest_file, 'rb') as f:
-                        upload_to_s3(f"{new_course_path}/thumbnails/{new_filename}", f.read())
+                    if not upload_file_to_s3(f"{new_course_path}/thumbnails/{new_filename}", dest_file):
+                        raise HTTPException(status_code=500, detail="Failed to upload thumbnail to storage")
 
                 # Update course reference
                 if course_data.get("thumbnail_image") and filename == course_data["thumbnail_image"]:
@@ -431,10 +473,9 @@ async def _import_single_course(
                 if course_data.get("thumbnail_video") and filename == course_data["thumbnail_video"]:
                     new_course.thumbnail_video = new_filename
 
-    # Insert course
+    # Use flush (not commit) for intermediate entities — the caller manages the transaction
     db_session.add(new_course)
-    db_session.commit()
-    db_session.refresh(new_course)
+    db_session.flush()
 
     # Create resource author
     if isinstance(current_user, APITokenUser):
@@ -451,7 +492,7 @@ async def _import_single_course(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.commit()
+    db_session.flush()
 
     # Import chapters
     chapters_dir = os.path.join(course_path, "chapters")
@@ -478,9 +519,6 @@ async def _import_single_course(
                 organization=organization,
                 db_session=db_session,
             )
-
-    # Increase feature usage
-    increase_feature_usage("courses", organization.id, db_session)
 
     return new_course
 
@@ -510,8 +548,7 @@ async def _import_chapter(
     )
 
     db_session.add(new_chapter)
-    db_session.commit()
-    db_session.refresh(new_chapter)
+    db_session.flush()
 
     # Create CourseChapter link
     new_course_chapter = CourseChapter(
@@ -523,7 +560,7 @@ async def _import_chapter(
         update_date=str(datetime.now()),
     )
     db_session.add(new_course_chapter)
-    db_session.commit()
+    db_session.flush()
 
     # Import activities
     activities_dir = os.path.join(chapter_path, "activities")
@@ -603,8 +640,7 @@ async def _import_activity(
     )
 
     db_session.add(new_activity)
-    db_session.commit()
-    db_session.refresh(new_activity)
+    db_session.flush()
 
     # Create ChapterActivity link
     new_chapter_activity = ChapterActivity(
@@ -617,7 +653,7 @@ async def _import_activity(
         update_date=str(datetime.now()),
     )
     db_session.add(new_chapter_activity)
-    db_session.commit()
+    db_session.flush()
 
     # Copy entire activity files directory (videos, documents, SCORM, dynamic blocks, etc.)
     new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
@@ -627,7 +663,8 @@ async def _import_activity(
         shutil.copytree(source_files_dir, new_activity_path, dirs_exist_ok=True)
         # Upload to S3 if configured
         if is_s3_enabled():
-            upload_directory_to_s3(new_activity_path, new_activity_path)
+            if not upload_directory_to_s3(new_activity_path, new_activity_path):
+                raise HTTPException(status_code=500, detail="Failed to upload activity files to storage")
     else:
         os.makedirs(new_activity_path, exist_ok=True)
 
@@ -682,7 +719,7 @@ async def _import_activity(
             try:
                 new_activity.content = json.loads(content_str)
                 db_session.add(new_activity)
-                db_session.commit()
+                db_session.flush()
             except json.JSONDecodeError:
                 pass  # Keep original content if parsing fails
 
@@ -761,8 +798,8 @@ async def _import_block(
 
                         # Upload renamed file to S3 and clean up old key
                         if is_s3_enabled():
-                            with open(new_file_path, 'rb') as f:
-                                upload_to_s3(new_file_path, f.read())
+                            if not upload_file_to_s3(new_file_path, new_file_path):
+                                raise HTTPException(status_code=500, detail="Failed to upload block file to storage")
                             # Delete the old S3 key (uploaded with old UUID before rename)
                             old_s3_key = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block_uuid}/{filename}"
                             delete_storage_file(old_s3_key)
@@ -785,7 +822,7 @@ async def _import_block(
     )
 
     db_session.add(new_block)
-    db_session.commit()
+    db_session.flush()
 
     return new_block_uuid, content_updates
 
