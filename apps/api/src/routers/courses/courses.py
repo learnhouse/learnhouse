@@ -1,9 +1,9 @@
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query
-from fastapi.responses import StreamingResponse
+import os
+from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query, BackgroundTasks
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, field_validator
 from sqlmodel import Session
-import io
 from src.core.events.database import get_db_session
 from src.db.courses.course_updates import (
     CourseUpdateCreate,
@@ -108,6 +108,7 @@ router = APIRouter(dependencies=[Depends(require_courses_feature)])
 async def api_export_courses_batch(
     request: Request,
     batch_request: BatchExportRequest,
+    background_tasks: BackgroundTasks,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
@@ -127,17 +128,20 @@ async def api_export_courses_batch(
     """
     from datetime import datetime
 
-    zip_content = await export_courses_batch(
+    zip_path = await export_courses_batch(
         request, batch_request.course_uuids, current_user, db_session
     )
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"learnhouse-export-batch-{timestamp}.zip"
 
-    return StreamingResponse(
-        io.BytesIO(zip_content),
+    # Clean up the temp file after the response is sent
+    background_tasks.add_task(os.unlink, zip_path)
+
+    return FileResponse(
+        path=zip_path,
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        filename=filename,
     )
 
 
@@ -431,6 +435,7 @@ async def api_clone_course(
 async def api_export_course(
     request: Request,
     course_uuid: str,
+    background_tasks: BackgroundTasks,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
@@ -452,15 +457,18 @@ async def api_export_course(
     """
     from datetime import datetime
 
-    zip_content = await export_course(request, course_uuid, current_user, db_session)
+    zip_path = await export_course(request, course_uuid, current_user, db_session)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"learnhouse-export-{course_uuid}-{timestamp}.zip"
 
-    return StreamingResponse(
-        io.BytesIO(zip_content),
+    # Clean up the temp file after the response is sent
+    background_tasks.add_task(os.unlink, zip_path)
+
+    return FileResponse(
+        path=zip_path,
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        filename=filename,
     )
 
 

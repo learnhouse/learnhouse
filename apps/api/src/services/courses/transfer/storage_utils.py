@@ -9,12 +9,17 @@ Follows the same pattern as upload_content.py and frontend media.ts:
 
 import logging
 import os
+import threading
 from typing import Optional
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 from config.config import get_learnhouse_config
 
 logger = logging.getLogger(__name__)
+
+# Cached S3 client (thread-safe)
+_s3_client = None
+_s3_client_lock = threading.Lock()
 
 
 def get_content_delivery_type() -> str:
@@ -26,16 +31,26 @@ def get_content_delivery_type() -> str:
 def get_storage_client():
     """
     Get boto3 S3 client if S3 is configured, otherwise return None.
+    Caches the client for reuse across calls.
     """
+    global _s3_client
     learnhouse_config = get_learnhouse_config()
     content_delivery = learnhouse_config.hosting_config.content_delivery.type
 
-    if content_delivery == "s3api":
-        return boto3.client(
+    if content_delivery != "s3api":
+        return None
+
+    if _s3_client is not None:
+        return _s3_client
+
+    with _s3_client_lock:
+        if _s3_client is not None:
+            return _s3_client
+        _s3_client = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
         )
-    return None
+        return _s3_client
 
 
 def get_s3_bucket_name() -> str:
@@ -409,6 +424,7 @@ def delete_storage_file(file_path: str) -> bool:
 def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
     """
     Upload an entire directory to S3 if configured.
+    Uses multipart streaming uploads to avoid loading large files into memory.
 
     Args:
         local_dir: Local directory path
@@ -430,13 +446,7 @@ def upload_directory_to_s3(local_dir: str, s3_prefix: str) -> bool:
             rel_path = os.path.relpath(local_path, local_dir)
             s3_path = f"{s3_prefix}/{rel_path}".replace('\\', '/')
 
-            try:
-                with open(local_path, 'rb') as f:
-                    content = f.read()
-                if not upload_to_s3(s3_path, content):
-                    success = False
-            except Exception as e:
-                logger.error("Error reading/uploading %s: %s", local_path, e)
+            if not upload_file_to_s3(s3_path, local_path):
                 success = False
 
     return success

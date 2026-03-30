@@ -9,6 +9,7 @@ from src.services.orgs.invites import (
 )
 from src.services.orgs.join import JoinOrg, join_org
 from src.services.orgs.users import (
+    export_organization_users_csv,
     get_list_of_invited_users,
     get_organization_users,
     invite_batch_users,
@@ -113,6 +114,28 @@ async def api_get_org_by_uuid(
     Get single Org by UUID
     """
     return await get_organization_by_uuid(request, org_uuid, db_session, current_user)
+
+
+@router.get("/{org_id}/users/export")
+async def api_export_org_users(
+    request: Request,
+    org_id: str,
+    search: str = "",
+    usergroup_id: Optional[int] = Query(default=None),
+    usergroup_filter: Optional[Literal["in_group", "not_in_group"]] = Query(default=None),
+    sort_order: Optional[Literal["asc", "desc"]] = Query(default="desc"),
+    role_id: Optional[int] = Query(default=None),
+    status: Optional[Literal["verified", "unverified"]] = Query(default=None),
+    current_user: PublicUser = Depends(get_authenticated_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Export organization users as CSV file.
+    """
+    return await export_organization_users_csv(
+        request, org_id, db_session, current_user, search,
+        usergroup_id, usergroup_filter, sort_order or "desc", role_id, status,
+    )
 
 
 @router.get("/{org_id}/users")
