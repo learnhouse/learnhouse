@@ -61,8 +61,6 @@ function EditUserGroup(props: EditUserGroupProps) {
         },
     })
 
-    console.log(formik.errors.name)
-
     return (
         <FormLayout onSubmit={formik.handleSubmit}>
             <FormField name="name">

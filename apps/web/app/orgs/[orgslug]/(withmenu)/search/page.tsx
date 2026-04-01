@@ -150,9 +150,6 @@ function SearchPage() {
           session?.data?.tokens?.access_token
         );
 
-        // Log the response to see what we're getting
-        console.log('Search API Response:', response);
-
         // The response data is directly what we need
         const results = response.data;
         

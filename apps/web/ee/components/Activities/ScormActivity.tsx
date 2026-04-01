@@ -27,19 +27,6 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  // Debug logging
-  console.log('[SCORM] ScormActivity render:', {
-    hasOrg: !!org,
-    orgUuid: org?.org_uuid,
-    hasCourse: !!course,
-    courseUuid: course?.course_uuid,
-    hasActivity: !!activity,
-    activityUuid: activity?.activity_uuid,
-    hasAccessToken: !!access_token,
-    scormVersion: activity?.content?.scorm_version,
-    entryPoint: activity?.content?.entry_point,
-  })
-
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const runtimeRef = useRef<ScormRuntimeAPI | null>(null)
   const initStartedRef = useRef(false)
@@ -71,12 +58,7 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
     const initializeRuntime = async () => {
       try {
         const apiUrl = getAPIUrl()
-        console.log('[SCORM] Starting runtime initialization...', {
-          activityUuid: activity.activity_uuid,
-          scormVersion: activity.content.scorm_version,
-          apiUrl: apiUrl,
-          initEndpoint: `${apiUrl}scorm/${activity.activity_uuid}/runtime/initialize`
-        })
+
         // Create runtime API instance
         const runtime = new ScormRuntimeAPI(
           activity.activity_uuid,
@@ -92,7 +74,6 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
         }
 
         runtimeRef.current = runtime
-        console.log('[SCORM] Runtime initialized successfully')
 
         setInitialized(true)
         setError(null)
@@ -117,7 +98,6 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
 
   // Inject SCORM API into window (where SCORM content looks for it)
   useEffect(() => {
-    console.log('[SCORM] API injection effect running, initialized:', initialized, 'runtimeRef:', !!runtimeRef.current)
     if (!runtimeRef.current || !initialized) return
 
     const runtime = runtimeRef.current
@@ -128,17 +108,14 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
       // Inject SCORM 1.2 API
       if (activity.content.scorm_version === 'SCORM_12') {
         (window as any).API = runtime.getScorm12API()
-        console.log('[SCORM] Injected SCORM 1.2 API into window')
       }
 
       // Inject SCORM 2004 API
       if (activity.content.scorm_version === 'SCORM_2004') {
         (window as any).API_1484_11 = runtime.getScorm2004API()
-        console.log('[SCORM] Injected SCORM 2004 API into window')
       }
 
       // Mark API as injected so iframe can render
-      console.log('[SCORM] Setting apiInjected to true')
       setApiInjected(true)
     } catch (err) {
       console.error('Error injecting SCORM API:', err)
@@ -149,7 +126,6 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
   // Cleanup SCORM API and observers on unmount
   useEffect(() => {
     return () => {
-      console.log('[SCORM] Cleaning up API on unmount')
       delete (window as any).API
       delete (window as any).API_1484_11
 
@@ -327,7 +303,6 @@ function ScormActivity({ activity, course }: ScormActivityProps) {
           }
         `
         iframe.contentDocument.head.appendChild(style)
-        console.log('[SCORM] Injected custom styles into iframe')
 
         // Also inject styles into nested iframes (contentFrame)
         const injectNestedStyles = () => {
