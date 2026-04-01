@@ -1,6 +1,6 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import { BookPlus, BookUser, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save, Type } from 'lucide-react'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 
@@ -23,10 +23,6 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
     const submission = useAssignmentSubmission() as any
     const session = useLHSession() as any
     
-    useEffect(() => {
-        console.log(submission)
-    }, [submission])
-
     // Check if user is authenticated
     const isAuthenticated = session?.status === 'authenticated'
 

@@ -79,7 +79,6 @@ export class ScormRuntimeAPI {
   async initialize(): Promise<boolean> {
     try {
       const url = `${this.apiUrl}scorm/${this.activityUuid}/runtime/initialize`
-      console.log('[ScormRuntimeAPI] Calling initialize:', url)
 
       const response = await fetch(url, {
         method: 'POST',
@@ -89,8 +88,6 @@ export class ScormRuntimeAPI {
         },
       })
 
-      console.log('[ScormRuntimeAPI] Initialize response status:', response.status)
-
       if (!response.ok) {
         const errorText = await response.text()
         console.error('[ScormRuntimeAPI] Initialize error response:', errorText)
@@ -98,7 +95,7 @@ export class ScormRuntimeAPI {
       }
 
       const data = await response.json()
-      console.log('[ScormRuntimeAPI] Initialize success, cmi_data keys:', Object.keys(data.cmi_data || {}))
+      
       this.cmiData = data.cmi_data || {}
       this.isInitialized = true
       this.lastError = '0'
