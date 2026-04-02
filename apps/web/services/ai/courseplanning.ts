@@ -322,9 +322,6 @@ export async function saveActivityContent(
   accessToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('[saveActivityContent] Saving content for activity:', activityUuid)
-    console.log('[saveActivityContent] Content preview:', JSON.stringify(content).slice(0, 200))
-
     const response = await fetch(`${getAPIUrl()}ai/courseplanning/save-activity-content`, {
       method: 'POST',
       headers: {
@@ -337,8 +334,6 @@ export async function saveActivityContent(
       }),
     })
 
-    console.log('[saveActivityContent] Response status:', response.status)
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error('[saveActivityContent] Error:', errorData)
@@ -349,7 +344,6 @@ export async function saveActivityContent(
     }
 
     const data = await response.json()
-    console.log('[saveActivityContent] Success:', data)
     return { success: true }
   } catch (error) {
     console.error('[saveActivityContent] Exception:', error)
@@ -626,7 +620,6 @@ export function parseActivityContentFromStream(streamContent: string): any | nul
       return null
     }
 
-    console.log('[parseActivityContent] Successfully parsed and validated content')
     return parsed
   } catch (error) {
     console.error('[parseActivityContent] Failed to parse activity content:', error)
