@@ -125,12 +125,13 @@ async def create_org(
     db_session: Session,
 ):
     # EE gating: only allow multiple orgs with Enterprise Edition
-    existing_org_count = db_session.exec(select(Organization)).all()
-    if len(existing_org_count) > 0 and not is_multi_org_allowed():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Multi-organization mode requires Enterprise Edition",
-        )
+    if not is_multi_org_allowed():
+        existing_org = db_session.exec(select(Organization).limit(1)).first()
+        if existing_org is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Multi-organization mode requires Enterprise Edition",
+            )
 
     statement = select(Organization).where(Organization.slug == org_object.slug)
     result = db_session.exec(statement)
@@ -221,12 +222,13 @@ async def create_org_with_config(
     submitted_config: dict | OrganizationConfigBase,
 ):
     # EE gating: only allow multiple orgs with Enterprise Edition
-    existing_org_count = db_session.exec(select(Organization)).all()
-    if len(existing_org_count) > 0 and not is_multi_org_allowed():
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Multi-organization mode requires Enterprise Edition",
-        )
+    if not is_multi_org_allowed():
+        existing_org = db_session.exec(select(Organization).limit(1)).first()
+        if existing_org is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Multi-organization mode requires Enterprise Edition",
+            )
 
     statement = select(Organization).where(Organization.slug == org_object.slug)
     result = db_session.exec(statement)
