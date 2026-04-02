@@ -376,7 +376,7 @@ function Editor(props: Editor) {
                       props.course.course_uuid,
                       props.course.thumbnail_image
                     ) : getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')}`}
-                    alt=""
+                    alt={props.course.name}
                   />
                 </Link>
                 <div className="activity-editor-doc-name">
