@@ -109,29 +109,30 @@ const CoursePage = async (params: any) => {
   // Await params before using them
   const { courseuuid, orgslug } = await params.params
 
-  // Fetch course metadata once
+  // Fetch course metadata + org info in parallel
   let course_meta = null
   let fetchError: { status?: number } | null = null
-  try {
-    course_meta = await getCourseMetadata(
+
+  const [courseResult, org] = await Promise.all([
+    getCourseMetadata(
       courseuuid,
       { revalidate: 0, tags: ['courses'] },
       access_token ?? undefined
-    )
-  } catch (error: any) {
-    fetchError = { status: error?.status }
-  }
+    ).catch((error: any) => {
+      fetchError = { status: error?.status }
+      return null
+    }),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
+  course_meta = courseResult
 
   // If truly not found (no auth token and no course), show 404
   if (!course_meta && !fetchError) {
     notFound()
   }
-
-  // Fetch org info for JSON-LD
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
 
   // Build Course JSON-LD for structured data
   const courseJsonLd = course_meta ? {
