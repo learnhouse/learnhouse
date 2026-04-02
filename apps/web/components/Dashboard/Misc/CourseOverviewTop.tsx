@@ -165,14 +165,14 @@ export function CourseOverviewTop({
                   'course_' + params.courseuuid,
                   courseStructure.thumbnail_image
                 )}`}
-                alt=""
+                alt={courseStructure.name}
               />
             ) : (
               <Image
                 width={100}
                 className="h-[57px] rounded-md drop-shadow-md"
                 src={EmptyThumbnailImage}
-                alt=""
+                alt={courseStructure?.name || ''}
               />
             )}
           </Link>
