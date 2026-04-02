@@ -94,7 +94,7 @@ const DiscussionPage = async (params: any) => {
   const discussionUuid = `discussion_${discussionuuid}`
 
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 

@@ -8,7 +8,7 @@ type PageParams = Promise<{ orgslug: string }>
 
 export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
   return {
     title: `Playgrounds — ${org?.name || 'Organization'}`,
     description: `Interactive AI-generated experiences from ${org?.name || 'this organization'}`,
@@ -21,7 +21,7 @@ export default async function PlaygroundsPage({ params }: { params: PageParams }
   const access_token = session?.tokens?.access_token
 
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 

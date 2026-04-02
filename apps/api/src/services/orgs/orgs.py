@@ -360,16 +360,9 @@ async def update_org(
     # Complete the org object
     org.update_date = str(datetime.now())
 
-    # Invalidate cache for old slug (in case slug changed)
-    from src.services.orgs.cache import invalidate_org_cache
-    invalidate_org_cache(org.slug)
-
     db_session.add(org)
     db_session.commit()
     db_session.refresh(org)
-
-    # Invalidate cache for new slug too
-    invalidate_org_cache(org.slug)
 
     org = OrganizationRead.model_validate(org)
 

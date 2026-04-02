@@ -19,27 +19,26 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
-
-  // Try to get course metadata
-  let course_meta
-  try {
-    course_meta = await getCourseMetadata(
+  // Parallelize org + course metadata fetches
+  const [org, courseResult] = await Promise.all([
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+    getCourseMetadata(
       params.courseuuid,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 60, tags: ['courses'] },
       access_token ?? undefined
-    )
-  } catch (error) {
-    // If we can't get course metadata (e.g., auth required), return minimal metadata
+    ).catch(() => null),
+  ])
+
+  if (!courseResult) {
     return {
       title: `Course — ${org?.name || 'LearnHouse'}`,
       description: 'View this course on LearnHouse',
     }
   }
+  const course_meta = courseResult
 
   // SEO - use custom SEO fields with fallbacks to existing fields
   const seoConfig = getOrgSeoConfig(org)
@@ -130,7 +129,7 @@ const CoursePage = async (params: any) => {
 
   // Fetch org info for JSON-LD
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 

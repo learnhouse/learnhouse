@@ -14,7 +14,7 @@ from config.config import get_learnhouse_config
 
 logger = logging.getLogger(__name__)
 
-CACHE_TTL_ORG_SLUG = 300      # org-by-slug — 5 min
+CACHE_TTL_ORG_SLUG = 120       # org-by-slug — 2 min (short, keeps frontend fresh)
 CACHE_TTL_INSTANCE_INFO = 600  # instance info — 10 min
 
 _KEY_PREFIX = "org_cache"

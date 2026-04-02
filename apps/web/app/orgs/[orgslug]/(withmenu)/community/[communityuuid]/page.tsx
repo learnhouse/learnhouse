@@ -85,7 +85,7 @@ const CommunityPage = async (params: any) => {
   const communityUuid = `community_${communityuuid}`
 
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
   const org_id = org.id
