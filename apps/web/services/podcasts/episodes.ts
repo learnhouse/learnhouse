@@ -78,14 +78,11 @@ export async function createEpisode(
   }
 
   const url = `${getAPIUrl()}podcasts/${podcast_uuid}/episodes`
-  console.log('Creating episode at URL:', url)
 
   const result = await fetch(
     url,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
-
-  console.log('Create episode response status:', result.status)
 
   const res = await getResponseMetadata(result)
   return res
