@@ -26,6 +26,7 @@ from fastapi import HTTPException, UploadFile, status, Request
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background, upload_org_og_image, upload_org_favicon
 from src.db.organization_config import AuthBrandingConfig, SeoOrgConfig
 from src.core.ee_hooks import is_multi_org_allowed
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
@@ -764,6 +765,12 @@ async def update_org_signup_mechanism(
     db_session.commit()
     db_session.refresh(org_config)
 
+    await dispatch_webhooks(
+        event_name="org_signup_method_changed",
+        org_id=org_id,
+        data={"signup_mechanism": signup_mechanism},
+    )
+
     return {"detail": "Signup mechanism updated"}
 
 
@@ -825,6 +832,12 @@ async def update_org_ai_config(
     db_session.add(org_config)
     db_session.commit()
     db_session.refresh(org_config)
+
+    await dispatch_webhooks(
+        event_name="org_ai_config_changed",
+        org_id=org_id,
+        data={"ai_enabled": ai_enabled, "copilot_enabled": copilot_enabled},
+    )
 
     return {"detail": "AI configuration updated"}
 
@@ -894,10 +907,18 @@ async def update_org_payments_config(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    return await _update_feature_toggle(
+    result = await _update_feature_toggle(
         request, "payments", payments_enabled, org_id, current_user, db_session,
         v1_default={"enabled": False},
     )
+
+    await dispatch_webhooks(
+        event_name="org_payments_config_changed",
+        org_id=org_id,
+        data={"payments_enabled": payments_enabled},
+    )
+
+    return result
 
 
 async def update_org_collections_config(

@@ -34,6 +34,7 @@ from src.security.rbac import (
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.courses.thumbnails import upload_thumbnail
+from src.services.webhooks.dispatch import dispatch_webhooks
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 
@@ -752,6 +753,16 @@ async def create_course(
     # Feature usage
     increase_feature_usage("courses", course.org_id, db_session)
 
+    await dispatch_webhooks(
+        event_name="course_created",
+        org_id=course.org_id,
+        data={
+            "course_uuid": course.course_uuid,
+            "name": course.name,
+            "org_id": course.org_id,
+        },
+    )
+
     course_data = {key: getattr(course, key) for key in course.model_fields}
     return CourseRead.model_validate({**course_data, "authors": authors})
 
@@ -902,6 +913,9 @@ async def update_course(
                 detail=f"You must be the course owner (CREATOR or MAINTAINER) or have admin role to change access settings: {', '.join(sensitive_fields_updated)}",
             )
 
+    # Track published state before update for webhook
+    old_published = course.published
+
     # Update only the fields that were passed in
     for var, value in vars(course_object).items():
         if value is not None:
@@ -913,6 +927,18 @@ async def update_course(
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
+
+    # Dispatch webhook if published state changed
+    if course_object.published is not None and course.published != old_published:
+        await dispatch_webhooks(
+            event_name="course_published",
+            org_id=course.org_id,
+            data={
+                "course_uuid": course.course_uuid,
+                "name": course.name,
+                "published": course.published,
+            },
+        )
 
     # Get course authors with their roles
     authors_statement = (
@@ -971,8 +997,21 @@ async def delete_course(
         content_path = f"content/orgs/{org.org_uuid}/courses/{course_uuid}"
         delete_storage_directory(content_path)
 
+    course_uuid_val = course.course_uuid
+    course_name_val = course.name
+    course_org_id = course.org_id
+
     db_session.delete(course)
     db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="course_deleted",
+        org_id=course_org_id,
+        data={
+            "course_uuid": course_uuid_val,
+            "name": course_name_val,
+        },
+    )
 
     return {"detail": "Course deleted"}
 

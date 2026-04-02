@@ -1653,6 +1653,17 @@ async def grade_assignment_submission(
     db_session.commit()
     db_session.refresh(assignment_user_submission)
 
+    await dispatch_webhooks(
+        event_name="assignment_graded",
+        org_id=course.org_id,
+        data={
+            "user_id": int(user_id),
+            "assignment_uuid": assignment_uuid,
+            "course_uuid": course.course_uuid,
+            "grade": grade,
+        },
+    )
+
     # return OK
     return {
         "message": "Assignment User Submission graded with the grade of " + str(grade)

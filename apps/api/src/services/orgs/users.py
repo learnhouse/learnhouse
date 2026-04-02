@@ -14,6 +14,7 @@ from src.services.orgs.invites import send_invite_email
 from src.services.email.utils import get_base_url_from_request
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
+from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.security.org_auth import is_org_member
 from src.db.roles import Role, RoleRead
@@ -458,6 +459,12 @@ async def remove_user_from_org(
 
     decrease_feature_usage("members", org_id, db_session)
 
+    await dispatch_webhooks(
+        event_name="user_removed_from_org",
+        org_id=org_id,
+        data={"user_id": user_id, "org_id": org_id},
+    )
+
     return {"detail": "User removed from org"}
 
 
@@ -602,6 +609,16 @@ async def update_user_role(
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_org.user_id)
 
+    await dispatch_webhooks(
+        event_name="user_role_changed",
+        org_id=int(org_id),
+        data={
+            "user_id": int(user_id),
+            "org_id": int(org_id),
+            "new_role_uuid": role_uuid,
+        },
+    )
+
     return {"detail": "User role updated"}
 
 
@@ -694,6 +711,17 @@ async def invite_batch_users(
             json.dumps(invited_user_object),
             ex=ttl,
         )
+
+    await dispatch_webhooks(
+        event_name="user_invited_to_org",
+        org_id=org_id,
+        data={
+            "org_id": org_id,
+            "emails": invite_list,
+            "invite_code_uuid": invite_code_uuid,
+            "invited_by": current_user.user_uuid,
+        },
+    )
 
     return {"detail": "Users invited"}
 
