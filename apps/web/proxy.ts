@@ -4,7 +4,7 @@ import {
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
+import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck, isIPAddress } from './services/utils/ts/hostUtils'
 
 // Cached instance info from backend (30-second TTL)
 interface InstanceInfo {
@@ -73,6 +73,8 @@ async function resolveCustomDomain(domain: string): Promise<{ slug: string } | n
 // Check if the host is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
 function isCustomDomain(fullhost: string | null, domain: string): boolean {
   if (!fullhost) return false
+  // Skip IP addresses (e.g. k8s internal pod IPs like 10.x.x.x)
+  if (isIPAddress(fullhost)) return false
   return !isSubdomainOf(fullhost, domain) && !isSameHost(fullhost, domain) && !isLocalhostCheck(fullhost)
 }
 

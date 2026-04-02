@@ -7,9 +7,10 @@ interface UseGetAIFeatures {
 
 function useGetAIFeatures(props: UseGetAIFeatures) {
   const org = useOrg() as any
-  const [isEnabled, setisEnabled] = React.useState(false)
 
-  function checkAvailableAIFeaturesOnOrg(feature: string) {
+  return React.useMemo(() => {
+    if (!org) return false
+
     const config = org?.config?.config
     const isV2 = config?.config_version?.startsWith('2')
 
@@ -21,18 +22,8 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
       return !config?.admin_toggles?.ai?.disabled
     }
     // v1 fallback
-    return config?.features?.ai?.enabled
-  }
-
-  React.useEffect(() => {
-    if (org) {
-      // Check if org is not null or undefined
-      let isEnabledStatus = checkAvailableAIFeaturesOnOrg(props.feature)
-      setisEnabled(isEnabledStatus)
-    }
-  }, [org])
-
-  return isEnabled
+    return config?.features?.ai?.enabled ?? false
+  }, [org, props.feature])
 }
 
 export default useGetAIFeatures
