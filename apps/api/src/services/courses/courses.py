@@ -322,6 +322,7 @@ async def get_courses_orgslug(
                     break
 
     # Base query
+    needs_distinct = False
     query = (
         select(Course)
         .join(Organization)
@@ -345,6 +346,7 @@ async def get_courses_orgslug(
             #
             # This allows UserGroup members and course authors to see unpublished courses
             # they have access to, while other users only see published courses.
+            needs_distinct = True
             query = (
                 query
                 .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
@@ -365,8 +367,10 @@ async def get_courses_orgslug(
                 ))
             )
 
-    # Apply ordering and pagination
-    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit).distinct()
+    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
+    if needs_distinct:
+        query = query.distinct()
 
     courses = db_session.exec(query).all()
 
@@ -504,6 +508,7 @@ async def search_courses(
     search_pattern = f"%{search_query}%"
 
     # Base query with parameterized search
+    needs_distinct = False
     query = (
         select(Course)
         .join(Organization)
@@ -532,6 +537,7 @@ async def search_courses(
         # 2. Published courses not in any UserGroup
         # 3. Courses (including unpublished) in UserGroups where the user is a member
         # 4. Courses (including unpublished) where the user is a resource author
+        needs_distinct = True
         query = (
             query
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
@@ -552,8 +558,10 @@ async def search_courses(
             ))
         )
 
-    # Apply ordering and pagination
-    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit).distinct()
+    # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
+    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
+    if needs_distinct:
+        query = query.distinct()
 
     courses = db_session.exec(query).all()
 

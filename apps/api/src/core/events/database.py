@@ -100,9 +100,6 @@ if not is_testing:
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")
-    # Only create tables if not in test mode
-    if not is_testing:
-        SQLModel.metadata.create_all(engine)
 
 def get_db_session():
     with Session(engine) as session:
