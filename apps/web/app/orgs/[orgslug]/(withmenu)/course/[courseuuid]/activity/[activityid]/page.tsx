@@ -34,17 +34,19 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
 
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
-  const course_meta = await fetchCourseMetadata(params.courseuuid, access_token)
-  const activity = await getActivityWithAuthHeader(
-    params.activityid,
-    { revalidate: 0, tags: ['activities'] },
-    access_token || null
-  )
+  // Parallelize all metadata fetches
+  const [org, course_meta, activity] = await Promise.all([
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+    fetchCourseMetadata(params.courseuuid, access_token),
+    getActivityWithAuthHeader(
+      params.activityid,
+      { revalidate: 60, tags: ['activities'] },
+      access_token || null
+    ),
+  ])
 
   // Check if this is the course end page
   const isCourseEnd = params.activityid === 'end';

@@ -32,6 +32,7 @@ class Organization(OrganizationBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_uuid: str = Field(default="", unique=True)
     slug: str = Field(unique=True, index=True)  # Override to add unique constraint
+    explore: Optional[bool] = Field(default=False, index=True)  # Override to add index
     creation_date: str = ""
     update_date: str = ""
 

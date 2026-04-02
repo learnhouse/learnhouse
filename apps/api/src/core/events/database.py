@@ -101,6 +101,114 @@ async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")
 
+def _register_cache_invalidation_hooks():
+    """
+    Automatically invalidate the org Redis cache when Organization or
+    OrganizationConfig rows are inserted, updated, or deleted.
+
+    Uses mapper-level events (after_insert/after_update/after_delete) which
+    fire per-object DURING the flush, while the target and its attribute
+    history are still accessible. Slugs are collected per-session, then
+    the actual Redis invalidation runs after_commit (so we only invalidate
+    on successful transactions).
+    """
+    from sqlalchemy import event as sa_event, inspect as sa_inspect
+    from src.db.organizations import Organization
+    from src.db.organization_config import OrganizationConfig
+
+    def _ensure_set(session):
+        if not hasattr(session, '_org_slugs_to_invalidate'):
+            session._org_slugs_to_invalidate = set()
+        return session._org_slugs_to_invalidate
+
+    # ── Mapper-level events: fire per-object during flush ──
+
+    @sa_event.listens_for(Organization, "after_insert")
+    def _org_after_insert(mapper, connection, target):
+        session = Session.object_session(target)
+        if session and target.slug:
+            _ensure_set(session).add(target.slug)
+
+    @sa_event.listens_for(Organization, "after_update")
+    def _org_after_update(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session:
+            return
+        if target.slug:
+            _ensure_set(session).add(target.slug)
+        # If slug was renamed, also invalidate the old slug
+        try:
+            history = sa_inspect(target).attrs.slug.history
+            for old_slug in (history.deleted or []):
+                _ensure_set(session).add(old_slug)
+        except Exception:
+            pass
+
+    @sa_event.listens_for(Organization, "after_delete")
+    def _org_after_delete(mapper, connection, target):
+        session = Session.object_session(target)
+        if session and target.slug:
+            _ensure_set(session).add(target.slug)
+
+    def _orgconfig_changed(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session or not target.org_id:
+            return
+        # Use the identity map key to look up the org without issuing SQL.
+        # session.get() is unsafe here because it can emit a SELECT mid-flush
+        # if the org isn't already loaded, causing reentrancy issues.
+        try:
+            key = sa_inspect(Organization).identity_key_from_primary_key(
+                (target.org_id,)
+            )
+            org = session.identity_map.get(key)
+            if org and org.slug:
+                _ensure_set(session).add(org.slug)
+        except Exception:
+            # If identity map lookup fails for any reason, fall back to
+            # querying the slug directly via the connection (bypasses ORM flush)
+            try:
+                from sqlalchemy import text as sa_text
+                row = connection.execute(
+                    sa_text("SELECT slug FROM organization WHERE id = :oid"),
+                    {"oid": target.org_id},
+                ).first()
+                if row and row[0]:
+                    _ensure_set(session).add(row[0])
+            except Exception:
+                pass
+
+    sa_event.listen(OrganizationConfig, "after_insert", _orgconfig_changed)
+    sa_event.listen(OrganizationConfig, "after_update", _orgconfig_changed)
+    sa_event.listen(OrganizationConfig, "after_delete", _orgconfig_changed)
+
+    # ── Session-level events: run after transaction completes ──
+
+    @sa_event.listens_for(Session, "after_commit")
+    def _on_after_commit(session):
+        slugs = getattr(session, '_org_slugs_to_invalidate', None)
+        if not slugs:
+            return
+        try:
+            from src.services.orgs.cache import invalidate_org_cache
+            for slug in slugs:
+                invalidate_org_cache(slug)
+        except Exception:
+            logging.warning("Cache invalidation after commit failed", exc_info=True)
+        finally:
+            session._org_slugs_to_invalidate = set()
+
+    @sa_event.listens_for(Session, "after_rollback")
+    def _on_after_rollback(session):
+        session._org_slugs_to_invalidate = set()
+
+if not is_testing:
+    try:
+        _register_cache_invalidation_hooks()
+    except Exception:
+        logging.warning("Failed to register cache invalidation hooks", exc_info=True)
+
+
 def get_db_session():
     with Session(engine) as session:
         yield session

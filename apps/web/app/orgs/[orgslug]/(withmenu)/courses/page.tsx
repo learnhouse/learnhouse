@@ -17,7 +17,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -73,29 +73,24 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const CoursesPage = async (params: any) => {
   const orgslug = (await params.params).orgslug
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  let courses: any[] = []
-  try {
-    courses = await getOrgCourses(
+  const [org, coursesResult] = await Promise.all([
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+    getOrgCourses(
       orgslug,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined
-    )
-  } catch (error: any) {
-    // If feature is disabled (403), pass empty courses array
-    // The client component will show the feature disabled view
-    if (error?.status === 403) {
-      courses = []
-    } else {
+    ).catch((error: any) => {
+      if (error?.status === 403) return []
       throw error
-    }
-  }
+    }),
+  ])
+  const courses = coursesResult
 
   const coursesJsonLd = {
     '@context': 'https://schema.org',

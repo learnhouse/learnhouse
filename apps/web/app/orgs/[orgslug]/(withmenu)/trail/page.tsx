@@ -15,7 +15,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const access_token = session?.tokens?.access_token
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   }, access_token)
   return {

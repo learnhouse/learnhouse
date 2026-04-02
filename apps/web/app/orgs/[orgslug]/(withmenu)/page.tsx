@@ -19,7 +19,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -83,20 +83,22 @@ const OrgHomePage = async (params: any) => {
   const orgslug = (await params.params).orgslug
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
-  const courses = await getOrgCourses(
-    orgslug,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ?? undefined
-  )
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 0,
-    tags: ['organizations'],
-  })
+  const [courses, org] = await Promise.all([
+    getOrgCourses(
+      orgslug,
+      { revalidate: 120, tags: ['courses'] },
+      access_token ?? undefined
+    ),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
   const org_id = org.id
   const collections = await getOrgCollections(
     org.id,
     access_token ?? undefined,
-    { revalidate: 0, tags: ['courses'] }
+    { revalidate: 120, tags: ['courses'] }
   )
 
   // Check if custom landing is enabled (v2: customization.landing, v1: landing)

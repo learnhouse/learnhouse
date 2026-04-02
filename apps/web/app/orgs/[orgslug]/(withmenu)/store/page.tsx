@@ -10,7 +10,7 @@ type PageParams = Promise<{ orgslug: string }>
 
 export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
   const seoConfig = getOrgSeoConfig(org)
   const ogImageUrl = seoConfig.default_og_image
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
 
 export default async function StorePage({ params }: { params: PageParams }) {
   const { orgslug } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
 
   const paymentsEnabled = org?.config?.config?.resolved_features?.payments?.enabled ?? org?.config?.config?.features?.payments?.enabled !== false
 
