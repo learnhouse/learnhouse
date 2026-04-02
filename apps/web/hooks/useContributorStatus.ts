@@ -22,8 +22,9 @@ export function useContributorStatus(courseUuid: string) {
     }
 
     try {
+      const prefixedUuid = courseUuid.startsWith('course_') ? courseUuid : 'course_' + courseUuid;
       const response = await getCourseContributors(
-        'course_' + courseUuid,
+        prefixedUuid,
         session.data?.tokens?.access_token
       );
       

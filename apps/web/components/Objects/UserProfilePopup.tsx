@@ -46,14 +46,17 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasOpened, setHasOpened] = useState(false)
 
   useEffect(() => {
+    if (!hasOpened) return
+
     const fetchUserData = async () => {
       if (!userId) return
-      
+
       setIsLoading(true)
       setError(null)
-      
+
       try {
         const data = await getUser(userId, session?.data?.tokens?.access_token)
         setUserData(data)
@@ -66,7 +69,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
     }
 
     fetchUserData()
-  }, [userId, session?.data?.tokens?.access_token])
+  }, [hasOpened, userId, session?.data?.tokens?.access_token])
 
   const IconComponent = ({ iconName }: { iconName: string }) => {
     const IconElement = ICON_MAP[iconName as keyof typeof ICON_MAP]
@@ -75,7 +78,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   }
 
   return (
-    <HoverCard openDelay={100} closeDelay={150}>
+    <HoverCard openDelay={100} closeDelay={150} onOpenChange={(open) => { if (open && !hasOpened) setHasOpened(true) }}>
       <HoverCardTrigger asChild>
         {children}
       </HoverCardTrigger>
