@@ -6,6 +6,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
@@ -481,6 +482,7 @@ function OrgUsers() {
                           <div className="flex items-center gap-3">
                             <UserAvatar
                               width={40}
+                              avatar_url={user.user.avatar_image ? getUserAvatarMediaDirectory(user.user.user_uuid, user.user.avatar_image) : undefined}
                               userId={user.user.id?.toString()}
                               rounded="rounded-full"
                               showProfilePopup={true}

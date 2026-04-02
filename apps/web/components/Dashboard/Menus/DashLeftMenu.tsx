@@ -66,7 +66,7 @@ import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { cn } from '@/lib/utils'
-import useSWR, { mutate } from 'swr'
+import useSWR from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { getDeploymentMode } from '@services/config/config'
@@ -90,54 +90,36 @@ function DashLeftMenu() {
     coursesKey,
     (url) => swrFetcher(url, access_token),
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
+      revalidateOnFocus: false,
     }
   )
   const recentCourses = coursesData?.slice(0, 8) || []
 
-  // Fetch assignments from courses
-  const [assignmentsRefreshKey, setAssignmentsRefreshKey] = useState(0)
+  // Lazy-load assignments only when the assignments hover menu is opened
+  const [assignmentsFetched, setAssignmentsFetched] = useState(false)
 
-  useEffect(() => {
-    if (coursesData && access_token) {
-      const coursesToFetch = coursesData.slice(0, 5)
-      const promises = coursesToFetch.map((course: any) =>
-        getAssignmentsFromACourse(course.course_uuid, access_token)
-      )
-
-      Promise.all(promises).then((results) => {
-        const allAssignments: any[] = []
-        results.forEach((res: any, index: number) => {
-          if (res?.data) {
-            res.data.forEach((assignment: any) => {
-              allAssignments.push({
-                ...assignment,
-                courseName: coursesToFetch[index].name
-              })
+  const fetchAssignments = () => {
+    if (assignmentsFetched || !coursesData || !access_token) return
+    setAssignmentsFetched(true)
+    const coursesToFetch = coursesData.slice(0, 5)
+    const promises = coursesToFetch.map((course: any) =>
+      getAssignmentsFromACourse(course.course_uuid, access_token)
+    )
+    Promise.all(promises).then((results) => {
+      const allAssignments: any[] = []
+      results.forEach((res: any, index: number) => {
+        if (res?.data) {
+          res.data.forEach((assignment: any) => {
+            allAssignments.push({
+              ...assignment,
+              courseName: coursesToFetch[index].name
             })
-          }
-        })
-        setRecentAssignments(allAssignments.slice(0, 8))
-      }).catch(() => {
-        // Silently ignore errors
+          })
+        }
       })
-    }
-  }, [coursesData, access_token, assignmentsRefreshKey])
-
-  // Refresh on window focus
-  useEffect(() => {
-    const handleFocus = () => {
-      // Revalidate courses SWR cache
-      if (coursesKey) {
-        mutate(coursesKey)
-      }
-      // Trigger assignments refetch
-      setAssignmentsRefreshKey(prev => prev + 1)
-    }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [coursesKey])
+      setRecentAssignments(allAssignments.slice(0, 8))
+    }).catch(() => {})
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -311,6 +293,7 @@ function DashLeftMenu() {
             </HoverMenu>
 
             {/* Assignments with hover menu */}
+            <div onMouseEnter={fetchAssignments}>
             <HoverMenu
               content={
                 <HoverMenuContent className="w-72">
@@ -367,6 +350,7 @@ function DashLeftMenu() {
                 )}
               </Link>
             </HoverMenu>
+            </div>
             {showCommunities && (
               <MenuLink
                 href="/dash/communities"
