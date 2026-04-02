@@ -91,7 +91,6 @@ function Editor(props: Editor) {
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
-  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const [editorReady, setEditorReady] = React.useState(false)
 
   // Conflict detection state
@@ -111,14 +110,7 @@ function Editor(props: Editor) {
   const rf = orgContext?.config?.config?.resolved_features
   const canUseAI = rf?.ai?.enabled === true
   const canUseVersioning = rf?.versioning?.enabled === true
-
-
-  React.useEffect(() => {
-    if (is_ai_feature_enabled) {
-      setIsButtonAvailable(true)
-    }
-
-  }, [is_ai_feature_enabled])
+  const isButtonAvailable = is_ai_feature_enabled
 
   // remove course_ from course_uuid
   const course_uuid = props.course.course_uuid.substring(7)

@@ -90,8 +90,13 @@ async def get_organization_by_slug(
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
-    # IMPORTANT: Order by id to ensure deterministic results
-    # This prevents issues if duplicate slugs somehow exist in the database
+    from src.services.orgs.cache import get_cached_org_by_slug, set_cached_org_by_slug
+
+    # Check Redis cache first (org read is public, no RBAC needed)
+    cached = get_cached_org_by_slug(org_slug)
+    if cached is not None:
+        return OrganizationRead(**cached)
+
     statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
     result = db_session.exec(statement)
 
@@ -103,10 +108,8 @@ async def get_organization_by_slug(
             detail="Organization not found",
         )
 
-    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
     result = db_session.exec(statement)
 
@@ -115,7 +118,14 @@ async def get_organization_by_slug(
     if org_config is None:
         logging.error(f"Organization {org_slug} has no config")
 
-    return _build_org_read_with_resolved(org, org_config)
+    org_read = _build_org_read_with_resolved(org, org_config)
+
+    try:
+        set_cached_org_by_slug(org_slug, org_read.model_dump(mode="json"))
+    except Exception:
+        pass
+
+    return org_read
 
 
 async def create_org(
@@ -350,9 +360,16 @@ async def update_org(
     # Complete the org object
     org.update_date = str(datetime.now())
 
+    # Invalidate cache for old slug (in case slug changed)
+    from src.services.orgs.cache import invalidate_org_cache
+    invalidate_org_cache(org.slug)
+
     db_session.add(org)
     db_session.commit()
     db_session.refresh(org)
+
+    # Invalidate cache for new slug too
+    invalidate_org_cache(org.slug)
 
     org = OrganizationRead.model_validate(org)
 

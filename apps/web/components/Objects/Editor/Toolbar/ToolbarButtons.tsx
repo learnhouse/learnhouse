@@ -44,7 +44,7 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useTranslation } from 'react-i18next'
 
-export const ToolbarButtons = ({ editor, props }: any) => {
+export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   const { t } = useTranslation()
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
@@ -612,4 +612,4 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       </ToolTip>
     </div>
   )
-}
+})

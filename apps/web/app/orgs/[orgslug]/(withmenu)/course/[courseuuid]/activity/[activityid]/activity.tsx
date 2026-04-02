@@ -73,6 +73,7 @@ interface ActivityActionsProps {
   orgslug: string
   assignment: any
   showNavigation?: boolean
+  trailData?: any
 }
 
 // Custom hook for activity position
@@ -100,19 +101,13 @@ function useActivityPosition(course: any, activityId: string) {
   }, [course, activityId]);
 }
 
-function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true }: ActivityActionsProps) {
-  
+function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData }: ActivityActionsProps) {
+
   const { t } = useTranslation();
   const { contributorStatus } = useContributorStatus(course.course_uuid);
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-
-  // Add SWR for trail data
-  const { data: trailData } = useSWR(
-    `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token)
-  );
 
 
   return (
@@ -547,6 +542,7 @@ function ActivityClient(props: ActivityClientProps) {
                               orgslug={orgslug}
                               assignment={assignment}
                               showNavigation={false}
+                              trailData={trailData}
                             />
                             <button
                               onClick={() => navigateToActivity(nextActivity)}
@@ -815,6 +811,7 @@ function ActivityClient(props: ActivityClientProps) {
                               orgslug={orgslug}
                               assignment={assignment}
                               showNavigation={false}
+                              trailData={trailData}
                             />
                             <NextActivityButton
                               course={course}
