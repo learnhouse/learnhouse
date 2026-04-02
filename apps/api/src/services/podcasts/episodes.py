@@ -18,6 +18,7 @@ from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
 from src.security.rbac import check_resource_access, AccessAction
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.services.webhooks.dispatch import dispatch_webhooks
 from src.security.superadmin import is_user_superadmin
 
 
@@ -224,6 +225,17 @@ async def create_episode(
     db_session.add(episode)
     db_session.commit()
     db_session.refresh(episode)
+
+    await dispatch_webhooks(
+        event_name="podcast_episode_created",
+        org_id=podcast.org_id,
+        data={
+            "episode_uuid": episode.episode_uuid,
+            "podcast_uuid": podcast.podcast_uuid,
+            "title": episode.title if hasattr(episode, "title") else None,
+            "episode_number": episode.episode_number,
+        },
+    )
 
     return PodcastEpisodeRead(**episode.model_dump())
 

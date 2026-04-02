@@ -483,6 +483,17 @@ async def pin_discussion(
     db_session.commit()
     db_session.refresh(discussion)
 
+    await dispatch_webhooks(
+        event_name="discussion_pinned",
+        org_id=community.org_id,
+        data={
+            "discussion_uuid": discussion.discussion_uuid,
+            "title": discussion.title,
+            "is_pinned": is_pinned,
+            "community_uuid": community.community_uuid,
+        },
+    )
+
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
     author = db_session.exec(author_statement).first()
@@ -545,6 +556,17 @@ async def lock_discussion(
     db_session.add(discussion)
     db_session.commit()
     db_session.refresh(discussion)
+
+    await dispatch_webhooks(
+        event_name="discussion_locked",
+        org_id=community.org_id,
+        data={
+            "discussion_uuid": discussion.discussion_uuid,
+            "title": discussion.title,
+            "is_locked": is_locked,
+            "community_uuid": community.community_uuid,
+        },
+    )
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)

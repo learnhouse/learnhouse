@@ -19,6 +19,7 @@ from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.services.utils.upload_content import upload_file
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 def _playground_to_read(playground: Playground, db_session: Session) -> PlaygroundRead:
@@ -167,6 +168,17 @@ async def create_playground(
     db_session.add(playground)
     db_session.commit()
     db_session.refresh(playground)
+
+    await dispatch_webhooks(
+        event_name="playground_created",
+        org_id=org_id,
+        data={
+            "playground_uuid": playground.playground_uuid,
+            "name": playground.name,
+            "created_by": current_user.id,
+        },
+    )
+
     return _playground_to_read(playground, db_session)
 
 
