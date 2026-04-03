@@ -1650,13 +1650,40 @@
           "unpublish": "非公開",
           "preview_activity": "アクティビティをプレビュー",
           "edit_page": "ページを編集",
-          "edit_assignment": "課題を編集"
+          "edit_assignment": "課題を編集",
+          "rename": "名前を変更",
+          "publishing": "公開中...",
+          "publish_all": "すべて公開 ({{count}})",
+          "publishing_all": "すべて公開中...",
+          "publish_all_success": "すべてのアクティビティを公開しました",
+          "unpublish_all": "すべて非公開",
+          "unpublish_all_success": "すべてのアクティビティを非公開にしました",
+          "publish_all_error": "一部のアクティビティの更新に失敗しました"
+        },
+        "bulk_actions": {
+          "selected": "{{count}}件 選択中",
+          "clear": "解除",
+          "delete": "削除",
+          "delete_title": "選択したアクティビティを削除",
+          "delete_confirm": "選択した{{count}}件のアクティビティを削除しますか？この操作は取り消せません。",
+          "delete_button": "アクティビティを削除",
+          "delete_success": "{{count}}件のアクティビティを削除しました",
+          "delete_error": "一部のアクティビティの削除に失敗しました",
+          "publish_success": "{{count}}件のアクティビティを公開しました",
+          "publish_error": "一部のアクティビティの公開に失敗しました",
+          "unpublish_success": "{{count}}件のアクティビティを非公開にしました",
+          "unpublish_error": "一部のアクティビティの非公開に失敗しました",
+          "partial_error": "{{total}}件中{{failed}}件のアクティビティの更新に失敗しました"
         },
         "chapter_element": {
           "chapter_name_placeholder": "章の名前"
         },
         "activity": {
           "name_placeholder": "アクティビティ名",
+          "status": {
+            "published": "公開中",
+            "draft": "下書き"
+          },
           "types": {
             "video": "動画",
             "document": "ドキュメント",

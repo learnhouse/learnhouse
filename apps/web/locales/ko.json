@@ -1647,13 +1647,40 @@
           "unpublish": "게시 취소",
           "preview_activity": "활동 미리보기",
           "edit_page": "페이지 편집",
-          "edit_assignment": "과제 편집"
+          "edit_assignment": "과제 편집",
+          "rename": "이름 변경",
+          "publishing": "게시 중...",
+          "publish_all": "전체 게시 ({{count}})",
+          "publishing_all": "전체 게시 중...",
+          "publish_all_success": "모든 활동이 게시되었습니다",
+          "unpublish_all": "전체 게시 취소",
+          "unpublish_all_success": "모든 활동의 게시가 취소되었습니다",
+          "publish_all_error": "일부 활동 업데이트에 실패했습니다"
+        },
+        "bulk_actions": {
+          "selected": "{{count}}개 선택됨",
+          "clear": "선택 해제",
+          "delete": "삭제",
+          "delete_title": "선택한 활동 삭제",
+          "delete_confirm": "선택한 {{count}}개의 활동을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+          "delete_button": "활동 삭제",
+          "delete_success": "{{count}}개의 활동이 삭제되었습니다",
+          "delete_error": "일부 활동 삭제에 실패했습니다",
+          "publish_success": "{{count}}개의 활동이 게시되었습니다",
+          "publish_error": "일부 활동 게시에 실패했습니다",
+          "unpublish_success": "{{count}}개의 활동이 게시 취소되었습니다",
+          "unpublish_error": "일부 활동 게시 취소에 실패했습니다",
+          "partial_error": "{{total}}개 중 {{failed}}개의 활동 업데이트에 실패했습니다"
         },
         "chapter_element": {
           "chapter_name_placeholder": "장 이름"
         },
         "activity": {
           "name_placeholder": "활동 이름",
+          "status": {
+            "published": "게시됨",
+            "draft": "임시저장"
+          },
           "types": {
             "video": "동영상",
             "document": "문서",

@@ -1839,13 +1839,40 @@
           "unpublish": "Nicht veröffentlichen",
           "preview_activity": "Vorschau der Aktivität",
           "edit_page": "Seite bearbeiten",
-          "edit_assignment": "Aufgabe bearbeiten"
+          "edit_assignment": "Aufgabe bearbeiten",
+          "rename": "Umbenennen",
+          "publishing": "Wird veröffentlicht...",
+          "publish_all": "Alle veröffentlichen ({{count}})",
+          "publishing_all": "Alle werden veröffentlicht...",
+          "publish_all_success": "Alle Aktivitäten wurden erfolgreich veröffentlicht",
+          "unpublish_all": "Alle zurückziehen",
+          "unpublish_all_success": "Alle Aktivitäten wurden erfolgreich zurückgezogen",
+          "publish_all_error": "Einige Aktivitäten konnten nicht aktualisiert werden"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} ausgewählt",
+          "clear": "Auswahl aufheben",
+          "delete": "Löschen",
+          "delete_title": "Ausgewählte Aktivitäten löschen",
+          "delete_confirm": "Möchtest du wirklich {{count}} ausgewählte Aktivitäten löschen? Dies kann nicht rückgängig gemacht werden.",
+          "delete_button": "Aktivitäten löschen",
+          "delete_success": "{{count}} Aktivitäten erfolgreich gelöscht",
+          "delete_error": "Einige Aktivitäten konnten nicht gelöscht werden",
+          "publish_success": "{{count}} Aktivitäten erfolgreich veröffentlicht",
+          "publish_error": "Einige Aktivitäten konnten nicht veröffentlicht werden",
+          "unpublish_success": "{{count}} Aktivitäten erfolgreich zurückgezogen",
+          "unpublish_error": "Einige Aktivitäten konnten nicht zurückgezogen werden",
+          "partial_error": "{{failed}} von {{total}} Aktivitäten konnten nicht aktualisiert werden"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Kapitelname"
         },
         "activity": {
           "name_placeholder": "Aktivitätsname",
+          "status": {
+            "published": "Veröffentlicht",
+            "draft": "Entwurf"
+          },
           "types": {
             "video": "Video",
             "document": "Dokument",

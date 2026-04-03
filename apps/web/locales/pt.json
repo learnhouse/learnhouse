@@ -1637,13 +1637,40 @@
           "unpublish": "Despublicar",
           "preview_activity": "Visualizar Atividade",
           "edit_page": "Editar Página",
-          "edit_assignment": "Editar Tarefa"
+          "edit_assignment": "Editar Tarefa",
+          "rename": "Renomear",
+          "publishing": "Publicando...",
+          "publish_all": "Publicar tudo ({{count}})",
+          "publishing_all": "Publicando tudo...",
+          "publish_all_success": "Todas as atividades foram publicadas com sucesso",
+          "unpublish_all": "Despublicar tudo",
+          "unpublish_all_success": "Todas as atividades foram despublicadas com sucesso",
+          "publish_all_error": "Falha ao atualizar algumas atividades"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} selecionadas",
+          "clear": "Limpar",
+          "delete": "Excluir",
+          "delete_title": "Excluir atividades selecionadas",
+          "delete_confirm": "Tem certeza de que deseja excluir {{count}} atividades selecionadas? Esta ação não pode ser desfeita.",
+          "delete_button": "Excluir atividades",
+          "delete_success": "{{count}} atividades excluídas com sucesso",
+          "delete_error": "Falha ao excluir algumas atividades",
+          "publish_success": "{{count}} atividades publicadas com sucesso",
+          "publish_error": "Falha ao publicar algumas atividades",
+          "unpublish_success": "{{count}} atividades despublicadas com sucesso",
+          "unpublish_error": "Falha ao despublicar algumas atividades",
+          "partial_error": "{{failed}} de {{total}} atividades não puderam ser atualizadas"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nome do capítulo"
         },
         "activity": {
           "name_placeholder": "Nome da atividade",
+          "status": {
+            "published": "Publicada",
+            "draft": "Rascunho"
+          },
           "types": {
             "video": "Vídeo",
             "document": "Documento",

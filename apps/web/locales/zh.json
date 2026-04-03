@@ -1647,13 +1647,40 @@
           "unpublish": "取消发布",
           "preview_activity": "预览活动",
           "edit_page": "编辑页面",
-          "edit_assignment": "编辑作业"
+          "edit_assignment": "编辑作业",
+          "rename": "重命名",
+          "publishing": "发布中...",
+          "publish_all": "全部发布 ({{count}})",
+          "publishing_all": "正在全部发布...",
+          "publish_all_success": "所有活动已成功发布",
+          "unpublish_all": "全部取消发布",
+          "unpublish_all_success": "所有活动已取消发布",
+          "publish_all_error": "部分活动更新失败"
+        },
+        "bulk_actions": {
+          "selected": "已选择 {{count}} 项",
+          "clear": "清除",
+          "delete": "删除",
+          "delete_title": "删除选中的活动",
+          "delete_confirm": "确定要删除选中的 {{count}} 个活动吗？此操作无法撤销。",
+          "delete_button": "删除活动",
+          "delete_success": "成功删除 {{count}} 个活动",
+          "delete_error": "部分活动删除失败",
+          "publish_success": "成功发布 {{count}} 个活动",
+          "publish_error": "部分活动发布失败",
+          "unpublish_success": "成功取消发布 {{count}} 个活动",
+          "unpublish_error": "部分活动取消发布失败",
+          "partial_error": "{{total}} 个活动中有 {{failed}} 个更新失败"
         },
         "chapter_element": {
           "chapter_name_placeholder": "章节名称"
         },
         "activity": {
           "name_placeholder": "活动名称",
+          "status": {
+            "published": "已发布",
+            "draft": "草稿"
+          },
           "types": {
             "video": "视频",
             "document": "文档",
