@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import React from 'react'
 import Courses from './courses'
 import { Metadata } from 'next'
@@ -15,9 +16,8 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 120,
+    revalidate: 0,
     tags: ['organizations'],
   })
 
@@ -30,7 +30,6 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const title = buildPageTitle('Courses', org.name, seoConfig)
   const description = org.description || seoConfig.default_meta_description || ''
 
-  // SEO
   return {
     title,
     description,
@@ -78,12 +77,12 @@ const CoursesPage = async (params: any) => {
 
   const [org, coursesResult] = await Promise.all([
     getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
+      revalidate: 0,
       tags: ['organizations'],
     }),
     getOrgCourses(
       orgslug,
-      { revalidate: 120, tags: ['courses'] },
+      { revalidate: 0, tags: ['courses'] },
       access_token ?? undefined
     ).catch((error: any) => {
       if (error?.status === 403) return []

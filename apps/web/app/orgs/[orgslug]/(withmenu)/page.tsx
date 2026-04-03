@@ -86,11 +86,11 @@ const OrgHomePage = async (params: any) => {
   const [courses, org] = await Promise.all([
     getOrgCourses(
       orgslug,
-      { revalidate: 120, tags: ['courses'] },
+      { revalidate: 0, tags: ['courses'] },
       access_token ?? undefined
     ),
     getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
+      revalidate: 0,
       tags: ['organizations'],
     }),
   ])
@@ -98,7 +98,7 @@ const OrgHomePage = async (params: any) => {
   const collections = await getOrgCollections(
     org.id,
     access_token ?? undefined,
-    { revalidate: 120, tags: ['courses'] }
+    { revalidate: 0, tags: ['courses'] }
   )
 
   // Check if custom landing is enabled (v2: customization.landing, v1: landing)
@@ -124,7 +124,7 @@ const OrgHomePage = async (params: any) => {
           orgslug={orgslug}
         />
       ) : (
-        <LandingClassic 
+        <LandingClassic
           courses={courses}
           collections={collections}
           orgslug={orgslug}
