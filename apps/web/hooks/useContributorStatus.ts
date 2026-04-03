@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getCourseContributors } from '@services/courses/courses';
+import { useMemo } from 'react';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import toast from 'react-hot-toast';
+import { getAPIUrl } from '@services/config/config';
+import { swrFetcher } from '@services/utils/ts/requests';
+import useSWR from 'swr';
 
 export type ContributorStatus = 'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE';
 
@@ -12,49 +13,27 @@ interface Contributor {
 
 export function useContributorStatus(courseUuid: string) {
   const session = useLHSession() as any;
-  const [contributorStatus, setContributorStatus] = useState<ContributorStatus>('NONE');
-  const [isLoading, setIsLoading] = useState(true);
+  const access_token = session?.data?.tokens?.access_token;
+  const userId = session?.data?.user?.id;
 
-  const checkContributorStatus = useCallback(async () => {
-    if (!session.data?.user) {
-      setIsLoading(false);
-      return;
-    }
+  const prefixedUuid = courseUuid?.startsWith('course_') ? courseUuid : 'course_' + courseUuid;
+  const swrKey = access_token && courseUuid
+    ? `${getAPIUrl()}courses/${prefixedUuid}/contributors`
+    : null;
 
-    try {
-      const prefixedUuid = courseUuid.startsWith('course_') ? courseUuid : 'course_' + courseUuid;
-      const response = await getCourseContributors(
-        prefixedUuid,
-        session.data?.tokens?.access_token
-      );
-      
-      if (response && response.data && Array.isArray(response.data)) {
-        const currentUser = response.data.find(
-          (contributor: Contributor) => contributor.user_id === session.data.user.id
-        );
-        
-        if (currentUser) {
-          setContributorStatus(currentUser.authorship_status as ContributorStatus);
-        } else {
-          setContributorStatus('NONE');
-        }
-      } else {
-        setContributorStatus('NONE');
-      }
-    } catch (error) {
-      console.error('Failed to check contributor status:', error);
-      toast.error('Failed to check contributor status');
-      setContributorStatus('NONE');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [courseUuid, session.data?.tokens?.access_token, session.data?.user]);
+  const { data, isLoading, mutate } = useSWR(
+    swrKey,
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
+  );
 
-  useEffect(() => {
-    if (session.data?.user) {
-      checkContributorStatus();
-    }
-  }, [checkContributorStatus, session.data?.user]);
+  const contributorStatus = useMemo<ContributorStatus>(() => {
+    if (!userId || !data || !Array.isArray(data)) return 'NONE';
+    const currentUser = data.find(
+      (contributor: Contributor) => contributor.user_id === userId
+    );
+    return currentUser ? (currentUser.authorship_status as ContributorStatus) : 'NONE';
+  }, [data, userId]);
 
-  return { contributorStatus, isLoading, refetch: checkContributorStatus };
-} 
+  return { contributorStatus, isLoading, refetch: mutate };
+}

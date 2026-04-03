@@ -1,7 +1,6 @@
 'use client';
 import { use, useEffect } from "react";
 import '@styles/globals.css'
-import { SessionProvider } from '@components/Contexts/AuthContext'
 import Watermark from '@components/Objects/Watermark'
 import { OrgMenu } from '@components/Objects/Menus/OrgMenu'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -135,16 +134,14 @@ export default function RootLayout(
 
   return (
     <>
-      <SessionProvider>
-        <OrgJoinBannerProvider>
-          <PodcastPlayerProvider>
-            <LayoutContent orgslug={params?.orgslug}>
-              {children}
-            </LayoutContent>
-            <PodcastPlayer />
-          </PodcastPlayerProvider>
-        </OrgJoinBannerProvider>
-      </SessionProvider>
+      <OrgJoinBannerProvider>
+        <PodcastPlayerProvider>
+          <LayoutContent orgslug={params?.orgslug}>
+            {children}
+          </LayoutContent>
+          <PodcastPlayer />
+        </PodcastPlayerProvider>
+      </OrgJoinBannerProvider>
     </>
   )
 }

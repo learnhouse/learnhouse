@@ -104,7 +104,6 @@ function useActivityPosition(course: any, activityId: string) {
 function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true, trailData }: ActivityActionsProps) {
 
   const { t } = useTranslation();
-  const { contributorStatus } = useContributorStatus(course.course_uuid);
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -220,7 +219,8 @@ function ActivityClient(props: ActivityClientProps) {
   // Add SWR for trail data
   const { data: trailData, error: error } = useSWR(
     `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   // Memoize activity position calculation

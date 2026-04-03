@@ -69,7 +69,8 @@ const CourseClient = (props: any) => {
   // Add SWR for trail data
   const { data: trailData } = useSWR(
     `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
 
   // Show loading state if fetching course data client-side
