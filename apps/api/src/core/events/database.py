@@ -222,6 +222,44 @@ def _register_cache_invalidation_hooks():
     sa_event.listen(Course, "after_update", _course_changed)
     sa_event.listen(Course, "after_delete", _course_changed)
 
+    # ── Activity/Chapter/ChapterActivity changes also invalidate course meta ──
+    from src.db.courses.activities import Activity
+    from src.db.courses.chapters import Chapter
+    from src.db.courses.chapter_activities import ChapterActivity
+
+    def _course_child_changed(mapper, connection, target):
+        """When an activity, chapter, or chapter_activity changes, invalidate the parent course meta."""
+        session = Session.object_session(target)
+        if not session or not getattr(target, 'course_id', None):
+            return
+        # Look up the course UUID from the identity map first (no SQL needed)
+        try:
+            course_key = sa_inspect(Course).identity_key_from_primary_key(
+                (target.course_id,)
+            )
+            course = session.identity_map.get(course_key)
+            if course and course.course_uuid:
+                _ensure_course_uuids(session).add(course.course_uuid)
+                return
+        except Exception:
+            pass
+        # Fallback: query the course UUID directly via connection
+        try:
+            from sqlalchemy import text as sa_text
+            row = connection.execute(
+                sa_text("SELECT course_uuid FROM course WHERE id = :cid"),
+                {"cid": target.course_id},
+            ).first()
+            if row and row[0]:
+                _ensure_course_uuids(session).add(row[0])
+        except Exception:
+            pass
+
+    for model in (Activity, Chapter, ChapterActivity):
+        sa_event.listen(model, "after_insert", _course_child_changed)
+        sa_event.listen(model, "after_update", _course_child_changed)
+        sa_event.listen(model, "after_delete", _course_child_changed)
+
     # ── Session-level events: run after transaction completes ──
 
     @sa_event.listens_for(Session, "after_commit")
