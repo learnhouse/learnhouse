@@ -1,11 +1,6 @@
 'use client'
 import { default as React, type JSX } from 'react';
-import dynamic from 'next/dynamic'
-import EditorSkeleton from './EditorSkeleton'
-const Editor = dynamic(() => import('./Editor'), {
-  ssr: false,
-  loading: () => <EditorSkeleton />,
-})
+import Editor from './Editor'
 import { updateActivity, getActivityState, getActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
@@ -65,6 +60,7 @@ interface EditorWrapperProps {
   activity: any
   course: any
   org: any
+  onEditorReady?: () => void
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
@@ -193,6 +189,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             checkForConflicts={checkForConflicts}
             fetchRemoteContent={fetchRemoteContent}
             localVersion={localVersion}
+            onReady={props.onEditorReady}
           />
         )}
       </OrgProvider>
