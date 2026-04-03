@@ -238,11 +238,18 @@ def get_user_chat_sessions(user_id: int, org_id: Optional[int] = None) -> list[d
         if not members:
             return []
 
+        # Decode all UUIDs upfront
+        uuid_strs = [
+            m.decode("utf-8") if isinstance(m, bytes) else m for m in members
+        ]
+
+        # Batch-fetch all metadata in a single MGET call (avoids N+1 round-trips)
+        meta_keys = [f"chat_meta:{u}" for u in uuid_strs]
+        meta_values = r.mget(meta_keys)
+
         sessions = []
         expired_uuids = []
-        for member in members:
-            uuid_str = member.decode("utf-8") if isinstance(member, bytes) else member
-            meta_data = r.get(f"chat_meta:{uuid_str}")
+        for uuid_str, meta_data in zip(uuid_strs, meta_values):
             if not meta_data:
                 expired_uuids.append(uuid_str)
                 continue
