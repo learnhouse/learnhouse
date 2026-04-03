@@ -41,14 +41,14 @@ type MetadataProps = {
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
   const discussionUuid = `discussion_${params.discussionuuid}`
   let discussion = null
   try {
-    discussion = await getDiscussion(discussionUuid, { revalidate: 0, tags: ['discussions'] })
+    discussion = await getDiscussion(discussionUuid, { revalidate: 120, tags: ['discussions'] })
   } catch (error) {
     // Discussion might not exist or user doesn't have access
   }
@@ -104,7 +104,7 @@ const DiscussionPage = async (params: any) => {
   try {
     community = await getCommunity(
       communityUuid,
-      { revalidate: 0, tags: ['communities'] },
+      { revalidate: 120, tags: ['communities'] },
       access_token ? access_token : undefined
     )
   } catch (error) {
@@ -114,7 +114,7 @@ const DiscussionPage = async (params: any) => {
   try {
     discussion = await getDiscussion(
       discussionUuid,
-      { revalidate: 0, tags: ['discussions'] },
+      { revalidate: 120, tags: ['discussions'] },
       access_token ? access_token : undefined
     )
   } catch (error) {

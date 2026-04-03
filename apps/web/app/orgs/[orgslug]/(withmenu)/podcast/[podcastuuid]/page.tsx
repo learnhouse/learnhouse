@@ -25,7 +25,7 @@ export async function generateMetadata({
   try {
     podcastMeta = await getPodcastMeta(
       `podcast_${podcastuuid}`,
-      { revalidate: 0, tags: ['podcasts'] },
+      { revalidate: 120, tags: ['podcasts'] },
       access_token
     )
   } catch (error) {
@@ -109,7 +109,7 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
   try {
     podcastMeta = await getPodcastMeta(
       `podcast_${podcastuuid}`,
-      { revalidate: 0, tags: ['podcasts'] },
+      { revalidate: 120, tags: ['podcasts'] },
       access_token
     )
   } catch (error) {
