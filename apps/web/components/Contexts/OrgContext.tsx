@@ -24,16 +24,14 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     {
       revalidateOnFocus: false,
       revalidateOnMount: true,
-      dedupingInterval: 30000,
     }
   )
   const { data: orgs, error: orgsError } = useSWR(
-    `${getAPIUrl()}orgs/user/page/1/limit/10`,
+    accessToken ? `${getAPIUrl()}orgs/user/page/1/limit/10` : null,
     (url) => swrFetcher(url, accessToken),
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnMount: true,
-      dedupingInterval: 30000,
     }
   )
 
