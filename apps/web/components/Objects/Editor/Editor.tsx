@@ -84,6 +84,7 @@ interface Editor {
   checkForConflicts: () => Promise<ConflictInfo | null>
   fetchRemoteContent: () => Promise<any>
   localVersion: number
+  onReady?: () => void
 }
 
 function Editor(props: Editor) {
@@ -230,7 +231,7 @@ function Editor(props: Editor) {
     ],
     content: props.content,
     immediatelyRender: false,
-    onCreate: () => setEditorReady(true),
+    onCreate: () => { setEditorReady(true); props.onReady?.(); },
   })
 
   // Handler to check for conflicts on save button hover

@@ -2,6 +2,7 @@
 import { use, useEffect } from "react";
 import '@styles/globals.css'
 import Watermark from '@components/Objects/Watermark'
+import { SessionGate } from '@components/Contexts/LHSessionContext'
 import { OrgMenu } from '@components/Objects/Menus/OrgMenu'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { OrgJoinBanner, OrgJoinBannerProvider } from '@components/Objects/Banners/OrgJoinBanner'
@@ -134,6 +135,7 @@ export default function RootLayout(
 
   return (
     <>
+      <SessionGate>
       <OrgJoinBannerProvider>
         <PodcastPlayerProvider>
           <LayoutContent orgslug={params?.orgslug}>
@@ -142,6 +144,7 @@ export default function RootLayout(
           <PodcastPlayer />
         </PodcastPlayerProvider>
       </OrgJoinBannerProvider>
+      </SessionGate>
     </>
   )
 }

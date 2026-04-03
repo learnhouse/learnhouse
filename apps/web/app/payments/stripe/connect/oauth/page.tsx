@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Check, Loader2, AlertTriangle } from 'lucide-react'
@@ -10,7 +10,7 @@ import Image from 'next/image'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { useTranslation } from 'react-i18next'
 
-function StripeConnectCallback() {
+function StripeConnectCallbackInner() {
   const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -23,7 +23,7 @@ function StripeConnectCallback() {
       try {
         const code = searchParams.get('code')
         const state = searchParams.get('state')
-        const orgId = state?.split('=')[1] // Extract org_id value after '='
+        const orgId = state?.split('=')[1]
 
         if (!code || !orgId) {
           throw new Error('Missing required parameters')
@@ -35,22 +35,19 @@ function StripeConnectCallback() {
           session?.data?.tokens?.access_token
         )
 
-        // Wait for 1 second to show processing state
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         setStatus('success')
         setMessage(t('payments.stripe_success'))
 
-        // Notify the opener tab so it can refresh its config data
         if (window.opener) {
           window.opener.postMessage({ type: 'payment_provider_connected', provider: 'stripe' }, '*')
         }
 
-        // Close the window after 2 seconds of showing success
         setTimeout(() => {
           window.close()
         }, 2000)
-        
+
       } catch (error) {
         console.error('Error verifying Stripe connection:', error)
         setStatus('error')
@@ -76,7 +73,7 @@ function StripeConnectCallback() {
             alt=""
           />
         </div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,4 +123,14 @@ function StripeConnectCallback() {
   )
 }
 
-export default StripeConnectCallback 
+export default function StripeConnectCallback() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+      </div>
+    }>
+      <StripeConnectCallbackInner />
+    </Suspense>
+  )
+}
