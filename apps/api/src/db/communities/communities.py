@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import Column, ForeignKey, Integer, Text, JSON
+from sqlalchemy import Column, ForeignKey, Index, Integer, Text, JSON
 from sqlmodel import Field, SQLModel
 
 
@@ -11,6 +11,10 @@ class CommunityBase(SQLModel):
 
 
 class Community(CommunityBase, table=True):
+    __table_args__ = (
+        Index("ix_community_org_id", "org_id"),
+        Index("ix_community_course_id", "course_id"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
@@ -19,7 +23,7 @@ class Community(CommunityBase, table=True):
         default=None,
         sa_column=Column(Integer, ForeignKey("course.id", ondelete="SET NULL"))
     )
-    community_uuid: str = ""
+    community_uuid: str = Field(default="", index=True)
     moderation_words: List[str] = Field(default=[], sa_column=Column(JSON, default=[]))
     creation_date: str = ""
     update_date: str = ""

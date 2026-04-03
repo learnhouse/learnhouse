@@ -751,13 +751,16 @@ def check_ai_credits(
     if config.get("config_version", "1.0").startswith("2"):
         extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0)
 
-    purchased_credits = r.get(f"ai_credits_purchased:{org_id}")
-    purchased_credits_count = int(purchased_credits) if purchased_credits else 0
+    # Batch-fetch both keys in a single round-trip
+    purchased_raw, used_raw = r.mget(
+        f"ai_credits_purchased:{org_id}",
+        f"ai_credits_used:{org_id}",
+    )
+    purchased_credits_count = int(purchased_raw) if purchased_raw else 0
 
     total_credits = base_credits + extra + purchased_credits_count
 
-    used_credits = r.get(f"ai_credits_used:{org_id}")
-    used_credits_count = int(used_credits) if used_credits else 0
+    used_credits_count = int(used_raw) if used_raw else 0
 
     remaining_credits = total_credits - used_credits_count
     if remaining_credits <= 0:
@@ -800,7 +803,11 @@ def reset_ai_credits_usage(org_id: int) -> bool:
 
 
 def get_ai_credits_summary(org_id: int, db_session: Session) -> dict:
-    """Get a summary of AI credits for an organization."""
+    """Get a summary of AI credits for an organization.
+
+    Uses a single Redis connection and pipelines the key fetches to minimize
+    round-trips (purchased + used credits fetched in one call).
+    """
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     result = db_session.exec(statement)
     org_config = result.first()
@@ -827,11 +834,13 @@ def get_ai_credits_summary(org_id: int, db_session: Session) -> dict:
 
     base_credits = get_ai_credit_limit(org_plan)
 
-    purchased_credits = r.get(f"ai_credits_purchased:{org_id}")
-    purchased_credits_count = int(purchased_credits) if purchased_credits else 0
-
-    used_credits = r.get(f"ai_credits_used:{org_id}")
-    used_credits_count = int(used_credits) if used_credits else 0
+    # Batch-fetch both keys in a single round-trip
+    purchased_raw, used_raw = r.mget(
+        f"ai_credits_purchased:{org_id}",
+        f"ai_credits_used:{org_id}",
+    )
+    purchased_credits_count = int(purchased_raw) if purchased_raw else 0
+    used_credits_count = int(used_raw) if used_raw else 0
 
     if base_credits == -1:
         return {

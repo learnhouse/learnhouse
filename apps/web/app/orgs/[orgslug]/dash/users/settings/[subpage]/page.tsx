@@ -100,6 +100,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         </div>
         <div className="flex space-x-5 font-black text-sm">
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/users`
             }
@@ -117,6 +118,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`
             }
@@ -137,6 +139,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/roles`
             }
@@ -157,6 +160,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`
             }
@@ -174,6 +178,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
             }
@@ -192,6 +197,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
           </Link>
           
           <Link
+            prefetch={false}
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`
             }
