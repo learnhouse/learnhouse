@@ -1632,13 +1632,40 @@
           "unpublish": "Yayından Kaldır",
           "preview_activity": "Aktivite Önizleme",
           "edit_page": "Sayfayı Düzenle",
-          "edit_assignment": "Ödevi Düzenle"
+          "edit_assignment": "Ödevi Düzenle",
+          "rename": "Yeniden Adlandır",
+          "publishing": "Yayınlanıyor...",
+          "publish_all": "Tümünü Yayınla ({{count}})",
+          "publishing_all": "Tümü Yayınlanıyor...",
+          "publish_all_success": "Tüm aktiviteler başarıyla yayınlandı",
+          "unpublish_all": "Tümünü Yayından Kaldır",
+          "unpublish_all_success": "Tüm aktiviteler başarıyla yayından kaldırıldı",
+          "publish_all_error": "Bazı aktiviteler güncellenemedi"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} seçildi",
+          "clear": "Temizle",
+          "delete": "Sil",
+          "delete_title": "Seçili aktiviteleri sil",
+          "delete_confirm": "{{count}} seçili aktiviteyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+          "delete_button": "Aktiviteleri Sil",
+          "delete_success": "{{count}} aktivite başarıyla silindi",
+          "delete_error": "Bazı aktiviteler silinemedi",
+          "publish_success": "{{count}} aktivite başarıyla yayınlandı",
+          "publish_error": "Bazı aktiviteler yayınlanamadı",
+          "unpublish_success": "{{count}} aktivite başarıyla yayından kaldırıldı",
+          "unpublish_error": "Bazı aktiviteler yayından kaldırılamadı",
+          "partial_error": "{{total}} aktiviteden {{failed}} tanesi güncellenemedi"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Bölüm Adı"
         },
         "activity": {
           "name_placeholder": "Aktivite Adı",
+          "status": {
+            "published": "Yayında",
+            "draft": "Taslak"
+          },
           "types": {
             "video": "Video",
             "document": "Doküman",

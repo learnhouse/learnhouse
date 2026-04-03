@@ -1631,13 +1631,40 @@
           "unpublish": "Снять с публикации",
           "preview_activity": "Предпросмотр занятия",
           "edit_page": "Редактировать страницу",
-          "edit_assignment": "Редактировать задание"
+          "edit_assignment": "Редактировать задание",
+          "rename": "Переименовать",
+          "publishing": "Публикация...",
+          "publish_all": "Опубликовать все ({{count}})",
+          "publishing_all": "Публикация всех...",
+          "publish_all_success": "Все занятия успешно опубликованы",
+          "unpublish_all": "Снять все с публикации",
+          "unpublish_all_success": "Все занятия успешно сняты с публикации",
+          "publish_all_error": "Не удалось обновить некоторые занятия"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} выбрано",
+          "clear": "Очистить",
+          "delete": "Удалить",
+          "delete_title": "Удалить выбранные занятия",
+          "delete_confirm": "Вы уверены, что хотите удалить {{count}} выбранных занятий? Это действие нельзя отменить.",
+          "delete_button": "Удалить занятия",
+          "delete_success": "{{count}} занятий успешно удалено",
+          "delete_error": "Не удалось удалить некоторые занятия",
+          "publish_success": "{{count}} занятий успешно опубликовано",
+          "publish_error": "Не удалось опубликовать некоторые занятия",
+          "unpublish_success": "{{count}} занятий успешно снято с публикации",
+          "unpublish_error": "Не удалось снять с публикации некоторые занятия",
+          "partial_error": "Не удалось обновить {{failed}} из {{total}} занятий"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Название главы"
         },
         "activity": {
           "name_placeholder": "Название занятия",
+          "status": {
+            "published": "Опубликовано",
+            "draft": "Черновик"
+          },
           "types": {
             "video": "Видео",
             "document": "Документ",

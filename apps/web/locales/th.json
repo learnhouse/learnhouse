@@ -1631,13 +1631,40 @@
           "unpublish": "ยกเลิกการเผยแพร่",
           "preview_activity": "ตัวอย่างกิจกรรม",
           "edit_page": "แก้ไขหน้า",
-          "edit_assignment": "แก้ไขงาน"
+          "edit_assignment": "แก้ไขงาน",
+          "rename": "เปลี่ยนชื่อ",
+          "publishing": "กำลังเผยแพร่...",
+          "publish_all": "เผยแพร่ทั้งหมด ({{count}})",
+          "publishing_all": "กำลังเผยแพร่ทั้งหมด...",
+          "publish_all_success": "เผยแพร่กิจกรรมทั้งหมดสำเร็จแล้ว",
+          "unpublish_all": "ยกเลิกการเผยแพร่ทั้งหมด",
+          "unpublish_all_success": "ยกเลิกการเผยแพร่กิจกรรมทั้งหมดสำเร็จแล้ว",
+          "publish_all_error": "ไม่สามารถอัปเดตบางกิจกรรมได้"
+        },
+        "bulk_actions": {
+          "selected": "เลือก {{count}} รายการ",
+          "clear": "ล้าง",
+          "delete": "ลบ",
+          "delete_title": "ลบกิจกรรมที่เลือก",
+          "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมที่เลือก {{count}} รายการ? การดำเนินการนี้ไม่สามารถเลิกทำได้",
+          "delete_button": "ลบกิจกรรม",
+          "delete_success": "ลบ {{count}} กิจกรรมสำเร็จแล้ว",
+          "delete_error": "ไม่สามารถลบบางกิจกรรมได้",
+          "publish_success": "เผยแพร่ {{count}} กิจกรรมสำเร็จแล้ว",
+          "publish_error": "ไม่สามารถเผยแพร่บางกิจกรรมได้",
+          "unpublish_success": "ยกเลิกการเผยแพร่ {{count}} กิจกรรมสำเร็จแล้ว",
+          "unpublish_error": "ไม่สามารถยกเลิกการเผยแพร่บางกิจกรรมได้",
+          "partial_error": "{{total}} กิจกรรมมี {{failed}} รายการที่อัปเดตล้มเหลว"
         },
         "chapter_element": {
           "chapter_name_placeholder": "ชื่อบท"
         },
         "activity": {
           "name_placeholder": "ชื่อกิจกรรม",
+          "status": {
+            "published": "เผยแพร่แล้ว",
+            "draft": "แบบร่าง"
+          },
           "types": {
             "video": "วิดีโอ",
             "document": "เอกสาร",

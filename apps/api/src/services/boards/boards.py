@@ -120,6 +120,56 @@ async def update_board(
     return _board_to_read(board, db_session)
 
 
+async def duplicate_board(
+    request: Request,
+    board_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> BoardRead:
+    source = _get_board_or_404(board_uuid, db_session)
+    await check_resource_access(request, db_session, current_user, source.board_uuid, AccessAction.READ)
+    # Also need create permission
+    await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
+
+    board = Board(
+        org_id=source.org_id,
+        board_uuid=f"board_{uuid4()}",
+        name=f"{source.name} (copy)",
+        description=source.description,
+        thumbnail_image=source.thumbnail_image,
+        public=source.public,
+        created_by=current_user.id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(board)
+    db_session.commit()
+    db_session.refresh(board)
+
+    # Add current user as owner
+    member = BoardMember(
+        board_id=board.id,
+        user_id=current_user.id,
+        role=BoardMemberRole.OWNER,
+        creation_date=str(datetime.now()),
+    )
+    db_session.add(member)
+
+    resource_author = ResourceAuthor(
+        resource_uuid=board.board_uuid,
+        user_id=current_user.id,
+        authorship=ResourceAuthorshipEnum.CREATOR,
+        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db_session.add(resource_author)
+    db_session.commit()
+
+    return _board_to_read(board, db_session)
+
+
 async def delete_board(
     request: Request,
     board_uuid: str,

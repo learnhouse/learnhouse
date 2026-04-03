@@ -1631,13 +1631,40 @@
           "unpublish": "Hủy công bố",
           "preview_activity": "Xem trước hoạt động",
           "edit_page": "Chỉnh sửa trang",
-          "edit_assignment": "Chỉnh sửa bài tập"
+          "edit_assignment": "Chỉnh sửa bài tập",
+          "rename": "Đổi tên",
+          "publishing": "Đang công bố...",
+          "publish_all": "Công bố tất cả ({{count}})",
+          "publishing_all": "Đang công bố tất cả...",
+          "publish_all_success": "Tất cả hoạt động đã được công bố thành công",
+          "unpublish_all": "Hủy công bố tất cả",
+          "unpublish_all_success": "Tất cả hoạt động đã được hủy công bố thành công",
+          "publish_all_error": "Không thể cập nhật một số hoạt động"
+        },
+        "bulk_actions": {
+          "selected": "Đã chọn {{count}}",
+          "clear": "Bỏ chọn",
+          "delete": "Xóa",
+          "delete_title": "Xóa các hoạt động đã chọn",
+          "delete_confirm": "Bạn có chắc chắn muốn xóa {{count}} hoạt động đã chọn? Hành động này không thể hoàn tác.",
+          "delete_button": "Xóa hoạt động",
+          "delete_success": "Đã xóa thành công {{count}} hoạt động",
+          "delete_error": "Không thể xóa một số hoạt động",
+          "publish_success": "Đã công bố thành công {{count}} hoạt động",
+          "publish_error": "Không thể công bố một số hoạt động",
+          "unpublish_success": "Đã hủy công bố thành công {{count}} hoạt động",
+          "unpublish_error": "Không thể hủy công bố một số hoạt động",
+          "partial_error": "{{failed}} trong {{total}} hoạt động không thể cập nhật"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Tên chương"
         },
         "activity": {
           "name_placeholder": "Tên hoạt động",
+          "status": {
+            "published": "Đã công bố",
+            "draft": "Bản nháp"
+          },
           "types": {
             "video": "Video",
             "document": "Tài liệu",

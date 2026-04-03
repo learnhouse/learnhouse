@@ -1632,13 +1632,40 @@
           "unpublish": "Wycofaj publikację",
           "preview_activity": "Podgląd aktywności",
           "edit_page": "Edytuj stronę",
-          "edit_assignment": "Edytuj zadanie"
+          "edit_assignment": "Edytuj zadanie",
+          "rename": "Zmień nazwę",
+          "publishing": "Publikowanie...",
+          "publish_all": "Opublikuj wszystkie ({{count}})",
+          "publishing_all": "Publikowanie wszystkich...",
+          "publish_all_success": "Wszystkie aktywności zostały pomyślnie opublikowane",
+          "unpublish_all": "Wycofaj wszystkie",
+          "unpublish_all_success": "Wszystkie aktywności zostały pomyślnie wycofane",
+          "publish_all_error": "Nie udało się zaktualizować niektórych aktywności"
+        },
+        "bulk_actions": {
+          "selected": "Zaznaczono: {{count}}",
+          "clear": "Wyczyść",
+          "delete": "Usuń",
+          "delete_title": "Usuń zaznaczone aktywności",
+          "delete_confirm": "Czy na pewno chcesz usunąć {{count}} zaznaczonych aktywności? Tej operacji nie można cofnąć.",
+          "delete_button": "Usuń aktywności",
+          "delete_success": "Pomyślnie usunięto {{count}} aktywności",
+          "delete_error": "Nie udało się usunąć niektórych aktywności",
+          "publish_success": "Pomyślnie opublikowano {{count}} aktywności",
+          "publish_error": "Nie udało się opublikować niektórych aktywności",
+          "unpublish_success": "Pomyślnie wycofano {{count}} aktywności",
+          "unpublish_error": "Nie udało się wycofać niektórych aktywności",
+          "partial_error": "{{failed}} z {{total}} aktywności nie udało się zaktualizować"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nazwa rozdziału"
         },
         "activity": {
           "name_placeholder": "Nazwa aktywności",
+          "status": {
+            "published": "Opublikowana",
+            "draft": "Wersja robocza"
+          },
           "types": {
             "video": "Wideo",
             "document": "Dokument",

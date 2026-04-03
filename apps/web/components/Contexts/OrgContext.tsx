@@ -26,24 +26,29 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
       revalidateOnMount: true,
     }
   )
-  const { data: orgs, error: orgsError } = useSWR(
-    accessToken ? `${getAPIUrl()}orgs/user/page/1/limit/10` : null,
-    (url) => swrFetcher(url, accessToken),
-    {
-      revalidateOnFocus: true,
-      revalidateOnMount: true,
-    }
-  )
 
   const isOrgActive = useMemo(() => (org?.config?.config?.active ?? org?.config?.config?.general?.enabled) !== false, [org])
-  const isUserPartOfTheOrg = useMemo(() => {
-    // If user is not authenticated, treat them as "part of org" for viewing purposes
-    if (session.status !== 'authenticated') return true
-    return orgs?.some((userOrg: any) => userOrg.id === org?.id) ?? false
-  }, [orgs, org?.id, session.status])
 
-  if (orgError || orgsError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!org || !orgs || !session) return <div></div>
+  // Determine membership from session roles (available immediately, no extra API call).
+  // Session roles contain ALL orgs the user belongs to — no pagination limit.
+  const isUserPartOfTheOrg = useMemo(() => {
+    if (session.status !== 'authenticated') return true
+    if (!org?.id) return true // Don't show guest banner while org is loading
+
+    // Check session roles
+    const roles = session?.data?.roles
+    if (roles && Array.isArray(roles)) {
+      if (roles.some((r: any) => r.org?.id === org.id)) return true
+    }
+
+    // Superadmins are always part of every org
+    if (session?.data?.user?.is_superadmin) return true
+
+    return false
+  }, [session?.data?.roles, session?.data?.user?.is_superadmin, org?.id, session.status])
+
+  if (orgError) return <ErrorUI message='An error occurred while fetching data' />
+  if (!org || !session) return <div></div>
   if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
 
   const contextValue: OrgContextValue = {

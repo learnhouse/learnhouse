@@ -87,31 +87,24 @@ export const CourseDispatchContext = createContext<React.Dispatch<CourseAction> 
 export function CourseProvider({ children, courseuuid, withUnpublishedActivities = false }: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { cache, mutate } = useSWRConfig()
+  const { mutate } = useSWRConfig()
   const lastServerDataRef = useRef<any>(null)
 
   const swrKey = getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
-
-  // Get cached data synchronously to prevent flickering on navigation
-  const cachedData = useMemo(() => {
-    const cached = cache.get(swrKey)
-    return cached?.data
-  }, [cache, swrKey])
 
   const { data: courseStructureData, error, isValidating } = useSWR(
     swrKey,
     url => swrFetcher(url, access_token),
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 10000, // Increased to reduce refetches during editing
-      keepPreviousData: true,
-      revalidateIfStale: false, // Don't auto-revalidate stale data while editing
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 0,
+      keepPreviousData: false,
+      revalidateIfStale: true,
     }
   )
 
-  // Use cached data or fetched data
-  const effectiveData = courseStructureData || cachedData
+  const effectiveData = courseStructureData
 
   const initialState: CourseState = useMemo(() => ({
     courseStructure: effectiveData || { course_uuid: courseuuid },
@@ -130,15 +123,13 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   // Track server data changes
   useEffect(() => {
     if (courseStructureData && !state.isSaving) {
-      // Only sync from server if we're not currently saving
-      // and the data is actually different from what we have
       const serverDataStr = JSON.stringify(courseStructureData)
       const lastServerDataStr = JSON.stringify(lastServerDataRef.current)
 
       if (serverDataStr !== lastServerDataStr) {
         lastServerDataRef.current = courseStructureData
 
-        // If we have unsaved changes, don't overwrite them
+        // Only auto-sync from server if we don't have unsaved local changes (e.g. drag-drop reorder)
         if (state.isSaved) {
           dispatch({
             type: 'syncFromServer',
