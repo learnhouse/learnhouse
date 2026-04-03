@@ -182,25 +182,73 @@ def _register_cache_invalidation_hooks():
     sa_event.listen(OrganizationConfig, "after_update", _orgconfig_changed)
     sa_event.listen(OrganizationConfig, "after_delete", _orgconfig_changed)
 
+    # ── Course cache invalidation: bust course list cache on changes ──
+    from src.db.courses.courses import Course
+
+    def _ensure_course_uuids(session):
+        if not hasattr(session, '_course_uuids_to_invalidate'):
+            session._course_uuids_to_invalidate = set()
+        return session._course_uuids_to_invalidate
+
+    def _course_changed(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session:
+            return
+        # Track course UUID for meta cache invalidation
+        if target.course_uuid:
+            _ensure_course_uuids(session).add(target.course_uuid)
+        if not target.org_id:
+            return
+        try:
+            key = sa_inspect(Organization).identity_key_from_primary_key(
+                (target.org_id,)
+            )
+            org = session.identity_map.get(key)
+            if org and org.slug:
+                _ensure_set(session).add(org.slug)
+        except Exception:
+            try:
+                from sqlalchemy import text as sa_text
+                row = connection.execute(
+                    sa_text("SELECT slug FROM organization WHERE id = :oid"),
+                    {"oid": target.org_id},
+                ).first()
+                if row and row[0]:
+                    _ensure_set(session).add(row[0])
+            except Exception:
+                pass
+
+    sa_event.listen(Course, "after_insert", _course_changed)
+    sa_event.listen(Course, "after_update", _course_changed)
+    sa_event.listen(Course, "after_delete", _course_changed)
+
     # ── Session-level events: run after transaction completes ──
 
     @sa_event.listens_for(Session, "after_commit")
     def _on_after_commit(session):
         slugs = getattr(session, '_org_slugs_to_invalidate', None)
-        if not slugs:
-            return
+        course_uuids = getattr(session, '_course_uuids_to_invalidate', None)
         try:
-            from src.services.orgs.cache import invalidate_org_cache
-            for slug in slugs:
-                invalidate_org_cache(slug)
+            if slugs:
+                from src.services.orgs.cache import invalidate_org_cache
+                from src.services.courses.cache import invalidate_courses_cache
+                for slug in slugs:
+                    invalidate_org_cache(slug)
+                    invalidate_courses_cache(slug)
+            if course_uuids:
+                from src.services.courses.cache import invalidate_course_meta_cache
+                for uuid in course_uuids:
+                    invalidate_course_meta_cache(uuid)
         except Exception:
             logging.warning("Cache invalidation after commit failed", exc_info=True)
         finally:
             session._org_slugs_to_invalidate = set()
+            session._course_uuids_to_invalidate = set()
 
     @sa_event.listens_for(Session, "after_rollback")
     def _on_after_rollback(session):
         session._org_slugs_to_invalidate = set()
+        session._course_uuids_to_invalidate = set()
 
 if not is_testing:
     try:

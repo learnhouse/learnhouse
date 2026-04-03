@@ -257,6 +257,14 @@ async def get_course_meta(
                 detail="Course not found",
             )
 
+    # Permission check passed — try Redis cache for the heavy data
+    # (shared across all authorized users for this course)
+    if course.published and not with_unpublished_activities:
+        from src.services.courses.cache import get_cached_course_meta
+        cached = get_cached_course_meta(course_uuid, slim)
+        if cached is not None:
+            return FullCourseRead.model_validate(cached)
+
     # Get course chapters
     chapters = []
     if course.id is not None:
@@ -282,6 +290,11 @@ async def get_course_meta(
         chapters=chapters
     )
 
+    # Cache for published courses (safe to share across users)
+    if course.published and not with_unpublished_activities:
+        from src.services.courses.cache import set_cached_course_meta
+        set_cached_course_meta(course_uuid, slim, course_read.model_dump())
+
     return course_read
 
 
@@ -294,6 +307,14 @@ async def get_courses_orgslug(
     limit: int = 10,
     include_unpublished: bool = False,
 ) -> List[CourseRead]:
+    # For anonymous users viewing public courses, try Redis cache first
+    is_anon = isinstance(current_user, AnonymousUser)
+    if is_anon and not include_unpublished:
+        from src.services.courses.cache import get_cached_courses_list
+        cached = get_cached_courses_list(org_slug, page, limit)
+        if cached is not None:
+            return [CourseRead.model_validate(c) for c in cached]
+
     offset = (page - 1) * limit
 
     # Get organization
@@ -429,6 +450,14 @@ async def get_courses_orgslug(
             "authors": course_authors.get(course.course_uuid, [])
         })
         course_reads.append(course_read)
+
+    # Cache the result for anonymous public views
+    if is_anon and not include_unpublished and course_reads:
+        from src.services.courses.cache import set_cached_courses_list
+        set_cached_courses_list(
+            org_slug, page, limit,
+            [cr.model_dump() for cr in course_reads]
+        )
 
     return course_reads
 
