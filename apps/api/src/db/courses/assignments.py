@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from sqlalchemy import JSON, Column, ForeignKey
+from sqlalchemy import JSON, Column, ForeignKey, Index
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -58,11 +58,15 @@ class AssignmentUpdate(SQLModel):
 
 class Assignment(AssignmentBase, table=True):
     """Represents an assignment with relevant details and foreign keys."""
+    __table_args__ = (
+        Index("ix_assignment_course_id", "course_id"),
+        Index("ix_assignment_org_id", "org_id"),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     creation_date: Optional[str] = None
     update_date: Optional[str] = None
-    assignment_uuid: str = ""
+    assignment_uuid: str = Field(default="", index=True)
 
     org_id: int = Field(
         sa_column=Column("org_id", ForeignKey("organization.id", ondelete="CASCADE"))

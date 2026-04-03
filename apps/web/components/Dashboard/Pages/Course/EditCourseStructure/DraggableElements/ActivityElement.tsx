@@ -216,6 +216,7 @@ function ActivityElement(props: ActivitiyElementProps) {
             </button>
             <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} sideOffset={8}>
               <Link
+                prefetch={false}
                 href={
                   getUriWithOrg(props.orgslug, '') +
                   `/course/${props.course_uuid.replace(

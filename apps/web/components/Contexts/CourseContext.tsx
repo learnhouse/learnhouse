@@ -7,7 +7,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 // Unified cache key generator - use this everywhere
 export const getCourseMetaCacheKey = (courseUuid: string, withUnpublishedActivities: boolean = false) =>
-  `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`
+  withUnpublishedActivities
+    ? `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=true`
+    : `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=false&slim=true`
 
 // Debounce manager for coordinating saves across components
 class DebounceManager {

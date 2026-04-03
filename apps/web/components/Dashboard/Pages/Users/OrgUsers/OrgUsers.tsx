@@ -458,6 +458,7 @@ function OrgUsers() {
                             <UserAvatar
                               width={40}
                               avatar_url={user.user.avatar_image ? getUserAvatarMediaDirectory(user.user.user_uuid, user.user.avatar_image) : undefined}
+                              predefined_avatar={user.user.avatar_image ? undefined : 'empty'}
                               userId={user.user.id?.toString()}
                               rounded="rounded-full"
                               showProfilePopup={true}

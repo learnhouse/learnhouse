@@ -1,7 +1,10 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React from 'react'
-import 'katex/dist/katex.min.css'
-import { BlockMath } from 'react-katex'
+import React, { lazy, Suspense, useEffect } from 'react'
+const BlockMath = lazy(() => {
+  // Load katex CSS when the component is first used
+  import('katex/dist/katex.min.css')
+  return import('react-katex').then(m => ({ default: m.BlockMath }))
+})
 import { Save, Sigma, ExternalLink, ChevronDown, BookOpen, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -162,7 +165,7 @@ function MathEquationBlockComponent(props: any) {
     return (
       <NodeViewWrapper className="block-math-equation">
         <div className="bg-neutral-50 rounded-xl p-5 nice-shadow">
-          <BlockMath>{equation}</BlockMath>
+          <Suspense fallback={<div className="text-gray-400 text-sm p-2">Loading math...</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
       </NodeViewWrapper>
     )
@@ -181,7 +184,7 @@ function MathEquationBlockComponent(props: any) {
 
         {/* Equation Display */}
         <div className="bg-white p-4 rounded-lg nice-shadow">
-          <BlockMath>{equation}</BlockMath>
+          <Suspense fallback={<div className="text-gray-400 text-sm p-2">Loading math...</div>}><BlockMath>{equation}</BlockMath></Suspense>
         </div>
 
         {/* Editor Controls */}
