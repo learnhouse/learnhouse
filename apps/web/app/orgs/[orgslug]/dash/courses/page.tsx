@@ -54,7 +54,7 @@ async function CoursesPage(params: any) {
   try {
     courses = await getOrgCourses(
       orgslug,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined,
       true // include_unpublished for dashboard
     )

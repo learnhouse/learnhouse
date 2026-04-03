@@ -19,11 +19,11 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params;
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
-  // Get Org context information
   const course_meta = await getCourseMetadata(
     params.courseid,
-    { revalidate: 60, tags: ['courses'] },
-    access_token ?? undefined
+    { revalidate: 0, tags: ['courses'] },
+    access_token ?? undefined,
+    { slim: true }
   )
 
   return {
@@ -37,19 +37,25 @@ const EditActivity = async (params: any) => {
   const access_token = session?.tokens?.access_token
   const activityuuid = (await params.params).activityuuid
   const courseid = (await params.params).courseid
-  const courseInfo = await getCourseMetadata(
-    courseid,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ?? undefined
-  )
-  const activity = await getActivityWithAuthHeader(
-    activityuuid,
-    { revalidate: 0, tags: ['activities'] },
-    access_token ?? undefined
-  )
-  
+
+  // Fetch course meta (slim — just need name/structure) and activity content in PARALLEL
+  // Activity uses revalidate: 0 to always get the latest content for editing
+  const [courseInfo, activity] = await Promise.all([
+    getCourseMetadata(
+      courseid,
+      { revalidate: 0, tags: ['courses'] },
+      access_token ?? undefined,
+      { slim: true }
+    ),
+    getActivityWithAuthHeader(
+      activityuuid,
+      { revalidate: 0, tags: ['activities'] },
+      access_token ?? undefined
+    ),
+  ])
+
   const org = await getOrganizationContextInfoWithUUID(courseInfo.org_uuid, {
-    revalidate: 180,
+    revalidate: 120,
     tags: ['organizations'],
   }, access_token)
 

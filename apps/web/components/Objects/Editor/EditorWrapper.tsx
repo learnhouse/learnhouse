@@ -1,6 +1,11 @@
 'use client'
 import { default as React, type JSX } from 'react';
-import Editor from './Editor'
+import dynamic from 'next/dynamic'
+import EditorSkeleton from './EditorSkeleton'
+const Editor = dynamic(() => import('./Editor'), {
+  ssr: false,
+  loading: () => <EditorSkeleton />,
+})
 import { updateActivity, getActivityState, getActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'

@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlmodel import Field, SQLModel
 from src.db.trail_runs import TrailRunRead
 
@@ -15,6 +15,9 @@ class TrailBase(SQLModel):
 
 
 class Trail(TrailBase, table=True):
+    __table_args__ = (
+        Index("ix_trail_user_org", "user_id", "org_id"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)

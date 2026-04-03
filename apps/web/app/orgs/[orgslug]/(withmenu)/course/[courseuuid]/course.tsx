@@ -44,7 +44,7 @@ const CourseClient = (props: any) => {
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useSWR(
     // Only fetch if we don't have initial course data AND we have a session token AND no server error
     !initialCourse && !serverError && access_token
-      ? `${getAPIUrl()}courses/course_${courseuuid}/meta`
+      ? `${getAPIUrl()}courses/course_${courseuuid}/meta?slim=true`
       : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
