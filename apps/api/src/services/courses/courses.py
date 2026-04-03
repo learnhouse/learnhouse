@@ -215,6 +215,7 @@ async def get_course_meta(
     with_unpublished_activities: bool,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
+    slim: bool = False,
 ) -> FullCourseRead:
     # Avoid circular import
     from src.services.courses.chapters import get_course_chapters
@@ -259,7 +260,7 @@ async def get_course_meta(
     # Get course chapters
     chapters = []
     if course.id is not None:
-        chapters = await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities)
+        chapters = await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities, slim=slim)
 
     # Convert to AuthorWithRole objects
     authors = [

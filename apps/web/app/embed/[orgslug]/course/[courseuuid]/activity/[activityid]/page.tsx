@@ -23,7 +23,8 @@ export default async function EmbedActivityPage({ params }: PageProps) {
       getCourseMetadata(
         courseuuid,
         { revalidate: 60, tags: ['courses'] },
-        null
+        null,
+        { slim: true }
       ),
     ])
   } catch (error) {

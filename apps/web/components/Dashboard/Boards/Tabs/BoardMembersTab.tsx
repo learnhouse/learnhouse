@@ -29,7 +29,7 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
   const { data: members } = useSWR(
     membersKey,
     (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: false }
   )
 
   const [addMemberModal, setAddMemberModal] = useState(false)
@@ -184,12 +184,14 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
 
   const { data: orgUsers } = useSWR(
     accessToken ? `${getAPIUrl()}orgs/${orgId}/users?page=1&limit=100` : null,
-    (url) => swrFetcher(url, accessToken)
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false }
   )
 
   const { data: usergroups } = useSWR(
     accessToken ? `${getAPIUrl()}usergroups/org/${orgId}?org_id=${orgId}` : null,
-    (url) => swrFetcher(url, accessToken)
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false }
   )
 
   const allUsers: any[] = orgUsers?.items || []

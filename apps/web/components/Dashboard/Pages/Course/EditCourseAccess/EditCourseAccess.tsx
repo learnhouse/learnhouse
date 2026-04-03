@@ -35,7 +35,8 @@ function EditCourseAccess(props: EditCourseAccessProps) {
 
     const { data: usergroups } = useSWR(
         courseStructure?.course_uuid && org?.id ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}` : null,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     );
 
     // Track local public state

@@ -109,7 +109,8 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
           HTTPmessage: result.statusText,
         };
       }
-    }
+    },
+    { revalidateOnFocus: false }
   );
 
   const existingCertification = certifications?.data?.[0]; // Assuming one certification per course

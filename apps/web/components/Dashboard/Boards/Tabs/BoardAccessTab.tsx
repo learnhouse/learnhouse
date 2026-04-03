@@ -40,7 +40,8 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
     !isPublic && boardUuid && org?.id
       ? `${getAPIUrl()}usergroups/resource/${boardUuid}?org_id=${org.id}`
       : null,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
   )
 
   const handleSetAccess = async (value: boolean) => {
@@ -220,7 +221,8 @@ function LinkUserGroupToBoard({ boardUuid, orgId, accessToken, setModalOpen }: {
 
   const { data: usergroups } = useSWR(
     org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, accessToken)
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false }
   )
 
   const [selectedUserGroup, setSelectedUserGroup] = useState<number | null>(null)

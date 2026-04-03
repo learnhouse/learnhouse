@@ -29,7 +29,8 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     getCourseMetadata(
       params.courseuuid,
       { revalidate: 0, tags: ['courses'] },
-      access_token ?? undefined
+      access_token ?? undefined,
+      { slim: true }
     ).catch(() => null),
   ])
 
@@ -118,7 +119,8 @@ const CoursePage = async (params: any) => {
     getCourseMetadata(
       courseuuid,
       { revalidate: 0, tags: ['courses'] },
-      access_token ?? undefined
+      access_token ?? undefined,
+      { slim: true }
     ).catch((error: any) => {
       fetchError = { status: error?.status }
       return null

@@ -78,7 +78,8 @@ const OrgEditDomains: React.FC = () => {
   const domainsUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/domains` : null
   const { data: domains, isLoading } = useSWR<CustomDomain[]>(
     domainsUrl,
-    (url: string) => swrFetcher(url, access_token)
+    (url: string) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
   )
 
   const handleAddDomain = async () => {

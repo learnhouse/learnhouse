@@ -21,7 +21,7 @@ export default function RecentCourses() {
       ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/8?include_unpublished=true`
       : null,
     (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const courses: any[] = coursesData ?? []

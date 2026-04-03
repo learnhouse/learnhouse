@@ -127,7 +127,8 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
   const { data, error, isLoading } = useSWR(
     [`/stripe/overview/${orgId}`, accessToken],
-    () => getStripeOverview(orgId, accessToken)
+    () => getStripeOverview(orgId, accessToken),
+    { revalidateOnFocus: false }
   )
 
   if (isLoading) return <PageLoading />
@@ -189,7 +190,8 @@ function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: strin
 function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
   const { data: customers, error, isLoading } = useSWR(
     [`/payments/${orgId}/customers`, accessToken],
-    () => getOrgCustomers(orgId, accessToken)
+    () => getOrgCustomers(orgId, accessToken),
+    { revalidateOnFocus: false }
   )
 
   if (isLoading) return <PageLoading />
@@ -292,7 +294,8 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
 
   const { data, error, isLoading } = useSWR(
     [`/stripe/charges/${orgId}`, accessToken, cursor],
-    () => getStripeCharges(orgId, accessToken, 25, cursor)
+    () => getStripeCharges(orgId, accessToken, 25, cursor),
+    { revalidateOnFocus: false }
   )
 
   const goNext = () => {
@@ -383,7 +386,8 @@ function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: 
 
   const { data, error, isLoading } = useSWR(
     [`/stripe/subscriptions/${orgId}`, accessToken, status],
-    () => getStripeSubscriptions(orgId, accessToken, status)
+    () => getStripeSubscriptions(orgId, accessToken, status),
+    { revalidateOnFocus: false }
   )
 
   const statuses = ['active', 'trialing', 'past_due', 'canceled', 'all']

@@ -1545,7 +1545,8 @@ const FeaturedCoursesEditor: React.FC<{
 
   const { data: courses } = useSWR(
     org?.slug ? [org.slug, access_token] : null,
-    ([orgSlug, token]) => getOrgCourses(orgSlug, null, token)
+    ([orgSlug, token]) => getOrgCourses(orgSlug, null, token),
+    { revalidateOnFocus: false }
   )
 
   return (

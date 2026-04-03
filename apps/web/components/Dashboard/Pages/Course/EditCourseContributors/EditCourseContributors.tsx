@@ -95,7 +95,8 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
 
     const { data: contributors } = useSWR<Contributor[]>(
         courseStructure ? `${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors` : null,
-        (url: string) => swrFetcher(url, access_token)
+        (url: string) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     );
 
     const [isOpenToContributors, setIsOpenToContributors] = useState<boolean | undefined>(undefined);

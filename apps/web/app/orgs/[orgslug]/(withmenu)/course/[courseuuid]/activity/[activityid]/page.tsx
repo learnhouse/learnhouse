@@ -26,7 +26,8 @@ async function fetchCourseMetadata(courseuuid: string, access_token: string | nu
   return await getCourseMetadata(
     courseuuid,
     { revalidate: 0, tags: ['courses'] },
-    access_token || null
+    access_token || null,
+    { slim: true }
   )
 }
 

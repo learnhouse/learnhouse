@@ -32,7 +32,8 @@ function OrgRoles() {
 
     const { data: roles } = useSWR(
         org ? `${getAPIUrl()}roles/org/${org.id}` : null,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     )
 
     const deleteRoleUI = async (role_id: any) => {

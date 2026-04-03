@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
           const meta = await getCourseMetadata(
             course.course_uuid.replace('course_', ''),
             null,
-            null
+            null,
+            { slim: true }
           )
           if (meta?.chapters) {
             for (const chapter of meta.chapters) {

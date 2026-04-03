@@ -45,10 +45,12 @@ export async function searchOrgCourses(
 export async function getCourseMetadata(
   course_uuid: string,
   next: any,
-  access_token: string | null | undefined
+  access_token: string | null | undefined,
+  options?: { slim?: boolean }
 ) {
+  const params = options?.slim ? '?slim=true' : ''
   const result = await fetch(
-    `${getAPIUrl()}courses/course_${course_uuid}/meta`,
+    `${getAPIUrl()}courses/course_${course_uuid}/meta${params}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
   const res = await errorHandling(result)
