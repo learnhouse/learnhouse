@@ -91,6 +91,7 @@ function DashLeftMenu() {
     (url) => swrFetcher(url, access_token),
     {
       revalidateOnFocus: false,
+      dedupingInterval: 30000,
     }
   )
   const recentCourses = coursesData?.slice(0, 8) || []

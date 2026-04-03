@@ -212,6 +212,7 @@ async def get_course_chapters(
     with_unpublished_activities: bool,
     page: int = 1,
     limit: int = 10,
+    slim: bool = False,
 ) -> List[ChapterRead]:
 
     statement = select(Course).where(Course.id == course_id)
@@ -253,8 +254,13 @@ async def get_course_chapters(
             key = (chapter_activity.chapter_id, activity.id)
             if key not in seen:
                 seen.add(key)
+                activity_data = activity.model_dump()
+                if slim:
+                    # Strip heavy fields, keep only what's needed for navigation
+                    activity_data["content"] = {}
+                    activity_data["details"] = None
                 chapter_activities_map.setdefault(chapter_activity.chapter_id, []).append(
-                    ActivityRead(**activity.model_dump())
+                    ActivityRead(**activity_data)
                 )
 
         for chapter in chapters:

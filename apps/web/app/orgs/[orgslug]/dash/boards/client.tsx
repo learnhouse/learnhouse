@@ -103,7 +103,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const { data: boards, isLoading } = useSWR(
     boardsKey,
     (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: false }
   )
 
   const allBoards = boards || []

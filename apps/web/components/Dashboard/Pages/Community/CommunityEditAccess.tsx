@@ -29,7 +29,8 @@ const CommunityEditAccess: React.FC = () => {
     community?.community_uuid && org?.id
       ? `${getAPIUrl()}usergroups/resource/${community.community_uuid}?org_id=${org.id}`
       : null,
-    (url) => swrFetcher(url, accessToken)
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false }
   )
 
   // Track local public state

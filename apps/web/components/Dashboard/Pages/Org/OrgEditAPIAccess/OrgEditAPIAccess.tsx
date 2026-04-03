@@ -88,7 +88,8 @@ const OrgEditAPIAccess: React.FC = () => {
   const tokensUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/api-tokens` : null
   const { data: tokens, isLoading } = useSWR<APIToken[]>(
     tokensUrl,
-    (url: string) => swrFetcher(url, access_token)
+    (url: string) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
   )
 
   const handleCreateToken = async () => {

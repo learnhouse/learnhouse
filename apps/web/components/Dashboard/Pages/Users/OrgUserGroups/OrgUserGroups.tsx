@@ -34,7 +34,8 @@ function OrgUserGroups() {
 
     const { data: usergroups, isValidating: isUsergroupsValidating } = useSWR(
         org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     )
     const isInitialLoading = !usergroups && isUsergroupsValidating
 
@@ -261,7 +262,8 @@ function MemberCountBadge({ usergroup_id, org_id, access_token }: { usergroup_id
     const { t } = useTranslation()
     const { data: users } = useSWR(
         access_token ? `${getAPIUrl()}usergroups/${usergroup_id}/users?org_id=${org_id}` : null,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     )
 
     const count = users?.length || 0

@@ -63,7 +63,8 @@ const PaymentsConfigurationPage: React.FC = () => {
 
   const { data: paymentConfigs, error, isLoading } = useSWR(
     () => (org && access_token ? [`/payments/${org.id}/config`, access_token] : null),
-    ([, token]) => getPaymentConfigs(org.id, token)
+    ([, token]) => getPaymentConfigs(org.id, token),
+    { revalidateOnFocus: false }
   );
 
   useEffect(() => {

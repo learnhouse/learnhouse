@@ -35,12 +35,14 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
 
   const { data: resources, error } = useSWR(
     swrKey,
-    ([, orgId, t]: any) => getOfferResources(orgId, offerId, t)
+    ([, orgId, t]: any) => getOfferResources(orgId, offerId, t),
+    { revalidateOnFocus: false }
   );
 
   const { data: coursesData } = useSWR(
     showPicker && org && token ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true)
+    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
+    { revalidateOnFocus: false }
   );
 
   if (error) return <div className="text-sm text-red-500">Failed to load resources</div>;
