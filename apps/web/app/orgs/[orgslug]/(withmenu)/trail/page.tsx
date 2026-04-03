@@ -13,7 +13,7 @@ type MetadataProps = {
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
   return {

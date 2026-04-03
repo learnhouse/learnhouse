@@ -37,13 +37,9 @@ export async function getOrganizationContextInfo(
   next: any,
   access_token?: string
 ) {
-  // Skip Next.js data cache for org data — the API serves from Redis cache
-  // (shared across pods, instantly invalidated on changes). Using Next.js ISR
-  // cache here causes stale data across pods since revalidateTag only busts
-  // the local pod's file-system cache.
   const result = await fetch(
     `${getAPIUrl()}orgs/slug/${org_slug}`,
-    RequestBodyWithAuthHeader('GET', null, { ...next, revalidate: 0 }, access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
@@ -56,7 +52,7 @@ export async function getOrganizationContextInfoWithUUID(
 ) {
   const result = await fetch(
     `${getAPIUrl()}orgs/uuid/${org_uuid}`,
-    RequestBodyWithAuthHeader('GET', null, { ...next, revalidate: 0 }, access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
@@ -71,8 +67,7 @@ export async function getOrganizationContextInfoWithoutCredentials(
     method: 'GET',
     headers: HeadersConfig,
     redirect: 'follow',
-    // Skip Next.js cache — API Redis cache handles caching and invalidation
-    next: { ...next, revalidate: 0 },
+    next: next,
   }
 
   const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, options)
@@ -87,7 +82,7 @@ export function getOrganizationContextInfoNoAsync(
 ) {
   const result = fetch(
     `${getAPIUrl()}orgs/slug/${org_slug}`,
-    RequestBodyWithAuthHeader('GET', null, { ...next, revalidate: 0 }, access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   return result
 }

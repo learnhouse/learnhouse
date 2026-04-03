@@ -20,7 +20,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const access_token = session?.tokens?.access_token
 
   // Parallelize org + course metadata fetches
-  // Use revalidate: 0 to match the page component and enable Next.js fetch dedup
+  // Use revalidate: 120 to match the page component and enable Next.js fetch dedup
   const [org, courseResult] = await Promise.all([
     getOrganizationContextInfo(params.orgslug, {
       revalidate: 120,
@@ -28,7 +28,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     }),
     getCourseMetadata(
       params.courseuuid,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined,
       { slim: true }
     ).catch(() => null),
@@ -118,7 +118,7 @@ const CoursePage = async (params: any) => {
   const [courseResult, org] = await Promise.all([
     getCourseMetadata(
       courseuuid,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined,
       { slim: true }
     ).catch((error: any) => {

@@ -88,7 +88,7 @@ export default async function PodcastsPage({ params }: { params: PageParams }) {
   try {
     initialPodcasts = await getOrgPodcasts(
       orgslug,
-      { revalidate: 0, tags: ['podcasts'] },
+      { revalidate: 120, tags: ['podcasts'] },
       access_token ? access_token : undefined,
       access_token ? true : false  // include_unpublished for logged-in users
     )

@@ -25,7 +25,7 @@ type Session = {
 async function fetchCourseMetadata(courseuuid: string, access_token: string | null | undefined) {
   return await getCourseMetadata(
     courseuuid,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 120, tags: ['courses'] },
     access_token || null,
     { slim: true }
   )
@@ -45,7 +45,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     fetchCourseMetadata(params.courseuuid, access_token),
     getActivityWithAuthHeader(
       params.activityid,
-      { revalidate: 0, tags: ['activities'] },
+      { revalidate: 120, tags: ['activities'] },
       access_token || null
     ),
   ])
@@ -125,7 +125,7 @@ const ActivityPage = async (params: any) => {
       fetchCourseMetadata(courseuuid, access_token),
       getActivityWithAuthHeader(
         activityid,
-        { revalidate: 0, tags: ['activities'] },
+        { revalidate: 120, tags: ['activities'] },
         access_token || null
       )
     ])
