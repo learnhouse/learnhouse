@@ -2,7 +2,7 @@
 import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
-import { SessionProvider } from '@components/Contexts/AuthContext'
+import { SessionGate } from '@components/Contexts/LHSessionContext'
 import React from 'react'
 import { useMediaQuery } from 'usehooks-ts';
 
@@ -16,7 +16,7 @@ function ClientAdminLayout({
     const isMobile = useMediaQuery('(max-width: 768px)')
 
     return (
-        <SessionProvider>
+        <SessionGate>
             <AdminAuthorization authorizationMode="page">
                 <div className="flex flex-col md:flex-row">
                     {isMobile ? (
@@ -27,7 +27,7 @@ function ClientAdminLayout({
                     <div className="flex w-full relative isolate">{children}</div>
                 </div>
             </AdminAuthorization>
-        </SessionProvider>
+        </SessionGate>
     )
 }
 

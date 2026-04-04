@@ -89,7 +89,8 @@ const OrgAuditLogs = () => {
   const logsUrl = org && access_token ? `${getAPIUrl()}ee/audit_logs/?${buildQuery()}` : null
   const { data, isLoading, isValidating } = useSWR(
     logsUrl,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
   )
 
   const logs = data?.items || []

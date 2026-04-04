@@ -17,7 +17,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const access_token = session?.tokens?.access_token
 
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -28,7 +28,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     collection = await getCollectionById(
       `collection_${params.collectionid}`,
       access_token || '',
-      { revalidate: 0, tags: ['collections'] }
+      { revalidate: 120, tags: ['collections'] }
     )
   } catch {
     // Collection might not exist or user doesn't have access
@@ -91,7 +91,7 @@ const CollectionPage = async (props: { params: MetadataProps['params'] }) => {
     collection = await getCollectionById(
       `collection_${params.collectionid}`,
       access_token || '',
-      { revalidate: 0, tags: ['collections'] }
+      { revalidate: 120, tags: ['collections'] }
     )
   } catch {
     // Collection might not exist or user doesn't have access

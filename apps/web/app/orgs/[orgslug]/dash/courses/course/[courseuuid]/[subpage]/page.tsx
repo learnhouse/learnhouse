@@ -178,6 +178,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
               return (
                 <Link
                   key={tab.key}
+                  prefetch={false}
                   href={getUriWithOrg(params.orgslug, '') + tab.href}
                 >
                   <div

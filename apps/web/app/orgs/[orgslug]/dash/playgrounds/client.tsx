@@ -63,7 +63,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const { data: playgrounds, isLoading } = useSWR(
     playgroundsKey,
     (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: false }
   )
 
   const allPlaygrounds: any[] = playgrounds || []

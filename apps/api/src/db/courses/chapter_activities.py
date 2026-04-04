@@ -6,10 +6,10 @@ class ChapterActivity(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     order: int
     chapter_id: int = Field(sa_column=Column(BigInteger, ForeignKey("chapter.id", ondelete="CASCADE"), index=True))
-    activity_id: int = Field(sa_column=Column(BigInteger, ForeignKey("activity.id", ondelete="CASCADE")))
+    activity_id: int = Field(sa_column=Column(BigInteger, ForeignKey("activity.id", ondelete="CASCADE"), index=True))
     course_id : int = Field(sa_column=Column(BigInteger, ForeignKey("course.id", ondelete="CASCADE"), index=True))
     org_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)
     )
     creation_date: str
     update_date: str

@@ -1,6 +1,5 @@
-import PageLoading from '@components/Objects/Loaders/PageLoading'
+import EditorSkeleton from '@components/Objects/Editor/EditorSkeleton'
 
 export default function Loading() {
-  // Or a custom loading skeleton component
-  return <PageLoading></PageLoading>
+  return <EditorSkeleton />
 }

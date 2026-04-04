@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 from sqlmodel import Field, SQLModel
-from sqlalchemy import ForeignKey, JSON, Column, Integer
+from sqlalchemy import ForeignKey, JSON, Column, Index, Integer
 
 
 class TrailStepTypeEnum(str, Enum):
@@ -11,6 +11,9 @@ class TrailStepTypeEnum(str, Enum):
 
 
 class TrailStep(SQLModel, table=True):
+    __table_args__ = (
+        Index("ix_trailstep_trailrun_user", "trailrun_id", "user_id"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     complete: bool
     teacher_verified: bool

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import {
   useCourse,
   useCourseDispatch,
+  getCourseMetaCacheKey,
 } from '@components/Contexts/CourseContext'
 import { Hexagon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -63,7 +64,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
     await createChapter(chapter,access_token)
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+    await mutate(getCourseMetaCacheKey(course.courseStructure.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
     setNewChapterModal(false)

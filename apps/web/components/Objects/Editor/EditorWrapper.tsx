@@ -60,6 +60,7 @@ interface EditorWrapperProps {
   activity: any
   course: any
   org: any
+  onEditorReady?: () => void
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
@@ -188,6 +189,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             checkForConflicts={checkForConflicts}
             fetchRemoteContent={fetchRemoteContent}
             localVersion={localVersion}
+            onReady={props.onEditorReady}
           />
         )}
       </OrgProvider>

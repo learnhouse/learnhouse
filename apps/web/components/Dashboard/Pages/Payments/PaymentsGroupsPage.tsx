@@ -40,11 +40,12 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
 
   const swrKey = [`/payments/${orgId}/groups/${group.id}/resources`, orgId, token];
 
-  const { data: resources } = useSWR(swrKey, () => getGroupResources(orgId, group.id, token));
+  const { data: resources } = useSWR(swrKey, () => getGroupResources(orgId, group.id, token), { revalidateOnFocus: false });
 
   const { data: coursesData } = useSWR(
     org ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true)
+    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
+    { revalidateOnFocus: false }
   );
 
   const rawList: string[] = Array.isArray(resources?.data) ? resources.data : Array.isArray(resources) ? resources : [];
@@ -153,7 +154,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
 function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; token: string }) {
   const swrKey = [`/payments/${orgId}/groups/${group.id}/sync`, token];
 
-  const { data: syncs } = useSWR(swrKey, () => getGroupSyncs(orgId, group.id, token));
+  const { data: syncs } = useSWR(swrKey, () => getGroupSyncs(orgId, group.id, token), { revalidateOnFocus: false });
 
   const { data: usergroups } = useSWR(
     [`/usergroups/${orgId}`, token],
@@ -161,7 +162,8 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
       const { getUserGroups } = await import('@services/usergroups/usergroups');
       const res = await getUserGroups(orgId, t);
       return res?.data ?? res ?? [];
-    }
+    },
+    { revalidateOnFocus: false }
   );
 
   const syncList: any[] = Array.isArray(syncs?.data) ? syncs.data : Array.isArray(syncs) ? syncs : [];
@@ -366,7 +368,7 @@ export default function PaymentsGroupsPage() {
   const [editingGroup, setEditingGroup] = useState<any>(null);
 
   const swrKey = org && token ? [`/payments/${org.id}/groups`, token] : null;
-  const { data: groups, error } = useSWR(swrKey, ([, t]: any) => getPaymentsGroups(org.id, t));
+  const { data: groups, error } = useSWR(swrKey, ([, t]: any) => getPaymentsGroups(org.id, t), { revalidateOnFocus: false });
 
   if (!isEnabled && !isLoading) return <UnconfiguredPaymentsDisclaimer />;
   if (error) return <div className="p-8 text-sm text-red-500">Failed to load groups.</div>;

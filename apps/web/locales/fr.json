@@ -1642,13 +1642,40 @@
           "unpublish": "Dépublier",
           "preview_activity": "Aperçu de l'activité",
           "edit_page": "Modifier la page",
-          "edit_assignment": "Modifier le devoir"
+          "edit_assignment": "Modifier le devoir",
+          "rename": "Renommer",
+          "publishing": "Publication en cours...",
+          "publish_all": "Tout publier ({{count}})",
+          "publishing_all": "Publication de tout en cours...",
+          "publish_all_success": "Toutes les activités ont été publiées avec succès",
+          "unpublish_all": "Tout dépublier",
+          "unpublish_all_success": "Toutes les activités ont été dépubliées avec succès",
+          "publish_all_error": "La mise à jour de certaines activités a échoué"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} sélectionnée(s)",
+          "clear": "Effacer",
+          "delete": "Supprimer",
+          "delete_title": "Supprimer les activités sélectionnées",
+          "delete_confirm": "Voulez-vous vraiment supprimer {{count}} activités sélectionnées ? Cette action est irréversible.",
+          "delete_button": "Supprimer les activités",
+          "delete_success": "{{count}} activités supprimées avec succès",
+          "delete_error": "La suppression de certaines activités a échoué",
+          "publish_success": "{{count}} activités publiées avec succès",
+          "publish_error": "La publication de certaines activités a échoué",
+          "unpublish_success": "{{count}} activités dépubliées avec succès",
+          "unpublish_error": "La dépublication de certaines activités a échoué",
+          "partial_error": "{{failed}} activités sur {{total}} n'ont pas pu être mises à jour"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nom du chapitre"
         },
         "activity": {
           "name_placeholder": "Nom de l'activité",
+          "status": {
+            "published": "Publié",
+            "draft": "Brouillon"
+          },
           "types": {
             "video": "Vidéo",
             "document": "Document",

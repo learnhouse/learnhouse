@@ -6,10 +6,11 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { removeUserFromOrg, removeUsersFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users, CheckCircle2, XCircle, Mail, Globe, ArrowUpDown, ArrowUp, ArrowDown, X, Filter, Download } from 'lucide-react'
-import React, { useState, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
@@ -34,11 +35,6 @@ function formatShortDate(dateStr: string | null | undefined): string {
   }
 }
 
-// Probabilistic revalidateOnFocus — revalidate ~50% of the time
-function shouldRevalidate() {
-  return Math.random() < 0.5
-}
-
 function OrgUsers() {
   const { t } = useTranslation()
   const org = useOrg() as any
@@ -52,9 +48,6 @@ function OrgUsers() {
   const [filterRole, setFilterRole] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterGroupId, setFilterGroupId] = useState<string>('')
-
-  // Track whether revalidation on focus is allowed
-  const revalidateRef = useRef(shouldRevalidate)
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -77,25 +70,8 @@ function OrgUsers() {
     (url) => swrFetcher(url, access_token),
     {
       revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      onSuccess: () => {
-        // Re-roll the dice for next focus
-        revalidateRef.current = shouldRevalidate
-      },
     }
   )
-
-  // Manual focus-based revalidation at ~50% rate
-  React.useEffect(() => {
-    const handleFocus = () => {
-      if (revalidateRef.current() && usersUrl) {
-        mutate(usersUrl)
-      }
-      revalidateRef.current = shouldRevalidate
-    }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [usersUrl])
 
   // Fetch available roles
   const { data: roles } = useSWR(
@@ -481,6 +457,8 @@ function OrgUsers() {
                           <div className="flex items-center gap-3">
                             <UserAvatar
                               width={40}
+                              avatar_url={user.user.avatar_image ? getUserAvatarMediaDirectory(user.user.user_uuid, user.user.avatar_image) : undefined}
+                              predefined_avatar={user.user.avatar_image ? undefined : 'empty'}
                               userId={user.user.id?.toString()}
                               rounded="rounded-full"
                               showProfilePopup={true}

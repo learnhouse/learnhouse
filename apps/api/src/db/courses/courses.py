@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Index, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from enum import Enum
@@ -60,6 +60,10 @@ class CourseBase(SQLModel):
 
 
 class Course(CourseBase, table=True):
+    __table_args__ = (
+        Index("ix_course_org_public_published_created", "org_id", "public", "published", "creation_date"),
+        {"extend_existing": True},
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)

@@ -678,45 +678,16 @@ function PlanChapterCard({ chapter, chapterIndex, plan, onUpdatePlan }: {
 
       {expanded && (
         <div className="px-4 pb-3 space-y-2">
-          {chapter.activities.map((activity, ai) => {
-            const [editing, setEditing] = React.useState(false)
-            const [val, setVal] = React.useState(activity.name)
-            React.useEffect(() => setVal(activity.name), [activity.name])
-
-            const save = () => {
-              if (val.trim()) {
-                const c = [...plan.chapters]; const a = [...c[chapterIndex].activities]
-                a[ai] = { ...a[ai], name: val.trim() }; c[chapterIndex] = { ...c[chapterIndex], activities: a }
-                onUpdatePlan({ ...plan, chapters: c })
-              }
-              setEditing(false)
-            }
-
-            const remove = () => {
-              const c = [...plan.chapters]
-              c[chapterIndex] = { ...c[chapterIndex], activities: c[chapterIndex].activities.filter((_, i) => i !== ai) }
-              onUpdatePlan({ ...plan, chapters: c })
-            }
-
-            return (
-              <div key={ai} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg ring-1 ring-inset ring-white/5">
-                <FileText className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  {editing ? (
-                    <input type="text" value={val} onChange={(e) => setVal(e.target.value)} onBlur={save}
-                      onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setVal(activity.name); setEditing(false) } }}
-                      className="w-full bg-white/10 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500" autoFocus />
-                  ) : (
-                    <span onClick={() => setEditing(true)} className="text-sm text-white/80 hover:text-purple-300 cursor-pointer">{activity.name}</span>
-                  )}
-                  {activity.description && <p className="text-xs text-white/40 mt-0.5 line-clamp-1">{activity.description}</p>}
-                </div>
-                <button onClick={remove} className="p-1 hover:bg-red-500/20 rounded transition-colors flex-shrink-0">
-                  <Trash2 className="w-3 h-3 text-red-400" />
-                </button>
-              </div>
-            )
-          })}
+          {chapter.activities.map((activity, ai) => (
+            <PlanActivityItem
+              key={ai}
+              activity={activity}
+              activityIndex={ai}
+              chapterIndex={chapterIndex}
+              plan={plan}
+              onUpdatePlan={onUpdatePlan}
+            />
+          ))}
 
           <button
             onClick={() => {
@@ -731,6 +702,52 @@ function PlanChapterCard({ chapter, chapterIndex, plan, onUpdatePlan }: {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────
+// Plan activity item - extracted to fix hooks-in-map
+// ────────────────────────────────────────
+
+function PlanActivityItem({ activity, activityIndex, chapterIndex, plan, onUpdatePlan }: {
+  activity: ActivityPlan; activityIndex: number; chapterIndex: number; plan: CoursePlan; onUpdatePlan: (plan: CoursePlan) => void
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const [val, setVal] = React.useState(activity.name)
+  React.useEffect(() => setVal(activity.name), [activity.name])
+
+  const save = () => {
+    if (val.trim()) {
+      const c = [...plan.chapters]; const a = [...c[chapterIndex].activities]
+      a[activityIndex] = { ...a[activityIndex], name: val.trim() }; c[chapterIndex] = { ...c[chapterIndex], activities: a }
+      onUpdatePlan({ ...plan, chapters: c })
+    }
+    setEditing(false)
+  }
+
+  const remove = () => {
+    const c = [...plan.chapters]
+    c[chapterIndex] = { ...c[chapterIndex], activities: c[chapterIndex].activities.filter((_, i) => i !== activityIndex) }
+    onUpdatePlan({ ...plan, chapters: c })
+  }
+
+  return (
+    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg ring-1 ring-inset ring-white/5">
+      <FileText className="w-4 h-4 text-white/40 mt-0.5 flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <input type="text" value={val} onChange={(e) => setVal(e.target.value)} onBlur={save}
+            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setVal(activity.name); setEditing(false) } }}
+            className="w-full bg-white/10 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500" autoFocus />
+        ) : (
+          <span onClick={() => setEditing(true)} className="text-sm text-white/80 hover:text-purple-300 cursor-pointer">{activity.name}</span>
+        )}
+        {activity.description && <p className="text-xs text-white/40 mt-0.5 line-clamp-1">{activity.description}</p>}
+      </div>
+      <button onClick={remove} className="p-1 hover:bg-red-500/20 rounded transition-colors flex-shrink-0">
+        <Trash2 className="w-3 h-3 text-red-400" />
+      </button>
     </div>
   )
 }

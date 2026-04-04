@@ -1634,13 +1634,40 @@
           "unpublish": "अप्रकाशित करें",
           "preview_activity": "गतिविधि पूर्वावलोकन",
           "edit_page": "पेज संपादित करें",
-          "edit_assignment": "असाइनमेंट संपादित करें"
+          "edit_assignment": "असाइनमेंट संपादित करें",
+          "rename": "नाम बदलें",
+          "publishing": "प्रकाशित हो रहा है...",
+          "publish_all": "सभी प्रकाशित करें ({{count}})",
+          "publishing_all": "सभी प्रकाशित हो रहे हैं...",
+          "publish_all_success": "सभी गतिविधियाँ सफलतापूर्वक प्रकाशित हो गईं",
+          "unpublish_all": "सभी अप्रकाशित करें",
+          "unpublish_all_success": "सभी गतिविधियाँ सफलतापूर्वक अप्रकाशित हो गईं",
+          "publish_all_error": "कुछ गतिविधियाँ अपडेट करने में विफल"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} चयनित",
+          "clear": "साफ़ करें",
+          "delete": "हटाएँ",
+          "delete_title": "चयनित गतिविधियाँ हटाएँ",
+          "delete_confirm": "क्या आप वाकई {{count}} चयनित गतिविधियाँ हटाना चाहते हैं? यह पूर्ववत नहीं किया जा सकता।",
+          "delete_button": "गतिविधियाँ हटाएँ",
+          "delete_success": "{{count}} गतिविधियाँ सफलतापूर्वक हटा दी गईं",
+          "delete_error": "कुछ गतिविधियाँ हटाने में विफल",
+          "publish_success": "{{count}} गतिविधियाँ सफलतापूर्वक प्रकाशित हो गईं",
+          "publish_error": "कुछ गतिविधियाँ प्रकाशित करने में विफल",
+          "unpublish_success": "{{count}} गतिविधियाँ सफलतापूर्वक अप्रकाशित हो गईं",
+          "unpublish_error": "कुछ गतिविधियाँ अप्रकाशित करने में विफल",
+          "partial_error": "{{total}} में से {{failed}} गतिविधियाँ अपडेट करने में विफल"
         },
         "chapter_element": {
           "chapter_name_placeholder": "अध्याय का नाम"
         },
         "activity": {
           "name_placeholder": "गतिविधि का नाम",
+          "status": {
+            "published": "प्रकाशित",
+            "draft": "ड्राफ़्ट"
+          },
           "types": {
             "video": "वीडियो",
             "document": "दस्तावेज़",

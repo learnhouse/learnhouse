@@ -41,7 +41,7 @@ export default function DashboardHome() {
   const { data: usageData } = useSWR<OrgUsageResponse>(
     token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
     (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const plan = usePlan()

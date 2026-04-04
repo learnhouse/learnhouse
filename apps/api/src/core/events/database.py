@@ -100,9 +100,200 @@ if not is_testing:
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")
-    # Only create tables if not in test mode
-    if not is_testing:
-        SQLModel.metadata.create_all(engine)
+
+def _register_cache_invalidation_hooks():
+    """
+    Automatically invalidate the org Redis cache when Organization or
+    OrganizationConfig rows are inserted, updated, or deleted.
+
+    Uses mapper-level events (after_insert/after_update/after_delete) which
+    fire per-object DURING the flush, while the target and its attribute
+    history are still accessible. Slugs are collected per-session, then
+    the actual Redis invalidation runs after_commit (so we only invalidate
+    on successful transactions).
+    """
+    from sqlalchemy import event as sa_event, inspect as sa_inspect
+    from src.db.organizations import Organization
+    from src.db.organization_config import OrganizationConfig
+
+    def _ensure_set(session):
+        if not hasattr(session, '_org_slugs_to_invalidate'):
+            session._org_slugs_to_invalidate = set()
+        return session._org_slugs_to_invalidate
+
+    # ── Mapper-level events: fire per-object during flush ──
+
+    @sa_event.listens_for(Organization, "after_insert")
+    def _org_after_insert(mapper, connection, target):
+        session = Session.object_session(target)
+        if session and target.slug:
+            _ensure_set(session).add(target.slug)
+
+    @sa_event.listens_for(Organization, "after_update")
+    def _org_after_update(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session:
+            return
+        if target.slug:
+            _ensure_set(session).add(target.slug)
+        # If slug was renamed, also invalidate the old slug
+        try:
+            history = sa_inspect(target).attrs.slug.history
+            for old_slug in (history.deleted or []):
+                _ensure_set(session).add(old_slug)
+        except Exception:
+            pass
+
+    @sa_event.listens_for(Organization, "after_delete")
+    def _org_after_delete(mapper, connection, target):
+        session = Session.object_session(target)
+        if session and target.slug:
+            _ensure_set(session).add(target.slug)
+
+    def _orgconfig_changed(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session or not target.org_id:
+            return
+        # Use the identity map key to look up the org without issuing SQL.
+        # session.get() is unsafe here because it can emit a SELECT mid-flush
+        # if the org isn't already loaded, causing reentrancy issues.
+        try:
+            key = sa_inspect(Organization).identity_key_from_primary_key(
+                (target.org_id,)
+            )
+            org = session.identity_map.get(key)
+            if org and org.slug:
+                _ensure_set(session).add(org.slug)
+        except Exception:
+            # If identity map lookup fails for any reason, fall back to
+            # querying the slug directly via the connection (bypasses ORM flush)
+            try:
+                from sqlalchemy import text as sa_text
+                row = connection.execute(
+                    sa_text("SELECT slug FROM organization WHERE id = :oid"),
+                    {"oid": target.org_id},
+                ).first()
+                if row and row[0]:
+                    _ensure_set(session).add(row[0])
+            except Exception:
+                pass
+
+    sa_event.listen(OrganizationConfig, "after_insert", _orgconfig_changed)
+    sa_event.listen(OrganizationConfig, "after_update", _orgconfig_changed)
+    sa_event.listen(OrganizationConfig, "after_delete", _orgconfig_changed)
+
+    # ── Course cache invalidation: bust course list cache on changes ──
+    from src.db.courses.courses import Course
+
+    def _ensure_course_uuids(session):
+        if not hasattr(session, '_course_uuids_to_invalidate'):
+            session._course_uuids_to_invalidate = set()
+        return session._course_uuids_to_invalidate
+
+    def _course_changed(mapper, connection, target):
+        session = Session.object_session(target)
+        if not session:
+            return
+        # Track course UUID for meta cache invalidation
+        if target.course_uuid:
+            _ensure_course_uuids(session).add(target.course_uuid)
+        if not target.org_id:
+            return
+        try:
+            key = sa_inspect(Organization).identity_key_from_primary_key(
+                (target.org_id,)
+            )
+            org = session.identity_map.get(key)
+            if org and org.slug:
+                _ensure_set(session).add(org.slug)
+        except Exception:
+            try:
+                from sqlalchemy import text as sa_text
+                row = connection.execute(
+                    sa_text("SELECT slug FROM organization WHERE id = :oid"),
+                    {"oid": target.org_id},
+                ).first()
+                if row and row[0]:
+                    _ensure_set(session).add(row[0])
+            except Exception:
+                pass
+
+    sa_event.listen(Course, "after_insert", _course_changed)
+    sa_event.listen(Course, "after_update", _course_changed)
+    sa_event.listen(Course, "after_delete", _course_changed)
+
+    # ── Activity/Chapter/ChapterActivity changes also invalidate course meta ──
+    from src.db.courses.activities import Activity
+    from src.db.courses.chapters import Chapter
+    from src.db.courses.chapter_activities import ChapterActivity
+
+    def _course_child_changed(mapper, connection, target):
+        """When an activity, chapter, or chapter_activity changes, invalidate the parent course meta."""
+        session = Session.object_session(target)
+        if not session or not getattr(target, 'course_id', None):
+            return
+        # Look up the course UUID from the identity map first (no SQL needed)
+        try:
+            course_key = sa_inspect(Course).identity_key_from_primary_key(
+                (target.course_id,)
+            )
+            course = session.identity_map.get(course_key)
+            if course and course.course_uuid:
+                _ensure_course_uuids(session).add(course.course_uuid)
+                return
+        except Exception:
+            pass
+        # Fallback: query the course UUID directly via connection
+        try:
+            from sqlalchemy import text as sa_text
+            row = connection.execute(
+                sa_text("SELECT course_uuid FROM course WHERE id = :cid"),
+                {"cid": target.course_id},
+            ).first()
+            if row and row[0]:
+                _ensure_course_uuids(session).add(row[0])
+        except Exception:
+            pass
+
+    for model in (Activity, Chapter, ChapterActivity):
+        sa_event.listen(model, "after_insert", _course_child_changed)
+        sa_event.listen(model, "after_update", _course_child_changed)
+        sa_event.listen(model, "after_delete", _course_child_changed)
+
+    # ── Session-level events: run after transaction completes ──
+
+    @sa_event.listens_for(Session, "after_commit")
+    def _on_after_commit(session):
+        slugs = getattr(session, '_org_slugs_to_invalidate', None)
+        course_uuids = getattr(session, '_course_uuids_to_invalidate', None)
+        try:
+            if slugs:
+                from src.services.orgs.cache import invalidate_org_cache
+                from src.services.courses.cache import invalidate_courses_cache
+                for slug in slugs:
+                    invalidate_org_cache(slug)
+                    invalidate_courses_cache(slug)
+            if course_uuids:
+                from src.services.courses.cache import invalidate_course_meta_cache
+                for uuid in course_uuids:
+                    invalidate_course_meta_cache(uuid)
+        except Exception:
+            logging.warning("Cache invalidation after commit failed", exc_info=True)
+        finally:
+            session._org_slugs_to_invalidate = set()
+            session._course_uuids_to_invalidate = set()
+
+    @sa_event.listens_for(Session, "after_rollback")
+    def _on_after_rollback(session):
+        session._org_slugs_to_invalidate = set()
+        session._course_uuids_to_invalidate = set()
+
+if not is_testing:
+    try:
+        _register_cache_invalidation_hooks()
+    except Exception:
+        logging.warning("Failed to register cache invalidation hooks", exc_info=True)
+
 
 def get_db_session():
     with Session(engine) as session:

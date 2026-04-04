@@ -65,13 +65,13 @@ export default function UsageOverview() {
   const { data: usageData, isLoading } = useSWR<OrgUsageResponse>(
     token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
     (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const { data: aiCredits } = useSWR<AICreditsSummary>(
     token && orgId ? `${getAPIUrl()}orgs/${orgId}/ai-credits` : null,
     (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const ossMode = usageData?.oss_mode ?? false

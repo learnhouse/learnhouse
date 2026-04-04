@@ -57,14 +57,16 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
   // Payment Groups for the optional group picker
   const { data: groupsResult } = useSWR(
     org && token ? [`/payments/${org.id}/groups`, token] : null,
-    ([, t]: any) => getPaymentsGroups(org.id, t)
+    ([, t]: any) => getPaymentsGroups(org.id, t),
+    { revalidateOnFocus: false }
   );
   const groups: any[] = Array.isArray(groupsResult?.data) ? groupsResult.data : Array.isArray(groupsResult) ? groupsResult : [];
 
   // Courses for the direct course picker
   const { data: courses } = useSWR(
     org && token ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true)
+    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
+    { revalidateOnFocus: false }
   );
 
   const initialValues: OfferFormValues = {

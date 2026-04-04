@@ -46,7 +46,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['@phosphor-icons/react', 'framer-motion', 'lucide-react', '@emoji-mart/react', '@emoji-mart/data', 'dayjs', 'highlight.js', 'recharts', '@radix-ui/react-icons', '@hello-pangea/dnd', 'react-i18next'],
+    optimizePackageImports: ['@phosphor-icons/react', 'framer-motion', 'lucide-react', '@emoji-mart/react', '@emoji-mart/data', 'dayjs', 'highlight.js', 'recharts', '@radix-ui/react-icons', '@hello-pangea/dnd', 'react-i18next', '@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-table', '@tiptap/extension-youtube', 'katex', 'react-katex'],
   },
   // Ensure consistent build IDs across multiple pods in Kubernetes
   generateBuildId: async () => {

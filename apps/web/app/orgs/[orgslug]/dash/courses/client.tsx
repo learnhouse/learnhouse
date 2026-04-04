@@ -61,7 +61,7 @@ function CoursesHome(params: CourseProps) {
   const { data: coursesData, mutate: mutateCourses } = useSWR(
     isCoursesEnabled && access_token ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true` : null,
     (url) => swrFetcher(url, access_token),
-    { fallbackData: params.courses, revalidateOnFocus: true }
+    { fallbackData: params.courses, revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const allCourses = coursesData || params.courses
@@ -70,7 +70,7 @@ function CoursesHome(params: CourseProps) {
   const { data: usageData } = useSWR<OrgUsageResponse>(
     access_token && params.org_id ? `${getAPIUrl()}orgs/${params.org_id}/usage` : null,
     (url) => orgUsageFetcher(url, access_token),
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   // Check course creation limit from backend

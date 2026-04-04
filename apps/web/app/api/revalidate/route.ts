@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   const tag = request.nextUrl.searchParams.get('tag')
 
@@ -11,7 +13,15 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Revalidate the requested tag
   revalidateTag(tag, {})
+
+  // When organizations change, also bust course/collection caches since they
+  // embed org data (config, features, etc.)
+  if (tag === 'organizations') {
+    revalidateTag('courses', {})
+    revalidateTag('collections', {})
+  }
 
   return NextResponse.json(
     { revalidated: true, now: Date.now(), tag },

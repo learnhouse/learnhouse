@@ -31,6 +31,8 @@ function UserAvatar(props: UserAvatarProps) {
     const fetchUserData = async () => {
       // Skip fetching if no access token (user not authenticated)
       if (!access_token) return
+      // Skip fetching if avatar is already determined — the popup will fetch its own data
+      if (props.avatar_url || props.predefined_avatar) return
 
       if (props.username) {
         try {
@@ -50,7 +52,7 @@ function UserAvatar(props: UserAvatarProps) {
     }
 
     fetchUserData()
-  }, [props.username, props.userId, access_token])
+  }, [props.username, props.userId, access_token, props.avatar_url, props.predefined_avatar])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')

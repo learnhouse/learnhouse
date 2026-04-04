@@ -36,7 +36,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
   const { data: board, isLoading } = useSWR(
     boardKey,
     (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: false }
   )
 
   const tabs = [

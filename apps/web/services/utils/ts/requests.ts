@@ -167,11 +167,19 @@ export const getResponseMetadata = async (
 
 export const revalidateTags = async (tags: string[], orgslug: string) => {
   const url = getUriWithOrg(orgslug, '')
-  await Promise.allSettled(
-    tags.map((tag) =>
-      fetch(`${url}/api/revalidate?tag=${tag}`).catch((err) =>
+  // Call each tag revalidation multiple times to hit different pods
+  // behind the load balancer (cookie affinity only applies to the
+  // user's browser session, not to these programmatic fetches).
+  const calls = tags.flatMap((tag) => {
+    const endpoint = `${url}/api/revalidate?tag=${tag}`
+    return [
+      fetch(endpoint, { cache: 'no-store' }).catch((err) =>
         console.error(`Failed to revalidate tag ${tag}:`, err)
-      )
-    )
-  )
+      ),
+      fetch(endpoint, { cache: 'no-store' }).catch((err) =>
+        console.error(`Failed to revalidate tag ${tag}:`, err)
+      ),
+    ]
+  })
+  await Promise.allSettled(calls)
 }
