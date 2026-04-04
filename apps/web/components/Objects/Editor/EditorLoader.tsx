@@ -6,6 +6,7 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import { useSession } from '@components/Contexts/AuthContext'
 import EditorSkeleton from './EditorSkeleton'
 import EditorWrapper from './EditorWrapper'
+import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownActivity'
 
 interface EditorLoaderProps {
   courseid: string
@@ -41,6 +42,11 @@ export default function EditorLoader({ courseid, activityuuid }: EditorLoaderPro
   )
 
   const dataReady = courseInfo && activity && org
+  const isMarkdownActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN'
+
+  if (isMarkdownActivity && dataReady) {
+    return <MarkdownActivity activity={activity} editable />
+  }
 
   return (
     <>

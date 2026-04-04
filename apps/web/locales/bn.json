@@ -1676,7 +1676,8 @@
             "assignments": "অ্যাসাইনমেন্টসমূহ",
             "dynamic": "ডায়নামিক",
             "dynamic_page": "ডায়নামিক পেজ",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown"
           },
           "toasts": {
             "deleting": "কার্যক্রম মোছা হচ্ছে...",

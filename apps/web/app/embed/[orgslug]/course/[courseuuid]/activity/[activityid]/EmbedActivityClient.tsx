@@ -10,6 +10,7 @@ import { CourseContext, CourseDispatchContext } from '@components/Contexts/Cours
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
 const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
+const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 
 // Minimal course context for embed — courseStructure must be populated
 // so that block components (Image, Video, Audio, PDF) can resolve media URLs.
@@ -161,6 +162,13 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
   const renderActivityContent = () => {
     switch (activity.activity_type) {
       case 'TYPE_DYNAMIC':
+        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN') {
+          return (
+            <Suspense fallback={null}>
+              <MarkdownActivity activity={activity} />
+            </Suspense>
+          )
+        }
         return (
           <EmbedCourseProvider course={course}>
             <Suspense fallback={null}>

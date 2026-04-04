@@ -1672,7 +1672,8 @@
             "assignments": "Задания",
             "dynamic": "Динамическое",
             "dynamic_page": "Динамическая страница",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown"
           },
           "toasts": {
             "deleting": "Удаление занятия...",
