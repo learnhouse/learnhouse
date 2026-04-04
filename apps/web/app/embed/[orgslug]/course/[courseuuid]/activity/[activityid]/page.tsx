@@ -5,10 +5,23 @@ import EmbedActivityClient from './EmbedActivityClient'
 
 type PageProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
+  searchParams: Promise<{ bgcolor?: string }>
 }
 
-export default async function EmbedActivityPage({ params }: PageProps) {
+const HEX_COLOR_RE = /^[0-9a-fA-F]{3,8}$/
+
+function getDefaultBgColor(activityType: string): string {
+  return activityType === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
+}
+
+function sanitizeBgColor(raw: string | undefined): string | null {
+  if (!raw) return null
+  return HEX_COLOR_RE.test(raw) ? `#${raw}` : null
+}
+
+export default async function EmbedActivityPage({ params, searchParams }: PageProps) {
   const { orgslug, courseuuid, activityid } = await params
+  const sp = await searchParams
 
   let activity
   let course
@@ -44,12 +57,20 @@ export default async function EmbedActivityPage({ params }: PageProps) {
     notFound()
   }
 
+  // Resolve bg color: sanitized query param or activity-type default.
+  // Set on html+body via server-rendered inline style so the correct
+  // background is painted before any JS or external CSS loads.
+  const bgColor = sanitizeBgColor(sp.bgcolor) ?? getDefaultBgColor(activity.activity_type)
+
   return (
-    <EmbedActivityClient
-      activity={activity}
-      course={course}
-      activityId={activityid}
-      orgslug={orgslug}
-    />
+    <>
+      <style>{`html,body{background-color:${bgColor}!important}`}</style>
+      <EmbedActivityClient
+        activity={activity}
+        course={course}
+        activityId={activityid}
+        orgslug={orgslug}
+      />
+    </>
   )
 }

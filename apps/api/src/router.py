@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from src.routers import admin as admin_router_module
 from src.routers import analytics as analytics_router_module
 from src.routers import code_execution
 from src.routers import code_submissions
@@ -113,6 +114,11 @@ v1_router.include_router(
     prefix="/blocks",
     tags=["blocks"],
     dependencies=[Depends(get_non_api_token_user)]
+)
+v1_router.include_router(
+    admin_router_module.router,
+    prefix="/admin",
+    tags=["admin"],
 )
 v1_router.include_router(courses.router, prefix="/courses", tags=["courses"])
 v1_router.include_router(
