@@ -14,7 +14,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -44,7 +44,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 async function CoursesPage(params: any) {
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
   const session = await getServerSession()
@@ -54,7 +54,7 @@ async function CoursesPage(params: any) {
   try {
     courses = await getOrgCourses(
       orgslug,
-      { revalidate: 0, tags: ['courses'] },
+      { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined,
       true // include_unpublished for dashboard
     )

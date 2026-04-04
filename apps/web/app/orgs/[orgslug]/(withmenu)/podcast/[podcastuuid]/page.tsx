@@ -25,7 +25,7 @@ export async function generateMetadata({
   try {
     podcastMeta = await getPodcastMeta(
       `podcast_${podcastuuid}`,
-      { revalidate: 0, tags: ['podcasts'] },
+      { revalidate: 120, tags: ['podcasts'] },
       access_token
     )
   } catch (error) {
@@ -33,7 +33,7 @@ export async function generateMetadata({
   }
 
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -101,7 +101,7 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
   const access_token = session?.tokens?.access_token
 
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -109,7 +109,7 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
   try {
     podcastMeta = await getPodcastMeta(
       `podcast_${podcastuuid}`,
-      { revalidate: 0, tags: ['podcasts'] },
+      { revalidate: 120, tags: ['podcasts'] },
       access_token
     )
   } catch (error) {

@@ -1641,13 +1641,40 @@
           "unpublish": "Annulla pubblicazione",
           "preview_activity": "Anteprima attività",
           "edit_page": "Modifica pagina",
-          "edit_assignment": "Modifica compito"
+          "edit_assignment": "Modifica compito",
+          "rename": "Rinomina",
+          "publishing": "Pubblicazione in corso...",
+          "publish_all": "Pubblica tutto ({{count}})",
+          "publishing_all": "Pubblicazione di tutto in corso...",
+          "publish_all_success": "Tutte le attività sono state pubblicate con successo",
+          "unpublish_all": "Annulla pubblicazione di tutto",
+          "unpublish_all_success": "Pubblicazione di tutte le attività annullata con successo",
+          "publish_all_error": "Impossibile aggiornare alcune attività"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} selezionate",
+          "clear": "Deseleziona",
+          "delete": "Elimina",
+          "delete_title": "Elimina attività selezionate",
+          "delete_confirm": "Sei sicuro di voler eliminare {{count}} attività selezionate? Questa azione non può essere annullata.",
+          "delete_button": "Elimina attività",
+          "delete_success": "{{count}} attività eliminate con successo",
+          "delete_error": "Impossibile eliminare alcune attività",
+          "publish_success": "{{count}} attività pubblicate con successo",
+          "publish_error": "Impossibile pubblicare alcune attività",
+          "unpublish_success": "{{count}} attività depubblicate con successo",
+          "unpublish_error": "Impossibile annullare la pubblicazione di alcune attività",
+          "partial_error": "{{failed}} di {{total}} attività non sono state aggiornate"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nome capitolo"
         },
         "activity": {
           "name_placeholder": "Nome attività",
+          "status": {
+            "published": "Pubblicata",
+            "draft": "Bozza"
+          },
           "types": {
             "video": "Video",
             "document": "Documento",

@@ -1839,13 +1839,40 @@
           "unpublish": "Despublicar",
           "preview_activity": "Previsualizar actividad",
           "edit_page": "Editar página",
-          "edit_assignment": "Editar tarea"
+          "edit_assignment": "Editar tarea",
+          "rename": "Renombrar",
+          "publishing": "Publicando...",
+          "publish_all": "Publicar todo ({{count}})",
+          "publishing_all": "Publicando todo...",
+          "publish_all_success": "Todas las actividades se publicaron correctamente",
+          "unpublish_all": "Despublicar todo",
+          "unpublish_all_success": "Todas las actividades se despublicaron correctamente",
+          "publish_all_error": "No se pudieron actualizar algunas actividades"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} seleccionada(s)",
+          "clear": "Limpiar",
+          "delete": "Eliminar",
+          "delete_title": "Eliminar actividades seleccionadas",
+          "delete_confirm": "¿Estás seguro de que deseas eliminar {{count}} actividades seleccionadas? Esta acción no se puede deshacer.",
+          "delete_button": "Eliminar actividades",
+          "delete_success": "{{count}} actividades eliminadas correctamente",
+          "delete_error": "No se pudieron eliminar algunas actividades",
+          "publish_success": "{{count}} actividades publicadas correctamente",
+          "publish_error": "No se pudieron publicar algunas actividades",
+          "unpublish_success": "{{count}} actividades despublicadas correctamente",
+          "unpublish_error": "No se pudieron despublicar algunas actividades",
+          "partial_error": "{{failed}} de {{total}} actividades no se pudieron actualizar"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nombre del capítulo"
         },
         "activity": {
           "name_placeholder": "Nombre de la actividad",
+          "status": {
+            "published": "Publicado",
+            "draft": "Borrador"
+          },
           "types": {
             "video": "Vídeo",
             "document": "Documento",

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Union
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column, ForeignKey, Integer
+from sqlalchemy import JSON, Column, ForeignKey, Index, Integer
 from sqlmodel import Field, SQLModel
 
 
@@ -88,6 +88,9 @@ class RoleBase(SQLModel):
 
 
 class Role(RoleBase, table=True):
+    __table_args__ = (
+        Index("ix_role_org_type", "org_id", "role_type"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: Optional[int] = Field(
         default=None,

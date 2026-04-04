@@ -15,7 +15,7 @@ type MetadataProps = {
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -73,7 +73,7 @@ const CommunitiesPage = async (params: any) => {
   const access_token = session?.tokens?.access_token
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
   const org_id = org.id
@@ -84,7 +84,7 @@ const CommunitiesPage = async (params: any) => {
       org_id,
       1,
       100,
-      { revalidate: 0, tags: ['communities'] },
+      { revalidate: 120, tags: ['communities'] },
       access_token ? access_token : undefined
     )
   } catch (error) {

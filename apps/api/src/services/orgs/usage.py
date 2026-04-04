@@ -17,7 +17,7 @@ from src.security.features_utils.plans import (
 )
 
 # Cache TTL in seconds (30 seconds)
-USAGE_CACHE_TTL = 30
+USAGE_CACHE_TTL = 120  # 2 min — usage data rarely changes
 
 
 def _get_cache_key(org_id: int) -> str:

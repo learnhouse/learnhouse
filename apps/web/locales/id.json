@@ -1635,13 +1635,40 @@
           "unpublish": "Batalkan Terbit",
           "preview_activity": "Pratinjau Aktivitas",
           "edit_page": "Edit Halaman",
-          "edit_assignment": "Edit Tugas"
+          "edit_assignment": "Edit Tugas",
+          "rename": "Ganti Nama",
+          "publishing": "Menerbitkan...",
+          "publish_all": "Terbitkan Semua ({{count}})",
+          "publishing_all": "Menerbitkan Semua...",
+          "publish_all_success": "Semua aktivitas berhasil diterbitkan",
+          "unpublish_all": "Batalkan Semua",
+          "unpublish_all_success": "Semua aktivitas berhasil dibatalkan",
+          "publish_all_error": "Gagal memperbarui beberapa aktivitas"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} dipilih",
+          "clear": "Hapus Pilihan",
+          "delete": "Hapus",
+          "delete_title": "Hapus aktivitas yang dipilih",
+          "delete_confirm": "Apakah Anda yakin ingin menghapus {{count}} aktivitas yang dipilih? Tindakan ini tidak dapat dibatalkan.",
+          "delete_button": "Hapus Aktivitas",
+          "delete_success": "{{count}} aktivitas berhasil dihapus",
+          "delete_error": "Gagal menghapus beberapa aktivitas",
+          "publish_success": "{{count}} aktivitas berhasil diterbitkan",
+          "publish_error": "Gagal menerbitkan beberapa aktivitas",
+          "unpublish_success": "{{count}} aktivitas berhasil dibatalkan",
+          "unpublish_error": "Gagal membatalkan beberapa aktivitas",
+          "partial_error": "{{failed}} dari {{total}} aktivitas gagal diperbarui"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Nama bab"
         },
         "activity": {
           "name_placeholder": "Nama aktivitas",
+          "status": {
+            "published": "Diterbitkan",
+            "draft": "Draf"
+          },
           "types": {
             "video": "Video",
             "document": "Dokumen",

@@ -76,6 +76,20 @@ export function extractSubdomain(host: string | null | undefined, domain: string
 }
 
 /**
+ * Is the host an IP address (v4 or v6)?
+ * Port is stripped before checking.
+ */
+export function isIPAddress(host: string | null | undefined): boolean {
+  const h = stripPort(host)
+  if (!h) return false
+  // IPv4: digits and dots only (e.g. 10.108.2.55, 127.0.0.1)
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return true
+  // IPv6: contains colons (e.g. ::1, fe80::1)
+  if (h.includes(':')) return true
+  return false
+}
+
+/**
  * Is host localhost, 127.0.0.1, or ::1?
  * Port is stripped before checking.
  */

@@ -19,22 +19,12 @@ def auto_install():
 
     db_session = Session(engine)
 
-    orgs = db_session.exec(select(Organization)).all()
+    default_org = db_session.exec(
+        select(Organization).where(Organization.slug == 'default')
+    ).first()
 
-    if len(orgs) == 0:
-        logger.info("No organizations found. Starting auto-installation 🏗️")
+    if not default_org:
+        logger.info("No default organization found. Starting auto-installation 🏗️")
         install(short=True)
-
-    if orgs: 
-        for org in orgs:
-            default_org = db_session.exec(select(Organization).where(Organization.slug == 'default')).first()
-
-            if not default_org:
-                logger.info("No default organization found. Starting auto-installation 🏗️")
-                install(short=True)
-
-    else: 
+    else:
         logger.info("Organizations found. Skipping auto-installation 🚀")
-
-            
-            

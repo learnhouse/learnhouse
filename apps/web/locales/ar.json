@@ -1849,13 +1849,40 @@
           "unpublish": "إلغاء النشر",
           "preview_activity": "معاينة النشاط",
           "edit_page": "تعديل الصفحة",
-          "edit_assignment": "تعديل الواجب"
+          "edit_assignment": "تعديل الواجب",
+          "rename": "إعادة تسمية",
+          "publishing": "جارٍ النشر...",
+          "publish_all": "نشر الكل ({{count}})",
+          "publishing_all": "جارٍ نشر الكل...",
+          "publish_all_success": "تم نشر جميع الأنشطة بنجاح",
+          "unpublish_all": "إلغاء نشر الكل",
+          "unpublish_all_success": "تم إلغاء نشر جميع الأنشطة بنجاح",
+          "publish_all_error": "فشل تحديث بعض الأنشطة"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} محدد",
+          "clear": "مسح",
+          "delete": "حذف",
+          "delete_title": "حذف الأنشطة المحددة",
+          "delete_confirm": "هل أنت متأكد من حذف {{count}} أنشطة محددة؟ لا يمكن التراجع عن هذا الإجراء.",
+          "delete_button": "حذف الأنشطة",
+          "delete_success": "تم حذف {{count}} أنشطة بنجاح",
+          "delete_error": "فشل حذف بعض الأنشطة",
+          "publish_success": "تم نشر {{count}} أنشطة بنجاح",
+          "publish_error": "فشل نشر بعض الأنشطة",
+          "unpublish_success": "تم إلغاء نشر {{count}} أنشطة بنجاح",
+          "unpublish_error": "فشل إلغاء نشر بعض الأنشطة",
+          "partial_error": "فشل تحديث {{failed}} من أصل {{total}} أنشطة"
         },
         "chapter_element": {
           "chapter_name_placeholder": "اسم الفصل"
         },
         "activity": {
           "name_placeholder": "اسم النشاط",
+          "status": {
+            "published": "منشور",
+            "draft": "مسودة"
+          },
           "types": {
             "video": "فيديو",
             "document": "مستند",

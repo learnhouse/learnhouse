@@ -1638,13 +1638,40 @@
           "unpublish": "Publicatie ongedaan maken",
           "preview_activity": "Activiteit bekijken",
           "edit_page": "Pagina bewerken",
-          "edit_assignment": "Opdracht bewerken"
+          "edit_assignment": "Opdracht bewerken",
+          "rename": "Hernoemen",
+          "publishing": "Publiceren...",
+          "publish_all": "Alles publiceren ({{count}})",
+          "publishing_all": "Alles aan het publiceren...",
+          "publish_all_success": "Alle activiteiten zijn succesvol gepubliceerd",
+          "unpublish_all": "Alles depubliceren",
+          "unpublish_all_success": "Alle activiteiten zijn succesvol gedepubliceerd",
+          "publish_all_error": "Sommige activiteiten konden niet worden bijgewerkt"
+        },
+        "bulk_actions": {
+          "selected": "{{count}} geselecteerd",
+          "clear": "Wissen",
+          "delete": "Verwijderen",
+          "delete_title": "Geselecteerde activiteiten verwijderen",
+          "delete_confirm": "Weet je zeker dat je {{count}} geselecteerde activiteiten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+          "delete_button": "Activiteiten verwijderen",
+          "delete_success": "{{count}} activiteiten succesvol verwijderd",
+          "delete_error": "Sommige activiteiten konden niet worden verwijderd",
+          "publish_success": "{{count}} activiteiten succesvol gepubliceerd",
+          "publish_error": "Sommige activiteiten konden niet worden gepubliceerd",
+          "unpublish_success": "{{count}} activiteiten succesvol gedepubliceerd",
+          "unpublish_error": "Sommige activiteiten konden niet worden gedepubliceerd",
+          "partial_error": "{{failed}} van {{total}} activiteiten konden niet worden bijgewerkt"
         },
         "chapter_element": {
           "chapter_name_placeholder": "Naam van het hoofdstuk"
         },
         "activity": {
           "name_placeholder": "Naam van de activiteit",
+          "status": {
+            "published": "Gepubliceerd",
+            "draft": "Concept"
+          },
           "types": {
             "video": "Video",
             "document": "Document",

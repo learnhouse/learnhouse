@@ -102,6 +102,8 @@ const LoggedInJoinScreen = ({ inviteCode, org }: JoinScreenProps) => {
     if (res.success) {
       setSuccess(typeof res.data === 'string' ? res.data : t('auth.join_organization_success'))
       setShowMessage(true)
+      // Refresh session so the new org membership appears in session.data.roles
+      await session.update?.(true)
       setTimeout(() => {
         router.push(getUriWithOrg(activeOrg.slug, '/'))
       }, 2000)

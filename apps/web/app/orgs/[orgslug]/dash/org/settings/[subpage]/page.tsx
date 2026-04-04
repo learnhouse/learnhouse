@@ -57,7 +57,7 @@ function TabLink({ tab, isActive, orgslug, currentPlan }: {
   currentPlan: PlanLevel
 }) {
   return (
-    <Link href={getUriWithOrg(orgslug, '') + `/dash/org/settings/${tab.id}`}>
+    <Link prefetch={false} href={getUriWithOrg(orgslug, '') + `/dash/org/settings/${tab.id}`}>
       <div
         className={`py-2 w-fit text-center border-black transition-all ease-linear ${
           isActive ? 'border-b-4' : 'opacity-50'

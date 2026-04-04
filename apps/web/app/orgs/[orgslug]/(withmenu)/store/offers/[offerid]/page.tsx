@@ -10,7 +10,7 @@ type PageParams = Promise<{ orgslug: string; offerid: string }>
 
 export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
   const { orgslug, offerid } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
   const seoConfig = getOrgSeoConfig(org)
   let offerName = 'Offer'
   try {
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
 
 export default async function OfferPage({ params }: { params: PageParams }) {
   const { orgslug, offerid } = await params
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] })
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 120, tags: ['organizations'] })
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token ?? null
 

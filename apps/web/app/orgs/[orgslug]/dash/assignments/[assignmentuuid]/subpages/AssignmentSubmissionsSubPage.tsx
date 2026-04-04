@@ -20,7 +20,8 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 
     const { data: assignmentSubmission, error: assignmentError } = useSWR(
         `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     );
 
     const renderSubmissions = (status: string) => {
@@ -78,7 +79,8 @@ function SubmissionBox({ assignment_uuid, user_id, submission }: any) {
 
     const { data: user, error: userError } = useSWR(
         `${getAPIUrl()}users/id/${user_id}`,
-        (url) => swrFetcher(url, access_token)
+        (url) => swrFetcher(url, access_token),
+        { revalidateOnFocus: false }
     );
 
     return (

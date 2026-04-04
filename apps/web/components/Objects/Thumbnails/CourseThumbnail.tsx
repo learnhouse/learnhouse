@@ -158,7 +158,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
         isDashboard={isDashboard}
       />
 
-      <Link prefetch href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
+      <Link prefetch={false} href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
         <div
           className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
@@ -182,6 +182,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       <div className="p-3 flex flex-col space-y-1.5">
         <div className="flex items-start justify-between">
           <Link
+            prefetch={false}
             href={courseLink}
             className="text-base font-bold text-gray-900 leading-tight hover:text-black transition-colors line-clamp-1"
           >
@@ -234,6 +235,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
           </div>
           
           <Link
+            prefetch={false}
             href={courseLink}
             className="text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider"
           >
@@ -274,12 +276,12 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCo
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)} className="flex items-center cursor-pointer">
+              <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)} className="flex items-center cursor-pointer">
                 <FilePenLine className="mr-2 h-4 w-4" /> {t('courses.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)} className="flex items-center cursor-pointer">
+              <Link prefetch={false} href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)} className="flex items-center cursor-pointer">
                 <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>

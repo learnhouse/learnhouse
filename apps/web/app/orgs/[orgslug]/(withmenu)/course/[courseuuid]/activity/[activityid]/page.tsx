@@ -20,12 +20,14 @@ type Session = {
   }
 }
 
-// Add this function at the top level to avoid duplicate fetches
+// Shared fetch config so generateMetadata + page component use the same
+// Next.js fetch cache key, enabling automatic request deduplication.
 async function fetchCourseMetadata(courseuuid: string, access_token: string | null | undefined) {
   return await getCourseMetadata(
     courseuuid,
-    { revalidate: 60, tags: ['courses'] },
-    access_token || null
+    { revalidate: 120, tags: ['courses'] },
+    access_token || null,
+    { slim: true }
   )
 }
 
@@ -34,17 +36,19 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
 
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
-  const course_meta = await fetchCourseMetadata(params.courseuuid, access_token)
-  const activity = await getActivityWithAuthHeader(
-    params.activityid,
-    { revalidate: 0, tags: ['activities'] },
-    access_token || null
-  )
+  // Parallelize all metadata fetches
+  const [org, course_meta, activity] = await Promise.all([
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+    fetchCourseMetadata(params.courseuuid, access_token),
+    getActivityWithAuthHeader(
+      params.activityid,
+      { revalidate: 120, tags: ['activities'] },
+      access_token || null
+    ),
+  ])
 
   // Check if this is the course end page
   const isCourseEnd = params.activityid === 'end';
@@ -121,7 +125,7 @@ const ActivityPage = async (params: any) => {
       fetchCourseMetadata(courseuuid, access_token),
       getActivityWithAuthHeader(
         activityid,
-        { revalidate: 0, tags: ['activities'] },
+        { revalidate: 120, tags: ['activities'] },
         access_token || null
       )
     ])

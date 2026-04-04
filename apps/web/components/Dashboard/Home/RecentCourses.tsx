@@ -21,7 +21,7 @@ export default function RecentCourses() {
       ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/8?include_unpublished=true`
       : null,
     (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 
   const courses: any[] = coursesData ?? []
@@ -109,6 +109,7 @@ export default function RecentCourses() {
             return (
               <Link
                 key={course.course_uuid}
+                prefetch={false}
                 href={`/dash/courses/course/${courseId}/general`}
                 className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors group"
               >

@@ -61,6 +61,7 @@ import AICanvaToolkit from './AI/AICanvaToolkit'
 interface Editor {
   content: string
   activity: any
+  hideTableOfContents?: boolean
 }
 
 
@@ -199,8 +200,8 @@ function Canva(props: Editor) {
     <EditorOptionsProvider options={{ isEditable: false }}>
       <div className="w-full mx-auto">
         <AICanvaToolkit activity={props.activity} editor={editor} />
-        <div className="canva-content-wrapper">
-          <TableOfContents editor={editor} />
+        <div className={props.hideTableOfContents ? '' : 'canva-content-wrapper'}>
+          {!props.hideTableOfContents && <TableOfContents editor={editor} />}
           <EditorContent editor={editor} />
         </div>
       </div>

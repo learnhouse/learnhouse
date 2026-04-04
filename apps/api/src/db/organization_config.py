@@ -242,7 +242,7 @@ class OrganizationConfigV2Base(BaseModel):
 class OrganizationConfig(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
-        sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
+        sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"), index=True)
     )
     config: dict = Field(default_factory=dict, sa_column=Column(JSON))
     creation_date: Optional[str] = None

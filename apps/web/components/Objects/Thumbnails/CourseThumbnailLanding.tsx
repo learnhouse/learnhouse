@@ -140,7 +140,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
         orgslug={orgslug}
         deleteCourse={deleteCourse}
       />
-      <Link prefetch href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
+      <Link prefetch={false} href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
         <div
           className="inset-0 ring-1 ring-inset ring-black/10 rounded-t-xl w-full aspect-video bg-cover bg-center"
           style={{ backgroundImage: `url(${thumbnailImage})` }}

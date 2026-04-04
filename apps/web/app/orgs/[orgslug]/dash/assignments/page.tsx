@@ -17,14 +17,24 @@ function AssignmentsHome() {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
-  const [courseAssignments, setCourseAssignments] = React.useState<any[]>([])
+  const { data: courses } = useSWR(
+    org?.slug && access_token ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/50` : null,
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false }
+  )
 
-  const { data: courses } = useSWR(`${getAPIUrl()}courses/org_slug/${org?.slug}/page/1/limit/50`, (url) => swrFetcher(url, access_token))
-
-  async function getAvailableAssignmentsForCourse(course_uuid: string) {
-    const res = await getAssignmentsFromACourse(course_uuid, access_token)
-    return res.data
-  }
+  // Fetch all course assignments in a single SWR call to avoid N+1 requests
+  const courseUuids = React.useMemo(() => courses?.map((c: any) => c.course_uuid) || [], [courses])
+  const { data: courseAssignments } = useSWR(
+    courseUuids.length > 0 && access_token ? ['assignments-all', ...courseUuids] : null,
+    async () => {
+      const results = await Promise.all(
+        courseUuids.map((uuid: string) => getAssignmentsFromACourse(uuid, access_token))
+      )
+      return results.map((res: any) => res.data)
+    },
+    { revalidateOnFocus: false }
+  )
 
   function removeAssignmentPrefix(assignment_uuid: string) {
     return assignment_uuid.replace('assignment_', '')
@@ -33,17 +43,6 @@ function AssignmentsHome() {
   function removeCoursePrefix(course_uuid: string) {
     return course_uuid.replace('course_', '')
   }
-
-
-  React.useEffect(() => {
-    if (courses) {
-      const course_uuids = courses.map((course: any) => course.course_uuid)
-      const courseAssignmentsPromises = course_uuids.map((course_uuid: string) => getAvailableAssignmentsForCourse(course_uuid))
-      Promise.all(courseAssignmentsPromises).then((results) => {
-        setCourseAssignments(results)
-      })
-    }
-  }, [courses])
 
 
   return (
@@ -56,7 +55,7 @@ function AssignmentsHome() {
           <h1 className="pt-3 flex font-bold text-4xl">{t('dashboard.assignments.home.title')}</h1>
         </div>
         <div className='flex flex-col space-y-3 w-full'>
-          {courseAssignments.map((assignments: any, index: number) => (
+          {(courseAssignments || []).map((assignments: any, index: number) => (
             <div key={index} className='flex flex-col space-y-2 bg-white nice-shadow p-3 sm:p-4 rounded-xl w-full'>
               <div>
                 <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-start sm:items-center justify-between w-full'>

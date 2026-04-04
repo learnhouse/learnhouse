@@ -20,6 +20,7 @@ from src.services.boards.boards import (
     get_board,
     get_boards_by_org,
     update_board,
+    duplicate_board,
     delete_board,
     add_board_member,
     add_board_members_batch,
@@ -84,6 +85,16 @@ async def api_update_board(
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await update_board(request, board_uuid, board_object, current_user, db_session)
+
+
+@router.post("/{board_uuid}/duplicate")
+async def api_duplicate_board(
+    request: Request,
+    board_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> BoardRead:
+    return await duplicate_board(request, board_uuid, current_user, db_session)
 
 
 @router.delete("/{board_uuid}")

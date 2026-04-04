@@ -43,7 +43,8 @@ function PaymentsOffersPage() {
 
   const { data: offers, error } = useSWR(
     () => org && session ? [`/payments/${org.id}/offers`, session.data?.tokens?.access_token] : null,
-    ([, token]) => getOffers(org.id, token)
+    ([, token]) => getOffers(org.id, token),
+    { revalidateOnFocus: false }
   );
 
   const handleArchiveOffer = async (offerId: string) => {

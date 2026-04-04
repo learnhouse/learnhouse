@@ -1635,13 +1635,40 @@
           "unpublish": "অপ্রকাশিত করুন",
           "preview_activity": "কার্যক্রম প্রিভিউ",
           "edit_page": "পেজ সম্পাদনা করুন",
-          "edit_assignment": "অ্যাসাইনমেন্ট সম্পাদনা করুন"
+          "edit_assignment": "অ্যাসাইনমেন্ট সম্পাদনা করুন",
+          "rename": "নাম পরিবর্তন করুন",
+          "publishing": "প্রকাশ হচ্ছে...",
+          "publish_all": "সব প্রকাশ করুন ({{count}})",
+          "publishing_all": "সব প্রকাশ হচ্ছে...",
+          "publish_all_success": "সকল কার্যক্রম সফলভাবে প্রকাশিত হয়েছে",
+          "unpublish_all": "সব অপ্রকাশিত করুন",
+          "unpublish_all_success": "সকল কার্যক্রম সফলভাবে অপ্রকাশিত করা হয়েছে",
+          "publish_all_error": "কিছু কার্যক্রম আপডেট করতে ব্যর্থ"
+        },
+        "bulk_actions": {
+          "selected": "{{count}}টি নির্বাচিত",
+          "clear": "মুছুন",
+          "delete": "মুছে ফেলুন",
+          "delete_title": "নির্বাচিত কার্যক্রম মুছে ফেলুন",
+          "delete_confirm": "আপনি কি নিশ্চিত যে আপনি {{count}}টি নির্বাচিত কার্যক্রম মুছে ফেলতে চান? এটি পূর্বাবস্থায় ফেরানো যাবে না।",
+          "delete_button": "কার্যক্রম মুছে ফেলুন",
+          "delete_success": "{{count}}টি কার্যক্রম সফলভাবে মুছে ফেলা হয়েছে",
+          "delete_error": "কিছু কার্যক্রম মুছে ফেলতে ব্যর্থ",
+          "publish_success": "{{count}}টি কার্যক্রম সফলভাবে প্রকাশিত হয়েছে",
+          "publish_error": "কিছু কার্যক্রম প্রকাশ করতে ব্যর্থ",
+          "unpublish_success": "{{count}}টি কার্যক্রম সফলভাবে অপ্রকাশিত করা হয়েছে",
+          "unpublish_error": "কিছু কার্যক্রম অপ্রকাশিত করতে ব্যর্থ",
+          "partial_error": "{{total}}টির মধ্যে {{failed}}টি কার্যক্রম আপডেট করতে ব্যর্থ"
         },
         "chapter_element": {
           "chapter_name_placeholder": "অধ্যায়ের নাম"
         },
         "activity": {
           "name_placeholder": "কার্যক্রমের নাম",
+          "status": {
+            "published": "প্রকাশিত",
+            "draft": "খসড়া"
+          },
           "types": {
             "video": "ভিডিও",
             "document": "ডকুমেন্ট",

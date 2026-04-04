@@ -44,7 +44,7 @@ const CourseClient = (props: any) => {
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useSWR(
     // Only fetch if we don't have initial course data AND we have a session token AND no server error
     !initialCourse && !serverError && access_token
-      ? `${getAPIUrl()}courses/course_${courseuuid}/meta`
+      ? `${getAPIUrl()}courses/course_${courseuuid}/meta?slim=true`
       : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
@@ -69,7 +69,8 @@ const CourseClient = (props: any) => {
   // Add SWR for trail data
   const { data: trailData } = useSWR(
     `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
 
   // Show loading state if fetching course data client-side

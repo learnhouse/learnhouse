@@ -44,6 +44,14 @@ export async function updateBoard(
   return errorHandling(result)
 }
 
+export async function duplicateBoard(boardUuid: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}boards/${boardUuid}/duplicate`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  return errorHandling(result)
+}
+
 export async function deleteBoard(boardUuid: string, access_token: string) {
   const result = await fetch(
     `${getAPIUrl()}boards/${boardUuid}`,

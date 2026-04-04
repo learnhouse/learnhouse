@@ -14,7 +14,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 0,
+    revalidate: 120,
     tags: ['organizations'],
   })
 
@@ -48,19 +48,21 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 }
 
+export const dynamic = 'force-dynamic'
+
 const CollectionsPage = async (params: any) => {
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
+    revalidate: 120,
     tags: ['organizations'],
   })
   const org_id = org.id
   const collections = await getOrgCollections(
     org_id,
     access_token ?? undefined,
-    { revalidate: 0, tags: ['collections'] }
+    { revalidate: 120, tags: ['collections'] }
   )
 
   return (

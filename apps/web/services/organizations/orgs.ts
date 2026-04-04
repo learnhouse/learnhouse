@@ -67,7 +67,6 @@ export async function getOrganizationContextInfoWithoutCredentials(
     method: 'GET',
     headers: HeadersConfig,
     redirect: 'follow',
-    // Next.js
     next: next,
   }
 

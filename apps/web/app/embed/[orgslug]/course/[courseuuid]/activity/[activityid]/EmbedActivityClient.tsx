@@ -102,7 +102,7 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
         return (
           <EmbedCourseProvider>
             <Suspense fallback={<LoadingFallback />}>
-              <Canva content={activity.content} activity={activity} />
+              <Canva content={activity.content} activity={activity} hideTableOfContents />
             </Suspense>
           </EmbedCourseProvider>
         )

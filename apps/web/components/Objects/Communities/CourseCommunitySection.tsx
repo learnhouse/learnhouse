@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
@@ -7,10 +7,12 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
 import { Users, MessageCircle, ArrowRight, ChevronUp } from 'lucide-react'
-import { getUriWithOrg } from '@services/config/config'
-import { getCommunityByCourse, Community } from '@services/communities/communities'
-import { getDiscussions, DiscussionWithAuthor } from '@services/communities/discussions'
+import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { Community } from '@services/communities/communities'
+import { DiscussionWithAuthor } from '@services/communities/discussions'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import useSWR from 'swr'
+import { swrFetcher } from '@services/utils/ts/requests'
 
 interface CourseCommunitySection {
   courseUuid: string
@@ -21,42 +23,27 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
   const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
-  const [community, setCommunity] = useState<Community | null>(null)
-  const [discussions, setDiscussions] = useState<DiscussionWithAuthor[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchCommunity = async () => {
-      setIsLoading(true)
-      try {
-        const communityData = await getCommunityByCourse(courseUuid, null, accessToken)
-        if (communityData) {
-          setCommunity(communityData)
+  // SWR for community data — cached across navigations within the same course
+  const { data: community } = useSWR<Community | null>(
+    courseUuid && accessToken
+      ? `${getAPIUrl()}communities/course/${courseUuid}`
+      : null,
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  )
 
-          // Fetch recent discussions
-          const discussionsData = await getDiscussions(
-            communityData.community_uuid,
-            'recent',
-            1,
-            3,
-            null,
-            accessToken
-          )
-          setDiscussions(discussionsData || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch community:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  // SWR for discussions — only fetch when community is loaded
+  const communityUuid = community?.community_uuid
+  const { data: discussions } = useSWR<DiscussionWithAuthor[]>(
+    communityUuid && accessToken
+      ? `${getAPIUrl()}communities/${communityUuid}/discussions?sort_by=recent&page=1&limit=3`
+      : null,
+    (url) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  )
 
-    if (courseUuid) {
-      fetchCommunity()
-    }
-  }, [courseUuid, accessToken])
-
-  if (isLoading || !community) {
+  if (!community) {
     return null
   }
 
@@ -88,7 +75,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
 
         {/* Recent Discussions */}
         <div className="divide-y divide-gray-50">
-          {discussions.length === 0 ? (
+          {!discussions || discussions.length === 0 ? (
             <div className="p-6 text-center">
               <MessageCircle size={32} className="mx-auto text-gray-300 mb-2" />
               <p className="text-sm text-gray-500">{t('communities.course_section.no_discussions')}</p>

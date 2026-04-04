@@ -19,27 +19,28 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  // Get Org context information
-  const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
-
-  // Try to get course metadata
-  let course_meta
-  try {
-    course_meta = await getCourseMetadata(
+  // Parallelize org + course metadata fetches
+  // Use revalidate: 120 to match the page component and enable Next.js fetch dedup
+  const [org, courseResult] = await Promise.all([
+    getOrganizationContextInfo(params.orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+    getCourseMetadata(
       params.courseuuid,
-      { revalidate: 0, tags: ['courses'] },
-      access_token ?? undefined
-    )
-  } catch (error) {
-    // If we can't get course metadata (e.g., auth required), return minimal metadata
+      { revalidate: 120, tags: ['courses'] },
+      access_token ?? undefined,
+      { slim: true }
+    ).catch(() => null),
+  ])
+
+  if (!courseResult) {
     return {
       title: `Course — ${org?.name || 'LearnHouse'}`,
       description: 'View this course on LearnHouse',
     }
   }
+  const course_meta = courseResult
 
   // SEO - use custom SEO fields with fallbacks to existing fields
   const seoConfig = getOrgSeoConfig(org)
@@ -110,29 +111,31 @@ const CoursePage = async (params: any) => {
   // Await params before using them
   const { courseuuid, orgslug } = await params.params
 
-  // Fetch course metadata once
+  // Fetch course metadata + org info in parallel
   let course_meta = null
   let fetchError: { status?: number } | null = null
-  try {
-    course_meta = await getCourseMetadata(
+
+  const [courseResult, org] = await Promise.all([
+    getCourseMetadata(
       courseuuid,
-      { revalidate: 0, tags: ['courses'] },
-      access_token ?? undefined
-    )
-  } catch (error: any) {
-    fetchError = { status: error?.status }
-  }
+      { revalidate: 120, tags: ['courses'] },
+      access_token ?? undefined,
+      { slim: true }
+    ).catch((error: any) => {
+      fetchError = { status: error?.status }
+      return null
+    }),
+    getOrganizationContextInfo(orgslug, {
+      revalidate: 120,
+      tags: ['organizations'],
+    }),
+  ])
+  course_meta = courseResult
 
   // If truly not found (no auth token and no course), show 404
   if (!course_meta && !fetchError) {
     notFound()
   }
-
-  // Fetch org info for JSON-LD
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 1800,
-    tags: ['organizations'],
-  })
 
   // Build Course JSON-LD for structured data
   const courseJsonLd = course_meta ? {

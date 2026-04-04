@@ -304,14 +304,16 @@ async def api_get_course_meta(
     request: Request,
     course_uuid: str,
     with_unpublished_activities: bool = False,
+    slim: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> FullCourseRead:
     """
-    Get single Course Metadata (chapters, activities) by course_uuid
+    Get single Course Metadata (chapters, activities) by course_uuid.
+    Use slim=true to exclude heavy activity content/details (useful for navigation).
     """
     return await get_course_meta(
-        request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session
+        request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session, slim=slim
     )
 
 
