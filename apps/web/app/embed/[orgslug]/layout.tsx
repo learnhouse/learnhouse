@@ -15,6 +15,8 @@ export default function EmbedLayout(
 
   return (
     <OrgProvider orgslug={params.orgslug}>
+      {/* Suppress the root layout fade-in animation for embeds */}
+      <style>{`.animate-fade-in{animation:none!important;opacity:1!important}`}</style>
       <div className="min-h-screen">
         {children}
       </div>
