@@ -12,7 +12,7 @@ from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.courses.courses import CourseRead, FullCourseRead
 from src.db.trails import TrailRead
-from src.db.users import APITokenUser, UserRead
+from src.db.users import UserRead
 from src.security.auth import get_current_user
 from src.services.admin.admin import (
     _require_api_token,
