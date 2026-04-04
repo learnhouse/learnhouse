@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from sqlmodel import Session
+from sqlmodel import Session, select
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.services.users.users import security_get_user
@@ -167,6 +167,45 @@ def decode_refresh_token(token: str) -> Optional[dict]:
         return None
 
 
+async def _verify_api_token_org_boundary(
+    request: Request,
+    api_token_user: APITokenUser,
+    db_session: Session,
+) -> None:
+    """
+    Global safety net: reject API token requests that target a different organization.
+
+    Checks path parameters for org_id or org_slug and verifies they match
+    the token's organization. This runs before any endpoint logic.
+    """
+    path_params = request.path_params
+
+    # Check org_id in path
+    org_id_param = path_params.get("org_id")
+    if org_id_param is not None:
+        try:
+            if int(org_id_param) != api_token_user.org_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="API token cannot access resources outside its organization",
+                )
+        except (ValueError, TypeError):
+            pass
+
+    # Check org_slug in path
+    org_slug_param = path_params.get("org_slug")
+    if org_slug_param is not None:
+        from src.db.organizations import Organization
+        org = db_session.exec(
+            select(Organization).where(Organization.slug == org_slug_param)
+        ).first()
+        if org and org.id != api_token_user.org_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token cannot access resources outside its organization",
+            )
+
+
 async def get_current_user(
     request: Request,
     db_session: Session = Depends(get_db_session),
@@ -185,6 +224,9 @@ async def get_current_user(
         token = auth_header[7:].strip()  # Remove "Bearer " prefix and trim
         api_token_user = await validate_api_token(token, db_session)
         if api_token_user:
+            # Verify org boundary: if the URL contains an org_id or org_slug,
+            # ensure it matches the token's organization
+            await _verify_api_token_org_boundary(request, api_token_user, db_session)
             request.state.user = api_token_user
             request.state.is_api_token = True
             return api_token_user
@@ -268,13 +310,33 @@ async def validate_api_token(
     if not api_token:
         return None
 
+    # Normalize rights to a plain dict of plain dicts so .get() works everywhere
+    raw_rights = api_token.rights
+    if raw_rights is None:
+        rights = None
+    elif isinstance(raw_rights, dict):
+        # Already a dict, but inner values might be Pydantic models
+        rights = {}
+        for k, v in raw_rights.items():
+            if isinstance(v, dict):
+                rights[k] = v
+            elif hasattr(v, 'model_dump'):
+                rights[k] = v.model_dump()
+            elif hasattr(v, 'dict'):
+                rights[k] = v.dict()
+            else:
+                rights[k] = v
+    else:
+        # Full Pydantic Rights model
+        rights = raw_rights.model_dump() if hasattr(raw_rights, 'model_dump') else raw_rights.dict()
+
     # Create and return an APITokenUser
     return APITokenUser(
         id=api_token.id,
         user_uuid=api_token.token_uuid,
         username=f"api_token_{api_token.name}",
         org_id=api_token.org_id,
-        rights=api_token.rights,
+        rights=rights,
         token_name=api_token.name,
         created_by_user_id=api_token.created_by_user_id,
     )
