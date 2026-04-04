@@ -6,20 +6,19 @@ All functions require an APITokenUser and operate within the token's org scope.
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select, func
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.courses.chapters import Chapter, ChapterRead
+from src.db.courses.chapters import Chapter
 from src.db.courses.courses import (
     Course,
     CourseRead,
     FullCourseRead,
     AuthorWithRole,
 )
-from src.db.courses.course_chapters import CourseChapter
 from src.db.collections import Collection
 from src.db.collections_courses import CollectionCourse
 from src.db.courses.certifications import (
@@ -32,14 +31,14 @@ from src.db.organizations import Organization
 from src.db.resource_authors import ResourceAuthor
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
-from src.db.trails import Trail, TrailCreate, TrailRead
+from src.db.trails import Trail, TrailRead
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, PublicUser, User, UserRead
 from src.services.trail.trail import _build_trail_read
 from src.services.courses.certifications import check_course_completion_and_create_certificate
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
-from src.security.auth import create_access_token, JWT_ACCESS_TOKEN_EXPIRES
+from src.security.auth import create_access_token
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 
