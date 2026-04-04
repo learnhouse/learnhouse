@@ -1679,7 +1679,8 @@
             "dynamic": "Dinâmico",
             "dynamic_page": "Página Dinâmica",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Excluindo atividade...",

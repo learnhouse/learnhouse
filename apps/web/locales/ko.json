@@ -1689,7 +1689,8 @@
             "dynamic": "동적",
             "dynamic_page": "동적 페이지",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",

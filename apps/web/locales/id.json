@@ -1677,7 +1677,8 @@
             "dynamic": "Dinamis",
             "dynamic_page": "Halaman Dinamis",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Menghapus aktivitas...",

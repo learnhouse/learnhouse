@@ -1676,7 +1676,8 @@
             "dynamic": "डायनेमिक",
             "dynamic_page": "डायनेमिक पेज",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",

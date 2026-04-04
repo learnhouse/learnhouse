@@ -1673,7 +1673,8 @@
             "dynamic": "Динамическое",
             "dynamic_page": "Динамическая страница",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Удаление занятия...",

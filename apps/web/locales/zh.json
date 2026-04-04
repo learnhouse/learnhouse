@@ -1689,7 +1689,8 @@
             "dynamic": "动态内容",
             "dynamic_page": "动态页面",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "正在删除活动...",

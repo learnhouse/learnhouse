@@ -2228,7 +2228,8 @@
             "dynamic": "Dynamic",
             "dynamic_page": "Dynamic Page",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Deleting activity...",

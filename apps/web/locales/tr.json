@@ -1674,7 +1674,8 @@
             "dynamic": "Dinamik",
             "dynamic_page": "Dinamik Sayfa",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",

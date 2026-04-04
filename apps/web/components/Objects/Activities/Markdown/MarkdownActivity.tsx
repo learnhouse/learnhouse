@@ -36,9 +36,10 @@ function toRawUrl(url: string): string {
 interface MarkdownActivityProps {
   activity: any
   editable?: boolean
+  style?: React.CSSProperties
 }
 
-function MarkdownActivity({ activity, editable = false }: MarkdownActivityProps) {
+function MarkdownActivity({ activity, editable = false, style }: MarkdownActivityProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const markdownUrl = activity.content?.markdown_url || ''
@@ -121,7 +122,7 @@ function MarkdownActivity({ activity, editable = false }: MarkdownActivityProps)
   }
 
   return (
-    <div className="w-full px-6 py-6">
+    <div className="w-full px-6 py-6" style={style}>
       {editable && (
         <div className="mb-6 flex items-center gap-3">
           <MarkdownLogo size={20} weight="duotone" className="text-rose-400 flex-shrink-0" />
@@ -147,7 +148,7 @@ function MarkdownActivity({ activity, editable = false }: MarkdownActivityProps)
         </div>
       )}
 
-      <div className="markdown-body">
+      <div className="markdown-body" style={style ? { backgroundColor: 'transparent', color: 'inherit' } : undefined}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]}>
           {markdown || ''}
         </ReactMarkdown>
