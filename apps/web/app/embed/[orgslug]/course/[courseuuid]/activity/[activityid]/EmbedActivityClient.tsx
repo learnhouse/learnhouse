@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, lazy } from 'react'
+import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config'
@@ -11,10 +11,11 @@ const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/Dyn
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
 const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
 
-// Minimal course context for embed
-function EmbedCourseProvider({ children }: { children: React.ReactNode }) {
+// Minimal course context for embed — courseStructure must be populated
+// so that block components (Image, Video, Audio, PDF) can resolve media URLs.
+function EmbedCourseProvider({ children, course }: { children: React.ReactNode; course: any }) {
   const minimalState = {
-    courseStructure: null,
+    courseStructure: course,
     courseOrder: null,
     pendingChanges: {},
     isSaved: true,
@@ -34,15 +35,6 @@ function EmbedCourseProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-64">
-    <div className="relative w-6 h-6">
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
-    </div>
-  </div>
-)
-
 interface EmbedActivityClientProps {
   activity: any
   course: any
@@ -52,6 +44,73 @@ interface EmbedActivityClientProps {
 
 const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
 
+// Returns a selector for the DOM element that signals content is ready.
+function getReadySelector(activityType: string): string {
+  switch (activityType) {
+    case 'TYPE_DYNAMIC':
+      // TipTap editor with rendered content
+      return '.ProseMirror'
+    case 'TYPE_VIDEO':
+      return 'video, iframe'
+    case 'TYPE_DOCUMENT':
+      return 'iframe'
+    default:
+      return '*'
+  }
+}
+
+function useContentReady(activityType: string) {
+  const [ready, setReady] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const checkReady = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return false
+    const selector = getReadySelector(activityType)
+    const target = el.querySelector(selector)
+    if (!target) return false
+    // For dynamic content, ensure the editor actually has child nodes (content rendered)
+    if (activityType === 'TYPE_DYNAMIC' && target.childNodes.length === 0) return false
+    return true
+  }, [activityType])
+
+  useEffect(() => {
+    if (ready) return
+
+    // Check immediately
+    if (checkReady()) {
+      setReady(true)
+      return
+    }
+
+    const el = containerRef.current
+    if (!el) return
+
+    const observer = new MutationObserver(() => {
+      if (checkReady()) {
+        // Wait one frame so the browser has painted the content
+        requestAnimationFrame(() => setReady(true))
+        observer.disconnect()
+      }
+    })
+
+    observer.observe(el, { childList: true, subtree: true })
+
+    // Safety timeout — always reveal after 4s regardless
+    const timeout = setTimeout(() => {
+      setReady(true)
+      observer.disconnect()
+    }, 4000)
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(timeout)
+    }
+  }, [ready, checkReady])
+
+  return { ready, containerRef }
+}
+
 function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedActivityClientProps) {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
@@ -59,6 +118,7 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
   const bgColor = searchParams.get('bgcolor')
   const textColor = searchParams.get('textcolor')
   const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
+  const { ready, containerRef } = useContentReady(activity.activity_type)
 
   const getActivityUrl = () => {
     const cleanCourseUuid = course.course_uuid.replace('course_', '')
@@ -102,21 +162,21 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
     switch (activity.activity_type) {
       case 'TYPE_DYNAMIC':
         return (
-          <EmbedCourseProvider>
-            <Suspense fallback={<LoadingFallback />}>
+          <EmbedCourseProvider course={course}>
+            <Suspense fallback={null}>
               <Canva content={activity.content} activity={activity} hideTableOfContents />
             </Suspense>
           </EmbedCourseProvider>
         )
       case 'TYPE_VIDEO':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense fallback={null}>
             <VideoActivity activity={activity} course={course} />
           </Suspense>
         )
       case 'TYPE_DOCUMENT':
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <Suspense fallback={null}>
             <DocumentPdfActivity activity={activity} course={course} />
           </Suspense>
         )
@@ -125,19 +185,26 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
     }
   }
 
-  const defaultBgClass = activity.activity_type === 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'
+  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
 
   const customStyles: React.CSSProperties = {
-    ...(bgColor ? { backgroundColor: `#${bgColor}` } : {}),
+    backgroundColor: bgColor ? `#${bgColor}` : defaultBg,
     ...(textColor ? { color: `#${textColor}` } : {}),
   }
 
   return (
-    <div className={`min-h-screen relative ${bgColor ? '' : defaultBgClass}`} style={customStyles}>
-      <div className="p-4">
+    <div className="min-h-screen relative" style={customStyles}>
+      <div
+        ref={containerRef}
+        className="p-4"
+        style={{
+          opacity: ready ? 1 : 0,
+          transition: 'opacity 0.15s ease-in',
+        }}
+      >
         {renderActivityContent()}
       </div>
-      {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
+      {showLearnHouseLogo && ready && <PoweredByBadge activityUrl={getActivityUrl()} />}
     </div>
   )
 }
