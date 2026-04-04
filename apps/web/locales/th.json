@@ -1672,7 +1672,9 @@
             "assignments": "งานที่มอบหมาย",
             "dynamic": "ไดนามิก",
             "dynamic_page": "หน้าไดนามิก",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "กำลังลบกิจกรรม...",

@@ -1673,7 +1673,9 @@
             "assignments": "Zadania",
             "dynamic": "Dynamiczna",
             "dynamic_page": "Strona dynamiczna",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Usuwanie aktywności...",

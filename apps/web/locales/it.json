@@ -1682,7 +1682,9 @@
             "assignments": "Compiti",
             "dynamic": "Dinamica",
             "dynamic_page": "Pagina dinamica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Eliminazione attività...",

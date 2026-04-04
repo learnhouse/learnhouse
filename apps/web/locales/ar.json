@@ -1890,7 +1890,9 @@
             "assignments": "واجبات",
             "dynamic": "ديناميكي",
             "dynamic_page": "صفحة ديناميكية",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",
