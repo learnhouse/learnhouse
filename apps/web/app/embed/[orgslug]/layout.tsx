@@ -15,7 +15,7 @@ export default function EmbedLayout(
 
   return (
     <OrgProvider orgslug={params.orgslug}>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">
         {children}
       </div>
     </OrgProvider>

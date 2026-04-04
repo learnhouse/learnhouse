@@ -56,6 +56,8 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
   const { t } = useTranslation()
   const searchParams = useSearchParams()
   const showLearnHouseLogo = searchParams.get('showlearnhouselogo') !== 'false'
+  const bgColor = searchParams.get('bgcolor')
+  const textColor = searchParams.get('textcolor')
   const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
 
   const getActivityUrl = () => {
@@ -123,11 +125,16 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
     }
   }
 
-  const bgColor = activity.activity_type === 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'
+  const defaultBgClass = activity.activity_type === 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'
+
+  const customStyles: React.CSSProperties = {
+    ...(bgColor ? { backgroundColor: `#${bgColor}` } : {}),
+    ...(textColor ? { color: `#${textColor}` } : {}),
+  }
 
   return (
-    <div className="min-h-screen relative">
-      <div className={`${bgColor} p-4`}>
+    <div className={`min-h-screen relative ${bgColor ? '' : defaultBgClass}`} style={customStyles}>
+      <div className="p-4">
         {renderActivityContent()}
       </div>
       {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
