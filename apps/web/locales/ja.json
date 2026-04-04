@@ -1692,7 +1692,8 @@
             "dynamic": "ダイナミック",
             "dynamic_page": "ダイナミックページ",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",

@@ -1680,7 +1680,8 @@
             "dynamic": "Dynamisch",
             "dynamic_page": "Dynamische Pagina",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",

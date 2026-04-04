@@ -1891,7 +1891,8 @@
             "dynamic": "ديناميكي",
             "dynamic_page": "صفحة ديناميكية",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",

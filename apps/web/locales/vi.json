@@ -1673,7 +1673,8 @@
             "dynamic": "Động",
             "dynamic_page": "Trang động",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",

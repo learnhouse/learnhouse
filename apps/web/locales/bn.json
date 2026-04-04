@@ -1677,7 +1677,8 @@
             "dynamic": "ডায়নামিক",
             "dynamic_page": "ডায়নামিক পেজ",
             "scorm": "Scorm",
-            "markdown": "Markdown"
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "কার্যক্রম মোছা হচ্ছে...",
