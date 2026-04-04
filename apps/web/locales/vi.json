@@ -1672,7 +1672,8 @@
             "assignments": "Bài tập",
             "dynamic": "Động",
             "dynamic_page": "Trang động",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",

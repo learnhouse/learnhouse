@@ -47,6 +47,7 @@ const AISidePanelContentWrapper = lazy(() => import('@components/Objects/Activit
 const AISidePanelInline = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk').then(mod => ({ default: mod.AISidePanelInline })))
 const AIChatBotProvider = lazy(() => import('@components/Contexts/AI/AIChatBotContext'))
 const ScormActivity = lazy(() => import('../../../../../../../../ee/components/Activities/ScormActivity'))
+const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -238,6 +239,13 @@ function ActivityClient(props: ActivityClientProps) {
 
     switch (activity.activity_type) {
       case 'TYPE_DYNAMIC':
+        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN') {
+          return (
+            <Suspense fallback={<LoadingFallback />}>
+              <MarkdownActivity activity={activity} />
+            </Suspense>
+          );
+        }
         return (
           <Suspense fallback={<LoadingFallback />}>
             <Canva content={activity.content} activity={activity} />

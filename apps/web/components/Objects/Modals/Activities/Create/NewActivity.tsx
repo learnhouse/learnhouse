@@ -1,15 +1,60 @@
-import React, { useState } from 'react'
-import DynamicPageActivityImage from 'public/activities_types/dynamic-page-activity.png'
-import VideoPageActivityImage from 'public//activities_types/video-page-activity.png'
-import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
-import AssignmentActivityImage from 'public//activities_types/assignment-page-activity.png'
-
+import React from 'react'
+import { Browsers, PlayCircle, FileText, Backpack, MarkdownLogo } from '@phosphor-icons/react'
 import DynamicCanvaModal from './NewActivityModal/DynamicActivityModal'
+import MarkdownModal from './NewActivityModal/MarkdownActivityModal'
 import VideoModal from './NewActivityModal/VideoActivityModal'
-import Image from 'next/image'
 import DocumentPdfModal from './NewActivityModal/DocumentActivityModal'
 import Assignment from './NewActivityModal/AssignmentActivityModal'
 import { useTranslation } from 'react-i18next'
+
+export const activityTypes = [
+  {
+    key: 'dynamic',
+    icon: Browsers,
+    labelKey: 'dashboard.courses.structure.activity.types.dynamic_page',
+    color: {
+      icon: 'text-blue-400',
+    },
+    pattern: `radial-gradient(circle, rgba(191,219,254,0.3) 1px, transparent 1px)`,
+    patternSize: '12px 12px',
+  },
+  {
+    key: 'video',
+    icon: PlayCircle,
+    labelKey: 'dashboard.courses.structure.activity.types.video',
+    color: {
+      icon: 'text-violet-400',
+    },
+    pattern: `repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(196,181,253,0.25) 6px, rgba(196,181,253,0.25) 7px)`,
+  },
+  {
+    key: 'documentpdf',
+    icon: FileText,
+    labelKey: 'dashboard.courses.structure.activity.types.document',
+    color: {
+      icon: 'text-emerald-400',
+    },
+    pattern: `repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(167,243,208,0.25) 8px, rgba(167,243,208,0.25) 9px)`,
+  },
+  {
+    key: 'assignments',
+    icon: Backpack,
+    labelKey: 'dashboard.courses.structure.activity.types.assignments',
+    color: {
+      icon: 'text-amber-400',
+    },
+    pattern: `repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(253,230,138,0.25) 5px, rgba(253,230,138,0.25) 6px)`,
+  },
+  {
+    key: 'markdown',
+    icon: MarkdownLogo,
+    labelKey: 'dashboard.courses.structure.activity.types.markdown',
+    color: {
+      icon: 'text-rose-400',
+    },
+    pattern: `repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(253,164,175,0.2) 6px, rgba(253,164,175,0.2) 7px), repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(253,164,175,0.2) 6px, rgba(253,164,175,0.2) 7px)`,
+  },
+]
 
 function NewActivityModal({
   closeModal,
@@ -18,109 +63,93 @@ function NewActivityModal({
   submitExternalVideo,
   chapterId,
   course,
+  selectedView,
+  setSelectedView,
 }: any) {
   const { t } = useTranslation()
-  const [selectedView, setSelectedView] = useState('home')
 
   return (
     <>
       {selectedView === 'home' && (
-        <div className="grid grid-cols-4 gap-2 mt-2.5 w-full">
-          <ActivityOption
-            onClick={() => {
-              setSelectedView('dynamic')
-            }}
-          >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
-              <Image unoptimized quality={100} alt="Dynamic Page" src={DynamicPageActivityImage}></Image>
-            </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              {t('dashboard.courses.structure.activity.types.dynamic_page')}
-            </div>
-          </ActivityOption>
-          <ActivityOption
-            onClick={() => {
-              setSelectedView('video')
-            }}
-          >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
-              <Image unoptimized quality={100} alt="Video Page" src={VideoPageActivityImage}></Image>
-            </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              {t('dashboard.courses.structure.activity.types.video')}
-            </div>
-          </ActivityOption>
-          <ActivityOption
-            onClick={() => {
-              setSelectedView('documentpdf')
-            }}
-          >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
-              <Image unoptimized quality={100} alt="Document PDF Page" src={DocumentPdfPageActivityImage}></Image>
-            </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              {t('dashboard.courses.structure.activity.types.document')}
-            </div>
-          </ActivityOption>
-          <ActivityOption
-            onClick={() => {
-              setSelectedView('assignments')
-            }}
-          >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
-              <Image unoptimized quality={100} alt="Assignment Page" src={AssignmentActivityImage}></Image>
-            </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              {t('dashboard.courses.structure.activity.types.assignments')}
-            </div>
-          </ActivityOption>
+        <div className="grid grid-cols-5 gap-3 p-5 w-full">
+          {activityTypes.map((activity) => {
+            const Icon = activity.icon
+            return (
+              <div
+                key={activity.key}
+                onClick={() => setSelectedView(activity.key)}
+                className="relative flex flex-col items-center justify-center rounded-xl nice-shadow hover:scale-[1.02] transition-all duration-200 ease-in-out cursor-pointer overflow-hidden h-32"
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: activity.pattern,
+                    backgroundSize: activity.patternSize || 'auto',
+                  }}
+                />
+                <div className="relative flex flex-col items-center gap-3">
+                  <Icon
+                    size={32}
+                    weight="duotone"
+                    className={activity.color.icon}
+                  />
+                  <span className="text-xs font-medium text-gray-500 bg-white nice-shadow rounded-full px-3 py-1">
+                    {t(activity.labelKey)}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {selectedView === 'dynamic' && (
-        <DynamicCanvaModal
-          submitActivity={submitActivity}
-          chapterId={chapterId}
-          course={course}
-        />
-      )}
+      {selectedView !== 'home' && (
+        <div className="p-5">
+          {selectedView === 'dynamic' && (
+            <DynamicCanvaModal
+              submitActivity={submitActivity}
+              chapterId={chapterId}
+              course={course}
+            />
+          )}
 
-      {selectedView === 'video' && (
-        <VideoModal
-          submitFileActivity={submitFileActivity}
-          submitExternalVideo={submitExternalVideo}
-          chapterId={chapterId}
-          course={course}
-        />
-      )}
+          {selectedView === 'video' && (
+            <VideoModal
+              submitFileActivity={submitFileActivity}
+              submitExternalVideo={submitExternalVideo}
+              chapterId={chapterId}
+              course={course}
+            />
+          )}
 
-      {selectedView === 'documentpdf' && (
-        <DocumentPdfModal
-          submitFileActivity={submitFileActivity}
-          chapterId={chapterId}
-          course={course}
-        />
-      )}
+          {selectedView === 'documentpdf' && (
+            <DocumentPdfModal
+              submitFileActivity={submitFileActivity}
+              chapterId={chapterId}
+              course={course}
+            />
+          )}
 
-      {selectedView === 'assignments' && (
-        <Assignment
-          submitActivity={submitActivity}
-          chapterId={chapterId}
-          course={course}
-          closeModal={closeModal}
-        />)
-      }
+          {selectedView === 'assignments' && (
+            <Assignment
+              submitActivity={submitActivity}
+              chapterId={chapterId}
+              course={course}
+              closeModal={closeModal}
+            />
+          )}
+
+          {selectedView === 'markdown' && (
+            <MarkdownModal
+              submitActivity={submitActivity}
+              chapterId={chapterId}
+              course={course}
+            />
+          )}
+        </div>
+      )}
     </>
   )
 }
-
-const ActivityOption = ({ onClick, children }: any) => (
-  <div
-    onClick={onClick}
-    className="w-full text-center rounded-xl bg-gray-100 border-4 border-gray-100 mx-auto hover:bg-gray-200 hover:border-gray-200 transition duration-200 ease-in-out cursor-pointer"
-  >
-    {children}
-  </div>
-)
 
 export default NewActivityModal

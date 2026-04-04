@@ -2227,7 +2227,8 @@
             "assignments": "Assignments",
             "dynamic": "Dynamic",
             "dynamic_page": "Dynamic Page",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown"
           },
           "toasts": {
             "deleting": "Deleting activity...",

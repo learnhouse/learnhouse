@@ -11,7 +11,7 @@ export async function createActivity(
   org_id: any,
   access_token: string
 ) {
-  data.content = {}
+  data.content = data.content || {}
   // remove chapter_id from data
   delete data.chapterId
 
