@@ -10,6 +10,7 @@ import {
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Layers } from 'lucide-react'
+import { ArrowLeft } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
@@ -25,6 +26,7 @@ type NewActivityButtonProps = {
 function NewActivityButton(props: NewActivityButtonProps) {
   const { t } = useTranslation()
   const [newActivityModal, setNewActivityModal] = React.useState(false)
+  const [selectedView, setSelectedView] = React.useState('home')
   const router = useRouter()
   const course = useCourse() as any
   const session = useLHSession() as any;
@@ -32,6 +34,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   const openNewActivityModal = async (chapterId: any) => {
+    setSelectedView('home')
     setNewActivityModal(true)
   }
 
@@ -101,6 +104,20 @@ function NewActivityButton(props: NewActivityButtonProps) {
 
   useEffect(() => { }, [course])
 
+  const dialogTitle = selectedView !== 'home' ? (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={() => setSelectedView('home')}
+        className="flex items-center justify-center h-7 w-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+      >
+        <ArrowLeft size={18} />
+      </button>
+      <span>{t('dashboard.courses.structure.modals.new_activity.title')}</span>
+    </div>
+  ) : (
+    t('dashboard.courses.structure.modals.new_activity.title')
+  )
+
   return (
     <div className="flex justify-center">
       <Modal
@@ -109,6 +126,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         minHeight="no-min"
         minWidth='md'
         addDefCloseButton={false}
+        noPadding
         dialogContent={
           <NewActivityModal
             closeModal={closeNewActivityModal}
@@ -117,10 +135,12 @@ function NewActivityButton(props: NewActivityButtonProps) {
             submitActivity={submitActivity}
             chapterId={props.chapterId}
             course={course}
+            selectedView={selectedView}
+            setSelectedView={setSelectedView}
           ></NewActivityModal>
         }
-        dialogTitle={t('dashboard.courses.structure.modals.new_activity.title')}
-        dialogDescription={t('dashboard.courses.structure.modals.new_activity.description')}
+        dialogTitle={dialogTitle}
+        dialogDescription={selectedView === 'home' ? t('dashboard.courses.structure.modals.new_activity.description') : undefined}
       />
       <div
         onClick={() => {

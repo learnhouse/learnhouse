@@ -1678,7 +1678,9 @@
             "assignments": "Tarefas",
             "dynamic": "Dinâmico",
             "dynamic_page": "Página Dinâmica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Excluindo atividade...",

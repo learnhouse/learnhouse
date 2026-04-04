@@ -1675,7 +1675,9 @@
             "assignments": "असाइनमेंट",
             "dynamic": "डायनेमिक",
             "dynamic_page": "डायनेमिक पेज",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",

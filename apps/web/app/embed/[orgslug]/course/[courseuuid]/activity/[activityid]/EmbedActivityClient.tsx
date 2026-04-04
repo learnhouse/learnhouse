@@ -10,6 +10,8 @@ import { CourseContext, CourseDispatchContext } from '@components/Contexts/Cours
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
 const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/DocumentPdf/DocumentPdf'))
+const MarkdownActivity = lazy(() => import('@components/Objects/Activities/Markdown/MarkdownActivity'))
+const EmbedActivity = lazy(() => import('@components/Objects/Activities/Embed/EmbedActivity'))
 
 // Minimal course context for embed — courseStructure must be populated
 // so that block components (Image, Video, Audio, PDF) can resolve media URLs.
@@ -45,7 +47,9 @@ interface EmbedActivityClientProps {
 const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
 
 // Returns a selector for the DOM element that signals content is ready.
-function getReadySelector(activityType: string): string {
+function getReadySelector(activityType: string, activitySubType?: string): string {
+  if (activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN') return '.markdown-body'
+  if (activitySubType === 'SUBTYPE_DYNAMIC_EMBED') return 'iframe'
   switch (activityType) {
     case 'TYPE_DYNAMIC':
       // TipTap editor with rendered content
@@ -59,14 +63,14 @@ function getReadySelector(activityType: string): string {
   }
 }
 
-function useContentReady(activityType: string) {
+function useContentReady(activityType: string, activitySubType?: string) {
   const [ready, setReady] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const checkReady = useCallback(() => {
     const el = containerRef.current
     if (!el) return false
-    const selector = getReadySelector(activityType)
+    const selector = getReadySelector(activityType, activitySubType)
     const target = el.querySelector(selector)
     if (!target) return false
     // For dynamic content, ensure the editor actually has child nodes (content rendered)
@@ -118,7 +122,7 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
   const bgColor = searchParams.get('bgcolor')
   const textColor = searchParams.get('textcolor')
   const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
-  const { ready, containerRef } = useContentReady(activity.activity_type)
+  const { ready, containerRef } = useContentReady(activity.activity_type, activity.activity_sub_type)
 
   const getActivityUrl = () => {
     const cleanCourseUuid = course.course_uuid.replace('course_', '')
@@ -161,6 +165,20 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
   const renderActivityContent = () => {
     switch (activity.activity_type) {
       case 'TYPE_DYNAMIC':
+        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN') {
+          return (
+            <Suspense fallback={null}>
+              <MarkdownActivity activity={activity} style={customStyles} />
+            </Suspense>
+          )
+        }
+        if (activity.activity_sub_type === 'SUBTYPE_DYNAMIC_EMBED') {
+          return (
+            <Suspense fallback={null}>
+              <EmbedActivity activity={activity} style={customStyles} />
+            </Suspense>
+          )
+        }
         return (
           <EmbedCourseProvider course={course}>
             <Suspense fallback={null}>

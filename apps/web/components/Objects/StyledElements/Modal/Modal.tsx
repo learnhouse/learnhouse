@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { cn } from "@/lib/utils"
 
 type ModalParams = {
-  dialogTitle?: string
+  dialogTitle?: React.ReactNode
   dialogDescription?: string
   dialogContent: React.ReactNode
   dialogClose?: React.ReactNode | null

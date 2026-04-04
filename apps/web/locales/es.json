@@ -1880,7 +1880,9 @@
             "assignments": "Tareas",
             "dynamic": "Dinámico",
             "dynamic_page": "Página dinámica",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "Eliminando actividad...",

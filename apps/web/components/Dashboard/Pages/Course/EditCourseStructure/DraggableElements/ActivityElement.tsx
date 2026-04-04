@@ -20,6 +20,7 @@ import {
   Trash2,
   Video,
 } from 'lucide-react'
+import { MarkdownLogo, Globe as GlobePhosphor } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -218,7 +219,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           </div>
 
           {/* Activity Type Icon */}
-          <ActivityTypeIndicator activityType={props.activity.activity_type} isMobile={isMobile} />
+          <ActivityTypeIndicator activityType={props.activity.activity_type} activitySubType={props.activity.activity_sub_type} isMobile={isMobile} />
 
           {/* Activity Name */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
@@ -258,75 +259,80 @@ function ActivityElement(props: ActivitiyElementProps) {
             )}
           </div>
 
-          {/* Status badge */}
+          {/* Status badge + quick actions */}
           {!props.selectionMode && (
-            <span className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-              props.activity.published
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-gray-100 text-gray-500 border border-gray-200'
-            }`}>
-              {isPublishing ? (
-                <Loader2 size={10} className="animate-spin" />
-              ) : props.activity.published ? (
-                <Globe size={10} />
-              ) : (
-                <Lock size={10} />
-              )}
-              {props.activity.published
-                ? t('dashboard.courses.structure.activity.status.published')
-                : t('dashboard.courses.structure.activity.status.draft')}
-            </span>
-          )}
-
-          {/* Actions kebab menu */}
-          {!props.selectionMode && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex-shrink-0 h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                  <MoreVertical size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {editHref && (
-                  <DropdownMenuItem asChild>
-                    <Link href={editHref} target="_blank">
-                      <FilePenLine size={14} />
-                      {props.activity.activity_type === 'TYPE_ASSIGNMENT'
-                        ? t('dashboard.courses.structure.actions.edit_assignment')
-                        : t('dashboard.courses.structure.actions.edit_page')}
-                    </Link>
-                  </DropdownMenuItem>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium w-[90px] justify-center ${
+                props.activity.published
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-gray-100 text-gray-500 border border-gray-200'
+              }`}>
+                {isPublishing ? (
+                  <Loader2 size={10} className="animate-spin" />
+                ) : props.activity.published ? (
+                  <Globe size={10} />
+                ) : (
+                  <Lock size={10} />
                 )}
-                <DropdownMenuItem asChild>
-                  <Link href={previewHref}>
-                    <Eye size={14} />
-                    {t('dashboard.courses.structure.actions.preview_activity')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedActivity(props.activity.id)}>
-                  <Pencil size={14} />
-                  {t('dashboard.courses.structure.actions.rename')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={changePublicStatus} disabled={isPublishing}>
-                  {props.activity.published ? <Lock size={14} /> : <Globe size={14} />}
-                  {props.activity.published
-                    ? t('dashboard.courses.structure.actions.unpublish')
-                    : t('dashboard.courses.structure.actions.publish')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setDeleteModalOpen(true)
-                  }}
-                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                {props.activity.published
+                  ? t('dashboard.courses.structure.activity.status.published')
+                  : t('dashboard.courses.structure.activity.status.draft')}
+              </span>
+              <div className="flex items-center gap-1">
+              {editHref ? (
+                <Link
+                  href={editHref}
+                  target="_blank"
+                  className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  title={props.activity.activity_type === 'TYPE_ASSIGNMENT'
+                    ? t('dashboard.courses.structure.actions.edit_assignment')
+                    : t('dashboard.courses.structure.actions.edit_page')}
                 >
-                  <Trash2 size={14} />
-                  {t('dashboard.courses.structure.bulk_actions.delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <FilePenLine size={15} />
+                </Link>
+              ) : (
+                <div className="h-7 w-7" />
+              )}
+              <Link
+                href={previewHref}
+                className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                title={t('dashboard.courses.structure.actions.preview_activity')}
+              >
+                <Eye size={15} />
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                    <MoreVertical size={16} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setSelectedActivity(props.activity.id)}>
+                    <Pencil size={14} />
+                    {t('dashboard.courses.structure.actions.rename')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={changePublicStatus} disabled={isPublishing}>
+                    {props.activity.published ? <Lock size={14} /> : <Globe size={14} />}
+                    {props.activity.published
+                      ? t('dashboard.courses.structure.actions.unpublish')
+                      : t('dashboard.courses.structure.actions.publish')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setDeleteModalOpen(true)
+                    }}
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                  >
+                    <Trash2 size={14} />
+                    {t('dashboard.courses.structure.bulk_actions.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              </div>
+            </div>
           )}
 
           {/* Delete confirmation modal - hidden trigger clicked from dropdown */}
@@ -369,9 +375,15 @@ const ACTIVITIES = {
   }
 }
 
-const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof typeof ACTIVITIES, isMobile: boolean}) => {
+const ActivityTypeIndicator = ({activityType, activitySubType, isMobile} : { activityType: keyof typeof ACTIVITIES, activitySubType?: string, isMobile: boolean}) => {
   const { t } = useTranslation()
-  const {displayNameKey, Icon} = ACTIVITIES[activityType]
+  const isMarkdown = activitySubType === 'SUBTYPE_DYNAMIC_MARKDOWN'
+  const isEmbed = activitySubType === 'SUBTYPE_DYNAMIC_EMBED'
+  const {displayNameKey, Icon} = isMarkdown
+    ? { displayNameKey: 'markdown', Icon: MarkdownLogo }
+    : isEmbed
+    ? { displayNameKey: 'embed', Icon: GlobePhosphor }
+    : ACTIVITIES[activityType]
 
   return (
     <div className="flex items-center gap-1.5 flex-shrink-0">

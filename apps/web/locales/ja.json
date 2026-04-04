@@ -1691,7 +1691,9 @@
             "assignments": "課題",
             "dynamic": "ダイナミック",
             "dynamic_page": "ダイナミックページ",
-            "scorm": "Scorm"
+            "scorm": "Scorm",
+            "markdown": "Markdown",
+            "embed": "Embed"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",
