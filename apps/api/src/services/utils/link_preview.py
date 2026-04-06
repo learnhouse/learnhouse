@@ -18,6 +18,7 @@ _BLOCKED_NETWORKS = [
     ipaddress.ip_network("192.0.0.0/24"),
     ipaddress.ip_network("192.168.0.0/16"),
     ipaddress.ip_network("198.18.0.0/15"),
+    ipaddress.ip_network("::ffff:0:0/96"),  # IPv4-mapped IPv6
     ipaddress.ip_network("::1/128"),
     ipaddress.ip_network("fc00::/7"),
     ipaddress.ip_network("fe80::/10"),
@@ -50,6 +51,9 @@ def _validate_url(url: str) -> str:
 
     for _, _, _, _, sockaddr in addr_infos:
         ip = ipaddress.ip_address(sockaddr[0])
+        # Normalize IPv4-mapped IPv6 addresses to their IPv4 equivalent
+        if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+            ip = ip.ipv4_mapped
         for network in _BLOCKED_NETWORKS:
             if ip in network:
                 raise HTTPException(
