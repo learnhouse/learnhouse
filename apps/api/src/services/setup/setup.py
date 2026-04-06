@@ -334,8 +334,8 @@ def install_default_elements(db_session: Session):
                 action_read_own=True,
                 action_update=False,
                 action_update_own=False,
-                action_delete=True,
-                action_delete_own=True,
+                action_delete=False,
+                action_delete_own=False,
             ),
             users=Permission(
                 action_create=False,

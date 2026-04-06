@@ -1361,13 +1361,22 @@ async def read_assignment_submissions(
             detail="Course not found",
         )
 
-    # Find assignments tasks for an assignment
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Check if user has instructor/admin privileges on this course
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+
+    # Non-instructors can only see their own submissions
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id
     )
-
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    if not is_instructor:
+        statement = statement.where(
+            AssignmentUserSubmission.user_id == current_user.id
+        )
 
     # return assignment tasks read
     return [

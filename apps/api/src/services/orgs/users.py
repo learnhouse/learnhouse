@@ -80,10 +80,15 @@ async def get_organization_users(
             detail="You must be a member of this organization to view its members",
         )
 
-    # RBAC check (for additional permission verification) — skip for superadmins
+    # Only admins/maintainers can list organization members
     from src.security.superadmin import is_user_superadmin
     if not is_user_superadmin(current_user.id, db_session):
-        await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+        from src.security.org_auth import is_org_admin
+        if not is_org_admin(current_user.id, org.id, db_session):
+            raise HTTPException(
+                status_code=403,
+                detail="Only administrators and maintainers can view organization members",
+            )
 
     # Base query for users in the organization
     base_statement = (
@@ -275,9 +280,15 @@ async def export_organization_users_csv(
     if not is_org_member(current_user.id, org.id, db_session):
         raise HTTPException(status_code=403, detail="You must be a member of this organization")
 
+    # Only admins/maintainers can export organization members
     from src.security.superadmin import is_user_superadmin
     if not is_user_superadmin(current_user.id, db_session):
-        await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+        from src.security.org_auth import is_org_admin
+        if not is_org_admin(current_user.id, org.id, db_session):
+            raise HTTPException(
+                status_code=403,
+                detail="Only administrators and maintainers can export organization members",
+            )
 
     base_statement = (
         select(User)
