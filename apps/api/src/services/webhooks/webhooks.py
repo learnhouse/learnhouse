@@ -276,7 +276,7 @@ async def get_webhook_delivery_logs(
         select(WebhookDeliveryLog)
         .where(WebhookDeliveryLog.webhook_id == endpoint.id)
         .order_by(col(WebhookDeliveryLog.id).desc())
-        .limit(limit)
+        .limit(min(limit, 200))
     )
     logs = db_session.exec(statement).all()
 

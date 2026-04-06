@@ -8,12 +8,13 @@ Mirrors the analytics ``track()`` pattern: wraps work in
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import uuid4
 
 import httpx
-from sqlmodel import Session, select, col
+from sqlmodel import Session, select, col, delete
 
 from src.core.events.database import engine
 from src.db.webhooks import WebhookEndpoint, WebhookDeliveryLog
@@ -44,6 +45,24 @@ def _get_webhook_client() -> httpx.AsyncClient:
             headers={"User-Agent": "LearnHouse-Webhooks/1.0"},
         )
     return _webhook_client
+
+
+async def close_webhook_client() -> None:
+    """Shutdown hook -- call from the app shutdown event."""
+    global _webhook_client
+    if _webhook_client is not None:
+        await _webhook_client.aclose()
+        _webhook_client = None
+
+
+@dataclass
+class _EndpointInfo:
+    """Lightweight snapshot of a WebhookEndpoint -- no ORM session needed."""
+    id: int
+    webhook_uuid: str
+    url: str
+    secret_encrypted: str
+    events: list
 
 
 async def dispatch_webhooks(
@@ -78,6 +97,8 @@ async def _deliver_webhooks(
 ) -> None:
     """Background task that queries matching endpoints and delivers payloads."""
     try:
+        # Short-lived DB session -- fetch endpoint data then release immediately.
+        endpoints: list[_EndpointInfo] = []
         with Session(engine) as db_session:
             if webhook_ids:
                 statement = select(WebhookEndpoint).where(
@@ -89,14 +110,19 @@ async def _deliver_webhooks(
                     WebhookEndpoint.org_id == org_id,
                     WebhookEndpoint.is_active == True,
                 )
-            endpoints = db_session.exec(statement).all()
+            for ep in db_session.exec(statement).all():
+                if webhook_ids or event_name in (ep.events or []):
+                    endpoints.append(_EndpointInfo(
+                        id=ep.id,  # type: ignore
+                        webhook_uuid=ep.webhook_uuid,
+                        url=ep.url,
+                        secret_encrypted=ep.secret_encrypted,
+                        events=ep.events or [],
+                    ))
 
-            for endpoint in endpoints:
-                # For normal dispatches, check if the endpoint is subscribed
-                if not webhook_ids and event_name not in (endpoint.events or []):
-                    continue
-
-                await _deliver_to_endpoint(db_session, endpoint, event_name, org_id, data)
+        # All HTTP work happens outside the DB session.
+        for ep_info in endpoints:
+            await _deliver_to_endpoint(ep_info, event_name, org_id, data)
 
     except Exception:
         logger.warning(
@@ -108,8 +134,7 @@ async def _deliver_webhooks(
 
 
 async def _deliver_to_endpoint(
-    db_session: Session,
-    endpoint: WebhookEndpoint,
+    ep: _EndpointInfo,
     event_name: str,
     org_id: int,
     data: dict,
@@ -129,9 +154,9 @@ async def _deliver_to_endpoint(
     payload_bytes = json.dumps(payload, separators=(",", ":")).encode()
 
     try:
-        secret = decrypt_secret(endpoint.secret_encrypted)
+        secret = decrypt_secret(ep.secret_encrypted)
     except Exception:
-        logger.warning("Failed to decrypt secret for webhook %s", endpoint.webhook_uuid)
+        logger.warning("Failed to decrypt secret for webhook %s", ep.webhook_uuid)
         return
 
     signature = compute_signature(payload_bytes, secret)
@@ -147,7 +172,7 @@ async def _deliver_to_endpoint(
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         log_entry = WebhookDeliveryLog(
-            webhook_id=endpoint.id,  # type: ignore
+            webhook_id=ep.id,
             event_name=event_name,
             delivery_uuid=delivery_uuid,
             request_payload=payload,
@@ -156,52 +181,50 @@ async def _deliver_to_endpoint(
         )
 
         try:
-            resp = await client.post(endpoint.url, content=payload_bytes, headers=headers)
+            resp = await client.post(ep.url, content=payload_bytes, headers=headers)
             log_entry.response_status = resp.status_code
             log_entry.response_body = resp.text[:500] if resp.text else None
             log_entry.success = 200 <= resp.status_code < 300
 
-            db_session.add(log_entry)
-            db_session.commit()
-
-            if log_entry.success:
-                break
-
         except Exception as e:
             log_entry.success = False
             log_entry.error_message = str(e)[:1000]
+
+        # Short-lived session just to persist the log entry.
+        with Session(engine) as db_session:
             db_session.add(log_entry)
             db_session.commit()
 
-        # Retry with backoff if not the last attempt and not successful
-        if attempt < MAX_ATTEMPTS and not log_entry.success:
+        if log_entry.success:
+            break
+
+        # Retry with backoff if not the last attempt
+        if attempt < MAX_ATTEMPTS:
             delay = BACKOFF_DELAYS[attempt - 1] if attempt - 1 < len(BACKOFF_DELAYS) else BACKOFF_DELAYS[-1]
             await asyncio.sleep(delay)
 
     # Prune old logs for this endpoint
-    _prune_delivery_logs(db_session, endpoint.id)  # type: ignore
+    _prune_delivery_logs(ep.id)
 
 
-def _prune_delivery_logs(db_session: Session, webhook_id: int) -> None:
+def _prune_delivery_logs(webhook_id: int) -> None:
     """Keep only the most recent LOG_RETENTION_PER_ENDPOINT logs per endpoint."""
     try:
-        statement = (
-            select(WebhookDeliveryLog.id)
-            .where(WebhookDeliveryLog.webhook_id == webhook_id)
-            .order_by(col(WebhookDeliveryLog.id).desc())
-            .offset(LOG_RETENTION_PER_ENDPOINT)
-            .limit(1)
-        )
-        cutoff_row = db_session.exec(statement).first()
-        if cutoff_row is not None:
-            old_logs = db_session.exec(
-                select(WebhookDeliveryLog).where(
-                    WebhookDeliveryLog.webhook_id == webhook_id,
-                    WebhookDeliveryLog.id <= cutoff_row,
+        with Session(engine) as db_session:
+            cutoff_row = db_session.exec(
+                select(WebhookDeliveryLog.id)
+                .where(WebhookDeliveryLog.webhook_id == webhook_id)
+                .order_by(col(WebhookDeliveryLog.id).desc())
+                .offset(LOG_RETENTION_PER_ENDPOINT)
+                .limit(1)
+            ).first()
+            if cutoff_row is not None:
+                db_session.exec(
+                    delete(WebhookDeliveryLog).where(
+                        WebhookDeliveryLog.webhook_id == webhook_id,
+                        WebhookDeliveryLog.id <= cutoff_row,
+                    )
                 )
-            ).all()
-            for log in old_logs:
-                db_session.delete(log)
-            db_session.commit()
+                db_session.commit()
     except Exception:
         logger.warning("Failed to prune webhook delivery logs for endpoint %s", webhook_id)

@@ -6,6 +6,7 @@ Cryptographic helpers for webhook secrets.
 """
 
 import base64
+import functools
 import hashlib
 import hmac
 
@@ -14,6 +15,7 @@ from cryptography.fernet import Fernet
 from config.config import get_learnhouse_config
 
 
+@functools.lru_cache(maxsize=1)
 def _fernet_key() -> bytes:
     """Derive a 32-byte Fernet key from the application's JWT secret."""
     secret = get_learnhouse_config().security_config.auth_jwt_secret_key
