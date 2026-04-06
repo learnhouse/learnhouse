@@ -2,9 +2,12 @@
 CRUD operations for webhook endpoints.
 """
 
+import ipaddress
 import secrets
+import socket
 from datetime import datetime
 from typing import List
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, status
@@ -30,6 +33,40 @@ from src.services.webhooks.events import WEBHOOK_EVENTS
 def _generate_signing_secret() -> str:
     """Generate a cryptographically secure signing secret."""
     return f"whsec_{secrets.token_urlsafe(32)}"
+
+
+def _validate_webhook_url(url: str) -> None:
+    """Block SSRF: reject private/reserved IPs and non-HTTPS schemes."""
+    parsed = urlparse(url)
+
+    if parsed.scheme not in ("https", "http"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Webhook URL must use https:// (or http:// for local testing).",
+        )
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Webhook URL has no valid hostname.",
+        )
+
+    try:
+        resolved = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
+    except socket.gaierror:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not resolve hostname: {hostname}",
+        )
+
+    for _, _, _, _, sockaddr in resolved:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Webhook URL must not point to a private or internal address.",
+            )
 
 
 def _validate_events(events: List[str]) -> None:
@@ -79,6 +116,7 @@ async def create_webhook_endpoint(
 
     require_org_admin(current_user.id, org_id, db_session)
     _validate_events(webhook_object.events)
+    _validate_webhook_url(webhook_object.url)
 
     plaintext_secret = _generate_signing_secret()
     now = str(datetime.now())
@@ -157,6 +195,7 @@ async def update_webhook_endpoint(
         _validate_events(webhook_object.events)
         endpoint.events = webhook_object.events
     if webhook_object.url is not None:
+        _validate_webhook_url(webhook_object.url)
         endpoint.url = webhook_object.url
     if webhook_object.description is not None:
         endpoint.description = webhook_object.description

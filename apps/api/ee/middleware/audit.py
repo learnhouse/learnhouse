@@ -10,6 +10,10 @@ from sqlmodel import Session
 
 logger = logging.getLogger(__name__)
 
+# Strong references to fire-and-forget tasks so the GC does not collect them
+# before they complete (Python 3.12+ only keeps weak refs in the event loop).
+_background_tasks: set = set()
+
 class EEAuditLogMiddleware:
     """
     Pure ASGI middleware for audit logging.
@@ -158,19 +162,24 @@ class EEAuditLogMiddleware:
 
         # Try to resolve org_id BEFORE the action (essential for DELETE)
         org_id = None
-        is_enterprise = False
+        should_log = False
         with Session(engine) as session:
             # 1. Try from captured payload
             if isinstance(payload, dict):
                 org_id = resolve_org_id(session, payload)
-            
+
             # 2. Try from path/query data collected
             if org_id is None:
                 org_id = resolve_org_id(session, path_query_data)
-            
-            # Check if this organization is on the enterprise plan
+
+            # In EE (self-hosted) mode all orgs get audit logs;
+            # in SaaS mode only enterprise-plan orgs qualify.
             if org_id:
-                is_enterprise = is_enterprise_plan(session, org_id)
+                from src.core.deployment_mode import get_deployment_mode
+                if get_deployment_mode() == "ee":
+                    should_log = True
+                else:
+                    should_log = is_enterprise_plan(session, org_id)
 
         # Wrap send to capture the response status code for audit logging.
         status_code = 0
@@ -192,9 +201,9 @@ class EEAuditLogMiddleware:
 
         action = f"{http_method} {path}"
 
-        # Queue the log asynchronously only if it's an enterprise org
-        if is_enterprise:
-            asyncio.create_task(queue_audit_log(
+        # Queue the log asynchronously only if audit logging is enabled for this org
+        if should_log:
+            task = asyncio.create_task(queue_audit_log(
                 user_id=user_id,
                 org_id=org_id,
                 action=action,
@@ -206,3 +215,5 @@ class EEAuditLogMiddleware:
                 resource_id=resource_id,
                 ip_address=request.client.host if request.client else None
             ))
+            _background_tasks.add(task)
+            task.add_done_callback(_background_tasks.discard)

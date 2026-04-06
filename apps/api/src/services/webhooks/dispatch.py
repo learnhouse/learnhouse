@@ -18,8 +18,13 @@ from sqlmodel import Session, select, col
 from src.core.events.database import engine
 from src.db.webhooks import WebhookEndpoint, WebhookDeliveryLog
 from src.services.webhooks.crypto import decrypt_secret, compute_signature
+from src.services.webhooks.events import validate_event_data
 
 logger = logging.getLogger(__name__)
+
+# Strong references to fire-and-forget tasks so the GC does not collect them
+# before they complete (Python 3.12+ only keeps weak refs in the event loop).
+_background_tasks: set = set()
 
 # Lazy singleton httpx client for outgoing webhook requests
 _webhook_client: httpx.AsyncClient | None = None
@@ -35,6 +40,7 @@ def _get_webhook_client() -> httpx.AsyncClient:
     if _webhook_client is None:
         _webhook_client = httpx.AsyncClient(
             timeout=10.0,
+            follow_redirects=False,
             headers={"User-Agent": "LearnHouse-Webhooks/1.0"},
         )
     return _webhook_client
@@ -56,9 +62,12 @@ async def dispatch_webhooks(
         webhook_ids: If provided, only deliver to these specific endpoints
                      (used by the test/ping feature).
     """
-    asyncio.create_task(
+    validate_event_data(event_name, data)
+    task = asyncio.create_task(
         _deliver_webhooks(event_name, org_id, data, webhook_ids)
     )
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def _deliver_webhooks(
