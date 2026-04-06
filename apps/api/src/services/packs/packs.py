@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime
 from fastapi import HTTPException
@@ -9,6 +10,7 @@ from src.security.features_utils.usage import (
     _get_redis_client,
     add_ai_credits,
 )
+from src.services.webhooks.dispatch import dispatch_webhooks, _background_tasks
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +134,20 @@ def activate_pack(
 
     db_session.commit()
     db_session.refresh(org_pack)
+
+    _task = asyncio.create_task(dispatch_webhooks(
+        event_name="pack_activated",
+        org_id=org_id,
+        data={
+            "pack_id": pack_id,
+            "pack_type": pack_def["type"],
+            "quantity": pack_def["quantity"],
+            "platform_subscription_id": platform_subscription_id,
+        },
+    ))
+    _background_tasks.add(_task)
+    _task.add_done_callback(_background_tasks.discard)
+
     return org_pack
 
 
@@ -169,6 +185,19 @@ def deactivate_pack(
 
     db_session.commit()
     db_session.refresh(org_pack)
+
+    _task = asyncio.create_task(dispatch_webhooks(
+        event_name="pack_deactivated",
+        org_id=org_id,
+        data={
+            "pack_id": org_pack.pack_id,
+            "pack_type": org_pack.pack_type.value,
+            "platform_subscription_id": platform_subscription_id,
+        },
+    ))
+    _background_tasks.add(_task)
+    _task.add_done_callback(_background_tasks.discard)
+
     return org_pack
 
 

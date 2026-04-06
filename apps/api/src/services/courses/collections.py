@@ -13,6 +13,7 @@ from src.db.collections_courses import CollectionCourse
 from src.db.courses.courses import Course
 from fastapi import HTTPException, status, Request
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 ####################################################
@@ -136,6 +137,15 @@ async def create_collection(
     courses = list(db_session.exec(statement).all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
+
+    await dispatch_webhooks(
+        event_name="collection_created",
+        org_id=collection_object.org_id,
+        data={
+            "collection_uuid": collection.collection_uuid,
+            "name": collection.name,
+        },
+    )
 
     return CollectionRead.model_validate(collection)
 

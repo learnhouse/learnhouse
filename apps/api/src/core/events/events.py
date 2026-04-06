@@ -84,6 +84,9 @@ def shutdown_app(app: FastAPI) -> Callable:
     async def close_app() -> None:
         if _cleanup_task:
             _cleanup_task.cancel()
+        # Close the webhook httpx client cleanly
+        from src.services.webhooks.dispatch import close_webhook_client
+        await close_webhook_client()
         await close_database(app)
 
     return close_app

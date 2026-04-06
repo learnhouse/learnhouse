@@ -107,7 +107,7 @@ def register_routers(v1_router: APIRouter):
 
 def on_startup(app: FastAPI):
     """Run Enterprise Edition startup tasks."""
-    
+
     # Start Audit Log Flusher
     async def audit_log_flusher():
         while True:
@@ -118,7 +118,9 @@ def on_startup(app: FastAPI):
             except Exception as e:
                 logger.error(f"EE Audit log flusher error: {e}")
 
-    asyncio.create_task(audit_log_flusher())
+    # Store a strong reference so the GC does not collect the long-running
+    # task (Python 3.12+ only keeps weak refs in the event loop).
+    app.state.audit_log_flusher_task = asyncio.create_task(audit_log_flusher())
     logger.info("EE Startup tasks initiated")
 
 # Payments hooks

@@ -1,6 +1,6 @@
 from typing import Optional, Any, List
 from sqlmodel import SQLModel, Field, Column, Integer, ForeignKey, JSON
-from datetime import datetime
+from datetime import datetime, timezone
 
 class AuditLogBase(SQLModel):
     user_id: Optional[int] = Field(
@@ -22,7 +22,7 @@ class AuditLogBase(SQLModel):
         sa_column=Column(JSON)
     )
     ip_address: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AuditLog(AuditLogBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -13,6 +13,7 @@ from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 async def create_update(
@@ -58,6 +59,15 @@ async def create_update(
 
     db_session.commit()
     db_session.refresh(update)
+
+    await dispatch_webhooks(
+        event_name="course_update_published",
+        org_id=update_object.org_id,
+        data={
+            "courseupdate_uuid": update.courseupdate_uuid,
+            "course_uuid": course_uuid,
+        },
+    )
 
     return CourseUpdateRead(**update.model_dump())
 
