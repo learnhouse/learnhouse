@@ -1,7 +1,7 @@
 import json
 import logging
 import redis
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional, Dict
 from sqlmodel import Session, select
 from config.config import get_learnhouse_config
@@ -233,7 +233,7 @@ async def queue_audit_log(
         "status_code": status_code,
         "payload": payload,
         "ip_address": ip_address,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
         r.lpush(REDIS_AUDIT_LOG_KEY, json.dumps(log_data))

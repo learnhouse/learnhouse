@@ -18,6 +18,7 @@ from src.db.users import PublicUser, AnonymousUser
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 ####################################################
@@ -315,7 +316,7 @@ async def create_certificate_user(
     db_session.commit()
     db_session.refresh(certificate_user)
 
-    # Track certificate_claimed event for analytics
+    # Track certificate_claimed event for analytics and webhooks
     try:
         course = db_session.exec(
             select(Course).where(Course.id == certification.course_id)
@@ -327,6 +328,24 @@ async def create_certificate_user(
                 user_id=user_id,
                 properties={
                     "course_uuid": course.course_uuid,
+                },
+            )
+            await dispatch_webhooks(
+                event_name=analytics_events.CERTIFICATE_CLAIMED,
+                org_id=course.org_id,
+                data={
+                    "user": {
+                        "user_uuid": user.user_uuid,
+                        "email": user.email,
+                        "username": user.username,
+                    },
+                    "course": {
+                        "course_uuid": course.course_uuid,
+                        "name": course.name,
+                    },
+                    "certificate": {
+                        "user_certification_uuid": certificate_user.user_certification_uuid,
+                    },
                 },
             )
     except Exception:

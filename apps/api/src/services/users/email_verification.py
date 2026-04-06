@@ -17,6 +17,7 @@ from config.config import get_learnhouse_config
 from src.services.users.emails import send_email_verification_email
 from src.services.email.utils import get_base_url_from_request
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 # Token expiration time in seconds (1 hour)
@@ -206,6 +207,20 @@ async def verify_email_token(
 
     # Delete used token
     r.delete(redis_key)
+
+    # Dispatch webhook — resolve org_id from org_uuid
+    if org_uuid != NO_ORG_UUID:
+        org_statement = select(Organization).where(Organization.org_uuid == org_uuid)
+        org = db_session.exec(org_statement).first()
+        if org:
+            await dispatch_webhooks(
+                event_name="user_email_verified",
+                org_id=org.id,
+                data={
+                    "user_uuid": user.user_uuid,
+                    "email": user.email,
+                },
+            )
 
     return "Email verified successfully"
 

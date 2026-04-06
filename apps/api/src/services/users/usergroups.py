@@ -20,6 +20,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
 from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 async def _validate_resource_exists_and_belongs_to_org(
@@ -143,6 +144,15 @@ async def create_usergroup(
 
     # Feature usage
     increase_feature_usage("usergroups", org.id, db_session)
+
+    await dispatch_webhooks(
+        event_name="usergroup_created",
+        org_id=org.id,
+        data={
+            "usergroup_uuid": usergroup.usergroup_uuid,
+            "name": usergroup.name,
+        },
+    )
 
     usergroup = UserGroupRead.model_validate(usergroup)
 
@@ -378,8 +388,21 @@ async def delete_usergroup_by_id(
     # Feature usage
     increase_feature_usage("usergroups", usergroup.org_id, db_session)
 
+    usergroup_uuid_val = usergroup.usergroup_uuid
+    usergroup_name_val = usergroup.name
+    usergroup_org_id = usergroup.org_id
+
     db_session.delete(usergroup)
     db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_deleted",
+        org_id=usergroup_org_id,
+        data={
+            "usergroup_uuid": usergroup_uuid_val,
+            "name": usergroup_name_val,
+        },
+    )
 
     return "UserGroup deleted successfully"
 
@@ -444,6 +467,16 @@ async def add_users_to_usergroup(
             logging.error(f"User with id {user_id} not found")
 
     db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_users_added",
+        org_id=usergroup.org_id,
+        data={
+            "usergroup_id": usergroup_id,
+            "usergroup_uuid": usergroup.usergroup_uuid,
+            "user_ids": [int(uid) for uid in user_ids_array],
+        },
+    )
 
     return "Users added to UserGroup successfully"
 
@@ -550,6 +583,16 @@ async def add_resources_to_usergroup(
         db_session.add(usergroup_obj)
 
     db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_resources_added",
+        org_id=usergroup.org_id,
+        data={
+            "usergroup_id": usergroup_id,
+            "usergroup_uuid": usergroup.usergroup_uuid,
+            "resource_uuids": resources_uuids_array,
+        },
+    )
 
     return "Resources added to UserGroup successfully"
 

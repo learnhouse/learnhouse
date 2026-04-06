@@ -45,6 +45,7 @@ from src.services.trail.trail import check_trail_presence
 from src.services.courses.certifications import check_course_completion_and_create_certificate
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
@@ -1249,6 +1250,15 @@ async def create_assignment_submission(
             "course_uuid": course.course_uuid,
         },
     )
+    await dispatch_webhooks(
+        event_name=analytics_events.ASSIGNMENT_SUBMITTED,
+        org_id=course.org_id,
+        data={
+            "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
+            "assignment": {"assignment_uuid": assignment_uuid},
+            "course": {"course_uuid": course.course_uuid, "name": course.name},
+        },
+    )
 
     # User
     statement = select(User).where(User.id == current_user.id)
@@ -1642,6 +1652,17 @@ async def grade_assignment_submission(
     db_session.add(assignment_user_submission)
     db_session.commit()
     db_session.refresh(assignment_user_submission)
+
+    await dispatch_webhooks(
+        event_name="assignment_graded",
+        org_id=course.org_id,
+        data={
+            "user_id": int(user_id),
+            "assignment_uuid": assignment_uuid,
+            "course_uuid": course.course_uuid,
+            "grade": grade,
+        },
+    )
 
     # return OK
     return {

@@ -15,6 +15,7 @@ from src.db.communities.discussion_comments import (
 from src.services.communities.comment_votes import get_user_votes_for_comments
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
 from src.services.communities.moderation import validate_comment_content
+from src.services.webhooks.dispatch import dispatch_webhooks
 
 
 async def create_comment(
@@ -81,6 +82,17 @@ async def create_comment(
     # Get author info
     author_statement = select(User).where(User.id == comment.author_id)
     author = db_session.exec(author_statement).first()
+
+    await dispatch_webhooks(
+        event_name="comment_created",
+        org_id=community.org_id,
+        data={
+            "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
+            "comment": {"comment_uuid": comment.comment_uuid},
+            "discussion": {"discussion_uuid": discussion.discussion_uuid, "title": discussion.title},
+            "community": {"community_uuid": community.community_uuid},
+        },
+    )
 
     return DiscussionCommentReadWithVoteStatus(
         **comment.model_dump(),
