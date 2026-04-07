@@ -50,7 +50,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   const [showListMenu, setShowListMenu] = React.useState(false)
   const [showCodeMenu, setShowCodeMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
-  const linkButtonRef = React.useRef<HTMLDivElement>(null)
+  const linkButtonRef = React.useRef<HTMLButtonElement>(null)
 
   // Get AI feature from resolved_features
   const orgContext = useOrg() as any
@@ -160,46 +160,51 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
 
   return (
     <div className="flex flex-row items-center justify-start flex-wrap gap-[7px] max-[1200px]:gap-[5px]">
-      <div className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label="Undo last action">
+      <button type="button" className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label="Undo last action">
         <ArrowLeftIcon />
-      </div>
-      <div className="editor-tool-btn" onClick={() => editor.chain().focus().redo().run()} aria-label="Redo last action">
+      </button>
+      <button type="button" className="editor-tool-btn" onClick={() => editor.chain().focus().redo().run()} aria-label="Redo last action">
         <ArrowRightIcon />
-      </div>
-      <div
+      </button>
+      <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`editor-tool-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
         aria-label="Toggle bold formatting"
       >
         <FontBoldIcon />
-      </div>
-      <div
+      </button>
+      <button
+        type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`editor-tool-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
         aria-label="Toggle italic formatting"
       >
         <FontItalicIcon />
-      </div>
-      <div
+      </button>
+      <button
+        type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`editor-tool-btn ${editor.isActive('strike') ? 'is-active' : ''}`}
         aria-label="Toggle strikethrough formatting"
       >
         <StrikethroughIcon />
-      </div>
+      </button>
       <div className="relative inline-block shrink-0">
-        <div
+        <button
+          type="button"
           onClick={() => setShowListMenu(!showListMenu)}
           className={`editor-tool-btn ${showListMenu || editor.isActive('bulletList') || editor.isActive('orderedList') ? 'is-active' : ''}`}
           aria-label="Insert list"
         >
           <ListBulletIcon />
           <ChevronDownIcon />
-        </div>
+        </button>
         {showListMenu && (
           <div className="editor-menu-dropdown">
             {listOptions.map((option, index) => (
-              <div
+              <button
+                type="button"
                 key={index}
                 onClick={() => {
                   option.action()
@@ -209,7 +214,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
               >
                 <span className="icon">{option.icon}</span>
                 <span className="label">{option.label}</span>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -242,18 +247,20 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
         <option value="6">{t('editor.toolbar.heading6')}</option>
       </select>
       <div className="relative inline-block shrink-0">
-        <div
+        <button
+          type="button"
           onClick={() => setShowTableMenu(!showTableMenu)}
           className={`editor-tool-btn ${showTableMenu ? 'is-active' : ''}`}
           aria-label="Insert table"
         >
           <TableIcon width={18} />
           <ChevronDownIcon  />
-        </div>
+        </button>
         {showTableMenu && (
           <div className="editor-menu-dropdown">
             {tableOptions.map((option, index) => (
-              <div
+              <button
+                type="button"
                 key={index}
                 onClick={() => {
                   option.action()
@@ -263,7 +270,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
               >
                 <span className="icon">{option.icon}</span>
                 <span className="label">{option.label}</span>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -272,16 +279,18 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
       />
       <ToolTip content={t('editor.blocks.info_callout')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-info"
           onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()}
           aria-label={t('editor.blocks.info_callout')}
         >
           <AlertCircle size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.warning_callout')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-warning"
           onClick={() =>
             editor.chain().focus().toggleNode('calloutWarning').run()
@@ -289,18 +298,19 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.warning_callout')}
         >
           <AlertTriangle size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.toolbar.link')}>
         <div style={{ position: 'relative' }}>
-          <div
+          <button
+            type="button"
             ref={linkButtonRef}
             onClick={handleLinkClick}
             className={`editor-tool-btn editor-tool-btn-link ${editor.isActive('link') ? 'is-active' : ''}`}
             aria-label={t('editor.toolbar.link')}
           >
             <Link2 size={15} />
-          </div>
+          </button>
           {showLinkInput && (
             <LinkInputTooltip
               onSave={handleLinkSave}
@@ -311,7 +321,8 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.image')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-media"
           onClick={() =>
             editor
@@ -325,10 +336,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.image')}
         >
           <ImagePlus size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.video')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-media"
           onClick={() =>
             editor
@@ -342,10 +354,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.video')}
         >
           <Video size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content="Audio">
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-media"
           onClick={() =>
             editor
@@ -359,15 +372,16 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label="Audio"
         >
           <Headphones size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.youtube')}>
-        <div className="editor-tool-btn editor-tool-btn-media" onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label={t('editor.blocks.youtube')}>
+        <button type="button" className="editor-tool-btn editor-tool-btn-media" onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label={t('editor.blocks.youtube')}>
           <SiYoutube size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.math')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-math"
           onClick={() =>
             editor
@@ -381,10 +395,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.math')}
         >
           <Sigma size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.pdf')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-document"
           onClick={() =>
             editor
@@ -398,10 +413,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.pdf')}
         >
           <FileText size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.quiz')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-interactive"
           onClick={() =>
             editor
@@ -415,20 +431,22 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.quiz')}
         >
           <BadgeHelp size={15} />
-        </div>
+        </button>
       </ToolTip>
       <div className="relative inline-block shrink-0">
-        <div
+        <button
+          type="button"
           onClick={() => setShowCodeMenu(!showCodeMenu)}
           className={`editor-tool-btn editor-tool-btn-code ${showCodeMenu || editor.isActive('codeBlock') || editor.isActive('blockCode') ? 'is-active' : ''}`}
           aria-label={t('editor.toolbar.code_block')}
         >
           <Code size={15} />
           <ChevronDownIcon />
-        </div>
+        </button>
         {showCodeMenu && (
           <div className="editor-menu-dropdown">
-            <div
+            <button
+              type="button"
               onClick={() => {
                 editor.chain().focus().toggleCodeBlock().run()
                 setShowCodeMenu(false)
@@ -437,8 +455,9 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
             >
               <span className="icon"><Code size={15} /></span>
               <span className="label">Basic</span>
-            </div>
-            <div
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 editor.chain().focus().insertContent({
                   type: 'blockCode',
@@ -456,21 +475,23 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
             >
               <span className="icon"><CodeSquare size={15} /></span>
               <span className="label">Playground</span>
-            </div>
+            </button>
           </div>
         )}
       </div>
       <ToolTip content={t('editor.blocks.embed')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-embed"
           onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
           aria-label={t('editor.blocks.embed')}
         >
           <Cuboid size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.badge')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-badge"
           onClick={() => editor.chain().focus().insertContent({
             type: 'badge',
@@ -484,10 +505,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.badge')}
         >
           <Tags size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.button')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-interactive"
           onClick={() => editor.chain().focus().insertContent({
             type: 'button',
@@ -501,19 +523,21 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.button')}
         >
           <MousePointerClick size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.user')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-user"
           onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
           aria-label={t('editor.blocks.user')}
         >
           <User size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.web_preview')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-web"
           onClick={() =>
             editor.chain().focus().insertContent({
@@ -523,10 +547,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.web_preview')}
         >
           <Globe size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.flipcard')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-interactive"
           onClick={() =>
             editor.chain().focus().insertContent({
@@ -543,10 +568,11 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.flipcard')}
         >
           <RotateCw size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={t('editor.blocks.scenario')}>
-        <div
+        <button
+          type="button"
           className="editor-tool-btn editor-tool-btn-interactive"
           onClick={() =>
             editor.chain().focus().insertContent({
@@ -589,11 +615,12 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           aria-label={t('editor.blocks.scenario')}
         >
           <GitBranch size={15} />
-        </div>
+        </button>
       </ToolTip>
       <ToolTip content={canUseAI ? t('editor.blocks.magic_block') : t('editor.blocks.magic_block_disabled')}>
         {canUseAI ? (
-          <div
+          <button
+            type="button"
             className="editor-tool-btn editor-tool-btn-magic"
             onClick={() =>
               editor.chain().focus().insertContent({
@@ -603,7 +630,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
             aria-label={t('editor.blocks.magic_block')}
           >
             <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
-          </div>
+          </button>
         ) : (
           <div className="editor-tool-btn editor-tool-btn-magic editor-tool-btn-magic-disabled" aria-label={t('editor.blocks.magic_block_disabled')}>
             <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />

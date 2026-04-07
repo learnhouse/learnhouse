@@ -50,13 +50,13 @@ function CourseUpdates() {
 
   return (
     <div style={{ position: 'relative' }} className='bg-white hover:bg-neutral-50 transition-all ease-linear nice-shadow rounded-full z-20 px-5 py-1'>
-      <div onClick={handleModelOpen} className='flex items-center space-x-2 font-normal hover:cursor-pointer text-gray-600'>
+      <button type="button" onClick={handleModelOpen} className='flex items-center space-x-2 font-normal text-gray-600 border-0 bg-transparent p-0'>
         <div><Rss size={16} /> </div>
         <div className='flex space-x-2 items-center'>
           <span>{t('courses.updates')}</span>
           {updates && <span className='text-xs px-2 font-bold py-0.5 rounded-full bg-rose-100 text-rose-900'>{updates.length}</span>}
         </div>
-      </div>
+      </button>
       {isModelOpen && <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -85,12 +85,13 @@ const UpdatesSection = () => {
           <span>{t('courses.updates')}</span>
 
         </div>
-        {adminStatus.isAdmin && <div
+        {adminStatus.isAdmin && <button
+          type="button"
           onClick={() => setSelectedView('new')}
-          className='py-2 px-4 space-x-2 items-center flex cursor-pointer text-xs font-medium hover:bg-gray-200 bg-gray-100 outline outline-1  outline-neutral-200/40'>
+          className='py-2 px-4 space-x-2 items-center flex text-xs font-medium hover:bg-gray-200 bg-gray-100 outline outline-1 outline-neutral-200/40 border-0'>
           <PencilLine size={14} />
           <span>{t('courses.new_update')}</span>
-        </div>}
+        </button>}
       </div>
       <div className=''>
         {selectedView === 'list' && <UpdatesListView />}

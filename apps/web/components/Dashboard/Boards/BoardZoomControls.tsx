@@ -30,21 +30,22 @@ export default function BoardZoomControls({
       }}
     >
       <ToolTip content={t('boards.zoom.zoom_out')}>
-        <div onClick={onZoomOut} className="editor-tool-btn">
+        <button type="button" onClick={onZoomOut} className="editor-tool-btn">
           <ZoomOut size={13} />
-        </div>
+        </button>
       </ToolTip>
-      <div
+      <button
+        type="button"
         onClick={onZoomReset}
-        className="editor-tool-btn cursor-pointer"
+        className="editor-tool-btn"
         style={{ minWidth: 36, fontSize: 10, fontWeight: 700 }}
       >
         {Math.round(zoom * 100)}%
-      </div>
+      </button>
       <ToolTip content={t('boards.zoom.zoom_in')}>
-        <div onClick={onZoomIn} className="editor-tool-btn">
+        <button type="button" onClick={onZoomIn} className="editor-tool-btn">
           <ZoomIn size={13} />
-        </div>
+        </button>
       </ToolTip>
     </div>
   )

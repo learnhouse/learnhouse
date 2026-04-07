@@ -1171,6 +1171,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 0;
   background: white;
   border-radius: 6px;
   min-width: 25px;
@@ -1179,6 +1180,10 @@
   transition: all 0.2s ease-in-out;
   flex-shrink: 0;
   color: #6b7280;
+  font: inherit;
+  line-height: 1;
+  appearance: none;
+  -webkit-appearance: none;
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25),
     0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.4);
@@ -1415,11 +1420,16 @@
 .editor-menu-item {
   display: flex;
   align-items: center;
+  width: 100%;
   padding: 8px 12px;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   transition: background 0.2s;
   border-radius: 4px;
   color: #4b5563;
+  font: inherit;
+  text-align: left;
 }
 
 .editor-menu-item:hover { background: rgba(243, 244, 246, 1); }
