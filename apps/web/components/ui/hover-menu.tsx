@@ -11,9 +11,19 @@ interface HoverMenuProps {
   align?: "start" | "center" | "end"
 }
 
+interface HoverMenuContextValue {
+  menuRef: React.RefObject<HTMLDivElement | null>
+  closeMenu: () => void
+  focusFirstItem: () => void
+  focusAdjacentItem: (currentItem: HTMLDivElement, direction: "next" | "previous") => void
+}
+
+const HoverMenuContext = React.createContext<HoverMenuContextValue | null>(null)
+
 const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
   ({ children, content, contentClassName, align = "start" }, ref) => {
     const triggerRef = React.useRef<HTMLDivElement>(null)
+    const menuRef = React.useRef<HTMLDivElement>(null)
     const [isHovered, setIsHovered] = React.useState(false)
     const [position, setPosition] = React.useState<{ top: number; left: number } | null>(null)
     const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -59,6 +69,58 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
       }, 100)
     }, [])
 
+    const closeMenu = React.useCallback(() => {
+      setIsHovered(false)
+      triggerRef.current?.focus()
+    }, [])
+
+    const getMenuItems = React.useCallback(() => {
+      if (!menuRef.current) {
+        return []
+      }
+
+      return Array.from(
+        menuRef.current.querySelectorAll<HTMLDivElement>('[role="menuitem"]')
+      )
+    }, [])
+
+    const focusFirstItem = React.useCallback(() => {
+      getMenuItems()[0]?.focus()
+    }, [getMenuItems])
+
+    const focusAdjacentItem = React.useCallback(
+      (currentItem: HTMLDivElement, direction: "next" | "previous") => {
+        const items = getMenuItems()
+        const currentIndex = items.indexOf(currentItem)
+
+        if (currentIndex === -1 || items.length === 0) {
+          return
+        }
+
+        const nextIndex =
+          direction === "next"
+            ? (currentIndex + 1) % items.length
+            : (currentIndex - 1 + items.length) % items.length
+
+        items[nextIndex]?.focus()
+      },
+      [getMenuItems]
+    )
+
+    React.useEffect(() => {
+      if (!isHovered) {
+        return
+      }
+
+      const frameId = window.requestAnimationFrame(() => {
+        focusFirstItem()
+      })
+
+      return () => {
+        window.cancelAnimationFrame(frameId)
+      }
+    }, [focusFirstItem, isHovered])
+
     React.useEffect(() => {
       return () => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
@@ -70,11 +132,21 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
     const shouldRenderPortal = position !== null
 
     return (
-      <>
+      <HoverMenuContext.Provider
+        value={{
+          menuRef,
+          closeMenu,
+          focusFirstItem,
+          focusAdjacentItem,
+        }}
+      >
         <div
           ref={triggerRef}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          tabIndex={-1}
+          aria-expanded={isHovered}
+          aria-haspopup="menu"
         >
           {children}
         </div>
@@ -102,7 +174,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
             </div>
           </Portal.Root>
         )}
-      </>
+      </HoverMenuContext.Provider>
     )
   }
 )
@@ -115,9 +187,22 @@ interface HoverMenuContentProps {
 
 const HoverMenuContent = React.forwardRef<HTMLDivElement, HoverMenuContentProps>(
   ({ children, className }, ref) => {
+    const context = React.useContext(HoverMenuContext)
+
     return (
       <div
-        ref={ref}
+        ref={(node) => {
+          if (context) {
+            context.menuRef.current = node
+          }
+
+          if (typeof ref === "function") {
+            ref(node)
+          } else if (ref) {
+            ref.current = node
+          }
+        }}
+        role="menu"
         className={cn(
           "min-w-[200px] rounded-lg border bg-[#0f0f10] border-white/10 shadow-xl shadow-black/30 py-1",
           className
@@ -139,9 +224,45 @@ interface HoverMenuItemProps {
 
 const HoverMenuItem = React.forwardRef<HTMLDivElement, HoverMenuItemProps>(
   ({ children, className, onClick, asChild }, ref) => {
+    const context = React.useContext(HoverMenuContext)
+
+    const handleKeyDown = React.useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        switch (event.key) {
+          case "Enter":
+          case " ":
+            event.preventDefault()
+            event.currentTarget.click()
+            break
+          case "ArrowDown":
+            event.preventDefault()
+            context?.focusAdjacentItem(event.currentTarget, "next")
+            break
+          case "ArrowUp":
+            event.preventDefault()
+            context?.focusAdjacentItem(event.currentTarget, "previous")
+            break
+          case "Escape":
+            event.preventDefault()
+            context?.closeMenu()
+            break
+          default:
+            break
+        }
+      },
+      [context]
+    )
+
     if (asChild) {
       return (
-        <div ref={ref} className={cn("hover-menu-item", className)}>
+        <div
+          ref={ref}
+          role="menuitem"
+          tabIndex={0}
+          onClick={onClick}
+          onKeyDown={handleKeyDown}
+          className={cn("hover-menu-item", className)}
+        >
           {children}
         </div>
       )
@@ -150,7 +271,10 @@ const HoverMenuItem = React.forwardRef<HTMLDivElement, HoverMenuItemProps>(
     return (
       <div
         ref={ref}
+        role="menuitem"
+        tabIndex={0}
         onClick={onClick}
+        onKeyDown={handleKeyDown}
         className={cn(
           "px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors",
           className
