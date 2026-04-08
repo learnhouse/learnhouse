@@ -53,9 +53,9 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 5},
             "collaboration": {"enabled": False, "limit": 0},
-            "courses": {"enabled": True, "limit": 3},
+            "courses": {"enabled": True, "limit": 1},
 
-            "members": {"admin_limit": 1, "enabled": True, "limit": 30},
+            "members": {"admin_limit": 1, "enabled": True, "limit": 10},
             "payments": {"enabled": False},
             "storage": {"enabled": True, "limit": 5},
             "usergroups": {"enabled": False, "limit": 0},

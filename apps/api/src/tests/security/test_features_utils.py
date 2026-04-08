@@ -153,7 +153,7 @@ class TestFeaturesUtils:
              patch('src.core.deployment_mode.get_deployment_mode', return_value='saas'), \
              patch('src.security.features_utils.resolve.get_deployment_mode', return_value='saas'), \
              patch('src.security.features_utils.usage.get_deployment_mode', return_value='saas'), \
-             patch('src.security.features_utils.usage._get_actual_usage', return_value=30):
+             patch('src.security.features_utils.usage._get_actual_usage', return_value=10):
 
             mock_config_instance = Mock()
             mock_config_instance.redis_config.redis_connection_string = "redis://localhost:6379"
@@ -165,7 +165,7 @@ class TestFeaturesUtils:
 
             mock_db_session.exec.return_value.first.return_value = mock_org_config
 
-            # Free plan has members limit=30, mock usage=30 → limit reached
+            # Free plan has members limit=10, mock usage=10 → limit reached
             with pytest.raises(HTTPException) as exc_info:
                 check_limits_with_usage(
                     feature="members",
