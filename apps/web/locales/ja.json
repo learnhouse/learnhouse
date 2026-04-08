@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
     "join_organization": "この組織に参加",
-    "to_access_features": "してすべての機能を利用できます。"
+    "to_access_features": "してすべての機能を利用できます。",
+    "free_plan_upgrade": "無料プランをご利用中です。アップグレードして完全な体験をお楽しみください。",
+    "free_plan_upgrade_button": "アップグレード"
   },
   "auth": {
     "login": "ログイン",
@@ -4308,5 +4310,52 @@
     "unassigned_files": "未割り当てファイル",
     "upload_failed": "ファイルアップロードに失敗しました",
     "uploading_files": "ファイルをアップロード中"
+  },
+  "upgrade_modal": {
+    "title": "あなたの可能性を最大限に引き出す",
+    "subtitle": "教育目標に合ったプランを選びましょう。",
+    "choose_plan": "{{plan}}を選ぶ",
+    "current_free_limits": "無料プラン：1コース · 10メンバー · AIなし",
+    "plans": {
+      "standard": {
+        "goal": "コースの収益化を始め、学習コミュニティを構築しましょう。",
+        "highlights": {
+          "courses": "無制限のコース",
+          "courses_desc": "必要なだけコースを作成 — カリキュラムに制限はありません。",
+          "members": "最大500メンバー",
+          "members_desc": "学習者を増やし、一か所で管理しましょう。",
+          "payments": "決済を受付",
+          "payments_desc": "コースを販売し、サブスクリプションで収益を生み出しましょう。",
+          "communities": "コミュニティディスカッション",
+          "communities_desc": "学習者がつながり、質問し、アイデアを共有できます。",
+          "podcasts": "ポッドキャスト作成",
+          "podcasts_desc": "音声コンテンツを配信し、どこにいても学習者に届けましょう。",
+          "ai": "1,000 AIクレジット",
+          "ai_desc": "AIライティングツールでコンテンツ作成を加速。",
+          "analytics": "学習者アナリティクス",
+          "analytics_desc": "進捗とエンゲージメントを追跡してコースを改善。"
+        }
+      },
+      "pro": {
+        "goal": "高度なツールと完全なコントロールでアカデミーを拡大。",
+        "includes_standard": "Standardのすべてに加えて：",
+        "highlights": {
+          "members": "最大1,000メンバー",
+          "members_desc": "最大10名の管理者席で大規模なコホートをサポート。",
+          "ai": "3,000 AIクレジット",
+          "ai_desc": "大規模なコンテンツ作成のためのより多くのクレジット。",
+          "certifications": "証明書の発行",
+          "certifications_desc": "コース修了時に学習者に証明書を授与。",
+          "custom_domain": "カスタムドメイン",
+          "custom_domain_desc": "独自ドメインでブランドアカデミーを構築。",
+          "roles": "カスタムロールと権限",
+          "roles_desc": "組織内で誰が何をできるかを正確に制御。",
+          "playgrounds": "インタラクティブプレイグラウンド",
+          "playgrounds_desc": "学習者がインタラクティブな演習で実験し練習できるようにします。",
+          "api": "APIアクセスとWebhooks",
+          "api_desc": "既存ツールと統合し、ワークフローを自動化。"
+        }
+      }
+    }
   }
 }

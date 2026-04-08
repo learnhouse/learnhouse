@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
     "join_organization": "이 조직에 가입",
-    "to_access_features": "하여 모든 기능을 이용하세요."
+    "to_access_features": "하여 모든 기능을 이용하세요.",
+    "free_plan_upgrade": "무료 플랜을 사용 중입니다. 업그레이드하여 전체 경험을 잠금 해제하세요.",
+    "free_plan_upgrade_button": "업그레이드"
   },
   "auth": {
     "login": "로그인",
@@ -4310,5 +4312,52 @@
     "unassigned_files": "미할당 파일",
     "upload_failed": "파일 업로드 실패",
     "uploading_files": "파일 업로드 중"
+  },
+  "upgrade_modal": {
+    "title": "잠재력을 최대한 발휘하세요",
+    "subtitle": "교육 목표에 맞는 플랜을 선택하세요.",
+    "choose_plan": "{{plan}} 선택",
+    "current_free_limits": "무료 플랜: 코스 1개 · 멤버 10명 · AI 없음",
+    "plans": {
+      "standard": {
+        "goal": "코스 수익화를 시작하고 학습 커뮤니티를 구축하세요.",
+        "highlights": {
+          "courses": "무제한 코스",
+          "courses_desc": "필요한 만큼 코스를 만드세요 — 커리큘럼에 제한이 없습니다.",
+          "members": "최대 500명 멤버",
+          "members_desc": "학습자를 늘리고 한곳에서 관리하세요.",
+          "payments": "결제 수락",
+          "payments_desc": "코스를 판매하고 구독을 제공하여 수익을 창출하세요.",
+          "communities": "커뮤니티 토론",
+          "communities_desc": "학습자들이 소통하고 질문하고 아이디어를 공유할 수 있습니다.",
+          "podcasts": "팟캐스트 제작",
+          "podcasts_desc": "오디오 콘텐츠를 제공하고 어디서나 학습자에게 도달하세요.",
+          "ai": "1,000 AI 크레딧",
+          "ai_desc": "AI 글쓰기 도구로 콘텐츠 제작을 가속화하세요.",
+          "analytics": "학습자 분석",
+          "analytics_desc": "진행 상황과 참여도를 추적하여 코스를 개선하세요."
+        }
+      },
+      "pro": {
+        "goal": "고급 도구와 완전한 제어로 아카데미를 확장하세요.",
+        "includes_standard": "Standard의 모든 것, 추가로:",
+        "highlights": {
+          "members": "최대 1,000명 멤버",
+          "members_desc": "최대 10개 관리자 시트로 더 큰 코호트를 지원하세요.",
+          "ai": "3,000 AI 크레딧",
+          "ai_desc": "대규모 콘텐츠 제작을 위한 더 많은 크레딧.",
+          "certifications": "인증서 발급",
+          "certifications_desc": "코스 수료 시 학습자에게 인증서를 수여하세요.",
+          "custom_domain": "커스텀 도메인",
+          "custom_domain_desc": "브랜드 아카데미를 위해 자체 도메인을 사용하세요.",
+          "roles": "맞춤 역할 및 권한",
+          "roles_desc": "조직에서 누가 무엇을 할 수 있는지 정확하게 제어하세요.",
+          "playgrounds": "인터랙티브 플레이그라운드",
+          "playgrounds_desc": "학습자가 실습형 인터랙티브 연습으로 실험하고 연습할 수 있게 합니다.",
+          "api": "API 액세스 및 Webhooks",
+          "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
+        }
+      }
+    }
   }
 }

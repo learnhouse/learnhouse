@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
     "join_organization": "Word lid van deze organisatie",
-    "to_access_features": "om alle functies te gebruiken."
+    "to_access_features": "om alle functies te gebruiken.",
+    "free_plan_upgrade": "U gebruikt het gratis plan. Upgrade om de volledige ervaring te ontgrendelen.",
+    "free_plan_upgrade_button": "Upgraden"
   },
   "auth": {
     "login": "Inloggen",
@@ -4300,5 +4302,52 @@
     "unassigned_files": "Niet-toegewezen bestanden",
     "upload_failed": "Bestand uploaden mislukt",
     "uploading_files": "Bestanden uploaden"
+  },
+  "upgrade_modal": {
+    "title": "Ontgrendel uw volledige potentieel",
+    "subtitle": "Kies het plan dat past bij uw onderwijsdoelen.",
+    "choose_plan": "{{plan}} kiezen",
+    "current_free_limits": "Gratis plan: 1 cursus · 10 leden · Geen AI",
+    "plans": {
+      "standard": {
+        "goal": "Begin met het verdienen aan uw cursussen en bouw een leergemeenschap op.",
+        "highlights": {
+          "courses": "Onbeperkte cursussen",
+          "courses_desc": "Maak zoveel cursussen als u nodig heeft — geen limieten op uw curriculum.",
+          "members": "Tot 500 leden",
+          "members_desc": "Laat uw leerlingsbestand groeien en beheer alles op één plek.",
+          "payments": "Betalingen accepteren",
+          "payments_desc": "Verkoop cursussen en bied abonnementen aan voor inkomsten.",
+          "communities": "Communitydiscussies",
+          "communities_desc": "Laat leerlingen verbinding maken, vragen stellen en ideeën delen.",
+          "podcasts": "Podcasts maken",
+          "podcasts_desc": "Lever audiocontent en bereik leerlingen onderweg.",
+          "ai": "1.000 AI-credits",
+          "ai_desc": "Versnel het maken van content met AI-schrijftools.",
+          "analytics": "Leerlingenanalyses",
+          "analytics_desc": "Volg voortgang en betrokkenheid om uw cursussen te verbeteren."
+        }
+      },
+      "pro": {
+        "goal": "Schaal uw academie op met geavanceerde tools en volledige controle.",
+        "includes_standard": "Alles in Standard, plus:",
+        "highlights": {
+          "members": "Tot 1.000 leden",
+          "members_desc": "Ondersteun grotere groepen met tot 10 admin-plaatsen.",
+          "ai": "3.000 AI-credits",
+          "ai_desc": "Meer credits voor het maken van content op grote schaal.",
+          "certifications": "Certificaten uitgeven",
+          "certifications_desc": "Beloon leerlingen met certificaten bij cursusafronding.",
+          "custom_domain": "Eigen domein",
+          "custom_domain_desc": "Gebruik uw eigen domein voor een academie met uw merk.",
+          "roles": "Aangepaste rollen & machtigingen",
+          "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie.",
+          "playgrounds": "Interactieve playgrounds",
+          "playgrounds_desc": "Laat leerlingen experimenteren en oefenen met praktische interactieve oefeningen.",
+          "api": "API-toegang & webhooks",
+          "api_desc": "Integreer met bestaande tools en automatiseer workflows."
+        }
+      }
+    }
   }
 }

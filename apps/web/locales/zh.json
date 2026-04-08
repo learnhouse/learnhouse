@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
     "join_organization": "加入此组织",
-    "to_access_features": "以访问所有功能。"
+    "to_access_features": "以访问所有功能。",
+    "free_plan_upgrade": "您正在使用免费计划。升级以解锁完整体验。",
+    "free_plan_upgrade_button": "升级"
   },
   "auth": {
     "login": "登录",
@@ -4310,5 +4312,52 @@
     "unassigned_files": "未分配的文件",
     "upload_failed": "文件上传失败",
     "uploading_files": "正在上传文件"
+  },
+  "upgrade_modal": {
+    "title": "释放您的全部潜力",
+    "subtitle": "选择适合您教学目标的方案。",
+    "choose_plan": "选择 {{plan}}",
+    "current_free_limits": "免费方案：1 门课程 · 10 名成员 · 无 AI",
+    "plans": {
+      "standard": {
+        "goal": "开始从课程中获利，构建学习社区。",
+        "highlights": {
+          "courses": "无限课程",
+          "courses_desc": "创建任意数量的课程——课程表没有限制。",
+          "members": "最多 500 名成员",
+          "members_desc": "扩大学员群体，在一个地方统一管理。",
+          "payments": "接受付款",
+          "payments_desc": "出售课程并提供订阅以创造收入。",
+          "communities": "社区讨论",
+          "communities_desc": "让学员交流互动、提问和分享想法。",
+          "podcasts": "创建播客",
+          "podcasts_desc": "提供音频内容，随时随地触达学员。",
+          "ai": "1,000 AI 积分",
+          "ai_desc": "借助 AI 写作工具加速内容创建。",
+          "analytics": "学习者分析",
+          "analytics_desc": "跟踪进度和参与度以改进课程。"
+        }
+      },
+      "pro": {
+        "goal": "通过高级工具和完全控制扩展您的学院。",
+        "includes_standard": "Standard中的一切，加上：",
+        "highlights": {
+          "members": "最多 1,000 名成员",
+          "members_desc": "支持更大规模的群组，最多 10 个管理员席位。",
+          "ai": "3,000 AI 积分",
+          "ai_desc": "更多积分用于大规模内容创建。",
+          "certifications": "颁发证书",
+          "certifications_desc": "在学员完成课程时授予证书。",
+          "custom_domain": "自定义域名",
+          "custom_domain_desc": "使用您自己的域名打造品牌学院。",
+          "roles": "自定义角色和权限",
+          "roles_desc": "精确控制组织中谁可以做什么。",
+          "playgrounds": "互动练习场",
+          "playgrounds_desc": "让学习者通过动手交互式练习进行实验和实践。",
+          "api": "API 访问和 Webhooks",
+          "api_desc": "与现有工具集成并自动化工作流程。"
+        }
+      }
+    }
   }
 }

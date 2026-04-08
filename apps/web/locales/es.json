@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "Estás viendo {{name}} como invitado.",
     "join_organization": "Únete a esta organización",
-    "to_access_features": "para acceder a todas las funciones."
+    "to_access_features": "para acceder a todas las funciones.",
+    "free_plan_upgrade": "Estás en el plan gratuito. Actualiza para desbloquear la experiencia completa.",
+    "free_plan_upgrade_button": "Actualizar"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -4298,5 +4300,52 @@
     "unassigned_files": "Archivos sin asignar",
     "upload_failed": "Error al subir archivo",
     "uploading_files": "Subiendo archivos"
+  },
+  "upgrade_modal": {
+    "title": "Desbloquea todo tu potencial",
+    "subtitle": "Elige el plan que se adapte a tus objetivos de enseñanza.",
+    "choose_plan": "Obtener {{plan}}",
+    "current_free_limits": "Plan gratuito: 1 curso · 10 miembros · Sin IA",
+    "plans": {
+      "standard": {
+        "goal": "Monetiza tus cursos y construye una comunidad de aprendizaje.",
+        "highlights": {
+          "courses": "Cursos ilimitados",
+          "courses_desc": "Crea tantos cursos como necesites — sin límites en tu plan de estudios.",
+          "members": "Hasta 500 miembros",
+          "members_desc": "Haz crecer tu base de estudiantes y gestiónala en un solo lugar.",
+          "payments": "Aceptar pagos",
+          "payments_desc": "Vende cursos y ofrece suscripciones para generar ingresos.",
+          "communities": "Discusiones de comunidad",
+          "communities_desc": "Deja que los estudiantes se conecten, pregunten y compartan ideas.",
+          "podcasts": "Crear podcasts",
+          "podcasts_desc": "Ofrece contenido en audio y llega a los estudiantes en cualquier lugar.",
+          "ai": "1.000 créditos de IA",
+          "ai_desc": "Acelera la creación de contenido con herramientas de escritura con IA.",
+          "analytics": "Análisis de estudiantes",
+          "analytics_desc": "Rastrea el progreso y la participación para mejorar tus cursos."
+        }
+      },
+      "pro": {
+        "goal": "Escala tu academia con herramientas avanzadas y control total.",
+        "includes_standard": "Todo en Standard, más:",
+        "highlights": {
+          "members": "Hasta 1.000 miembros",
+          "members_desc": "Soporta cohortes más grandes con hasta 10 administradores.",
+          "ai": "3.000 créditos de IA",
+          "ai_desc": "Más créditos para creación de contenido a gran escala.",
+          "certifications": "Emitir certificados",
+          "certifications_desc": "Recompensa a los estudiantes con certificados al completar cursos.",
+          "custom_domain": "Dominio personalizado",
+          "custom_domain_desc": "Usa tu propio dominio para una academia con tu marca.",
+          "roles": "Roles y permisos personalizados",
+          "roles_desc": "Controla exactamente quién puede hacer qué en tu organización.",
+          "playgrounds": "Playgrounds interactivos",
+          "playgrounds_desc": "Permite a los estudiantes experimentar y practicar con ejercicios interactivos prácticos.",
+          "api": "Acceso API y webhooks",
+          "api_desc": "Integra con tus herramientas existentes y automatiza flujos de trabajo."
+        }
+      }
+    }
   }
 }
