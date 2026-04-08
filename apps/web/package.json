@@ -78,6 +78,7 @@
     "avvvatars-react": "^0.4.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cobe": "^2.0.1",
     "currency-codes": "^2.2.0",
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",

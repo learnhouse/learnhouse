@@ -1123,22 +1123,69 @@
       "cards": {
         "courses": {
           "title": "课程",
-          "description": "创建并管理您的课程、章节和活动"
+          "description": "创建和管理课程、章节和活动"
         },
         "organization": {
           "title": "组织",
-          "description": "配置组织的常规设置"
+          "description": "配置您的组织通用设置"
         },
         "users": {
           "title": "用户",
-          "description": "管理组织的成员和角色"
+          "description": "管理您组织的用户和角色"
         },
         "account_settings": {
           "title": "账户设置",
-          "description": "管理您的个人信息、密码、电子邮件"
+          "description": "配置您的个人设置、密码和电子邮件"
         }
       },
-      "learnhouse_university": "LearnHouse 大学"
+      "learnhouse_university": "LearnHouse 大学",
+      "welcome_back": "欢迎回来",
+      "plan": "方案",
+      "create_course": "创建课程",
+      "analytics": "分析",
+      "members": "成员",
+      "settings": "设置",
+      "courses": "课程",
+      "communities": "社区",
+      "podcasts": "播客",
+      "boards": "看板",
+      "published": "已发布",
+      "draft": "草稿",
+      "total_users": "用户总数",
+      "public": "公开",
+      "episodes": "集数",
+      "participants": "参与者",
+      "loading": "加载中...",
+      "enable_analytics_description": "启用分析以查看实时用户、注册情况等。",
+      "enable": "启用",
+      "quick_stats": "快速统计",
+      "full_analytics": "完整分析",
+      "live_now": "当前在线",
+      "signups_30d": "注册（30天）",
+      "enrollments_30d": "报名（30天）",
+      "completions_30d": "完成（30天）",
+      "recent_courses": "最近课程",
+      "view_all": "查看全部",
+      "no_courses_yet": "暂无课程",
+      "create_your_first_course": "创建您的第一门课程",
+      "chapter": "章节",
+      "chapters": "章节",
+      "recent_members": "最近成员",
+      "total": "总计",
+      "no_members_yet": "暂无成员",
+      "unverified": "未验证",
+      "plan_and_usage": "方案与用量",
+      "unlimited": "无限制",
+      "admin_seats": "管理员席位",
+      "limit_reached": "已达上限",
+      "remaining": "剩余",
+      "usage_data_unavailable": "用量数据不可用",
+      "features": "功能",
+      "off": "关闭",
+      "ai_credits": "AI 积分",
+      "used": "已使用",
+      "no_credits_remaining": "没有剩余积分",
+      "includes_purchased": "包含 {{count}} 个已购买"
     },
     "courses": {
       "title": "课程",
@@ -3405,6 +3452,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "开始使用",
+    "all_done": "全部完成！",
+    "all_set": "一切就绪！",
+    "all_set_desc": "您已完成入门指南。",
+    "more_steps": "还有 {{count}} 个步骤",
+    "more_steps_plural": "还有 {{count}} 个步骤",
+    "show_less": "收起",
+    "skip": "跳过",
+    "got_it": "明白了，我准备好开始构建了！",
+    "done": "完成，一切准备就绪！",
+    "steps": {
+      "create_course": {
+        "title": "创建您的第一个课程",
+        "description": "从为学员创建新课程开始。",
+        "action": "创建课程"
+      },
+      "add_activities": {
+        "title": "为课程添加活动",
+        "description": "添加页面、视频、文档等内容。",
+        "action": "前往内容"
+      },
+      "experience_editor": {
+        "title": "体验编辑器",
+        "description": "打开编辑器，学习如何构建课程内容。",
+        "add_activity": "添加活动",
+        "dynamic_page": "动态页面",
+        "click_edit": "点击编辑",
+        "editor_features": "编辑器中你可以做的事：",
+        "slash_commands": "输入 / 使用斜杠命令",
+        "headings_lists": "标题、列表和文本",
+        "images_media": "图片和媒体",
+        "video_embeds": "视频和嵌入",
+        "tables_callouts": "表格和提示框",
+        "interactive_blocks": "互动块"
+      },
+      "try_playgrounds": {
+        "title": "通过 Playground 进行互动学习",
+        "description": "创建互动页面，支持自主学习。",
+        "action": "试用 Playground"
+      },
+      "invite_users": {
+        "title": "邀请您的团队和学员",
+        "description": "添加讲师或分享链接让学员加入。",
+        "action": "邀请用户"
+      },
+      "customize_org": {
+        "title": "自定义您的组织",
+        "description": "添加您的标志、颜色，打造专属风格。",
+        "action": "自定义"
+      },
+      "teach_the_world": {
+        "title": "学习与成长",
+        "description": "帮助您充分利用 LearnHouse 的资源。",
+        "classroom": "课堂",
+        "classroom_desc": "了解如何扩展和管理您的课程",
+        "university": "LearnHouse 大学",
+        "university_desc": "指南、技巧和最佳实践"
+      }
+    },
+    "welcome": {
+      "title": "欢迎来到 LearnHouse",
+      "subtitle": "创建课程、邀请学员，与世界分享知识。",
+      "get_started": "开始",
+      "features_title": "您需要的一切",
+      "features_subtitle": "构建和发展学习平台所需的所有工具。",
+      "lets_go": "开始吧",
+      "features": {
+        "teach": "教授任何内容",
+        "teach_desc": "创建包含章节和丰富内容的结构化课程",
+        "interactive": "互动学习",
+        "interactive_desc": "构建学习者按自己节奏探索的互动空间",
+        "community": "建立社区",
+        "community_desc": "创建讨论空间，让学习者互相帮助",
+        "assess": "评估知识",
+        "assess_desc": "创建作业并跟踪学习者的提交情况",
+        "collaborate": "视觉协作",
+        "collaborate_desc": "为学习者提供共享白板，进行头脑风暴和协作",
+        "voice": "分享你的声音",
+        "voice_desc": "发布播客并向学习者分发音频节目",
+        "certify": "认证学习者",
+        "certify_desc": "学习者完成课程时颁发证书",
+        "impact": "了解你的影响",
+        "impact_desc": "跟踪参与度，查看学习者随时间的进步情况",
+        "team": "壮大你的团队",
+        "team_desc": "邀请讲师、管理角色并组织学习者小组"
+      }
+    },
+    "farewell": {
+      "title": "您已准备好教导世界",
+      "description": "一切就绪。您的学习者正期待着精彩的内容。",
+      "button": "开始教学"
     }
   }
 }

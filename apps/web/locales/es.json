@@ -101,8 +101,26 @@
         "sso": {
           "description": "El inicio de sesión único (SSO) es una función premium disponible solo para organizaciones en nuestro plan Enterprise. Actualiza para habilitar la autenticación segura a través del proveedor de identidad de tu organización.",
           "title": "Función Enterprise"
+        },
+        "analytics": {
+          "description": "Las analíticas son una función premium disponible solo para organizaciones con plan Estándar o superior. Actualiza para desbloquear información sobre tus estudiantes y contenido.",
+          "title": "Función Estándar"
+        },
+        "course_analytics": {
+          "description": "Las analíticas de curso son una función premium disponible solo para organizaciones con plan Pro o superior. Actualiza para desbloquear datos detallados de participación, tendencias de inscripción y progreso de los estudiantes para cursos individuales.",
+          "title": "Función Pro"
+        },
+        "custom_domains": {
+          "description": "Los dominios personalizados son una función premium disponible solo para organizaciones con plan Estándar o superior. Actualiza para usar tu propio dominio para una experiencia personalizada.",
+          "title": "Función Estándar"
+        },
+        "podcasts": {
+          "description": "Los podcasts son una función premium disponible solo para organizaciones con plan Estándar o superior. Actualiza para crear y compartir podcasts con tus miembros.",
+          "title": "Función Estándar"
         }
-      }
+      },
+      "current_plan": "Plan actual",
+      "upgrade_to": "Actualizar a"
     },
     "features": {
       "disabled": {
@@ -279,7 +297,9 @@
       },
       "try_again": "Intentar de nuevo"
     },
-    "sso_error": "La autenticación SSO falló. Por favor, inténtalo de nuevo."
+    "sso_error": "La autenticación SSO falló. Por favor, inténtalo de nuevo.",
+    "email_verification_required": "Verificación de correo requerida",
+    "email_verification_required_join": "Por favor verifica tu dirección de correo electrónico antes de unirte a una organización. Revisa tu bandeja de entrada para el correo de verificación."
   },
   "validation": {
     "required": "Obligatorio",
@@ -557,7 +577,9 @@
         "still_working": "Aún trabajando...",
         "video_takes_time": "El análisis de video puede tardar 1-2 minutos",
         "video_hint": "Los videos pueden tardar 1-2 minutos en procesarse"
-      }
+      },
+      "from_existing": "Desde contenido existente",
+      "from_existing_description": "Sube archivos de otra plataforma y organízalos en un curso"
     },
     "copied": "¡Copiado!",
     "quit_course_confirm": "¿Estás seguro de que quieres abandonar este curso? Perderás todo tu progreso.",
@@ -997,7 +1019,8 @@
     "security": "Seguridad",
     "my_courses": "Mis Cursos",
     "no_purchased_courses": "Aún no hay cursos comprados",
-    "purchased_courses_description": "Los cursos que hayas comprado o a los que te hayas suscrito aparecerán aquí"
+    "purchased_courses_description": "Los cursos que hayas comprado o a los que te hayas suscrito aparecerán aquí",
+    "purchases": "Compras"
   },
   "user": {
     "user_settings": "Ajustes de usuario",
@@ -1255,22 +1278,69 @@
       "cards": {
         "courses": {
           "title": "Cursos",
-          "description": "Crea y gestiona cursos, capítulos y actividades"
+          "description": "Crear y gestionar cursos, capítulos y actividades"
         },
         "organization": {
           "title": "Organización",
-          "description": "Configura los ajustes generales de tu organización"
+          "description": "Configurar los ajustes generales de su organización"
         },
         "users": {
           "title": "Usuarios",
-          "description": "Gestiona los usuarios y roles de tu organización"
+          "description": "Gestionar los usuarios y roles de su organización"
         },
         "account_settings": {
-          "title": "Ajustes de cuenta",
-          "description": "Configura tus ajustes personales, contraseñas, email"
+          "title": "Configuración de cuenta",
+          "description": "Configurar sus ajustes personales, contraseñas y correo electrónico"
         }
       },
-      "learnhouse_university": "Universidad LearnHouse"
+      "learnhouse_university": "Universidad LearnHouse",
+      "welcome_back": "Bienvenido de nuevo",
+      "plan": "plan",
+      "create_course": "Crear curso",
+      "analytics": "Analíticas",
+      "members": "Miembros",
+      "settings": "Configuración",
+      "courses": "Cursos",
+      "communities": "Comunidades",
+      "podcasts": "Podcasts",
+      "boards": "Tableros",
+      "published": "publicado",
+      "draft": "borrador",
+      "total_users": "Usuarios totales",
+      "public": "público",
+      "episodes": "episodios",
+      "participants": "participantes",
+      "loading": "Cargando...",
+      "enable_analytics_description": "Habilite las analíticas para ver usuarios en vivo, registros y más.",
+      "enable": "Habilitar",
+      "quick_stats": "Estadísticas rápidas",
+      "full_analytics": "Analíticas completas",
+      "live_now": "En vivo ahora",
+      "signups_30d": "Registros (30 días)",
+      "enrollments_30d": "Inscripciones (30 días)",
+      "completions_30d": "Completados (30 días)",
+      "recent_courses": "Cursos recientes",
+      "view_all": "Ver todo",
+      "no_courses_yet": "Aún no hay cursos",
+      "create_your_first_course": "Crea tu primer curso",
+      "chapter": "capítulo",
+      "chapters": "capítulos",
+      "recent_members": "Miembros recientes",
+      "total": "total",
+      "no_members_yet": "Aún no hay miembros",
+      "unverified": "No verificado",
+      "plan_and_usage": "Plan y uso",
+      "unlimited": "Ilimitado",
+      "admin_seats": "Plazas de administrador",
+      "limit_reached": "Límite alcanzado",
+      "remaining": "restante",
+      "usage_data_unavailable": "Datos de uso no disponibles",
+      "features": "Características",
+      "off": "Desactivado",
+      "ai_credits": "Créditos de IA",
+      "used": "usado",
+      "no_credits_remaining": "No quedan créditos",
+      "includes_purchased": "Incluye {{count}} comprados"
     },
     "courses": {
       "title": "Cursos",
@@ -1321,7 +1391,8 @@
           "access": "Acceso",
           "contributors": "Colaboradores",
           "certification": "Certificación",
-          "seo": "SEO"
+          "seo": "SEO",
+          "analytics": "Analíticas"
         },
         "access_denied": {
           "title": "Acceso denegado",
@@ -2009,7 +2080,8 @@
           "twitter_description_max_length": "La descripción de Twitter debe tener 200 caracteres o menos",
           "twitter_title_max_length": "El título de Twitter debe tener 70 caracteres o menos"
         }
-      }
+      },
+      "limit_reached": "Límite de cursos alcanzado ({{limit}})"
     },
     "organization": {
       "settings": {
@@ -2024,7 +2096,8 @@
           "features": "Funcionalidades",
           "usage": "Usage",
           "other": "Otros",
-          "sso": "SSO"
+          "sso": "SSO",
+          "domains": "Dominios"
         },
         "pages": {
           "general": {
@@ -2062,6 +2135,10 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "Configura dominios personalizados para tu organización",
+            "title": "Dominios personalizados"
           }
         },
         "name": "Nombre de la organización",
@@ -2079,7 +2156,10 @@
         "updating": "Actualizando organización...",
         "footer_text": "Texto del pie de página",
         "footer_text_placeholder": "Introduce el texto del pie de página...",
-        "footer_text_desc": "Texto personalizado que se muestra en la parte inferior de las páginas de tu organización"
+        "footer_text_desc": "Texto personalizado que se muestra en la parte inferior de las páginas de tu organización",
+        "watermark_desc": "Mostrar la marca de agua de LearnHouse en las páginas de tu organización",
+        "watermark_free_plan": "La marca de agua siempre se muestra en el plan gratuito",
+        "watermark_label": "Marca de agua \"Hecho con LearnHouse\""
       },
       "images": {
         "title": "Imágenes y vistas previas",
@@ -2667,7 +2747,8 @@
           "table": {
             "email": "Email",
             "signup_status": "Estado de registro",
-            "email_sent": "Email enviado"
+            "email_sent": "Email enviado",
+            "actions": "Acciones"
           },
           "status": {
             "pending": "Pendiente",
@@ -2676,12 +2757,34 @@
           "email_status": {
             "sent": "Enviado",
             "no": "No"
-          }
+          },
+          "no_invites": "No hay invitaciones pendientes",
+          "no_results": "No se encontraron invitaciones que coincidan con tu búsqueda",
+          "remove_button": "Eliminar",
+          "remove_error": "Error al eliminar la invitación",
+          "remove_message": "¿Estás seguro de que deseas eliminar la invitación para {{email}}?",
+          "remove_success": "Invitación eliminada",
+          "remove_title": "Eliminar invitación",
+          "removing": "Eliminando invitación...",
+          "search_placeholder": "Buscar por correo electrónico..."
         },
         "toasts": {
           "sending": "Enviando invitación...",
           "success": "Invitación enviada",
-          "error": "Error al enviar la invitación"
+          "error": "Error al enviar la invitación",
+          "partial": "{{sent}} enviados, {{failed}} fallidos"
+        },
+        "no_invite_code": "Ninguno",
+        "results": {
+          "failed_count": "{{count}} fallido(s)",
+          "sent_count": "{{count}} enviado(s)",
+          "skipped_count": "{{count}} ya invitado(s)",
+          "status": {
+            "already_invited": "Ya invitado",
+            "email_failed": "Fallido",
+            "sent": "Enviado"
+          },
+          "summary_title": "Resultados"
         }
       },
       "usergroups": {
@@ -3392,7 +3495,28 @@
       },
       "button_block": {
         "enter_link_url": "Ingresa URL del enlace"
-      }
+      },
+      "magic_block": "Bloque mágico (generado por IA)"
+    },
+    "ai_panel": {
+      "add_definition": "Agregar definición",
+      "add_examples": "Agregar ejemplos",
+      "add_quiz": "Agregar cuestionario",
+      "add_summary": "Agregar resumen",
+      "add_tip": "Agregar consejo",
+      "block_selected": "bloque seleccionado",
+      "clear_chat": "Limpiar chat",
+      "clear_selection": "Limpiar selección",
+      "expand": "Expandir",
+      "how_can_i_help": "¿Cómo puedo ayudarte a mejorar tu contenido?",
+      "improve_writing": "Mejorar escritura",
+      "input_placeholder": "Pide a la IA que te ayude con tu contenido...",
+      "question_add_quiz": "Agregar un cuestionario",
+      "question_improve": "¿Cómo puedo mejorar esto?",
+      "question_summary": "Agregar un resumen",
+      "simplify": "Simplificar",
+      "title": "Editor IA",
+      "translate": "Traducir"
     }
   },
   "embed": {
@@ -3785,6 +3909,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} de {{total}}"
       }
+    },
+    "export": {
+      "button": "Exportar",
+      "csv": "Descargar CSV",
+      "downloading": "Exportando...",
+      "json": "Descargar JSON"
     }
   },
   "boards": {
@@ -3909,7 +4039,8 @@
       "thick": "Grueso",
       "undo": "Deshacer",
       "redo": "Rehacer",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "todo": "Tarea"
     },
     "zoom": {
       "zoom_in": "Acercar",
@@ -4014,6 +4145,158 @@
       "page_of": "Página {{current}} de {{total}}",
       "results": "{{count}} resultado para \"{{query}}\"",
       "results_plural": "{{count}} resultados para \"{{query}}\""
+    },
+    "board_deleted_error": "Error al eliminar el tablero",
+    "board_deleted_success": "Tablero eliminado",
+    "board_duplicated_error": "Error al duplicar el tablero",
+    "board_duplicated_success": "Tablero duplicado",
+    "boards_deleted_partial": "{{success}} eliminados, {{error}} fallidos",
+    "boards_deleted_success": "{{count}} tablero(s) eliminado(s)",
+    "clear_selection": "Limpiar",
+    "delete_board": "Eliminar tablero",
+    "delete_board_confirm": "¿Estás seguro de que deseas eliminar este tablero? Esta acción no se puede deshacer.",
+    "delete_board_title": "Eliminar \"{{name}}\"",
+    "delete_boards_title": "Eliminar tableros",
+    "delete_selected": "Eliminar seleccionados",
+    "delete_selected_confirm": "¿Estás seguro de que deseas eliminar {{count}} tablero(s)? Esta acción no se puede deshacer.",
+    "deleting_board": "Eliminando tablero...",
+    "deleting_boards": "Eliminando {{count}} tablero(s)...",
+    "duplicate_board": "Duplicar tablero",
+    "duplicate_board_confirm": "Se creará una copia del tablero con la misma configuración.",
+    "duplicate_board_title": "Duplicar \"{{name}}\"",
+    "duplicating_board": "Duplicando tablero...",
+    "open_board": "Abrir tablero",
+    "select_all": "Seleccionar todo",
+    "selected_count": "{{count}} seleccionado(s)"
+  },
+  "onboarding": {
+    "getting_started": "Primeros pasos",
+    "all_done": "¡Todo listo!",
+    "all_set": "¡Estás listo!",
+    "all_set_desc": "Has completado la guía de primeros pasos.",
+    "more_steps": "{{count}} paso más",
+    "more_steps_plural": "{{count}} pasos más",
+    "show_less": "Mostrar menos",
+    "skip": "Omitir",
+    "got_it": "¡Entendido, estoy listo para crear!",
+    "done": "¡Listo, todo preparado!",
+    "steps": {
+      "create_course": {
+        "title": "Crea tu primer curso",
+        "description": "Comienza creando un nuevo curso para tus estudiantes.",
+        "action": "Crear un curso"
+      },
+      "add_activities": {
+        "title": "Añade actividades a tu curso",
+        "description": "Añade contenido como páginas, videos, documentos y más.",
+        "action": "Ir al contenido"
+      },
+      "experience_editor": {
+        "title": "Experimenta el editor",
+        "description": "Abre el editor y aprende a crear el contenido de tu curso.",
+        "add_activity": "Añadir actividad",
+        "dynamic_page": "Página dinámica",
+        "click_edit": "Haz clic en Editar",
+        "editor_features": "Cosas que puedes hacer en el editor:",
+        "slash_commands": "Escribe / para comandos rápidos",
+        "headings_lists": "Encabezados, listas y texto",
+        "images_media": "Imágenes y multimedia",
+        "video_embeds": "Video e incrustaciones",
+        "tables_callouts": "Tablas y llamadas",
+        "interactive_blocks": "Bloques interactivos"
+      },
+      "try_playgrounds": {
+        "title": "Aprendizaje interactivo con Playgrounds",
+        "description": "Crea páginas interactivas para el aprendizaje autónomo.",
+        "action": "Probar Playgrounds"
+      },
+      "invite_users": {
+        "title": "Invita a tu equipo y estudiantes",
+        "description": "Añade instructores o comparte un enlace para que los estudiantes se unan.",
+        "action": "Invitar usuarios"
+      },
+      "customize_org": {
+        "title": "Personaliza tu organización",
+        "description": "Añade tu logo, colores y hazla tuya.",
+        "action": "Personalizar"
+      },
+      "teach_the_world": {
+        "title": "Aprende y crece",
+        "description": "Recursos para ayudarte a sacar el máximo provecho de LearnHouse.",
+        "classroom": "El aula",
+        "classroom_desc": "Aprende a hacer crecer y gestionar tus cursos",
+        "university": "Universidad LearnHouse",
+        "university_desc": "Guías, consejos y mejores prácticas"
+      }
+    },
+    "welcome": {
+      "title": "Bienvenido a LearnHouse",
+      "subtitle": "Crea cursos, invita estudiantes y comparte conocimiento con el mundo.",
+      "get_started": "Comenzar",
+      "features_title": "Todo lo que necesitas",
+      "features_subtitle": "Todas las herramientas para construir y hacer crecer tu plataforma de aprendizaje.",
+      "lets_go": "¡Vamos!",
+      "features": {
+        "teach": "Enseña cualquier cosa",
+        "teach_desc": "Crea cursos estructurados con capítulos y contenido enriquecido",
+        "interactive": "Hazlo interactivo",
+        "interactive_desc": "Crea playgrounds donde los estudiantes exploran a su propio ritmo",
+        "community": "Construye una comunidad",
+        "community_desc": "Crea espacios de discusión donde los estudiantes se ayudan mutuamente",
+        "assess": "Evalúa el conocimiento",
+        "assess_desc": "Crea tareas y haz seguimiento de las entregas de los estudiantes",
+        "collaborate": "Colabora visualmente",
+        "collaborate_desc": "Da a los estudiantes pizarras compartidas para lluvia de ideas y trabajo en equipo",
+        "voice": "Comparte tu voz",
+        "voice_desc": "Lanza podcasts y distribuye episodios de audio a los estudiantes",
+        "certify": "Certifica estudiantes",
+        "certify_desc": "Emite certificados cuando los estudiantes completen tus cursos",
+        "impact": "Comprende tu impacto",
+        "impact_desc": "Rastrea el engagement y observa cómo progresan los estudiantes con el tiempo",
+        "team": "Haz crecer tu equipo",
+        "team_desc": "Invita instructores, gestiona roles y organiza grupos de estudiantes"
+      }
+    },
+    "farewell": {
+      "title": "Estás listo para enseñar al mundo",
+      "description": "Todo está listo. Tus estudiantes esperan algo grandioso.",
+      "button": "Empezar a enseñar"
     }
+  },
+  "migration": {
+    "accepted_formats": "Videos (MP4, WebM, MOV), Documentos (PDF), Imágenes (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Agregar actividad",
+    "add_chapter": "Agregar capítulo",
+    "ai_failed": "Sugerencia de IA fallida, volviendo a organización manual",
+    "all_files_assigned": "Todos los archivos asignados",
+    "click_to_add_more": "Haz clic para agregar más archivos",
+    "course_created": "¡Curso creado exitosamente!",
+    "course_name": "Nombre del curso",
+    "course_name_placeholder": "ej. Fundamentos de Python para principiantes",
+    "course_structure": "Estructura del curso",
+    "create_course": "Crear curso",
+    "created_summary": "{{chapters}} capítulos y {{activities}} actividades creados",
+    "creating_course": "Creando tu curso...",
+    "creating_description": "Subiendo archivos y configurando capítulos y actividades",
+    "creation_error_generic": "Algo salió mal. Por favor intenta de nuevo.",
+    "creation_failed": "Error al crear el curso",
+    "description": "Descripción breve",
+    "description_placeholder": "ej. 3 módulos cubriendo fundamentos, tipos de datos y funciones",
+    "drop_file_here": "Suelta un archivo aquí",
+    "drop_files": "Suelta tus archivos aquí o haz clic para explorar",
+    "go_to_course": "Ir al curso",
+    "new_activity": "Nueva actividad",
+    "new_chapter": "Nuevo capítulo",
+    "organize_manually": "Organizar manualmente",
+    "organize_with_ai": "Organizar con IA",
+    "step_complete": "Completar",
+    "step_organize": "Organizar",
+    "step_upload": "Subir",
+    "subtitle": "Sube tus archivos y organízalos en un curso",
+    "title": "Migrar contenido",
+    "try_again": "Intentar de nuevo",
+    "unassigned_files": "Archivos sin asignar",
+    "upload_failed": "Error al subir archivo",
+    "uploading_files": "Subiendo archivos"
   }
 }

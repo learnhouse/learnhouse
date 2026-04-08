@@ -1113,22 +1113,69 @@
       "cards": {
         "courses": {
           "title": "Cursos",
-          "description": "Crie e gerencie cursos, capítulos e atividades"
+          "description": "Criar e gerenciar cursos, capítulos e atividades"
         },
         "organization": {
           "title": "Organização",
-          "description": "Configure as configurações gerais da sua Organização"
+          "description": "Configurar as definições gerais da sua organização"
         },
         "users": {
           "title": "Usuários",
-          "description": "Gerencie os usuários e funções da sua Organização"
+          "description": "Gerenciar os usuários e funções da sua organização"
         },
         "account_settings": {
-          "title": "Configurações da Conta",
-          "description": "Configure suas configurações pessoais, senhas, e-mail"
+          "title": "Configurações da conta",
+          "description": "Configurar suas definições pessoais, senhas e e-mail"
         }
       },
-      "learnhouse_university": "Universidade LearnHouse"
+      "learnhouse_university": "Universidade LearnHouse",
+      "welcome_back": "Bem-vindo de volta",
+      "plan": "plano",
+      "create_course": "Criar curso",
+      "analytics": "Análises",
+      "members": "Membros",
+      "settings": "Configurações",
+      "courses": "Cursos",
+      "communities": "Comunidades",
+      "podcasts": "Podcasts",
+      "boards": "Quadros",
+      "published": "publicado",
+      "draft": "rascunho",
+      "total_users": "Total de usuários",
+      "public": "público",
+      "episodes": "episódios",
+      "participants": "participantes",
+      "loading": "Carregando...",
+      "enable_analytics_description": "Ative as análises para ver usuários ao vivo, inscrições e mais.",
+      "enable": "Ativar",
+      "quick_stats": "Estatísticas rápidas",
+      "full_analytics": "Análises completas",
+      "live_now": "Ao vivo agora",
+      "signups_30d": "Cadastros (30 dias)",
+      "enrollments_30d": "Matrículas (30 dias)",
+      "completions_30d": "Conclusões (30 dias)",
+      "recent_courses": "Cursos recentes",
+      "view_all": "Ver tudo",
+      "no_courses_yet": "Nenhum curso ainda",
+      "create_your_first_course": "Crie seu primeiro curso",
+      "chapter": "capítulo",
+      "chapters": "capítulos",
+      "recent_members": "Membros recentes",
+      "total": "total",
+      "no_members_yet": "Nenhum membro ainda",
+      "unverified": "Não verificado",
+      "plan_and_usage": "Plano e uso",
+      "unlimited": "Ilimitado",
+      "admin_seats": "Vagas de administrador",
+      "limit_reached": "Limite atingido",
+      "remaining": "restante",
+      "usage_data_unavailable": "Dados de uso indisponíveis",
+      "features": "Funcionalidades",
+      "off": "Desativado",
+      "ai_credits": "Créditos de IA",
+      "used": "usado",
+      "no_credits_remaining": "Nenhum crédito restante",
+      "includes_purchased": "Inclui {{count}} comprados"
     },
     "courses": {
       "title": "Cursos",
@@ -3395,6 +3442,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} de {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "Primeiros passos",
+    "all_done": "Tudo pronto!",
+    "all_set": "Você está pronto!",
+    "all_set_desc": "Você completou o guia de primeiros passos.",
+    "more_steps": "Mais {{count}} passo",
+    "more_steps_plural": "Mais {{count}} passos",
+    "show_less": "Mostrar menos",
+    "skip": "Pular",
+    "got_it": "Entendi, estou pronto para construir!",
+    "done": "Pronto, estou preparado!",
+    "steps": {
+      "create_course": {
+        "title": "Crie seu primeiro curso",
+        "description": "Comece criando um novo curso para seus alunos.",
+        "action": "Criar um curso"
+      },
+      "add_activities": {
+        "title": "Adicione atividades ao seu curso",
+        "description": "Adicione conteúdo como páginas, vídeos, documentos e mais.",
+        "action": "Ir para o conteúdo"
+      },
+      "experience_editor": {
+        "title": "Experimente o editor",
+        "description": "Abra o editor e aprenda a criar o conteúdo do seu curso.",
+        "add_activity": "Adicionar atividade",
+        "dynamic_page": "Página dinâmica",
+        "click_edit": "Clique em Editar",
+        "editor_features": "Coisas que você pode fazer no editor:",
+        "slash_commands": "Digite / para comandos slash",
+        "headings_lists": "Títulos, listas e texto",
+        "images_media": "Imagens e mídia",
+        "video_embeds": "Vídeo e incorporações",
+        "tables_callouts": "Tabelas e destaques",
+        "interactive_blocks": "Blocos interativos"
+      },
+      "try_playgrounds": {
+        "title": "Aprendizagem interativa com Playgrounds",
+        "description": "Crie páginas interativas para aprendizagem no próprio ritmo.",
+        "action": "Experimentar Playgrounds"
+      },
+      "invite_users": {
+        "title": "Convide sua equipe e alunos",
+        "description": "Adicione instrutores ou compartilhe um link para os alunos participarem.",
+        "action": "Convidar usuários"
+      },
+      "customize_org": {
+        "title": "Personalize sua organização",
+        "description": "Adicione seu logo, cores e deixe com a sua cara.",
+        "action": "Personalizar"
+      },
+      "teach_the_world": {
+        "title": "Aprenda e cresça",
+        "description": "Recursos para ajudá-lo a aproveitar ao máximo o LearnHouse.",
+        "classroom": "A sala de aula",
+        "classroom_desc": "Aprenda a expandir e gerenciar seus cursos",
+        "university": "Universidade LearnHouse",
+        "university_desc": "Guias, dicas e melhores práticas"
+      }
+    },
+    "welcome": {
+      "title": "Bem-vindo ao LearnHouse",
+      "subtitle": "Crie cursos, convide alunos e compartilhe conhecimento com o mundo.",
+      "get_started": "Começar",
+      "features_title": "Tudo o que você precisa",
+      "features_subtitle": "Todas as ferramentas para construir e expandir sua plataforma de aprendizagem.",
+      "lets_go": "Vamos lá",
+      "features": {
+        "teach": "Ensine qualquer coisa",
+        "teach_desc": "Crie cursos estruturados com capítulos e conteúdo rico",
+        "interactive": "Torne interativo",
+        "interactive_desc": "Crie playgrounds onde os alunos exploram no seu próprio ritmo",
+        "community": "Construa uma comunidade",
+        "community_desc": "Crie espaços de discussão onde os alunos se ajudam mutuamente",
+        "assess": "Avalie o conhecimento",
+        "assess_desc": "Crie tarefas e acompanhe as entregas dos alunos",
+        "collaborate": "Colabore visualmente",
+        "collaborate_desc": "Dê aos alunos quadros compartilhados para brainstorming e trabalho em equipe",
+        "voice": "Compartilhe sua voz",
+        "voice_desc": "Lance podcasts e distribua episódios de áudio para os alunos",
+        "certify": "Certifique os alunos",
+        "certify_desc": "Emita certificados quando os alunos concluírem seus cursos",
+        "impact": "Entenda seu impacto",
+        "impact_desc": "Acompanhe o engajamento e veja como os alunos progridem ao longo do tempo",
+        "team": "Amplie sua equipe",
+        "team_desc": "Convide instrutores, gerencie funções e organize grupos de alunos"
+      }
+    },
+    "farewell": {
+      "title": "Você está pronto para ensinar o mundo",
+      "description": "Tudo está configurado. Seus alunos estão esperando algo incrível.",
+      "button": "Começar a ensinar"
     }
   }
 }

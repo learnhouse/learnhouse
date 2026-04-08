@@ -11,6 +11,7 @@ import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import React, { useEffect } from 'react'
 import useSWR from 'swr';
 import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '@/lib/i18n';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,9 +33,6 @@ function HomeClient() {
   const access_token = session?.data?.tokens?.access_token;
   const { data: orgs } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, (url) => swrFetcher(url, access_token))
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng)
-  }
 
   useEffect(() => {
   }, [session, orgs])
@@ -80,7 +78,7 @@ function HomeClient() {
                       className="flex items-center justify-between"
                     >
                       <span>{t(language.translationKey)} ({language.nativeName})</span>
-                      {i18n.language === language.code && <Check size={14} />}
+                      {i18n.language.split('-')[0] === language.code && <Check size={14} />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuSubContent>

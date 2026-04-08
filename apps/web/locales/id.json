@@ -1126,7 +1126,54 @@
           "description": "Konfigurasikan pengaturan pribadi, kata sandi, email Anda"
         }
       },
-      "learnhouse_university": "Universitas LearnHouse"
+      "learnhouse_university": "Universitas LearnHouse",
+      "welcome_back": "Selamat datang kembali",
+      "plan": "paket",
+      "create_course": "Buat Kursus",
+      "analytics": "Analitik",
+      "members": "Anggota",
+      "settings": "Pengaturan",
+      "courses": "Kursus",
+      "communities": "Komunitas",
+      "podcasts": "Podcast",
+      "boards": "Papan",
+      "published": "diterbitkan",
+      "draft": "draf",
+      "total_users": "Total pengguna",
+      "public": "publik",
+      "episodes": "episode",
+      "participants": "peserta",
+      "loading": "Memuat...",
+      "enable_analytics_description": "Aktifkan analitik untuk melihat pengguna langsung, pendaftaran, dan lainnya.",
+      "enable": "Aktifkan",
+      "quick_stats": "Statistik Cepat",
+      "full_analytics": "Analitik Lengkap",
+      "live_now": "Langsung Sekarang",
+      "signups_30d": "Pendaftaran (30 hari)",
+      "enrollments_30d": "Pendaftaran kursus (30 hari)",
+      "completions_30d": "Penyelesaian (30 hari)",
+      "recent_courses": "Kursus Terbaru",
+      "view_all": "Lihat Semua",
+      "no_courses_yet": "Belum ada kursus",
+      "create_your_first_course": "Buat kursus pertama Anda",
+      "chapter": "bab",
+      "chapters": "bab",
+      "recent_members": "Anggota Terbaru",
+      "total": "total",
+      "no_members_yet": "Belum ada anggota",
+      "unverified": "Belum diverifikasi",
+      "plan_and_usage": "Paket & Penggunaan",
+      "unlimited": "Tidak terbatas",
+      "admin_seats": "Kursi Admin",
+      "limit_reached": "Batas tercapai",
+      "remaining": "tersisa",
+      "usage_data_unavailable": "Data penggunaan tidak tersedia",
+      "features": "Fitur",
+      "off": "Mati",
+      "ai_credits": "Kredit AI",
+      "used": "digunakan",
+      "no_credits_remaining": "Tidak ada kredit tersisa",
+      "includes_purchased": "Termasuk {{count}} yang dibeli"
     },
     "courses": {
       "title": "Kursus",
@@ -2868,11 +2915,33 @@
       "common": {
         "cancel": "Batal",
         "save": "Simpan",
-        "apply": "Terapkan"
+        "apply": "Terapkan",
+        "align_center": "Rata tengah",
+        "align_left": "Rata kiri",
+        "align_right": "Rata kanan",
+        "download": "Unduh",
+        "drop_or_browse": "Letakkan file Anda di sini atau klik untuk menelusuri",
+        "expand": "Perluas",
+        "full_width": "Lebar Penuh",
+        "large": "Besar",
+        "medium": "Sedang",
+        "size": "Ukuran",
+        "small": "Kecil",
+        "upload": "Unggah",
+        "uploading": "Mengunggah..."
       },
       "quiz_block": {
         "question_placeholder": "Masukkan pertanyaan Anda di sini",
-        "answer_placeholder": "Masukkan jawaban di sini"
+        "answer_placeholder": "Masukkan jawaban di sini",
+        "add_answer": "Tambah Jawaban",
+        "add_question": "Tambah Pertanyaan",
+        "all_correct": "Semua jawaban benar!",
+        "delete_answer": "Hapus jawaban",
+        "mark_correct": "Tandai sebagai benar",
+        "mark_incorrect": "Tandai sebagai salah",
+        "reset_answers": "Reset jawaban",
+        "some_incorrect": "Beberapa jawaban salah!",
+        "submit": "Kirim"
       },
       "math_block": {
         "templates": "Templat",
@@ -2955,6 +3024,38 @@
         "suggestion_calculator_prompt": "Buat kalkulator yang menunjukkan solusi langkah demi langkah untuk persamaan dasar",
         "suggestion_timeline": "Garis waktu",
         "suggestion_timeline_prompt": "Buat garis waktu interaktif yang menunjukkan peristiwa sejarah penting dengan detail yang dapat diperluas"
+      },
+      "flipcard_block": {
+        "back": "Belakang",
+        "click_to_flip": "Klik untuk membalik",
+        "front": "Depan"
+      },
+      "image_block": {
+        "download_image": "Unduh gambar",
+        "drop_or_browse": "Letakkan gambar Anda di sini atau klik untuk menelusuri",
+        "expand_image": "Perluas gambar",
+        "supported_formats": "Mendukung JPG, PNG, WebP, dan GIF",
+        "uploading": "Mengunggah gambar...",
+        "viewer_title": "Penampil Gambar"
+      },
+      "pdf_block": {
+        "document_title": "Dokumen PDF",
+        "download_pdf": "Unduh PDF",
+        "drop_or_browse": "Letakkan PDF Anda di sini atau klik untuk menelusuri",
+        "expand_pdf": "Perluas PDF",
+        "no_pdf": "Tidak ada PDF tersedia",
+        "supported_formats": "Mendukung format PDF",
+        "upload_pdf": "Unggah PDF",
+        "uploading": "Mengunggah PDF..."
+      },
+      "video_block": {
+        "download_video": "Unduh video",
+        "drop_or_browse": "Letakkan video Anda di sini atau klik untuk menelusuri",
+        "expand_video": "Perluas video",
+        "player_title": "Pemutar Video",
+        "supported_formats": "Mendukung format MP4 dan WebM",
+        "unsupported_format": "Silakan unggah format video yang didukung (MP4 atau WebM)",
+        "uploading": "Mengunggah video..."
       }
     }
   },
@@ -3571,6 +3672,100 @@
       "page_of": "Halaman {{current}} dari {{total}}",
       "results": "{{count}} hasil untuk \"{{query}}\"",
       "results_plural": "{{count}} hasil untuk \"{{query}}\""
+    }
+  },
+  "onboarding": {
+    "getting_started": "Memulai",
+    "all_done": "Selesai semua!",
+    "all_set": "Anda sudah siap!",
+    "all_set_desc": "Anda telah menyelesaikan panduan memulai.",
+    "more_steps": "{{count}} langkah lagi",
+    "more_steps_plural": "{{count}} langkah lagi",
+    "show_less": "Tampilkan lebih sedikit",
+    "skip": "Lewati",
+    "got_it": "Paham, saya siap membangun!",
+    "done": "Selesai, saya sudah siap!",
+    "steps": {
+      "create_course": {
+        "title": "Buat kursus pertama Anda",
+        "description": "Mulailah dengan membuat kursus baru untuk para pembelajar Anda.",
+        "action": "Buat Kursus"
+      },
+      "add_activities": {
+        "title": "Tambahkan aktivitas ke kursus Anda",
+        "description": "Tambahkan konten seperti halaman, video, dokumen, dan lainnya.",
+        "action": "Buka Konten"
+      },
+      "experience_editor": {
+        "title": "Rasakan editor",
+        "description": "Buka editor dan pelajari cara membuat konten kursus Anda.",
+        "add_activity": "Tambah Aktivitas",
+        "dynamic_page": "Halaman Dinamis",
+        "click_edit": "Klik Edit",
+        "editor_features": "Hal yang bisa Anda lakukan di editor:",
+        "slash_commands": "Ketik / untuk perintah slash",
+        "headings_lists": "Judul, daftar & teks",
+        "images_media": "Gambar & media",
+        "video_embeds": "Video & sematan",
+        "tables_callouts": "Tabel & callout",
+        "interactive_blocks": "Blok interaktif"
+      },
+      "try_playgrounds": {
+        "title": "Pembelajaran interaktif dengan Playground",
+        "description": "Buat halaman interaktif untuk pembelajaran mandiri.",
+        "action": "Coba Playground"
+      },
+      "invite_users": {
+        "title": "Undang tim & pembelajar Anda",
+        "description": "Tambahkan instruktur atau bagikan tautan agar pembelajar bisa bergabung.",
+        "action": "Undang Pengguna"
+      },
+      "customize_org": {
+        "title": "Kustomisasi organisasi Anda",
+        "description": "Tambahkan logo, warna, dan jadikan milik Anda.",
+        "action": "Kustomisasi"
+      },
+      "teach_the_world": {
+        "title": "Belajar & berkembang",
+        "description": "Sumber daya untuk membantu Anda memaksimalkan LearnHouse.",
+        "classroom": "Kelas",
+        "classroom_desc": "Pelajari cara mengembangkan dan mengelola kursus Anda",
+        "university": "Universitas LearnHouse",
+        "university_desc": "Panduan, tips, dan praktik terbaik"
+      }
+    },
+    "welcome": {
+      "title": "Selamat datang di LearnHouse",
+      "subtitle": "Buat kursus, undang pembelajar, dan bagikan pengetahuan dengan dunia.",
+      "get_started": "Mulai",
+      "features_title": "Semua yang Anda butuhkan",
+      "features_subtitle": "Semua alat untuk membangun dan mengembangkan platform pembelajaran Anda.",
+      "lets_go": "Ayo mulai",
+      "features": {
+        "teach": "Ajarkan apa saja",
+        "teach_desc": "Buat kursus terstruktur dengan bab dan konten yang kaya",
+        "interactive": "Jadikan interaktif",
+        "interactive_desc": "Buat playground tempat pelajar mengeksplorasi dengan kecepatan mereka sendiri",
+        "community": "Bangun komunitas",
+        "community_desc": "Buat ruang diskusi tempat pelajar saling membantu",
+        "assess": "Nilai pengetahuan",
+        "assess_desc": "Buat tugas dan lacak pengumpulan dari pelajar",
+        "collaborate": "Kolaborasi secara visual",
+        "collaborate_desc": "Berikan pelajar papan bersama untuk brainstorm dan bekerja sama",
+        "voice": "Bagikan suara Anda",
+        "voice_desc": "Luncurkan podcast dan distribusikan episode audio ke pelajar",
+        "certify": "Sertifikasi pelajar",
+        "certify_desc": "Terbitkan sertifikat saat pelajar menyelesaikan kursus Anda",
+        "impact": "Pahami dampak Anda",
+        "impact_desc": "Lacak keterlibatan dan lihat bagaimana pelajar berkembang dari waktu ke waktu",
+        "team": "Kembangkan tim Anda",
+        "team_desc": "Undang instruktur, kelola peran, dan atur kelompok pelajar"
+      }
+    },
+    "farewell": {
+      "title": "Anda siap mengajarkan dunia",
+      "description": "Semuanya sudah siap. Pelajar Anda menunggu sesuatu yang hebat.",
+      "button": "Mulai mengajar"
     }
   }
 }

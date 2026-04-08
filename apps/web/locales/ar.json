@@ -101,8 +101,26 @@
         "sso": {
           "description": "تسجيل الدخول الموحد (SSO) هو ميزة مميزة متاحة فقط للمؤسسات على خطة Enterprise. قم بالترقية لتمكين المصادقة الآمنة من خلال مزود هوية مؤسستك.",
           "title": "ميزة Enterprise"
+        },
+        "analytics": {
+          "description": "التحليلات هي ميزة مميزة متاحة فقط للمنظمات ذات الخطة القياسية أو أعلى. قم بالترقية لفتح رؤى حول المتعلمين والمحتوى الخاص بك.",
+          "title": "ميزة قياسية"
+        },
+        "course_analytics": {
+          "description": "تحليلات الدورة هي ميزة مميزة متاحة فقط للمنظمات ذات خطة Pro أو أعلى. قم بالترقية لفتح بيانات المشاركة التفصيلية واتجاهات التسجيل وتقدم المتعلمين للدورات الفردية.",
+          "title": "ميزة Pro"
+        },
+        "custom_domains": {
+          "description": "النطاقات المخصصة هي ميزة مميزة متاحة فقط للمنظمات ذات الخطة القياسية أو أعلى. قم بالترقية لاستخدام نطاقك الخاص لتجربة ذات علامة تجارية.",
+          "title": "ميزة قياسية"
+        },
+        "podcasts": {
+          "description": "البودكاست هي ميزة مميزة متاحة فقط للمنظمات ذات الخطة القياسية أو أعلى. قم بالترقية لإنشاء ومشاركة البودكاست مع أعضائك.",
+          "title": "ميزة قياسية"
         }
-      }
+      },
+      "current_plan": "الخطة الحالية",
+      "upgrade_to": "الترقية إلى"
     },
     "features": {
       "disabled": {
@@ -279,7 +297,9 @@
       "try_again": "حاول مرة أخرى"
     },
     "sso_error": "فشلت مصادقة SSO. يرجى المحاولة مرة أخرى.",
-    "try_again_in": "حاول مرة أخرى خلال {{minutes}} دقيقة"
+    "try_again_in": "حاول مرة أخرى خلال {{minutes}} دقيقة",
+    "email_verification_required": "مطلوب التحقق من البريد الإلكتروني",
+    "email_verification_required_join": "يرجى التحقق من عنوان بريدك الإلكتروني قبل الانضمام إلى المنظمة. تحقق من صندوق الوارد للحصول على رسالة التحقق."
   },
   "verify_email": {
     "title": "تأكيد البريد الإلكتروني",
@@ -567,7 +587,9 @@
         "still_working": "لا يزال يعمل...",
         "video_takes_time": "قد يستغرق تحليل الفيديو 1-2 دقيقة",
         "video_hint": "قد تستغرق معالجة الفيديو 1-2 دقيقة"
-      }
+      },
+      "from_existing": "من محتوى موجود",
+      "from_existing_description": "قم بتحميل ملفات من منصة أخرى وتنظيمها في دورة"
     },
     "copied": "تم النسخ!",
     "quit_course_confirm": "هل أنت متأكد من رغبتك في مغادرة هذه الدورة؟ ستفقد كل تقدمك.",
@@ -1007,7 +1029,8 @@
     "security": "الأمان",
     "my_courses": "دوراتي",
     "no_purchased_courses": "لا توجد دورات مشتراة بعد",
-    "purchased_courses_description": "ستظهر هنا الدورات التي اشتريتها أو اشتركت فيها"
+    "purchased_courses_description": "ستظهر هنا الدورات التي اشتريتها أو اشتركت فيها",
+    "purchases": "المشتريات"
   },
   "user": {
     "user_settings": "إعدادات المستخدم",
@@ -1265,22 +1288,69 @@
       "cards": {
         "courses": {
           "title": "الدورات",
-          "description": "أنشئ وأدر دوراتك، فصولك وأنشطتك"
+          "description": "إنشاء وإدارة الدورات والفصول والأنشطة"
         },
         "organization": {
-          "title": "المنظمة",
-          "description": "قم بتكوين الإعدادات العامة لمنظمتك"
+          "title": "المؤسسة",
+          "description": "تكوين الإعدادات العامة لمؤسستك"
         },
         "users": {
-          "title": "المستخدمين",
-          "description": "أدر أعضاء وأدوار منظمتك"
+          "title": "المستخدمون",
+          "description": "إدارة مستخدمي مؤسستك وأدوارهم"
         },
         "account_settings": {
           "title": "إعدادات الحساب",
-          "description": "أدر معلوماتك الشخصية، كلمات المرور، البريد الإلكتروني"
+          "description": "تكوين إعداداتك الشخصية وكلمات المرور والبريد الإلكتروني"
         }
       },
-      "learnhouse_university": "جامعة LearnHouse"
+      "learnhouse_university": "جامعة ليرن هاوس",
+      "welcome_back": "مرحباً بعودتك",
+      "plan": "الخطة",
+      "create_course": "إنشاء دورة",
+      "analytics": "التحليلات",
+      "members": "الأعضاء",
+      "settings": "الإعدادات",
+      "courses": "الدورات",
+      "communities": "المجتمعات",
+      "podcasts": "البودكاست",
+      "boards": "اللوحات",
+      "published": "منشور",
+      "draft": "مسودة",
+      "total_users": "إجمالي المستخدمين",
+      "public": "عام",
+      "episodes": "الحلقات",
+      "participants": "المشاركون",
+      "loading": "جارٍ التحميل...",
+      "enable_analytics_description": "قم بتفعيل التحليلات لرؤية المستخدمين المباشرين والتسجيلات والمزيد.",
+      "enable": "تفعيل",
+      "quick_stats": "إحصائيات سريعة",
+      "full_analytics": "التحليلات الكاملة",
+      "live_now": "مباشر الآن",
+      "signups_30d": "التسجيلات (30 يوم)",
+      "enrollments_30d": "الالتحاقات (30 يوم)",
+      "completions_30d": "الإكمالات (30 يوم)",
+      "recent_courses": "الدورات الأخيرة",
+      "view_all": "عرض الكل",
+      "no_courses_yet": "لا توجد دورات بعد",
+      "create_your_first_course": "أنشئ دورتك الأولى",
+      "chapter": "فصل",
+      "chapters": "فصول",
+      "recent_members": "الأعضاء الجدد",
+      "total": "الإجمالي",
+      "no_members_yet": "لا يوجد أعضاء بعد",
+      "unverified": "غير مُتحقق",
+      "plan_and_usage": "الخطة والاستخدام",
+      "unlimited": "غير محدود",
+      "admin_seats": "مقاعد المشرفين",
+      "limit_reached": "تم الوصول للحد الأقصى",
+      "remaining": "متبقٍ",
+      "usage_data_unavailable": "بيانات الاستخدام غير متوفرة",
+      "features": "الميزات",
+      "off": "معطل",
+      "ai_credits": "أرصدة الذكاء الاصطناعي",
+      "used": "مستخدَم",
+      "no_credits_remaining": "لا توجد أرصدة متبقية",
+      "includes_purchased": "يشمل {{count}} مشتراة"
     },
     "courses": {
       "title": "الدورات",
@@ -1331,7 +1401,8 @@
           "access": "الوصول",
           "contributors": "المساهمون",
           "certification": "الشهادات",
-          "seo": "SEO"
+          "seo": "SEO",
+          "analytics": "التحليلات"
         },
         "access_denied": {
           "title": "تم رفض الوصول",
@@ -2019,7 +2090,8 @@
           "twitter_description_max_length": "يجب أن يكون وصف تويتر 200 حرف أو أقل",
           "twitter_title_max_length": "يجب أن يكون عنوان تويتر 70 حرفاً أو أقل"
         }
-      }
+      },
+      "limit_reached": "تم الوصول إلى حد الدورات ({{limit}})"
     },
     "organization": {
       "settings": {
@@ -2034,7 +2106,8 @@
           "features": "الميزات",
           "usage": "Usage",
           "other": "أخرى",
-          "sso": "SSO"
+          "sso": "SSO",
+          "domains": "النطاقات"
         },
         "pages": {
           "general": {
@@ -2072,6 +2145,10 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "تكوين النطاقات المخصصة لمنظمتك",
+            "title": "النطاقات المخصصة"
           }
         },
         "name": "اسم المنظمة",
@@ -2089,7 +2166,10 @@
         "updating": "جاري تحديث المنظمة...",
         "footer_text": "نص التذييل",
         "footer_text_placeholder": "أدخل نص التذييل...",
-        "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك"
+        "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك",
+        "watermark_desc": "إظهار علامة LearnHouse المائية على صفحات منظمتك",
+        "watermark_free_plan": "يتم عرض العلامة المائية دائمًا في الخطة المجانية",
+        "watermark_label": "علامة \"صنع بواسطة LearnHouse\" المائية"
       },
       "images": {
         "title": "الصور والمعاينات",
@@ -2677,7 +2757,8 @@
           "table": {
             "email": "البريد الإلكتروني",
             "signup_status": "حالة التسجيل",
-            "email_sent": "تم إرسال البريد"
+            "email_sent": "تم إرسال البريد",
+            "actions": "الإجراءات"
           },
           "status": {
             "pending": "قيد الانتظار",
@@ -2686,12 +2767,34 @@
           "email_status": {
             "sent": "تم الإرسال",
             "no": "لا"
-          }
+          },
+          "no_invites": "لا توجد دعوات معلقة",
+          "no_results": "لم يتم العثور على دعوات تطابق بحثك",
+          "remove_button": "إزالة",
+          "remove_error": "خطأ في إزالة الدعوة",
+          "remove_message": "هل أنت متأكد من إزالة الدعوة لـ {{email}}؟",
+          "remove_success": "تمت إزالة الدعوة",
+          "remove_title": "إزالة الدعوة",
+          "removing": "جارٍ إزالة الدعوة...",
+          "search_placeholder": "البحث بالبريد الإلكتروني..."
         },
         "toasts": {
           "sending": "جاري إرسال الدعوة...",
           "success": "تم إرسال الدعوة",
-          "error": "فشل إرسال الدعوة"
+          "error": "فشل إرسال الدعوة",
+          "partial": "تم إرسال {{sent}}، فشل {{failed}}"
+        },
+        "no_invite_code": "لا يوجد",
+        "results": {
+          "failed_count": "{{count}} فشل",
+          "sent_count": "{{count}} تم إرسالها",
+          "skipped_count": "{{count}} مدعوين مسبقاً",
+          "status": {
+            "already_invited": "مدعو مسبقاً",
+            "email_failed": "فشل",
+            "sent": "تم الإرسال"
+          },
+          "summary_title": "النتائج"
         }
       },
       "usergroups": {
@@ -3402,7 +3505,28 @@
       },
       "button_block": {
         "enter_link_url": "أدخل رابط URL"
-      }
+      },
+      "magic_block": "كتلة سحرية (مولدة بالذكاء الاصطناعي)"
+    },
+    "ai_panel": {
+      "add_definition": "إضافة تعريف",
+      "add_examples": "إضافة أمثلة",
+      "add_quiz": "إضافة اختبار",
+      "add_summary": "إضافة ملخص",
+      "add_tip": "إضافة نصيحة",
+      "block_selected": "كتلة محددة",
+      "clear_chat": "مسح المحادثة",
+      "clear_selection": "مسح التحديد",
+      "expand": "توسيع",
+      "how_can_i_help": "كيف يمكنني مساعدتك في تحسين محتواك؟",
+      "improve_writing": "تحسين الكتابة",
+      "input_placeholder": "اطلب من الذكاء الاصطناعي مساعدتك في محتواك...",
+      "question_add_quiz": "إضافة اختبار",
+      "question_improve": "كيف يمكنني تحسين هذا؟",
+      "question_summary": "إضافة ملخص",
+      "simplify": "تبسيط",
+      "title": "محرر الذكاء الاصطناعي",
+      "translate": "ترجمة"
     }
   },
   "embed": {
@@ -3795,6 +3919,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} من {{total}}"
       }
+    },
+    "export": {
+      "button": "تصدير",
+      "csv": "تحميل CSV",
+      "downloading": "جارٍ التصدير...",
+      "json": "تحميل JSON"
     }
   },
   "boards": {
@@ -3919,7 +4049,8 @@
       "thick": "سميك",
       "undo": "تراجع",
       "redo": "إعادة",
-      "podcast": "بودكاست"
+      "podcast": "بودكاست",
+      "todo": "قائمة المهام"
     },
     "zoom": {
       "zoom_in": "تكبير",
@@ -4024,6 +4155,158 @@
       "page_of": "صفحة {{current}} من {{total}}",
       "results": "{{count}} نتيجة لـ \"{{query}}\"",
       "results_plural": "{{count}} نتائج لـ \"{{query}}\""
+    },
+    "board_deleted_error": "فشل حذف اللوحة",
+    "board_deleted_success": "تم حذف اللوحة",
+    "board_duplicated_error": "فشل تكرار اللوحة",
+    "board_duplicated_success": "تم تكرار اللوحة",
+    "boards_deleted_partial": "تم حذف {{success}}، فشل {{error}}",
+    "boards_deleted_success": "تم حذف {{count}} لوحة",
+    "clear_selection": "مسح",
+    "delete_board": "حذف اللوحة",
+    "delete_board_confirm": "هل أنت متأكد من حذف هذه اللوحة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "delete_board_title": "حذف \"{{name}}\"",
+    "delete_boards_title": "حذف اللوحات",
+    "delete_selected": "حذف المحدد",
+    "delete_selected_confirm": "هل أنت متأكد من حذف {{count}} لوحة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleting_board": "جارٍ حذف اللوحة...",
+    "deleting_boards": "جارٍ حذف {{count}} لوحة...",
+    "duplicate_board": "تكرار اللوحة",
+    "duplicate_board_confirm": "سيتم إنشاء نسخة من اللوحة بنفس الإعدادات.",
+    "duplicate_board_title": "تكرار \"{{name}}\"",
+    "duplicating_board": "جارٍ تكرار اللوحة...",
+    "open_board": "فتح اللوحة",
+    "select_all": "تحديد الكل",
+    "selected_count": "{{count}} محدد"
+  },
+  "onboarding": {
+    "getting_started": "البدء",
+    "all_done": "تم الانتهاء!",
+    "all_set": "أنت جاهز!",
+    "all_set_desc": "لقد أكملت دليل البدء.",
+    "more_steps": "{{count}} خطوة إضافية",
+    "more_steps_plural": "{{count}} خطوات إضافية",
+    "show_less": "عرض أقل",
+    "skip": "تخطي",
+    "got_it": "فهمت، أنا جاهز للبناء!",
+    "done": "تم، أنا جاهز!",
+    "steps": {
+      "create_course": {
+        "title": "أنشئ دورتك الأولى",
+        "description": "ابدأ بإنشاء دورة جديدة للمتعلمين.",
+        "action": "إنشاء دورة"
+      },
+      "add_activities": {
+        "title": "أضف أنشطة إلى دورتك",
+        "description": "أضف محتوى مثل الصفحات والفيديوهات والمستندات والمزيد.",
+        "action": "الذهاب إلى المحتوى"
+      },
+      "experience_editor": {
+        "title": "جرّب المحرر",
+        "description": "افتح المحرر وتعلم كيفية بناء محتوى دورتك.",
+        "add_activity": "إضافة نشاط",
+        "dynamic_page": "صفحة ديناميكية",
+        "click_edit": "انقر على تعديل",
+        "editor_features": "أشياء يمكنك فعلها في المحرر:",
+        "slash_commands": "اكتب / لأوامر الشرطة المائلة",
+        "headings_lists": "عناوين وقوائم ونصوص",
+        "images_media": "صور ووسائط",
+        "video_embeds": "فيديو وتضمينات",
+        "tables_callouts": "جداول وتنبيهات",
+        "interactive_blocks": "كتل تفاعلية"
+      },
+      "try_playgrounds": {
+        "title": "التعلم التفاعلي مع الملاعب",
+        "description": "أنشئ صفحات تفاعلية للتعلم الذاتي.",
+        "action": "جرّب الملاعب"
+      },
+      "invite_users": {
+        "title": "ادعُ فريقك والمتعلمين",
+        "description": "أضف مدرسين أو شارك رابطًا ليتمكن المتعلمون من الانضمام.",
+        "action": "دعوة المستخدمين"
+      },
+      "customize_org": {
+        "title": "خصّص مؤسستك",
+        "description": "أضف شعارك وألوانك واجعلها خاصة بك.",
+        "action": "تخصيص"
+      },
+      "teach_the_world": {
+        "title": "تعلّم وانمُ",
+        "description": "موارد لمساعدتك في الاستفادة القصوى من LearnHouse.",
+        "classroom": "الفصل الدراسي",
+        "classroom_desc": "تعلم كيفية تنمية وإدارة دوراتك",
+        "university": "جامعة LearnHouse",
+        "university_desc": "أدلة ونصائح وأفضل الممارسات"
+      }
+    },
+    "welcome": {
+      "title": "مرحبًا بك في LearnHouse",
+      "subtitle": "أنشئ دورات، وادعُ المتعلمين، وشارك المعرفة مع العالم.",
+      "get_started": "ابدأ الآن",
+      "features_title": "كل ما تحتاجه",
+      "features_subtitle": "جميع الأدوات لبناء وتنمية منصة التعلم الخاصة بك.",
+      "lets_go": "هيا بنا",
+      "features": {
+        "teach": "علّم أي شيء",
+        "teach_desc": "أنشئ دورات منظمة بفصول ومحتوى غني",
+        "interactive": "اجعلها تفاعلية",
+        "interactive_desc": "أنشئ بيئات تفاعلية يستكشف فيها المتعلمون بوتيرتهم الخاصة",
+        "community": "ابنِ مجتمعاً",
+        "community_desc": "أنشئ مساحات نقاش يساعد فيها المتعلمون بعضهم البعض",
+        "assess": "قيّم المعرفة",
+        "assess_desc": "أنشئ واجبات وتابع التقديمات من المتعلمين",
+        "collaborate": "تعاون بصرياً",
+        "collaborate_desc": "امنح المتعلمين لوحات مشتركة للعصف الذهني والعمل معاً",
+        "voice": "شارك صوتك",
+        "voice_desc": "أطلق بودكاست ووزّع حلقات صوتية على المتعلمين",
+        "certify": "امنح الشهادات",
+        "certify_desc": "أصدر شهادات عند إتمام المتعلمين لدوراتك",
+        "impact": "افهم تأثيرك",
+        "impact_desc": "تابع التفاعل وشاهد كيف يتقدم المتعلمون بمرور الوقت",
+        "team": "طوّر فريقك",
+        "team_desc": "ادعُ المعلمين وأدِر الأدوار ونظّم مجموعات المتعلمين"
+      }
+    },
+    "farewell": {
+      "title": "أنت مستعد لتعليم العالم",
+      "description": "كل شيء جاهز. متعلموك ينتظرون شيئًا رائعًا.",
+      "button": "ابدأ التعليم"
     }
+  },
+  "migration": {
+    "accepted_formats": "فيديو (MP4, WebM, MOV)، مستندات (PDF)، صور (PNG, JPG, WebP)، صوت (MP3, WAV)",
+    "add_activity": "إضافة نشاط",
+    "add_chapter": "إضافة فصل",
+    "ai_failed": "فشل اقتراح الذكاء الاصطناعي، العودة إلى التنظيم اليدوي",
+    "all_files_assigned": "تم تعيين جميع الملفات",
+    "click_to_add_more": "انقر لإضافة المزيد من الملفات",
+    "course_created": "تم إنشاء الدورة بنجاح!",
+    "course_name": "اسم الدورة",
+    "course_name_placeholder": "مثال: أساسيات بايثون للمبتدئين",
+    "course_structure": "هيكل الدورة",
+    "create_course": "إنشاء دورة",
+    "created_summary": "تم إنشاء {{chapters}} فصول و {{activities}} أنشطة",
+    "creating_course": "جارٍ إنشاء دورتك...",
+    "creating_description": "تحميل الملفات وإعداد الفصول والأنشطة",
+    "creation_error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "creation_failed": "فشل إنشاء الدورة",
+    "description": "وصف مختصر",
+    "description_placeholder": "مثال: 3 وحدات تغطي الأساسيات وأنواع البيانات والدوال",
+    "drop_file_here": "اسحب ملفاً هنا",
+    "drop_files": "اسحب ملفاتك هنا أو انقر للتصفح",
+    "go_to_course": "الذهاب إلى الدورة",
+    "new_activity": "نشاط جديد",
+    "new_chapter": "فصل جديد",
+    "organize_manually": "تنظيم يدوياً",
+    "organize_with_ai": "تنظيم بالذكاء الاصطناعي",
+    "step_complete": "اكتمال",
+    "step_organize": "تنظيم",
+    "step_upload": "تحميل",
+    "subtitle": "قم بتحميل ملفاتك وتنظيمها في دورة",
+    "title": "ترحيل المحتوى",
+    "try_again": "حاول مرة أخرى",
+    "unassigned_files": "ملفات غير معينة",
+    "upload_failed": "فشل تحميل الملف",
+    "uploading_files": "تحميل الملفات"
   }
 }

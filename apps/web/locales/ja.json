@@ -93,8 +93,34 @@
         "communities": {
           "title": "スタンダード機能",
           "description": "コミュニティは、スタンダードプラン以上の組織のみが利用できるプレミアム機能です。メンバー向けのディスカッションコミュニティをアンロックするにはアップグレードしてください。"
+        },
+        "analytics": {
+          "description": "アナリティクスはStandardプラン以上の組織のみ利用可能なプレミアム機能です。学習者やコンテンツに関するインサイトを利用するにはアップグレードしてください。",
+          "title": "Standardプラン機能"
+        },
+        "course_analytics": {
+          "description": "コースアナリティクスはProプラン以上の組織のみ利用可能なプレミアム機能です。詳細なエンゲージメントデータ、登録トレンド、学習者の進捗を確認するにはアップグレードしてください。",
+          "title": "Proプラン機能"
+        },
+        "custom_domains": {
+          "description": "カスタムドメインはStandardプラン以上の組織のみ利用可能なプレミアム機能です。ブランド体験のために独自ドメインを使用するにはアップグレードしてください。",
+          "title": "Standardプラン機能"
+        },
+        "podcasts": {
+          "description": "ポッドキャストはStandardプラン以上の組織のみ利用可能なプレミアム機能です。メンバーとポッドキャストを作成・共有するにはアップグレードしてください。",
+          "title": "Standardプラン機能"
+        },
+        "seo": {
+          "description": "SEO最適化ツールはStandardプラン以上の組織のみ利用可能です。コースの検索エンジン表示、ソーシャル共有プレビュー、構造化データをカスタマイズするにはアップグレードしてください。",
+          "title": "Standardプラン機能"
+        },
+        "sso": {
+          "description": "シングルサインオン（SSO）はEnterpriseプランの組織のみ利用可能なプレミアム機能です。組織のIDプロバイダーを通じたセキュアな認証を有効にするにはアップグレードしてください。",
+          "title": "Enterpriseプラン機能"
         }
-      }
+      },
+      "current_plan": "現在のプラン",
+      "upgrade_to": "アップグレード"
     },
     "features": {
       "disabled": {
@@ -152,7 +178,9 @@
     "back": "戻る",
     "of": "/",
     "creating": "作成中...",
-    "view_details": "詳細を見る"
+    "view_details": "詳細を見る",
+    "close": "閉じる",
+    "optional": "任意"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -241,7 +269,37 @@
     "invite_required": "招待が必要です",
     "invite_required_desc": "{{org}}に参加するには招待コードが必要です",
     "invite_code": "招待コード",
-    "validate_invite": "招待を確認"
+    "validate_invite": "招待を確認",
+    "create_your_account": "アカウントを作成",
+    "email_verification_required": "メール認証が必要です",
+    "email_verification_required_join": "組織に参加する前にメールアドレスを確認してください。受信トレイで確認メールをご確認ください。",
+    "sign_in_with_sso": "SSOでサインイン",
+    "sso_callback": {
+      "auth_failed": "認証に失敗しました",
+      "authenticating": "認証中...",
+      "copied": "コピーしました！",
+      "copy_details": "クリップボードにコピー",
+      "error": "SSO認証に失敗しました。もう一度お試しください。",
+      "error_code": "エラーコード",
+      "go_home": "ホームへ",
+      "hide_details": "技術詳細を非表示",
+      "missing_params": "無効なSSOコールバックです。必要なパラメータが不足しています。",
+      "please_wait": "本人確認中です。しばらくお待ちください",
+      "provider": "プロバイダー",
+      "redirecting": "アプリケーションにリダイレクト中...",
+      "show_details": "技術詳細を表示",
+      "success": "認証に成功しました",
+      "tips": {
+        "access_denied": "誤ってログインリクエストを拒否した場合は、もう一度試して権限を承認してください。",
+        "domain_not_allowed": "メールドメインが許可されているか、組織の管理者に確認してください。",
+        "invalid_state": "セッションが期限切れの可能性があります。再度ログインしてください。",
+        "server_error": "IDプロバイダーに問題が発生しています。しばらくしてから再度お試しください。"
+      },
+      "try_again": "再試行"
+    },
+    "sso_error": "SSO認証に失敗しました。もう一度お試しください。",
+    "login_failed": "ログインに失敗しました",
+    "try_again_in": "{{minutes}}分後に再試行してください"
   },
   "verify_email": {
     "title": "メール確認",
@@ -529,14 +587,19 @@
         "still_working": "まだ処理中...",
         "video_takes_time": "動画の分析には1〜2分かかることがあります",
         "video_hint": "動画の処理には1〜2分かかることがあります"
-      }
+      },
+      "from_existing": "既存コンテンツから",
+      "from_existing_description": "別のプラットフォームからファイルをアップロードしてコースに整理"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "コピーしました！",
+    "quit_course_confirm": "このコースを終了してもよろしいですか？すべての進捗が失われます。",
+    "quit_course_title": "コースを終了しますか？"
   },
   "communities": {
     "title": "コミュニティ",
@@ -696,7 +759,99 @@
     "deleting_podcast": "ポッドキャストを削除中...",
     "podcast_deleted_success": "ポッドキャストが正常に削除されました",
     "podcast_deleted_error": "ポッドキャストの削除に失敗しました",
-    "edit_content": "コンテンツを編集"
+    "edit_content": "コンテンツを編集",
+    "create_new_podcast": "組織の新しいポッドキャストを作成",
+    "create_podcast": "ポッドキャストを作成",
+    "create_podcast_btn": "ポッドキャストを作成",
+    "create_podcasts_placeholder": "オーディエンスとオーディオコンテンツを共有するためのポッドキャストを作成",
+    "creating_podcast": "ポッドキャストを作成中...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3、WAV、またはM4Aファイルに対応",
+        "audio_label": "オーディオファイル",
+        "create": "エピソードを作成",
+        "create_error": "エピソードの作成に失敗しました",
+        "create_first": "最初のエピソードを作成",
+        "created": "エピソードを作成しました",
+        "creating": "エピソードを作成中...",
+        "delete": "削除",
+        "delete_confirm": "このエピソードを削除してもよろしいですか？この操作は元に戻せません。",
+        "delete_error": "エピソードの削除に失敗しました",
+        "delete_title": "エピソードを削除しますか？",
+        "deleted": "エピソードを削除しました",
+        "deleting": "エピソードを削除中...",
+        "description_label": "説明",
+        "description_placeholder": "エピソードの説明を入力",
+        "edit": "編集",
+        "edit_episode": "エピソードを編集",
+        "edit_episode_description": "エピソードの詳細を更新",
+        "new_episode": "新しいエピソード",
+        "new_episode_description": "このポッドキャストに新しいエピソードを追加",
+        "no_audio": "オーディオファイルなし",
+        "no_episodes_description": "最初のエピソードを追加して始めましょう",
+        "publish": "公開",
+        "replace_audio": "オーディオファイルを差し替え",
+        "save": "変更を保存",
+        "title_label": "タイトル",
+        "title_placeholder": "エピソードタイトルを入力",
+        "unpublish": "非公開にする",
+        "update_error": "エピソードの更新に失敗しました",
+        "updated": "エピソードを更新しました",
+        "updating": "エピソードを更新中...",
+        "upload_audio": "オーディオファイルをアップロード"
+      },
+      "form": {
+        "about": "概要",
+        "about_max_length": "概要は最大2000文字です",
+        "about_placeholder": "このポッドキャストについてリスナーに詳しく伝えてください...",
+        "public_hint": "誰でもこのポッドキャストを見つけて聴くことができます",
+        "published_hint": "このポッドキャストを組織ページに表示する",
+        "tags_hint": "タグをカンマで区切ってください",
+        "tags_placeholder": "音楽, 教育, テック",
+        "thumbnail": "サムネイル",
+        "thumbnail_hint": "推奨サイズ：1400x1400px。JPGまたはPNG。",
+        "upload_thumbnail": "サムネイルをアップロード",
+        "visibility": "表示設定"
+      },
+      "save_changes": "変更を保存",
+      "save_error": "変更の保存に失敗しました",
+      "saved": "変更を保存しました",
+      "saving": "保存中...",
+      "tabs": {
+        "episodes": "エピソード",
+        "general": "一般"
+      },
+      "view_podcast": "ポッドキャストを表示"
+    },
+    "failed_to_create_podcast": "ポッドキャストの作成に失敗しました",
+    "form": {
+      "description_max_length": "説明は最大500文字です",
+      "name_max_length": "名前は最大100文字です",
+      "name_min_length": "名前は最低3文字です",
+      "name_required": "ポッドキャスト名は必須です"
+    },
+    "modals": {
+      "create": {
+        "cancel": "キャンセル",
+        "description": "新しいポッドキャストの詳細を入力してください",
+        "form": {
+          "description_label": "説明",
+          "description_placeholder": "ポッドキャストの説明を入力",
+          "name_label": "ポッドキャスト名",
+          "name_placeholder": "ポッドキャスト名を入力",
+          "public_label": "このポッドキャストを公開する"
+        },
+        "submit": "ポッドキャストを作成",
+        "title": "新しいポッドキャストを作成"
+      }
+    },
+    "podcast_created_success": "ポッドキャストを正常に作成しました",
+    "podcast_name": "ポッドキャスト名",
+    "podcast_name_required": "ポッドキャスト名は必須です",
+    "podcast_tags": "タグ",
+    "podcast_thumbnail": "ポッドキャストサムネイル",
+    "podcast_visibility": "表示設定",
+    "search_results": "\"{{query}}\"で{{count}}件のポッドキャストが見つかりました"
   },
   "collections": {
     "collections": "コレクション",
@@ -772,7 +927,12 @@
     "size_large": "大サイズ",
     "change_color": "色を変更",
     "preview_flip": "プレビューをめくる",
-    "activities_count": "{{count}} 個のアクティビティ"
+    "activities_count": "{{count}} 個のアクティビティ",
+    "copy_link": "リンクをコピー",
+    "embed": "埋め込み",
+    "embed_code_copied": "埋め込みコードをコピーしました！",
+    "link_copied": "リンクをコピーしました！",
+    "share": "共有"
   },
   "assignments": {
     "submit_assignment": "課題を提出",
@@ -869,7 +1029,8 @@
     "security": "セキュリティ",
     "my_courses": "マイコース",
     "no_purchased_courses": "購入したコースはまだありません",
-    "purchased_courses_description": "購入またはサブスクリプションしたコースがここに表示されます"
+    "purchased_courses_description": "購入またはサブスクリプションしたコースがここに表示されます",
+    "purchases": "購入履歴"
   },
   "user": {
     "user_settings": "ユーザー設定",
@@ -1099,7 +1260,8 @@
     "no_biography": "自己紹介は未設定です",
     "my_progress": "自分の進捗",
     "no_courses_in_progress": "進行中のコースはありません",
-    "start_course_to_see_progress": "コースを開始すると、ここに進捗が表示されます"
+    "start_course_to_see_progress": "コースを開始すると、ここに進捗が表示されます",
+    "bio_placeholder": "自己紹介を入力してください..."
   },
   "roles": {
     "custom_role": "カスタムロール",
@@ -1126,22 +1288,69 @@
       "cards": {
         "courses": {
           "title": "コース",
-          "description": "コース、章、アクティビティの作成と管理"
+          "description": "コース、チャプター、アクティビティを作成・管理"
         },
         "organization": {
           "title": "組織",
-          "description": "組織の一般設定の構成"
+          "description": "組織の全般設定を構成する"
         },
         "users": {
           "title": "ユーザー",
-          "description": "組織のユーザーとロールの管理"
+          "description": "組織のユーザーと役割を管理する"
         },
         "account_settings": {
           "title": "アカウント設定",
-          "description": "個人設定、パスワード、メールの構成"
+          "description": "個人設定、パスワード、メールを構成する"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "LearnHouse大学",
+      "welcome_back": "おかえりなさい",
+      "plan": "プラン",
+      "create_course": "コースを作成",
+      "analytics": "アナリティクス",
+      "members": "メンバー",
+      "settings": "設定",
+      "courses": "コース",
+      "communities": "コミュニティ",
+      "podcasts": "ポッドキャスト",
+      "boards": "ボード",
+      "published": "公開済み",
+      "draft": "下書き",
+      "total_users": "ユーザー総数",
+      "public": "公開",
+      "episodes": "エピソード",
+      "participants": "参加者",
+      "loading": "読み込み中...",
+      "enable_analytics_description": "アナリティクスを有効にして、ライブユーザー、登録状況などを確認しましょう。",
+      "enable": "有効にする",
+      "quick_stats": "クイック統計",
+      "full_analytics": "完全なアナリティクス",
+      "live_now": "現在オンライン",
+      "signups_30d": "登録数（30日間）",
+      "enrollments_30d": "受講登録数（30日間）",
+      "completions_30d": "修了数（30日間）",
+      "recent_courses": "最近のコース",
+      "view_all": "すべて表示",
+      "no_courses_yet": "コースはまだありません",
+      "create_your_first_course": "最初のコースを作成しましょう",
+      "chapter": "チャプター",
+      "chapters": "チャプター",
+      "recent_members": "最近のメンバー",
+      "total": "合計",
+      "no_members_yet": "メンバーはまだいません",
+      "unverified": "未認証",
+      "plan_and_usage": "プランと使用状況",
+      "unlimited": "無制限",
+      "admin_seats": "管理者シート",
+      "limit_reached": "上限に達しました",
+      "remaining": "残り",
+      "usage_data_unavailable": "使用状況データは利用できません",
+      "features": "機能",
+      "off": "オフ",
+      "ai_credits": "AIクレジット",
+      "used": "使用済み",
+      "no_credits_remaining": "クレジットが残っていません",
+      "includes_purchased": "購入した{{count}}件を含む"
     },
     "courses": {
       "title": "コース",
@@ -1191,7 +1400,9 @@
           "content": "コンテンツ",
           "access": "アクセス",
           "contributors": "投稿者",
-          "certification": "証明書"
+          "certification": "証明書",
+          "analytics": "アナリティクス",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "アクセス拒否",
@@ -1482,7 +1693,8 @@
             "general": "一般",
             "thumbnail": "サムネイル",
             "course": "リンクされたコース",
-            "moderation": "モデレーション"
+            "moderation": "モデレーション",
+            "access": "アクセス"
           },
           "general": {
             "title": "一般設定",
@@ -1499,6 +1711,10 @@
           "moderation": {
             "title": "モデレーション",
             "subtitle": "コンテンツモデレーション設定を構成"
+          },
+          "access": {
+            "subtitle": "このコミュニティにアクセスできるユーザーを制御",
+            "title": "アクセス設定"
           }
         },
         "course": {
@@ -1611,6 +1827,60 @@
           "deleting": "コミュニティを削除中...",
           "delete_success": "コミュニティが削除されました",
           "delete_error": "コミュニティの削除に失敗しました"
+        },
+        "access": {
+          "public": {
+            "active": "アクティブ",
+            "confirmation_button": "公開に変更",
+            "confirmation_message": "このコミュニティを公開にしてもよろしいですか？",
+            "confirmation_title": "公開に変更しますか？",
+            "description": "コミュニティは公開されています。誰でもディスカッションを閲覧・参加できます。",
+            "title": "公開"
+          },
+          "restricted": {
+            "active": "アクティブ",
+            "confirmation_button": "制限に変更",
+            "confirmation_message": "このコミュニティを制限しますか？リンクされたユーザーグループのメンバーのみアクセスできます。",
+            "confirmation_title": "制限に変更しますか？",
+            "description": "コミュニティは選択されたユーザーグループのメンバーのみアクセスできます。アクセスを付与するにはユーザーグループをリンクしてください。",
+            "title": "制限付き"
+          },
+          "subtitle": "コミュニティを公開にするか、特定のユーザーグループのみアクセス可能にするかを選択",
+          "title": "アクセス設定",
+          "toasts": {
+            "update_error": "アクセス設定の更新に失敗しました",
+            "update_success": "アクセス設定を正常に更新しました"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "削除",
+              "link_to_usergroup": "ユーザーグループにリンク"
+            },
+            "modals": {
+              "create_usergroup": "ユーザーグループを作成",
+              "link_button": "リンク",
+              "link_description": "このコミュニティにリンクするユーザーグループを選択してください。このグループのユーザーがアクセスできるようになります。",
+              "link_title": "コミュニティをユーザーグループにリンク",
+              "no_usergroups": "利用可能なユーザーグループがありません",
+              "unlink_button": "アクセスを削除",
+              "unlink_message": "このユーザーグループのユーザーはこのコミュニティにアクセスできなくなります。",
+              "unlink_title": "ユーザーグループのアクセスを削除しますか？",
+              "usergroup_name": "ユーザーグループ名",
+              "warning": "リンクされたユーザーグループに属していないユーザーはこのコミュニティへのアクセスを失います"
+            },
+            "subtitle": "ユーザーグループにリンクしてこのコミュニティへのアクセスを付与します。これらのグループのユーザーが閲覧・参加できるようになります。",
+            "table": {
+              "actions": "アクション",
+              "name": "名前"
+            },
+            "title": "ユーザーグループ",
+            "toasts": {
+              "link_error": "エラー {{status}}: {{detail}}",
+              "link_success": "ユーザーグループを正常にリンクしました",
+              "unlink_error": "ユーザーグループのアクセス削除中にエラーが発生しました",
+              "unlink_success": "ユーザーグループのアクセスを正常に削除しました"
+            }
+          }
         }
       },
       "structure": {
@@ -1752,6 +2022,75 @@
             }
           }
         }
+      },
+      "limit_reached": "コース数の上限に達しました（{{limit}}）",
+      "seo": {
+        "errors": {
+          "save_failed": "SEO設定の保存に失敗しました"
+        },
+        "form": {
+          "canonical_url_hint": "このコースが他の場所に複製されている場合に使用。デフォルトURLの場合は空欄",
+          "canonical_url_label": "正規URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "空欄の場合コースの説明が使用されます。推奨：150-160文字",
+          "description_label": "メタ説明",
+          "description_placeholder": "検索結果用の魅力的な説明を入力",
+          "enable_jsonld_hint": "検索結果のリッチスニペット用にCourse schema.orgマークアップを追加",
+          "enable_jsonld_label": "JSON-LD構造化データを有効にする",
+          "keywords_hint": "コースに関連するキーワードをカンマ区切りで入力",
+          "keywords_label": "キーワード",
+          "keywords_placeholder": "キーワード1, キーワード2, キーワード3",
+          "og_description_label": "OG説明",
+          "og_description_placeholder": "ソーシャルメディア共有用のカスタム説明",
+          "og_image_hint": "ソーシャル共有用のカスタム画像URL。空欄の場合コースのサムネイルが使用されます",
+          "og_image_label": "OG画像URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OGタイトル",
+          "og_title_placeholder": "ソーシャルメディア共有用のカスタムタイトル",
+          "robots_nofollow_hint": "有効にすると、検索エンジンはこのページのリンクをたどりません",
+          "robots_nofollow_label": "リンクのフォローを防止（nofollow）",
+          "robots_noindex_hint": "有効にすると、検索エンジンはこのコースをインデックスしません",
+          "robots_noindex_label": "検索エンジンのインデックスを防止（noindex）",
+          "title_hint": "空欄の場合コース名が使用されます。推奨：50-60文字",
+          "title_label": "SEOタイトル",
+          "title_placeholder": "検索エンジン用のカスタムタイトルを入力",
+          "twitter_card_label": "カードタイプ",
+          "twitter_card_summary": "サマリー",
+          "twitter_card_summary_large": "大きい画像付きサマリー",
+          "twitter_description_label": "Twitter説明",
+          "twitter_description_placeholder": "Twitter共有用のカスタム説明",
+          "twitter_title_label": "Twitterタイトル",
+          "twitter_title_placeholder": "Twitter共有用のカスタムタイトル"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "検索エンジンの結果でのコース表示を設定",
+            "title": "基本SEO"
+          },
+          "opengraph": {
+            "subtitle": "ソーシャルメディア（Facebook、LinkedInなど）で共有されたときのコース表示をカスタマイズ",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "検索エンジンのインデックスを制御し、リッチスニペットを有効にする",
+            "title": "ロボットと構造化データ"
+          },
+          "twitter": {
+            "subtitle": "Twitter/Xで共有されたときのコース表示をカスタマイズ",
+            "title": "Twitterカード"
+          }
+        },
+        "subtitle": "検索エンジンとソーシャルメディア共有用にコースを最適化",
+        "title": "SEO設定",
+        "validation": {
+          "description_max_length": "メタ説明は160文字以下にしてください",
+          "invalid_url": "有効なURLを入力してください",
+          "og_description_max_length": "OG説明は200文字以下にしてください",
+          "og_title_max_length": "OGタイトルは70文字以下にしてください",
+          "title_max_length": "SEOタイトルは70文字以下にしてください",
+          "twitter_description_max_length": "Twitter説明は200文字以下にしてください",
+          "twitter_title_max_length": "Twitterタイトルは70文字以下にしてください"
+        }
       }
     },
     "organization": {
@@ -1766,7 +2105,9 @@
           "api": "APIアクセス",
           "features": "機能",
           "usage": "Usage",
-          "other": "その他"
+          "other": "その他",
+          "domains": "ドメイン",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1800,6 +2141,14 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "組織のカスタムドメインを設定",
+            "title": "カスタムドメイン"
+          },
+          "sso": {
+            "subtitle": "組織のSSOを設定",
+            "title": "シングルサインオン"
           }
         },
         "name": "組織名",
@@ -1817,7 +2166,10 @@
         "updating": "組織を更新中...",
         "footer_text": "フッターテキスト",
         "footer_text_placeholder": "フッターテキストを入力...",
-        "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト"
+        "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト",
+        "watermark_desc": "組織ページにLearnHouseブランドの透かしを表示",
+        "watermark_free_plan": "無料プランでは透かしが常に表示されます",
+        "watermark_label": "\"Made with LearnHouse\"透かし"
       },
       "images": {
         "title": "画像とプレビュー",
@@ -1876,7 +2228,8 @@
         "tabs": {
           "images": "画像とプレビュー",
           "social": "ソーシャルリンク",
-          "theme": "テーマ"
+          "theme": "テーマ",
+          "auth": "認証"
         }
       },
       "auth_branding": {
@@ -1972,6 +2325,14 @@
           "collections": {
             "title": "コレクション",
             "description": "コースをコレクションに整理することを許可する"
+          },
+          "courses": {
+            "description": "組織のコースと進捗トラッキングを有効にする",
+            "title": "コース"
+          },
+          "podcasts": {
+            "description": "組織のポッドキャスト作成とオーディオコンテンツを有効にする",
+            "title": "ポッドキャスト"
           }
         },
         "toasts": {
@@ -1979,7 +2340,8 @@
           "disabling": "{{feature}}を無効にしています...",
           "enabled": "{{feature}}が有効になりました",
           "disabled": "{{feature}}が無効になりました",
-          "error": "{{feature}}の設定の更新に失敗しました"
+          "error": "{{feature}}の設定の更新に失敗しました",
+          "admin_only": "機能の有効化・無効化は組織管理者のみ可能です"
         }
       },
       "audit_logs": {
@@ -2198,6 +2560,45 @@
         "footer_text": "フッターテキスト",
         "footer_text_desc": "ページフッターに表示するカスタムテキストを追加します。",
         "footer_text_placeholder": "フッターテキストを入力..."
+      },
+      "sso": {
+        "allowed_domains": "許可メールドメイン",
+        "allowed_domains_help": "SSOでのログインを許可するメールドメインをカンマ区切りで入力（例：example.com, company.org）。空欄の場合すべてのドメインを許可します。",
+        "auto_provision": "ユーザーの自動プロビジョニング",
+        "auto_provision_desc": "初回SSOログイン時にユーザーアカウントを自動作成します。",
+        "delete": "SSO設定を削除",
+        "delete_confirm": "このSSO設定を削除してもよろしいですか？ユーザーはSSOでログインできなくなります。",
+        "delete_error": "SSO設定の削除に失敗しました",
+        "delete_success": "SSO設定を削除しました",
+        "deleting": "削除中...",
+        "enable_sso": "SSOを有効にする",
+        "enable_sso_desc": "組織のIDプロバイダーを使用してユーザーが認証できるようにします。",
+        "load_error": "SSO設定の読み込みに失敗しました",
+        "not_configured": "未設定",
+        "oidc_client_id": "クライアントID",
+        "oidc_client_secret": "クライアントシークレット",
+        "oidc_client_secret_help": "このシークレットは安全に保管してください。IDプロバイダーとの認証に使用されます。",
+        "oidc_info": "OpenID Connect互換のIDプロバイダー（Azure AD、Okta、Google Workspace、Keycloak）に直接接続します。",
+        "oidc_issuer_url": "発行者URL",
+        "oidc_issuer_url_help": "OIDC発行者URL。エンドポイントは/.well-known/openid-configurationから自動検出されます。",
+        "oidc_scopes": "スコープ",
+        "oidc_scopes_help": "要求するOAuthスコープ（スペース区切り）。デフォルト：openid email profile",
+        "open_setup_portal": "IDプロバイダーを設定",
+        "provider": "SSOプロバイダー",
+        "save": "設定を保存",
+        "save_error": "SSO設定の保存に失敗しました",
+        "save_success": "SSO設定を正常に保存しました",
+        "saving": "保存中...",
+        "select_provider": "プロバイダーを選択",
+        "setup_error": "セットアップポータルURLの取得に失敗しました",
+        "setup_not_available": "セットアップポータルは利用できません。先にプロバイダーを設定してください。",
+        "status_disabled": "無効",
+        "status_enabled": "有効",
+        "subtitle": "組織のエンタープライズSSOを設定",
+        "title": "シングルサインオン（SSO）",
+        "workos_info": "WorkOSはSAMLとOIDC IDプロバイダーをサポートするエンタープライズSSOを提供します。",
+        "workos_org_id": "WorkOS組織ID",
+        "workos_org_id_help": "このIDはセットアップポータルでSSOを設定すると自動的に生成されます。"
       }
     },
     "users": {
@@ -2356,7 +2757,8 @@
           "table": {
             "email": "メールアドレス",
             "signup_status": "登録ステータス",
-            "email_sent": "メール送信済み"
+            "email_sent": "メール送信済み",
+            "actions": "アクション"
           },
           "status": {
             "pending": "保留中",
@@ -2365,12 +2767,34 @@
           "email_status": {
             "sent": "送信済み",
             "no": "未送信"
-          }
+          },
+          "no_invites": "保留中の招待はありません",
+          "no_results": "検索に一致する招待が見つかりません",
+          "remove_button": "削除",
+          "remove_error": "招待の削除中にエラーが発生しました",
+          "remove_message": "{{email}}への招待を削除してもよろしいですか？",
+          "remove_success": "招待を削除しました",
+          "remove_title": "招待を削除",
+          "removing": "招待を削除中...",
+          "search_placeholder": "メールで検索..."
         },
         "toasts": {
           "sending": "招待を送信中...",
           "success": "招待を送信しました",
-          "error": "招待の送信中にエラーが発生しました"
+          "error": "招待の送信中にエラーが発生しました",
+          "partial": "{{sent}}件送信、{{failed}}件失敗"
+        },
+        "no_invite_code": "なし",
+        "results": {
+          "failed_count": "{{count}}件失敗",
+          "sent_count": "{{count}}件送信済み",
+          "skipped_count": "{{count}}件は既に招待済み",
+          "status": {
+            "already_invited": "既に招待済み",
+            "email_failed": "失敗",
+            "sent": "送信済み"
+          },
+          "summary_title": "結果"
         }
       },
       "usergroups": {
@@ -2399,7 +2823,9 @@
             },
             "status": {
               "linked": "リンク済み",
-              "not_linked": "未リンク"
+              "not_linked": "未リンク",
+              "in_group": "グループ内",
+              "not_in_group": "グループ外"
             },
             "actions": {
               "link": "リンク",
@@ -2408,7 +2834,31 @@
             "toasts": {
               "link_success": "ユーザーを正常にリンクしました",
               "unlink_success": "ユーザーのリンクを正常に解除しました",
-              "error": "エラー {{status}}: {{detail}}"
+              "error": "エラー {{status}}: {{detail}}",
+              "bulk_add_success": "{{count}}人のユーザーをグループに追加しました",
+              "bulk_adding": "ユーザーをグループに追加中...",
+              "bulk_error": "操作中にエラーが発生しました",
+              "bulk_remove_success": "{{count}}人のユーザーをグループから削除しました",
+              "bulk_removing": "ユーザーをグループから削除中..."
+            },
+            "no_results": "検索に一致するユーザーが見つかりません",
+            "no_users": "この組織にはまだユーザーがいません",
+            "pagination": {
+              "page": "ページ {{current}} / {{total}}",
+              "showing": "{{start}}-{{end}} / {{total}}件表示中"
+            },
+            "search_placeholder": "名前またはユーザー名で検索...",
+            "selection": {
+              "add_selected": "{{count}}件をグループに追加",
+              "clear": "クリア",
+              "count": "{{count}}人のユーザーを選択中",
+              "remove_selected": "{{count}}件をグループから削除",
+              "select_all_visible": "表示中すべてを選択"
+            },
+            "tabs": {
+              "all": "すべてのユーザー",
+              "in_group": "グループ内",
+              "not_in_group": "グループ外"
             }
           },
           "create": {
@@ -2451,7 +2901,18 @@
           "deleting": "削除中...",
           "delete_success": "ユーザーグループを削除しました",
           "delete_error": "ユーザーグループの削除中にエラーが発生しました"
-        }
+        },
+        "count": {
+          "plural": "グループ",
+          "singular": "グループ"
+        },
+        "member_count": {
+          "plural": "メンバー",
+          "singular": "メンバー"
+        },
+        "no_groups": "ユーザーグループはまだありません",
+        "no_results": "検索に一致するグループが見つかりません",
+        "search_placeholder": "グループを検索..."
       },
       "roles": {
         "title": "ロールと権限の管理",
@@ -2469,7 +2930,8 @@
         "actions": {
           "edit": "編集",
           "delete": "削除",
-          "create": "ロールを作成"
+          "create": "ロールを作成",
+          "view_rights": "権限を表示"
         },
         "modals": {
           "create": {
@@ -2595,12 +3057,29 @@
             "title": "ロールを削除しますか？",
             "message": "この操作は取り消せません。このロールを持つすべてのユーザーは権限を失います。本当にこのロールを削除しますか？",
             "button": "ロールを削除"
+          },
+          "view_rights": {
+            "description": "このロールに割り当てられたすべての権限を表示",
+            "title": "{{roleName}} - 権限"
           }
         },
         "toasts": {
           "deleting": "削除中...",
           "delete_success": "ロールを削除しました",
           "delete_error": "ロールの削除中にエラーが発生しました"
+        },
+        "rights": {
+          "resources": {
+            "activities": "アクティビティ",
+            "collections": "コレクション",
+            "coursechapters": "コースチャプター",
+            "courses": "コース",
+            "dashboard": "ダッシュボード",
+            "organizations": "組織",
+            "roles": "ロール",
+            "usergroups": "ユーザーグループ",
+            "users": "ユーザー"
+          }
         }
       }
     },
@@ -3024,7 +3503,30 @@
         "suggestion_calculator_prompt": "基本的な方程式のステップバイステップの解答を表示する計算機を作成",
         "suggestion_timeline": "タイムライン",
         "suggestion_timeline_prompt": "展開可能な詳細を含む主要な歴史的出来事を示すインタラクティブなタイムラインを作成"
+      },
+      "button_block": {
+        "enter_link_url": "リンクURLを入力"
       }
+    },
+    "ai_panel": {
+      "add_definition": "定義を追加",
+      "add_examples": "例を追加",
+      "add_quiz": "クイズを追加",
+      "add_summary": "要約を追加",
+      "add_tip": "ヒントを追加",
+      "block_selected": "ブロック選択中",
+      "clear_chat": "チャットをクリア",
+      "clear_selection": "選択をクリア",
+      "expand": "展開",
+      "how_can_i_help": "コンテンツの改善をお手伝いしますか？",
+      "improve_writing": "文章を改善",
+      "input_placeholder": "AIにコンテンツのサポートを依頼...",
+      "question_add_quiz": "クイズを追加",
+      "question_improve": "これをどう改善できますか？",
+      "question_summary": "要約を追加",
+      "simplify": "簡略化",
+      "title": "AIエディター",
+      "translate": "翻訳"
     }
   },
   "analytics": {
@@ -3411,6 +3913,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    },
+    "export": {
+      "button": "エクスポート",
+      "csv": "CSVをダウンロード",
+      "downloading": "エクスポート中...",
+      "json": "JSONをダウンロード"
     }
   },
   "boards": {
@@ -3535,7 +4043,8 @@
       "thick": "太い",
       "undo": "元に戻す",
       "redo": "やり直す",
-      "podcast": "ポッドキャスト"
+      "podcast": "ポッドキャスト",
+      "todo": "To-do"
     },
     "zoom": {
       "zoom_in": "拡大",
@@ -3640,6 +4149,164 @@
       "page_of": "{{total}} ページ中 {{current}} ページ",
       "results": "\"{{query}}\" の検索結果 {{count}} 件",
       "results_plural": "\"{{query}}\" の検索結果 {{count}} 件"
+    },
+    "board_deleted_error": "ボードの削除に失敗しました",
+    "board_deleted_success": "ボードを削除しました",
+    "board_duplicated_error": "ボードの複製に失敗しました",
+    "board_duplicated_success": "ボードを複製しました",
+    "boards_deleted_partial": "{{success}}件削除、{{error}}件失敗",
+    "boards_deleted_success": "{{count}}件のボードを削除しました",
+    "clear_selection": "クリア",
+    "delete_board": "ボードを削除",
+    "delete_board_confirm": "このボードを削除してもよろしいですか？この操作は元に戻せません。",
+    "delete_board_title": "\"{{name}}\"を削除",
+    "delete_boards_title": "ボードを削除",
+    "delete_selected": "選択を削除",
+    "delete_selected_confirm": "{{count}}件のボードを削除してもよろしいですか？この操作は元に戻せません。",
+    "deleting_board": "ボードを削除中...",
+    "deleting_boards": "{{count}}件のボードを削除中...",
+    "duplicate_board": "ボードを複製",
+    "duplicate_board_confirm": "同じ設定でボードのコピーを作成します。",
+    "duplicate_board_title": "\"{{name}}\"を複製",
+    "duplicating_board": "ボードを複製中...",
+    "open_board": "ボードを開く",
+    "select_all": "すべて選択",
+    "selected_count": "{{count}}件選択中"
+  },
+  "onboarding": {
+    "getting_started": "はじめに",
+    "all_done": "完了！",
+    "all_set": "準備完了です！",
+    "all_set_desc": "スタートガイドを完了しました。",
+    "more_steps": "あと{{count}}ステップ",
+    "more_steps_plural": "あと{{count}}ステップ",
+    "show_less": "折りたたむ",
+    "skip": "スキップ",
+    "got_it": "了解、構築する準備ができました！",
+    "done": "完了、準備万端です！",
+    "steps": {
+      "create_course": {
+        "title": "最初のコースを作成する",
+        "description": "学習者のために新しいコースを作成して始めましょう。",
+        "action": "コースを作成"
+      },
+      "add_activities": {
+        "title": "コースにアクティビティを追加する",
+        "description": "ページ、動画、ドキュメントなどのコンテンツを追加します。",
+        "action": "コンテンツへ移動"
+      },
+      "experience_editor": {
+        "title": "エディターを体験する",
+        "description": "エディターを開いて、コースコンテンツの作成方法を学びましょう。",
+        "add_activity": "アクティビティを追加",
+        "dynamic_page": "ダイナミックページ",
+        "click_edit": "編集をクリック",
+        "editor_features": "エディターでできること：",
+        "slash_commands": "/ を入力してスラッシュコマンド",
+        "headings_lists": "見出し、リスト、テキスト",
+        "images_media": "画像とメディア",
+        "video_embeds": "動画と埋め込み",
+        "tables_callouts": "テーブルとコールアウト",
+        "interactive_blocks": "インタラクティブブロック"
+      },
+      "try_playgrounds": {
+        "title": "プレイグラウンドでインタラクティブ学習",
+        "description": "自己ペースの学習のためのインタラクティブなページを作成します。",
+        "action": "プレイグラウンドを試す"
+      },
+      "invite_users": {
+        "title": "チームと学習者を招待する",
+        "description": "講師を追加するか、学習者が参加できるリンクを共有します。",
+        "action": "ユーザーを招待"
+      },
+      "customize_org": {
+        "title": "組織をカスタマイズする",
+        "description": "ロゴや色を追加して、あなたらしくしましょう。",
+        "action": "カスタマイズ"
+      },
+      "teach_the_world": {
+        "title": "学んで成長する",
+        "description": "LearnHouseを最大限に活用するためのリソース。",
+        "classroom": "クラスルーム",
+        "classroom_desc": "コースの成長と管理の方法を学ぶ",
+        "university": "LearnHouse大学",
+        "university_desc": "ガイド、ヒント、ベストプラクティス"
+      }
+    },
+    "welcome": {
+      "title": "LearnHouseへようこそ",
+      "subtitle": "コースを作成し、学習者を招待し、世界と知識を共有しましょう。",
+      "get_started": "始める",
+      "features_title": "必要なものがすべて揃っています",
+      "features_subtitle": "学習プラットフォームを構築・成長させるためのすべてのツール。",
+      "lets_go": "さあ始めましょう",
+      "features": {
+        "teach": "何でも教えよう",
+        "teach_desc": "チャプターとリッチコンテンツで構成されたコースを作成",
+        "interactive": "インタラクティブに",
+        "interactive_desc": "学習者が自分のペースで探求できるプレイグラウンドを構築",
+        "community": "コミュニティを作ろう",
+        "community_desc": "学習者が互いに助け合えるディスカッションスペースを作成",
+        "assess": "知識を評価",
+        "assess_desc": "課題を作成し、学習者の提出物を追跡",
+        "collaborate": "ビジュアルにコラボ",
+        "collaborate_desc": "学習者にブレインストーミングや共同作業のための共有ボードを提供",
+        "voice": "声を届けよう",
+        "voice_desc": "ポッドキャストを開始し、学習者にオーディオエピソードを配信",
+        "certify": "学習者を認定",
+        "certify_desc": "学習者がコースを修了したら証明書を発行",
+        "impact": "影響を把握しよう",
+        "impact_desc": "エンゲージメントを追跡し、学習者の進捗を時系列で確認",
+        "team": "チームを拡大",
+        "team_desc": "講師を招待し、ロールを管理し、学習者グループを整理"
+      }
+    },
+    "farewell": {
+      "title": "世界に教える準備ができました",
+      "description": "すべて準備が整いました。学習者が素晴らしいコンテンツを待っています。",
+      "button": "教え始める"
     }
+  },
+  "embed": {
+    "not_supported_description": "このタイプのアクティビティは認証が必要で、埋め込みできません。",
+    "not_supported_title": "このアクティビティはサポートされていません",
+    "powered_by": "Powered by LearnHouse",
+    "visit_activity": "アクティビティページを訪問"
+  },
+  "migration": {
+    "accepted_formats": "動画（MP4, WebM, MOV）、ドキュメント（PDF）、画像（PNG, JPG, WebP）、オーディオ（MP3, WAV）",
+    "add_activity": "アクティビティを追加",
+    "add_chapter": "チャプターを追加",
+    "ai_failed": "AI提案に失敗しました。手動整理に戻ります",
+    "all_files_assigned": "すべてのファイルが割り当てられました",
+    "click_to_add_more": "クリックしてファイルを追加",
+    "course_created": "コースが正常に作成されました！",
+    "course_name": "コース名",
+    "course_name_placeholder": "例：初心者のためのPython入門",
+    "course_structure": "コース構成",
+    "create_course": "コースを作成",
+    "created_summary": "{{chapters}}チャプターと{{activities}}アクティビティを作成しました",
+    "creating_course": "コースを作成中...",
+    "creating_description": "ファイルをアップロードし、チャプターとアクティビティを設定中",
+    "creation_error_generic": "問題が発生しました。もう一度お試しください。",
+    "creation_failed": "コース作成に失敗しました",
+    "description": "一行説明",
+    "description_placeholder": "例：基礎、データ型、関数を網羅する3モジュール",
+    "drop_file_here": "ファイルをここにドロップ",
+    "drop_files": "ファイルをここにドロップまたはクリックして参照",
+    "go_to_course": "コースへ移動",
+    "new_activity": "新しいアクティビティ",
+    "new_chapter": "新しいチャプター",
+    "organize_manually": "手動で整理",
+    "organize_with_ai": "AIで整理",
+    "step_complete": "完了",
+    "step_organize": "整理",
+    "step_upload": "アップロード",
+    "subtitle": "ファイルをアップロードしてコースに整理",
+    "title": "コンテンツ移行",
+    "try_again": "再試行",
+    "unassigned_files": "未割り当てファイル",
+    "upload_failed": "ファイルアップロードに失敗しました",
+    "uploading_files": "ファイルをアップロード中"
   }
 }
