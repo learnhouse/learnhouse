@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Optional
 import csv
 import io
 import json
@@ -626,7 +627,7 @@ async def invite_batch_users(
     request: Request,
     org_id: int,
     emails: str,
-    invite_code_uuid: str,
+    invite_code_uuid: Optional[str],
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ):
@@ -672,15 +673,18 @@ async def invite_batch_users(
     # invitations expire after 60 days
     ttl = int(timedelta(days=60).total_seconds())
 
+    results = []
+
     for email in invite_list:
         email = email.strip()
+        if not email:
+            continue
 
         # Check if user is already invited
         invited_user = r.get(f"invited_user:{email}:org:{org.org_uuid}")
 
         if invited_user:
-            logging.error(f"User {email} already invited")
-            # skip this user
+            results.append({"email": email, "status": "already_invited"})
             continue
 
         org = OrganizationRead.model_validate(org)
@@ -706,11 +710,20 @@ async def invite_batch_users(
             "created_by": current_user.user_uuid,
         }
 
-        invited_user = r.set(
+        r.set(
             f"invited_user:{email}:org:{org.org_uuid}",
             json.dumps(invited_user_object),
             ex=ttl,
         )
+
+        results.append({
+            "email": email,
+            "status": "sent" if isEmailSent else "email_failed",
+        })
+
+    sent = sum(1 for r in results if r["status"] == "sent")
+    failed = sum(1 for r in results if r["status"] == "email_failed")
+    skipped = sum(1 for r in results if r["status"] == "already_invited")
 
     await dispatch_webhooks(
         event_name="user_invited_to_org",
@@ -723,7 +736,16 @@ async def invite_batch_users(
         },
     )
 
-    return {"detail": "Users invited"}
+    return {
+        "detail": "Users invited",
+        "results": results,
+        "summary": {
+            "total": len(results),
+            "sent": sent,
+            "failed": failed,
+            "already_invited": skipped,
+        },
+    }
 
 
 async def get_list_of_invited_users(

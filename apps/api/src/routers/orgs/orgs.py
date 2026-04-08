@@ -580,7 +580,7 @@ async def api_invite_batch_users(
     request: Request,
     org_id: int,
     emails: str,
-    invite_code_uuid: str,
+    invite_code_uuid: Optional[str] = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
