@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
     "join_organization": "Join this organization",
-    "to_access_features": "to access all features."
+    "to_access_features": "to access all features.",
+    "free_plan_upgrade": "You're on the Free plan. Upgrade to unlock the complete experience.",
+    "free_plan_upgrade_button": "Upgrade"
   },
   "auth": {
     "login": "Login",
@@ -4293,6 +4295,53 @@
       "title": "You're ready to teach the world",
       "description": "Everything is set up. Your learners are waiting for something great.",
       "button": "Start teaching"
+    }
+  },
+  "upgrade_modal": {
+    "title": "Unlock your full potential",
+    "subtitle": "Choose the plan that matches where you want to take your teaching.",
+    "choose_plan": "Get {{plan}}",
+    "current_free_limits": "Free plan: 1 course · 10 members · No AI",
+    "plans": {
+      "standard": {
+        "goal": "Start monetizing your courses and build a learning community.",
+        "highlights": {
+          "courses": "Unlimited courses",
+          "courses_desc": "Create as many courses as you need — no limits on your curriculum.",
+          "members": "Up to 500 members",
+          "members_desc": "Grow your learner base and manage them in one place.",
+          "payments": "Accept payments",
+          "payments_desc": "Sell courses and offer subscriptions to generate revenue.",
+          "communities": "Community discussions",
+          "communities_desc": "Let learners connect, ask questions, and share ideas.",
+          "podcasts": "Create podcasts",
+          "podcasts_desc": "Deliver audio content and reach learners on the go.",
+          "ai": "1,000 AI credits",
+          "ai_desc": "Speed up content creation with AI-powered writing tools.",
+          "analytics": "Learner analytics",
+          "analytics_desc": "Track progress and engagement to improve your courses."
+        }
+      },
+      "pro": {
+        "goal": "Scale your academy with advanced tools and full control.",
+        "includes_standard": "Everything in Standard, plus:",
+        "highlights": {
+          "members": "Up to 1,000 members",
+          "members_desc": "Support larger cohorts with up to 10 admin seats.",
+          "ai": "3,000 AI credits",
+          "ai_desc": "More credits for high-volume content creation and assistance.",
+          "certifications": "Issue certificates",
+          "certifications_desc": "Reward learners with certificates when they complete courses.",
+          "custom_domain": "Custom domain",
+          "custom_domain_desc": "Use your own domain for a fully branded academy.",
+          "roles": "Custom roles & permissions",
+          "roles_desc": "Control exactly who can do what across your organization.",
+          "playgrounds": "Interactive playgrounds",
+          "playgrounds_desc": "Let learners experiment and practice with hands-on interactive exercises.",
+          "api": "API access & webhooks",
+          "api_desc": "Integrate with your existing tools and automate workflows."
+        }
+      }
     }
   }
 }

@@ -91,8 +91,34 @@
         "communities": {
           "title": "Tính năng Standard",
           "description": "Cộng đồng là tính năng cao cấp chỉ dành cho các tổ chức trên gói Standard hoặc cao hơn. Nâng cấp để mở khóa cộng đồng thảo luận cho thành viên của bạn."
+        },
+        "analytics": {
+          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
+          "title": "Standard Feature"
+        },
+        "course_analytics": {
+          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
+          "title": "Pro Feature"
+        },
+        "custom_domains": {
+          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
+          "title": "Standard Feature"
+        },
+        "podcasts": {
+          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
+          "title": "Standard Feature"
+        },
+        "seo": {
+          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
+          "title": "Standard Feature"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
+          "title": "Enterprise Feature"
         }
-      }
+      },
+      "current_plan": "Current plan",
+      "upgrade_to": "Upgrade to"
     },
     "features": {
       "disabled": {
@@ -104,7 +130,8 @@
           "communities": "Cộng đồng",
           "podcasts": "Podcast",
           "payments": "Thanh toán",
-          "trail": "Theo dõi tiến độ"
+          "trail": "Theo dõi tiến độ",
+          "boards": "Bảng"
         },
         "public": {
           "title": "{{feature}} không khả dụng",
@@ -149,12 +176,18 @@
     "back": "Quay lại",
     "of": "của",
     "creating": "Đang tạo...",
-    "view_details": "Xem chi tiết"
+    "view_details": "Xem chi tiết",
+    "boards": "Bảng",
+    "close": "Đóng",
+    "optional": "optional",
+    "playgrounds": "Playgrounds"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
     "join_organization": "Tham gia tổ chức này",
-    "to_access_features": "để truy cập tất cả tính năng."
+    "to_access_features": "để truy cập tất cả tính năng.",
+    "free_plan_upgrade": "Bạn đang sử dụng gói miễn phí. Nâng cấp để mở khóa trải nghiệm đầy đủ.",
+    "free_plan_upgrade_button": "Nâng cấp"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -222,7 +255,66 @@
     "invite_required": "Yêu cầu lời mời",
     "invite_required_desc": "Cần mã mời để tham gia {{org}}",
     "invite_code": "Mã mời",
-    "validate_invite": "Xác nhận lời mời"
+    "validate_invite": "Xác nhận lời mời",
+    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
+    "back_to_login": "Back to Login",
+    "check_email_for_verification": "Check Your Email",
+    "check_inbox_message": "Please check your inbox and click the verification link.",
+    "create_your_account": "Create your account",
+    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
+    "email_verification_required": "Email Verification Required",
+    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
+    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
+    "email_verified_success": "Email Verified!",
+    "login_failed": "Login Failed",
+    "password_req_lowercase": "At least one lowercase letter (a-z)",
+    "password_req_min_length": "At least 8 characters",
+    "password_req_number": "At least one number (0-9)",
+    "password_req_special": "At least one special character (!@#$%...)",
+    "password_req_uppercase": "At least one uppercase letter (A-Z)",
+    "password_requirements_not_met": "Password does not meet requirements",
+    "password_strength": "Password strength",
+    "password_strength_fair": "Fair",
+    "password_strength_good": "Good",
+    "password_strength_strong": "Strong",
+    "password_strength_weak": "Weak",
+    "proceed_to_login": "Proceed to Login",
+    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
+    "resend_verification_email": "Resend verification email",
+    "resend_verification_failed": "Failed to resend verification email. Please try again.",
+    "sign_in_with_sso": "Sign in with SSO",
+    "sso_callback": {
+      "auth_failed": "Authentication Failed",
+      "authenticating": "Authenticating...",
+      "copied": "Copied!",
+      "copy_details": "Copy to clipboard",
+      "error": "SSO authentication failed. Please try again.",
+      "error_code": "Error code",
+      "go_home": "Go to Home",
+      "hide_details": "Hide technical details",
+      "missing_params": "Invalid SSO callback. Missing required parameters.",
+      "please_wait": "Please wait while we verify your identity",
+      "provider": "Provider",
+      "redirecting": "Redirecting you to the application...",
+      "show_details": "Show technical details",
+      "success": "Authentication Successful",
+      "tips": {
+        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
+        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "invalid_state": "Your session may have expired. Please try logging in again.",
+        "server_error": "The identity provider is experiencing issues. Please try again later."
+      },
+      "try_again": "Try Again"
+    },
+    "sso_error": "SSO authentication failed. Please try again.",
+    "try_again_in": "try again in {{minutes}} min",
+    "verification_email_resent": "Verification Email Sent",
+    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
+    "verification_failed": "Verification Failed",
+    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
+    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
+    "verify_email_title": "Verify Your Email",
+    "verifying_email": "Verifying your email address..."
   },
   "verify_email": {
     "title": "Xác minh email",
@@ -510,14 +602,19 @@
         "still_working": "Vẫn đang xử lý...",
         "video_takes_time": "Phân tích video có thể mất 1-2 phút",
         "video_hint": "Video có thể mất 1-2 phút để xử lý"
-      }
+      },
+      "from_existing": "From Existing Content",
+      "from_existing_description": "Upload files from another platform and organize them into a course"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Copied!",
+    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
+    "quit_course_title": "Quit Course?"
   },
   "communities": {
     "title": "Cộng đồng",
@@ -677,7 +774,99 @@
     "deleting_podcast": "Đang xóa podcast...",
     "podcast_deleted_success": "Xóa podcast thành công",
     "podcast_deleted_error": "Xóa podcast thất bại",
-    "edit_content": "Chỉnh sửa Nội dung"
+    "edit_content": "Chỉnh sửa Nội dung",
+    "create_new_podcast": "Create a new podcast for your organization",
+    "create_podcast": "Create Podcast",
+    "create_podcast_btn": "Create Podcast",
+    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
+    "creating_podcast": "Creating podcast...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3, WAV, or M4A files supported",
+        "audio_label": "Audio File",
+        "create": "Create Episode",
+        "create_error": "Failed to create episode",
+        "create_first": "Create First Episode",
+        "created": "Episode created",
+        "creating": "Creating episode...",
+        "delete": "Xóa",
+        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
+        "delete_error": "Failed to delete episode",
+        "delete_title": "Delete Episode?",
+        "deleted": "Episode deleted",
+        "deleting": "Deleting episode...",
+        "description_label": "Mô tả",
+        "description_placeholder": "Enter episode description",
+        "edit": "Chỉnh sửa",
+        "edit_episode": "Edit Episode",
+        "edit_episode_description": "Update episode details",
+        "new_episode": "New Episode",
+        "new_episode_description": "Add a new episode to this podcast",
+        "no_audio": "No audio file",
+        "no_episodes_description": "Start by adding your first episode",
+        "publish": "Xuất bản",
+        "replace_audio": "Replace Audio File",
+        "save": "Save Changes",
+        "title_label": "Tiêu đề",
+        "title_placeholder": "Enter episode title",
+        "unpublish": "Hủy xuất bản",
+        "update_error": "Failed to update episode",
+        "updated": "Episode updated",
+        "updating": "Updating episode...",
+        "upload_audio": "Upload Audio File"
+      },
+      "form": {
+        "about": "About",
+        "about_max_length": "About must be at most 2000 characters",
+        "about_placeholder": "Tell listeners more about this podcast...",
+        "public_hint": "Anyone can find and listen to this podcast",
+        "published_hint": "Make this podcast visible on your organization page",
+        "tags_hint": "Separate tags with commas",
+        "tags_placeholder": "music, education, tech",
+        "thumbnail": "Thumbnail",
+        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
+        "upload_thumbnail": "Upload Thumbnail",
+        "visibility": "Visibility Settings"
+      },
+      "save_changes": "Save Changes",
+      "save_error": "Failed to save changes",
+      "saved": "Changes saved",
+      "saving": "Saving...",
+      "tabs": {
+        "episodes": "Episodes",
+        "general": "Chung"
+      },
+      "view_podcast": "View Podcast"
+    },
+    "failed_to_create_podcast": "Failed to create podcast",
+    "form": {
+      "description_max_length": "Description must be at most 500 characters",
+      "name_max_length": "Name must be at most 100 characters",
+      "name_min_length": "Name must be at least 3 characters",
+      "name_required": "Podcast name is required"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Hủy",
+        "description": "Fill in the details to create a new podcast",
+        "form": {
+          "description_label": "Mô tả",
+          "description_placeholder": "Enter podcast description",
+          "name_label": "Podcast Name",
+          "name_placeholder": "Enter podcast name",
+          "public_label": "Make this podcast public"
+        },
+        "submit": "Create Podcast",
+        "title": "Create New Podcast"
+      }
+    },
+    "podcast_created_success": "Podcast created successfully",
+    "podcast_name": "Podcast Name",
+    "podcast_name_required": "Podcast name is required",
+    "podcast_tags": "Thẻ",
+    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_visibility": "Hiển thị",
+    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
   },
   "collections": {
     "collections": "Bộ sưu tập",
@@ -753,7 +942,12 @@
     "size_large": "Kích thước lớn",
     "change_color": "Thay đổi màu sắc",
     "preview_flip": "Xem trước lật",
-    "activities_count": "{{count}} hoạt động"
+    "activities_count": "{{count}} hoạt động",
+    "copy_link": "Sao chép liên kết",
+    "embed": "Nhúng",
+    "embed_code_copied": "Embed code copied!",
+    "link_copied": "Link copied!",
+    "share": "Chia sẻ"
   },
   "assignments": {
     "submit_assignment": "Nộp bài tập",
@@ -850,7 +1044,8 @@
     "security": "Bảo mật",
     "my_courses": "Khóa học của tôi",
     "no_purchased_courses": "Chưa có khóa học nào được mua",
-    "purchased_courses_description": "Các khóa học bạn đã mua hoặc đăng ký sẽ xuất hiện ở đây"
+    "purchased_courses_description": "Các khóa học bạn đã mua hoặc đăng ký sẽ xuất hiện ở đây",
+    "purchases": "Giao dịch mua"
   },
   "user": {
     "user_settings": "Cài đặt người dùng",
@@ -1080,7 +1275,8 @@
     "no_biography": "Chưa có tiểu sử",
     "my_progress": "Tiến trình của tôi",
     "no_courses_in_progress": "Chưa có khóa học nào đang học",
-    "start_course_to_see_progress": "Bắt đầu một khóa học để xem tiến trình của bạn tại đây"
+    "start_course_to_see_progress": "Bắt đầu một khóa học để xem tiến trình của bạn tại đây",
+    "bio_placeholder": "Tell us a bit about yourself..."
   },
   "roles": {
     "custom_role": "Vai trò tùy chỉnh",
@@ -1219,7 +1415,9 @@
           "content": "Nội dung",
           "access": "Truy cập",
           "contributors": "Người đóng góp",
-          "certification": "Chứng nhận"
+          "certification": "Chứng nhận",
+          "analytics": "Phân tích",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Truy cập bị từ chối",
@@ -1510,7 +1708,8 @@
             "general": "Chung",
             "thumbnail": "Hình thu nhỏ",
             "course": "Khóa học liên kết",
-            "moderation": "Kiểm duyệt"
+            "moderation": "Kiểm duyệt",
+            "access": "Access"
           },
           "general": {
             "title": "Cài đặt chung",
@@ -1527,6 +1726,10 @@
           "moderation": {
             "title": "Kiểm duyệt",
             "subtitle": "Cấu hình cài đặt kiểm duyệt nội dung"
+          },
+          "access": {
+            "subtitle": "Control who can access this community",
+            "title": "Access Settings"
           }
         },
         "course": {
@@ -1639,6 +1842,60 @@
           "deleting": "Đang xóa cộng đồng...",
           "delete_success": "Xóa cộng đồng thành công",
           "delete_error": "Xóa cộng đồng thất bại"
+        },
+        "access": {
+          "public": {
+            "active": "Hoạt động",
+            "confirmation_button": "Change to Public",
+            "confirmation_message": "Are you sure you want this community to be publicly available?",
+            "confirmation_title": "Change to Public?",
+            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "title": "Công khai"
+          },
+          "restricted": {
+            "active": "Hoạt động",
+            "confirmation_button": "Change to Restricted",
+            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
+            "confirmation_title": "Change to Restricted?",
+            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
+            "title": "Restricted"
+          },
+          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
+          "title": "Access Settings",
+          "toasts": {
+            "update_error": "Failed to update access settings",
+            "update_success": "Access settings updated successfully"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Xóa",
+              "link_to_usergroup": "Link to User Group"
+            },
+            "modals": {
+              "create_usergroup": "Create a User Group",
+              "link_button": "Liên kết",
+              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
+              "link_title": "Link Community to User Group",
+              "no_usergroups": "No User Groups available",
+              "unlink_button": "Remove Access",
+              "unlink_message": "Users from this User Group will no longer have access to this community.",
+              "unlink_title": "Remove User Group Access?",
+              "usergroup_name": "User Group Name",
+              "warning": "Users not in linked User Groups will lose access to this community"
+            },
+            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "table": {
+              "actions": "Hành động",
+              "name": "Tên"
+            },
+            "title": "User Groups",
+            "toasts": {
+              "link_error": "Error {{status}}: {{detail}}",
+              "link_success": "Successfully linked User Group",
+              "unlink_error": "An error occurred while removing User Group access",
+              "unlink_success": "Successfully removed User Group access"
+            }
+          }
         }
       },
       "structure": {
@@ -1780,6 +2037,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Course limit reached ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "Failed to save SEO settings"
+        },
+        "form": {
+          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "canonical_url_label": "Canonical URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "description_label": "Meta Description",
+          "description_placeholder": "Enter a compelling description for search results",
+          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
+          "enable_jsonld_label": "Enable JSON-LD Structured Data",
+          "keywords_hint": "Comma-separated list of keywords related to your course",
+          "keywords_label": "Keywords",
+          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "og_description_label": "OG Description",
+          "og_description_placeholder": "Custom description for social media sharing",
+          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "og_image_label": "OG Image URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG Title",
+          "og_title_placeholder": "Custom title for social media sharing",
+          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
+          "robots_nofollow_label": "Prevent following links (nofollow)",
+          "robots_noindex_hint": "When enabled, search engines will not index this course",
+          "robots_noindex_label": "Prevent search engine indexing (noindex)",
+          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "title_label": "SEO Title",
+          "title_placeholder": "Enter a custom title for search engines",
+          "twitter_card_label": "Card Type",
+          "twitter_card_summary": "Summary",
+          "twitter_card_summary_large": "Summary with Large Image",
+          "twitter_description_label": "Twitter Description",
+          "twitter_description_placeholder": "Custom description for Twitter sharing",
+          "twitter_title_label": "Twitter Title",
+          "twitter_title_placeholder": "Custom title for Twitter sharing"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Configure how your course appears in search engine results",
+            "title": "Basic SEO"
+          },
+          "opengraph": {
+            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Control search engine indexing and enable rich snippets",
+            "title": "Robots & Structured Data"
+          },
+          "twitter": {
+            "subtitle": "Customize how your course appears when shared on Twitter/X",
+            "title": "Twitter Card"
+          }
+        },
+        "subtitle": "Optimize your course for search engines and social media sharing",
+        "title": "SEO Settings",
+        "validation": {
+          "description_max_length": "Meta description must be 160 characters or less",
+          "invalid_url": "Please enter a valid URL",
+          "og_description_max_length": "OG description must be 200 characters or less",
+          "og_title_max_length": "OG title must be 70 characters or less",
+          "title_max_length": "SEO title must be 70 characters or less",
+          "twitter_description_max_length": "Twitter description must be 200 characters or less",
+          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+        }
       }
     },
     "organization": {
@@ -1793,7 +2119,10 @@
           "ai": "AI",
           "api": "Truy cập API",
           "features": "Tính năng",
-          "other": "Khác"
+          "other": "Khác",
+          "domains": "Domains",
+          "sso": "SSO",
+          "usage": "Usage"
         },
         "pages": {
           "general": {
@@ -1823,6 +2152,18 @@
           "features": {
             "title": "Tính năng",
             "subtitle": "Bật hoặc tắt tính năng cho tổ chức của bạn"
+          },
+          "domains": {
+            "subtitle": "Configure custom domains for your organization",
+            "title": "Custom Domains"
+          },
+          "sso": {
+            "subtitle": "Configure SSO for your organization",
+            "title": "Single Sign-On"
+          },
+          "usage": {
+            "subtitle": "Monitor your organization's resource usage and plan limits",
+            "title": "Usage"
           }
         },
         "name": "Tên tổ chức",
@@ -1842,7 +2183,10 @@
         "updating": "Đang cập nhật thông tin tổ chức...",
         "footer_text": "Văn bản chân trang",
         "footer_text_placeholder": "Nhập văn bản chân trang...",
-        "footer_text_desc": "Văn bản tùy chỉnh hiển thị ở cuối các trang của tổ chức"
+        "footer_text_desc": "Văn bản tùy chỉnh hiển thị ở cuối các trang của tổ chức",
+        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
+        "watermark_free_plan": "Watermark is always shown on the free plan",
+        "watermark_label": "\"Made with LearnHouse\" watermark"
       },
       "images": {
         "title": "Hình ảnh & Xem trước",
@@ -1901,7 +2245,8 @@
         "tabs": {
           "images": "Hình ảnh & Xem trước",
           "social": "Liên kết mạng xã hội",
-          "theme": "Chủ đề"
+          "theme": "Chủ đề",
+          "auth": "Auth"
         }
       },
       "socials": {
@@ -1973,6 +2318,14 @@
           "collections": {
             "title": "Bộ sưu tập",
             "description": "Cho phép sắp xếp khóa học thành bộ sưu tập"
+          },
+          "courses": {
+            "description": "Enable courses and progress tracking for your organization",
+            "title": "Khóa học"
+          },
+          "podcasts": {
+            "description": "Enable podcast creation and audio content for your organization",
+            "title": "Podcast"
           }
         },
         "toasts": {
@@ -1980,7 +2333,8 @@
           "disabling": "Đang tắt {{feature}}...",
           "enabled": "Đã bật {{feature}}",
           "disabled": "Đã tắt {{feature}}",
-          "error": "Cập nhật cấu hình {{feature}} thất bại"
+          "error": "Cập nhật cấu hình {{feature}} thất bại",
+          "admin_only": "Only organization admins can enable or disable features"
         }
       },
       "auth_branding": {
@@ -2223,6 +2577,45 @@
         "footer_text": "Văn bản chân trang",
         "footer_text_desc": "Thêm văn bản tùy chỉnh để hiển thị ở chân trang.",
         "footer_text_placeholder": "Nhập văn bản chân trang..."
+      },
+      "sso": {
+        "allowed_domains": "Allowed Email Domains",
+        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
+        "auto_provision": "Auto-provision Users",
+        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
+        "delete": "Delete SSO Configuration",
+        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
+        "delete_error": "Failed to delete SSO configuration",
+        "delete_success": "SSO configuration deleted",
+        "deleting": "Deleting...",
+        "enable_sso": "Enable SSO",
+        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
+        "load_error": "Failed to load SSO configuration",
+        "not_configured": "Not configured",
+        "oidc_client_id": "Client ID",
+        "oidc_client_secret": "Client Secret",
+        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
+        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
+        "open_setup_portal": "Configure Identity Provider",
+        "provider": "SSO Provider",
+        "save": "Save Configuration",
+        "save_error": "Failed to save SSO configuration",
+        "save_success": "SSO configuration saved successfully",
+        "saving": "Saving...",
+        "select_provider": "Select a provider",
+        "setup_error": "Failed to get setup portal URL",
+        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "status_disabled": "Đã tắt",
+        "status_enabled": "Đã bật",
+        "subtitle": "Configure enterprise SSO for your organization",
+        "title": "Single Sign-On (SSO)",
+        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_org_id": "WorkOS Organization ID",
+        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
       }
     },
     "users": {
@@ -2381,7 +2774,8 @@
           "table": {
             "email": "Email",
             "signup_status": "Trạng thái đăng ký",
-            "email_sent": "Đã gửi email"
+            "email_sent": "Đã gửi email",
+            "actions": "Hành động"
           },
           "status": {
             "pending": "Đang chờ",
@@ -2390,12 +2784,34 @@
           "email_status": {
             "sent": "Đã gửi",
             "no": "Chưa"
-          }
+          },
+          "no_invites": "No pending invitations",
+          "no_results": "No invitations found matching your search",
+          "remove_button": "Xóa",
+          "remove_error": "Error removing invitation",
+          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
+          "remove_success": "Invitation removed",
+          "remove_title": "Remove invitation",
+          "removing": "Removing invitation...",
+          "search_placeholder": "Search by email..."
         },
         "toasts": {
           "sending": "Đang gửi lời mời...",
           "success": "Đã gửi lời mời thành công",
-          "error": "Đã xảy ra lỗi khi gửi lời mời"
+          "error": "Đã xảy ra lỗi khi gửi lời mời",
+          "partial": "{{sent}} sent, {{failed}} failed"
+        },
+        "no_invite_code": "Không có",
+        "results": {
+          "failed_count": "{{count}} failed",
+          "sent_count": "{{count}} sent",
+          "skipped_count": "{{count}} already invited",
+          "status": {
+            "already_invited": "Already invited",
+            "email_failed": "Thất bại",
+            "sent": "Đã gửi"
+          },
+          "summary_title": "Kết quả"
         }
       },
       "usergroups": {
@@ -2424,7 +2840,9 @@
             },
             "status": {
               "linked": "Đã liên kết",
-              "not_linked": "Chưa liên kết"
+              "not_linked": "Chưa liên kết",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             },
             "actions": {
               "link": "Liên kết",
@@ -2433,7 +2851,31 @@
             "toasts": {
               "link_success": "Đã liên kết người dùng thành công",
               "unlink_success": "Đã hủy liên kết người dùng thành công",
-              "error": "Lỗi {{status}}: {{detail}}"
+              "error": "Lỗi {{status}}: {{detail}}",
+              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_adding": "Adding users to group...",
+              "bulk_error": "An error occurred during the operation",
+              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_removing": "Removing users from group..."
+            },
+            "no_results": "No users found matching your search",
+            "no_users": "No users in this organization yet",
+            "pagination": {
+              "page": "Page {{current}} of {{total}}",
+              "showing": "Showing {{start}}-{{end}} of {{total}}"
+            },
+            "search_placeholder": "Search users by name or username...",
+            "selection": {
+              "add_selected": "Add {{count}} to Group",
+              "clear": "Xóa",
+              "count": "{{count}} users selected",
+              "remove_selected": "Remove {{count}} from Group",
+              "select_all_visible": "Select all visible"
+            },
+            "tabs": {
+              "all": "All Users",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             }
           },
           "create": {
@@ -2476,7 +2918,18 @@
           "deleting": "Đang xóa...",
           "delete_success": "Đã xóa nhóm người dùng thành công",
           "delete_error": "Đã xảy ra lỗi khi xóa nhóm người dùng"
-        }
+        },
+        "count": {
+          "plural": "groups",
+          "singular": "group"
+        },
+        "member_count": {
+          "plural": "members",
+          "singular": "member"
+        },
+        "no_groups": "No user groups yet",
+        "no_results": "No groups found matching your search",
+        "search_placeholder": "Search groups..."
       },
       "roles": {
         "title": "Quản lý vai trò và quyền hạn",
@@ -2494,7 +2947,8 @@
         "actions": {
           "edit": "Chỉnh sửa",
           "delete": "Xóa",
-          "create": "Tạo vai trò"
+          "create": "Tạo vai trò",
+          "view_rights": "View Rights"
         },
         "modals": {
           "create": {
@@ -2620,12 +3074,29 @@
             "title": "Xóa vai trò?",
             "message": "Hành động này không thể hoàn tác. Tất cả người dùng có vai trò này sẽ bị mất các quyền hạn của họ. Bạn có chắc chắn muốn xóa vai trò này không?",
             "button": "Xóa vai trò"
+          },
+          "view_rights": {
+            "description": "View all permissions assigned to this role",
+            "title": "{{roleName}} - Permissions"
           }
         },
         "toasts": {
           "deleting": "Đang xóa...",
           "delete_success": "Đã xóa vai trò thành công",
           "delete_error": "Đã xảy ra lỗi khi xóa vai trò"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Activities",
+            "collections": "Collections",
+            "coursechapters": "Course Chapters",
+            "courses": "Khóa học",
+            "dashboard": "Dashboard",
+            "organizations": "Organizations",
+            "roles": "Roles",
+            "usergroups": "User Groups",
+            "users": "Users"
+          }
         }
       }
     },
@@ -2908,11 +3379,33 @@
       "common": {
         "cancel": "Hủy",
         "save": "Lưu",
-        "apply": "Áp dụng"
+        "apply": "Áp dụng",
+        "align_center": "Center align",
+        "align_left": "Align left",
+        "align_right": "Align right",
+        "download": "Tải xuống",
+        "drop_or_browse": "Drop your file here or click to browse",
+        "expand": "Expand",
+        "full_width": "Full Width",
+        "large": "Large",
+        "medium": "Medium",
+        "size": "Size",
+        "small": "Small",
+        "upload": "Tải lên",
+        "uploading": "Uploading..."
       },
       "quiz_block": {
         "question_placeholder": "Nhập câu hỏi của bạn ở đây",
-        "answer_placeholder": "Nhập câu trả lời ở đây"
+        "answer_placeholder": "Nhập câu trả lời ở đây",
+        "add_answer": "Add Answer",
+        "add_question": "Add Question",
+        "all_correct": "All answers are correct!",
+        "delete_answer": "Delete answer",
+        "mark_correct": "Mark as correct",
+        "mark_incorrect": "Mark as incorrect",
+        "reset_answers": "Reset answers",
+        "some_incorrect": "Some answers are incorrect!",
+        "submit": "Gửi"
       },
       "math_block": {
         "templates": "Mẫu",
@@ -2995,7 +3488,62 @@
         "suggestion_calculator_prompt": "Tạo máy tính hiển thị lời giải từng bước cho các phương trình cơ bản",
         "suggestion_timeline": "Dòng thời gian",
         "suggestion_timeline_prompt": "Tạo dòng thời gian tương tác hiển thị các sự kiện lịch sử quan trọng với chi tiết có thể mở rộng"
+      },
+      "button_block": {
+        "enter_link_url": "Enter link URL"
+      },
+      "flipcard_block": {
+        "back": "Back",
+        "click_to_flip": "Click to flip",
+        "front": "Front"
+      },
+      "image_block": {
+        "download_image": "Download image",
+        "drop_or_browse": "Drop your image here or click to browse",
+        "expand_image": "Expand image",
+        "supported_formats": "Supports JPG, PNG, WebP, and GIF",
+        "uploading": "Uploading image...",
+        "viewer_title": "Image Viewer"
+      },
+      "pdf_block": {
+        "document_title": "PDF Document",
+        "download_pdf": "Download PDF",
+        "drop_or_browse": "Drop your PDF here or click to browse",
+        "expand_pdf": "Expand PDF",
+        "no_pdf": "No PDF available",
+        "supported_formats": "Supports PDF format",
+        "upload_pdf": "Upload PDF",
+        "uploading": "Uploading PDF..."
+      },
+      "video_block": {
+        "download_video": "Download video",
+        "drop_or_browse": "Drop your video here or click to browse",
+        "expand_video": "Expand video",
+        "player_title": "Video Player",
+        "supported_formats": "Supports MP4 and WebM formats",
+        "unsupported_format": "Please upload a supported video format (MP4 or WebM)",
+        "uploading": "Uploading video..."
       }
+    },
+    "ai_panel": {
+      "add_definition": "Add definition",
+      "add_examples": "Add examples",
+      "add_quiz": "Add quiz",
+      "add_summary": "Add summary",
+      "add_tip": "Add tip",
+      "block_selected": "block selected",
+      "clear_chat": "Clear chat",
+      "clear_selection": "Clear selection",
+      "expand": "Expand",
+      "how_can_i_help": "How can I help improve your content?",
+      "improve_writing": "Improve writing",
+      "input_placeholder": "Ask AI to help with your content...",
+      "question_add_quiz": "Add a quiz",
+      "question_improve": "How can I improve this?",
+      "question_summary": "Add a summary",
+      "simplify": "Simplify",
+      "title": "AI Editor",
+      "translate": "Translate"
     }
   },
   "analytics": {
@@ -3382,6 +3930,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    },
+    "export": {
+      "button": "Xuất",
+      "csv": "Download CSV",
+      "downloading": "Exporting...",
+      "json": "Download JSON"
     }
   },
   "onboarding": {
@@ -3476,6 +4030,347 @@
       "title": "Bạn đã sẵn sàng dạy cả thế giới",
       "description": "Mọi thứ đã được thiết lập. Người học đang chờ đợi điều tuyệt vời từ bạn.",
       "button": "Bắt đầu giảng dạy"
+    }
+  },
+  "boards": {
+    "access": {
+      "access_update_error": "Failed to update access",
+      "actions": "Hành động",
+      "active": "Hoạt động",
+      "board_set_private": "Board set to private",
+      "board_set_public": "Board set to public",
+      "create_user_group": "Create User Group",
+      "description": "Control who can access this board",
+      "link": "Liên kết",
+      "link_error": "Failed to link: ",
+      "link_to_user_group": "Link to User Group",
+      "link_to_user_group_description": "Select a user group to give them access to this board",
+      "link_to_usergroup_btn": "Link to UserGroup",
+      "make_board_private": "Make Board Private",
+      "make_board_public": "Make Board Public",
+      "no_user_groups": "No user groups linked yet",
+      "no_user_groups_available": "No user groups available",
+      "private_description": "Only linked UserGroups can access this board",
+      "private_option": "Users Only",
+      "public_description": "All signed-in organization members can access this board",
+      "public_option": "Công khai",
+      "set_to_private": "Set to Private",
+      "set_to_private_confirm": "Only members of linked UserGroups will be able to access this board.",
+      "set_to_public": "Set to Public",
+      "set_to_public_confirm": "All signed-in organization members will be able to access this board.",
+      "title": "Access Control",
+      "unlink": "Hủy liên kết",
+      "unlink_confirm": "This user group will no longer have access to this board.",
+      "unlink_error": "Failed to unlink: ",
+      "unlink_error_generic": "Failed to unlink user group",
+      "unlink_user_group": "Unlink User Group",
+      "user_group": "User Group",
+      "user_group_linked": "User group linked",
+      "user_group_unlinked": "User group unlinked",
+      "user_groups": "User Groups",
+      "user_groups_description": "Manage which user groups have access to this board"
+    },
+    "activity_block": {
+      "no_activities": "No activities found",
+      "no_courses": "No courses found",
+      "select_course": "Select a course",
+      "unsupported_type": "Unsupported activity type"
+    },
+    "back_to_boards": "Back to boards",
+    "board_created": "Board created",
+    "board_created_error": "Failed to create board",
+    "board_deleted_error": "Failed to delete board",
+    "board_deleted_success": "Board deleted",
+    "board_duplicated_error": "Failed to duplicate board",
+    "board_duplicated_success": "Board duplicated",
+    "boards": "Bảng",
+    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
+    "boards_deleted_success": "{{count}} board(s) deleted",
+    "chat": {
+      "placeholder": "Say something..."
+    },
+    "clear_selection": "Xóa",
+    "create_board": "Create Board",
+    "create_new_board": "Create New Board",
+    "create_new_board_description": "Set up a new collaborative board",
+    "delete_board": "Delete Board",
+    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
+    "delete_board_title": "Delete \"{{name}}\"",
+    "delete_boards_title": "Delete Boards",
+    "delete_selected": "Delete Selected",
+    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
+    "deleting_board": "Deleting board...",
+    "deleting_boards": "Deleting {{count}} board(s)...",
+    "description": "Mô tả",
+    "description_placeholder": "Brief description...",
+    "duplicate_board": "Duplicate Board",
+    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
+    "duplicate_board_title": "Duplicate \"{{name}}\"",
+    "duplicating_board": "Duplicating board...",
+    "effects": {
+      "aurora": "Aurora",
+      "black_hole": "Black Hole",
+      "blizzard": "Blizzard",
+      "earthquake": "Earthquake",
+      "fireworks": "Fireworks",
+      "glitch": "Glitch",
+      "inferno": "Inferno",
+      "lightning": "Lightning",
+      "matrix": "Matrix",
+      "nuke": "Nuke",
+      "title": "Effects"
+    },
+    "embed_block": {
+      "add_embed": "Add {{name}} embed",
+      "apply": "Áp dụng",
+      "code": "Mã",
+      "code_help": "Paste iframe or embed code",
+      "edit_embed": "Edit embed",
+      "edit_embed_code": "Edit embed code",
+      "edit_embed_url": "Edit embed URL",
+      "embed": "Nhúng",
+      "paste_code": "Paste embed code",
+      "paste_url": "Paste embed URL",
+      "remove_embed": "Remove embed",
+      "url": "URL",
+      "url_help": "Paste a URL from YouTube, Figma, CodePen, Spotify, and more"
+    },
+    "general": {
+      "board_updated": "Board updated",
+      "board_updated_error": "Failed to update board",
+      "description": "Basic board information",
+      "save_changes": "Save Changes",
+      "saving": "Saving...",
+      "title": "Chung"
+    },
+    "member_count": "{{count}} member",
+    "member_count_plural": "{{count}} members",
+    "members": {
+      "actions": "Hành động",
+      "add_member": "Add Member",
+      "add_member_description": "Search for an organization member to add to this board",
+      "adding": "Adding...",
+      "description": "Manage who can collaborate on this board",
+      "editor": "Editor",
+      "member_added": "Member added",
+      "member_added_error": "Failed to add member (may already be a member)",
+      "member_limit_reached": "Member limit reached (10 max)",
+      "member_removed": "Member removed",
+      "member_removed_error": "Failed to remove member",
+      "no_members": "No members yet",
+      "no_users_found": "No users found",
+      "remove": "Xóa",
+      "remove_confirm": "Remove {{name}} from the board?",
+      "remove_member": "Remove Member",
+      "role": "Vai trò",
+      "role_label": "Role:",
+      "search_placeholder": "Search by name or email...",
+      "title": "Thành viên",
+      "user": "Người dùng",
+      "viewer": "Viewer"
+    },
+    "name": "Tên",
+    "name_placeholder": "e.g., Project Planning",
+    "new_board": "New Board",
+    "no_boards_description": "Create your first collaborative board to get started.",
+    "no_boards_found": "No boards found",
+    "no_boards_yet": "No boards yet",
+    "node_actions": {
+      "delete": "Xóa",
+      "delete_multiple": "Delete {{count}} items",
+      "move_back": "Move back",
+      "move_forward": "Move forward"
+    },
+    "open_board": "Open Board",
+    "pagination": {
+      "next": "Tiếp theo",
+      "page_of": "Page {{current}} of {{total}}",
+      "previous": "Trước",
+      "results": "{{count}} result for \"{{query}}\"",
+      "results_plural": "{{count}} results for \"{{query}}\""
+    },
+    "playground_block": {
+      "ai_content": "AI generated content",
+      "calculator": "Calculator",
+      "chart": "Chart",
+      "chat_header": "AI Playground",
+      "check_preview": "Check the preview on the left",
+      "creating": "Creating...",
+      "description": "Generate interactive elements powered by AI",
+      "drawing": "Drawing",
+      "edit": "Chỉnh sửa",
+      "empty_state": "Describe what you want to create and watch it come to life",
+      "flashcards": "Flashcards",
+      "generate": "Tạo",
+      "generating": "Generating interactive content...",
+      "input_placeholder": "Describe what you want to create...",
+      "input_placeholder_refine": "Describe changes or refinements...",
+      "max_iterations": "Maximum iterations reached. Save your work!",
+      "prompt_text": "Describe an interactive element to generate",
+      "quiz": "Quiz",
+      "save_close": "Save & Close",
+      "streaming": "Generating...",
+      "timeline": "Timeline",
+      "title": "AI Playground"
+    },
+    "private": "Riêng tư",
+    "public": "Công khai",
+    "search_placeholder": "Search boards...",
+    "select_all": "Select All",
+    "selected_count": "{{count}} selected",
+    "settings": "Cài đặt",
+    "share": {
+      "share_board": "Share board",
+      "share_this_board": "Share this board"
+    },
+    "thumbnail": {
+      "alt": "Board thumbnail",
+      "description": "Board cover image shown on cards",
+      "gallery": "Thư viện",
+      "supported_formats": "Supported formats: JPG, JPEG, PNG. Max 8MB.",
+      "thumbnail_updated": "Thumbnail updated",
+      "thumbnail_updated_error": "Failed to upload thumbnail",
+      "title": "Thumbnail",
+      "upload_image": "Upload Image",
+      "uploading": "Uploading..."
+    },
+    "timer": {
+      "close": "Đóng",
+      "pause": "Tạm dừng",
+      "restart": "Khởi động lại",
+      "resume": "Tiếp tục",
+      "set_timer": "Set timer",
+      "set_timer_title": "Set Timer",
+      "times_up": "Time's up!"
+    },
+    "toolbar": {
+      "activity": "Activity",
+      "add_card": "Add Card",
+      "ai_playground": "AI Playground",
+      "draw": "Draw",
+      "embed": "Nhúng",
+      "frame": "Frame",
+      "medium": "Medium",
+      "note": "Ghi chú",
+      "pan": "Pan",
+      "podcast": "Podcast",
+      "redo": "Redo",
+      "select": "Chọn",
+      "sticker": "Sticker",
+      "sticky_note": "Sticky Note",
+      "thick": "Thick",
+      "thin": "Thin",
+      "todo": "To-do",
+      "undo": "Undo",
+      "webpage": "Webpage",
+      "youtube": "YouTube"
+    },
+    "try_different_search": "Try a different search term",
+    "webpage_block": {
+      "add": "Thêm",
+      "blocking_notice": "Some sites may block embedding",
+      "embed_webpage": "Embed a webpage",
+      "open_in_new_tab": "Open in new tab",
+      "reload": "Tải lại",
+      "url_placeholder": "https://example.com"
+    },
+    "youtube_block": {
+      "add": "Thêm",
+      "paste_url": "Paste a YouTube URL",
+      "url_placeholder": "https://youtube.com/watch?v=..."
+    },
+    "zoom": {
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out"
+    }
+  },
+  "embed": {
+    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
+    "not_supported_title": "This activity is not supported",
+    "powered_by": "Powered by LearnHouse",
+    "visit_activity": "Visit Activity Page"
+  },
+  "migration": {
+    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Add Activity",
+    "add_chapter": "Add Chapter",
+    "ai_failed": "AI suggestion failed, falling back to manual organization",
+    "all_files_assigned": "All files assigned",
+    "click_to_add_more": "Click to add more files",
+    "course_created": "Course created successfully!",
+    "course_name": "Course Name",
+    "course_name_placeholder": "e.g. Python Basics for Beginners",
+    "course_structure": "Course Structure",
+    "create_course": "Create Course",
+    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
+    "creating_course": "Creating your course...",
+    "creating_description": "Uploading files and setting up chapters and activities",
+    "creation_error_generic": "Something went wrong. Please try again.",
+    "creation_failed": "Course creation failed",
+    "description": "One-liner Description",
+    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
+    "drop_file_here": "Drop a file here",
+    "drop_files": "Drop your files here or click to browse",
+    "go_to_course": "Go to Course",
+    "new_activity": "New Activity",
+    "new_chapter": "New Chapter",
+    "organize_manually": "Organize Manually",
+    "organize_with_ai": "Organize with AI",
+    "step_complete": "Complete",
+    "step_organize": "Organize",
+    "step_upload": "Tải lên",
+    "subtitle": "Upload your files and organize them into a course",
+    "title": "Migrate Content",
+    "try_again": "Try Again",
+    "unassigned_files": "Unassigned Files",
+    "upload_failed": "File upload failed",
+    "uploading_files": "Uploading files"
+  },
+  "upgrade_modal": {
+    "title": "Khai phá toàn bộ tiềm năng của bạn",
+    "subtitle": "Chọn gói phù hợp với mục tiêu giảng dạy của bạn.",
+    "choose_plan": "Chọn {{plan}}",
+    "current_free_limits": "Gói miễn phí: 1 khóa học · 10 thành viên · Không có AI",
+    "plans": {
+      "standard": {
+        "goal": "Bắt đầu kiếm tiền từ khóa học và xây dựng cộng đồng học tập.",
+        "highlights": {
+          "courses": "Khóa học không giới hạn",
+          "courses_desc": "Tạo bao nhiêu khóa học tùy thích — không giới hạn chương trình giảng dạy.",
+          "members": "Lên đến 500 thành viên",
+          "members_desc": "Phát triển đội ngũ người học và quản lý tại một nơi.",
+          "payments": "Chấp nhận thanh toán",
+          "payments_desc": "Bán khóa học và cung cấp đăng ký để tạo doanh thu.",
+          "communities": "Thảo luận cộng đồng",
+          "communities_desc": "Cho phép người học kết nối, đặt câu hỏi và chia sẻ ý tưởng.",
+          "podcasts": "Tạo podcast",
+          "podcasts_desc": "Cung cấp nội dung âm thanh và tiếp cận người học mọi nơi.",
+          "ai": "1.000 tín dụng AI",
+          "ai_desc": "Tăng tốc tạo nội dung với công cụ viết hỗ trợ AI.",
+          "analytics": "Phân tích người học",
+          "analytics_desc": "Theo dõi tiến độ và mức độ tương tác để cải thiện khóa học."
+        }
+      },
+      "pro": {
+        "goal": "Mở rộng học viện với công cụ nâng cao và kiểm soát toàn diện.",
+        "includes_standard": "Tất cả trong Standard, cùng với:",
+        "highlights": {
+          "members": "Lên đến 1.000 thành viên",
+          "members_desc": "Hỗ trợ nhóm lớn hơn với tối đa 10 ghế quản trị.",
+          "ai": "3.000 tín dụng AI",
+          "ai_desc": "Nhiều tín dụng hơn cho việc tạo nội dung quy mô lớn.",
+          "certifications": "Cấp chứng chỉ",
+          "certifications_desc": "Trao thưởng cho người học bằng chứng chỉ khi hoàn thành khóa học.",
+          "custom_domain": "Tên miền tùy chỉnh",
+          "custom_domain_desc": "Sử dụng tên miền riêng cho học viện mang thương hiệu của bạn.",
+          "roles": "Vai trò và quyền tùy chỉnh",
+          "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn.",
+          "playgrounds": "Playground tương tác",
+          "playgrounds_desc": "Cho người học thử nghiệm và thực hành với các bài tập tương tác thực tế.",
+          "api": "Truy cập API và webhooks",
+          "api_desc": "Tích hợp với các công cụ hiện có và tự động hóa quy trình làm việc."
+        }
+      }
     }
   }
 }

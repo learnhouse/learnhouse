@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
     "join_organization": "Dieser Organisation beitreten",
-    "to_access_features": "um alle Funktionen zu nutzen."
+    "to_access_features": "um alle Funktionen zu nutzen.",
+    "free_plan_upgrade": "Sie nutzen den kostenlosen Plan. Upgraden Sie für das vollständige Erlebnis.",
+    "free_plan_upgrade_button": "Upgraden"
   },
   "auth": {
     "login": "Anmelden",
@@ -4298,5 +4300,52 @@
     "unassigned_files": "Nicht zugewiesene Dateien",
     "upload_failed": "Datei-Upload fehlgeschlagen",
     "uploading_files": "Dateien werden hochgeladen"
+  },
+  "upgrade_modal": {
+    "title": "Entfalten Sie Ihr volles Potenzial",
+    "subtitle": "Wählen Sie den Plan, der zu Ihren Lehrzielen passt.",
+    "choose_plan": "{{plan}} wählen",
+    "current_free_limits": "Kostenloser Plan: 1 Kurs · 10 Mitglieder · Kein AI",
+    "plans": {
+      "standard": {
+        "goal": "Monetarisieren Sie Ihre Kurse und bauen Sie eine Lerngemeinschaft auf.",
+        "highlights": {
+          "courses": "Unbegrenzte Kurse",
+          "courses_desc": "Erstellen Sie so viele Kurse wie nötig — keine Limits.",
+          "members": "Bis zu 500 Mitglieder",
+          "members_desc": "Vergrößern Sie Ihre Lernbasis und verwalten Sie alles an einem Ort.",
+          "payments": "Zahlungen akzeptieren",
+          "payments_desc": "Verkaufen Sie Kurse und bieten Sie Abos an.",
+          "communities": "Community-Diskussionen",
+          "communities_desc": "Lassen Sie Lernende sich vernetzen und Ideen austauschen.",
+          "podcasts": "Podcasts erstellen",
+          "podcasts_desc": "Liefern Sie Audioinhalte und erreichen Sie Lernende unterwegs.",
+          "ai": "1.000 AI-Credits",
+          "ai_desc": "Beschleunigen Sie die Inhaltserstellung mit KI-Schreibtools.",
+          "analytics": "Lernenden-Analysen",
+          "analytics_desc": "Verfolgen Sie Fortschritte und Engagement, um Kurse zu verbessern."
+        }
+      },
+      "pro": {
+        "goal": "Skalieren Sie Ihre Akademie mit erweiterten Tools und voller Kontrolle.",
+        "includes_standard": "Alles aus Standard, plus:",
+        "highlights": {
+          "members": "Bis zu 1.000 Mitglieder",
+          "members_desc": "Unterstützen Sie größere Kohorten mit bis zu 10 Admin-Plätzen.",
+          "ai": "3.000 AI-Credits",
+          "ai_desc": "Mehr Credits für umfangreiche Inhaltserstellung.",
+          "certifications": "Zertifikate ausstellen",
+          "certifications_desc": "Belohnen Sie Lernende mit Zertifikaten bei Kursabschluss.",
+          "custom_domain": "Eigene Domain",
+          "custom_domain_desc": "Nutzen Sie Ihre eigene Domain für eine gebrandete Akademie.",
+          "roles": "Rollen & Berechtigungen",
+          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann.",
+          "playgrounds": "Interaktive Playgrounds",
+          "playgrounds_desc": "Lassen Sie Lernende mit praktischen interaktiven Übungen experimentieren und üben.",
+          "api": "API-Zugang & Webhooks",
+          "api_desc": "Integrieren Sie mit bestehenden Tools und automatisieren Sie Workflows."
+        }
+      }
+    }
   }
 }

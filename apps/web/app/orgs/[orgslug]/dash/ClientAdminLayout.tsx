@@ -3,6 +3,7 @@ import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import OnboardingBar from '@components/Dashboard/Onboarding/OnboardingBar';
 import WelcomeModal from '@components/Dashboard/Onboarding/WelcomeModal';
+import FreePlanUpgradeBanner from '@components/Dashboard/Shared/PlanRestricted/FreePlanUpgradeBanner';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
 import React from 'react'
@@ -26,7 +27,8 @@ function ClientAdminLayout({
                     ) : (
                         <DashLeftMenu />
                     )}
-                    <div className="flex w-full relative isolate">
+                    <div className="flex flex-col w-full relative isolate">
+                        <FreePlanUpgradeBanner />
                         {children}
                         <OnboardingBar />
                     </div>

@@ -185,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "Vous consultez {{name}} en tant qu'invité.",
     "join_organization": "Rejoindre cette organisation",
-    "to_access_features": "pour accéder à toutes les fonctionnalités."
+    "to_access_features": "pour accéder à toutes les fonctionnalités.",
+    "free_plan_upgrade": "Vous utilisez le plan gratuit. Passez à un plan supérieur pour débloquer l'expérience complète.",
+    "free_plan_upgrade_button": "Mettre à niveau"
   },
   "auth": {
     "login": "Connexion",
@@ -4298,5 +4300,52 @@
     "not_supported_title": "Cette activité n'est pas prise en charge",
     "powered_by": "Propulsé par LearnHouse",
     "visit_activity": "Visiter la page de l'activité"
+  },
+  "upgrade_modal": {
+    "title": "Libérez tout votre potentiel",
+    "subtitle": "Choisissez le plan adapté à vos ambitions pédagogiques.",
+    "choose_plan": "Choisir {{plan}}",
+    "current_free_limits": "Plan gratuit : 1 cours · 10 membres · Pas d'IA",
+    "plans": {
+      "standard": {
+        "goal": "Monétisez vos cours et construisez une communauté d'apprentissage.",
+        "highlights": {
+          "courses": "Cours illimités",
+          "courses_desc": "Créez autant de cours que nécessaire — aucune limite.",
+          "members": "Jusqu'à 500 membres",
+          "members_desc": "Développez votre base d'apprenants et gérez-la en un seul endroit.",
+          "payments": "Accepter les paiements",
+          "payments_desc": "Vendez des cours et proposez des abonnements.",
+          "communities": "Discussions communautaires",
+          "communities_desc": "Laissez les apprenants échanger, poser des questions et partager des idées.",
+          "podcasts": "Créer des podcasts",
+          "podcasts_desc": "Diffusez du contenu audio et touchez les apprenants en déplacement.",
+          "ai": "1 000 crédits IA",
+          "ai_desc": "Accélérez la création de contenu avec des outils d'écriture IA.",
+          "analytics": "Analyses des apprenants",
+          "analytics_desc": "Suivez la progression et l'engagement pour améliorer vos cours."
+        }
+      },
+      "pro": {
+        "goal": "Faites évoluer votre académie avec des outils avancés et un contrôle total.",
+        "includes_standard": "Tout dans Standard, plus :",
+        "highlights": {
+          "members": "Jusqu'à 1 000 membres",
+          "members_desc": "Accueillez de plus grandes cohortes avec jusqu'à 10 admins.",
+          "ai": "3 000 crédits IA",
+          "ai_desc": "Plus de crédits pour la création de contenu à grande échelle.",
+          "certifications": "Délivrer des certificats",
+          "certifications_desc": "Récompensez les apprenants avec des certificats.",
+          "custom_domain": "Domaine personnalisé",
+          "custom_domain_desc": "Utilisez votre propre domaine pour une académie à votre image.",
+          "roles": "Rôles et permissions personnalisés",
+          "roles_desc": "Contrôlez précisément qui peut faire quoi.",
+          "playgrounds": "Playgrounds interactifs",
+          "playgrounds_desc": "Laissez les apprenants expérimenter et pratiquer avec des exercices interactifs.",
+          "api": "Accès API et webhooks",
+          "api_desc": "Intégrez vos outils existants et automatisez vos workflows."
+        }
+      }
+    }
   }
 }
