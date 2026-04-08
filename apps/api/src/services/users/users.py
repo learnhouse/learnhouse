@@ -1,8 +1,12 @@
+import json
+import logging
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
+import redis
 from sqlmodel import Session, select
+from config.config import get_learnhouse_config
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     increase_feature_usage,
@@ -229,6 +233,32 @@ async def create_user_with_invite(
         )
 
     increase_feature_usage("members", org_id, db_session)
+
+    # Mark the invitation as no longer pending in Redis
+    try:
+        LH_CONFIG = get_learnhouse_config()
+        redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+        if redis_conn_string:
+            r = redis.Redis.from_url(redis_conn_string)
+            statement = select(Organization).where(Organization.id == org_id)
+            org = db_session.exec(statement).first()
+            if org:
+                redis_key = f"invited_user:{user_object.email}:org:{org.org_uuid}"
+                invited_data = r.get(redis_key)
+                if invited_data:
+                    invited_record = json.loads(invited_data)
+                    invited_record["pending"] = False
+                    remaining_ttl = r.ttl(redis_key)
+                    r.set(
+                        redis_key,
+                        json.dumps(invited_record),
+                        ex=remaining_ttl if remaining_ttl > 0 else None,
+                    )
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "Failed to update invitation pending status for %s",
+            user_object.email,
+        )
 
     return user
 

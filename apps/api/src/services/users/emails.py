@@ -1,10 +1,14 @@
 import html
+import logging
+from typing import Optional
 from urllib.parse import quote
 
 from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
 from src.services.email.utils import send_email
+
+logger = logging.getLogger(__name__)
 
 
 # Inline SVG logo (LearnHouse icon mark + wordmark, scaled down)
@@ -157,6 +161,54 @@ def send_password_reset_email_platform(
             title="Reset Password",
             body_content=body_content,
             footer_note="If you didn't request a password reset, you can safely ignore this email. This link will expire in 1 hour.",
+        ),
+    )
+
+
+def send_invitation_email(
+    email: EmailStr,
+    org_name: str,
+    inviter_username: str,
+    signup_url: str,
+    invite_code: Optional[str] = None,
+):
+    safe_org_name = html.escape(org_name)
+    safe_inviter = html.escape(inviter_username)
+
+    code_section = ""
+    if invite_code:
+        safe_code = html.escape(invite_code)
+        code_section = f"""
+        <div style="margin: 28px 0;">
+            <span style="{STYLES['code']}">{safe_code}</span>
+        </div>
+        <p style="{STYLES['p']}">
+            Use the invite code above, or click the button below to sign up.
+        </p>"""
+    else:
+        code_section = f"""
+        <p style="{STYLES['p']}">
+            Click the button below to get started.
+        </p>"""
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">You've been invited!</h1>
+        <p style="{STYLES['p']}">
+            <strong>@{safe_inviter}</strong> has invited you to join <strong>{safe_org_name}</strong> on LearnHouse.
+        </p>
+        {code_section}
+        <a href="{signup_url}" style="{STYLES['button']}">
+            Join {safe_org_name}
+        </a>
+    """
+
+    return send_email(
+        to=email,
+        subject=f"You've been invited to join {safe_org_name}",
+        body=_email_layout(
+            title="Invitation",
+            body_content=body_content,
+            footer_note=f"This invitation was sent by @{safe_inviter}. If you weren't expecting this, you can safely ignore it.",
         ),
     )
 

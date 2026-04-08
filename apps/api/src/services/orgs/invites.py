@@ -1,4 +1,5 @@
 import json
+import logging
 import secrets
 import string
 import uuid
@@ -7,8 +8,10 @@ from pydantic import EmailStr
 import redis
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
-from src.services.email.utils import send_email
+from src.services.users.emails import send_invitation_email
 from config.config import get_learnhouse_config
+
+logger = logging.getLogger(__name__)
 from src.services.orgs.orgs import rbac_check
 from src.db.users import AnonymousUser, PublicUser, UserRead
 from src.db.organizations import (
@@ -295,54 +298,41 @@ async def delete_invite_code(
 
 def send_invite_email(
     org: OrganizationRead,
-    invite_code_uuid: str,
+    invite_code_uuid: str | None,
     user: UserRead,
     email: EmailStr,
     base_url: str,
 ):
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+    invite_code = None
 
-    if not redis_conn_string:
-        raise HTTPException(
-            status_code=500,
-            detail="Redis connection string not found",
-        )
+    # Look up the invite code from Redis if a UUID was provided
+    if invite_code_uuid:
+        LH_CONFIG = get_learnhouse_config()
+        redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
 
-    # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+        if redis_conn_string:
+            r = redis.Redis.from_url(redis_conn_string)
+            matched = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))  # type: ignore
+            if matched:
+                data = r.get(matched[0])
+                if data:
+                    invite_code = json.loads(data).get("invite_code")
 
-    if not r:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not connect to Redis",
-        )
-
-    # Get invite code (use scan_iter to avoid blocking Redis)
-    invite = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))  # type: ignore
-
-    # Send email
-    if invite:
-        invite = r.get(invite[0])
-        invite = json.loads(invite)  # type: ignore
-
-        # send email
-        send_email(
-            to=email,
-            subject=f"You have been invited to {org.name}",
-            body=f"""
-<html>
-    <body>
-        <p>Hello {email}</p>
-        <p>You have been invited to {org.name} by @{user.username}. Your invite code is {invite['invite_code']}.</p>
-        <p>Click <a href="{base_url}/signup?inviteCode={invite['invite_code']}">here</a> to sign up.</p>
-        <p>Thank you</p>
-    </body>
-</html>
-""",
-        )
-
-        return True
-
+    # Build signup URL — include invite code if available
+    if invite_code:
+        signup_url = f"{base_url}/signup?inviteCode={invite_code}"
     else:
+        signup_url = f"{base_url}/signup"
+
+    try:
+        result = send_invitation_email(
+            email=email,
+            org_name=org.name,
+            inviter_username=user.username,
+            invite_code=invite_code,
+            signup_url=signup_url,
+        )
+        return result is not None
+    except Exception:
+        logger.exception("Failed to send invite email to %s", email)
         return False

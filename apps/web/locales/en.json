@@ -2946,29 +2946,52 @@
         "subtitle": "Send invite via email, separated by comma",
         "email_placeholder": "Example : spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
         "invite_code_label": "Invite Code",
-        "invite_code_tooltip": "Use one of the invite codes that you generated from the signup access page",
+        "invite_code_tooltip": "Optionally attach an invite code that you generated from the signup access page",
+        "no_invite_code": "None",
         "send_button": "Send invites via email",
+        "results": {
+          "summary_title": "Results",
+          "sent_count": "{{count}} sent",
+          "failed_count": "{{count}} failed",
+          "skipped_count": "{{count}} already invited",
+          "status": {
+            "sent": "Sent",
+            "email_failed": "Failed",
+            "already_invited": "Already invited"
+          }
+        },
         "invited_users": {
           "title": "Invited Users",
           "subtitle": "Users who have been invited to join your organization",
+          "search_placeholder": "Search by email...",
+          "no_results": "No invitations found matching your search",
+          "no_invites": "No pending invitations",
           "table": {
             "email": "Email",
             "signup_status": "Signup Status",
-            "email_sent": "Email sent"
+            "email_sent": "Email sent",
+            "actions": "Actions"
           },
           "status": {
             "pending": "Pending",
-            "signed": "Signed"
+            "signed": "Signed up"
           },
           "email_status": {
             "sent": "Sent",
-            "no": "No"
-          }
+            "no": "Not sent"
+          },
+          "removing": "Removing invitation...",
+          "remove_success": "Invitation removed",
+          "remove_error": "Error removing invitation",
+          "remove_button": "Remove",
+          "remove_title": "Remove invitation",
+          "remove_message": "Are you sure you want to remove the invitation for {{email}}?"
         },
         "toasts": {
-          "sending": "Sending invite...",
-          "success": "Invite sent",
-          "error": "Error sending invite"
+          "sending": "Sending invites...",
+          "success": "Invites sent successfully",
+          "partial": "{{sent}} sent, {{failed}} failed",
+          "error": "Error sending invites"
         }
       },
       "usergroups": {

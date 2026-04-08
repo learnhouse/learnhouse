@@ -58,12 +58,29 @@ export async function validateInviteCode(
 export async function inviteBatchUsers(
   org_id: any,
   emails: string,
-  invite_code_uuid: string,
+  invite_code_uuid: string | undefined,
+  access_token: any
+) {
+  const params = new URLSearchParams({ emails })
+  if (invite_code_uuid) {
+    params.append('invite_code_uuid', invite_code_uuid)
+  }
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/invites/users/batch?${params.toString()}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function removeInvitedUser(
+  org_id: any,
+  email: string,
   access_token: any
 ) {
   const result = await fetch(
-    `${getAPIUrl()}orgs/${org_id}/invites/users/batch?emails=${emails}&invite_code_uuid=${invite_code_uuid}`,
-    RequestBodyWithAuthHeader('POST', null, null, access_token)
+    `${getAPIUrl()}orgs/${org_id}/invites/users/${encodeURIComponent(email)}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
