@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
@@ -9,6 +10,7 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import { Users, ShieldCheck, Clock, EnvelopeSimple } from '@phosphor-icons/react'
 
 export default function RecentMembers() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -30,11 +32,11 @@ export default function RecentMembers() {
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-gray-700">
-            Recent Members
+            {t('dashboard.home.recent_members')}
           </h3>
           {totalMembers > 0 && (
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
-              {totalMembers} total
+              {totalMembers} {t('dashboard.home.total')}
             </span>
           )}
         </div>
@@ -42,7 +44,7 @@ export default function RecentMembers() {
           href="/dash/users/settings/users"
           className="text-[11px] font-medium text-gray-400 hover:text-gray-600 transition-colors"
         >
-          View All &rarr;
+          {t('dashboard.home.view_all')} &rarr;
         </Link>
       </div>
 
@@ -64,7 +66,7 @@ export default function RecentMembers() {
             <div className="p-3 rounded-full bg-gray-100 mb-3">
               <Users size={20} weight="duotone" className="text-gray-400" />
             </div>
-            <p className="text-xs text-gray-400">No members yet</p>
+            <p className="text-xs text-gray-400">{t('dashboard.home.no_members_yet')}</p>
           </div>
         </div>
       ) : (
@@ -105,7 +107,7 @@ export default function RecentMembers() {
                     </p>
                     {!user.email_verified && (
                       <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-600">
-                        Unverified
+                        {t('dashboard.home.unverified')}
                       </span>
                     )}
                   </div>

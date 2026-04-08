@@ -1551,7 +1551,54 @@
           "description": "Configure your personal settings, passwords, email"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "LearnHouse University",
+      "welcome_back": "Welcome back",
+      "plan": "plan",
+      "create_course": "Create Course",
+      "analytics": "Analytics",
+      "members": "Members",
+      "settings": "Settings",
+      "courses": "Courses",
+      "communities": "Communities",
+      "podcasts": "Podcasts",
+      "boards": "Boards",
+      "published": "published",
+      "draft": "draft",
+      "total_users": "Total users",
+      "public": "public",
+      "episodes": "episodes",
+      "participants": "participants",
+      "loading": "Loading...",
+      "enable_analytics_description": "Enable analytics to see live users, signups, and more.",
+      "enable": "Enable",
+      "quick_stats": "Quick Stats",
+      "full_analytics": "Full Analytics",
+      "live_now": "Live Now",
+      "signups_30d": "Signups (30d)",
+      "enrollments_30d": "Enrollments (30d)",
+      "completions_30d": "Completions (30d)",
+      "recent_courses": "Recent Courses",
+      "view_all": "View All",
+      "no_courses_yet": "No courses yet",
+      "create_your_first_course": "Create your first course",
+      "chapter": "chapter",
+      "chapters": "chapters",
+      "recent_members": "Recent Members",
+      "total": "total",
+      "no_members_yet": "No members yet",
+      "unverified": "Unverified",
+      "plan_and_usage": "Plan & Usage",
+      "unlimited": "Unlimited",
+      "admin_seats": "Admin Seats",
+      "limit_reached": "Limit reached",
+      "remaining": "remaining",
+      "usage_data_unavailable": "Usage data unavailable",
+      "features": "Features",
+      "off": "Off",
+      "ai_credits": "AI Credits",
+      "used": "used",
+      "no_credits_remaining": "No credits remaining",
+      "includes_purchased": "Includes {{count}} purchased"
     },
     "courses": {
       "title": "Courses",
@@ -4153,5 +4200,99 @@
     "step_upload": "Upload",
     "step_organize": "Organize",
     "step_complete": "Complete"
+  },
+  "onboarding": {
+    "getting_started": "Getting Started",
+    "all_done": "All done!",
+    "all_set": "You're all set!",
+    "all_set_desc": "You've completed the getting started guide.",
+    "more_steps": "{{count}} more step",
+    "more_steps_plural": "{{count}} more steps",
+    "show_less": "Show less",
+    "skip": "Skip",
+    "got_it": "Got it, I'm ready to build!",
+    "done": "Done, I'm all set!",
+    "steps": {
+      "create_course": {
+        "title": "Create your first course",
+        "description": "Start by creating a new course for your learners.",
+        "action": "Create a Course"
+      },
+      "add_activities": {
+        "title": "Add activities to your course",
+        "description": "Add content like pages, videos, documents and more.",
+        "action": "Go to Content"
+      },
+      "experience_editor": {
+        "title": "Experience the editor",
+        "description": "Open the editor and learn how to build your course content.",
+        "add_activity": "Add Activity",
+        "dynamic_page": "Dynamic Page",
+        "click_edit": "Click Edit",
+        "editor_features": "Things you can do in the editor:",
+        "slash_commands": "Type / for slash commands",
+        "headings_lists": "Headings, lists & text",
+        "images_media": "Images & media",
+        "video_embeds": "Video & embeds",
+        "tables_callouts": "Tables & callouts",
+        "interactive_blocks": "Interactive blocks"
+      },
+      "try_playgrounds": {
+        "title": "Interactive learning with Playgrounds",
+        "description": "Build interactive pages for self-paced learning.",
+        "action": "Try Playgrounds"
+      },
+      "invite_users": {
+        "title": "Invite your team & learners",
+        "description": "Add instructors or share a link for learners to join.",
+        "action": "Invite Users"
+      },
+      "customize_org": {
+        "title": "Customize your organization",
+        "description": "Add your logo, colors and make it yours.",
+        "action": "Customize"
+      },
+      "teach_the_world": {
+        "title": "Learn & grow",
+        "description": "Resources to help you get the most out of LearnHouse.",
+        "classroom": "The Classroom",
+        "classroom_desc": "Learn how to grow and manage your courses",
+        "university": "LearnHouse University",
+        "university_desc": "Guides, tips and best practices"
+      }
+    },
+    "welcome": {
+      "title": "Welcome to LearnHouse",
+      "subtitle": "Create courses, invite learners and share knowledge with the world.",
+      "get_started": "Get Started",
+      "features_title": "Everything you need",
+      "features_subtitle": "All the tools to build and grow your learning platform.",
+      "lets_go": "Let's go",
+      "features": {
+        "teach": "Teach anything",
+        "teach_desc": "Create structured courses with chapters and rich content",
+        "interactive": "Go interactive",
+        "interactive_desc": "Build playgrounds where learners explore at their own pace",
+        "community": "Build a community",
+        "community_desc": "Create discussion spaces where learners help each other",
+        "assess": "Assess knowledge",
+        "assess_desc": "Create assignments and track submissions from learners",
+        "collaborate": "Collaborate visually",
+        "collaborate_desc": "Give learners shared boards to brainstorm and work together",
+        "voice": "Share your voice",
+        "voice_desc": "Launch podcasts and distribute audio episodes to learners",
+        "certify": "Certify learners",
+        "certify_desc": "Issue certificates when learners complete your courses",
+        "impact": "Understand your impact",
+        "impact_desc": "Track engagement and see how learners progress over time",
+        "team": "Grow your team",
+        "team_desc": "Invite instructors, manage roles and organize learner groups"
+      }
+    },
+    "farewell": {
+      "title": "You're ready to teach the world",
+      "description": "Everything is set up. Your learners are waiting for something great.",
+      "button": "Start teaching"
+    }
   }
 }

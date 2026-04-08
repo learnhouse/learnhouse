@@ -1,6 +1,8 @@
 'use client';
 import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
+import OnboardingBar from '@components/Dashboard/Onboarding/OnboardingBar';
+import WelcomeModal from '@components/Dashboard/Onboarding/WelcomeModal';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionGate } from '@components/Contexts/LHSessionContext'
 import React from 'react'
@@ -24,7 +26,11 @@ function ClientAdminLayout({
                     ) : (
                         <DashLeftMenu />
                     )}
-                    <div className="flex w-full relative isolate">{children}</div>
+                    <div className="flex w-full relative isolate">
+                        {children}
+                        <OnboardingBar />
+                    </div>
+                    <WelcomeModal />
                 </div>
             </AdminAuthorization>
         </SessionGate>

@@ -1,33 +1,32 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import i18n from '../../lib/i18n'
+import i18n, { initialLocaleReady } from '../../lib/i18n'
 import { useTranslation } from 'react-i18next'
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
   const { i18n: i18nInstance } = useTranslation()
-  const [isReady, setIsReady] = useState(i18n.isInitialized)
+  const [isReady, setIsReady] = useState(false)
+  const [, setLang] = useState(i18n.language)
 
   useEffect(() => {
-    // Wait for i18n to be fully initialized
-    if (i18n.isInitialized) {
+    // Wait for both i18n initialization AND the detected locale bundle to load
+    const waitForReady = async () => {
+      if (!i18n.isInitialized) {
+        await new Promise<void>((resolve) => {
+          i18n.on('initialized', () => resolve())
+        })
+      }
+      await initialLocaleReady
       setIsReady(true)
-    } else {
-      const handleInitialized = () => {
-        setIsReady(true)
-      }
-      i18n.on('initialized', handleInitialized)
-      return () => {
-        i18n.off('initialized', handleInitialized)
-      }
     }
+    waitForReady()
   }, [])
 
-  // Also listen for language changes to trigger re-renders
+  // Listen for language changes to force re-render of the entire tree
   useEffect(() => {
-    const handleLanguageChanged = () => {
-      // Force a re-render when language changes
-      setIsReady(true)
+    const handleLanguageChanged = (lng: string) => {
+      setLang(lng)
     }
     i18n.on('languageChanged', handleLanguageChanged)
     return () => {
@@ -35,11 +34,10 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  // Show nothing while i18n is initializing to prevent flash of wrong language
+  // Show nothing while i18n + locale resources are loading
   if (!isReady) {
     return null
   }
 
   return <>{children}</>
 }
-

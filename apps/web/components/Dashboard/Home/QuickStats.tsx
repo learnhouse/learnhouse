@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ChartBar,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import {
   useAnalyticsPipe,
   useAnalyticsStatus,
@@ -15,6 +16,7 @@ import {
 import { AnimatedNumber } from '@components/Dashboard/Analytics/Course/CourseWidgetCard'
 
 export default function QuickStats() {
+  const { t } = useTranslation()
   const { data: statusData, isLoading: statusLoading } = useAnalyticsStatus()
   const isConfigured = statusData?.configured === true
 
@@ -22,7 +24,7 @@ export default function QuickStats() {
     return (
       <div className="bg-white rounded-xl nice-shadow p-5">
         <div className="h-[120px] flex items-center justify-center text-gray-300 text-xs">
-          Loading...
+          {t('dashboard.home.loading')}
         </div>
       </div>
     )
@@ -36,16 +38,16 @@ export default function QuickStats() {
             <ChartBar size={18} weight="duotone" className="text-gray-400" />
           </div>
           <h3 className="text-xs font-semibold text-gray-600 mb-1">
-            Analytics
+            {t('dashboard.home.analytics')}
           </h3>
           <p className="text-[11px] text-gray-400 mb-3 max-w-[200px]">
-            Enable analytics to see live users, signups, and more.
+            {t('dashboard.home.enable_analytics_description')}
           </p>
           <Link
             href="/dash/analytics"
             className="text-[11px] font-medium text-blue-600 hover:text-blue-700"
           >
-            Enable &rarr;
+            {t('dashboard.home.enable')} &rarr;
           </Link>
         </div>
       </div>
@@ -56,6 +58,7 @@ export default function QuickStats() {
 }
 
 function QuickStatsContent() {
+  const { t } = useTranslation()
   const { data: eventData, isLoading: eventsLoading } = useAnalyticsPipe(
     'event_counts',
     { days: '30' }
@@ -78,7 +81,7 @@ function QuickStatsContent() {
 
   const stats = [
     {
-      label: 'Live Now',
+      label: t('dashboard.home.live_now'),
       value: liveCount,
       loading: liveLoading,
       icon: Broadcast,
@@ -86,7 +89,7 @@ function QuickStatsContent() {
       bg: 'bg-green-50',
     },
     {
-      label: 'Signups (30d)',
+      label: t('dashboard.home.signups_30d'),
       value: signups,
       loading: eventsLoading,
       icon: UserPlus,
@@ -94,7 +97,7 @@ function QuickStatsContent() {
       bg: 'bg-blue-50',
     },
     {
-      label: 'Enrollments (30d)',
+      label: t('dashboard.home.enrollments_30d'),
       value: enrollments,
       loading: eventsLoading,
       icon: GraduationCap,
@@ -102,7 +105,7 @@ function QuickStatsContent() {
       bg: 'bg-indigo-50',
     },
     {
-      label: 'Completions (30d)',
+      label: t('dashboard.home.completions_30d'),
       value: completions,
       loading: eventsLoading,
       icon: CheckCircle,
@@ -114,12 +117,12 @@ function QuickStatsContent() {
   return (
     <div className="bg-white rounded-xl nice-shadow p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-700">Quick Stats</h3>
+        <h3 className="text-sm font-semibold text-gray-700">{t('dashboard.home.quick_stats')}</h3>
         <Link
           href="/dash/analytics"
           className="text-[11px] font-medium text-gray-400 hover:text-gray-600 transition-colors"
         >
-          Full Analytics &rarr;
+          {t('dashboard.home.full_analytics')} &rarr;
         </Link>
       </div>
       <div className="space-y-3">

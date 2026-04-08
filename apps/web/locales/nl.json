@@ -1114,22 +1114,69 @@
       "cards": {
         "courses": {
           "title": "Cursussen",
-          "description": "Maak en beheer cursussen, hoofdstukken en activiteiten"
+          "description": "Cursussen, hoofdstukken en activiteiten aanmaken en beheren"
         },
         "organization": {
           "title": "Organisatie",
-          "description": "Configureer de algemene instellingen van je organisatie"
+          "description": "De algemene instellingen van uw organisatie configureren"
         },
         "users": {
           "title": "Gebruikers",
-          "description": "Beheer gebruikers en rollen binnen je organisatie"
+          "description": "De gebruikers en rollen van uw organisatie beheren"
         },
         "account_settings": {
           "title": "Accountinstellingen",
-          "description": "Configureer je persoonlijke instellingen, wachtwoord en e-mail"
+          "description": "Uw persoonlijke instellingen, wachtwoorden en e-mail configureren"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "LearnHouse Universiteit",
+      "welcome_back": "Welkom terug",
+      "plan": "abonnement",
+      "create_course": "Cursus aanmaken",
+      "analytics": "Analyses",
+      "members": "Leden",
+      "settings": "Instellingen",
+      "courses": "Cursussen",
+      "communities": "Communities",
+      "podcasts": "Podcasts",
+      "boards": "Borden",
+      "published": "gepubliceerd",
+      "draft": "concept",
+      "total_users": "Totaal gebruikers",
+      "public": "openbaar",
+      "episodes": "afleveringen",
+      "participants": "deelnemers",
+      "loading": "Laden...",
+      "enable_analytics_description": "Schakel analyses in om live gebruikers, aanmeldingen en meer te zien.",
+      "enable": "Inschakelen",
+      "quick_stats": "Snelle statistieken",
+      "full_analytics": "Volledige analyses",
+      "live_now": "Nu live",
+      "signups_30d": "Aanmeldingen (30 dagen)",
+      "enrollments_30d": "Inschrijvingen (30 dagen)",
+      "completions_30d": "Voltooiingen (30 dagen)",
+      "recent_courses": "Recente cursussen",
+      "view_all": "Alles bekijken",
+      "no_courses_yet": "Nog geen cursussen",
+      "create_your_first_course": "Maak uw eerste cursus",
+      "chapter": "hoofdstuk",
+      "chapters": "hoofdstukken",
+      "recent_members": "Recente leden",
+      "total": "totaal",
+      "no_members_yet": "Nog geen leden",
+      "unverified": "Niet geverifieerd",
+      "plan_and_usage": "Abonnement & gebruik",
+      "unlimited": "Onbeperkt",
+      "admin_seats": "Beheerderplaatsen",
+      "limit_reached": "Limiet bereikt",
+      "remaining": "resterend",
+      "usage_data_unavailable": "Gebruiksgegevens niet beschikbaar",
+      "features": "Functies",
+      "off": "Uit",
+      "ai_credits": "AI-tegoed",
+      "used": "gebruikt",
+      "no_credits_remaining": "Geen tegoed meer over",
+      "includes_purchased": "Inclusief {{count}} gekochte"
     },
     "courses": {
       "title": "Cursussen",
@@ -3342,6 +3389,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} van {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "Aan de slag",
+    "all_done": "Helemaal klaar!",
+    "all_set": "Je bent er klaar voor!",
+    "all_set_desc": "Je hebt de startgids voltooid.",
+    "more_steps": "Nog {{count}} stap",
+    "more_steps_plural": "Nog {{count}} stappen",
+    "show_less": "Minder tonen",
+    "skip": "Overslaan",
+    "got_it": "Begrepen, ik ben klaar om te bouwen!",
+    "done": "Klaar, ik ben er helemaal klaar voor!",
+    "steps": {
+      "create_course": {
+        "title": "Maak je eerste cursus",
+        "description": "Begin met het maken van een nieuwe cursus voor je leerlingen.",
+        "action": "Cursus aanmaken"
+      },
+      "add_activities": {
+        "title": "Voeg activiteiten toe aan je cursus",
+        "description": "Voeg inhoud toe zoals pagina's, video's, documenten en meer.",
+        "action": "Naar inhoud"
+      },
+      "experience_editor": {
+        "title": "Ervaar de editor",
+        "description": "Open de editor en leer hoe je cursusinhoud maakt.",
+        "add_activity": "Activiteit toevoegen",
+        "dynamic_page": "Dynamische pagina",
+        "click_edit": "Klik op Bewerken",
+        "editor_features": "Wat je kunt doen in de editor:",
+        "slash_commands": "Typ / voor slash-commando's",
+        "headings_lists": "Koppen, lijsten & tekst",
+        "images_media": "Afbeeldingen & media",
+        "video_embeds": "Video & embeds",
+        "tables_callouts": "Tabellen & callouts",
+        "interactive_blocks": "Interactieve blokken"
+      },
+      "try_playgrounds": {
+        "title": "Interactief leren met Playgrounds",
+        "description": "Maak interactieve pagina's voor zelfgestuurd leren.",
+        "action": "Playgrounds proberen"
+      },
+      "invite_users": {
+        "title": "Nodig je team & leerlingen uit",
+        "description": "Voeg docenten toe of deel een link zodat leerlingen kunnen deelnemen.",
+        "action": "Gebruikers uitnodigen"
+      },
+      "customize_org": {
+        "title": "Pas je organisatie aan",
+        "description": "Voeg je logo en kleuren toe en maak het helemaal van jou.",
+        "action": "Aanpassen"
+      },
+      "teach_the_world": {
+        "title": "Leer & groei",
+        "description": "Bronnen om je te helpen het meeste uit LearnHouse te halen.",
+        "classroom": "Het klaslokaal",
+        "classroom_desc": "Leer hoe je je cursussen kunt laten groeien en beheren",
+        "university": "LearnHouse Universiteit",
+        "university_desc": "Handleidingen, tips en best practices"
+      }
+    },
+    "welcome": {
+      "title": "Welkom bij LearnHouse",
+      "subtitle": "Maak cursussen, nodig leerlingen uit en deel kennis met de wereld.",
+      "get_started": "Aan de slag",
+      "features_title": "Alles wat je nodig hebt",
+      "features_subtitle": "Alle tools om je leerplatform op te bouwen en te laten groeien.",
+      "lets_go": "Laten we beginnen",
+      "features": {
+        "teach": "Geef les in alles",
+        "teach_desc": "Maak gestructureerde cursussen met hoofdstukken en rijke inhoud",
+        "interactive": "Maak het interactief",
+        "interactive_desc": "Bouw playgrounds waar leerlingen op hun eigen tempo verkennen",
+        "community": "Bouw een community",
+        "community_desc": "Maak discussieruimtes waar leerlingen elkaar helpen",
+        "assess": "Beoordeel kennis",
+        "assess_desc": "Maak opdrachten en volg inzendingen van leerlingen",
+        "collaborate": "Werk visueel samen",
+        "collaborate_desc": "Geef leerlingen gedeelde borden om te brainstormen en samen te werken",
+        "voice": "Deel je stem",
+        "voice_desc": "Start podcasts en verspreid audio-afleveringen aan leerlingen",
+        "certify": "Certificeer leerlingen",
+        "certify_desc": "Geef certificaten uit wanneer leerlingen je cursussen afronden",
+        "impact": "Begrijp je impact",
+        "impact_desc": "Volg betrokkenheid en zie hoe leerlingen in de loop der tijd vorderen",
+        "team": "Laat je team groeien",
+        "team_desc": "Nodig docenten uit, beheer rollen en organiseer leerlinggroepen"
+      }
+    },
+    "farewell": {
+      "title": "Je bent klaar om de wereld te onderwijzen",
+      "description": "Alles is ingesteld. Je leerlingen wachten op iets geweldigs.",
+      "button": "Begin met lesgeven"
     }
   }
 }

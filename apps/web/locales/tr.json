@@ -1108,22 +1108,69 @@
       "cards": {
         "courses": {
           "title": "Kurslar",
-          "description": "Kursları, bölümleri ve aktiviteleri oluşturun ve yönetin."
+          "description": "Kursları, bölümleri ve etkinlikleri oluşturun ve yönetin"
         },
         "organization": {
           "title": "Organizasyon",
-          "description": "Organizasyonunuzun genel bilgilerini yapılandırın."
+          "description": "Organizasyonunuzun genel ayarlarını yapılandırın"
         },
         "users": {
           "title": "Kullanıcılar",
-          "description": "Organizasyonunuzdaki kullanıcıları ve rolleri yönetin."
+          "description": "Organizasyonunuzun kullanıcılarını ve rollerini yönetin"
         },
         "account_settings": {
           "title": "Hesap Ayarları",
-          "description": "Kişisel bilgilerinizi, şifrenizi ve e-postanızı yapılandırın."
+          "description": "Kişisel ayarlarınızı, şifrelerinizi ve e-postanızı yapılandırın"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "LearnHouse Üniversitesi",
+      "welcome_back": "Tekrar hoş geldiniz",
+      "plan": "plan",
+      "create_course": "Kurs Oluştur",
+      "analytics": "Analitik",
+      "members": "Üyeler",
+      "settings": "Ayarlar",
+      "courses": "Kurslar",
+      "communities": "Topluluklar",
+      "podcasts": "Podcast'ler",
+      "boards": "Panolar",
+      "published": "yayınlandı",
+      "draft": "taslak",
+      "total_users": "Toplam kullanıcı",
+      "public": "herkese açık",
+      "episodes": "bölümler",
+      "participants": "katılımcılar",
+      "loading": "Yükleniyor...",
+      "enable_analytics_description": "Canlı kullanıcıları, kayıtları ve daha fazlasını görmek için analitiği etkinleştirin.",
+      "enable": "Etkinleştir",
+      "quick_stats": "Hızlı İstatistikler",
+      "full_analytics": "Tam Analitik",
+      "live_now": "Şu an canlı",
+      "signups_30d": "Kayıtlar (30 gün)",
+      "enrollments_30d": "Kaydolmalar (30 gün)",
+      "completions_30d": "Tamamlamalar (30 gün)",
+      "recent_courses": "Son Kurslar",
+      "view_all": "Tümünü Gör",
+      "no_courses_yet": "Henüz kurs yok",
+      "create_your_first_course": "İlk kursunuzu oluşturun",
+      "chapter": "bölüm",
+      "chapters": "bölümler",
+      "recent_members": "Son Üyeler",
+      "total": "toplam",
+      "no_members_yet": "Henüz üye yok",
+      "unverified": "Doğrulanmamış",
+      "plan_and_usage": "Plan ve Kullanım",
+      "unlimited": "Sınırsız",
+      "admin_seats": "Yönetici Koltukları",
+      "limit_reached": "Sınıra ulaşıldı",
+      "remaining": "kalan",
+      "usage_data_unavailable": "Kullanım verileri mevcut değil",
+      "features": "Özellikler",
+      "off": "Kapalı",
+      "ai_credits": "AI Kredileri",
+      "used": "kullanıldı",
+      "no_credits_remaining": "Kalan kredi yok",
+      "includes_purchased": "{{count}} satın alınan dahil"
     },
     "courses": {
       "title": "Kurslar",
@@ -3336,6 +3383,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "Başlangıç",
+    "all_done": "Hepsi tamam!",
+    "all_set": "Hazırsınız!",
+    "all_set_desc": "Başlangıç rehberini tamamladınız.",
+    "more_steps": "{{count}} adım daha",
+    "more_steps_plural": "{{count}} adım daha",
+    "show_less": "Daha az göster",
+    "skip": "Atla",
+    "got_it": "Anladım, oluşturmaya hazırım!",
+    "done": "Tamam, hazırım!",
+    "steps": {
+      "create_course": {
+        "title": "İlk kursunuzu oluşturun",
+        "description": "Öğrencileriniz için yeni bir kurs oluşturarak başlayın.",
+        "action": "Kurs Oluştur"
+      },
+      "add_activities": {
+        "title": "Kursunuza etkinlikler ekleyin",
+        "description": "Sayfalar, videolar, belgeler ve daha fazlası gibi içerik ekleyin.",
+        "action": "İçeriğe Git"
+      },
+      "experience_editor": {
+        "title": "Editörü deneyimleyin",
+        "description": "Editörü açın ve kurs içeriği oluşturmayı öğrenin.",
+        "add_activity": "Etkinlik Ekle",
+        "dynamic_page": "Dinamik Sayfa",
+        "click_edit": "Düzenle'ye tıklayın",
+        "editor_features": "Editörde yapabilecekleriniz:",
+        "slash_commands": "Slash komutları için / yazın",
+        "headings_lists": "Başlıklar, listeler ve metin",
+        "images_media": "Görseller ve medya",
+        "video_embeds": "Video ve yerleştirmeler",
+        "tables_callouts": "Tablolar ve vurgular",
+        "interactive_blocks": "Etkileşimli bloklar"
+      },
+      "try_playgrounds": {
+        "title": "Playground ile etkileşimli öğrenme",
+        "description": "Kendi hızında öğrenme için etkileşimli sayfalar oluşturun.",
+        "action": "Playground'u Dene"
+      },
+      "invite_users": {
+        "title": "Ekibinizi ve öğrencilerinizi davet edin",
+        "description": "Eğitmenler ekleyin veya öğrencilerin katılması için bir bağlantı paylaşın.",
+        "action": "Kullanıcıları Davet Et"
+      },
+      "customize_org": {
+        "title": "Organizasyonunuzu özelleştirin",
+        "description": "Logonuzu, renklerinizi ekleyin ve kendinize ait yapın.",
+        "action": "Özelleştir"
+      },
+      "teach_the_world": {
+        "title": "Öğrenin ve büyüyün",
+        "description": "LearnHouse'dan en iyi şekilde yararlanmanıza yardımcı olacak kaynaklar.",
+        "classroom": "Sınıf",
+        "classroom_desc": "Kurslarınızı nasıl büyüteceğinizi ve yöneteceğinizi öğrenin",
+        "university": "LearnHouse Üniversitesi",
+        "university_desc": "Kılavuzlar, ipuçları ve en iyi uygulamalar"
+      }
+    },
+    "welcome": {
+      "title": "LearnHouse'a hoş geldiniz",
+      "subtitle": "Kurslar oluşturun, öğrencileri davet edin ve bilgiyi dünyayla paylaşın.",
+      "get_started": "Başla",
+      "features_title": "İhtiyacınız olan her şey",
+      "features_subtitle": "Öğrenme platformunuzu oluşturmak ve büyütmek için tüm araçlar.",
+      "lets_go": "Hadi başlayalım",
+      "features": {
+        "teach": "Her şeyi öğretin",
+        "teach_desc": "Bölümler ve zengin içerikle yapılandırılmış kurslar oluşturun",
+        "interactive": "İnteraktif olun",
+        "interactive_desc": "Öğrencilerin kendi hızlarında keşfettiği playground'lar oluşturun",
+        "community": "Bir topluluk kurun",
+        "community_desc": "Öğrencilerin birbirine yardım ettiği tartışma alanları oluşturun",
+        "assess": "Bilgiyi değerlendirin",
+        "assess_desc": "Ödevler oluşturun ve öğrencilerin gönderimlerini takip edin",
+        "collaborate": "Görsel olarak işbirliği yapın",
+        "collaborate_desc": "Öğrencilere beyin fırtınası ve birlikte çalışma için ortak panolar verin",
+        "voice": "Sesinizi paylaşın",
+        "voice_desc": "Podcast başlatın ve öğrencilere ses bölümleri dağıtın",
+        "certify": "Öğrencileri sertifikalandırın",
+        "certify_desc": "Öğrenciler kurslarınızı tamamladığında sertifika verin",
+        "impact": "Etkinizi anlayın",
+        "impact_desc": "Etkileşimi takip edin ve öğrencilerin zaman içinde nasıl ilerlediğini görün",
+        "team": "Ekibinizi büyütün",
+        "team_desc": "Eğitmenleri davet edin, rolleri yönetin ve öğrenci gruplarını düzenleyin"
+      }
+    },
+    "farewell": {
+      "title": "Dünyaya öğretmeye hazırsınız",
+      "description": "Her şey hazır. Öğrencileriniz harika bir şey bekliyor.",
+      "button": "Öğretmeye başla"
     }
   }
 }

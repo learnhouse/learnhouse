@@ -9,12 +9,14 @@ import {
   Microphone,
   Chalkboard,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 
 export default function ContentOverview() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -87,9 +89,9 @@ export default function ContentOverview() {
 
   const cards = [
     {
-      label: 'Courses',
+      label: t('dashboard.home.courses'),
       value: courses.length,
-      sub: `${publishedCourses} published · ${draftCourses} draft`,
+      sub: `${publishedCourses} ${t('dashboard.home.published')} · ${draftCourses} ${t('dashboard.home.draft')}`,
       icon: BookOpen,
       iconColor: 'text-blue-500',
       iconBg: 'bg-blue-50',
@@ -97,9 +99,9 @@ export default function ContentOverview() {
       show: true,
     },
     {
-      label: 'Members',
+      label: t('dashboard.home.members'),
       value: totalMembers,
-      sub: 'Total users',
+      sub: t('dashboard.home.total_users'),
       icon: Users,
       iconColor: 'text-indigo-500',
       iconBg: 'bg-indigo-50',
@@ -107,9 +109,9 @@ export default function ContentOverview() {
       show: true,
     },
     {
-      label: 'Communities',
+      label: t('dashboard.home.communities'),
       value: communities.length,
-      sub: `${communities.filter((c: any) => c.public).length} public`,
+      sub: `${communities.filter((c: any) => c.public).length} ${t('dashboard.home.public')}`,
       icon: ChatCircle,
       iconColor: 'text-violet-500',
       iconBg: 'bg-violet-50',
@@ -117,9 +119,9 @@ export default function ContentOverview() {
       show: communitiesEnabled,
     },
     {
-      label: 'Podcasts',
+      label: t('dashboard.home.podcasts'),
       value: podcasts.length,
-      sub: `${podcasts.reduce((sum: number, p: any) => sum + (p.episode_count || 0), 0)} episodes`,
+      sub: `${podcasts.reduce((sum: number, p: any) => sum + (p.episode_count || 0), 0)} ${t('dashboard.home.episodes')}`,
       icon: Microphone,
       iconColor: 'text-amber-500',
       iconBg: 'bg-amber-50',
@@ -127,9 +129,9 @@ export default function ContentOverview() {
       show: podcastsEnabled,
     },
     {
-      label: 'Boards',
+      label: t('dashboard.home.boards'),
       value: boards.length,
-      sub: `${boards.reduce((sum: number, b: any) => sum + (b.member_count || 0), 0)} participants`,
+      sub: `${boards.reduce((sum: number, b: any) => sum + (b.member_count || 0), 0)} ${t('dashboard.home.participants')}`,
       icon: Chalkboard,
       iconColor: 'text-rose-500',
       iconBg: 'bg-rose-50',

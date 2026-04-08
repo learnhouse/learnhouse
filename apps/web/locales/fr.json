@@ -93,8 +93,34 @@
         "communities": {
           "title": "Fonctionnalité Standard",
           "description": "Les Communautés sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Standard ou supérieur. Mettez à niveau pour débloquer les communautés de discussion pour vos membres."
+        },
+        "analytics": {
+          "description": "Les analyses sont une fonctionnalité premium disponible uniquement pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour accéder aux informations sur vos apprenants et votre contenu.",
+          "title": "Fonctionnalité Standard"
+        },
+        "course_analytics": {
+          "description": "Les analyses de cours sont une fonctionnalité premium disponible uniquement pour les organisations avec un plan Pro ou supérieur. Passez à un plan supérieur pour accéder aux données d'engagement détaillées, aux tendances d'inscription et aux progrès des apprenants.",
+          "title": "Fonctionnalité Pro"
+        },
+        "custom_domains": {
+          "description": "Les domaines personnalisés sont une fonctionnalité premium disponible uniquement pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour utiliser votre propre domaine.",
+          "title": "Fonctionnalité Standard"
+        },
+        "podcasts": {
+          "description": "Les podcasts sont une fonctionnalité premium disponible uniquement pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour créer et partager des podcasts avec vos membres.",
+          "title": "Fonctionnalité Standard"
+        },
+        "seo": {
+          "description": "Les outils d'optimisation SEO sont disponibles uniquement pour les organisations avec un plan Standard ou supérieur. Passez à un plan supérieur pour personnaliser l'apparence dans les moteurs de recherche, les aperçus de partage social et les données structurées de vos cours.",
+          "title": "Fonctionnalité Standard"
+        },
+        "sso": {
+          "description": "L'authentification unique (SSO) est une fonctionnalité premium disponible uniquement pour les organisations avec un plan Enterprise. Passez à un plan supérieur pour activer l'authentification sécurisée via le fournisseur d'identité de votre organisation.",
+          "title": "Fonctionnalité Enterprise"
         }
-      }
+      },
+      "current_plan": "Plan actuel",
+      "upgrade_to": "Passer à"
     },
     "features": {
       "disabled": {
@@ -152,7 +178,9 @@
     "back": "Retour",
     "of": "sur",
     "creating": "Création...",
-    "view_details": "Détails"
+    "view_details": "Détails",
+    "close": "Fermer",
+    "optional": "optionnel"
   },
   "banner": {
     "viewing_as_guest": "Vous consultez {{name}} en tant qu'invité.",
@@ -243,7 +271,35 @@
     "invite_required": "Invitation requise",
     "invite_required_desc": "Un code d'invitation est requis pour rejoindre {{org}}",
     "invite_code": "Code d'invitation",
-    "validate_invite": "Valider l'invitation"
+    "validate_invite": "Valider l'invitation",
+    "email_verification_required": "Vérification de l'e-mail requise",
+    "email_verification_required_join": "Veuillez vérifier votre adresse e-mail avant de rejoindre une organisation. Vérifiez votre boîte de réception pour l'e-mail de vérification.",
+    "create_your_account": "Créez votre compte",
+    "sign_in_with_sso": "Se connecter avec SSO",
+    "sso_callback": {
+      "auth_failed": "Échec de l'authentification",
+      "authenticating": "Authentification...",
+      "copied": "Copié !",
+      "copy_details": "Copier dans le presse-papiers",
+      "error": "L'authentification SSO a échoué. Veuillez réessayer.",
+      "error_code": "Code d'erreur",
+      "go_home": "Aller à l'accueil",
+      "hide_details": "Masquer les détails techniques",
+      "missing_params": "Callback SSO invalide. Paramètres requis manquants.",
+      "please_wait": "Veuillez patienter pendant que nous vérifions votre identité",
+      "provider": "Fournisseur",
+      "redirecting": "Redirection vers l'application...",
+      "show_details": "Afficher les détails techniques",
+      "success": "Authentification réussie",
+      "tips": {
+        "access_denied": "Si vous avez refusé la demande de connexion par erreur, réessayez et acceptez les autorisations.",
+        "domain_not_allowed": "Contactez l'administrateur de votre organisation pour vérifier que votre domaine e-mail est autorisé.",
+        "invalid_state": "Votre session a peut-être expiré. Veuillez vous reconnecter.",
+        "server_error": "Le fournisseur d'identité rencontre des problèmes. Veuillez réessayer plus tard."
+      },
+      "try_again": "Réessayer"
+    },
+    "sso_error": "L'authentification SSO a échoué. Veuillez réessayer."
   },
   "validation": {
     "required": "Requis",
@@ -521,14 +577,19 @@
         "still_working": "Toujours en cours...",
         "video_takes_time": "L'analyse vidéo peut prendre 1-2 minutes",
         "video_hint": "Les vidéos peuvent prendre 1-2 minutes à traiter"
-      }
+      },
+      "from_existing": "À partir de contenu existant",
+      "from_existing_description": "Téléchargez des fichiers d'une autre plateforme et organisez-les en un cours"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Copié !",
+    "quit_course_confirm": "Êtes-vous sûr de vouloir quitter ce cours ? Vous perdrez toute votre progression.",
+    "quit_course_title": "Quitter le cours ?"
   },
   "communities": {
     "title": "Communautés",
@@ -688,7 +749,99 @@
     "deleting_podcast": "Suppression du podcast...",
     "podcast_deleted_success": "Podcast supprimé avec succès",
     "podcast_deleted_error": "Échec de la suppression du podcast",
-    "edit_content": "Modifier le Contenu"
+    "edit_content": "Modifier le Contenu",
+    "create_new_podcast": "Créer un nouveau podcast pour votre organisation",
+    "create_podcast": "Créer un podcast",
+    "create_podcast_btn": "Créer un podcast",
+    "create_podcasts_placeholder": "Créez des podcasts pour partager du contenu audio avec votre audience",
+    "creating_podcast": "Création du podcast...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "Fichiers MP3, WAV ou M4A supportés",
+        "audio_label": "Fichier audio",
+        "create": "Créer un épisode",
+        "create_error": "Échec de la création de l'épisode",
+        "create_first": "Créer le premier épisode",
+        "created": "Épisode créé",
+        "creating": "Création de l'épisode...",
+        "delete": "Supprimer",
+        "delete_confirm": "Êtes-vous sûr de vouloir supprimer cet épisode ? Cette action est irréversible.",
+        "delete_error": "Échec de la suppression de l'épisode",
+        "delete_title": "Supprimer l'épisode ?",
+        "deleted": "Épisode supprimé",
+        "deleting": "Suppression de l'épisode...",
+        "description_label": "Description",
+        "description_placeholder": "Entrez la description de l'épisode",
+        "edit": "Modifier",
+        "edit_episode": "Modifier l'épisode",
+        "edit_episode_description": "Mettre à jour les détails de l'épisode",
+        "new_episode": "Nouvel épisode",
+        "new_episode_description": "Ajouter un nouvel épisode à ce podcast",
+        "no_audio": "Aucun fichier audio",
+        "no_episodes_description": "Commencez par ajouter votre premier épisode",
+        "publish": "Publier",
+        "replace_audio": "Remplacer le fichier audio",
+        "save": "Enregistrer les modifications",
+        "title_label": "Titre",
+        "title_placeholder": "Entrez le titre de l'épisode",
+        "unpublish": "Dépublier",
+        "update_error": "Échec de la mise à jour de l'épisode",
+        "updated": "Épisode mis à jour",
+        "updating": "Mise à jour de l'épisode...",
+        "upload_audio": "Télécharger le fichier audio"
+      },
+      "form": {
+        "about": "À propos",
+        "about_max_length": "Le champ À propos doit comporter au maximum 2000 caractères",
+        "about_placeholder": "Dites-en plus aux auditeurs sur ce podcast...",
+        "public_hint": "Tout le monde peut trouver et écouter ce podcast",
+        "published_hint": "Rendre ce podcast visible sur la page de votre organisation",
+        "tags_hint": "Séparez les tags par des virgules",
+        "tags_placeholder": "musique, éducation, tech",
+        "thumbnail": "Miniature",
+        "thumbnail_hint": "Taille recommandée : 1400x1400px. JPG ou PNG.",
+        "upload_thumbnail": "Télécharger la miniature",
+        "visibility": "Paramètres de visibilité"
+      },
+      "save_changes": "Enregistrer les modifications",
+      "save_error": "Échec de l'enregistrement des modifications",
+      "saved": "Modifications enregistrées",
+      "saving": "Enregistrement...",
+      "tabs": {
+        "episodes": "Épisodes",
+        "general": "Général"
+      },
+      "view_podcast": "Voir le podcast"
+    },
+    "failed_to_create_podcast": "Échec de la création du podcast",
+    "form": {
+      "description_max_length": "La description doit comporter au maximum 500 caractères",
+      "name_max_length": "Le nom doit comporter au maximum 100 caractères",
+      "name_min_length": "Le nom doit comporter au minimum 3 caractères",
+      "name_required": "Le nom du podcast est requis"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Annuler",
+        "description": "Remplissez les détails pour créer un nouveau podcast",
+        "form": {
+          "description_label": "Description",
+          "description_placeholder": "Entrez la description du podcast",
+          "name_label": "Nom du podcast",
+          "name_placeholder": "Entrez le nom du podcast",
+          "public_label": "Rendre ce podcast public"
+        },
+        "submit": "Créer le podcast",
+        "title": "Créer un nouveau podcast"
+      }
+    },
+    "podcast_created_success": "Podcast créé avec succès",
+    "podcast_name": "Nom du podcast",
+    "podcast_name_required": "Le nom du podcast est requis",
+    "podcast_tags": "Tags",
+    "podcast_thumbnail": "Miniature du podcast",
+    "podcast_visibility": "Visibilité",
+    "search_results": "{{count}} podcast(s) trouvé(s) pour \"{{query}}\""
   },
   "collections": {
     "collections": "Collections",
@@ -764,7 +917,12 @@
     "size_large": "Grand",
     "change_color": "Couleur",
     "preview_flip": "Aperçu",
-    "activities_count": "{{count}} activités"
+    "activities_count": "{{count}} activités",
+    "copy_link": "Copier le lien",
+    "embed": "Intégrer",
+    "embed_code_copied": "Code d'intégration copié !",
+    "link_copied": "Lien copié !",
+    "share": "Partager"
   },
   "assignments": {
     "submit_assignment": "Rendre le devoir",
@@ -861,7 +1019,8 @@
     "security": "Sécurité",
     "my_courses": "Mes Cours",
     "no_purchased_courses": "Aucun cours acheté",
-    "purchased_courses_description": "Les cours que vous avez achetés ou auxquels vous êtes abonné apparaîtront ici"
+    "purchased_courses_description": "Les cours que vous avez achetés ou auxquels vous êtes abonné apparaîtront ici",
+    "purchases": "Achats"
   },
   "user": {
     "user_settings": "Profil",
@@ -1091,7 +1250,8 @@
     "no_biography": "Aucune bio",
     "my_progress": "Ma progression",
     "no_courses_in_progress": "Aucun cours en cours",
-    "start_course_to_see_progress": "Commencez un cours pour voir votre avancée"
+    "start_course_to_see_progress": "Commencez un cours pour voir votre avancée",
+    "bio_placeholder": "Parlez-nous un peu de vous..."
   },
   "roles": {
     "custom_role": "Rôle personnalisé",
@@ -1118,22 +1278,69 @@
       "cards": {
         "courses": {
           "title": "Cours",
-          "description": "Créez et gérez des cours, des chapitres et des activités"
+          "description": "Créer et gérer les cours, chapitres et activités"
         },
         "organization": {
           "title": "Organisation",
-          "description": "Configurez les paramètres généraux de votre organisation"
+          "description": "Configurer les paramètres généraux de votre organisation"
         },
         "users": {
           "title": "Utilisateurs",
-          "description": "Gérez les utilisateurs et les rôles de votre organisation"
+          "description": "Gérer les utilisateurs et les rôles de votre organisation"
         },
         "account_settings": {
           "title": "Paramètres du compte",
-          "description": "Configurez vos paramètres personnels, mots de passe, email"
+          "description": "Configurer vos paramètres personnels, mots de passe et e-mail"
         }
       },
-      "learnhouse_university": "Université LearnHouse"
+      "learnhouse_university": "Université LearnHouse",
+      "admin_seats": "Places administrateur",
+      "ai_credits": "Crédits IA",
+      "analytics": "Analytiques",
+      "boards": "Tableaux",
+      "chapter": "chapitre",
+      "chapters": "chapitres",
+      "communities": "Communautés",
+      "completions_30d": "Achèvements (30 j)",
+      "courses": "Cours",
+      "create_course": "Créer un cours",
+      "create_your_first_course": "Créez votre premier cours",
+      "draft": "brouillon",
+      "enable": "Activer",
+      "enable_analytics_description": "Activez les analytiques pour voir les utilisateurs en direct, les inscriptions et plus encore.",
+      "enrollments_30d": "Enrôlements (30 j)",
+      "episodes": "épisodes",
+      "features": "Fonctionnalités",
+      "full_analytics": "Analytiques complètes",
+      "includes_purchased": "Inclut {{count}} achetés",
+      "limit_reached": "Limite atteinte",
+      "live_now": "En direct",
+      "loading": "Chargement...",
+      "members": "Membres",
+      "no_courses_yet": "Aucun cours pour l'instant",
+      "no_credits_remaining": "Aucun crédit restant",
+      "no_members_yet": "Aucun membre pour l'instant",
+      "off": "Désactivé",
+      "participants": "participants",
+      "plan": "forfait",
+      "plan_and_usage": "Forfait et utilisation",
+      "podcasts": "Podcasts",
+      "public": "public",
+      "published": "publié",
+      "quick_stats": "Statistiques rapides",
+      "recent_courses": "Cours récents",
+      "recent_members": "Membres récents",
+      "remaining": "restant",
+      "settings": "Paramètres",
+      "signups_30d": "Inscriptions (30 j)",
+      "total": "total",
+      "total_users": "Utilisateurs totaux",
+      "unlimited": "Illimité",
+      "unverified": "Non vérifié",
+      "usage_data_unavailable": "Données d'utilisation non disponibles",
+      "used": "utilisé",
+      "view_all": "Tout voir",
+      "welcome_back": "Bienvenue"
     },
     "courses": {
       "title": "Cours",
@@ -1183,7 +1390,9 @@
           "content": "Contenu",
           "access": "Accès",
           "contributors": "Contributeurs",
-          "certification": "Certification"
+          "certification": "Certification",
+          "analytics": "Analyses",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Accès refusé",
@@ -1474,7 +1683,8 @@
             "general": "Général",
             "thumbnail": "Miniature",
             "course": "Cours lié",
-            "moderation": "Modération"
+            "moderation": "Modération",
+            "access": "Accès"
           },
           "general": {
             "title": "Paramètres généraux",
@@ -1491,6 +1701,10 @@
           "moderation": {
             "title": "Modération",
             "subtitle": "Configurer les paramètres de modération du contenu"
+          },
+          "access": {
+            "subtitle": "Contrôlez qui peut accéder à cette communauté",
+            "title": "Paramètres d'accès"
           }
         },
         "course": {
@@ -1603,6 +1817,60 @@
           "deleting": "Suppression de la communauté...",
           "delete_success": "Communauté supprimée avec succès",
           "delete_error": "Échec de la suppression de la communauté"
+        },
+        "access": {
+          "public": {
+            "active": "Actif",
+            "confirmation_button": "Passer en public",
+            "confirmation_message": "Êtes-vous sûr de vouloir rendre cette communauté publique ?",
+            "confirmation_title": "Passer en public ?",
+            "description": "La communauté est publique. Tout le monde peut consulter et participer aux discussions.",
+            "title": "Public"
+          },
+          "restricted": {
+            "active": "Actif",
+            "confirmation_button": "Passer en restreint",
+            "confirmation_message": "Êtes-vous sûr de vouloir restreindre cette communauté ? Seuls les membres des groupes d'utilisateurs liés auront accès.",
+            "confirmation_title": "Passer en restreint ?",
+            "description": "La communauté est accessible uniquement aux membres des groupes d'utilisateurs sélectionnés. Liez des groupes d'utilisateurs pour accorder l'accès.",
+            "title": "Restreint"
+          },
+          "subtitle": "Choisissez si votre communauté doit être publique ou accessible uniquement à des groupes d'utilisateurs spécifiques",
+          "title": "Paramètres d'accès",
+          "toasts": {
+            "update_error": "Échec de la mise à jour des paramètres d'accès",
+            "update_success": "Paramètres d'accès mis à jour avec succès"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Supprimer",
+              "link_to_usergroup": "Lier à un groupe d'utilisateurs"
+            },
+            "modals": {
+              "create_usergroup": "Créer un groupe d'utilisateurs",
+              "link_button": "Lier",
+              "link_description": "Choisissez un groupe d'utilisateurs à lier à cette communauté. Les utilisateurs de ce groupe auront accès.",
+              "link_title": "Lier la communauté à un groupe d'utilisateurs",
+              "no_usergroups": "Aucun groupe d'utilisateurs disponible",
+              "unlink_button": "Supprimer l'accès",
+              "unlink_message": "Les utilisateurs de ce groupe n'auront plus accès à cette communauté.",
+              "unlink_title": "Supprimer l'accès du groupe ?",
+              "usergroup_name": "Nom du groupe d'utilisateurs",
+              "warning": "Les utilisateurs qui ne font pas partie des groupes liés perdront l'accès à cette communauté"
+            },
+            "subtitle": "Accordez l'accès à cette communauté en la liant à des groupes d'utilisateurs. Les utilisateurs de ces groupes pourront consulter et participer.",
+            "table": {
+              "actions": "Actions",
+              "name": "Nom"
+            },
+            "title": "Groupes d'utilisateurs",
+            "toasts": {
+              "link_error": "Erreur {{status}} : {{detail}}",
+              "link_success": "Groupe d'utilisateurs lié avec succès",
+              "unlink_error": "Une erreur s'est produite lors de la suppression de l'accès du groupe",
+              "unlink_success": "Accès du groupe supprimé avec succès"
+            }
+          }
         }
       },
       "structure": {
@@ -1744,6 +2012,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Limite de cours atteinte ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "Échec de l'enregistrement des paramètres SEO"
+        },
+        "form": {
+          "canonical_url_hint": "Utilisez si ce cours est dupliqué ailleurs. Laissez vide pour l'URL par défaut",
+          "canonical_url_label": "URL canonique",
+          "canonical_url_placeholder": "https://example.com/course/votre-cours",
+          "description_hint": "Laissez vide pour utiliser la description du cours. Recommandé : 150-160 caractères",
+          "description_label": "Méta-description",
+          "description_placeholder": "Entrez une description convaincante pour les résultats de recherche",
+          "enable_jsonld_hint": "Ajoute le balisage schema.org Course pour les extraits enrichis dans les résultats de recherche",
+          "enable_jsonld_label": "Activer les données structurées JSON-LD",
+          "keywords_hint": "Liste de mots-clés séparés par des virgules liés à votre cours",
+          "keywords_label": "Mots-clés",
+          "keywords_placeholder": "mot-clé1, mot-clé2, mot-clé3",
+          "og_description_label": "Description OG",
+          "og_description_placeholder": "Description personnalisée pour le partage sur les réseaux sociaux",
+          "og_image_hint": "URL d'image personnalisée pour le partage social. Laissez vide pour utiliser la miniature du cours",
+          "og_image_label": "URL de l'image OG",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "Titre OG",
+          "og_title_placeholder": "Titre personnalisé pour le partage sur les réseaux sociaux",
+          "robots_nofollow_hint": "Lorsqu'activé, les moteurs de recherche ne suivront pas les liens de cette page",
+          "robots_nofollow_label": "Empêcher le suivi des liens (nofollow)",
+          "robots_noindex_hint": "Lorsqu'activé, les moteurs de recherche n'indexeront pas ce cours",
+          "robots_noindex_label": "Empêcher l'indexation par les moteurs de recherche (noindex)",
+          "title_hint": "Laissez vide pour utiliser le nom du cours. Recommandé : 50-60 caractères",
+          "title_label": "Titre SEO",
+          "title_placeholder": "Entrez un titre personnalisé pour les moteurs de recherche",
+          "twitter_card_label": "Type de carte",
+          "twitter_card_summary": "Résumé",
+          "twitter_card_summary_large": "Résumé avec grande image",
+          "twitter_description_label": "Description Twitter",
+          "twitter_description_placeholder": "Description personnalisée pour le partage sur Twitter",
+          "twitter_title_label": "Titre Twitter",
+          "twitter_title_placeholder": "Titre personnalisé pour le partage sur Twitter"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Configurez l'apparence de votre cours dans les résultats de recherche",
+            "title": "SEO de base"
+          },
+          "opengraph": {
+            "subtitle": "Personnalisez l'apparence de votre cours lorsqu'il est partagé sur les réseaux sociaux (Facebook, LinkedIn, etc.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Contrôlez l'indexation par les moteurs de recherche et activez les extraits enrichis",
+            "title": "Robots et données structurées"
+          },
+          "twitter": {
+            "subtitle": "Personnalisez l'apparence de votre cours lorsqu'il est partagé sur Twitter/X",
+            "title": "Carte Twitter"
+          }
+        },
+        "subtitle": "Optimisez votre cours pour les moteurs de recherche et le partage sur les réseaux sociaux",
+        "title": "Paramètres SEO",
+        "validation": {
+          "description_max_length": "La méta-description doit comporter 160 caractères ou moins",
+          "invalid_url": "Veuillez entrer une URL valide",
+          "og_description_max_length": "La description OG doit comporter 200 caractères ou moins",
+          "og_title_max_length": "Le titre OG doit comporter 70 caractères ou moins",
+          "title_max_length": "Le titre SEO doit comporter 70 caractères ou moins",
+          "twitter_description_max_length": "La description Twitter doit comporter 200 caractères ou moins",
+          "twitter_title_max_length": "Le titre Twitter doit comporter 70 caractères ou moins"
+        }
       }
     },
     "organization": {
@@ -1758,7 +2095,9 @@
           "api": "Accès API",
           "features": "Fonctionnalités",
           "usage": "Usage",
-          "other": "Autre"
+          "other": "Autre",
+          "domains": "Domaines",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1792,6 +2131,14 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "Configurer les domaines personnalisés pour votre organisation",
+            "title": "Domaines personnalisés"
+          },
+          "sso": {
+            "subtitle": "Configurer le SSO pour votre organisation",
+            "title": "Authentification unique"
           }
         },
         "name": "Nom de l'organisation",
@@ -1809,7 +2156,10 @@
         "updating": "Mise à jour de l'organisation...",
         "footer_text": "Texte du pied de page",
         "footer_text_placeholder": "Entrez le texte du pied de page...",
-        "footer_text_desc": "Texte personnalisé affiché en bas des pages de votre organisation"
+        "footer_text_desc": "Texte personnalisé affiché en bas des pages de votre organisation",
+        "watermark_desc": "Afficher le filigrane LearnHouse sur les pages de votre organisation",
+        "watermark_free_plan": "Le filigrane est toujours affiché sur le plan gratuit",
+        "watermark_label": "Filigrane \"Made with LearnHouse\""
       },
       "images": {
         "title": "Images et aperçus",
@@ -1868,7 +2218,8 @@
         "tabs": {
           "images": "Images et aperçus",
           "social": "Réseaux sociaux",
-          "theme": "Thème"
+          "theme": "Thème",
+          "auth": "Auth"
         }
       },
       "auth_branding": {
@@ -1964,6 +2315,14 @@
           "collections": {
             "title": "Collections",
             "description": "Permettre l'organisation des cours en collections"
+          },
+          "courses": {
+            "description": "Activer les cours et le suivi de la progression pour votre organisation",
+            "title": "Cours"
+          },
+          "podcasts": {
+            "description": "Activer la création de podcasts et le contenu audio pour votre organisation",
+            "title": "Podcasts"
           }
         },
         "toasts": {
@@ -1971,7 +2330,8 @@
           "disabling": "Désactivation de {{feature}}...",
           "enabled": "{{feature}} activé",
           "disabled": "{{feature}} désactivé",
-          "error": "Échec de la mise à jour de la configuration de {{feature}}"
+          "error": "Échec de la mise à jour de la configuration de {{feature}}",
+          "admin_only": "Seuls les administrateurs de l'organisation peuvent activer ou désactiver les fonctionnalités"
         }
       },
       "audit_logs": {
@@ -2190,6 +2550,45 @@
         "footer_text": "Texte du pied de page",
         "footer_text_desc": "Ajoutez du texte personnalisé à afficher dans le pied de page.",
         "footer_text_placeholder": "Entrez le texte du pied de page..."
+      },
+      "sso": {
+        "allowed_domains": "Domaines e-mail autorisés",
+        "allowed_domains_help": "Liste de domaines e-mail séparés par des virgules autorisés à se connecter via SSO (ex. example.com, company.org). Laissez vide pour autoriser tous les domaines.",
+        "auto_provision": "Provisionnement automatique des utilisateurs",
+        "auto_provision_desc": "Créer automatiquement des comptes utilisateur pour les premières connexions SSO.",
+        "delete": "Supprimer la configuration SSO",
+        "delete_confirm": "Êtes-vous sûr de vouloir supprimer cette configuration SSO ? Les utilisateurs ne pourront plus se connecter via SSO.",
+        "delete_error": "Échec de la suppression de la configuration SSO",
+        "delete_success": "Configuration SSO supprimée",
+        "deleting": "Suppression...",
+        "enable_sso": "Activer le SSO",
+        "enable_sso_desc": "Permettre aux utilisateurs de s'authentifier via le fournisseur d'identité de votre organisation.",
+        "load_error": "Échec du chargement de la configuration SSO",
+        "not_configured": "Non configuré",
+        "oidc_client_id": "ID client",
+        "oidc_client_secret": "Secret client",
+        "oidc_client_secret_help": "Gardez ce secret en sécurité. Il est utilisé pour s'authentifier auprès de votre fournisseur d'identité.",
+        "oidc_info": "Connectez-vous directement à tout fournisseur d'identité compatible OpenID Connect (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "URL de l'émetteur",
+        "oidc_issuer_url_help": "L'URL de l'émetteur OIDC. Les endpoints seront auto-découverts depuis /.well-known/openid-configuration.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "Scopes OAuth à demander (séparés par des espaces). Par défaut : openid email profile",
+        "open_setup_portal": "Configurer le fournisseur d'identité",
+        "provider": "Fournisseur SSO",
+        "save": "Enregistrer la configuration",
+        "save_error": "Échec de l'enregistrement de la configuration SSO",
+        "save_success": "Configuration SSO enregistrée avec succès",
+        "saving": "Enregistrement...",
+        "select_provider": "Sélectionner un fournisseur",
+        "setup_error": "Échec de l'obtention de l'URL du portail de configuration",
+        "setup_not_available": "Le portail de configuration n'est pas disponible. Veuillez d'abord configurer le fournisseur.",
+        "status_disabled": "Désactivé",
+        "status_enabled": "Activé",
+        "subtitle": "Configurer le SSO entreprise pour votre organisation",
+        "title": "Authentification unique (SSO)",
+        "workos_info": "WorkOS fournit le SSO entreprise avec support SAML et OIDC.",
+        "workos_org_id": "ID d'organisation WorkOS",
+        "workos_org_id_help": "Cet ID est automatiquement généré lorsque vous configurez le SSO via le portail de configuration."
       }
     },
     "users": {
@@ -2348,7 +2747,8 @@
           "table": {
             "email": "E-mail",
             "signup_status": "Statut d'inscription",
-            "email_sent": "E-mail envoyé"
+            "email_sent": "E-mail envoyé",
+            "actions": "Actions"
           },
           "status": {
             "pending": "En attente",
@@ -2357,12 +2757,34 @@
           "email_status": {
             "sent": "Envoyé",
             "no": "Non"
-          }
+          },
+          "no_invites": "Aucune invitation en attente",
+          "no_results": "Aucune invitation trouvée correspondant à votre recherche",
+          "remove_button": "Supprimer",
+          "remove_error": "Erreur lors de la suppression de l'invitation",
+          "remove_message": "Êtes-vous sûr de vouloir supprimer l'invitation pour {{email}} ?",
+          "remove_success": "Invitation supprimée",
+          "remove_title": "Supprimer l'invitation",
+          "removing": "Suppression de l'invitation...",
+          "search_placeholder": "Rechercher par e-mail..."
         },
         "toasts": {
           "sending": "Envoi de l'invitation...",
           "success": "Invitation envoyée",
-          "error": "Erreur lors de l'envoi de l'invitation"
+          "error": "Erreur lors de l'envoi de l'invitation",
+          "partial": "{{sent}} envoyé(s), {{failed}} échoué(s)"
+        },
+        "no_invite_code": "Aucun",
+        "results": {
+          "failed_count": "{{count}} échoué(s)",
+          "sent_count": "{{count}} envoyé(s)",
+          "skipped_count": "{{count}} déjà invité(s)",
+          "status": {
+            "already_invited": "Déjà invité",
+            "email_failed": "Échoué",
+            "sent": "Envoyé"
+          },
+          "summary_title": "Résultats"
         }
       },
       "usergroups": {
@@ -2391,7 +2813,9 @@
             },
             "status": {
               "linked": "Lié",
-              "not_linked": "Non lié"
+              "not_linked": "Non lié",
+              "in_group": "Dans le groupe",
+              "not_in_group": "Pas dans le groupe"
             },
             "actions": {
               "link": "Lier",
@@ -2400,7 +2824,31 @@
             "toasts": {
               "link_success": "Utilisateur lié avec succès",
               "unlink_success": "Utilisateur délié avec succès",
-              "error": "Erreur {{status}} : {{detail}}"
+              "error": "Erreur {{status}} : {{detail}}",
+              "bulk_add_success": "{{count}} utilisateurs ajoutés au groupe avec succès",
+              "bulk_adding": "Ajout des utilisateurs au groupe...",
+              "bulk_error": "Une erreur s'est produite pendant l'opération",
+              "bulk_remove_success": "{{count}} utilisateurs retirés du groupe avec succès",
+              "bulk_removing": "Retrait des utilisateurs du groupe..."
+            },
+            "no_results": "Aucun utilisateur trouvé correspondant à votre recherche",
+            "no_users": "Aucun utilisateur dans cette organisation pour le moment",
+            "pagination": {
+              "page": "Page {{current}} sur {{total}}",
+              "showing": "Affichage de {{start}}-{{end}} sur {{total}}"
+            },
+            "search_placeholder": "Rechercher par nom ou identifiant...",
+            "selection": {
+              "add_selected": "Ajouter {{count}} au groupe",
+              "clear": "Effacer",
+              "count": "{{count}} utilisateurs sélectionnés",
+              "remove_selected": "Retirer {{count}} du groupe",
+              "select_all_visible": "Sélectionner tous les visibles"
+            },
+            "tabs": {
+              "all": "Tous les utilisateurs",
+              "in_group": "Dans le groupe",
+              "not_in_group": "Pas dans le groupe"
             }
           },
           "create": {
@@ -2443,7 +2891,18 @@
           "deleting": "Suppression...",
           "delete_success": "Groupe d'utilisateurs supprimé",
           "delete_error": "Erreur lors de la suppression du groupe d'utilisateurs"
-        }
+        },
+        "count": {
+          "plural": "groupes",
+          "singular": "groupe"
+        },
+        "member_count": {
+          "plural": "membres",
+          "singular": "membre"
+        },
+        "no_groups": "Aucun groupe d'utilisateurs pour le moment",
+        "no_results": "Aucun groupe trouvé correspondant à votre recherche",
+        "search_placeholder": "Rechercher des groupes..."
       },
       "roles": {
         "title": "Gérer les rôles et les permissions",
@@ -2461,7 +2920,8 @@
         "actions": {
           "edit": "Modifier",
           "delete": "Supprimer",
-          "create": "Créer un rôle"
+          "create": "Créer un rôle",
+          "view_rights": "Voir les droits"
         },
         "modals": {
           "create": {
@@ -2587,12 +3047,29 @@
             "title": "Supprimer le rôle ?",
             "message": "Cette action ne peut pas être annulée. Tous les utilisateurs avec ce rôle perdront leurs permissions. Êtes-vous sûr de vouloir supprimer ce rôle ?",
             "button": "Supprimer le rôle"
+          },
+          "view_rights": {
+            "description": "Voir toutes les permissions attribuées à ce rôle",
+            "title": "{{roleName}} - Permissions"
           }
         },
         "toasts": {
           "deleting": "Suppression...",
           "delete_success": "Rôle supprimé",
           "delete_error": "Erreur lors de la suppression du rôle"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Activités",
+            "collections": "Collections",
+            "coursechapters": "Chapitres de cours",
+            "courses": "Cours",
+            "dashboard": "Tableau de bord",
+            "organizations": "Organisations",
+            "roles": "Rôles",
+            "usergroups": "Groupes d'utilisateurs",
+            "users": "Utilisateurs"
+          }
         }
       }
     },
@@ -3016,7 +3493,30 @@
         "suggestion_calculator_prompt": "Créer une calculatrice qui montre les solutions étape par étape pour les équations de base",
         "suggestion_timeline": "Chronologie",
         "suggestion_timeline_prompt": "Créer une chronologie interactive montrant les événements historiques majeurs avec des détails extensibles"
+      },
+      "button_block": {
+        "enter_link_url": "Entrez l'URL du lien"
       }
+    },
+    "ai_panel": {
+      "add_definition": "Ajouter une définition",
+      "add_examples": "Ajouter des exemples",
+      "add_quiz": "Ajouter un quiz",
+      "add_summary": "Ajouter un résumé",
+      "add_tip": "Ajouter un conseil",
+      "block_selected": "bloc sélectionné",
+      "clear_chat": "Effacer la conversation",
+      "clear_selection": "Effacer la sélection",
+      "expand": "Développer",
+      "how_can_i_help": "Comment puis-je vous aider à améliorer votre contenu ?",
+      "improve_writing": "Améliorer l'écriture",
+      "input_placeholder": "Demandez à l'IA de vous aider avec votre contenu...",
+      "question_add_quiz": "Ajouter un quiz",
+      "question_improve": "Comment améliorer ceci ?",
+      "question_summary": "Ajouter un résumé",
+      "simplify": "Simplifier",
+      "title": "Éditeur IA",
+      "translate": "Traduire"
     }
   },
   "analytics": {
@@ -3403,6 +3903,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} sur {{total}}"
       }
+    },
+    "export": {
+      "button": "Exporter",
+      "csv": "Télécharger CSV",
+      "downloading": "Exportation...",
+      "json": "Télécharger JSON"
     }
   },
   "boards": {
@@ -3527,7 +4033,8 @@
       "thick": "Épais",
       "undo": "Annuler",
       "redo": "Rétablir",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "todo": "À faire"
     },
     "zoom": {
       "zoom_in": "Zoom avant",
@@ -3632,6 +4139,164 @@
       "page_of": "Page {{current}} sur {{total}}",
       "results": "{{count}} résultat pour \"{{query}}\"",
       "results_plural": "{{count}} résultats pour \"{{query}}\""
+    },
+    "board_deleted_error": "Échec de la suppression du tableau",
+    "board_deleted_success": "Tableau supprimé",
+    "board_duplicated_error": "Échec de la duplication du tableau",
+    "board_duplicated_success": "Tableau dupliqué",
+    "boards_deleted_partial": "{{success}} supprimés, {{error}} échoués",
+    "boards_deleted_success": "{{count}} tableau(x) supprimé(s)",
+    "clear_selection": "Effacer",
+    "delete_board": "Supprimer le tableau",
+    "delete_board_confirm": "Êtes-vous sûr de vouloir supprimer ce tableau ? Cette action est irréversible.",
+    "delete_board_title": "Supprimer \"{{name}}\"",
+    "delete_boards_title": "Supprimer les tableaux",
+    "delete_selected": "Supprimer la sélection",
+    "delete_selected_confirm": "Êtes-vous sûr de vouloir supprimer {{count}} tableau(x) ? Cette action est irréversible.",
+    "deleting_board": "Suppression du tableau...",
+    "deleting_boards": "Suppression de {{count}} tableau(x)...",
+    "duplicate_board": "Dupliquer le tableau",
+    "duplicate_board_confirm": "Une copie du tableau sera créée avec les mêmes paramètres.",
+    "duplicate_board_title": "Dupliquer \"{{name}}\"",
+    "duplicating_board": "Duplication du tableau...",
+    "open_board": "Ouvrir le tableau",
+    "select_all": "Tout sélectionner",
+    "selected_count": "{{count}} sélectionné(s)"
+  },
+  "onboarding": {
+    "getting_started": "Prise en main",
+    "all_done": "Terminé !",
+    "all_set": "Vous êtes prêt !",
+    "all_set_desc": "Vous avez terminé le guide de prise en main.",
+    "more_steps": "{{count}} étape restante",
+    "more_steps_plural": "{{count}} étapes restantes",
+    "show_less": "Afficher moins",
+    "skip": "Passer",
+    "got_it": "Compris, je suis prêt à construire !",
+    "done": "Terminé, je suis prêt !",
+    "steps": {
+      "create_course": {
+        "title": "Créez votre premier cours",
+        "description": "Commencez par créer un nouveau cours pour vos apprenants.",
+        "action": "Créer un cours"
+      },
+      "add_activities": {
+        "title": "Ajoutez des activités à votre cours",
+        "description": "Ajoutez du contenu comme des pages, vidéos, documents et plus encore.",
+        "action": "Aller au contenu"
+      },
+      "experience_editor": {
+        "title": "Découvrez l'éditeur",
+        "description": "Ouvrez l'éditeur et apprenez à créer le contenu de votre cours.",
+        "add_activity": "Ajouter une activité",
+        "dynamic_page": "Page dynamique",
+        "click_edit": "Cliquez sur Modifier",
+        "editor_features": "Ce que vous pouvez faire dans l'éditeur :",
+        "slash_commands": "Tapez / pour les commandes slash",
+        "headings_lists": "Titres, listes & texte",
+        "images_media": "Images & médias",
+        "video_embeds": "Vidéo & intégrations",
+        "tables_callouts": "Tableaux & encarts",
+        "interactive_blocks": "Blocs interactifs"
+      },
+      "try_playgrounds": {
+        "title": "Apprentissage interactif avec les Playgrounds",
+        "description": "Créez des pages interactives pour l'apprentissage autonome.",
+        "action": "Essayer les Playgrounds"
+      },
+      "invite_users": {
+        "title": "Invitez votre équipe et vos apprenants",
+        "description": "Ajoutez des formateurs ou partagez un lien pour que les apprenants rejoignent.",
+        "action": "Inviter des utilisateurs"
+      },
+      "customize_org": {
+        "title": "Personnalisez votre organisation",
+        "description": "Ajoutez votre logo, vos couleurs et faites-la vôtre.",
+        "action": "Personnaliser"
+      },
+      "teach_the_world": {
+        "title": "Apprenez et progressez",
+        "description": "Des ressources pour vous aider à tirer le meilleur parti de LearnHouse.",
+        "classroom": "La salle de classe",
+        "classroom_desc": "Apprenez à développer et gérer vos cours",
+        "university": "Université LearnHouse",
+        "university_desc": "Guides, astuces et bonnes pratiques"
+      }
+    },
+    "welcome": {
+      "title": "Bienvenue sur LearnHouse",
+      "subtitle": "Créez des cours, invitez des apprenants et partagez le savoir avec le monde.",
+      "get_started": "Commencer",
+      "features_title": "Tout ce dont vous avez besoin",
+      "features_subtitle": "Tous les outils pour construire et développer votre plateforme d'apprentissage.",
+      "lets_go": "C'est parti",
+      "features": {
+        "teach": "Enseignez n'importe quoi",
+        "teach_desc": "Créez des cours structurés avec des chapitres et du contenu riche",
+        "interactive": "Passez à l'interactif",
+        "interactive_desc": "Créez des playgrounds où les apprenants explorent à leur rythme",
+        "community": "Construisez une communauté",
+        "community_desc": "Créez des espaces de discussion où les apprenants s'entraident",
+        "assess": "Évaluez les connaissances",
+        "assess_desc": "Créez des devoirs et suivez les soumissions des apprenants",
+        "collaborate": "Collaborez visuellement",
+        "collaborate_desc": "Offrez aux apprenants des tableaux partagés pour réfléchir et travailler ensemble",
+        "voice": "Partagez votre voix",
+        "voice_desc": "Lancez des podcasts et diffusez des épisodes audio aux apprenants",
+        "certify": "Certifiez les apprenants",
+        "certify_desc": "Délivrez des certificats lorsque les apprenants terminent vos cours",
+        "impact": "Comprenez votre impact",
+        "impact_desc": "Suivez l'engagement et voyez comment les apprenants progressent au fil du temps",
+        "team": "Développez votre équipe",
+        "team_desc": "Invitez des formateurs, gérez les rôles et organisez les groupes d'apprenants"
+      }
+    },
+    "farewell": {
+      "title": "Vous êtes prêt à enseigner au monde",
+      "description": "Tout est en place. Vos apprenants attendent quelque chose de formidable.",
+      "button": "Commencer à enseigner"
     }
+  },
+  "migration": {
+    "accepted_formats": "Vidéos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Ajouter une activité",
+    "add_chapter": "Ajouter un chapitre",
+    "ai_failed": "Suggestion IA échouée, retour à l'organisation manuelle",
+    "all_files_assigned": "Tous les fichiers assignés",
+    "click_to_add_more": "Cliquez pour ajouter plus de fichiers",
+    "course_created": "Cours créé avec succès !",
+    "course_name": "Nom du cours",
+    "course_name_placeholder": "ex. Bases de Python pour débutants",
+    "course_structure": "Structure du cours",
+    "create_course": "Créer un cours",
+    "created_summary": "{{chapters}} chapitres et {{activities}} activités créés",
+    "creating_course": "Création de votre cours...",
+    "creating_description": "Téléchargement des fichiers et configuration des chapitres et activités",
+    "creation_error_generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "creation_failed": "Échec de la création du cours",
+    "description": "Description en une ligne",
+    "description_placeholder": "ex. 3 modules couvrant les fondamentaux, les types de données et les fonctions",
+    "drop_file_here": "Déposez un fichier ici",
+    "drop_files": "Déposez vos fichiers ici ou cliquez pour parcourir",
+    "go_to_course": "Aller au cours",
+    "new_activity": "Nouvelle activité",
+    "new_chapter": "Nouveau chapitre",
+    "organize_manually": "Organiser manuellement",
+    "organize_with_ai": "Organiser avec l'IA",
+    "step_complete": "Terminé",
+    "step_organize": "Organiser",
+    "step_upload": "Télécharger",
+    "subtitle": "Téléchargez vos fichiers et organisez-les en un cours",
+    "title": "Migrer le contenu",
+    "try_again": "Réessayer",
+    "unassigned_files": "Fichiers non assignés",
+    "upload_failed": "Échec du téléchargement du fichier",
+    "uploading_files": "Téléchargement des fichiers"
+  },
+  "embed": {
+    "not_supported_description": "Ce type d'activité nécessite une authentification et ne peut pas être intégré.",
+    "not_supported_title": "Cette activité n'est pas prise en charge",
+    "powered_by": "Propulsé par LearnHouse",
+    "visit_activity": "Visiter la page de l'activité"
   }
 }

@@ -1120,10 +1120,57 @@
         },
         "account_settings": {
           "title": "Ustawienia konta",
-          "description": "Skonfiguruj swoje ustawienia osobiste, hasło i email"
+          "description": "Skonfiguruj swoje ustawienia osobiste, hasła i e-mail"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "Uniwersytet LearnHouse",
+      "welcome_back": "Witaj ponownie",
+      "plan": "plan",
+      "create_course": "Utwórz kurs",
+      "analytics": "Analityka",
+      "members": "Członkowie",
+      "settings": "Ustawienia",
+      "courses": "Kursy",
+      "communities": "Społeczności",
+      "podcasts": "Podcasty",
+      "boards": "Tablice",
+      "published": "opublikowany",
+      "draft": "szkic",
+      "total_users": "Łączna liczba użytkowników",
+      "public": "publiczny",
+      "episodes": "odcinki",
+      "participants": "uczestnicy",
+      "loading": "Ładowanie...",
+      "enable_analytics_description": "Włącz analitykę, aby zobaczyć aktywnych użytkowników, rejestracje i więcej.",
+      "enable": "Włącz",
+      "quick_stats": "Szybkie statystyki",
+      "full_analytics": "Pełna analityka",
+      "live_now": "Na żywo",
+      "signups_30d": "Rejestracje (30 dni)",
+      "enrollments_30d": "Zapisy (30 dni)",
+      "completions_30d": "Ukończenia (30 dni)",
+      "recent_courses": "Ostatnie kursy",
+      "view_all": "Zobacz wszystko",
+      "no_courses_yet": "Brak kursów",
+      "create_your_first_course": "Utwórz swój pierwszy kurs",
+      "chapter": "rozdział",
+      "chapters": "rozdziały",
+      "recent_members": "Ostatni członkowie",
+      "total": "łącznie",
+      "no_members_yet": "Brak członków",
+      "unverified": "Niezweryfikowany",
+      "plan_and_usage": "Plan i użycie",
+      "unlimited": "Bez limitu",
+      "admin_seats": "Miejsca administratorów",
+      "limit_reached": "Osiągnięto limit",
+      "remaining": "pozostało",
+      "usage_data_unavailable": "Dane o użyciu niedostępne",
+      "features": "Funkcje",
+      "off": "Wyłączone",
+      "ai_credits": "Kredyty AI",
+      "used": "wykorzystane",
+      "no_credits_remaining": "Brak pozostałych kredytów",
+      "includes_purchased": "Zawiera {{count}} zakupionych"
     },
     "courses": {
       "title": "Kursy",
@@ -3336,6 +3383,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} z {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "Rozpocznij",
+    "all_done": "Wszystko gotowe!",
+    "all_set": "Jesteś gotowy!",
+    "all_set_desc": "Ukończyłeś przewodnik wprowadzający.",
+    "more_steps": "Jeszcze {{count}} krok",
+    "more_steps_plural": "Jeszcze {{count}} kroków",
+    "show_less": "Pokaż mniej",
+    "skip": "Pomiń",
+    "got_it": "Rozumiem, jestem gotowy do budowania!",
+    "done": "Gotowe, jestem przygotowany!",
+    "steps": {
+      "create_course": {
+        "title": "Utwórz swój pierwszy kurs",
+        "description": "Zacznij od utworzenia nowego kursu dla swoich uczniów.",
+        "action": "Utwórz kurs"
+      },
+      "add_activities": {
+        "title": "Dodaj aktywności do kursu",
+        "description": "Dodaj treści, takie jak strony, filmy, dokumenty i więcej.",
+        "action": "Przejdź do treści"
+      },
+      "experience_editor": {
+        "title": "Poznaj edytor",
+        "description": "Otwórz edytor i naucz się tworzyć treści kursu.",
+        "add_activity": "Dodaj aktywność",
+        "dynamic_page": "Strona dynamiczna",
+        "click_edit": "Kliknij Edytuj",
+        "editor_features": "Co możesz robić w edytorze:",
+        "slash_commands": "Wpisz / aby użyć poleceń slash",
+        "headings_lists": "Nagłówki, listy i tekst",
+        "images_media": "Obrazy i media",
+        "video_embeds": "Wideo i osadzenia",
+        "tables_callouts": "Tabele i wyróżnienia",
+        "interactive_blocks": "Bloki interaktywne"
+      },
+      "try_playgrounds": {
+        "title": "Interaktywna nauka z Playground",
+        "description": "Twórz interaktywne strony do nauki we własnym tempie.",
+        "action": "Wypróbuj Playground"
+      },
+      "invite_users": {
+        "title": "Zaproś swój zespół i uczniów",
+        "description": "Dodaj instruktorów lub udostępnij link, aby uczniowie mogli dołączyć.",
+        "action": "Zaproś użytkowników"
+      },
+      "customize_org": {
+        "title": "Dostosuj swoją organizację",
+        "description": "Dodaj swoje logo, kolory i spersonalizuj ją.",
+        "action": "Dostosuj"
+      },
+      "teach_the_world": {
+        "title": "Ucz się i rozwijaj",
+        "description": "Zasoby, które pomogą Ci w pełni wykorzystać LearnHouse.",
+        "classroom": "Klasa",
+        "classroom_desc": "Naucz się rozwijać i zarządzać swoimi kursami",
+        "university": "Uniwersytet LearnHouse",
+        "university_desc": "Przewodniki, wskazówki i najlepsze praktyki"
+      }
+    },
+    "welcome": {
+      "title": "Witaj w LearnHouse",
+      "subtitle": "Twórz kursy, zapraszaj uczniów i dziel się wiedzą ze światem.",
+      "get_started": "Rozpocznij",
+      "features_title": "Wszystko, czego potrzebujesz",
+      "features_subtitle": "Wszystkie narzędzia do budowania i rozwijania platformy edukacyjnej.",
+      "lets_go": "Zaczynajmy",
+      "features": {
+        "teach": "Ucz czegokolwiek",
+        "teach_desc": "Twórz ustrukturyzowane kursy z rozdziałami i bogatą treścią",
+        "interactive": "Działaj interaktywnie",
+        "interactive_desc": "Buduj playgroundy, w których uczniowie eksplorują we własnym tempie",
+        "community": "Zbuduj społeczność",
+        "community_desc": "Twórz przestrzenie dyskusyjne, w których uczniowie pomagają sobie nawzajem",
+        "assess": "Oceniaj wiedzę",
+        "assess_desc": "Twórz zadania i śledź prace przesłane przez uczniów",
+        "collaborate": "Współpracuj wizualnie",
+        "collaborate_desc": "Daj uczniom wspólne tablice do burzy mózgów i pracy zespołowej",
+        "voice": "Podziel się głosem",
+        "voice_desc": "Uruchom podcasty i dystrybuuj odcinki audio do uczniów",
+        "certify": "Certyfikuj uczniów",
+        "certify_desc": "Wydawaj certyfikaty, gdy uczniowie ukończą Twoje kursy",
+        "impact": "Zrozum swój wpływ",
+        "impact_desc": "Śledź zaangażowanie i obserwuj, jak uczniowie postępują z czasem",
+        "team": "Rozwijaj swój zespół",
+        "team_desc": "Zaproś instruktorów, zarządzaj rolami i organizuj grupy uczniów"
+      }
+    },
+    "farewell": {
+      "title": "Jesteś gotowy, by uczyć świat",
+      "description": "Wszystko jest gotowe. Twoi uczniowie czekają na coś wspaniałego.",
+      "button": "Zacznij uczyć"
     }
   }
 }

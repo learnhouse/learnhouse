@@ -1107,22 +1107,69 @@
       "cards": {
         "courses": {
           "title": "Khóa học",
-          "description": "Tạo và quản lý các khóa học, chương và hoạt động."
+          "description": "Tạo và quản lý khóa học, chương và hoạt động"
         },
         "organization": {
           "title": "Tổ chức",
-          "description": "Cấu hình thông tin chung của tổ chức bạn."
+          "description": "Cấu hình cài đặt chung của Tổ chức"
         },
         "users": {
           "title": "Người dùng",
-          "description": "Quản lý người dùng và vai trò trong tổ chức của bạn."
+          "description": "Quản lý người dùng và vai trò của Tổ chức"
         },
         "account_settings": {
           "title": "Cài đặt tài khoản",
-          "description": "Cấu hình thông tin cá nhân, mật khẩu và email của bạn."
+          "description": "Cấu hình cài đặt cá nhân, mật khẩu, email"
         }
       },
-      "learnhouse_university": "LearnHouse University"
+      "learnhouse_university": "Đại học LearnHouse",
+      "welcome_back": "Chào mừng trở lại",
+      "plan": "gói",
+      "create_course": "Tạo khóa học",
+      "analytics": "Phân tích",
+      "members": "Thành viên",
+      "settings": "Cài đặt",
+      "courses": "Khóa học",
+      "communities": "Cộng đồng",
+      "podcasts": "Podcast",
+      "boards": "Bảng",
+      "published": "đã xuất bản",
+      "draft": "bản nháp",
+      "total_users": "Tổng người dùng",
+      "public": "công khai",
+      "episodes": "tập",
+      "participants": "người tham gia",
+      "loading": "Đang tải...",
+      "enable_analytics_description": "Bật phân tích để xem người dùng trực tuyến, đăng ký và nhiều hơn nữa.",
+      "enable": "Bật",
+      "quick_stats": "Thống kê nhanh",
+      "full_analytics": "Phân tích đầy đủ",
+      "live_now": "Đang trực tuyến",
+      "signups_30d": "Đăng ký (30 ngày)",
+      "enrollments_30d": "Ghi danh (30 ngày)",
+      "completions_30d": "Hoàn thành (30 ngày)",
+      "recent_courses": "Khóa học gần đây",
+      "view_all": "Xem tất cả",
+      "no_courses_yet": "Chưa có khóa học nào",
+      "create_your_first_course": "Tạo khóa học đầu tiên của bạn",
+      "chapter": "chương",
+      "chapters": "chương",
+      "recent_members": "Thành viên gần đây",
+      "total": "tổng",
+      "no_members_yet": "Chưa có thành viên nào",
+      "unverified": "Chưa xác minh",
+      "plan_and_usage": "Gói & Sử dụng",
+      "unlimited": "Không giới hạn",
+      "admin_seats": "Chỗ quản trị viên",
+      "limit_reached": "Đã đạt giới hạn",
+      "remaining": "còn lại",
+      "usage_data_unavailable": "Dữ liệu sử dụng không khả dụng",
+      "features": "Tính năng",
+      "off": "Tắt",
+      "ai_credits": "Tín dụng AI",
+      "used": "đã sử dụng",
+      "no_credits_remaining": "Không còn tín dụng",
+      "includes_purchased": "Bao gồm {{count}} đã mua"
     },
     "courses": {
       "title": "Khóa học",
@@ -3335,6 +3382,100 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    }
+  },
+  "onboarding": {
+    "getting_started": "Bắt đầu",
+    "all_done": "Hoàn tất!",
+    "all_set": "Bạn đã sẵn sàng!",
+    "all_set_desc": "Bạn đã hoàn thành hướng dẫn bắt đầu.",
+    "more_steps": "Còn {{count}} bước nữa",
+    "more_steps_plural": "Còn {{count}} bước nữa",
+    "show_less": "Hiển thị ít hơn",
+    "skip": "Bỏ qua",
+    "got_it": "Hiểu rồi, tôi sẵn sàng xây dựng!",
+    "done": "Xong, tôi đã sẵn sàng!",
+    "steps": {
+      "create_course": {
+        "title": "Tạo khóa học đầu tiên",
+        "description": "Bắt đầu bằng cách tạo khóa học mới cho học viên của bạn.",
+        "action": "Tạo khóa học"
+      },
+      "add_activities": {
+        "title": "Thêm hoạt động vào khóa học",
+        "description": "Thêm nội dung như trang, video, tài liệu và nhiều hơn nữa.",
+        "action": "Đi đến nội dung"
+      },
+      "experience_editor": {
+        "title": "Trải nghiệm trình soạn thảo",
+        "description": "Mở trình soạn thảo và tìm hiểu cách xây dựng nội dung khóa học.",
+        "add_activity": "Thêm hoạt động",
+        "dynamic_page": "Trang động",
+        "click_edit": "Nhấp Chỉnh sửa",
+        "editor_features": "Những gì bạn có thể làm trong trình soạn thảo:",
+        "slash_commands": "Gõ / để dùng lệnh slash",
+        "headings_lists": "Tiêu đề, danh sách & văn bản",
+        "images_media": "Hình ảnh & phương tiện",
+        "video_embeds": "Video & nhúng",
+        "tables_callouts": "Bảng & callout",
+        "interactive_blocks": "Khối tương tác"
+      },
+      "try_playgrounds": {
+        "title": "Học tương tác với Playground",
+        "description": "Tạo các trang tương tác để học theo tốc độ riêng.",
+        "action": "Thử Playground"
+      },
+      "invite_users": {
+        "title": "Mời đội ngũ & học viên",
+        "description": "Thêm giảng viên hoặc chia sẻ liên kết để học viên tham gia.",
+        "action": "Mời người dùng"
+      },
+      "customize_org": {
+        "title": "Tùy chỉnh tổ chức của bạn",
+        "description": "Thêm logo, màu sắc và biến nó thành của bạn.",
+        "action": "Tùy chỉnh"
+      },
+      "teach_the_world": {
+        "title": "Học hỏi & phát triển",
+        "description": "Tài nguyên giúp bạn tận dụng tối đa LearnHouse.",
+        "classroom": "Lớp học",
+        "classroom_desc": "Tìm hiểu cách phát triển và quản lý khóa học",
+        "university": "Đại học LearnHouse",
+        "university_desc": "Hướng dẫn, mẹo và thực hành tốt nhất"
+      }
+    },
+    "welcome": {
+      "title": "Chào mừng đến với LearnHouse",
+      "subtitle": "Tạo khóa học, mời học viên và chia sẻ kiến thức với thế giới.",
+      "get_started": "Bắt đầu",
+      "features_title": "Mọi thứ bạn cần",
+      "features_subtitle": "Tất cả công cụ để xây dựng và phát triển nền tảng học tập của bạn.",
+      "lets_go": "Bắt đầu thôi",
+      "features": {
+        "teach": "Dạy bất cứ điều gì",
+        "teach_desc": "Tạo khóa học có cấu trúc với các chương và nội dung phong phú",
+        "interactive": "Trở nên tương tác",
+        "interactive_desc": "Xây dựng playground nơi học viên khám phá theo tốc độ riêng",
+        "community": "Xây dựng cộng đồng",
+        "community_desc": "Tạo không gian thảo luận nơi học viên giúp đỡ lẫn nhau",
+        "assess": "Đánh giá kiến thức",
+        "assess_desc": "Tạo bài tập và theo dõi bài nộp của học viên",
+        "collaborate": "Cộng tác trực quan",
+        "collaborate_desc": "Cung cấp cho học viên bảng chia sẻ để động não và làm việc cùng nhau",
+        "voice": "Chia sẻ giọng nói của bạn",
+        "voice_desc": "Phát hành podcast và phân phối các tập âm thanh đến học viên",
+        "certify": "Cấp chứng chỉ cho học viên",
+        "certify_desc": "Cấp chứng chỉ khi học viên hoàn thành khóa học của bạn",
+        "impact": "Hiểu tác động của bạn",
+        "impact_desc": "Theo dõi mức độ tương tác và xem học viên tiến bộ như thế nào theo thời gian",
+        "team": "Phát triển đội ngũ",
+        "team_desc": "Mời giảng viên, quản lý vai trò và tổ chức nhóm học viên"
+      }
+    },
+    "farewell": {
+      "title": "Bạn đã sẵn sàng dạy cả thế giới",
+      "description": "Mọi thứ đã được thiết lập. Người học đang chờ đợi điều tuyệt vời từ bạn.",
+      "button": "Bắt đầu giảng dạy"
     }
   }
 }

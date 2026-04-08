@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Lightning,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
@@ -57,6 +58,7 @@ const METER_ICONS: Record<string, React.ComponentType<any>> = {
 }
 
 export default function UsageOverview() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -81,9 +83,9 @@ export default function UsageOverview() {
 
   const meters = features
     ? [
-        { label: 'Courses', ...features.courses },
-        { label: 'Members', ...features.members },
-        { label: 'Admin Seats', ...features.admin_seats },
+        { key: 'Courses', label: t('dashboard.home.courses'), ...features.courses },
+        { key: 'Members', label: t('dashboard.home.members'), ...features.members },
+        { key: 'Admin Seats', label: t('dashboard.home.admin_seats'), ...features.admin_seats },
       ]
     : []
 
@@ -92,28 +94,28 @@ export default function UsageOverview() {
   const enabledFeatures = [
     {
       key: 'courses',
-      label: 'Courses',
+      label: t('dashboard.home.courses'),
       icon: BookOpen,
       enabled: orgFeatures?.courses?.enabled !== false,
       href: '/dash/courses',
     },
     {
       key: 'communities',
-      label: 'Communities',
+      label: t('dashboard.home.communities'),
       icon: ChatCircle,
       enabled: orgFeatures?.communities?.enabled !== false,
       href: '/dash/communities',
     },
     {
       key: 'podcasts',
-      label: 'Podcasts',
+      label: t('dashboard.home.podcasts'),
       icon: Microphone,
       enabled: orgFeatures?.podcasts?.enabled === true,
       href: '/dash/podcasts',
     },
     {
       key: 'boards',
-      label: 'Boards',
+      label: t('dashboard.home.boards'),
       icon: Chalkboard,
       enabled: orgFeatures?.boards?.enabled === true,
       href: '/dash/boards',
@@ -125,7 +127,7 @@ export default function UsageOverview() {
       {/* Usage card */}
       <div className="bg-white rounded-xl nice-shadow p-5">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-semibold text-gray-700">Plan & Usage</h3>
+          <h3 className="text-sm font-semibold text-gray-700">{t('dashboard.home.plan_and_usage')}</h3>
           <span
             className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${planStyle.bg} ${planStyle.text}`}
           >
@@ -146,14 +148,14 @@ export default function UsageOverview() {
           <div className="space-y-5">
             {meters.map((meter) => {
               const isUnlimited = ossMode || meter.limit === 'unlimited'
-              const limitText = isUnlimited ? 'Unlimited' : String(meter.limit)
+              const limitText = isUnlimited ? t('dashboard.home.unlimited') : String(meter.limit)
               const barColor = isUnlimited
                 ? 'bg-green-500'
                 : getBarColor(meter.usage, meter.limit)
               const barPercent = isUnlimited
                 ? 30
                 : getBarPercent(meter.usage, meter.limit)
-              const Icon = METER_ICONS[meter.label] || BookOpen
+              const Icon = METER_ICONS[meter.key] || BookOpen
 
               return (
                 <div key={meter.label}>
@@ -180,12 +182,12 @@ export default function UsageOverview() {
                   </div>
                   {!isUnlimited && meter.limit_reached && (
                     <p className="text-[10px] text-red-500 mt-1">
-                      Limit reached
+                      {t('dashboard.home.limit_reached')}
                     </p>
                   )}
                   {!isUnlimited && !meter.limit_reached && (
                     <p className="text-[10px] text-gray-300 mt-1">
-                      {meter.remaining} remaining
+                      {meter.remaining} {t('dashboard.home.remaining')}
                     </p>
                   )}
                 </div>
@@ -194,7 +196,7 @@ export default function UsageOverview() {
 
             {meters.length === 0 && (
               <p className="text-xs text-gray-400 text-center py-4">
-                Usage data unavailable
+                {t('dashboard.home.usage_data_unavailable')}
               </p>
             )}
           </div>
@@ -212,7 +214,7 @@ export default function UsageOverview() {
       {/* Features card */}
       <div className="bg-white rounded-xl nice-shadow p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">
-          Features
+          {t('dashboard.home.features')}
         </h3>
         <div className="space-y-2.5">
           {enabledFeatures.map((feature) => (
@@ -251,7 +253,7 @@ export default function UsageOverview() {
                   />
                 </Link>
               ) : (
-                <span className="text-[10px] text-gray-300">Off</span>
+                <span className="text-[10px] text-gray-300">{t('dashboard.home.off')}</span>
               )}
             </div>
           ))}
@@ -262,6 +264,7 @@ export default function UsageOverview() {
 }
 
 function AICreditsSection({ credits }: { credits: AICreditsSummary }) {
+  const { t } = useTranslation()
   const total =
     typeof credits.total_credits === 'number' ? credits.total_credits : 0
   const used = credits.used_credits ?? 0
@@ -294,10 +297,10 @@ function AICreditsSection({ credits }: { credits: AICreditsSummary }) {
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <Lightning size={13} weight="duotone" className="text-violet-400" />
-          <span className="text-xs font-medium text-gray-600">AI Credits</span>
+          <span className="text-xs font-medium text-gray-600">{t('dashboard.home.ai_credits')}</span>
         </div>
         <span className="text-[11px] text-gray-400 tabular-nums">
-          {used} / {isUnlimited ? 'Unlimited' : total}
+          {used} / {isUnlimited ? t('dashboard.home.unlimited') : total}
         </span>
       </div>
       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -307,15 +310,15 @@ function AICreditsSection({ credits }: { credits: AICreditsSummary }) {
         />
       </div>
       {isUnlimited ? (
-        <p className="text-[10px] text-gray-300 mt-1">{used} used</p>
+        <p className="text-[10px] text-gray-300 mt-1">{used} {t('dashboard.home.used')}</p>
       ) : remaining !== null && remaining > 0 ? (
-        <p className="text-[10px] text-gray-300 mt-1">{remaining} remaining</p>
+        <p className="text-[10px] text-gray-300 mt-1">{remaining} {t('dashboard.home.remaining')}</p>
       ) : remaining !== null && remaining <= 0 ? (
-        <p className="text-[10px] text-red-500 mt-1">No credits remaining</p>
+        <p className="text-[10px] text-red-500 mt-1">{t('dashboard.home.no_credits_remaining')}</p>
       ) : null}
       {credits.purchased_credits > 0 && (
         <p className="text-[10px] text-gray-300 mt-0.5">
-          Includes {credits.purchased_credits} purchased
+          {t('dashboard.home.includes_purchased', { count: credits.purchased_credits })}
         </p>
       )}
     </div>
