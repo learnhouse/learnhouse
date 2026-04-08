@@ -91,8 +91,34 @@
         "communities": {
           "title": "标准版功能",
           "description": "社区是仅对标准版或更高版本计划的组织可用的高级功能。升级以解锁成员的讨论社区。"
+        },
+        "analytics": {
+          "description": "数据分析是仅限标准方案及以上组织使用的高级功能。升级以解锁关于学习者和内容的洞察。",
+          "title": "标准功能"
+        },
+        "course_analytics": {
+          "description": "课程分析是仅限 Pro 方案及以上组织使用的高级功能。升级以解锁详细的参与数据、注册趋势和个别课程的学习者进度。",
+          "title": "Pro 功能"
+        },
+        "custom_domains": {
+          "description": "自定义域名是仅限标准方案及以上组织使用的高级功能。升级以使用您自己的域名获得品牌体验。",
+          "title": "标准功能"
+        },
+        "podcasts": {
+          "description": "播客是仅限标准方案及以上组织使用的高级功能。升级以创建和分享播客。",
+          "title": "标准功能"
+        },
+        "seo": {
+          "description": "SEO 优化工具仅限标准方案及以上组织使用。升级以自定义搜索引擎外观、社交分享预览和课程的结构化数据。",
+          "title": "标准功能"
+        },
+        "sso": {
+          "description": "单点登录 (SSO) 是仅限企业方案组织使用的高级功能。升级以通过组织的身份提供商启用安全认证。",
+          "title": "企业功能"
         }
-      }
+      },
+      "current_plan": "当前方案",
+      "upgrade_to": "升级到"
     },
     "features": {
       "disabled": {
@@ -104,7 +130,8 @@
           "communities": "社区",
           "podcasts": "播客",
           "payments": "支付",
-          "trail": "进度跟踪"
+          "trail": "进度跟踪",
+          "boards": "面板"
         },
         "public": {
           "title": "{{feature}}不可用",
@@ -149,7 +176,11 @@
     "back": "返回",
     "of": "属于",
     "creating": "创建中...",
-    "view_details": "查看详情"
+    "view_details": "查看详情",
+    "boards": "面板",
+    "close": "关闭",
+    "optional": "可选",
+    "playgrounds": "游乐场"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -238,7 +269,37 @@
     "invite_required": "需要邀请",
     "invite_required_desc": "加入{{org}}需要邀请码",
     "invite_code": "邀请码",
-    "validate_invite": "验证邀请"
+    "validate_invite": "验证邀请",
+    "create_your_account": "创建您的帐户",
+    "email_verification_required": "需要邮箱验证",
+    "email_verification_required_join": "请在加入组织前验证您的邮箱地址。请查看收件箱中的验证邮件。",
+    "login_failed": "登录失败",
+    "sign_in_with_sso": "使用 SSO 登录",
+    "sso_callback": {
+      "auth_failed": "认证失败",
+      "authenticating": "认证中...",
+      "copied": "已复制！",
+      "copy_details": "复制到剪贴板",
+      "error": "SSO 认证失败。请重试。",
+      "error_code": "错误代码",
+      "go_home": "返回首页",
+      "hide_details": "隐藏技术详情",
+      "missing_params": "无效的 SSO 回调。缺少必要参数。",
+      "please_wait": "正在验证您的身份，请稍候",
+      "provider": "提供商",
+      "redirecting": "正在重定向到应用程序...",
+      "show_details": "显示技术详情",
+      "success": "认证成功",
+      "tips": {
+        "access_denied": "如果您错误地拒绝了登录请求，请重试并接受权限。",
+        "domain_not_allowed": "请联系您的组织管理员验证您的邮箱域名是否被允许。",
+        "invalid_state": "您的会话可能已过期。请重新登录。",
+        "server_error": "身份提供商遇到问题。请稍后重试。"
+      },
+      "try_again": "重试"
+    },
+    "sso_error": "SSO 认证失败。请重试。",
+    "try_again_in": "{{minutes}}分钟后重试"
   },
   "verify_email": {
     "title": "邮箱验证",
@@ -526,14 +587,19 @@
         "still_working": "仍在处理...",
         "video_takes_time": "视频分析可能需要1-2分钟",
         "video_hint": "视频处理可能需要1-2分钟"
-      }
+      },
+      "from_existing": "从现有内容",
+      "from_existing_description": "从其他平台上传文件并将其组织成课程"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "已复制！",
+    "quit_course_confirm": "确定要退出此课程吗？您将失去所有进度。",
+    "quit_course_title": "退出课程？"
   },
   "communities": {
     "title": "社区",
@@ -693,7 +759,99 @@
     "deleting_podcast": "正在删除播客...",
     "podcast_deleted_success": "播客删除成功",
     "podcast_deleted_error": "播客删除失败",
-    "edit_content": "编辑内容"
+    "edit_content": "编辑内容",
+    "create_new_podcast": "为您的组织创建新播客",
+    "create_podcast": "创建播客",
+    "create_podcast_btn": "创建播客",
+    "create_podcasts_placeholder": "创建播客与您的受众分享音频内容",
+    "creating_podcast": "创建播客中...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "支持 MP3、WAV 或 M4A 文件",
+        "audio_label": "音频文件",
+        "create": "创建剧集",
+        "create_error": "创建剧集失败",
+        "create_first": "创建第一个剧集",
+        "created": "剧集已创建",
+        "creating": "创建剧集中...",
+        "delete": "删除",
+        "delete_confirm": "确定要删除此剧集吗？此操作无法撤消。",
+        "delete_error": "删除剧集失败",
+        "delete_title": "删除剧集？",
+        "deleted": "剧集已删除",
+        "deleting": "删除剧集中...",
+        "description_label": "描述",
+        "description_placeholder": "输入剧集描述",
+        "edit": "编辑",
+        "edit_episode": "编辑剧集",
+        "edit_episode_description": "更新剧集详情",
+        "new_episode": "新剧集",
+        "new_episode_description": "为此播客添加新剧集",
+        "no_audio": "无音频文件",
+        "no_episodes_description": "从添加第一个剧集开始",
+        "publish": "发布",
+        "replace_audio": "替换音频文件",
+        "save": "保存更改",
+        "title_label": "标题",
+        "title_placeholder": "输入剧集标题",
+        "unpublish": "取消发布",
+        "update_error": "更新剧集失败",
+        "updated": "剧集已更新",
+        "updating": "更新剧集中...",
+        "upload_audio": "上传音频文件"
+      },
+      "form": {
+        "about": "关于",
+        "about_max_length": "关于最多2000个字符",
+        "about_placeholder": "告诉听众更多关于此播客的信息...",
+        "public_hint": "任何人都可以找到和收听此播客",
+        "published_hint": "在您的组织页面上显示此播客",
+        "tags_hint": "用逗号分隔标签",
+        "tags_placeholder": "音乐, 教育, 科技",
+        "thumbnail": "缩略图",
+        "thumbnail_hint": "建议尺寸：1400x1400px。JPG 或 PNG。",
+        "upload_thumbnail": "上传缩略图",
+        "visibility": "可见性设置"
+      },
+      "save_changes": "保存更改",
+      "save_error": "保存更改失败",
+      "saved": "更改已保存",
+      "saving": "保存中...",
+      "tabs": {
+        "episodes": "剧集",
+        "general": "常规"
+      },
+      "view_podcast": "查看播客"
+    },
+    "failed_to_create_podcast": "创建播客失败",
+    "form": {
+      "description_max_length": "描述最多500个字符",
+      "name_max_length": "名称最多100个字符",
+      "name_min_length": "名称至少3个字符",
+      "name_required": "播客名称为必填"
+    },
+    "modals": {
+      "create": {
+        "cancel": "取消",
+        "description": "填写详细信息以创建新播客",
+        "form": {
+          "description_label": "描述",
+          "description_placeholder": "输入播客描述",
+          "name_label": "播客名称",
+          "name_placeholder": "输入播客名称",
+          "public_label": "将此播客设为公开"
+        },
+        "submit": "创建播客",
+        "title": "创建新播客"
+      }
+    },
+    "podcast_created_success": "播客创建成功",
+    "podcast_name": "播客名称",
+    "podcast_name_required": "播客名称为必填",
+    "podcast_tags": "标签",
+    "podcast_thumbnail": "播客缩略图",
+    "podcast_visibility": "可见性",
+    "search_results": "找到 {{count}} 个与 \"{{query}}\" 相关的播客"
   },
   "collections": {
     "collections": "合集",
@@ -769,7 +927,12 @@
     "size_large": "大号",
     "change_color": "更改颜色",
     "preview_flip": "翻转预览",
-    "activities_count": "{{count}} 个活动"
+    "activities_count": "{{count}} 个活动",
+    "copy_link": "复制链接",
+    "embed": "嵌入",
+    "embed_code_copied": "嵌入代码已复制！",
+    "link_copied": "链接已复制！",
+    "share": "分享"
   },
   "assignments": {
     "submit_assignment": "提交作业",
@@ -866,7 +1029,8 @@
     "security": "安全",
     "my_courses": "我的课程",
     "no_purchased_courses": "暂无已购课程",
-    "purchased_courses_description": "您购买或订阅的课程将显示在这里"
+    "purchased_courses_description": "您购买或订阅的课程将显示在这里",
+    "purchases": "购买记录"
   },
   "user": {
     "user_settings": "用户设置",
@@ -1096,7 +1260,8 @@
     "no_biography": "未提供个人简介",
     "my_progress": "我的进度",
     "no_courses_in_progress": "尚无进行中的课程",
-    "start_course_to_see_progress": "开始一门课程以在此处查看进度"
+    "start_course_to_see_progress": "开始一门课程以在此处查看进度",
+    "bio_placeholder": "介绍一下您自己..."
   },
   "roles": {
     "custom_role": "自定义角色",
@@ -1235,7 +1400,9 @@
           "content": "内容",
           "access": "访问",
           "contributors": "贡献者",
-          "certification": "认证"
+          "certification": "认证",
+          "analytics": "分析",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "拒绝访问",
@@ -1526,7 +1693,8 @@
             "general": "常规",
             "thumbnail": "缩略图",
             "course": "关联课程",
-            "moderation": "内容审核"
+            "moderation": "内容审核",
+            "access": "访问"
           },
           "general": {
             "title": "常规设置",
@@ -1543,6 +1711,10 @@
           "moderation": {
             "title": "内容审核",
             "subtitle": "配置内容审核设置"
+          },
+          "access": {
+            "subtitle": "控制谁可以访问此社区",
+            "title": "访问设置"
           }
         },
         "course": {
@@ -1655,6 +1827,60 @@
           "deleting": "正在删除社区...",
           "delete_success": "社区删除成功",
           "delete_error": "删除社区失败"
+        },
+        "access": {
+          "public": {
+            "active": "活跃",
+            "confirmation_button": "更改为公开",
+            "confirmation_message": "确定要将此社区设为公开吗？",
+            "confirmation_title": "更改为公开？",
+            "description": "社区是公开的。任何人都可以查看和参与讨论。",
+            "title": "公开"
+          },
+          "restricted": {
+            "active": "活跃",
+            "confirmation_button": "更改为受限",
+            "confirmation_message": "确定要限制此社区吗？只有关联的用户组成员才能访问。",
+            "confirmation_title": "更改为受限？",
+            "description": "社区仅对所选用户组的成员开放。关联用户组以授予访问权限。",
+            "title": "受限"
+          },
+          "subtitle": "选择您的社区是公开的还是仅对特定用户组开放",
+          "title": "访问设置",
+          "toasts": {
+            "update_error": "更新访问设置失败",
+            "update_success": "访问设置已成功更新"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "移除",
+              "link_to_usergroup": "关联到用户组"
+            },
+            "modals": {
+              "create_usergroup": "创建用户组",
+              "link_button": "关联",
+              "link_description": "选择要关联到此社区的用户组。该组的用户将获得访问权限。",
+              "link_title": "将社区关联到用户组",
+              "no_usergroups": "没有可用的用户组",
+              "unlink_button": "移除访问权限",
+              "unlink_message": "此用户组的用户将不再能访问此社区。",
+              "unlink_title": "移除用户组访问权限？",
+              "usergroup_name": "用户组名称",
+              "warning": "不在关联用户组中的用户将失去对此社区的访问权限"
+            },
+            "subtitle": "通过将社区关联到用户组来授予访问权限。这些组中的用户将能够查看和参与。",
+            "table": {
+              "actions": "操作",
+              "name": "名称"
+            },
+            "title": "用户组",
+            "toasts": {
+              "link_error": "错误 {{status}}：{{detail}}",
+              "link_success": "用户组关联成功",
+              "unlink_error": "移除用户组访问权限时出错",
+              "unlink_success": "用户组访问权限已成功移除"
+            }
+          }
         }
       },
       "structure": {
@@ -1796,6 +2022,75 @@
             }
           }
         }
+      },
+      "limit_reached": "课程上限已达 ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "保存 SEO 设置失败"
+        },
+        "form": {
+          "canonical_url_hint": "如果此课程在其他地方有副本则使用。留空使用默认 URL",
+          "canonical_url_label": "规范 URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "留空将使用课程描述。建议：150-160个字符",
+          "description_label": "元描述",
+          "description_placeholder": "输入搜索结果的引人注目的描述",
+          "enable_jsonld_hint": "为搜索结果中的富摘要添加 Course schema.org 标记",
+          "enable_jsonld_label": "启用 JSON-LD 结构化数据",
+          "keywords_hint": "与课程相关的关键词列表，用逗号分隔",
+          "keywords_label": "关键词",
+          "keywords_placeholder": "关键词1, 关键词2, 关键词3",
+          "og_description_label": "OG 描述",
+          "og_description_placeholder": "社交媒体分享的自定义描述",
+          "og_image_hint": "社交分享的自定义图片 URL。留空使用课程缩略图",
+          "og_image_label": "OG 图片 URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG 标题",
+          "og_title_placeholder": "社交媒体分享的自定义标题",
+          "robots_nofollow_hint": "启用后，搜索引擎将不会跟踪此页面的链接",
+          "robots_nofollow_label": "阻止跟踪链接 (nofollow)",
+          "robots_noindex_hint": "启用后，搜索引擎将不会索引此课程",
+          "robots_noindex_label": "阻止搜索引擎索引 (noindex)",
+          "title_hint": "留空将使用课程名称。建议：50-60个字符",
+          "title_label": "SEO 标题",
+          "title_placeholder": "输入搜索引擎的自定义标题",
+          "twitter_card_label": "卡片类型",
+          "twitter_card_summary": "摘要",
+          "twitter_card_summary_large": "大图摘要",
+          "twitter_description_label": "Twitter 描述",
+          "twitter_description_placeholder": "Twitter 分享的自定义描述",
+          "twitter_title_label": "Twitter 标题",
+          "twitter_title_placeholder": "Twitter 分享的自定义标题"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "配置课程在搜索引擎结果中的显示方式",
+            "title": "基础 SEO"
+          },
+          "opengraph": {
+            "subtitle": "自定义课程在社交媒体（Facebook、LinkedIn 等）上分享时的显示方式",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "控制搜索引擎索引并启用富摘要",
+            "title": "机器人与结构化数据"
+          },
+          "twitter": {
+            "subtitle": "自定义课程在 Twitter/X 上分享时的显示方式",
+            "title": "Twitter 卡片"
+          }
+        },
+        "subtitle": "优化课程以用于搜索引擎和社交媒体分享",
+        "title": "SEO 设置",
+        "validation": {
+          "description_max_length": "元描述不能超过160个字符",
+          "invalid_url": "请输入有效的 URL",
+          "og_description_max_length": "OG 描述不能超过200个字符",
+          "og_title_max_length": "OG 标题不能超过70个字符",
+          "title_max_length": "SEO 标题不能超过70个字符",
+          "twitter_description_max_length": "Twitter 描述不能超过200个字符",
+          "twitter_title_max_length": "Twitter 标题不能超过70个字符"
+        }
       }
     },
     "organization": {
@@ -1809,7 +2104,10 @@
           "ai": "AI",
           "api": "API访问",
           "features": "功能",
-          "other": "其他"
+          "other": "其他",
+          "domains": "域名",
+          "sso": "SSO",
+          "usage": "用量"
         },
         "pages": {
           "general": {
@@ -1839,6 +2137,18 @@
           "features": {
             "title": "功能",
             "subtitle": "为您的组织启用或禁用功能"
+          },
+          "domains": {
+            "subtitle": "配置您组织的自定义域名",
+            "title": "自定义域名"
+          },
+          "sso": {
+            "subtitle": "为您的组织配置 SSO",
+            "title": "单点登录"
+          },
+          "usage": {
+            "subtitle": "监控您组织的资源使用情况和方案限制",
+            "title": "用量"
           }
         },
         "name": "组织名称",
@@ -1858,7 +2168,10 @@
         "updating": "正在更新组织...",
         "footer_text": "页脚文本",
         "footer_text_placeholder": "输入页脚文本...",
-        "footer_text_desc": "显示在组织页面底部的自定义文本"
+        "footer_text_desc": "显示在组织页面底部的自定义文本",
+        "watermark_desc": "在您的组织页面上显示 LearnHouse 品牌水印",
+        "watermark_free_plan": "免费方案始终显示水印",
+        "watermark_label": "\"Made with LearnHouse\" 水印"
       },
       "images": {
         "title": "图像与预览",
@@ -1917,7 +2230,8 @@
         "tabs": {
           "images": "预览图像",
           "social": "社交媒体链接",
-          "theme": "主题"
+          "theme": "主题",
+          "auth": "认证"
         }
       },
       "auth_branding": {
@@ -2013,6 +2327,14 @@
           "collections": {
             "title": "合集",
             "description": "允许将课程组织到合集中"
+          },
+          "courses": {
+            "description": "为您的组织启用课程和进度跟踪",
+            "title": "课程"
+          },
+          "podcasts": {
+            "description": "为您的组织启用播客创建和音频内容",
+            "title": "播客"
           }
         },
         "toasts": {
@@ -2020,7 +2342,8 @@
           "disabling": "正在禁用{{feature}}...",
           "enabled": "{{feature}}已启用",
           "disabled": "{{feature}}已禁用",
-          "error": "更新{{feature}}配置失败"
+          "error": "更新{{feature}}配置失败",
+          "admin_only": "只有组织管理员才能启用或禁用功能"
         }
       },
       "audit_logs": {
@@ -2239,6 +2562,45 @@
         "footer_text": "页脚文本",
         "footer_text_desc": "添加要在页脚显示的自定义文本。",
         "footer_text_placeholder": "输入页脚文本..."
+      },
+      "sso": {
+        "allowed_domains": "允许的邮箱域名",
+        "allowed_domains_help": "允许通过 SSO 登录的邮箱域名列表，用逗号分隔（例如：example.com, company.org）。留空表示允许所有域名。",
+        "auto_provision": "自动创建用户",
+        "auto_provision_desc": "为首次 SSO 登录自动创建用户帐户。",
+        "delete": "删除 SSO 配置",
+        "delete_confirm": "确定要删除此 SSO 配置吗？用户将无法再通过 SSO 登录。",
+        "delete_error": "删除 SSO 配置失败",
+        "delete_success": "SSO 配置已删除",
+        "deleting": "删除中...",
+        "enable_sso": "启用 SSO",
+        "enable_sso_desc": "允许用户使用您组织的身份提供商进行认证。",
+        "load_error": "加载 SSO 配置失败",
+        "not_configured": "未配置",
+        "oidc_client_id": "客户端 ID",
+        "oidc_client_secret": "客户端密钥",
+        "oidc_client_secret_help": "请妥善保管此密钥。它用于与您的身份提供商进行认证。",
+        "oidc_info": "直接连接到任何兼容 OpenID Connect 的身份提供商（Azure AD、Okta、Google Workspace、Keycloak）。",
+        "oidc_issuer_url": "发行者 URL",
+        "oidc_issuer_url_help": "OIDC 发行者 URL。端点将从 /.well-known/openid-configuration 自动发现。",
+        "oidc_scopes": "作用域",
+        "oidc_scopes_help": "要请求的 OAuth 作用域（空格分隔）。默认：openid email profile",
+        "open_setup_portal": "配置身份提供商",
+        "provider": "SSO 提供商",
+        "save": "保存配置",
+        "save_error": "保存 SSO 配置失败",
+        "save_success": "SSO 配置保存成功",
+        "saving": "保存中...",
+        "select_provider": "选择提供商",
+        "setup_error": "获取设置门户 URL 失败",
+        "setup_not_available": "设置门户不可用。请先配置提供商。",
+        "status_disabled": "已禁用",
+        "status_enabled": "已启用",
+        "subtitle": "为您的组织配置企业 SSO",
+        "title": "单点登录 (SSO)",
+        "workos_info": "WorkOS 提供支持 SAML 和 OIDC 身份提供商的企业 SSO。",
+        "workos_org_id": "WorkOS 组织 ID",
+        "workos_org_id_help": "当您通过设置门户配置 SSO 时，此 ID 将自动生成。"
       }
     },
     "users": {
@@ -2397,7 +2759,8 @@
           "table": {
             "email": "电子邮件",
             "signup_status": "注册状态",
-            "email_sent": "邮件已发送"
+            "email_sent": "邮件已发送",
+            "actions": "操作"
           },
           "status": {
             "pending": "处理中",
@@ -2406,12 +2769,34 @@
           "email_status": {
             "sent": "已发送",
             "no": "未发送"
-          }
+          },
+          "no_invites": "没有待处理的邀请",
+          "no_results": "未找到匹配您搜索的邀请",
+          "remove_button": "移除",
+          "remove_error": "移除邀请时出错",
+          "remove_message": "确定要移除发给 {{email}} 的邀请吗？",
+          "remove_success": "邀请已移除",
+          "remove_title": "移除邀请",
+          "removing": "正在移除邀请...",
+          "search_placeholder": "按邮箱搜索..."
         },
         "toasts": {
           "sending": "正在发送邀请...",
           "success": "邀请已发送",
-          "error": "发送邀请失败"
+          "error": "发送邀请失败",
+          "partial": "{{sent}} 个已发送，{{failed}} 个失败"
+        },
+        "no_invite_code": "无",
+        "results": {
+          "failed_count": "{{count}} 个失败",
+          "sent_count": "{{count}} 个已发送",
+          "skipped_count": "{{count}} 个已邀请",
+          "status": {
+            "already_invited": "已邀请",
+            "email_failed": "失败",
+            "sent": "已发送"
+          },
+          "summary_title": "结果"
         }
       },
       "usergroups": {
@@ -2440,7 +2825,9 @@
             },
             "status": {
               "linked": "已关联",
-              "not_linked": "未关联"
+              "not_linked": "未关联",
+              "in_group": "在组内",
+              "not_in_group": "不在组内"
             },
             "actions": {
               "link": "关联",
@@ -2449,7 +2836,31 @@
             "toasts": {
               "link_success": "用户关联成功",
               "unlink_success": "用户取消关联成功",
-              "error": "错误 {{status}}: {{detail}}"
+              "error": "错误 {{status}}: {{detail}}",
+              "bulk_add_success": "成功将 {{count}} 个用户添加到组",
+              "bulk_adding": "正在将用户添加到组...",
+              "bulk_error": "操作过程中发生错误",
+              "bulk_remove_success": "成功从组中移除 {{count}} 个用户",
+              "bulk_removing": "正在从组中移除用户..."
+            },
+            "no_results": "未找到匹配您搜索的用户",
+            "no_users": "此组织暂无用户",
+            "pagination": {
+              "page": "第 {{current}} 页，共 {{total}} 页",
+              "showing": "显示 {{start}}-{{end}}，共 {{total}}"
+            },
+            "search_placeholder": "按姓名或用户名搜索...",
+            "selection": {
+              "add_selected": "将 {{count}} 人添加到组",
+              "clear": "清除",
+              "count": "已选 {{count}} 个用户",
+              "remove_selected": "从组中移除 {{count}} 人",
+              "select_all_visible": "选择所有可见的"
+            },
+            "tabs": {
+              "all": "所有用户",
+              "in_group": "在组内",
+              "not_in_group": "不在组内"
             }
           },
           "create": {
@@ -2492,7 +2903,18 @@
           "deleting": "正在删除...",
           "delete_success": "用户组已删除",
           "delete_error": "删除用户组失败"
-        }
+        },
+        "count": {
+          "plural": "组",
+          "singular": "组"
+        },
+        "member_count": {
+          "plural": "成员",
+          "singular": "成员"
+        },
+        "no_groups": "暂无用户组",
+        "no_results": "未找到匹配的组",
+        "search_placeholder": "搜索组..."
       },
       "roles": {
         "title": "管理角色与权限",
@@ -2510,7 +2932,8 @@
         "actions": {
           "edit": "编辑",
           "delete": "删除",
-          "create": "创建角色"
+          "create": "创建角色",
+          "view_rights": "查看权限"
         },
         "modals": {
           "create": {
@@ -2636,12 +3059,29 @@
             "title": "删除角色？",
             "message": "此操作无法撤销。分配到此角色的所有用户将失去其权限。您确定要删除此角色吗？",
             "button": "删除角色"
+          },
+          "view_rights": {
+            "description": "查看分配给此角色的所有权限",
+            "title": "{{roleName}} - 权限"
           }
         },
         "toasts": {
           "deleting": "正在删除...",
           "delete_success": "角色已删除",
           "delete_error": "删除角色失败"
+        },
+        "rights": {
+          "resources": {
+            "activities": "活动",
+            "collections": "集合",
+            "coursechapters": "课程章节",
+            "courses": "课程",
+            "dashboard": "仪表板",
+            "organizations": "组织",
+            "roles": "角色",
+            "usergroups": "用户组",
+            "users": "用户"
+          }
         }
       }
     },
@@ -3065,7 +3505,30 @@
         "suggestion_calculator_prompt": "创建一个显示基础方程分步解题过程的计算器",
         "suggestion_timeline": "时间轴",
         "suggestion_timeline_prompt": "创建一个展示主要历史事件并可展开详情的交互式时间轴"
+      },
+      "button_block": {
+        "enter_link_url": "输入链接 URL"
       }
+    },
+    "ai_panel": {
+      "add_definition": "添加定义",
+      "add_examples": "添加示例",
+      "add_quiz": "添加测验",
+      "add_summary": "添加摘要",
+      "add_tip": "添加提示",
+      "block_selected": "块已选中",
+      "clear_chat": "清除聊天",
+      "clear_selection": "清除选择",
+      "expand": "展开",
+      "how_can_i_help": "我能如何帮助改善您的内容？",
+      "improve_writing": "改善写作",
+      "input_placeholder": "请 AI 帮助您的内容...",
+      "question_add_quiz": "添加测验",
+      "question_improve": "如何改善这个？",
+      "question_summary": "添加摘要",
+      "simplify": "简化",
+      "title": "AI 编辑器",
+      "translate": "翻译"
     }
   },
   "analytics": {
@@ -3452,6 +3915,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} / {{total}}"
       }
+    },
+    "export": {
+      "button": "导出",
+      "csv": "下载 CSV",
+      "downloading": "导出中...",
+      "json": "下载 JSON"
     }
   },
   "onboarding": {
@@ -3547,5 +4016,299 @@
       "description": "一切就绪。您的学习者正期待着精彩的内容。",
       "button": "开始教学"
     }
+  },
+  "boards": {
+    "access": {
+      "access_update_error": "更新访问权限失败",
+      "actions": "操作",
+      "active": "活跃",
+      "board_set_private": "面板已设为私有",
+      "board_set_public": "面板已设为公开",
+      "create_user_group": "创建用户组",
+      "description": "控制谁可以访问此面板",
+      "link": "关联",
+      "link_error": "关联失败：",
+      "link_to_user_group": "关联到用户组",
+      "link_to_user_group_description": "选择一个用户组以授予其访问此面板的权限",
+      "link_to_usergroup_btn": "关联到用户组",
+      "make_board_private": "将面板设为私有",
+      "make_board_public": "将面板设为公开",
+      "no_user_groups": "尚未关联任何用户组",
+      "no_user_groups_available": "没有可用的用户组",
+      "private_description": "只有关联的用户组可以访问此面板",
+      "private_option": "仅用户",
+      "public_description": "所有已登录的组织成员都可以访问此面板",
+      "public_option": "公开",
+      "set_to_private": "设为私有",
+      "set_to_private_confirm": "只有关联的用户组成员才能访问此面板。",
+      "set_to_public": "设为公开",
+      "set_to_public_confirm": "所有已登录的组织成员都可以访问此面板。",
+      "title": "访问控制",
+      "unlink": "取消关联",
+      "unlink_confirm": "此用户组将不再有权访问此面板。",
+      "unlink_error": "取消关联失败：",
+      "unlink_error_generic": "取消关联用户组失败",
+      "unlink_user_group": "取消关联用户组",
+      "user_group": "用户组",
+      "user_group_linked": "用户组已关联",
+      "user_group_unlinked": "用户组已取消关联",
+      "user_groups": "用户组",
+      "user_groups_description": "管理哪些用户组可以访问此面板"
+    },
+    "activity_block": {
+      "no_activities": "未找到活动",
+      "no_courses": "未找到课程",
+      "select_course": "选择课程",
+      "unsupported_type": "不支持的活动类型"
+    },
+    "back_to_boards": "返回面板",
+    "board_created": "面板已创建",
+    "board_created_error": "创建面板失败",
+    "board_deleted_error": "删除面板失败",
+    "board_deleted_success": "面板已删除",
+    "board_duplicated_error": "复制面板失败",
+    "board_duplicated_success": "面板已复制",
+    "boards": "面板",
+    "boards_deleted_partial": "{{success}} 个已删除，{{error}} 个失败",
+    "boards_deleted_success": "{{count}} 个面板已删除",
+    "chat": {
+      "placeholder": "说点什么..."
+    },
+    "clear_selection": "清除",
+    "create_board": "创建面板",
+    "create_new_board": "创建新面板",
+    "create_new_board_description": "设置一个新的协作面板",
+    "delete_board": "删除面板",
+    "delete_board_confirm": "确定要删除此面板吗？此操作无法撤消。",
+    "delete_board_title": "删除 \"{{name}}\"",
+    "delete_boards_title": "删除面板",
+    "delete_selected": "删除所选",
+    "delete_selected_confirm": "确定要删除 {{count}} 个面板吗？此操作无法撤消。",
+    "deleting_board": "正在删除面板...",
+    "deleting_boards": "正在删除 {{count}} 个面板...",
+    "description": "描述",
+    "description_placeholder": "简要描述...",
+    "duplicate_board": "复制面板",
+    "duplicate_board_confirm": "将创建一个具有相同设置的面板副本。",
+    "duplicate_board_title": "复制 \"{{name}}\"",
+    "duplicating_board": "正在复制面板...",
+    "effects": {
+      "aurora": "极光",
+      "black_hole": "黑洞",
+      "blizzard": "暴风雪",
+      "earthquake": "地震",
+      "fireworks": "烟花",
+      "glitch": "故障",
+      "inferno": "地狱火",
+      "lightning": "闪电",
+      "matrix": "矩阵",
+      "nuke": "核爆",
+      "title": "特效"
+    },
+    "embed_block": {
+      "add_embed": "添加 {{name}} 嵌入",
+      "apply": "应用",
+      "code": "代码",
+      "code_help": "粘贴 iframe 或嵌入代码",
+      "edit_embed": "编辑嵌入",
+      "edit_embed_code": "编辑嵌入代码",
+      "edit_embed_url": "编辑嵌入 URL",
+      "embed": "嵌入",
+      "paste_code": "粘贴嵌入代码",
+      "paste_url": "粘贴嵌入 URL",
+      "remove_embed": "移除嵌入",
+      "url": "URL",
+      "url_help": "粘贴来自 YouTube、Figma、CodePen、Spotify 等的 URL"
+    },
+    "general": {
+      "board_updated": "面板已更新",
+      "board_updated_error": "更新面板失败",
+      "description": "基本面板信息",
+      "save_changes": "保存更改",
+      "saving": "保存中...",
+      "title": "常规"
+    },
+    "member_count": "{{count}} 名成员",
+    "member_count_plural": "{{count}} 名成员",
+    "members": {
+      "actions": "操作",
+      "add_member": "添加成员",
+      "add_member_description": "搜索要添加到此面板的组织成员",
+      "adding": "添加中...",
+      "description": "管理谁可以在此面板上协作",
+      "editor": "编辑者",
+      "member_added": "成员已添加",
+      "member_added_error": "添加成员失败（可能已是成员）",
+      "member_limit_reached": "成员上限已达（最多10人）",
+      "member_removed": "成员已移除",
+      "member_removed_error": "移除成员失败",
+      "no_members": "暂无成员",
+      "no_users_found": "未找到用户",
+      "remove": "移除",
+      "remove_confirm": "确定要从面板中移除 {{name}} 吗？",
+      "remove_member": "移除成员",
+      "role": "角色",
+      "role_label": "角色：",
+      "search_placeholder": "按姓名或邮箱搜索...",
+      "title": "成员",
+      "user": "用户",
+      "viewer": "查看者"
+    },
+    "name": "名称",
+    "name_placeholder": "例如：项目规划",
+    "new_board": "新面板",
+    "no_boards_description": "创建您的第一个协作面板以开始使用。",
+    "no_boards_found": "未找到面板",
+    "no_boards_yet": "暂无面板",
+    "node_actions": {
+      "delete": "删除",
+      "delete_multiple": "删除 {{count}} 个项目",
+      "move_back": "向后移动",
+      "move_forward": "向前移动"
+    },
+    "open_board": "打开面板",
+    "pagination": {
+      "next": "下一页",
+      "page_of": "第 {{current}} 页，共 {{total}} 页",
+      "previous": "上一页",
+      "results": "\"{{query}}\" 找到 {{count}} 个结果",
+      "results_plural": "\"{{query}}\" 找到 {{count}} 个结果"
+    },
+    "playground_block": {
+      "ai_content": "AI 生成的内容",
+      "calculator": "计算器",
+      "chart": "图表",
+      "chat_header": "AI 游乐场",
+      "check_preview": "查看左侧的预览",
+      "creating": "创建中...",
+      "description": "生成由 AI 驱动的交互元素",
+      "drawing": "绘画",
+      "edit": "编辑",
+      "empty_state": "描述您想创建的内容，然后看它实现",
+      "flashcards": "闪卡",
+      "generate": "生成",
+      "generating": "正在生成交互内容...",
+      "input_placeholder": "描述您想创建的内容...",
+      "input_placeholder_refine": "描述更改或改进...",
+      "max_iterations": "已达到最大迭代次数。请保存您的工作！",
+      "prompt_text": "描述要生成的交互元素",
+      "quiz": "测验",
+      "save_close": "保存并关闭",
+      "streaming": "生成中...",
+      "timeline": "时间线",
+      "title": "AI 游乐场"
+    },
+    "private": "私有",
+    "public": "公开",
+    "search_placeholder": "搜索面板...",
+    "select_all": "全选",
+    "selected_count": "已选 {{count}} 个",
+    "settings": "设置",
+    "share": {
+      "share_board": "分享面板",
+      "share_this_board": "分享此面板"
+    },
+    "thumbnail": {
+      "alt": "面板缩略图",
+      "description": "卡片上显示的面板封面图",
+      "gallery": "图库",
+      "supported_formats": "支持格式：JPG、JPEG、PNG。最大 8MB。",
+      "thumbnail_updated": "缩略图已更新",
+      "thumbnail_updated_error": "上传缩略图失败",
+      "title": "缩略图",
+      "upload_image": "上传图片",
+      "uploading": "上传中..."
+    },
+    "timer": {
+      "close": "关闭",
+      "pause": "暂停",
+      "restart": "重新开始",
+      "resume": "继续",
+      "set_timer": "设置计时器",
+      "set_timer_title": "设置计时器",
+      "times_up": "时间到！"
+    },
+    "toolbar": {
+      "activity": "活动",
+      "add_card": "添加卡片",
+      "ai_playground": "AI 游乐场",
+      "draw": "画笔",
+      "embed": "嵌入",
+      "frame": "框架",
+      "medium": "中等",
+      "note": "笔记",
+      "pan": "平移",
+      "podcast": "播客",
+      "redo": "重做",
+      "select": "选择",
+      "sticker": "贴纸",
+      "sticky_note": "便签",
+      "thick": "粗",
+      "thin": "细",
+      "todo": "待办",
+      "undo": "撤销",
+      "webpage": "网页",
+      "youtube": "YouTube"
+    },
+    "try_different_search": "尝试不同的搜索词",
+    "webpage_block": {
+      "add": "添加",
+      "blocking_notice": "某些网站可能会阻止嵌入",
+      "embed_webpage": "嵌入网页",
+      "open_in_new_tab": "在新标签页中打开",
+      "reload": "重新加载",
+      "url_placeholder": "https://example.com"
+    },
+    "youtube_block": {
+      "add": "添加",
+      "paste_url": "粘贴 YouTube URL",
+      "url_placeholder": "https://youtube.com/watch?v=..."
+    },
+    "zoom": {
+      "zoom_in": "放大",
+      "zoom_out": "缩小"
+    }
+  },
+  "embed": {
+    "not_supported_description": "此类活动需要认证，无法嵌入。",
+    "not_supported_title": "不支持此活动",
+    "powered_by": "由 LearnHouse 提供支持",
+    "visit_activity": "访问活动页面"
+  },
+  "migration": {
+    "accepted_formats": "视频 (MP4, WebM, MOV)、文档 (PDF)、图片 (PNG, JPG, WebP)、音频 (MP3, WAV)",
+    "add_activity": "添加活动",
+    "add_chapter": "添加章节",
+    "ai_failed": "AI 建议失败，回退到手动组织",
+    "all_files_assigned": "所有文件已分配",
+    "click_to_add_more": "点击添加更多文件",
+    "course_created": "课程创建成功！",
+    "course_name": "课程名称",
+    "course_name_placeholder": "例如：Python 入门基础",
+    "course_structure": "课程结构",
+    "create_course": "创建课程",
+    "created_summary": "已创建 {{chapters}} 个章节和 {{activities}} 个活动",
+    "creating_course": "正在创建您的课程...",
+    "creating_description": "正在上传文件并设置章节和活动",
+    "creation_error_generic": "出了点问题。请重试。",
+    "creation_failed": "课程创建失败",
+    "description": "一句话描述",
+    "description_placeholder": "例如：3个模块涵盖基础知识、数据类型和函数",
+    "drop_file_here": "将文件拖放到此处",
+    "drop_files": "将文件拖放到此处或点击浏览",
+    "go_to_course": "前往课程",
+    "new_activity": "新活动",
+    "new_chapter": "新章节",
+    "organize_manually": "手动组织",
+    "organize_with_ai": "AI 组织",
+    "step_complete": "完成",
+    "step_organize": "组织",
+    "step_upload": "上传",
+    "subtitle": "上传您的文件并将其组织成课程",
+    "title": "迁移内容",
+    "try_again": "重试",
+    "unassigned_files": "未分配的文件",
+    "upload_failed": "文件上传失败",
+    "uploading_files": "正在上传文件"
   }
 }
