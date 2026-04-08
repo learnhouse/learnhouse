@@ -91,8 +91,34 @@
         "communities": {
           "title": "Standaard Functie",
           "description": "Community's is een premium functie die alleen beschikbaar is voor organisaties met ons Standaard abonnement of hoger. Upgrade om discussiecommunity's voor je leden te ontgrendelen."
+        },
+        "analytics": {
+          "description": "Analyses is een premiumfunctie alleen beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om inzichten over uw leerlingen en inhoud te ontgrendelen.",
+          "title": "Standard-functie"
+        },
+        "course_analytics": {
+          "description": "Cursusanalyses is een premiumfunctie alleen beschikbaar voor organisaties met een Pro-plan of hoger. Upgrade om gedetailleerde betrokkenheidsgegevens te ontgrendelen.",
+          "title": "Pro-functie"
+        },
+        "custom_domains": {
+          "description": "Aangepaste domeinen is een premiumfunctie alleen beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om uw eigen domein te gebruiken.",
+          "title": "Standard-functie"
+        },
+        "podcasts": {
+          "description": "Podcasts is een premiumfunctie alleen beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om podcasts te maken en delen.",
+          "title": "Standard-functie"
+        },
+        "seo": {
+          "description": "SEO-optimalisatietools zijn alleen beschikbaar voor organisaties met een Standard-plan of hoger. Upgrade om de weergave in zoekmachines aan te passen.",
+          "title": "Standard-functie"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) is een premiumfunctie alleen beschikbaar voor organisaties met een Enterprise-plan. Upgrade om veilige authenticatie via uw identiteitsprovider in te schakelen.",
+          "title": "Enterprise-functie"
         }
-      }
+      },
+      "current_plan": "Huidig plan",
+      "upgrade_to": "Upgraden naar"
     },
     "features": {
       "disabled": {
@@ -104,7 +130,8 @@
           "communities": "Gemeenschappen",
           "podcasts": "Podcasts",
           "payments": "Betalingen",
-          "trail": "Voortgang bijhouden"
+          "trail": "Voortgang bijhouden",
+          "boards": "Borden"
         },
         "public": {
           "title": "{{feature}} niet beschikbaar",
@@ -149,7 +176,11 @@
     "back": "Terug",
     "of": "van",
     "creating": "Aanmaken...",
-    "view_details": "Details bekijken"
+    "view_details": "Details bekijken",
+    "boards": "Borden",
+    "close": "Sluiten",
+    "optional": "optioneel",
+    "playgrounds": "Playgrounds"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -239,7 +270,36 @@
     "invite_required": "Uitnodiging vereist",
     "invite_required_desc": "Een uitnodigingscode is vereist om lid te worden van {{org}}",
     "invite_code": "Uitnodigingscode",
-    "validate_invite": "Uitnodiging valideren"
+    "validate_invite": "Uitnodiging valideren",
+    "create_your_account": "Maak uw account aan",
+    "email_verification_required": "E-mailverificatie vereist",
+    "email_verification_required_join": "Verifieer uw e-mailadres voordat u lid wordt van een organisatie. Controleer uw inbox voor de verificatie-e-mail.",
+    "login_failed": "Inloggen mislukt",
+    "sign_in_with_sso": "Inloggen met SSO",
+    "sso_callback": {
+      "auth_failed": "Authenticatie mislukt",
+      "authenticating": "Authenticeren...",
+      "copied": "Gekopieerd!",
+      "copy_details": "Kopiëren naar klembord",
+      "error": "SSO-authenticatie mislukt. Probeer het opnieuw.",
+      "error_code": "Foutcode",
+      "go_home": "Naar home",
+      "hide_details": "Technische details verbergen",
+      "missing_params": "Ongeldige SSO-callback. Vereiste parameters ontbreken.",
+      "please_wait": "Even geduld terwijl we uw identiteit verifiëren",
+      "provider": "Provider",
+      "redirecting": "U wordt doorgestuurd naar de applicatie...",
+      "show_details": "Technische details tonen",
+      "success": "Authenticatie geslaagd",
+      "tips": {
+        "access_denied": "Als u het inlogverzoek per ongeluk hebt geweigerd, probeer het opnieuw en accepteer de machtigingen.",
+        "domain_not_allowed": "Neem contact op met uw organisatiebeheerder om te verifiëren dat uw e-maildomein is toegestaan.",
+        "invalid_state": "Uw sessie is mogelijk verlopen. Log opnieuw in.",
+        "server_error": "De identiteitsprovider ondervindt problemen. Probeer het later opnieuw."
+      },
+      "try_again": "Opnieuw proberen"
+    },
+    "sso_error": "SSO-authenticatie mislukt. Probeer het opnieuw."
   },
   "validation": {
     "required": "Verplicht",
@@ -517,14 +577,19 @@
         "still_working": "Nog bezig...",
         "video_takes_time": "Video-analyse kan 1-2 minuten duren",
         "video_hint": "Video's kunnen 1-2 minuten nodig hebben om te verwerken"
-      }
+      },
+      "from_existing": "Van bestaande inhoud",
+      "from_existing_description": "Upload bestanden van een ander platform en organiseer ze in een cursus"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Gekopieerd!",
+    "quit_course_confirm": "Weet u zeker dat u deze cursus wilt verlaten? U verliest al uw voortgang.",
+    "quit_course_title": "Cursus verlaten?"
   },
   "communities": {
     "title": "Community's",
@@ -684,7 +749,99 @@
     "deleting_podcast": "Podcast verwijderen...",
     "podcast_deleted_success": "Podcast succesvol verwijderd",
     "podcast_deleted_error": "Kan podcast niet verwijderen",
-    "edit_content": "Inhoud bewerken"
+    "edit_content": "Inhoud bewerken",
+    "create_new_podcast": "Maak een nieuwe podcast voor uw organisatie",
+    "create_podcast": "Podcast aanmaken",
+    "create_podcast_btn": "Podcast aanmaken",
+    "create_podcasts_placeholder": "Maak podcasts om audio-inhoud te delen",
+    "creating_podcast": "Podcast aanmaken...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3-, WAV- of M4A-bestanden ondersteund",
+        "audio_label": "Audiobestand",
+        "create": "Aflevering aanmaken",
+        "create_error": "Aflevering aanmaken mislukt",
+        "create_first": "Eerste aflevering aanmaken",
+        "created": "Aflevering aangemaakt",
+        "creating": "Aflevering aanmaken...",
+        "delete": "Verwijderen",
+        "delete_confirm": "Weet u zeker dat u deze aflevering wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+        "delete_error": "Aflevering verwijderen mislukt",
+        "delete_title": "Aflevering verwijderen?",
+        "deleted": "Aflevering verwijderd",
+        "deleting": "Aflevering verwijderen...",
+        "description_label": "Beschrijving",
+        "description_placeholder": "Voer de beschrijving van de aflevering in",
+        "edit": "Bewerken",
+        "edit_episode": "Aflevering bewerken",
+        "edit_episode_description": "Afleveringsdetails bijwerken",
+        "new_episode": "Nieuwe aflevering",
+        "new_episode_description": "Voeg een nieuwe aflevering toe aan deze podcast",
+        "no_audio": "Geen audiobestand",
+        "no_episodes_description": "Begin met het toevoegen van uw eerste aflevering",
+        "publish": "Publiceren",
+        "replace_audio": "Audiobestand vervangen",
+        "save": "Wijzigingen opslaan",
+        "title_label": "Titel",
+        "title_placeholder": "Voer de titel van de aflevering in",
+        "unpublish": "Depubliceren",
+        "update_error": "Aflevering bijwerken mislukt",
+        "updated": "Aflevering bijgewerkt",
+        "updating": "Aflevering bijwerken...",
+        "upload_audio": "Audiobestand uploaden"
+      },
+      "form": {
+        "about": "Over",
+        "about_max_length": "Over mag maximaal 2000 tekens zijn",
+        "about_placeholder": "Vertel luisteraars meer over deze podcast...",
+        "public_hint": "Iedereen kan deze podcast vinden en beluisteren",
+        "published_hint": "Maak deze podcast zichtbaar op uw organisatiepagina",
+        "tags_hint": "Scheid tags met komma's",
+        "tags_placeholder": "muziek, educatie, tech",
+        "thumbnail": "Miniatuur",
+        "thumbnail_hint": "Aanbevolen formaat: 1400x1400px. JPG of PNG.",
+        "upload_thumbnail": "Miniatuur uploaden",
+        "visibility": "Zichtbaarheidsinstellingen"
+      },
+      "save_changes": "Wijzigingen opslaan",
+      "save_error": "Wijzigingen opslaan mislukt",
+      "saved": "Wijzigingen opgeslagen",
+      "saving": "Opslaan...",
+      "tabs": {
+        "episodes": "Afleveringen",
+        "general": "Algemeen"
+      },
+      "view_podcast": "Podcast bekijken"
+    },
+    "failed_to_create_podcast": "Podcast aanmaken mislukt",
+    "form": {
+      "description_max_length": "Beschrijving mag maximaal 500 tekens zijn",
+      "name_max_length": "Naam mag maximaal 100 tekens zijn",
+      "name_min_length": "Naam moet minstens 3 tekens zijn",
+      "name_required": "Podcastnaam is verplicht"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Annuleren",
+        "description": "Vul de details in om een nieuwe podcast te maken",
+        "form": {
+          "description_label": "Beschrijving",
+          "description_placeholder": "Voer de beschrijving van de podcast in",
+          "name_label": "Podcastnaam",
+          "name_placeholder": "Voer de podcastnaam in",
+          "public_label": "Maak deze podcast openbaar"
+        },
+        "submit": "Podcast aanmaken",
+        "title": "Nieuwe podcast aanmaken"
+      }
+    },
+    "podcast_created_success": "Podcast succesvol aangemaakt",
+    "podcast_name": "Podcastnaam",
+    "podcast_name_required": "Podcastnaam is verplicht",
+    "podcast_tags": "Tags",
+    "podcast_thumbnail": "Podcastminiatuur",
+    "podcast_visibility": "Zichtbaarheid",
+    "search_results": "{{count}} podcast(s) gevonden voor \"{{query}}\""
   },
   "collections": {
     "collections": "Collecties",
@@ -760,7 +917,12 @@
     "size_large": "Grote maat",
     "change_color": "Kleur wijzigen",
     "preview_flip": "Voorbeeld draaien",
-    "activities_count": "{{count}} activiteiten"
+    "activities_count": "{{count}} activiteiten",
+    "copy_link": "Link kopiëren",
+    "embed": "Insluiten",
+    "embed_code_copied": "Insluitcode gekopieerd!",
+    "link_copied": "Link gekopieerd!",
+    "share": "Delen"
   },
   "assignments": {
     "submit_assignment": "Opdracht indienen",
@@ -857,7 +1019,8 @@
     "security": "Beveiliging",
     "my_courses": "Mijn cursussen",
     "no_purchased_courses": "Nog geen cursussen gekocht",
-    "purchased_courses_description": "Cursussen die je hebt gekocht of waarop je bent geabonneerd verschijnen hier"
+    "purchased_courses_description": "Cursussen die je hebt gekocht of waarop je bent geabonneerd verschijnen hier",
+    "purchases": "Aankopen"
   },
   "user": {
     "user_settings": "Gebruikersinstellingen",
@@ -1087,7 +1250,8 @@
     "no_biography": "Geen biografie opgegeven",
     "my_progress": "Mijn voortgang",
     "no_courses_in_progress": "Geen lopende cursussen",
-    "start_course_to_see_progress": "Start een cursus om hier je voortgang te zien"
+    "start_course_to_see_progress": "Start een cursus om hier je voortgang te zien",
+    "bio_placeholder": "Vertel ons iets over uzelf..."
   },
   "roles": {
     "custom_role": "Aangepaste rol",
@@ -1226,7 +1390,9 @@
           "content": "Inhoud",
           "access": "Toegang",
           "contributors": "Bijdragers",
-          "certification": "Certificering"
+          "certification": "Certificering",
+          "analytics": "Analyses",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Toegang geweigerd",
@@ -1517,7 +1683,8 @@
             "general": "Algemeen",
             "thumbnail": "Miniatuur",
             "course": "Gekoppelde cursus",
-            "moderation": "Moderatie"
+            "moderation": "Moderatie",
+            "access": "Toegang"
           },
           "general": {
             "title": "Algemene instellingen",
@@ -1534,6 +1701,10 @@
           "moderation": {
             "title": "Moderatie",
             "subtitle": "Configureer instellingen voor contentmoderatie"
+          },
+          "access": {
+            "subtitle": "Beheer wie toegang heeft tot deze community",
+            "title": "Toegangsinstellingen"
           }
         },
         "course": {
@@ -1646,6 +1817,60 @@
           "deleting": "Community verwijderen...",
           "delete_success": "Community succesvol verwijderd",
           "delete_error": "Community verwijderen mislukt"
+        },
+        "access": {
+          "public": {
+            "active": "Actief",
+            "confirmation_button": "Wijzigen naar openbaar",
+            "confirmation_message": "Weet u zeker dat u deze community openbaar wilt maken?",
+            "confirmation_title": "Wijzigen naar openbaar?",
+            "description": "De community is openbaar. Iedereen kan discussies bekijken en eraan deelnemen.",
+            "title": "Openbaar"
+          },
+          "restricted": {
+            "active": "Actief",
+            "confirmation_button": "Wijzigen naar beperkt",
+            "confirmation_message": "Weet u zeker dat u deze community wilt beperken? Alleen leden van gekoppelde gebruikersgroepen hebben toegang.",
+            "confirmation_title": "Wijzigen naar beperkt?",
+            "description": "De community is alleen toegankelijk voor leden van geselecteerde gebruikersgroepen.",
+            "title": "Beperkt"
+          },
+          "subtitle": "Kies of uw community openbaar of alleen toegankelijk voor specifieke gebruikersgroepen moet zijn",
+          "title": "Toegangsinstellingen",
+          "toasts": {
+            "update_error": "Toegangsinstellingen bijwerken mislukt",
+            "update_success": "Toegangsinstellingen succesvol bijgewerkt"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Verwijderen",
+              "link_to_usergroup": "Koppelen aan gebruikersgroep"
+            },
+            "modals": {
+              "create_usergroup": "Gebruikersgroep aanmaken",
+              "link_button": "Koppelen",
+              "link_description": "Kies een gebruikersgroep om te koppelen aan deze community.",
+              "link_title": "Community koppelen aan gebruikersgroep",
+              "no_usergroups": "Geen gebruikersgroepen beschikbaar",
+              "unlink_button": "Toegang verwijderen",
+              "unlink_message": "Gebruikers van deze groep hebben geen toegang meer tot deze community.",
+              "unlink_title": "Groepstoegang verwijderen?",
+              "usergroup_name": "Groepsnaam",
+              "warning": "Gebruikers die niet in gekoppelde groepen zitten verliezen toegang"
+            },
+            "subtitle": "Verleen toegang door te koppelen aan gebruikersgroepen.",
+            "table": {
+              "actions": "Acties",
+              "name": "Naam"
+            },
+            "title": "Gebruikersgroepen",
+            "toasts": {
+              "link_error": "Fout {{status}}: {{detail}}",
+              "link_success": "Gebruikersgroep succesvol gekoppeld",
+              "unlink_error": "Fout bij verwijderen groepstoegang",
+              "unlink_success": "Groepstoegang succesvol verwijderd"
+            }
+          }
         }
       },
       "structure": {
@@ -1787,6 +2012,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Cursuslimiet bereikt ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "SEO-instellingen opslaan mislukt"
+        },
+        "form": {
+          "canonical_url_hint": "Gebruik als deze cursus elders is gedupliceerd. Laat leeg voor standaard URL",
+          "canonical_url_label": "Canonieke URL",
+          "canonical_url_placeholder": "https://example.com/course/uw-cursus",
+          "description_hint": "Laat leeg om de cursusbeschrijving te gebruiken. Aanbevolen: 150-160 tekens",
+          "description_label": "Metabeschrijving",
+          "description_placeholder": "Voer een aantrekkelijke beschrijving in voor zoekresultaten",
+          "enable_jsonld_hint": "Voegt Course schema.org-markup toe voor rich snippets",
+          "enable_jsonld_label": "JSON-LD gestructureerde data inschakelen",
+          "keywords_hint": "Kommagescheiden lijst van trefwoorden",
+          "keywords_label": "Trefwoorden",
+          "keywords_placeholder": "trefwoord1, trefwoord2, trefwoord3",
+          "og_description_label": "OG-beschrijving",
+          "og_description_placeholder": "Aangepaste beschrijving voor social media",
+          "og_image_hint": "Aangepaste afbeeldings-URL voor sociaal delen",
+          "og_image_label": "OG-afbeeldings-URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG-titel",
+          "og_title_placeholder": "Aangepaste titel voor social media",
+          "robots_nofollow_hint": "Indien ingeschakeld volgen zoekmachines geen links op deze pagina",
+          "robots_nofollow_label": "Links volgen voorkomen (nofollow)",
+          "robots_noindex_hint": "Indien ingeschakeld indexeren zoekmachines deze cursus niet",
+          "robots_noindex_label": "Zoekmachine-indexering voorkomen (noindex)",
+          "title_hint": "Laat leeg om de cursusnaam te gebruiken. Aanbevolen: 50-60 tekens",
+          "title_label": "SEO-titel",
+          "title_placeholder": "Voer een aangepaste titel in voor zoekmachines",
+          "twitter_card_label": "Kaarttype",
+          "twitter_card_summary": "Samenvatting",
+          "twitter_card_summary_large": "Samenvatting met grote afbeelding",
+          "twitter_description_label": "Twitter-beschrijving",
+          "twitter_description_placeholder": "Aangepaste beschrijving voor Twitter",
+          "twitter_title_label": "Twitter-titel",
+          "twitter_title_placeholder": "Aangepaste titel voor Twitter"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Configureer hoe uw cursus verschijnt in zoekresultaten",
+            "title": "Basis-SEO"
+          },
+          "opengraph": {
+            "subtitle": "Pas aan hoe uw cursus verschijnt bij delen op social media",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Beheer zoekmachine-indexering en schakel rich snippets in",
+            "title": "Robots en gestructureerde data"
+          },
+          "twitter": {
+            "subtitle": "Pas aan hoe uw cursus verschijnt bij delen op Twitter/X",
+            "title": "Twitter-kaart"
+          }
+        },
+        "subtitle": "Optimaliseer uw cursus voor zoekmachines en social media",
+        "title": "SEO-instellingen",
+        "validation": {
+          "description_max_length": "Metabeschrijving mag maximaal 160 tekens zijn",
+          "invalid_url": "Voer een geldige URL in",
+          "og_description_max_length": "OG-beschrijving mag maximaal 200 tekens zijn",
+          "og_title_max_length": "OG-titel mag maximaal 70 tekens zijn",
+          "title_max_length": "SEO-titel mag maximaal 70 tekens zijn",
+          "twitter_description_max_length": "Twitter-beschrijving mag maximaal 200 tekens zijn",
+          "twitter_title_max_length": "Twitter-titel mag maximaal 70 tekens zijn"
+        }
       }
     },
     "organization": {
@@ -1800,7 +2094,10 @@
           "ai": "AI",
           "api": "API-toegang",
           "features": "Functies",
-          "other": "Overig"
+          "other": "Overig",
+          "domains": "Domeinen",
+          "sso": "SSO",
+          "usage": "Gebruik"
         },
         "pages": {
           "general": {
@@ -1830,6 +2127,18 @@
           "features": {
             "title": "Functies",
             "subtitle": "Schakel functies in of uit voor je organisatie"
+          },
+          "domains": {
+            "subtitle": "Aangepaste domeinen configureren voor uw organisatie",
+            "title": "Aangepaste domeinen"
+          },
+          "sso": {
+            "subtitle": "SSO configureren voor uw organisatie",
+            "title": "Single Sign-On"
+          },
+          "usage": {
+            "subtitle": "Resourcegebruik en planlimieten monitoren",
+            "title": "Gebruik"
           }
         },
         "name": "Organisatienaam",
@@ -1849,7 +2158,10 @@
         "updating": "Organisatiegegevens bijwerken...",
         "footer_text": "Voettekst",
         "footer_text_placeholder": "Voer voettekst in...",
-        "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven"
+        "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven",
+        "watermark_desc": "LearnHouse-watermerk tonen op organisatiepagina's",
+        "watermark_free_plan": "Watermerk wordt altijd getoond bij het gratis plan",
+        "watermark_label": "\"Made with LearnHouse\"-watermerk"
       },
       "images": {
         "title": "Afbeeldingen & Previews",
@@ -1908,7 +2220,8 @@
         "tabs": {
           "images": "Afbeeldingen & Previews",
           "social": "Sociale links",
-          "theme": "Thema"
+          "theme": "Thema",
+          "auth": "Auth"
         }
       },
       "socials": {
@@ -1980,6 +2293,14 @@
           "collections": {
             "title": "Collecties",
             "description": "Sta organisatie van cursussen in collecties toe"
+          },
+          "courses": {
+            "description": "Cursussen en voortgangsregistratie inschakelen",
+            "title": "Cursussen"
+          },
+          "podcasts": {
+            "description": "Podcast-creatie en audio-inhoud inschakelen",
+            "title": "Podcasts"
           }
         },
         "toasts": {
@@ -1987,7 +2308,8 @@
           "disabling": "{{feature}} wordt uitgeschakeld...",
           "enabled": "{{feature}} ingeschakeld",
           "disabled": "{{feature}} uitgeschakeld",
-          "error": "Bijwerken van {{feature}}-configuratie mislukt"
+          "error": "Bijwerken van {{feature}}-configuratie mislukt",
+          "admin_only": "Alleen organisatiebeheerders kunnen functies in- of uitschakelen"
         }
       },
       "auth_branding": {
@@ -2230,6 +2552,45 @@
         "footer_text": "Voettekst",
         "footer_text_desc": "Voeg aangepaste tekst toe om in de paginavoettekst weer te geven.",
         "footer_text_placeholder": "Voer voettekst in..."
+      },
+      "sso": {
+        "allowed_domains": "Toegestane e-maildomeinen",
+        "allowed_domains_help": "Kommagescheiden lijst van e-maildomeinen die mogen inloggen via SSO. Laat leeg om alle domeinen toe te staan.",
+        "auto_provision": "Automatische gebruikersaanmaak",
+        "auto_provision_desc": "Automatisch accounts aanmaken bij eerste SSO-login.",
+        "delete": "SSO-configuratie verwijderen",
+        "delete_confirm": "Weet u zeker dat u deze SSO-configuratie wilt verwijderen?",
+        "delete_error": "SSO-configuratie verwijderen mislukt",
+        "delete_success": "SSO-configuratie verwijderd",
+        "deleting": "Verwijderen...",
+        "enable_sso": "SSO inschakelen",
+        "enable_sso_desc": "Gebruikers authenticeren via de identiteitsprovider van uw organisatie.",
+        "load_error": "SSO-configuratie laden mislukt",
+        "not_configured": "Niet geconfigureerd",
+        "oidc_client_id": "Client-ID",
+        "oidc_client_secret": "Client-geheim",
+        "oidc_client_secret_help": "Houd dit geheim veilig. Het wordt gebruikt voor authenticatie met uw identiteitsprovider.",
+        "oidc_info": "Verbind direct met elke OpenID Connect-compatibele identiteitsprovider.",
+        "oidc_issuer_url": "Uitgever-URL",
+        "oidc_issuer_url_help": "De OIDC-uitgever-URL. Eindpunten worden automatisch ontdekt.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "Te verzoeken OAuth-scopes (gescheiden door spaties). Standaard: openid email profile",
+        "open_setup_portal": "Identiteitsprovider configureren",
+        "provider": "SSO-provider",
+        "save": "Configuratie opslaan",
+        "save_error": "SSO-configuratie opslaan mislukt",
+        "save_success": "SSO-configuratie succesvol opgeslagen",
+        "saving": "Opslaan...",
+        "select_provider": "Selecteer een provider",
+        "setup_error": "Setup-portal-URL ophalen mislukt",
+        "setup_not_available": "Setup-portal niet beschikbaar. Configureer eerst de provider.",
+        "status_disabled": "Uitgeschakeld",
+        "status_enabled": "Ingeschakeld",
+        "subtitle": "Enterprise SSO configureren voor uw organisatie",
+        "title": "Single Sign-On (SSO)",
+        "workos_info": "WorkOS biedt enterprise SSO met SAML- en OIDC-ondersteuning.",
+        "workos_org_id": "WorkOS Organisatie-ID",
+        "workos_org_id_help": "Dit ID wordt automatisch gegenereerd wanneer u SSO configureert via het setup-portal."
       }
     },
     "users": {
@@ -2388,7 +2749,8 @@
           "table": {
             "email": "E-mail",
             "signup_status": "Aanmeldstatus",
-            "email_sent": "E-mail verzonden"
+            "email_sent": "E-mail verzonden",
+            "actions": "Acties"
           },
           "status": {
             "pending": "In afwachting",
@@ -2397,12 +2759,34 @@
           "email_status": {
             "sent": "Verzonden",
             "no": "Nee"
-          }
+          },
+          "no_invites": "Geen openstaande uitnodigingen",
+          "no_results": "Geen uitnodigingen gevonden",
+          "remove_button": "Verwijderen",
+          "remove_error": "Fout bij verwijderen uitnodiging",
+          "remove_message": "Weet u zeker dat u de uitnodiging voor {{email}} wilt verwijderen?",
+          "remove_success": "Uitnodiging verwijderd",
+          "remove_title": "Uitnodiging verwijderen",
+          "removing": "Uitnodiging verwijderen...",
+          "search_placeholder": "Zoeken op e-mail..."
         },
         "toasts": {
           "sending": "Uitnodigingen verzenden...",
           "success": "Uitnodigingen succesvol verzonden",
-          "error": "Fout bij het verzenden van uitnodigingen"
+          "error": "Fout bij het verzenden van uitnodigingen",
+          "partial": "{{sent}} verzonden, {{failed}} mislukt"
+        },
+        "no_invite_code": "Geen",
+        "results": {
+          "failed_count": "{{count}} mislukt",
+          "sent_count": "{{count}} verzonden",
+          "skipped_count": "{{count}} al uitgenodigd",
+          "status": {
+            "already_invited": "Al uitgenodigd",
+            "email_failed": "Mislukt",
+            "sent": "Verzonden"
+          },
+          "summary_title": "Resultaten"
         }
       },
       "usergroups": {
@@ -2431,7 +2815,9 @@
             },
             "status": {
               "linked": "Gekoppeld",
-              "not_linked": "Niet gekoppeld"
+              "not_linked": "Niet gekoppeld",
+              "in_group": "In groep",
+              "not_in_group": "Niet in groep"
             },
             "actions": {
               "link": "Koppelen",
@@ -2440,7 +2826,31 @@
             "toasts": {
               "link_success": "Gebruiker succesvol gekoppeld",
               "unlink_success": "Gebruiker succesvol ontkoppeld",
-              "error": "Fout {{status}}: {{detail}}"
+              "error": "Fout {{status}}: {{detail}}",
+              "bulk_add_success": "{{count}} gebruikers toegevoegd aan groep",
+              "bulk_adding": "Gebruikers toevoegen aan groep...",
+              "bulk_error": "Er is een fout opgetreden",
+              "bulk_remove_success": "{{count}} gebruikers verwijderd uit groep",
+              "bulk_removing": "Gebruikers verwijderen uit groep..."
+            },
+            "no_results": "Geen gebruikers gevonden",
+            "no_users": "Nog geen gebruikers in deze organisatie",
+            "pagination": {
+              "page": "Pagina {{current}} van {{total}}",
+              "showing": "{{start}}-{{end}} van {{total}} getoond"
+            },
+            "search_placeholder": "Zoek gebruikers op naam...",
+            "selection": {
+              "add_selected": "{{count}} toevoegen aan groep",
+              "clear": "Wissen",
+              "count": "{{count}} gebruikers geselecteerd",
+              "remove_selected": "{{count}} verwijderen uit groep",
+              "select_all_visible": "Alle zichtbare selecteren"
+            },
+            "tabs": {
+              "all": "Alle gebruikers",
+              "in_group": "In groep",
+              "not_in_group": "Niet in groep"
             }
           },
           "create": {
@@ -2483,7 +2893,18 @@
           "deleting": "Verwijderen...",
           "delete_success": "Gebruikersgroep succesvol verwijderd",
           "delete_error": "Fout bij het verwijderen van gebruikersgroep"
-        }
+        },
+        "count": {
+          "plural": "groepen",
+          "singular": "groep"
+        },
+        "member_count": {
+          "plural": "leden",
+          "singular": "lid"
+        },
+        "no_groups": "Nog geen gebruikersgroepen",
+        "no_results": "Geen groepen gevonden",
+        "search_placeholder": "Groepen zoeken..."
       },
       "roles": {
         "title": "Beheer rollen & machtigingen",
@@ -2501,7 +2922,8 @@
         "actions": {
           "edit": "Bewerken",
           "delete": "Verwijderen",
-          "create": "Rol aanmaken"
+          "create": "Rol aanmaken",
+          "view_rights": "Rechten bekijken"
         },
         "modals": {
           "create": {
@@ -2627,12 +3049,29 @@
             "title": "Rol verwijderen?",
             "message": "Deze actie kan niet ongedaan worden gemaakt. Alle gebruikers met deze rol verliezen hun machtigingen. Weet je zeker dat je deze rol wilt verwijderen?",
             "button": "Rol verwijderen"
+          },
+          "view_rights": {
+            "description": "Bekijk alle machtigingen voor deze rol",
+            "title": "{{roleName}} - Machtigingen"
           }
         },
         "toasts": {
           "deleting": "Verwijderen...",
           "delete_success": "Rol succesvol verwijderd",
           "delete_error": "Fout bij het verwijderen van rol"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Activiteiten",
+            "collections": "Collecties",
+            "coursechapters": "Cursushoofdstukken",
+            "courses": "Cursussen",
+            "dashboard": "Dashboard",
+            "organizations": "Organisaties",
+            "roles": "Rollen",
+            "usergroups": "Gebruikersgroepen",
+            "users": "Gebruikers"
+          }
         }
       }
     },
@@ -2915,11 +3354,33 @@
       "common": {
         "cancel": "Annuleren",
         "save": "Opslaan",
-        "apply": "Toepassen"
+        "apply": "Toepassen",
+        "align_center": "Centreren",
+        "align_left": "Links uitlijnen",
+        "align_right": "Rechts uitlijnen",
+        "download": "Downloaden",
+        "drop_or_browse": "Sleep uw bestand hierheen of klik om te bladeren",
+        "expand": "Uitvouwen",
+        "full_width": "Volledige breedte",
+        "large": "Groot",
+        "medium": "Medium",
+        "size": "Grootte",
+        "small": "Klein",
+        "upload": "Uploaden",
+        "uploading": "Uploaden..."
       },
       "quiz_block": {
         "question_placeholder": "Typ uw vraag...",
-        "answer_placeholder": "Typ het antwoord..."
+        "answer_placeholder": "Typ het antwoord...",
+        "add_answer": "Antwoord toevoegen",
+        "add_question": "Vraag toevoegen",
+        "all_correct": "Alle antwoorden zijn correct!",
+        "delete_answer": "Antwoord verwijderen",
+        "mark_correct": "Markeren als correct",
+        "mark_incorrect": "Markeren als fout",
+        "reset_answers": "Antwoorden resetten",
+        "some_incorrect": "Sommige antwoorden zijn fout!",
+        "submit": "Verzenden"
       },
       "math_block": {
         "templates": "Sjablonen",
@@ -3002,7 +3463,62 @@
         "suggestion_calculator_prompt": "Maak een rekenmachine die stapsgewijze oplossingen toont voor basis vergelijkingen",
         "suggestion_timeline": "Tijdlijn",
         "suggestion_timeline_prompt": "Maak een interactieve tijdlijn met belangrijke historische gebeurtenissen met uitklapbare details"
+      },
+      "button_block": {
+        "enter_link_url": "Voer link-URL in"
+      },
+      "flipcard_block": {
+        "back": "Achterkant",
+        "click_to_flip": "Klik om om te draaien",
+        "front": "Voorkant"
+      },
+      "image_block": {
+        "download_image": "Afbeelding downloaden",
+        "drop_or_browse": "Sleep uw afbeelding hierheen of klik om te bladeren",
+        "expand_image": "Afbeelding uitvouwen",
+        "supported_formats": "Ondersteunt JPG, PNG, WebP en GIF",
+        "uploading": "Afbeelding uploaden...",
+        "viewer_title": "Afbeeldingsviewer"
+      },
+      "pdf_block": {
+        "document_title": "PDF-document",
+        "download_pdf": "PDF downloaden",
+        "drop_or_browse": "Sleep uw PDF hierheen of klik om te bladeren",
+        "expand_pdf": "PDF uitvouwen",
+        "no_pdf": "Geen PDF beschikbaar",
+        "supported_formats": "Ondersteunt PDF-formaat",
+        "upload_pdf": "PDF uploaden",
+        "uploading": "PDF uploaden..."
+      },
+      "video_block": {
+        "download_video": "Video downloaden",
+        "drop_or_browse": "Sleep uw video hierheen of klik om te bladeren",
+        "expand_video": "Video uitvouwen",
+        "player_title": "Videospeler",
+        "supported_formats": "Ondersteunt MP4- en WebM-formaten",
+        "unsupported_format": "Upload een ondersteund videoformaat (MP4 of WebM)",
+        "uploading": "Video uploaden..."
       }
+    },
+    "ai_panel": {
+      "add_definition": "Definitie toevoegen",
+      "add_examples": "Voorbeelden toevoegen",
+      "add_quiz": "Quiz toevoegen",
+      "add_summary": "Samenvatting toevoegen",
+      "add_tip": "Tip toevoegen",
+      "block_selected": "blok geselecteerd",
+      "clear_chat": "Chat wissen",
+      "clear_selection": "Selectie wissen",
+      "expand": "Uitvouwen",
+      "how_can_i_help": "Hoe kan ik helpen uw inhoud te verbeteren?",
+      "improve_writing": "Schrijfstijl verbeteren",
+      "input_placeholder": "Vraag AI om te helpen met uw inhoud...",
+      "question_add_quiz": "Een quiz toevoegen",
+      "question_improve": "Hoe kan ik dit verbeteren?",
+      "question_summary": "Een samenvatting toevoegen",
+      "simplify": "Vereenvoudigen",
+      "title": "AI-editor",
+      "translate": "Vertalen"
     }
   },
   "analytics": {
@@ -3389,6 +3905,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} van {{total}}"
       }
+    },
+    "export": {
+      "button": "Exporteren",
+      "csv": "CSV downloaden",
+      "downloading": "Exporteren...",
+      "json": "JSON downloaden"
     }
   },
   "onboarding": {
@@ -3484,5 +4006,299 @@
       "description": "Alles is ingesteld. Je leerlingen wachten op iets geweldigs.",
       "button": "Begin met lesgeven"
     }
+  },
+  "boards": {
+    "access": {
+      "access_update_error": "Toegang bijwerken mislukt",
+      "actions": "Acties",
+      "active": "Actief",
+      "board_set_private": "Bord ingesteld als privé",
+      "board_set_public": "Bord ingesteld als openbaar",
+      "create_user_group": "Gebruikersgroep aanmaken",
+      "description": "Beheer wie toegang heeft tot dit bord",
+      "link": "Koppelen",
+      "link_error": "Koppelen mislukt: ",
+      "link_to_user_group": "Koppelen aan gebruikersgroep",
+      "link_to_user_group_description": "Selecteer een gebruikersgroep om toegang te geven tot dit bord",
+      "link_to_usergroup_btn": "Koppelen aan gebruikersgroep",
+      "make_board_private": "Bord privé maken",
+      "make_board_public": "Bord openbaar maken",
+      "no_user_groups": "Nog geen gebruikersgroepen gekoppeld",
+      "no_user_groups_available": "Geen gebruikersgroepen beschikbaar",
+      "private_description": "Alleen gekoppelde gebruikersgroepen hebben toegang",
+      "private_option": "Alleen gebruikers",
+      "public_description": "Alle ingelogde organisatieleden hebben toegang",
+      "public_option": "Openbaar",
+      "set_to_private": "Instellen als privé",
+      "set_to_private_confirm": "Alleen leden van gekoppelde gebruikersgroepen hebben toegang tot dit bord.",
+      "set_to_public": "Instellen als openbaar",
+      "set_to_public_confirm": "Alle ingelogde organisatieleden hebben toegang tot dit bord.",
+      "title": "Toegangsbeheer",
+      "unlink": "Ontkoppelen",
+      "unlink_confirm": "Deze gebruikersgroep heeft geen toegang meer tot dit bord.",
+      "unlink_error": "Ontkoppelen mislukt: ",
+      "unlink_error_generic": "Gebruikersgroep ontkoppelen mislukt",
+      "unlink_user_group": "Gebruikersgroep ontkoppelen",
+      "user_group": "Gebruikersgroep",
+      "user_group_linked": "Gebruikersgroep gekoppeld",
+      "user_group_unlinked": "Gebruikersgroep ontkoppeld",
+      "user_groups": "Gebruikersgroepen",
+      "user_groups_description": "Beheer welke gebruikersgroepen toegang hebben tot dit bord"
+    },
+    "activity_block": {
+      "no_activities": "Geen activiteiten gevonden",
+      "no_courses": "Geen cursussen gevonden",
+      "select_course": "Selecteer een cursus",
+      "unsupported_type": "Niet-ondersteund activiteitstype"
+    },
+    "back_to_boards": "Terug naar borden",
+    "board_created": "Bord aangemaakt",
+    "board_created_error": "Bord aanmaken mislukt",
+    "board_deleted_error": "Bord verwijderen mislukt",
+    "board_deleted_success": "Bord verwijderd",
+    "board_duplicated_error": "Bord dupliceren mislukt",
+    "board_duplicated_success": "Bord gedupliceerd",
+    "boards": "Borden",
+    "boards_deleted_partial": "{{success}} verwijderd, {{error}} mislukt",
+    "boards_deleted_success": "{{count}} bord(en) verwijderd",
+    "chat": {
+      "placeholder": "Zeg iets..."
+    },
+    "clear_selection": "Wissen",
+    "create_board": "Bord aanmaken",
+    "create_new_board": "Nieuw bord aanmaken",
+    "create_new_board_description": "Stel een nieuw samenwerkingsbord in",
+    "delete_board": "Bord verwijderen",
+    "delete_board_confirm": "Weet u zeker dat u dit bord wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "delete_board_title": "\"{{name}}\" verwijderen",
+    "delete_boards_title": "Borden verwijderen",
+    "delete_selected": "Geselecteerde verwijderen",
+    "delete_selected_confirm": "Weet u zeker dat u {{count}} bord(en) wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "deleting_board": "Bord verwijderen...",
+    "deleting_boards": "{{count}} bord(en) verwijderen...",
+    "description": "Beschrijving",
+    "description_placeholder": "Korte beschrijving...",
+    "duplicate_board": "Bord dupliceren",
+    "duplicate_board_confirm": "Er wordt een kopie van het bord gemaakt met dezelfde instellingen.",
+    "duplicate_board_title": "\"{{name}}\" dupliceren",
+    "duplicating_board": "Bord dupliceren...",
+    "effects": {
+      "aurora": "Aurora",
+      "black_hole": "Zwart gat",
+      "blizzard": "Sneeuwstorm",
+      "earthquake": "Aardbeving",
+      "fireworks": "Vuurwerk",
+      "glitch": "Glitch",
+      "inferno": "Inferno",
+      "lightning": "Bliksem",
+      "matrix": "Matrix",
+      "nuke": "Kernexplosie",
+      "title": "Effecten"
+    },
+    "embed_block": {
+      "add_embed": "{{name}}-insluiting toevoegen",
+      "apply": "Toepassen",
+      "code": "Code",
+      "code_help": "Plak iframe of insluitcode",
+      "edit_embed": "Insluiting bewerken",
+      "edit_embed_code": "Insluitcode bewerken",
+      "edit_embed_url": "Insluit-URL bewerken",
+      "embed": "Insluiten",
+      "paste_code": "Plak insluitcode",
+      "paste_url": "Plak insluit-URL",
+      "remove_embed": "Insluiting verwijderen",
+      "url": "URL",
+      "url_help": "Plak een URL van YouTube, Figma, CodePen, Spotify en meer"
+    },
+    "general": {
+      "board_updated": "Bord bijgewerkt",
+      "board_updated_error": "Bord bijwerken mislukt",
+      "description": "Basisinformatie bord",
+      "save_changes": "Wijzigingen opslaan",
+      "saving": "Opslaan...",
+      "title": "Algemeen"
+    },
+    "member_count": "{{count}} lid",
+    "member_count_plural": "{{count}} leden",
+    "members": {
+      "actions": "Acties",
+      "add_member": "Lid toevoegen",
+      "add_member_description": "Zoek een organisatielid om toe te voegen aan dit bord",
+      "adding": "Toevoegen...",
+      "description": "Beheer wie kan samenwerken op dit bord",
+      "editor": "Bewerker",
+      "member_added": "Lid toegevoegd",
+      "member_added_error": "Lid toevoegen mislukt (mogelijk al een lid)",
+      "member_limit_reached": "Ledenlimiet bereikt (max 10)",
+      "member_removed": "Lid verwijderd",
+      "member_removed_error": "Lid verwijderen mislukt",
+      "no_members": "Nog geen leden",
+      "no_users_found": "Geen gebruikers gevonden",
+      "remove": "Verwijderen",
+      "remove_confirm": "{{name}} van het bord verwijderen?",
+      "remove_member": "Lid verwijderen",
+      "role": "Rol",
+      "role_label": "Rol:",
+      "search_placeholder": "Zoek op naam of e-mail...",
+      "title": "Leden",
+      "user": "Gebruiker",
+      "viewer": "Kijker"
+    },
+    "name": "Naam",
+    "name_placeholder": "bijv. Projectplanning",
+    "new_board": "Nieuw bord",
+    "no_boards_description": "Maak uw eerste samenwerkingsbord om te beginnen.",
+    "no_boards_found": "Geen borden gevonden",
+    "no_boards_yet": "Nog geen borden",
+    "node_actions": {
+      "delete": "Verwijderen",
+      "delete_multiple": "{{count}} items verwijderen",
+      "move_back": "Naar achteren",
+      "move_forward": "Naar voren"
+    },
+    "open_board": "Bord openen",
+    "pagination": {
+      "next": "Volgende",
+      "page_of": "Pagina {{current}} van {{total}}",
+      "previous": "Vorige",
+      "results": "{{count}} resultaat voor \"{{query}}\"",
+      "results_plural": "{{count}} resultaten voor \"{{query}}\""
+    },
+    "playground_block": {
+      "ai_content": "AI-gegenereerde inhoud",
+      "calculator": "Rekenmachine",
+      "chart": "Grafiek",
+      "chat_header": "AI Playground",
+      "check_preview": "Bekijk het voorbeeld links",
+      "creating": "Aanmaken...",
+      "description": "Genereer interactieve elementen met AI",
+      "drawing": "Tekenen",
+      "edit": "Bewerken",
+      "empty_state": "Beschrijf wat u wilt maken en zie het tot leven komen",
+      "flashcards": "Flashcards",
+      "generate": "Genereren",
+      "generating": "Interactieve inhoud genereren...",
+      "input_placeholder": "Beschrijf wat u wilt maken...",
+      "input_placeholder_refine": "Beschrijf wijzigingen of verfijningen...",
+      "max_iterations": "Maximum iteraties bereikt. Sla uw werk op!",
+      "prompt_text": "Beschrijf een interactief element om te genereren",
+      "quiz": "Quiz",
+      "save_close": "Opslaan en sluiten",
+      "streaming": "Genereren...",
+      "timeline": "Tijdlijn",
+      "title": "AI Playground"
+    },
+    "private": "Privé",
+    "public": "Openbaar",
+    "search_placeholder": "Borden zoeken...",
+    "select_all": "Alles selecteren",
+    "selected_count": "{{count}} geselecteerd",
+    "settings": "Instellingen",
+    "share": {
+      "share_board": "Bord delen",
+      "share_this_board": "Dit bord delen"
+    },
+    "thumbnail": {
+      "alt": "Bordminiatuur",
+      "description": "Bordomslagafbeelding getoond op kaarten",
+      "gallery": "Galerij",
+      "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max 8MB.",
+      "thumbnail_updated": "Miniatuur bijgewerkt",
+      "thumbnail_updated_error": "Miniatuur uploaden mislukt",
+      "title": "Miniatuur",
+      "upload_image": "Afbeelding uploaden",
+      "uploading": "Uploaden..."
+    },
+    "timer": {
+      "close": "Sluiten",
+      "pause": "Pauze",
+      "restart": "Opnieuw starten",
+      "resume": "Hervatten",
+      "set_timer": "Timer instellen",
+      "set_timer_title": "Timer instellen",
+      "times_up": "Tijd is om!"
+    },
+    "toolbar": {
+      "activity": "Activiteit",
+      "add_card": "Kaart toevoegen",
+      "ai_playground": "AI Playground",
+      "draw": "Tekenen",
+      "embed": "Insluiten",
+      "frame": "Frame",
+      "medium": "Medium",
+      "note": "Notitie",
+      "pan": "Pannen",
+      "podcast": "Podcast",
+      "redo": "Opnieuw",
+      "select": "Selecteren",
+      "sticker": "Sticker",
+      "sticky_note": "Plaknotitie",
+      "thick": "Dik",
+      "thin": "Dun",
+      "todo": "Taak",
+      "undo": "Ongedaan maken",
+      "webpage": "Webpagina",
+      "youtube": "YouTube"
+    },
+    "try_different_search": "Probeer een andere zoekterm",
+    "webpage_block": {
+      "add": "Toevoegen",
+      "blocking_notice": "Sommige sites blokkeren mogelijk insluiting",
+      "embed_webpage": "Webpagina insluiten",
+      "open_in_new_tab": "Openen in nieuw tabblad",
+      "reload": "Herladen",
+      "url_placeholder": "https://example.com"
+    },
+    "youtube_block": {
+      "add": "Toevoegen",
+      "paste_url": "Plak een YouTube URL",
+      "url_placeholder": "https://youtube.com/watch?v=..."
+    },
+    "zoom": {
+      "zoom_in": "Inzoomen",
+      "zoom_out": "Uitzoomen"
+    }
+  },
+  "embed": {
+    "not_supported_description": "Dit type activiteit vereist authenticatie en kan niet worden ingebed.",
+    "not_supported_title": "Deze activiteit wordt niet ondersteund",
+    "powered_by": "Powered by LearnHouse",
+    "visit_activity": "Activiteitpagina bezoeken"
+  },
+  "migration": {
+    "accepted_formats": "Video's (MP4, WebM, MOV), Documenten (PDF), Afbeeldingen (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Activiteit toevoegen",
+    "add_chapter": "Hoofdstuk toevoegen",
+    "ai_failed": "AI-suggestie mislukt, terugval naar handmatige organisatie",
+    "all_files_assigned": "Alle bestanden toegewezen",
+    "click_to_add_more": "Klik om meer bestanden toe te voegen",
+    "course_created": "Cursus succesvol aangemaakt!",
+    "course_name": "Cursusnaam",
+    "course_name_placeholder": "bijv. Python Basics voor beginners",
+    "course_structure": "Cursusstructuur",
+    "create_course": "Cursus aanmaken",
+    "created_summary": "{{chapters}} hoofdstukken en {{activities}} activiteiten aangemaakt",
+    "creating_course": "Uw cursus wordt aangemaakt...",
+    "creating_description": "Bestanden uploaden en hoofdstukken en activiteiten instellen",
+    "creation_error_generic": "Er is iets misgegaan. Probeer het opnieuw.",
+    "creation_failed": "Cursus aanmaken mislukt",
+    "description": "Korte beschrijving",
+    "description_placeholder": "bijv. 3 modules over basisprincipes, datatypen en functies",
+    "drop_file_here": "Sleep een bestand hierheen",
+    "drop_files": "Sleep uw bestanden hierheen of klik om te bladeren",
+    "go_to_course": "Ga naar cursus",
+    "new_activity": "Nieuwe activiteit",
+    "new_chapter": "Nieuw hoofdstuk",
+    "organize_manually": "Handmatig organiseren",
+    "organize_with_ai": "Organiseren met AI",
+    "step_complete": "Voltooien",
+    "step_organize": "Organiseren",
+    "step_upload": "Uploaden",
+    "subtitle": "Upload uw bestanden en organiseer ze in een cursus",
+    "title": "Inhoud migreren",
+    "try_again": "Opnieuw proberen",
+    "unassigned_files": "Niet-toegewezen bestanden",
+    "upload_failed": "Bestand uploaden mislukt",
+    "uploading_files": "Bestanden uploaden"
   }
 }
