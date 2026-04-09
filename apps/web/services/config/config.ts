@@ -105,6 +105,15 @@ const getLEARNHOUSE_TOP_DOMAIN = () => {
   return domain.split(':')[0]
 }
 const getLEARNHOUSE_TELEMETRY_DISABLED = () => getConfig('NEXT_TELEMETRY_DISABLED', 'true').toLowerCase();
+const getLEARNHOUSE_PLATFORM_URL = (): string | null => {
+  // NEXT_PUBLIC_ variant (available client-side via runtime config)
+  const pubVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_PLATFORM_URL')
+  if (pubVal) return pubVal.replace(/\/+$/, '')
+  // Non-prefixed variant (server-side only, backward compat)
+  const val = getConfig('LEARNHOUSE_PLATFORM_URL')
+  if (val) return val.replace(/\/+$/, '')
+  return null
+}
 
 // Export getter functions for dynamic runtime configuration
 export const getLEARNHOUSE_HTTP_PROTOCOL_VAL = getLEARNHOUSE_HTTP_PROTOCOL
@@ -112,6 +121,7 @@ export const getLEARNHOUSE_BACKEND_URL_VAL = getLEARNHOUSE_BACKEND_URL
 export const getLEARNHOUSE_DOMAIN_VAL = getLEARNHOUSE_DOMAIN
 export const getLEARNHOUSE_TOP_DOMAIN_VAL = getLEARNHOUSE_TOP_DOMAIN
 export const getLEARNHOUSE_TELEMETRY_DISABLED_VAL = getLEARNHOUSE_TELEMETRY_DISABLED
+export const getLEARNHOUSE_PLATFORM_URL_VAL = getLEARNHOUSE_PLATFORM_URL
 
 // Export constants for backward compatibility
 // These are computed once at module load, but getConfig uses runtime values
@@ -159,16 +169,27 @@ export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 
 /**
  * Get the upgrade/plan URL for a given org.
- * Uses the main LEARNHOUSE_DOMAIN to build the URL.
- * Returns null in OSS/self-hosted mode.
+ * Uses LEARNHOUSE_PLATFORM_URL (the main platform, e.g. learnhouse.app).
+ * Returns null in OSS/self-hosted mode or when platform URL is not configured.
  */
 export const getUpgradeUrl = (orgSlug: string): string | null => {
   const mode = getDeploymentMode()
   if (mode === 'oss' || mode === 'ee') return null
-  const domain = getLEARNHOUSE_DOMAIN()
-  if (!domain || domain === 'localhost') return null
-  const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
-  return `${protocol}${domain}/dashboard/${orgSlug}/plan`
+  const platformUrl = getLEARNHOUSE_PLATFORM_URL()
+  if (!platformUrl) return null
+  return `${platformUrl}/dashboard/${orgSlug}/plan`
+}
+
+/**
+ * Build a URL on the platform domain (e.g. learnhouse.app).
+ * Use this for links that should point to the main platform site,
+ * not the org subdomain (e.g. upgrade, billing, account management).
+ * Returns null when platform URL is not configured.
+ */
+export const getPlatformUrl = (path: string): string | null => {
+  const platformUrl = getLEARNHOUSE_PLATFORM_URL()
+  if (!platformUrl) return null
+  return `${platformUrl}${path}`
 }
 
 // Multi Organization Mode
