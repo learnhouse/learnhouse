@@ -1,33 +1,33 @@
-from datetime import datetime, timedelta
-from typing import Optional
 import csv
 import io
 import json
 import logging
+from datetime import datetime, timedelta
+from typing import Optional
 
 import redis
 from fastapi import HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import aliased
 from sqlmodel import Session, select, func
-from src.security.features_utils.usage import decrease_feature_usage
-from src.services.orgs.invites import send_invite_email
-from src.services.email.utils import get_base_url_from_request
+
 from config.config import get_learnhouse_config
-from src.services.orgs.orgs import rbac_check
-from src.services.webhooks.dispatch import dispatch_webhooks
-from src.security.rbac.constants import ADMIN_ROLE_ID
-from src.security.org_auth import is_org_member
+from src.db.organizations import Organization, OrganizationRead, OrganizationUser
 from src.db.roles import Role, RoleRead
-from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
-from src.db.organizations import (
-    Organization,
-    OrganizationRead,
-    OrganizationUser,
-)
+from src.db.users import AnonymousUser, PublicUser, User, UserRead
+from src.security.features_utils.usage import decrease_feature_usage
+from src.security.org_auth import is_org_member
+from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.services.email.utils import get_base_url_from_request
+from src.services.orgs.invites import send_invite_email
+from src.services.orgs.orgs import rbac_check
+from src.services.users.emails import send_role_changed_email
+from src.services.webhooks.dispatch import dispatch_webhooks
+
+logger = logging.getLogger(__name__)
 
 
 async def get_organization_users(
@@ -619,6 +619,21 @@ async def update_user_role(
             "new_role_uuid": role_uuid,
         },
     )
+
+    # Send role change notification email
+    try:
+        user = db_session.exec(
+            select(User).where(User.id == int(user_id))
+        ).first()
+        if user and user.email:
+            send_role_changed_email(
+                email=user.email,
+                username=user.username,
+                org_name=org.name,
+                new_role_name=role.name,
+            )
+    except Exception:
+        logger.warning("Failed to send role change email to user %s", user_id)
 
     return {"detail": "User role updated"}
 

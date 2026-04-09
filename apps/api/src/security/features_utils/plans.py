@@ -48,7 +48,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
 PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     "free": {
         "features": {
-            "ai": {"enabled": False, "limit": 0, "model": "gpt-4o-mini"},
+            "ai": {"enabled": False, "limit": 0},
             "analytics": {"enabled": False, "limit": 0},
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 5},
@@ -57,7 +57,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 1, "enabled": True, "limit": 10},
             "payments": {"enabled": False},
-            "storage": {"enabled": True, "limit": 5},
+
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
             "boards": {"enabled": False, "limit": 0},
@@ -76,7 +76,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "personal": {
         "features": {
-            "ai": {"enabled": True, "limit": 1000, "model": "gpt-4o-mini"},
+            "ai": {"enabled": True, "limit": 1000},
             "analytics": {"enabled": False, "limit": 0},
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -85,7 +85,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 1, "enabled": True, "limit": 1},
             "payments": {"enabled": False},
-            "storage": {"enabled": True, "limit": 10},
+
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
@@ -104,7 +104,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "personal-family": {
         "features": {
-            "ai": {"enabled": True, "limit": 3000, "model": "gpt-4o"},
+            "ai": {"enabled": True, "limit": 3000},
             "analytics": {"enabled": False, "limit": 0},
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -113,7 +113,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 4, "enabled": True, "limit": 4},
             "payments": {"enabled": False},
-            "storage": {"enabled": True, "limit": 20},
+
             "usergroups": {"enabled": False, "limit": 0},
             "podcasts": {"enabled": False, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
@@ -132,7 +132,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "standard": {
         "features": {
-            "ai": {"enabled": True, "limit": 1000, "model": "gpt-4o-mini"},
+            "ai": {"enabled": True, "limit": 1000},
             "analytics": {"enabled": True, "limit": 0},
             "api": {"enabled": False, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -141,7 +141,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 2, "enabled": True, "limit": 500},
             "payments": {"enabled": True},
-            "storage": {"enabled": True, "limit": 20},
+
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
             "boards": {"enabled": False, "limit": 0},
@@ -160,7 +160,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "pro": {
         "features": {
-            "ai": {"enabled": True, "limit": 3000, "model": "gpt-4o"},
+            "ai": {"enabled": True, "limit": 3000},
             "analytics": {"enabled": True, "limit": 0},
             "api": {"enabled": True, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -169,7 +169,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 10, "enabled": True, "limit": 1000},
             "payments": {"enabled": True},
-            "storage": {"enabled": True, "limit": 50},
+
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
             "boards": {"enabled": True, "limit": 0},
@@ -188,7 +188,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
     },
     "enterprise": {
         "features": {
-            "ai": {"enabled": True, "limit": 10000, "model": "gpt-4o"},
+            "ai": {"enabled": True, "limit": 10000},
             "analytics": {"enabled": True, "limit": 0},
             "api": {"enabled": True, "limit": 0},
             "assignments": {"enabled": True, "limit": 0},
@@ -197,7 +197,7 @@ PLAN_FEATURE_CONFIGS: dict[str, dict] = {
 
             "members": {"admin_limit": 100, "enabled": True, "limit": 0},
             "payments": {"enabled": True},
-            "storage": {"enabled": True, "limit": 200},
+
             "usergroups": {"enabled": True, "limit": 0},
             "podcasts": {"enabled": True, "limit": 0},
             "boards": {"enabled": True, "limit": 0},

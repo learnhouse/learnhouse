@@ -93,8 +93,34 @@
         "communities": {
           "title": "Fitur Standar",
           "description": "Komunitas adalah fitur premium yang hanya tersedia untuk organisasi pada paket Standar kami atau lebih tinggi. Tingkatkan untuk membuka komunitas diskusi untuk anggota Anda."
+        },
+        "analytics": {
+          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
+          "title": "Standard Feature"
+        },
+        "course_analytics": {
+          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
+          "title": "Pro Feature"
+        },
+        "custom_domains": {
+          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
+          "title": "Standard Feature"
+        },
+        "podcasts": {
+          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
+          "title": "Standard Feature"
+        },
+        "seo": {
+          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
+          "title": "Standard Feature"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
+          "title": "Enterprise Feature"
         }
-      }
+      },
+      "current_plan": "Current plan",
+      "upgrade_to": "Upgrade to"
     },
     "features": {
       "disabled": {
@@ -152,12 +178,16 @@
     "back": "Kembali",
     "of": "dari",
     "creating": "Membuat...",
-    "view_details": "Lihat Detail"
+    "view_details": "Lihat Detail",
+    "close": "Tutup",
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
     "join_organization": "Bergabung dengan organisasi ini",
-    "to_access_features": "untuk mengakses semua fitur."
+    "to_access_features": "untuk mengakses semua fitur.",
+    "free_plan_upgrade": "Anda menggunakan paket gratis. Upgrade untuk membuka pengalaman lengkap.",
+    "free_plan_upgrade_button": "Upgrade"
   },
   "auth": {
     "login": "Masuk",
@@ -236,7 +266,65 @@
     "invite_required": "Undangan diperlukan",
     "invite_required_desc": "Kode undangan diperlukan untuk bergabung dengan {{org}}",
     "invite_code": "Kode undangan",
-    "validate_invite": "Validasi undangan"
+    "validate_invite": "Validasi undangan",
+    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
+    "back_to_login": "Back to Login",
+    "check_email_for_verification": "Check Your Email",
+    "check_inbox_message": "Please check your inbox and click the verification link.",
+    "create_your_account": "Create your account",
+    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
+    "email_verification_required": "Email Verification Required",
+    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
+    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
+    "email_verified_success": "Email Verified!",
+    "login_failed": "Login Failed",
+    "password_req_lowercase": "At least one lowercase letter (a-z)",
+    "password_req_min_length": "At least 8 characters",
+    "password_req_number": "At least one number (0-9)",
+    "password_req_special": "At least one special character (!@#$%...)",
+    "password_req_uppercase": "At least one uppercase letter (A-Z)",
+    "password_requirements_not_met": "Password does not meet requirements",
+    "password_strength": "Password strength",
+    "password_strength_fair": "Fair",
+    "password_strength_good": "Good",
+    "password_strength_strong": "Strong",
+    "password_strength_weak": "Weak",
+    "proceed_to_login": "Proceed to Login",
+    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
+    "resend_verification_email": "Resend verification email",
+    "resend_verification_failed": "Failed to resend verification email. Please try again.",
+    "sign_in_with_sso": "Sign in with SSO",
+    "sso_callback": {
+      "auth_failed": "Authentication Failed",
+      "authenticating": "Authenticating...",
+      "copied": "Copied!",
+      "copy_details": "Copy to clipboard",
+      "error": "SSO authentication failed. Please try again.",
+      "error_code": "Error code",
+      "go_home": "Go to Home",
+      "hide_details": "Hide technical details",
+      "missing_params": "Invalid SSO callback. Missing required parameters.",
+      "please_wait": "Please wait while we verify your identity",
+      "provider": "Provider",
+      "redirecting": "Redirecting you to the application...",
+      "show_details": "Show technical details",
+      "success": "Authentication Successful",
+      "tips": {
+        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
+        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "invalid_state": "Your session may have expired. Please try logging in again.",
+        "server_error": "The identity provider is experiencing issues. Please try again later."
+      },
+      "try_again": "Try Again"
+    },
+    "sso_error": "SSO authentication failed. Please try again.",
+    "verification_email_resent": "Verification Email Sent",
+    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
+    "verification_failed": "Verification Failed",
+    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
+    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
+    "verify_email_title": "Verify Your Email",
+    "verifying_email": "Verifying your email address..."
   },
   "validation": {
     "required": "Wajib isi",
@@ -514,14 +602,19 @@
         "still_working": "Masih bekerja...",
         "video_takes_time": "Analisis video bisa memakan waktu 1-2 menit",
         "video_hint": "Video mungkin memerlukan 1-2 menit untuk diproses"
-      }
+      },
+      "from_existing": "From Existing Content",
+      "from_existing_description": "Upload files from another platform and organize them into a course"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Copied!",
+    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
+    "quit_course_title": "Quit Course?"
   },
   "communities": {
     "title": "Komunitas",
@@ -681,7 +774,99 @@
     "deleting_podcast": "Menghapus podcast...",
     "podcast_deleted_success": "Podcast berhasil dihapus",
     "podcast_deleted_error": "Gagal menghapus podcast",
-    "edit_content": "Edit Konten"
+    "edit_content": "Edit Konten",
+    "create_new_podcast": "Create a new podcast for your organization",
+    "create_podcast": "Create Podcast",
+    "create_podcast_btn": "Create Podcast",
+    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
+    "creating_podcast": "Creating podcast...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3, WAV, or M4A files supported",
+        "audio_label": "Audio File",
+        "create": "Create Episode",
+        "create_error": "Failed to create episode",
+        "create_first": "Create First Episode",
+        "created": "Episode created",
+        "creating": "Creating episode...",
+        "delete": "Hapus",
+        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
+        "delete_error": "Failed to delete episode",
+        "delete_title": "Delete Episode?",
+        "deleted": "Episode deleted",
+        "deleting": "Deleting episode...",
+        "description_label": "Deskripsi",
+        "description_placeholder": "Enter episode description",
+        "edit": "Edit",
+        "edit_episode": "Edit Episode",
+        "edit_episode_description": "Update episode details",
+        "new_episode": "New Episode",
+        "new_episode_description": "Add a new episode to this podcast",
+        "no_audio": "No audio file",
+        "no_episodes_description": "Start by adding your first episode",
+        "publish": "Terbitkan",
+        "replace_audio": "Replace Audio File",
+        "save": "Save Changes",
+        "title_label": "Judul",
+        "title_placeholder": "Enter episode title",
+        "unpublish": "Batalkan Terbit",
+        "update_error": "Failed to update episode",
+        "updated": "Episode updated",
+        "updating": "Updating episode...",
+        "upload_audio": "Upload Audio File"
+      },
+      "form": {
+        "about": "About",
+        "about_max_length": "About must be at most 2000 characters",
+        "about_placeholder": "Tell listeners more about this podcast...",
+        "public_hint": "Anyone can find and listen to this podcast",
+        "published_hint": "Make this podcast visible on your organization page",
+        "tags_hint": "Separate tags with commas",
+        "tags_placeholder": "music, education, tech",
+        "thumbnail": "Thumbnail",
+        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
+        "upload_thumbnail": "Upload Thumbnail",
+        "visibility": "Visibility Settings"
+      },
+      "save_changes": "Save Changes",
+      "save_error": "Failed to save changes",
+      "saved": "Changes saved",
+      "saving": "Saving...",
+      "tabs": {
+        "episodes": "Episodes",
+        "general": "Umum"
+      },
+      "view_podcast": "View Podcast"
+    },
+    "failed_to_create_podcast": "Failed to create podcast",
+    "form": {
+      "description_max_length": "Description must be at most 500 characters",
+      "name_max_length": "Name must be at most 100 characters",
+      "name_min_length": "Name must be at least 3 characters",
+      "name_required": "Podcast name is required"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Batal",
+        "description": "Fill in the details to create a new podcast",
+        "form": {
+          "description_label": "Deskripsi",
+          "description_placeholder": "Enter podcast description",
+          "name_label": "Podcast Name",
+          "name_placeholder": "Enter podcast name",
+          "public_label": "Make this podcast public"
+        },
+        "submit": "Create Podcast",
+        "title": "Create New Podcast"
+      }
+    },
+    "podcast_created_success": "Podcast created successfully",
+    "podcast_name": "Podcast Name",
+    "podcast_name_required": "Podcast name is required",
+    "podcast_tags": "Tag",
+    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_visibility": "Visibilitas",
+    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
   },
   "collections": {
     "collections": "Koleksi",
@@ -757,7 +942,12 @@
     "size_large": "Ukuran Besar",
     "change_color": "Ubah Warna",
     "preview_flip": "Pratinjau Balik",
-    "activities_count": "{{count}} aktivitas"
+    "activities_count": "{{count}} aktivitas",
+    "copy_link": "Salin Tautan",
+    "embed": "Sematkan",
+    "embed_code_copied": "Embed code copied!",
+    "link_copied": "Link copied!",
+    "share": "Bagikan"
   },
   "assignments": {
     "submit_assignment": "Kirim Tugas",
@@ -854,7 +1044,8 @@
     "security": "Keamanan",
     "my_courses": "Kursus Saya",
     "no_purchased_courses": "Belum ada kursus yang dibeli",
-    "purchased_courses_description": "Kursus yang Anda beli atau langgani akan muncul di sini"
+    "purchased_courses_description": "Kursus yang Anda beli atau langgani akan muncul di sini",
+    "purchases": "Pembelian"
   },
   "user": {
     "user_settings": "Pengaturan Pengguna",
@@ -1084,7 +1275,8 @@
     "no_biography": "Biografi belum disediakan",
     "my_progress": "Kemajuan Saya",
     "no_courses_in_progress": "Tidak ada kursus yang sedang berjalan",
-    "start_course_to_see_progress": "Mulai kursus untuk melihat kemajuan Anda di sini"
+    "start_course_to_see_progress": "Mulai kursus untuk melihat kemajuan Anda di sini",
+    "bio_placeholder": "Tell us a bit about yourself..."
   },
   "roles": {
     "custom_role": "Peran Kustom",
@@ -1126,7 +1318,54 @@
           "description": "Konfigurasikan pengaturan pribadi, kata sandi, email Anda"
         }
       },
-      "learnhouse_university": "Universitas LearnHouse"
+      "learnhouse_university": "Universitas LearnHouse",
+      "welcome_back": "Selamat datang kembali",
+      "plan": "paket",
+      "create_course": "Buat Kursus",
+      "analytics": "Analitik",
+      "members": "Anggota",
+      "settings": "Pengaturan",
+      "courses": "Kursus",
+      "communities": "Komunitas",
+      "podcasts": "Podcast",
+      "boards": "Papan",
+      "published": "diterbitkan",
+      "draft": "draf",
+      "total_users": "Total pengguna",
+      "public": "publik",
+      "episodes": "episode",
+      "participants": "peserta",
+      "loading": "Memuat...",
+      "enable_analytics_description": "Aktifkan analitik untuk melihat pengguna langsung, pendaftaran, dan lainnya.",
+      "enable": "Aktifkan",
+      "quick_stats": "Statistik Cepat",
+      "full_analytics": "Analitik Lengkap",
+      "live_now": "Langsung Sekarang",
+      "signups_30d": "Pendaftaran (30 hari)",
+      "enrollments_30d": "Pendaftaran kursus (30 hari)",
+      "completions_30d": "Penyelesaian (30 hari)",
+      "recent_courses": "Kursus Terbaru",
+      "view_all": "Lihat Semua",
+      "no_courses_yet": "Belum ada kursus",
+      "create_your_first_course": "Buat kursus pertama Anda",
+      "chapter": "bab",
+      "chapters": "bab",
+      "recent_members": "Anggota Terbaru",
+      "total": "total",
+      "no_members_yet": "Belum ada anggota",
+      "unverified": "Belum diverifikasi",
+      "plan_and_usage": "Paket & Penggunaan",
+      "unlimited": "Tidak terbatas",
+      "admin_seats": "Kursi Admin",
+      "limit_reached": "Batas tercapai",
+      "remaining": "tersisa",
+      "usage_data_unavailable": "Data penggunaan tidak tersedia",
+      "features": "Fitur",
+      "off": "Mati",
+      "ai_credits": "Kredit AI",
+      "used": "digunakan",
+      "no_credits_remaining": "Tidak ada kredit tersisa",
+      "includes_purchased": "Termasuk {{count}} yang dibeli"
     },
     "courses": {
       "title": "Kursus",
@@ -1176,7 +1415,9 @@
           "content": "Konten",
           "access": "Akses",
           "contributors": "Kontributor",
-          "certification": "Sertifikasi"
+          "certification": "Sertifikasi",
+          "analytics": "Analitik",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Akses Ditolak",
@@ -1467,7 +1708,8 @@
             "general": "Umum",
             "thumbnail": "Gambar Mini",
             "course": "Kursus Terkait",
-            "moderation": "Moderasi"
+            "moderation": "Moderasi",
+            "access": "Access"
           },
           "general": {
             "title": "Pengaturan Umum",
@@ -1484,6 +1726,10 @@
           "moderation": {
             "title": "Moderasi",
             "subtitle": "Konfigurasi pengaturan moderasi konten"
+          },
+          "access": {
+            "subtitle": "Control who can access this community",
+            "title": "Access Settings"
           }
         },
         "course": {
@@ -1596,6 +1842,60 @@
           "deleting": "Menghapus komunitas...",
           "delete_success": "Komunitas berhasil dihapus",
           "delete_error": "Gagal menghapus komunitas"
+        },
+        "access": {
+          "public": {
+            "active": "Aktif",
+            "confirmation_button": "Change to Public",
+            "confirmation_message": "Are you sure you want this community to be publicly available?",
+            "confirmation_title": "Change to Public?",
+            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "title": "Publik"
+          },
+          "restricted": {
+            "active": "Aktif",
+            "confirmation_button": "Change to Restricted",
+            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
+            "confirmation_title": "Change to Restricted?",
+            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
+            "title": "Restricted"
+          },
+          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
+          "title": "Access Settings",
+          "toasts": {
+            "update_error": "Failed to update access settings",
+            "update_success": "Access settings updated successfully"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Hapus",
+              "link_to_usergroup": "Link to User Group"
+            },
+            "modals": {
+              "create_usergroup": "Create a User Group",
+              "link_button": "Tautkan",
+              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
+              "link_title": "Link Community to User Group",
+              "no_usergroups": "No User Groups available",
+              "unlink_button": "Remove Access",
+              "unlink_message": "Users from this User Group will no longer have access to this community.",
+              "unlink_title": "Remove User Group Access?",
+              "usergroup_name": "User Group Name",
+              "warning": "Users not in linked User Groups will lose access to this community"
+            },
+            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "table": {
+              "actions": "Tindakan",
+              "name": "Nama"
+            },
+            "title": "User Groups",
+            "toasts": {
+              "link_error": "Error {{status}}: {{detail}}",
+              "link_success": "Successfully linked User Group",
+              "unlink_error": "An error occurred while removing User Group access",
+              "unlink_success": "Successfully removed User Group access"
+            }
+          }
         }
       },
       "structure": {
@@ -1737,6 +2037,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Course limit reached ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "Failed to save SEO settings"
+        },
+        "form": {
+          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "canonical_url_label": "Canonical URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "description_label": "Meta Description",
+          "description_placeholder": "Enter a compelling description for search results",
+          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
+          "enable_jsonld_label": "Enable JSON-LD Structured Data",
+          "keywords_hint": "Comma-separated list of keywords related to your course",
+          "keywords_label": "Keywords",
+          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "og_description_label": "OG Description",
+          "og_description_placeholder": "Custom description for social media sharing",
+          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "og_image_label": "OG Image URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG Title",
+          "og_title_placeholder": "Custom title for social media sharing",
+          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
+          "robots_nofollow_label": "Prevent following links (nofollow)",
+          "robots_noindex_hint": "When enabled, search engines will not index this course",
+          "robots_noindex_label": "Prevent search engine indexing (noindex)",
+          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "title_label": "SEO Title",
+          "title_placeholder": "Enter a custom title for search engines",
+          "twitter_card_label": "Card Type",
+          "twitter_card_summary": "Summary",
+          "twitter_card_summary_large": "Summary with Large Image",
+          "twitter_description_label": "Twitter Description",
+          "twitter_description_placeholder": "Custom description for Twitter sharing",
+          "twitter_title_label": "Twitter Title",
+          "twitter_title_placeholder": "Custom title for Twitter sharing"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Configure how your course appears in search engine results",
+            "title": "Basic SEO"
+          },
+          "opengraph": {
+            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Control search engine indexing and enable rich snippets",
+            "title": "Robots & Structured Data"
+          },
+          "twitter": {
+            "subtitle": "Customize how your course appears when shared on Twitter/X",
+            "title": "Twitter Card"
+          }
+        },
+        "subtitle": "Optimize your course for search engines and social media sharing",
+        "title": "SEO Settings",
+        "validation": {
+          "description_max_length": "Meta description must be 160 characters or less",
+          "invalid_url": "Please enter a valid URL",
+          "og_description_max_length": "OG description must be 200 characters or less",
+          "og_title_max_length": "OG title must be 70 characters or less",
+          "title_max_length": "SEO title must be 70 characters or less",
+          "twitter_description_max_length": "Twitter description must be 200 characters or less",
+          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+        }
       }
     },
     "organization": {
@@ -1751,7 +2120,9 @@
           "api": "Akses API",
           "features": "Fitur",
           "usage": "Usage",
-          "other": "Lainnya"
+          "other": "Lainnya",
+          "domains": "Domains",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1785,6 +2156,14 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "Configure custom domains for your organization",
+            "title": "Custom Domains"
+          },
+          "sso": {
+            "subtitle": "Configure SSO for your organization",
+            "title": "Single Sign-On"
           }
         },
         "name": "Nama Organisasi",
@@ -1802,7 +2181,10 @@
         "updating": "Memperbarui organisasi...",
         "footer_text": "Teks Footer",
         "footer_text_placeholder": "Masukkan teks footer...",
-        "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda"
+        "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda",
+        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
+        "watermark_free_plan": "Watermark is always shown on the free plan",
+        "watermark_label": "\"Made with LearnHouse\" watermark"
       },
       "images": {
         "title": "Gambar & Pratinjau",
@@ -1861,7 +2243,8 @@
         "tabs": {
           "images": "Gambar & Pratinjau",
           "social": "Tautan Sosial",
-          "theme": "Tema"
+          "theme": "Tema",
+          "auth": "Auth"
         }
       },
       "socials": {
@@ -1933,6 +2316,14 @@
           "collections": {
             "title": "Koleksi",
             "description": "Izinkan pengorganisasian kursus ke dalam koleksi"
+          },
+          "courses": {
+            "description": "Enable courses and progress tracking for your organization",
+            "title": "Kursus"
+          },
+          "podcasts": {
+            "description": "Enable podcast creation and audio content for your organization",
+            "title": "Podcast"
           }
         },
         "toasts": {
@@ -1940,7 +2331,8 @@
           "disabling": "Menonaktifkan {{feature}}...",
           "enabled": "{{feature}} diaktifkan",
           "disabled": "{{feature}} dinonaktifkan",
-          "error": "Gagal memperbarui konfigurasi {{feature}}"
+          "error": "Gagal memperbarui konfigurasi {{feature}}",
+          "admin_only": "Only organization admins can enable or disable features"
         }
       },
       "audit_logs": {
@@ -2183,6 +2575,45 @@
         "uploading": "Mengunggah latar belakang...",
         "upload_success": "Gambar latar belakang berhasil diunggah",
         "upload_error": "Gagal mengunggah gambar"
+      },
+      "sso": {
+        "allowed_domains": "Allowed Email Domains",
+        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
+        "auto_provision": "Auto-provision Users",
+        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
+        "delete": "Delete SSO Configuration",
+        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
+        "delete_error": "Failed to delete SSO configuration",
+        "delete_success": "SSO configuration deleted",
+        "deleting": "Deleting...",
+        "enable_sso": "Enable SSO",
+        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
+        "load_error": "Failed to load SSO configuration",
+        "not_configured": "Not configured",
+        "oidc_client_id": "Client ID",
+        "oidc_client_secret": "Client Secret",
+        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
+        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
+        "open_setup_portal": "Configure Identity Provider",
+        "provider": "SSO Provider",
+        "save": "Save Configuration",
+        "save_error": "Failed to save SSO configuration",
+        "save_success": "SSO configuration saved successfully",
+        "saving": "Saving...",
+        "select_provider": "Select a provider",
+        "setup_error": "Failed to get setup portal URL",
+        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "status_disabled": "Nonaktif",
+        "status_enabled": "Aktif",
+        "subtitle": "Configure enterprise SSO for your organization",
+        "title": "Single Sign-On (SSO)",
+        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_org_id": "WorkOS Organization ID",
+        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
       }
     },
     "users": {
@@ -2341,7 +2772,8 @@
           "table": {
             "email": "Email",
             "signup_status": "Status Pendaftaran",
-            "email_sent": "Email terkirim"
+            "email_sent": "Email terkirim",
+            "actions": "Tindakan"
           },
           "status": {
             "pending": "Tertunda",
@@ -2350,12 +2782,34 @@
           "email_status": {
             "sent": "Terkirim",
             "no": "Tidak"
-          }
+          },
+          "no_invites": "No pending invitations",
+          "no_results": "No invitations found matching your search",
+          "remove_button": "Hapus",
+          "remove_error": "Error removing invitation",
+          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
+          "remove_success": "Invitation removed",
+          "remove_title": "Remove invitation",
+          "removing": "Removing invitation...",
+          "search_placeholder": "Search by email..."
         },
         "toasts": {
           "sending": "Mengirim undangan...",
           "success": "Undangan terkirim",
-          "error": "Kesalahan mengirim undangan"
+          "error": "Kesalahan mengirim undangan",
+          "partial": "{{sent}} sent, {{failed}} failed"
+        },
+        "no_invite_code": "Tidak ada",
+        "results": {
+          "failed_count": "{{count}} failed",
+          "sent_count": "{{count}} sent",
+          "skipped_count": "{{count}} already invited",
+          "status": {
+            "already_invited": "Already invited",
+            "email_failed": "Gagal",
+            "sent": "Terkirim"
+          },
+          "summary_title": "Hasil"
         }
       },
       "usergroups": {
@@ -2384,7 +2838,9 @@
             },
             "status": {
               "linked": "Terhubung",
-              "not_linked": "Tidak terhubung"
+              "not_linked": "Tidak terhubung",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             },
             "actions": {
               "link": "Hubungkan",
@@ -2393,7 +2849,31 @@
             "toasts": {
               "link_success": "Pengguna berhasil terhubung",
               "unlink_success": "Pengguna berhasil diputuskan",
-              "error": "Kesalahan {{status}}: {{detail}}"
+              "error": "Kesalahan {{status}}: {{detail}}",
+              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_adding": "Adding users to group...",
+              "bulk_error": "An error occurred during the operation",
+              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_removing": "Removing users from group..."
+            },
+            "no_results": "No users found matching your search",
+            "no_users": "No users in this organization yet",
+            "pagination": {
+              "page": "Page {{current}} of {{total}}",
+              "showing": "Showing {{start}}-{{end}} of {{total}}"
+            },
+            "search_placeholder": "Search users by name or username...",
+            "selection": {
+              "add_selected": "Add {{count}} to Group",
+              "clear": "Hapus",
+              "count": "{{count}} users selected",
+              "remove_selected": "Remove {{count}} from Group",
+              "select_all_visible": "Select all visible"
+            },
+            "tabs": {
+              "all": "All Users",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             }
           },
           "create": {
@@ -2436,7 +2916,18 @@
           "deleting": "Menghapus...",
           "delete_success": "Grup pengguna dihapus",
           "delete_error": "Kesalahan menghapus grup pengguna"
-        }
+        },
+        "count": {
+          "plural": "groups",
+          "singular": "group"
+        },
+        "member_count": {
+          "plural": "members",
+          "singular": "member"
+        },
+        "no_groups": "No user groups yet",
+        "no_results": "No groups found matching your search",
+        "search_placeholder": "Search groups..."
       },
       "roles": {
         "title": "Kelola Peran & Izin",
@@ -2454,7 +2945,8 @@
         "actions": {
           "edit": "Edit",
           "delete": "Hapus",
-          "create": "Buat Peran"
+          "create": "Buat Peran",
+          "view_rights": "View Rights"
         },
         "modals": {
           "create": {
@@ -2580,12 +3072,29 @@
             "title": "Hapus Peran ?",
             "message": "Tindakan ini tidak dapat dibatalkan. Semua pengguna dengan peran ini akan kehilangan izin mereka. Apakah Anda yakin ingin menghapus peran ini?",
             "button": "Hapus Peran"
+          },
+          "view_rights": {
+            "description": "View all permissions assigned to this role",
+            "title": "{{roleName}} - Permissions"
           }
         },
         "toasts": {
           "deleting": "Menghapus...",
           "delete_success": "Peran dihapus",
           "delete_error": "Kesalahan menghapus peran"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Activities",
+            "collections": "Collections",
+            "coursechapters": "Course Chapters",
+            "courses": "Kursus",
+            "dashboard": "Dashboard",
+            "organizations": "Organizations",
+            "roles": "Roles",
+            "usergroups": "User Groups",
+            "users": "Users"
+          }
         }
       }
     },
@@ -2868,11 +3377,33 @@
       "common": {
         "cancel": "Batal",
         "save": "Simpan",
-        "apply": "Terapkan"
+        "apply": "Terapkan",
+        "align_center": "Rata tengah",
+        "align_left": "Rata kiri",
+        "align_right": "Rata kanan",
+        "download": "Unduh",
+        "drop_or_browse": "Letakkan file Anda di sini atau klik untuk menelusuri",
+        "expand": "Perluas",
+        "full_width": "Lebar Penuh",
+        "large": "Besar",
+        "medium": "Sedang",
+        "size": "Ukuran",
+        "small": "Kecil",
+        "upload": "Unggah",
+        "uploading": "Mengunggah..."
       },
       "quiz_block": {
         "question_placeholder": "Masukkan pertanyaan Anda di sini",
-        "answer_placeholder": "Masukkan jawaban di sini"
+        "answer_placeholder": "Masukkan jawaban di sini",
+        "add_answer": "Tambah Jawaban",
+        "add_question": "Tambah Pertanyaan",
+        "all_correct": "Semua jawaban benar!",
+        "delete_answer": "Hapus jawaban",
+        "mark_correct": "Tandai sebagai benar",
+        "mark_incorrect": "Tandai sebagai salah",
+        "reset_answers": "Reset jawaban",
+        "some_incorrect": "Beberapa jawaban salah!",
+        "submit": "Kirim"
       },
       "math_block": {
         "templates": "Templat",
@@ -2955,7 +3486,62 @@
         "suggestion_calculator_prompt": "Buat kalkulator yang menunjukkan solusi langkah demi langkah untuk persamaan dasar",
         "suggestion_timeline": "Garis waktu",
         "suggestion_timeline_prompt": "Buat garis waktu interaktif yang menunjukkan peristiwa sejarah penting dengan detail yang dapat diperluas"
+      },
+      "flipcard_block": {
+        "back": "Belakang",
+        "click_to_flip": "Klik untuk membalik",
+        "front": "Depan"
+      },
+      "image_block": {
+        "download_image": "Unduh gambar",
+        "drop_or_browse": "Letakkan gambar Anda di sini atau klik untuk menelusuri",
+        "expand_image": "Perluas gambar",
+        "supported_formats": "Mendukung JPG, PNG, WebP, dan GIF",
+        "uploading": "Mengunggah gambar...",
+        "viewer_title": "Penampil Gambar"
+      },
+      "pdf_block": {
+        "document_title": "Dokumen PDF",
+        "download_pdf": "Unduh PDF",
+        "drop_or_browse": "Letakkan PDF Anda di sini atau klik untuk menelusuri",
+        "expand_pdf": "Perluas PDF",
+        "no_pdf": "Tidak ada PDF tersedia",
+        "supported_formats": "Mendukung format PDF",
+        "upload_pdf": "Unggah PDF",
+        "uploading": "Mengunggah PDF..."
+      },
+      "video_block": {
+        "download_video": "Unduh video",
+        "drop_or_browse": "Letakkan video Anda di sini atau klik untuk menelusuri",
+        "expand_video": "Perluas video",
+        "player_title": "Pemutar Video",
+        "supported_formats": "Mendukung format MP4 dan WebM",
+        "unsupported_format": "Silakan unggah format video yang didukung (MP4 atau WebM)",
+        "uploading": "Mengunggah video..."
+      },
+      "button_block": {
+        "enter_link_url": "Enter link URL"
       }
+    },
+    "ai_panel": {
+      "add_definition": "Add definition",
+      "add_examples": "Add examples",
+      "add_quiz": "Add quiz",
+      "add_summary": "Add summary",
+      "add_tip": "Add tip",
+      "block_selected": "block selected",
+      "clear_chat": "Clear chat",
+      "clear_selection": "Clear selection",
+      "expand": "Expand",
+      "how_can_i_help": "How can I help improve your content?",
+      "improve_writing": "Improve writing",
+      "input_placeholder": "Ask AI to help with your content...",
+      "question_add_quiz": "Add a quiz",
+      "question_improve": "How can I improve this?",
+      "question_summary": "Add a summary",
+      "simplify": "Simplify",
+      "title": "AI Editor",
+      "translate": "Translate"
     }
   },
   "analytics": {
@@ -3342,6 +3928,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} dari {{total}}"
       }
+    },
+    "export": {
+      "button": "Ekspor",
+      "csv": "Download CSV",
+      "downloading": "Exporting...",
+      "json": "Download JSON"
     }
   },
   "boards": {
@@ -3466,7 +4058,8 @@
       "thick": "Tebal",
       "undo": "Urungkan",
       "redo": "Ulangi",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "todo": "To-do"
     },
     "zoom": {
       "zoom_in": "Perbesar",
@@ -3571,6 +4164,211 @@
       "page_of": "Halaman {{current}} dari {{total}}",
       "results": "{{count}} hasil untuk \"{{query}}\"",
       "results_plural": "{{count}} hasil untuk \"{{query}}\""
+    },
+    "board_deleted_error": "Failed to delete board",
+    "board_deleted_success": "Board deleted",
+    "board_duplicated_error": "Failed to duplicate board",
+    "board_duplicated_success": "Board duplicated",
+    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
+    "boards_deleted_success": "{{count}} board(s) deleted",
+    "clear_selection": "Hapus",
+    "delete_board": "Delete Board",
+    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
+    "delete_board_title": "Delete \"{{name}}\"",
+    "delete_boards_title": "Delete Boards",
+    "delete_selected": "Delete Selected",
+    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
+    "deleting_board": "Deleting board...",
+    "deleting_boards": "Deleting {{count}} board(s)...",
+    "duplicate_board": "Duplicate Board",
+    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
+    "duplicate_board_title": "Duplicate \"{{name}}\"",
+    "duplicating_board": "Duplicating board...",
+    "open_board": "Open Board",
+    "select_all": "Select All",
+    "selected_count": "{{count}} selected"
+  },
+  "onboarding": {
+    "getting_started": "Memulai",
+    "all_done": "Selesai semua!",
+    "all_set": "Anda sudah siap!",
+    "all_set_desc": "Anda telah menyelesaikan panduan memulai.",
+    "more_steps": "{{count}} langkah lagi",
+    "more_steps_plural": "{{count}} langkah lagi",
+    "show_less": "Tampilkan lebih sedikit",
+    "skip": "Lewati",
+    "got_it": "Paham, saya siap membangun!",
+    "done": "Selesai, saya sudah siap!",
+    "steps": {
+      "create_course": {
+        "title": "Buat kursus pertama Anda",
+        "description": "Mulailah dengan membuat kursus baru untuk para pembelajar Anda.",
+        "action": "Buat Kursus"
+      },
+      "add_activities": {
+        "title": "Tambahkan aktivitas ke kursus Anda",
+        "description": "Tambahkan konten seperti halaman, video, dokumen, dan lainnya.",
+        "action": "Buka Konten"
+      },
+      "experience_editor": {
+        "title": "Rasakan editor",
+        "description": "Buka editor dan pelajari cara membuat konten kursus Anda.",
+        "add_activity": "Tambah Aktivitas",
+        "dynamic_page": "Halaman Dinamis",
+        "click_edit": "Klik Edit",
+        "editor_features": "Hal yang bisa Anda lakukan di editor:",
+        "slash_commands": "Ketik / untuk perintah slash",
+        "headings_lists": "Judul, daftar & teks",
+        "images_media": "Gambar & media",
+        "video_embeds": "Video & sematan",
+        "tables_callouts": "Tabel & callout",
+        "interactive_blocks": "Blok interaktif"
+      },
+      "try_playgrounds": {
+        "title": "Pembelajaran interaktif dengan Playground",
+        "description": "Buat halaman interaktif untuk pembelajaran mandiri.",
+        "action": "Coba Playground"
+      },
+      "invite_users": {
+        "title": "Undang tim & pembelajar Anda",
+        "description": "Tambahkan instruktur atau bagikan tautan agar pembelajar bisa bergabung.",
+        "action": "Undang Pengguna"
+      },
+      "customize_org": {
+        "title": "Kustomisasi organisasi Anda",
+        "description": "Tambahkan logo, warna, dan jadikan milik Anda.",
+        "action": "Kustomisasi"
+      },
+      "teach_the_world": {
+        "title": "Belajar & berkembang",
+        "description": "Sumber daya untuk membantu Anda memaksimalkan LearnHouse.",
+        "classroom": "Kelas",
+        "classroom_desc": "Pelajari cara mengembangkan dan mengelola kursus Anda",
+        "university": "Universitas LearnHouse",
+        "university_desc": "Panduan, tips, dan praktik terbaik"
+      }
+    },
+    "welcome": {
+      "title": "Selamat datang di LearnHouse",
+      "subtitle": "Buat kursus, undang pembelajar, dan bagikan pengetahuan dengan dunia.",
+      "get_started": "Mulai",
+      "features_title": "Semua yang Anda butuhkan",
+      "features_subtitle": "Semua alat untuk membangun dan mengembangkan platform pembelajaran Anda.",
+      "lets_go": "Ayo mulai",
+      "features": {
+        "teach": "Ajarkan apa saja",
+        "teach_desc": "Buat kursus terstruktur dengan bab dan konten yang kaya",
+        "interactive": "Jadikan interaktif",
+        "interactive_desc": "Buat playground tempat pelajar mengeksplorasi dengan kecepatan mereka sendiri",
+        "community": "Bangun komunitas",
+        "community_desc": "Buat ruang diskusi tempat pelajar saling membantu",
+        "assess": "Nilai pengetahuan",
+        "assess_desc": "Buat tugas dan lacak pengumpulan dari pelajar",
+        "collaborate": "Kolaborasi secara visual",
+        "collaborate_desc": "Berikan pelajar papan bersama untuk brainstorm dan bekerja sama",
+        "voice": "Bagikan suara Anda",
+        "voice_desc": "Luncurkan podcast dan distribusikan episode audio ke pelajar",
+        "certify": "Sertifikasi pelajar",
+        "certify_desc": "Terbitkan sertifikat saat pelajar menyelesaikan kursus Anda",
+        "impact": "Pahami dampak Anda",
+        "impact_desc": "Lacak keterlibatan dan lihat bagaimana pelajar berkembang dari waktu ke waktu",
+        "team": "Kembangkan tim Anda",
+        "team_desc": "Undang instruktur, kelola peran, dan atur kelompok pelajar"
+      }
+    },
+    "farewell": {
+      "title": "Anda siap mengajarkan dunia",
+      "description": "Semuanya sudah siap. Pelajar Anda menunggu sesuatu yang hebat.",
+      "button": "Mulai mengajar"
+    }
+  },
+  "embed": {
+    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
+    "not_supported_title": "This activity is not supported",
+    "powered_by": "Powered by LearnHouse",
+    "visit_activity": "Visit Activity Page"
+  },
+  "migration": {
+    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Add Activity",
+    "add_chapter": "Add Chapter",
+    "ai_failed": "AI suggestion failed, falling back to manual organization",
+    "all_files_assigned": "All files assigned",
+    "click_to_add_more": "Click to add more files",
+    "course_created": "Course created successfully!",
+    "course_name": "Course Name",
+    "course_name_placeholder": "e.g. Python Basics for Beginners",
+    "course_structure": "Course Structure",
+    "create_course": "Create Course",
+    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
+    "creating_course": "Creating your course...",
+    "creating_description": "Uploading files and setting up chapters and activities",
+    "creation_error_generic": "Something went wrong. Please try again.",
+    "creation_failed": "Course creation failed",
+    "description": "One-liner Description",
+    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
+    "drop_file_here": "Drop a file here",
+    "drop_files": "Drop your files here or click to browse",
+    "go_to_course": "Go to Course",
+    "new_activity": "New Activity",
+    "new_chapter": "New Chapter",
+    "organize_manually": "Organize Manually",
+    "organize_with_ai": "Organize with AI",
+    "step_complete": "Complete",
+    "step_organize": "Organize",
+    "step_upload": "Unggah",
+    "subtitle": "Upload your files and organize them into a course",
+    "title": "Migrate Content",
+    "try_again": "Try Again",
+    "unassigned_files": "Unassigned Files",
+    "upload_failed": "File upload failed",
+    "uploading_files": "Uploading files"
+  },
+  "upgrade_modal": {
+    "title": "Buka potensi penuh Anda",
+    "subtitle": "Pilih paket yang sesuai dengan tujuan pengajaran Anda.",
+    "choose_plan": "Pilih {{plan}}",
+    "current_free_limits": "Paket gratis: 1 kursus · 10 anggota · Tanpa AI",
+    "plans": {
+      "standard": {
+        "goal": "Mulai monetisasi kursus Anda dan bangun komunitas belajar.",
+        "highlights": {
+          "courses": "Kursus tanpa batas",
+          "courses_desc": "Buat sebanyak mungkin kursus yang Anda butuhkan — tanpa batasan.",
+          "members": "Hingga 500 anggota",
+          "members_desc": "Kembangkan basis pelajar Anda dan kelola di satu tempat.",
+          "payments": "Terima pembayaran",
+          "payments_desc": "Jual kursus dan tawarkan langganan untuk menghasilkan pendapatan.",
+          "communities": "Diskusi komunitas",
+          "communities_desc": "Biarkan pelajar terhubung, bertanya, dan berbagi ide.",
+          "podcasts": "Buat podcast",
+          "podcasts_desc": "Sajikan konten audio dan jangkau pelajar di mana saja.",
+          "ai": "1.000 kredit AI",
+          "ai_desc": "Percepat pembuatan konten dengan alat tulis bertenaga AI.",
+          "analytics": "Analitik pelajar",
+          "analytics_desc": "Lacak kemajuan dan keterlibatan untuk meningkatkan kursus Anda."
+        }
+      },
+      "pro": {
+        "goal": "Skalakan akademi Anda dengan alat canggih dan kontrol penuh.",
+        "includes_standard": "Semua di Standard, ditambah:",
+        "highlights": {
+          "members": "Hingga 1.000 anggota",
+          "members_desc": "Dukung kelompok lebih besar dengan hingga 10 kursi admin.",
+          "ai": "3.000 kredit AI",
+          "ai_desc": "Lebih banyak kredit untuk pembuatan konten skala besar.",
+          "certifications": "Terbitkan sertifikat",
+          "certifications_desc": "Berikan penghargaan kepada pelajar dengan sertifikat penyelesaian kursus.",
+          "custom_domain": "Domain kustom",
+          "custom_domain_desc": "Gunakan domain Anda sendiri untuk akademi bermerek.",
+          "roles": "Peran & izin kustom",
+          "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda.",
+          "playgrounds": "Playground interaktif",
+          "playgrounds_desc": "Biarkan pelajar bereksperimen dan berlatih dengan latihan interaktif langsung.",
+          "api": "Akses API & webhooks",
+          "api_desc": "Integrasikan dengan alat yang ada dan otomatisasi alur kerja."
+        }
+      }
     }
   }
 }

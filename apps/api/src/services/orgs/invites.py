@@ -3,23 +3,22 @@ import logging
 import secrets
 import string
 import uuid
-from typing import Optional
-from pydantic import EmailStr
-import redis
 from datetime import datetime, timedelta
+from typing import Optional
+
+import redis
+from fastapi import HTTPException, Request
+from pydantic import EmailStr
 from sqlmodel import Session, select
-from src.services.users.emails import send_invitation_email
+
 from config.config import get_learnhouse_config
+from src.db.organizations import Organization, OrganizationRead
+from src.db.usergroups import UserGroup
+from src.db.users import AnonymousUser, PublicUser, UserRead
+from src.services.orgs.orgs import rbac_check
+from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
-from src.services.orgs.orgs import rbac_check
-from src.db.users import AnonymousUser, PublicUser, UserRead
-from src.db.organizations import (
-    Organization,
-    OrganizationRead,
-)
-from src.db.usergroups import UserGroup
-from fastapi import HTTPException, Request
 
 
 async def create_invite_code(

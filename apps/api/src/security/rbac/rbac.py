@@ -265,7 +265,7 @@ async def authorization_verify_based_on_roles(
                 element_rights = getattr(rights, element_type, None)
             if element_rights:
                 # Special handling for resources with PermissionsWithOwn
-                if element_type in ("courses", "discussions", "podcasts"):
+                if element_type in ("courses", "discussions", "podcasts", "boards", "playgrounds"):
                     if await check_course_permissions_with_own(element_rights, action, is_author):
                         return True
                 else:

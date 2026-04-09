@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
+import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
@@ -11,6 +12,7 @@ import { SafeImage } from '@components/Objects/SafeImage'
 import { BookOpen, PlusCircle, Clock } from '@phosphor-icons/react'
 
 export default function RecentCourses() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
@@ -33,16 +35,16 @@ export default function RecentCourses() {
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-gray-700">
-            Recent Courses
+            {t('dashboard.home.recent_courses')}
           </h3>
           {courses.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">
-                {publishedCount} published
+                {publishedCount} {t('dashboard.home.published')}
               </span>
               {draftCount > 0 && (
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                  {draftCount} draft
+                  {draftCount} {t('dashboard.home.draft')}
                 </span>
               )}
             </div>
@@ -52,7 +54,7 @@ export default function RecentCourses() {
           href="/dash/courses"
           className="text-[11px] font-medium text-gray-400 hover:text-gray-600 transition-colors"
         >
-          View All &rarr;
+          {t('dashboard.home.view_all')} &rarr;
         </Link>
       </div>
 
@@ -78,13 +80,13 @@ export default function RecentCourses() {
                 className="text-gray-400"
               />
             </div>
-            <p className="text-xs text-gray-400 mb-3">No courses yet</p>
+            <p className="text-xs text-gray-400 mb-3">{t('dashboard.home.no_courses_yet')}</p>
             <Link
               href="/dash/courses?new=true"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700"
             >
               <PlusCircle size={14} weight="bold" />
-              Create your first course
+              {t('dashboard.home.create_your_first_course')}
             </Link>
           </div>
         </div>
@@ -143,8 +145,7 @@ export default function RecentCourses() {
                     )}
                     {course.chapters_count !== undefined && (
                       <span className="text-[10px] text-gray-400">
-                        {course.chapters_count} chapter
-                        {course.chapters_count !== 1 ? 's' : ''}
+                        {course.chapters_count} {course.chapters_count !== 1 ? t('dashboard.home.chapters') : t('dashboard.home.chapter')}
                       </span>
                     )}
                   </div>
@@ -156,7 +157,7 @@ export default function RecentCourses() {
                       : 'bg-gray-100 text-gray-500'
                   }`}
                 >
-                  {course.published ? 'Published' : 'Draft'}
+                  {course.published ? t('dashboard.home.published') : t('dashboard.home.draft')}
                 </span>
               </Link>
             )
