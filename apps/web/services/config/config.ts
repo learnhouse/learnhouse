@@ -157,6 +157,20 @@ export const getServerAPIUrl = () => {
 
 export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 
+/**
+ * Get the upgrade/plan URL for a given org.
+ * Uses the main LEARNHOUSE_DOMAIN to build the URL.
+ * Returns null in OSS/self-hosted mode.
+ */
+export const getUpgradeUrl = (orgSlug: string): string | null => {
+  const mode = getDeploymentMode()
+  if (mode === 'oss' || mode === 'ee') return null
+  const domain = getLEARNHOUSE_DOMAIN()
+  if (!domain || domain === 'localhost') return null
+  const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+  return `${protocol}${domain}/dashboard/${orgSlug}/plan`
+}
+
 // Multi Organization Mode
 export const isMultiOrgModeEnabled = () => {
   // 1. Env var (backward compat for existing deploys)

@@ -101,8 +101,26 @@
         "sso": {
           "description": "Single Sign-On (SSO) ist eine Premium-Funktion, die nur für Organisationen mit unserem Enterprise-Plan verfügbar ist. Upgraden Sie, um sichere Authentifizierung über den Identitätsanbieter Ihrer Organisation zu ermöglichen.",
           "title": "Enterprise-Funktion"
+        },
+        "analytics": {
+          "description": "Analysen sind eine Premium-Funktion, die nur für Organisationen mit Standard-Plan oder höher verfügbar ist. Upgrade, um Einblicke über Ihre Lernenden und Inhalte freizuschalten.",
+          "title": "Standard-Funktion"
+        },
+        "course_analytics": {
+          "description": "Kursanalysen sind eine Premium-Funktion, die nur für Organisationen mit Pro-Plan oder höher verfügbar ist. Upgrade, um detaillierte Engagement-Daten, Einschreibungstrends und Lernfortschritte für einzelne Kurse freizuschalten.",
+          "title": "Pro-Funktion"
+        },
+        "custom_domains": {
+          "description": "Benutzerdefinierte Domains sind eine Premium-Funktion, die nur für Organisationen mit Standard-Plan oder höher verfügbar ist. Upgrade, um Ihre eigene Domain für ein gebrandetes Erlebnis zu nutzen.",
+          "title": "Standard-Funktion"
+        },
+        "podcasts": {
+          "description": "Podcasts sind eine Premium-Funktion, die nur für Organisationen mit Standard-Plan oder höher verfügbar ist. Upgrade, um Podcasts zu erstellen und mit Ihren Mitgliedern zu teilen.",
+          "title": "Standard-Funktion"
         }
-      }
+      },
+      "current_plan": "Aktueller Plan",
+      "upgrade_to": "Upgrade auf"
     },
     "features": {
       "disabled": {
@@ -167,7 +185,9 @@
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
     "join_organization": "Dieser Organisation beitreten",
-    "to_access_features": "um alle Funktionen zu nutzen."
+    "to_access_features": "um alle Funktionen zu nutzen.",
+    "free_plan_upgrade": "Sie nutzen den kostenlosen Plan. Upgraden Sie für das vollständige Erlebnis.",
+    "free_plan_upgrade_button": "Upgraden"
   },
   "auth": {
     "login": "Anmelden",
@@ -279,7 +299,9 @@
       },
       "try_again": "Erneut versuchen"
     },
-    "sso_error": "SSO-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    "sso_error": "SSO-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "email_verification_required": "E-Mail-Verifizierung erforderlich",
+    "email_verification_required_join": "Bitte verifizieren Sie Ihre E-Mail-Adresse, bevor Sie einer Organisation beitreten. Überprüfen Sie Ihren Posteingang für die Verifizierungs-E-Mail."
   },
   "validation": {
     "required": "Erforderlich",
@@ -557,7 +579,9 @@
         "still_working": "Arbeitet noch...",
         "video_takes_time": "Videoanalyse kann 1-2 Minuten dauern",
         "video_hint": "Videos können 1-2 Minuten zur Verarbeitung benötigen"
-      }
+      },
+      "from_existing": "Aus vorhandenem Inhalt",
+      "from_existing_description": "Laden Sie Dateien von einer anderen Plattform hoch und organisieren Sie sie in einem Kurs"
     },
     "copied": "Kopiert!",
     "quit_course_confirm": "Sind Sie sicher, dass Sie diesen Kurs verlassen möchten? Sie verlieren Ihren gesamten Fortschritt.",
@@ -997,7 +1021,8 @@
     "security": "Sicherheit",
     "my_courses": "Meine Kurse",
     "no_purchased_courses": "Noch keine gekauften Kurse",
-    "purchased_courses_description": "Kurse, die Sie gekauft oder abonniert haben, werden hier angezeigt"
+    "purchased_courses_description": "Kurse, die Sie gekauft oder abonniert haben, werden hier angezeigt",
+    "purchases": "Einkäufe"
   },
   "user": {
     "user_settings": "Benutzereinstellungen",
@@ -1255,22 +1280,69 @@
       "cards": {
         "courses": {
           "title": "Kurse",
-          "description": "Erstellen und verwalten Sie Kurse, Kapitel und Aktivitäten"
+          "description": "Kurse, Kapitel und Aktivitäten erstellen und verwalten"
         },
         "organization": {
           "title": "Organisation",
-          "description": "Konfigurieren Sie die allgemeinen Einstellungen Ihrer Organisation"
+          "description": "Allgemeine Einstellungen Ihrer Organisation konfigurieren"
         },
         "users": {
           "title": "Benutzer",
-          "description": "Verwalten Sie die Benutzer und Rollen Ihrer Organisation"
+          "description": "Benutzer und Rollen Ihrer Organisation verwalten"
         },
         "account_settings": {
           "title": "Kontoeinstellungen",
-          "description": "Konfigurieren Sie Ihre persönlichen Einstellungen, Passwörter, E-Mail"
+          "description": "Persönliche Einstellungen, Passwörter und E-Mail konfigurieren"
         }
       },
-      "learnhouse_university": "LearnHouse Universität"
+      "learnhouse_university": "LearnHouse Universität",
+      "welcome_back": "Willkommen zurück",
+      "plan": "Tarif",
+      "create_course": "Kurs erstellen",
+      "analytics": "Analysen",
+      "members": "Mitglieder",
+      "settings": "Einstellungen",
+      "courses": "Kurse",
+      "communities": "Communities",
+      "podcasts": "Podcasts",
+      "boards": "Boards",
+      "published": "veröffentlicht",
+      "draft": "Entwurf",
+      "total_users": "Benutzer gesamt",
+      "public": "öffentlich",
+      "episodes": "Episoden",
+      "participants": "Teilnehmer",
+      "loading": "Laden...",
+      "enable_analytics_description": "Aktivieren Sie Analysen, um Live-Benutzer, Anmeldungen und mehr zu sehen.",
+      "enable": "Aktivieren",
+      "quick_stats": "Schnellstatistik",
+      "full_analytics": "Vollständige Analysen",
+      "live_now": "Jetzt live",
+      "signups_30d": "Anmeldungen (30 Tage)",
+      "enrollments_30d": "Einschreibungen (30 Tage)",
+      "completions_30d": "Abschlüsse (30 Tage)",
+      "recent_courses": "Neueste Kurse",
+      "view_all": "Alle anzeigen",
+      "no_courses_yet": "Noch keine Kurse",
+      "create_your_first_course": "Erstellen Sie Ihren ersten Kurs",
+      "chapter": "Kapitel",
+      "chapters": "Kapitel",
+      "recent_members": "Neueste Mitglieder",
+      "total": "gesamt",
+      "no_members_yet": "Noch keine Mitglieder",
+      "unverified": "Nicht verifiziert",
+      "plan_and_usage": "Tarif & Nutzung",
+      "unlimited": "Unbegrenzt",
+      "admin_seats": "Admin-Plätze",
+      "limit_reached": "Limit erreicht",
+      "remaining": "verbleibend",
+      "usage_data_unavailable": "Nutzungsdaten nicht verfügbar",
+      "features": "Funktionen",
+      "off": "Aus",
+      "ai_credits": "KI-Guthaben",
+      "used": "verwendet",
+      "no_credits_remaining": "Kein Guthaben mehr vorhanden",
+      "includes_purchased": "Enthält {{count}} gekaufte"
     },
     "courses": {
       "title": "Kurse",
@@ -1321,7 +1393,8 @@
           "access": "Zugriff",
           "contributors": "Mitwirkende",
           "certification": "Zertifizierung",
-          "seo": "SEO"
+          "seo": "SEO",
+          "analytics": "Analysen"
         },
         "access_denied": {
           "title": "Zugriff verweigert",
@@ -2009,7 +2082,8 @@
           "twitter_description_max_length": "Twitter-Beschreibung muss 200 Zeichen oder weniger sein",
           "twitter_title_max_length": "Twitter-Titel muss 70 Zeichen oder weniger sein"
         }
-      }
+      },
+      "limit_reached": "Kurslimit erreicht ({{limit}})"
     },
     "organization": {
       "settings": {
@@ -2024,7 +2098,8 @@
           "features": "Funktionen",
           "usage": "Usage",
           "other": "Sonstiges",
-          "sso": "SSO"
+          "sso": "SSO",
+          "domains": "Domains"
         },
         "pages": {
           "general": {
@@ -2062,6 +2137,10 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "Benutzerdefinierte Domains für Ihre Organisation konfigurieren",
+            "title": "Benutzerdefinierte Domains"
           }
         },
         "name": "Organisations-Name",
@@ -2079,7 +2158,10 @@
         "updating": "Organisation wird aktualisiert...",
         "footer_text": "Fußzeilentext",
         "footer_text_placeholder": "Fußzeilentext eingeben...",
-        "footer_text_desc": "Benutzerdefinierter Text, der unten auf Ihren Organisationsseiten angezeigt wird"
+        "footer_text_desc": "Benutzerdefinierter Text, der unten auf Ihren Organisationsseiten angezeigt wird",
+        "watermark_desc": "LearnHouse-Wasserzeichen auf Ihren Organisationsseiten anzeigen",
+        "watermark_free_plan": "Das Wasserzeichen wird im kostenlosen Plan immer angezeigt",
+        "watermark_label": "\"Made with LearnHouse\"-Wasserzeichen"
       },
       "images": {
         "title": "Bilder & Vorschauen",
@@ -2667,7 +2749,8 @@
           "table": {
             "email": "E-Mail",
             "signup_status": "Registrierungsstatus",
-            "email_sent": "E-Mail gesendet"
+            "email_sent": "E-Mail gesendet",
+            "actions": "Aktionen"
           },
           "status": {
             "pending": "Ausstehend",
@@ -2676,12 +2759,34 @@
           "email_status": {
             "sent": "Gesendet",
             "no": "Nein"
-          }
+          },
+          "no_invites": "Keine ausstehenden Einladungen",
+          "no_results": "Keine Einladungen gefunden, die Ihrer Suche entsprechen",
+          "remove_button": "Entfernen",
+          "remove_error": "Fehler beim Entfernen der Einladung",
+          "remove_message": "Sind Sie sicher, dass Sie die Einladung für {{email}} entfernen möchten?",
+          "remove_success": "Einladung entfernt",
+          "remove_title": "Einladung entfernen",
+          "removing": "Einladung wird entfernt...",
+          "search_placeholder": "Nach E-Mail suchen..."
         },
         "toasts": {
           "sending": "Einladung wird gesendet...",
           "success": "Einladung gesendet",
-          "error": "Fehler beim Senden der Einladung"
+          "error": "Fehler beim Senden der Einladung",
+          "partial": "{{sent}} gesendet, {{failed}} fehlgeschlagen"
+        },
+        "no_invite_code": "Keiner",
+        "results": {
+          "failed_count": "{{count}} fehlgeschlagen",
+          "sent_count": "{{count}} gesendet",
+          "skipped_count": "{{count}} bereits eingeladen",
+          "status": {
+            "already_invited": "Bereits eingeladen",
+            "email_failed": "Fehlgeschlagen",
+            "sent": "Gesendet"
+          },
+          "summary_title": "Ergebnisse"
         }
       },
       "usergroups": {
@@ -3392,7 +3497,28 @@
       },
       "button_block": {
         "enter_link_url": "Link-URL eingeben"
-      }
+      },
+      "magic_block": "Magic Block (KI-generiert)"
+    },
+    "ai_panel": {
+      "add_definition": "Definition hinzufügen",
+      "add_examples": "Beispiele hinzufügen",
+      "add_quiz": "Quiz hinzufügen",
+      "add_summary": "Zusammenfassung hinzufügen",
+      "add_tip": "Tipp hinzufügen",
+      "block_selected": "Block ausgewählt",
+      "clear_chat": "Chat leeren",
+      "clear_selection": "Auswahl aufheben",
+      "expand": "Erweitern",
+      "how_can_i_help": "Wie kann ich Ihnen helfen, Ihren Inhalt zu verbessern?",
+      "improve_writing": "Schreibstil verbessern",
+      "input_placeholder": "Bitten Sie die KI, Ihnen bei Ihrem Inhalt zu helfen...",
+      "question_add_quiz": "Quiz hinzufügen",
+      "question_improve": "Wie kann ich das verbessern?",
+      "question_summary": "Zusammenfassung hinzufügen",
+      "simplify": "Vereinfachen",
+      "title": "KI-Editor",
+      "translate": "Übersetzen"
     }
   },
   "embed": {
@@ -3785,6 +3911,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} von {{total}}"
       }
+    },
+    "export": {
+      "button": "Exportieren",
+      "csv": "CSV herunterladen",
+      "downloading": "Exportiere...",
+      "json": "JSON herunterladen"
     }
   },
   "boards": {
@@ -3909,7 +4041,8 @@
       "thick": "Dick",
       "undo": "Rückgängig",
       "redo": "Wiederholen",
-      "podcast": "Podcast"
+      "podcast": "Podcast",
+      "todo": "Aufgabe"
     },
     "zoom": {
       "zoom_in": "Vergrößern",
@@ -4014,6 +4147,205 @@
       "page_of": "Seite {{current}} von {{total}}",
       "results": "{{count}} Ergebnis für \"{{query}}\"",
       "results_plural": "{{count}} Ergebnisse für \"{{query}}\""
+    },
+    "board_deleted_error": "Board konnte nicht gelöscht werden",
+    "board_deleted_success": "Board gelöscht",
+    "board_duplicated_error": "Board konnte nicht dupliziert werden",
+    "board_duplicated_success": "Board dupliziert",
+    "boards_deleted_partial": "{{success}} gelöscht, {{error}} fehlgeschlagen",
+    "boards_deleted_success": "{{count}} Board(s) gelöscht",
+    "clear_selection": "Auswahl aufheben",
+    "delete_board": "Board löschen",
+    "delete_board_confirm": "Sind Sie sicher, dass Sie dieses Board löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "delete_board_title": "\"{{name}}\" löschen",
+    "delete_boards_title": "Boards löschen",
+    "delete_selected": "Ausgewählte löschen",
+    "delete_selected_confirm": "Sind Sie sicher, dass Sie {{count}} Board(s) löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleting_board": "Board wird gelöscht...",
+    "deleting_boards": "{{count}} Board(s) werden gelöscht...",
+    "duplicate_board": "Board duplizieren",
+    "duplicate_board_confirm": "Es wird eine Kopie des Boards mit denselben Einstellungen erstellt.",
+    "duplicate_board_title": "\"{{name}}\" duplizieren",
+    "duplicating_board": "Board wird dupliziert...",
+    "open_board": "Board öffnen",
+    "select_all": "Alle auswählen",
+    "selected_count": "{{count}} ausgewählt"
+  },
+  "onboarding": {
+    "getting_started": "Erste Schritte",
+    "all_done": "Alles erledigt!",
+    "all_set": "Du bist startklar!",
+    "all_set_desc": "Du hast die Erste-Schritte-Anleitung abgeschlossen.",
+    "more_steps": "{{count}} weiterer Schritt",
+    "more_steps_plural": "{{count}} weitere Schritte",
+    "show_less": "Weniger anzeigen",
+    "skip": "Überspringen",
+    "got_it": "Verstanden, ich bin bereit loszulegen!",
+    "done": "Fertig, ich bin startklar!",
+    "steps": {
+      "create_course": {
+        "title": "Erstelle deinen ersten Kurs",
+        "description": "Beginne mit der Erstellung eines neuen Kurses für deine Lernenden.",
+        "action": "Kurs erstellen"
+      },
+      "add_activities": {
+        "title": "Füge Aktivitäten zu deinem Kurs hinzu",
+        "description": "Füge Inhalte wie Seiten, Videos, Dokumente und mehr hinzu.",
+        "action": "Zum Inhalt"
+      },
+      "experience_editor": {
+        "title": "Erlebe den Editor",
+        "description": "Öffne den Editor und lerne, wie du Kursinhalte erstellst.",
+        "add_activity": "Aktivität hinzufügen",
+        "dynamic_page": "Dynamische Seite",
+        "click_edit": "Klicke auf Bearbeiten",
+        "editor_features": "Was du im Editor tun kannst:",
+        "slash_commands": "Tippe / für Slash-Befehle",
+        "headings_lists": "Überschriften, Listen & Text",
+        "images_media": "Bilder & Medien",
+        "video_embeds": "Video & Einbettungen",
+        "tables_callouts": "Tabellen & Hinweise",
+        "interactive_blocks": "Interaktive Blöcke"
+      },
+      "try_playgrounds": {
+        "title": "Interaktives Lernen mit Playgrounds",
+        "description": "Erstelle interaktive Seiten für selbstgesteuertes Lernen.",
+        "action": "Playgrounds ausprobieren"
+      },
+      "invite_users": {
+        "title": "Lade dein Team & Lernende ein",
+        "description": "Füge Dozenten hinzu oder teile einen Link, damit Lernende beitreten können.",
+        "action": "Benutzer einladen"
+      },
+      "customize_org": {
+        "title": "Passe deine Organisation an",
+        "description": "Füge dein Logo und Farben hinzu und mach sie zu deiner eigenen.",
+        "action": "Anpassen"
+      },
+      "teach_the_world": {
+        "title": "Lerne & wachse",
+        "description": "Ressourcen, die dir helfen, das Beste aus LearnHouse herauszuholen.",
+        "classroom": "Das Klassenzimmer",
+        "classroom_desc": "Lerne, wie du deine Kurse ausbaust und verwaltest",
+        "university": "LearnHouse Universität",
+        "university_desc": "Anleitungen, Tipps und Best Practices"
+      }
+    },
+    "welcome": {
+      "title": "Willkommen bei LearnHouse",
+      "subtitle": "Erstelle Kurse, lade Lernende ein und teile Wissen mit der Welt.",
+      "get_started": "Loslegen",
+      "features_title": "Alles, was du brauchst",
+      "features_subtitle": "Alle Werkzeuge, um deine Lernplattform aufzubauen und zu erweitern.",
+      "lets_go": "Los geht's",
+      "features": {
+        "teach": "Lehre alles",
+        "teach_desc": "Erstelle strukturierte Kurse mit Kapiteln und reichhaltigen Inhalten",
+        "interactive": "Werde interaktiv",
+        "interactive_desc": "Erstelle Playgrounds, in denen Lernende in ihrem eigenen Tempo entdecken",
+        "community": "Baue eine Community auf",
+        "community_desc": "Erstelle Diskussionsräume, in denen Lernende sich gegenseitig helfen",
+        "assess": "Wissen prüfen",
+        "assess_desc": "Erstelle Aufgaben und verfolge Einreichungen von Lernenden",
+        "collaborate": "Visuell zusammenarbeiten",
+        "collaborate_desc": "Gib Lernenden gemeinsame Boards zum Brainstormen und Zusammenarbeiten",
+        "voice": "Teile deine Stimme",
+        "voice_desc": "Starte Podcasts und verteile Audio-Episoden an Lernende",
+        "certify": "Lernende zertifizieren",
+        "certify_desc": "Stelle Zertifikate aus, wenn Lernende deine Kurse abschließen",
+        "impact": "Verstehe deine Wirkung",
+        "impact_desc": "Verfolge Engagement und sieh, wie Lernende im Laufe der Zeit Fortschritte machen",
+        "team": "Erweitere dein Team",
+        "team_desc": "Lade Dozenten ein, verwalte Rollen und organisiere Lerngruppen"
+      }
+    },
+    "farewell": {
+      "title": "Du bist bereit, die Welt zu unterrichten",
+      "description": "Alles ist eingerichtet. Deine Lernenden warten auf etwas Großartiges.",
+      "button": "Loslegen"
+    }
+  },
+  "migration": {
+    "accepted_formats": "Videos (MP4, WebM, MOV), Dokumente (PDF), Bilder (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Aktivität hinzufügen",
+    "add_chapter": "Kapitel hinzufügen",
+    "ai_failed": "KI-Vorschlag fehlgeschlagen, manuelles Organisieren wird verwendet",
+    "all_files_assigned": "Alle Dateien zugewiesen",
+    "click_to_add_more": "Klicken Sie, um weitere Dateien hinzuzufügen",
+    "course_created": "Kurs erfolgreich erstellt!",
+    "course_name": "Kursname",
+    "course_name_placeholder": "z.B. Python-Grundlagen für Anfänger",
+    "course_structure": "Kursstruktur",
+    "create_course": "Kurs erstellen",
+    "created_summary": "{{chapters}} Kapitel und {{activities}} Aktivitäten erstellt",
+    "creating_course": "Ihr Kurs wird erstellt...",
+    "creating_description": "Dateien werden hochgeladen und Kapitel und Aktivitäten eingerichtet",
+    "creation_error_generic": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut.",
+    "creation_failed": "Kurserstellung fehlgeschlagen",
+    "description": "Kurzbeschreibung",
+    "description_placeholder": "z.B. 3 Module zu Grundlagen, Datentypen und Funktionen",
+    "drop_file_here": "Datei hier ablegen",
+    "drop_files": "Dateien hier ablegen oder zum Durchsuchen klicken",
+    "go_to_course": "Zum Kurs gehen",
+    "new_activity": "Neue Aktivität",
+    "new_chapter": "Neues Kapitel",
+    "organize_manually": "Manuell organisieren",
+    "organize_with_ai": "Mit KI organisieren",
+    "step_complete": "Abschluss",
+    "step_organize": "Organisieren",
+    "step_upload": "Hochladen",
+    "subtitle": "Laden Sie Ihre Dateien hoch und organisieren Sie sie in einem Kurs",
+    "title": "Inhalt migrieren",
+    "try_again": "Erneut versuchen",
+    "unassigned_files": "Nicht zugewiesene Dateien",
+    "upload_failed": "Datei-Upload fehlgeschlagen",
+    "uploading_files": "Dateien werden hochgeladen"
+  },
+  "upgrade_modal": {
+    "title": "Entfalten Sie Ihr volles Potenzial",
+    "subtitle": "Wählen Sie den Plan, der zu Ihren Lehrzielen passt.",
+    "choose_plan": "{{plan}} wählen",
+    "current_free_limits": "Kostenloser Plan: 1 Kurs · 10 Mitglieder · Kein AI",
+    "plans": {
+      "standard": {
+        "goal": "Monetarisieren Sie Ihre Kurse und bauen Sie eine Lerngemeinschaft auf.",
+        "highlights": {
+          "courses": "Unbegrenzte Kurse",
+          "courses_desc": "Erstellen Sie so viele Kurse wie nötig — keine Limits.",
+          "members": "Bis zu 500 Mitglieder",
+          "members_desc": "Vergrößern Sie Ihre Lernbasis und verwalten Sie alles an einem Ort.",
+          "payments": "Zahlungen akzeptieren",
+          "payments_desc": "Verkaufen Sie Kurse und bieten Sie Abos an.",
+          "communities": "Community-Diskussionen",
+          "communities_desc": "Lassen Sie Lernende sich vernetzen und Ideen austauschen.",
+          "podcasts": "Podcasts erstellen",
+          "podcasts_desc": "Liefern Sie Audioinhalte und erreichen Sie Lernende unterwegs.",
+          "ai": "1.000 AI-Credits",
+          "ai_desc": "Beschleunigen Sie die Inhaltserstellung mit KI-Schreibtools.",
+          "analytics": "Lernenden-Analysen",
+          "analytics_desc": "Verfolgen Sie Fortschritte und Engagement, um Kurse zu verbessern."
+        }
+      },
+      "pro": {
+        "goal": "Skalieren Sie Ihre Akademie mit erweiterten Tools und voller Kontrolle.",
+        "includes_standard": "Alles aus Standard, plus:",
+        "highlights": {
+          "members": "Bis zu 1.000 Mitglieder",
+          "members_desc": "Unterstützen Sie größere Kohorten mit bis zu 10 Admin-Plätzen.",
+          "ai": "3.000 AI-Credits",
+          "ai_desc": "Mehr Credits für umfangreiche Inhaltserstellung.",
+          "certifications": "Zertifikate ausstellen",
+          "certifications_desc": "Belohnen Sie Lernende mit Zertifikaten bei Kursabschluss.",
+          "custom_domain": "Eigene Domain",
+          "custom_domain_desc": "Nutzen Sie Ihre eigene Domain für eine gebrandete Akademie.",
+          "roles": "Rollen & Berechtigungen",
+          "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann.",
+          "playgrounds": "Interaktive Playgrounds",
+          "playgrounds_desc": "Lassen Sie Lernende mit praktischen interaktiven Übungen experimentieren und üben.",
+          "api": "API-Zugang & Webhooks",
+          "api_desc": "Integrieren Sie mit bestehenden Tools und automatisieren Sie Workflows."
+        }
+      }
     }
   }
 }

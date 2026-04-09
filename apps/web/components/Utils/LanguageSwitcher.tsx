@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Languages, ChevronDown, Check } from 'lucide-react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
+import { changeLanguage } from '@/lib/i18n'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +16,6 @@ import { getMenuColorClasses } from '@services/utils/ts/colorUtils'
 const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const { i18n, t } = useTranslation()
   const colors = getMenuColorClasses(primaryColor)
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng)
-  }
 
   const currentLangCode = i18n.language.split('-')[0].toUpperCase()
 
@@ -46,7 +43,7 @@ const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
               <span className="text-xs font-mono text-gray-400 w-5">{language.code.toUpperCase()}</span>
               <span>{language.nativeName}</span>
             </span>
-            {i18n.language === language.code && <Check size={14} className="text-black" />}
+            {i18n.language.split('-')[0] === language.code && <Check size={14} className="text-black" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

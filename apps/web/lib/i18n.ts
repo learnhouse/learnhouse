@@ -32,12 +32,13 @@ const resources = {
 };
 
 async function loadLocale(lng: string) {
-  if (lng === 'en' || !LOCALE_LOADERS[lng]) return;
-  if (i18n.hasResourceBundle(lng, 'common')) return;
+  const code = lng.split('-')[0]
+  if (code === 'en' || !LOCALE_LOADERS[code]) return;
+  if (i18n.hasResourceBundle(code, 'common')) return;
 
   try {
-    const mod = await LOCALE_LOADERS[lng]();
-    i18n.addResourceBundle(lng, 'common', mod.default, true, true);
+    const mod = await LOCALE_LOADERS[code]();
+    i18n.addResourceBundle(code, 'common', mod.default, true, true);
   } catch (e) {
     console.warn(`Failed to load locale: ${lng}`, e);
   }
@@ -65,10 +66,17 @@ i18n
     }
   });
 
-// Load the detected language if it's not English
-loadLocale(i18n.language);
+// Load the detected language if it's not English — export the promise
+// so I18nProvider can wait for resources before rendering
+export const initialLocaleReady = loadLocale(i18n.language.split('-')[0]);
 
-// Load locale whenever the language changes
-i18n.on('languageChanged', loadLocale);
+/**
+ * Switch language safely — preloads the bundle before switching
+ * so the UI never flashes English as a fallback.
+ */
+export async function changeLanguage(lng: string) {
+  await loadLocale(lng)
+  return i18n.changeLanguage(lng)
+}
 
 export default i18n;

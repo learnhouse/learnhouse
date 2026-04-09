@@ -213,6 +213,40 @@ def send_invitation_email(
     )
 
 
+def send_role_changed_email(
+    email: EmailStr,
+    username: str,
+    org_name: str,
+    new_role_name: str,
+):
+    """
+    Send an email notifying a user that their role has changed in an organization.
+    """
+    safe_username = html.escape(username)
+    safe_org_name = html.escape(org_name)
+    safe_role_name = html.escape(new_role_name)
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">Your role has been updated</h1>
+        <p style="{STYLES['p']}">
+            Hi {safe_username}, your role in <strong>{safe_org_name}</strong> has been changed to <strong>{safe_role_name}</strong>.
+        </p>
+        <p style="{STYLES['p']}">
+            This may affect what you can access and manage within the organization. If you have any questions, please reach out to your organization administrator.
+        </p>
+    """
+
+    return send_email(
+        to=email,
+        subject=f"Your role in {safe_org_name} has been updated",
+        body=_email_layout(
+            title="Role Updated",
+            body_content=body_content,
+            footer_note=f"You received this email because your role was changed in {safe_org_name} on LearnHouse.",
+        ),
+    )
+
+
 def send_email_verification_email(
     token: str,
     user: UserRead,

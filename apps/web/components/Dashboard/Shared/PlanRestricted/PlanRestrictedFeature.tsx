@@ -4,6 +4,8 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import type { LucideIcon } from 'lucide-react'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { getUpgradeUrl } from '@services/config/config'
+import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from './PlanBadge'
 
 interface PlanRestrictedFeatureProps {
@@ -58,6 +60,8 @@ const PlanRestrictedFeature: React.FC<PlanRestrictedFeatureProps> = ({
   fullScreen = false,
 }) => {
   const { t } = useTranslation()
+  const org = useOrg() as any
+  const upgradeUrl = getUpgradeUrl(org?.slug || 'default')
 
   // Check if the current plan meets the requirement
   if (planMeetsRequirement(currentPlan, requiredPlan)) {
@@ -81,16 +85,34 @@ const PlanRestrictedFeature: React.FC<PlanRestrictedFeatureProps> = ({
           </p>
 
           {/* Upgrade button - white with plan badge */}
-          <button className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors nice-shadow flex items-center gap-2">
-            <span>{t('common.plans.upgrade_to')}</span>
-            <PlanBadge
-              currentPlan={currentPlan}
-              requiredPlan={requiredPlan}
-              size="md"
-              alwaysShow
-              noMargin
-            />
-          </button>
+          {upgradeUrl ? (
+            <a
+              href={upgradeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors nice-shadow flex items-center gap-2"
+            >
+              <span>{t('common.plans.upgrade_to')}</span>
+              <PlanBadge
+                currentPlan={currentPlan}
+                requiredPlan={requiredPlan}
+                size="md"
+                alwaysShow
+                noMargin
+              />
+            </a>
+          ) : (
+            <div className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold nice-shadow flex items-center gap-2">
+              <span>{t('common.plans.upgrade_to')}</span>
+              <PlanBadge
+                currentPlan={currentPlan}
+                requiredPlan={requiredPlan}
+                size="md"
+                alwaysShow
+                noMargin
+              />
+            </div>
+          )}
 
           {/* Current plan indicator */}
           <p className="mt-6 text-xs text-gray-400">

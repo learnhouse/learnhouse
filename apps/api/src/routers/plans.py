@@ -22,6 +22,5 @@ async def api_get_plan_limits():
             "members": features["members"]["limit"],
             "admin_seats": features["members"]["admin_limit"],
             "ai_credits": AI_CREDIT_LIMITS.get(plan_id, 0),
-            "storage": features["storage"]["limit"],
         }
     return result

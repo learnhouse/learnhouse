@@ -8,6 +8,7 @@ import EditorSkeleton from './EditorSkeleton'
 import EditorWrapper from './EditorWrapper'
 import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownActivity'
 import EmbedActivity from '@components/Objects/Activities/Embed/EmbedActivity'
+import OnboardingBar from '@components/Dashboard/Onboarding/OnboardingBar'
 
 interface EditorLoaderProps {
   courseid: string
@@ -55,7 +56,7 @@ export default function EditorLoader({ courseid, activityuuid }: EditorLoaderPro
   }
 
   return (
-    <>
+    <div className="relative">
       {/* Skeleton — fades out when editor is ready */}
       <div
         style={{
@@ -87,6 +88,7 @@ export default function EditorLoader({ courseid, activityuuid }: EditorLoaderPro
           />
         </div>
       )}
-    </>
+      <OnboardingBar />
+    </div>
   )
 }

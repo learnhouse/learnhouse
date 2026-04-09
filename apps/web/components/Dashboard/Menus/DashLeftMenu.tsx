@@ -49,6 +49,7 @@ import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg, getAPIUrl } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
+import { changeLanguage } from '@/lib/i18n'
 import {
   Tooltip,
   TooltipContent,
@@ -137,9 +138,6 @@ function DashLeftMenu() {
     localStorage.setItem('dash-menu-collapsed', String(newState))
   }
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng)
-  }
 
   async function logOutUI() {
     await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
@@ -719,7 +717,7 @@ function DashLeftMenu() {
                       <span className="font-medium text-sm">{language.nativeName}</span>
                       <span className="text-xs text-white/40">{t(language.translationKey)}</span>
                     </div>
-                    {i18n.language === language.code && (
+                    {i18n.language.split('-')[0] === language.code && (
                       <Check size={16} weight="bold" className="text-green-500" />
                     )}
                   </HoverMenuItem>

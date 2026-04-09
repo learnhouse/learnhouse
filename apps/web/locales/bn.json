@@ -93,8 +93,34 @@
         "communities": {
           "title": "স্ট্যান্ডার্ড বৈশিষ্ট্য",
           "description": "কমিউনিটি একটি প্রিমিয়াম বৈশিষ্ট্য যা শুধুমাত্র আমাদের স্ট্যান্ডার্ড প্ল্যান বা তার উপরে সংস্থাগুলির জন্য উপলব্ধ। আপনার সদস্যদের জন্য আলোচনা কমিউনিটি আনলক করতে আপগ্রেড করুন।"
+        },
+        "analytics": {
+          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
+          "title": "Standard Feature"
+        },
+        "course_analytics": {
+          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
+          "title": "Pro Feature"
+        },
+        "custom_domains": {
+          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
+          "title": "Standard Feature"
+        },
+        "podcasts": {
+          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
+          "title": "Standard Feature"
+        },
+        "seo": {
+          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
+          "title": "Standard Feature"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
+          "title": "Enterprise Feature"
         }
-      }
+      },
+      "current_plan": "Current plan",
+      "upgrade_to": "Upgrade to"
     },
     "features": {
       "disabled": {
@@ -152,12 +178,16 @@
     "back": "পিছনে",
     "of": "এর",
     "creating": "তৈরি হচ্ছে...",
-    "view_details": "বিস্তারিত দেখুন"
+    "view_details": "বিস্তারিত দেখুন",
+    "close": "বন্ধ",
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "আপনি {{name}} অতিথি হিসেবে দেখছেন।",
     "join_organization": "এই সংস্থায় যোগ দিন",
-    "to_access_features": "সমস্ত বৈশিষ্ট্য অ্যাক্সেস করতে।"
+    "to_access_features": "সমস্ত বৈশিষ্ট্য অ্যাক্সেস করতে।",
+    "free_plan_upgrade": "আপনি বিনামূল্যে প্ল্যানে আছেন। সম্পূর্ণ অভিজ্ঞতা আনলক করতে আপগ্রেড করুন।",
+    "free_plan_upgrade_button": "আপগ্রেড"
   },
   "auth": {
     "login": "লগইন",
@@ -226,7 +256,65 @@
     "invite_required": "আমন্ত্রণ প্রয়োজন",
     "invite_required_desc": "{{org}} এ যোগ দিতে আমন্ত্রণ কোড প্রয়োজন",
     "invite_code": "আমন্ত্রণ কোড",
-    "validate_invite": "আমন্ত্রণ যাচাই করুন"
+    "validate_invite": "আমন্ত্রণ যাচাই করুন",
+    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
+    "back_to_login": "Back to Login",
+    "check_email_for_verification": "Check Your Email",
+    "check_inbox_message": "Please check your inbox and click the verification link.",
+    "create_your_account": "Create your account",
+    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
+    "email_verification_required": "Email Verification Required",
+    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
+    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
+    "email_verified_success": "Email Verified!",
+    "login_failed": "Login Failed",
+    "password_req_lowercase": "At least one lowercase letter (a-z)",
+    "password_req_min_length": "At least 8 characters",
+    "password_req_number": "At least one number (0-9)",
+    "password_req_special": "At least one special character (!@#$%...)",
+    "password_req_uppercase": "At least one uppercase letter (A-Z)",
+    "password_requirements_not_met": "Password does not meet requirements",
+    "password_strength": "Password strength",
+    "password_strength_fair": "Fair",
+    "password_strength_good": "Good",
+    "password_strength_strong": "Strong",
+    "password_strength_weak": "Weak",
+    "proceed_to_login": "Proceed to Login",
+    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
+    "resend_verification_email": "Resend verification email",
+    "resend_verification_failed": "Failed to resend verification email. Please try again.",
+    "sign_in_with_sso": "Sign in with SSO",
+    "sso_callback": {
+      "auth_failed": "Authentication Failed",
+      "authenticating": "Authenticating...",
+      "copied": "Copied!",
+      "copy_details": "Copy to clipboard",
+      "error": "SSO authentication failed. Please try again.",
+      "error_code": "Error code",
+      "go_home": "Go to Home",
+      "hide_details": "Hide technical details",
+      "missing_params": "Invalid SSO callback. Missing required parameters.",
+      "please_wait": "Please wait while we verify your identity",
+      "provider": "Provider",
+      "redirecting": "Redirecting you to the application...",
+      "show_details": "Show technical details",
+      "success": "Authentication Successful",
+      "tips": {
+        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
+        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "invalid_state": "Your session may have expired. Please try logging in again.",
+        "server_error": "The identity provider is experiencing issues. Please try again later."
+      },
+      "try_again": "Try Again"
+    },
+    "sso_error": "SSO authentication failed. Please try again.",
+    "verification_email_resent": "Verification Email Sent",
+    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
+    "verification_failed": "Verification Failed",
+    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
+    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
+    "verify_email_title": "Verify Your Email",
+    "verifying_email": "Verifying your email address..."
   },
   "verify_email": {
     "title": "ইমেল যাচাইকরণ",
@@ -514,14 +602,19 @@
         "still_working": "এখনও কাজ চলছে...",
         "video_takes_time": "ভিডিও বিশ্লেষণে ১-২ মিনিট সময় লাগতে পারে",
         "video_hint": "ভিডিও প্রক্রিয়া করতে ১-২ মিনিট সময় লাগতে পারে"
-      }
+      },
+      "from_existing": "From Existing Content",
+      "from_existing_description": "Upload files from another platform and organize them into a course"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Copied!",
+    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
+    "quit_course_title": "Quit Course?"
   },
   "communities": {
     "title": "কমিউনিটি",
@@ -681,7 +774,99 @@
     "deleting_podcast": "পডকাস্ট মুছে ফেলা হচ্ছে...",
     "podcast_deleted_success": "পডকাস্ট সফলভাবে মুছে ফেলা হয়েছে",
     "podcast_deleted_error": "পডকাস্ট মুছে ফেলা যায়নি",
-    "edit_content": "বিষয়বস্তু সম্পাদনা করুন"
+    "edit_content": "বিষয়বস্তু সম্পাদনা করুন",
+    "create_new_podcast": "Create a new podcast for your organization",
+    "create_podcast": "Create Podcast",
+    "create_podcast_btn": "Create Podcast",
+    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
+    "creating_podcast": "Creating podcast...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3, WAV, or M4A files supported",
+        "audio_label": "Audio File",
+        "create": "Create Episode",
+        "create_error": "Failed to create episode",
+        "create_first": "Create First Episode",
+        "created": "Episode created",
+        "creating": "Creating episode...",
+        "delete": "মুছুন",
+        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
+        "delete_error": "Failed to delete episode",
+        "delete_title": "Delete Episode?",
+        "deleted": "Episode deleted",
+        "deleting": "Deleting episode...",
+        "description_label": "বিবরণ",
+        "description_placeholder": "Enter episode description",
+        "edit": "সম্পাদনা",
+        "edit_episode": "Edit Episode",
+        "edit_episode_description": "Update episode details",
+        "new_episode": "New Episode",
+        "new_episode_description": "Add a new episode to this podcast",
+        "no_audio": "No audio file",
+        "no_episodes_description": "Start by adding your first episode",
+        "publish": "প্রকাশ",
+        "replace_audio": "Replace Audio File",
+        "save": "Save Changes",
+        "title_label": "শিরোনাম",
+        "title_placeholder": "Enter episode title",
+        "unpublish": "অপ্রকাশ",
+        "update_error": "Failed to update episode",
+        "updated": "Episode updated",
+        "updating": "Updating episode...",
+        "upload_audio": "Upload Audio File"
+      },
+      "form": {
+        "about": "About",
+        "about_max_length": "About must be at most 2000 characters",
+        "about_placeholder": "Tell listeners more about this podcast...",
+        "public_hint": "Anyone can find and listen to this podcast",
+        "published_hint": "Make this podcast visible on your organization page",
+        "tags_hint": "Separate tags with commas",
+        "tags_placeholder": "music, education, tech",
+        "thumbnail": "Thumbnail",
+        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
+        "upload_thumbnail": "Upload Thumbnail",
+        "visibility": "Visibility Settings"
+      },
+      "save_changes": "Save Changes",
+      "save_error": "Failed to save changes",
+      "saved": "Changes saved",
+      "saving": "Saving...",
+      "tabs": {
+        "episodes": "Episodes",
+        "general": "সাধারণ"
+      },
+      "view_podcast": "View Podcast"
+    },
+    "failed_to_create_podcast": "Failed to create podcast",
+    "form": {
+      "description_max_length": "Description must be at most 500 characters",
+      "name_max_length": "Name must be at most 100 characters",
+      "name_min_length": "Name must be at least 3 characters",
+      "name_required": "Podcast name is required"
+    },
+    "modals": {
+      "create": {
+        "cancel": "বাতিল",
+        "description": "Fill in the details to create a new podcast",
+        "form": {
+          "description_label": "বিবরণ",
+          "description_placeholder": "Enter podcast description",
+          "name_label": "Podcast Name",
+          "name_placeholder": "Enter podcast name",
+          "public_label": "Make this podcast public"
+        },
+        "submit": "Create Podcast",
+        "title": "Create New Podcast"
+      }
+    },
+    "podcast_created_success": "Podcast created successfully",
+    "podcast_name": "Podcast Name",
+    "podcast_name_required": "Podcast name is required",
+    "podcast_tags": "ট্যাগ",
+    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_visibility": "দৃশ্যমানতা",
+    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
   },
   "collections": {
     "collections": "সংগ্রহ",
@@ -757,7 +942,12 @@
     "size_large": "বড়",
     "change_color": "রঙ পরিবর্তন করুন",
     "preview_flip": "ফ্লিপ প্রিভিউ",
-    "activities_count": "{{count}}টি ক্রিয়াকলাপ"
+    "activities_count": "{{count}}টি ক্রিয়াকলাপ",
+    "copy_link": "লিংক কপি করুন",
+    "embed": "এম্বেড",
+    "embed_code_copied": "Embed code copied!",
+    "link_copied": "Link copied!",
+    "share": "শেয়ার"
   },
   "assignments": {
     "submit_assignment": "অ্যাসাইনমেন্ট জমা দিন",
@@ -854,7 +1044,8 @@
     "security": "নিরাপত্তা",
     "my_courses": "আমার কোর্স",
     "no_purchased_courses": "এখনও কোনো কোর্স কেনা হয়নি",
-    "purchased_courses_description": "আপনার কেনা বা সাবস্ক্রাইব করা কোর্সগুলো এখানে দেখা যাবে"
+    "purchased_courses_description": "আপনার কেনা বা সাবস্ক্রাইব করা কোর্সগুলো এখানে দেখা যাবে",
+    "purchases": "কেনাকাটা"
   },
   "user": {
     "user_settings": "ব্যবহারকারী সেটি้ง",
@@ -1084,7 +1275,8 @@
     "no_biography": "কোনও জীবনী দেওয়া হয়নি",
     "my_progress": "আমার অগ্রগতি",
     "no_courses_in_progress": "বর্তমানে কোনও কোর্স চলছে না",
-    "start_course_to_see_progress": "আপনার অগ্রগতি এখানে দেখতে একটি কোর্স শুরু করুন"
+    "start_course_to_see_progress": "আপনার অগ্রগতি এখানে দেখতে একটি কোর্স শুরু করুন",
+    "bio_placeholder": "Tell us a bit about yourself..."
   },
   "roles": {
     "custom_role": "কাস্টম রোল",
@@ -1114,19 +1306,66 @@
           "description": "কোর্স, অধ্যায় এবং কার্যক্রম তৈরি ও পরিচালনা করুন"
         },
         "organization": {
-          "title": "সংস্থা",
-          "description": "আপনার সংস্থার সাধারণ সেটিংস কনফিগার করুন"
+          "title": "প্রতিষ্ঠান",
+          "description": "আপনার প্রতিষ্ঠানের সাধারণ সেটিংস কনফিগার করুন"
         },
         "users": {
-          "title": "ব্যবহারকারী",
-          "description": "আপনার সংস্থার ব্যবহারকারী এবং রোলসমূহ পরিচালনা করুন"
+          "title": "ব্যবহারকারীগণ",
+          "description": "আপনার প্রতিষ্ঠানের ব্যবহারকারী ও ভূমিকা পরিচালনা করুন"
         },
         "account_settings": {
           "title": "অ্যাকাউন্ট সেটিংস",
-          "description": "আপনার ব্যক্তিগত সেটিংস, পাসওয়ার্ড এবং ইমেল কনফিগার করুন"
+          "description": "আপনার ব্যক্তিগত সেটিংস, পাসওয়ার্ড, ইমেইল কনফিগার করুন"
         }
       },
-      "learnhouse_university": "লার্নহাউস ইউনিভার্সিটি"
+      "learnhouse_university": "লার্নহাউস ইউনিভার্সিটি",
+      "welcome_back": "স্বাগতম",
+      "plan": "পরিকল্পনা",
+      "create_course": "কোর্স তৈরি করুন",
+      "analytics": "বিশ্লেষণ",
+      "members": "সদস্যবৃন্দ",
+      "settings": "সেটিংস",
+      "courses": "কোর্সসমূহ",
+      "communities": "সম্প্রদায়সমূহ",
+      "podcasts": "পডকাস্ট",
+      "boards": "বোর্ডসমূহ",
+      "published": "প্রকাশিত",
+      "draft": "খসড়া",
+      "total_users": "মোট ব্যবহারকারী",
+      "public": "সর্বজনীন",
+      "episodes": "পর্বসমূহ",
+      "participants": "অংশগ্রহণকারী",
+      "loading": "লোড হচ্ছে...",
+      "enable_analytics_description": "লাইভ ব্যবহারকারী, সাইন আপ এবং আরও অনেক কিছু দেখতে বিশ্লেষণ সক্রিয় করুন।",
+      "enable": "সক্রিয় করুন",
+      "quick_stats": "দ্রুত পরিসংখ্যান",
+      "full_analytics": "সম্পূর্ণ বিশ্লেষণ",
+      "live_now": "এখন লাইভ",
+      "signups_30d": "সাইন আপ (৩০ দিন)",
+      "enrollments_30d": "তালিকাভুক্তি (৩০ দিন)",
+      "completions_30d": "সমাপ্তি (৩০ দিন)",
+      "recent_courses": "সাম্প্রতিক কোর্স",
+      "view_all": "সব দেখুন",
+      "no_courses_yet": "এখনো কোনো কোর্স নেই",
+      "create_your_first_course": "আপনার প্রথম কোর্স তৈরি করুন",
+      "chapter": "অধ্যায়",
+      "chapters": "অধ্যায়সমূহ",
+      "recent_members": "সাম্প্রতিক সদস্য",
+      "total": "মোট",
+      "no_members_yet": "এখনো কোনো সদস্য নেই",
+      "unverified": "অযাচাইকৃত",
+      "plan_and_usage": "পরিকল্পনা ও ব্যবহার",
+      "unlimited": "সীমাহীন",
+      "admin_seats": "অ্যাডমিন আসন",
+      "limit_reached": "সীমা পৌঁছেছে",
+      "remaining": "অবশিষ্ট",
+      "usage_data_unavailable": "ব্যবহারের ডেটা অনুপলব্ধ",
+      "features": "বৈশিষ্ট্য",
+      "off": "বন্ধ",
+      "ai_credits": "এআই ক্রেডিট",
+      "used": "ব্যবহৃত",
+      "no_credits_remaining": "কোনো ক্রেডিট অবশিষ্ট নেই",
+      "includes_purchased": "{{count}} টি ক্রয়কৃত অন্তর্ভুক্ত"
     },
     "courses": {
       "title": "কোর্সসমূহ",
@@ -1176,7 +1415,9 @@
           "content": "কন্টেন্ট",
           "access": "অ্যাক্সেস",
           "contributors": "কন্ট্রিবিউটর",
-          "certification": "সার্টিফিকেশন"
+          "certification": "সার্টিফিকেশন",
+          "analytics": "বিশ্লেষণ",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "অ্যাক্সেস ডিনাইড",
@@ -1467,7 +1708,8 @@
             "general": "সাধারণ",
             "thumbnail": "থাম্বনেইল",
             "course": "সংযুক্ত কোর্স",
-            "moderation": "মডারেশন"
+            "moderation": "মডারেশন",
+            "access": "Access"
           },
           "general": {
             "title": "সাধারণ সেটিংস",
@@ -1484,6 +1726,10 @@
           "moderation": {
             "title": "মডারেশন",
             "subtitle": "কন্টেন্ট মডারেশন সেটিংস কনফিগার করুন"
+          },
+          "access": {
+            "subtitle": "Control who can access this community",
+            "title": "Access Settings"
           }
         },
         "course": {
@@ -1596,6 +1842,60 @@
           "deleting": "কমিউনিটি মুছে ফেলা হচ্ছে...",
           "delete_success": "কমিউনিটি সফলভাবে মুছে ফেলা হয়েছে",
           "delete_error": "কমিউনিটি মুছতে ব্যর্থ"
+        },
+        "access": {
+          "public": {
+            "active": "সক্রিয়",
+            "confirmation_button": "Change to Public",
+            "confirmation_message": "Are you sure you want this community to be publicly available?",
+            "confirmation_title": "Change to Public?",
+            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "title": "পাবলিক"
+          },
+          "restricted": {
+            "active": "সক্রিয়",
+            "confirmation_button": "Change to Restricted",
+            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
+            "confirmation_title": "Change to Restricted?",
+            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
+            "title": "Restricted"
+          },
+          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
+          "title": "Access Settings",
+          "toasts": {
+            "update_error": "Failed to update access settings",
+            "update_success": "Access settings updated successfully"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "সরান",
+              "link_to_usergroup": "Link to User Group"
+            },
+            "modals": {
+              "create_usergroup": "Create a User Group",
+              "link_button": "লিংক",
+              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
+              "link_title": "Link Community to User Group",
+              "no_usergroups": "No User Groups available",
+              "unlink_button": "Remove Access",
+              "unlink_message": "Users from this User Group will no longer have access to this community.",
+              "unlink_title": "Remove User Group Access?",
+              "usergroup_name": "User Group Name",
+              "warning": "Users not in linked User Groups will lose access to this community"
+            },
+            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "table": {
+              "actions": "অ্যাকশন",
+              "name": "নাম"
+            },
+            "title": "User Groups",
+            "toasts": {
+              "link_error": "Error {{status}}: {{detail}}",
+              "link_success": "Successfully linked User Group",
+              "unlink_error": "An error occurred while removing User Group access",
+              "unlink_success": "Successfully removed User Group access"
+            }
+          }
         }
       },
       "structure": {
@@ -1737,6 +2037,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Course limit reached ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "Failed to save SEO settings"
+        },
+        "form": {
+          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "canonical_url_label": "Canonical URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "description_label": "Meta Description",
+          "description_placeholder": "Enter a compelling description for search results",
+          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
+          "enable_jsonld_label": "Enable JSON-LD Structured Data",
+          "keywords_hint": "Comma-separated list of keywords related to your course",
+          "keywords_label": "Keywords",
+          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "og_description_label": "OG Description",
+          "og_description_placeholder": "Custom description for social media sharing",
+          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "og_image_label": "OG Image URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG Title",
+          "og_title_placeholder": "Custom title for social media sharing",
+          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
+          "robots_nofollow_label": "Prevent following links (nofollow)",
+          "robots_noindex_hint": "When enabled, search engines will not index this course",
+          "robots_noindex_label": "Prevent search engine indexing (noindex)",
+          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "title_label": "SEO Title",
+          "title_placeholder": "Enter a custom title for search engines",
+          "twitter_card_label": "Card Type",
+          "twitter_card_summary": "Summary",
+          "twitter_card_summary_large": "Summary with Large Image",
+          "twitter_description_label": "Twitter Description",
+          "twitter_description_placeholder": "Custom description for Twitter sharing",
+          "twitter_title_label": "Twitter Title",
+          "twitter_title_placeholder": "Custom title for Twitter sharing"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Configure how your course appears in search engine results",
+            "title": "Basic SEO"
+          },
+          "opengraph": {
+            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Control search engine indexing and enable rich snippets",
+            "title": "Robots & Structured Data"
+          },
+          "twitter": {
+            "subtitle": "Customize how your course appears when shared on Twitter/X",
+            "title": "Twitter Card"
+          }
+        },
+        "subtitle": "Optimize your course for search engines and social media sharing",
+        "title": "SEO Settings",
+        "validation": {
+          "description_max_length": "Meta description must be 160 characters or less",
+          "invalid_url": "Please enter a valid URL",
+          "og_description_max_length": "OG description must be 200 characters or less",
+          "og_title_max_length": "OG title must be 70 characters or less",
+          "title_max_length": "SEO title must be 70 characters or less",
+          "twitter_description_max_length": "Twitter description must be 200 characters or less",
+          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+        }
       }
     },
     "organization": {
@@ -1751,7 +2120,9 @@
           "api": "API অ্যাক্সেস",
           "features": "ফিচার",
           "usage": "Usage",
-          "other": "অন্যান্য"
+          "other": "অন্যান্য",
+          "domains": "Domains",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1785,6 +2156,14 @@
           "usage": {
             "title": "Usage",
             "subtitle": "Monitor your organization's resource usage and plan limits"
+          },
+          "domains": {
+            "subtitle": "Configure custom domains for your organization",
+            "title": "Custom Domains"
+          },
+          "sso": {
+            "subtitle": "Configure SSO for your organization",
+            "title": "Single Sign-On"
           }
         },
         "name": "সংস্থার নাম",
@@ -1802,7 +2181,10 @@
         "updating": "সংস্থা আপডেট হচ্ছে...",
         "footer_text": "ফুটার টেক্সট",
         "footer_text_placeholder": "ফুটার টেক্সট লিখুন...",
-        "footer_text_desc": "আপনার সংস্থার পৃষ্ঠাগুলির নীচে প্রদর্শিত কাস্টম টেক্সট"
+        "footer_text_desc": "আপনার সংস্থার পৃষ্ঠাগুলির নীচে প্রদর্শিত কাস্টম টেক্সট",
+        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
+        "watermark_free_plan": "Watermark is always shown on the free plan",
+        "watermark_label": "\"Made with LearnHouse\" watermark"
       },
       "images": {
         "title": "ছবি এবং প্রিভিউ",
@@ -1861,7 +2243,8 @@
         "tabs": {
           "images": "ছবি এবং প্রিভিউ",
           "social": "সোশ্যাল লিঙ্ক",
-          "theme": "থিম"
+          "theme": "থিম",
+          "auth": "Auth"
         }
       },
       "socials": {
@@ -1933,6 +2316,14 @@
           "collections": {
             "title": "কালেকশন",
             "description": "কোর্সগুলিকে কালেকশনে সংগঠিত করার অনুমতি দিন"
+          },
+          "courses": {
+            "description": "Enable courses and progress tracking for your organization",
+            "title": "কোর্স"
+          },
+          "podcasts": {
+            "description": "Enable podcast creation and audio content for your organization",
+            "title": "পডকাস্ট"
           }
         },
         "toasts": {
@@ -1940,7 +2331,8 @@
           "disabling": "{{feature}} নিষ্ক্রিয় করা হচ্ছে...",
           "enabled": "{{feature}} সক্রিয় করা হয়েছে",
           "disabled": "{{feature}} নিষ্ক্রিয় করা হয়েছে",
-          "error": "{{feature}} কনফিগারেশন আপডেট করতে ব্যর্থ"
+          "error": "{{feature}} কনফিগারেশন আপডেট করতে ব্যর্থ",
+          "admin_only": "Only organization admins can enable or disable features"
         }
       },
       "auth_branding": {
@@ -2183,6 +2575,45 @@
         "footer_text": "ফুটার টেক্সট",
         "footer_text_desc": "পৃষ্ঠার ফুটারে প্রদর্শনের জন্য কাস্টম টেক্সট যোগ করুন।",
         "footer_text_placeholder": "ফুটার টেক্সট লিখুন..."
+      },
+      "sso": {
+        "allowed_domains": "Allowed Email Domains",
+        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
+        "auto_provision": "Auto-provision Users",
+        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
+        "delete": "Delete SSO Configuration",
+        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
+        "delete_error": "Failed to delete SSO configuration",
+        "delete_success": "SSO configuration deleted",
+        "deleting": "Deleting...",
+        "enable_sso": "Enable SSO",
+        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
+        "load_error": "Failed to load SSO configuration",
+        "not_configured": "Not configured",
+        "oidc_client_id": "Client ID",
+        "oidc_client_secret": "Client Secret",
+        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
+        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
+        "open_setup_portal": "Configure Identity Provider",
+        "provider": "SSO Provider",
+        "save": "Save Configuration",
+        "save_error": "Failed to save SSO configuration",
+        "save_success": "SSO configuration saved successfully",
+        "saving": "Saving...",
+        "select_provider": "Select a provider",
+        "setup_error": "Failed to get setup portal URL",
+        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "status_disabled": "নিষ্ক্রিয়",
+        "status_enabled": "সক্রিয়",
+        "subtitle": "Configure enterprise SSO for your organization",
+        "title": "Single Sign-On (SSO)",
+        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_org_id": "WorkOS Organization ID",
+        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
       }
     },
     "users": {
@@ -2341,7 +2772,8 @@
           "table": {
             "email": "ইমেল",
             "signup_status": "সাইনআপ স্ট্যাটাস",
-            "email_sent": "ইমেল পাঠানো হয়েছে"
+            "email_sent": "ইমেল পাঠানো হয়েছে",
+            "actions": "অ্যাকশন"
           },
           "status": {
             "pending": "পেন্ডিং",
@@ -2350,12 +2782,34 @@
           "email_status": {
             "sent": "পাঠানো হয়েছে",
             "no": "না"
-          }
+          },
+          "no_invites": "No pending invitations",
+          "no_results": "No invitations found matching your search",
+          "remove_button": "সরান",
+          "remove_error": "Error removing invitation",
+          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
+          "remove_success": "Invitation removed",
+          "remove_title": "Remove invitation",
+          "removing": "Removing invitation...",
+          "search_placeholder": "Search by email..."
         },
         "toasts": {
           "sending": "আমন্ত্রণ পাঠানো হচ্ছে...",
           "success": "আমন্ত্রণ পাঠানো হয়েছে",
-          "error": "আমন্ত্রণ পাঠাতে ত্রুটি"
+          "error": "আমন্ত্রণ পাঠাতে ত্রুটি",
+          "partial": "{{sent}} sent, {{failed}} failed"
+        },
+        "no_invite_code": "কোনোটি নয়",
+        "results": {
+          "failed_count": "{{count}} failed",
+          "sent_count": "{{count}} sent",
+          "skipped_count": "{{count}} already invited",
+          "status": {
+            "already_invited": "Already invited",
+            "email_failed": "ব্যর্থ",
+            "sent": "পাঠানো হয়েছে"
+          },
+          "summary_title": "ফলাফল"
         }
       },
       "usergroups": {
@@ -2384,7 +2838,9 @@
             },
             "status": {
               "linked": "লিঙ্কযুক্ত",
-              "not_linked": "লিঙ্কযুক্ত নয়"
+              "not_linked": "লিঙ্কযুক্ত নয়",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             },
             "actions": {
               "link": "লিঙ্ক করুন",
@@ -2393,7 +2849,31 @@
             "toasts": {
               "link_success": "ব্যবহারকারী সফলভাবে লিঙ্ক করা হয়েছে",
               "unlink_success": "ব্যবহারকারী সফলভাবে সরানো হয়েছে",
-              "error": "ত্রুটি {{status}}: {{detail}}"
+              "error": "ত্রুটি {{status}}: {{detail}}",
+              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_adding": "Adding users to group...",
+              "bulk_error": "An error occurred during the operation",
+              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_removing": "Removing users from group..."
+            },
+            "no_results": "No users found matching your search",
+            "no_users": "No users in this organization yet",
+            "pagination": {
+              "page": "Page {{current}} of {{total}}",
+              "showing": "Showing {{start}}-{{end}} of {{total}}"
+            },
+            "search_placeholder": "Search users by name or username...",
+            "selection": {
+              "add_selected": "Add {{count}} to Group",
+              "clear": "মুছুন",
+              "count": "{{count}} users selected",
+              "remove_selected": "Remove {{count}} from Group",
+              "select_all_visible": "Select all visible"
+            },
+            "tabs": {
+              "all": "All Users",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
             }
           },
           "create": {
@@ -2436,7 +2916,18 @@
           "deleting": "মুছে ফেলা হচ্ছে...",
           "delete_success": "ইউজার গ্রুপ মুছে ফেলা হয়েছে",
           "delete_error": "ইউজার গ্রুপ মুছতে ত্রুটি"
-        }
+        },
+        "count": {
+          "plural": "groups",
+          "singular": "group"
+        },
+        "member_count": {
+          "plural": "members",
+          "singular": "member"
+        },
+        "no_groups": "No user groups yet",
+        "no_results": "No groups found matching your search",
+        "search_placeholder": "Search groups..."
       },
       "roles": {
         "title": "রোল এবং অনুমতি পরিচালনা করুন",
@@ -2454,7 +2945,8 @@
         "actions": {
           "edit": "সম্পাদনা",
           "delete": "মুছুন",
-          "create": "একটি রোল তৈরি করুন"
+          "create": "একটি রোল তৈরি করুন",
+          "view_rights": "View Rights"
         },
         "modals": {
           "create": {
@@ -2580,12 +3072,29 @@
             "title": "রোল মুছবেন?",
             "message": "এই অ্যাকশনটি পূর্বাবস্থায় ফেরানো যাবে না। এই রোলের সমস্ত ব্যবহারকারী তাদের অনুমতি হারাবেন। আপনি কি নিশ্চিত যে আপনি এই রোলটি মুছতে চান?",
             "button": "রোল মুছুন"
+          },
+          "view_rights": {
+            "description": "View all permissions assigned to this role",
+            "title": "{{roleName}} - Permissions"
           }
         },
         "toasts": {
           "deleting": "মুছে ফেলা হচ্ছে...",
           "delete_success": "রোল মুছে ফেলা হয়েছে",
           "delete_error": "রোল মুছতে ত্রুটি"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Activities",
+            "collections": "Collections",
+            "coursechapters": "Course Chapters",
+            "courses": "কোর্স",
+            "dashboard": "Dashboard",
+            "organizations": "Organizations",
+            "roles": "Roles",
+            "usergroups": "User Groups",
+            "users": "Users"
+          }
         }
       }
     },
@@ -2868,11 +3377,33 @@
       "common": {
         "cancel": "বাতিল",
         "save": "সংরক্ষণ করুন",
-        "apply": "প্রয়োগ করুন"
+        "apply": "প্রয়োগ করুন",
+        "align_center": "কেন্দ্রে সারিবদ্ধ",
+        "align_left": "বামে সারিবদ্ধ",
+        "align_right": "ডানে সারিবদ্ধ",
+        "download": "ডাউনলোড",
+        "drop_or_browse": "আপনার ফাইল এখানে ছেড়ে দিন বা ব্রাউজ করতে ক্লিক করুন",
+        "expand": "প্রসারিত করুন",
+        "full_width": "পূর্ণ প্রস্থ",
+        "large": "বড়",
+        "medium": "মাঝারি",
+        "size": "আকার",
+        "small": "ছোট",
+        "upload": "আপলোড",
+        "uploading": "আপলোড হচ্ছে..."
       },
       "quiz_block": {
         "question_placeholder": "আপনার প্রশ্ন এখানে লিখুন",
-        "answer_placeholder": "উত্তর এখানে লিখুন"
+        "answer_placeholder": "উত্তর এখানে লিখুন",
+        "add_answer": "উত্তর যোগ করুন",
+        "add_question": "প্রশ্ন যোগ করুন",
+        "all_correct": "সব উত্তর সঠিক!",
+        "delete_answer": "উত্তর মুছুন",
+        "mark_correct": "সঠিক হিসেবে চিহ্নিত করুন",
+        "mark_incorrect": "ভুল হিসেবে চিহ্নিত করুন",
+        "reset_answers": "উত্তর রিসেট করুন",
+        "some_incorrect": "কিছু উত্তর ভুল!",
+        "submit": "জমা দিন"
       },
       "math_block": {
         "templates": "টেমপ্লেট",
@@ -2955,7 +3486,62 @@
         "suggestion_calculator_prompt": "মৌলিক সমীকরণের জন্য ধাপে ধাপে সমাধান দেখানো একটি ক্যালকুলেটর তৈরি করুন",
         "suggestion_timeline": "টাইমলাইন",
         "suggestion_timeline_prompt": "বিস্তারযোগ্য বিবরণ সহ প্রধান ঐতিহাসিক ঘটনা দেখানো একটি ইন্টারেক্টিভ টাইমলাইন তৈরি করুন"
+      },
+      "flipcard_block": {
+        "back": "পেছনে",
+        "click_to_flip": "উল্টাতে ক্লিক করুন",
+        "front": "সামনে"
+      },
+      "image_block": {
+        "download_image": "ছবি ডাউনলোড করুন",
+        "drop_or_browse": "আপনার ছবি এখানে ছেড়ে দিন বা ব্রাউজ করতে ক্লিক করুন",
+        "expand_image": "ছবি প্রসারিত করুন",
+        "supported_formats": "JPG, PNG, WebP এবং GIF সমর্থন করে",
+        "uploading": "ছবি আপলোড হচ্ছে...",
+        "viewer_title": "ছবি দর্শক"
+      },
+      "pdf_block": {
+        "document_title": "PDF ডকুমেন্ট",
+        "download_pdf": "PDF ডাউনলোড করুন",
+        "drop_or_browse": "আপনার PDF এখানে ছেড়ে দিন বা ব্রাউজ করতে ক্লিক করুন",
+        "expand_pdf": "PDF প্রসারিত করুন",
+        "no_pdf": "কোনো PDF উপলব্ধ নেই",
+        "supported_formats": "PDF ফরম্যাট সমর্থন করে",
+        "upload_pdf": "PDF আপলোড করুন",
+        "uploading": "PDF আপলোড হচ্ছে..."
+      },
+      "video_block": {
+        "download_video": "ভিডিও ডাউনলোড করুন",
+        "drop_or_browse": "আপনার ভিডিও এখানে ছেড়ে দিন বা ব্রাউজ করতে ক্লিক করুন",
+        "expand_video": "ভিডিও প্রসারিত করুন",
+        "player_title": "ভিডিও প্লেয়ার",
+        "supported_formats": "MP4 এবং WebM ফরম্যাট সমর্থন করে",
+        "unsupported_format": "অনুগ্রহ করে একটি সমর্থিত ভিডিও ফরম্যাট আপলোড করুন (MP4 বা WebM)",
+        "uploading": "ভিডিও আপলোড হচ্ছে..."
+      },
+      "button_block": {
+        "enter_link_url": "Enter link URL"
       }
+    },
+    "ai_panel": {
+      "add_definition": "Add definition",
+      "add_examples": "Add examples",
+      "add_quiz": "Add quiz",
+      "add_summary": "Add summary",
+      "add_tip": "Add tip",
+      "block_selected": "block selected",
+      "clear_chat": "Clear chat",
+      "clear_selection": "Clear selection",
+      "expand": "Expand",
+      "how_can_i_help": "How can I help improve your content?",
+      "improve_writing": "Improve writing",
+      "input_placeholder": "Ask AI to help with your content...",
+      "question_add_quiz": "Add a quiz",
+      "question_improve": "How can I improve this?",
+      "question_summary": "Add a summary",
+      "simplify": "Simplify",
+      "title": "AI Editor",
+      "translate": "Translate"
     }
   },
   "analytics": {
@@ -3342,6 +3928,12 @@
       "pagination": {
         "range": "{{from}}–{{to}} এর মধ্যে {{total}}"
       }
+    },
+    "export": {
+      "button": "এক্সপোর্ট",
+      "csv": "Download CSV",
+      "downloading": "Exporting...",
+      "json": "Download JSON"
     }
   },
   "boards": {
@@ -3466,7 +4058,8 @@
       "thick": "মোটা",
       "undo": "পূর্বাবস্থায় ফেরান",
       "redo": "পুনরায় করুন",
-      "podcast": "পডকাস্ট"
+      "podcast": "পডকাস্ট",
+      "todo": "To-do"
     },
     "zoom": {
       "zoom_in": "জুম ইন",
@@ -3571,6 +4164,211 @@
       "page_of": "পৃষ্ঠা {{current}} এর মধ্যে {{total}}",
       "results": "\"{{query}}\" এর জন্য {{count}} ফলাফল",
       "results_plural": "\"{{query}}\" এর জন্য {{count}} ফলাফল"
+    },
+    "board_deleted_error": "Failed to delete board",
+    "board_deleted_success": "Board deleted",
+    "board_duplicated_error": "Failed to duplicate board",
+    "board_duplicated_success": "Board duplicated",
+    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
+    "boards_deleted_success": "{{count}} board(s) deleted",
+    "clear_selection": "মুছুন",
+    "delete_board": "Delete Board",
+    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
+    "delete_board_title": "Delete \"{{name}}\"",
+    "delete_boards_title": "Delete Boards",
+    "delete_selected": "Delete Selected",
+    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
+    "deleting_board": "Deleting board...",
+    "deleting_boards": "Deleting {{count}} board(s)...",
+    "duplicate_board": "Duplicate Board",
+    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
+    "duplicate_board_title": "Duplicate \"{{name}}\"",
+    "duplicating_board": "Duplicating board...",
+    "open_board": "Open Board",
+    "select_all": "Select All",
+    "selected_count": "{{count}} selected"
+  },
+  "onboarding": {
+    "getting_started": "শুরু করুন",
+    "all_done": "সব হয়ে গেছে!",
+    "all_set": "আপনি প্রস্তুত!",
+    "all_set_desc": "আপনি শুরু করার গাইড সম্পন্ন করেছেন।",
+    "more_steps": "আরো {{count}}টি ধাপ",
+    "more_steps_plural": "আরো {{count}}টি ধাপ",
+    "show_less": "কম দেখান",
+    "skip": "এড়িয়ে যান",
+    "got_it": "বুঝেছি, আমি তৈরি করতে প্রস্তুত!",
+    "done": "হয়ে গেছে, আমি প্রস্তুত!",
+    "steps": {
+      "create_course": {
+        "title": "আপনার প্রথম কোর্স তৈরি করুন",
+        "description": "আপনার শিক্ষার্থীদের জন্য একটি নতুন কোর্স তৈরি করে শুরু করুন।",
+        "action": "কোর্স তৈরি করুন"
+      },
+      "add_activities": {
+        "title": "আপনার কোর্সে কার্যক্রম যোগ করুন",
+        "description": "পৃষ্ঠা, ভিডিও, নথি এবং আরও অনেক কিছুর মতো বিষয়বস্তু যোগ করুন।",
+        "action": "বিষয়বস্তুতে যান"
+      },
+      "experience_editor": {
+        "title": "সম্পাদক অনুভব করুন",
+        "description": "সম্পাদক খুলুন এবং আপনার কোর্সের বিষয়বস্তু তৈরি করতে শিখুন।",
+        "add_activity": "কার্যক্রম যোগ করুন",
+        "dynamic_page": "গতিশীল পৃষ্ঠা",
+        "click_edit": "সম্পাদনা ক্লিক করুন",
+        "editor_features": "সম্পাদকে আপনি যা করতে পারেন:",
+        "slash_commands": "স্ল্যাশ কমান্ডের জন্য / টাইপ করুন",
+        "headings_lists": "শিরোনাম, তালিকা ও পাঠ্য",
+        "images_media": "ছবি ও মিডিয়া",
+        "video_embeds": "ভিডিও ও এম্বেড",
+        "tables_callouts": "টেবিল ও কলআউট",
+        "interactive_blocks": "ইন্টারেক্টিভ ব্লক"
+      },
+      "try_playgrounds": {
+        "title": "প্লেগ্রাউন্ড দিয়ে ইন্টারেক্টিভ শিক্ষা",
+        "description": "স্ব-গতিতে শেখার জন্য ইন্টারেক্টিভ পৃষ্ঠা তৈরি করুন।",
+        "action": "প্লেগ্রাউন্ড ব্যবহার করুন"
+      },
+      "invite_users": {
+        "title": "আপনার দল ও শিক্ষার্থীদের আমন্ত্রণ জানান",
+        "description": "প্রশিক্ষক যোগ করুন বা শিক্ষার্থীদের যোগদানের জন্য একটি লিঙ্ক শেয়ার করুন।",
+        "action": "ব্যবহারকারীদের আমন্ত্রণ জানান"
+      },
+      "customize_org": {
+        "title": "আপনার সংস্থা কাস্টমাইজ করুন",
+        "description": "আপনার লোগো, রং যোগ করুন এবং এটি আপনার করে তুলুন।",
+        "action": "কাস্টমাইজ করুন"
+      },
+      "teach_the_world": {
+        "title": "শিখুন ও বেড়ে উঠুন",
+        "description": "LearnHouse থেকে সর্বাধিক সুবিধা পেতে সহায়ক রিসোর্স।",
+        "classroom": "ক্লাসরুম",
+        "classroom_desc": "আপনার কোর্স বৃদ্ধি ও পরিচালনা করতে শিখুন",
+        "university": "LearnHouse বিশ্ববিদ্যালয়",
+        "university_desc": "গাইড, টিপস এবং সেরা অনুশীলন"
+      }
+    },
+    "welcome": {
+      "title": "LearnHouse-এ স্বাগতম",
+      "subtitle": "কোর্স তৈরি করুন, শিক্ষার্থীদের আমন্ত্রণ জানান এবং বিশ্বের সাথে জ্ঞান ভাগ করুন।",
+      "get_started": "শুরু করুন",
+      "features_title": "আপনার যা দরকার সব আছে",
+      "features_subtitle": "আপনার শেখার প্ল্যাটফর্ম তৈরি ও বৃদ্ধির জন্য সমস্ত সরঞ্জাম।",
+      "lets_go": "চলুন শুরু করি",
+      "features": {
+        "teach": "যেকোনো কিছু শেখান",
+        "teach_desc": "অধ্যায় এবং সমৃদ্ধ বিষয়বস্তু সহ কাঠামোবদ্ধ কোর্স তৈরি করুন",
+        "interactive": "ইন্টারেক্টিভ করুন",
+        "interactive_desc": "প্লেগ্রাউন্ড তৈরি করুন যেখানে শিক্ষার্থীরা নিজের গতিতে শিখতে পারে",
+        "community": "একটি সম্প্রদায় গড়ুন",
+        "community_desc": "আলোচনার জায়গা তৈরি করুন যেখানে শিক্ষার্থীরা একে অপরকে সাহায্য করে",
+        "assess": "জ্ঞান মূল্যায়ন করুন",
+        "assess_desc": "অ্যাসাইনমেন্ট তৈরি করুন এবং শিক্ষার্থীদের জমা ট্র্যাক করুন",
+        "collaborate": "দৃশ্যমানভাবে সহযোগিতা করুন",
+        "collaborate_desc": "শিক্ষার্থীদের ব্রেনস্টর্ম এবং একসাথে কাজ করার জন্য শেয়ার্ড বোর্ড দিন",
+        "voice": "আপনার কণ্ঠ শেয়ার করুন",
+        "voice_desc": "পডকাস্ট চালু করুন এবং শিক্ষার্থীদের কাছে অডিও এপিসোড বিতরণ করুন",
+        "certify": "শিক্ষার্থীদের সার্টিফাই করুন",
+        "certify_desc": "শিক্ষার্থীরা আপনার কোর্স সম্পন্ন করলে সার্টিফিকেট প্রদান করুন",
+        "impact": "আপনার প্রভাব বুঝুন",
+        "impact_desc": "এনগেজমেন্ট ট্র্যাক করুন এবং শিক্ষার্থীরা সময়ের সাথে কীভাবে এগিয়ে যাচ্ছে দেখুন",
+        "team": "আপনার দল বাড়ান",
+        "team_desc": "প্রশিক্ষক আমন্ত্রণ করুন, ভূমিকা পরিচালনা করুন এবং শিক্ষার্থী গ্রুপ সংগঠিত করুন"
+      }
+    },
+    "farewell": {
+      "title": "আপনি বিশ্বকে শেখাতে প্রস্তুত",
+      "description": "সবকিছু প্রস্তুত। আপনার শিক্ষার্থীরা দারুণ কিছুর অপেক্ষায়।",
+      "button": "শেখানো শুরু করুন"
+    }
+  },
+  "embed": {
+    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
+    "not_supported_title": "This activity is not supported",
+    "powered_by": "Powered by LearnHouse",
+    "visit_activity": "Visit Activity Page"
+  },
+  "migration": {
+    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Add Activity",
+    "add_chapter": "Add Chapter",
+    "ai_failed": "AI suggestion failed, falling back to manual organization",
+    "all_files_assigned": "All files assigned",
+    "click_to_add_more": "Click to add more files",
+    "course_created": "Course created successfully!",
+    "course_name": "Course Name",
+    "course_name_placeholder": "e.g. Python Basics for Beginners",
+    "course_structure": "Course Structure",
+    "create_course": "Create Course",
+    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
+    "creating_course": "Creating your course...",
+    "creating_description": "Uploading files and setting up chapters and activities",
+    "creation_error_generic": "Something went wrong. Please try again.",
+    "creation_failed": "Course creation failed",
+    "description": "One-liner Description",
+    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
+    "drop_file_here": "Drop a file here",
+    "drop_files": "Drop your files here or click to browse",
+    "go_to_course": "Go to Course",
+    "new_activity": "New Activity",
+    "new_chapter": "New Chapter",
+    "organize_manually": "Organize Manually",
+    "organize_with_ai": "Organize with AI",
+    "step_complete": "Complete",
+    "step_organize": "Organize",
+    "step_upload": "আপলোড",
+    "subtitle": "Upload your files and organize them into a course",
+    "title": "Migrate Content",
+    "try_again": "Try Again",
+    "unassigned_files": "Unassigned Files",
+    "upload_failed": "File upload failed",
+    "uploading_files": "Uploading files"
+  },
+  "upgrade_modal": {
+    "title": "আপনার পূর্ণ সম্ভাবনা আনলক করুন",
+    "subtitle": "আপনার শিক্ষাদানের লক্ষ্যের সাথে মেলে এমন প্ল্যান বেছে নিন।",
+    "choose_plan": "{{plan}} নিন",
+    "current_free_limits": "বিনামূল্যে প্ল্যান: ১টি কোর্স · ১০ সদস্য · AI নেই",
+    "plans": {
+      "standard": {
+        "goal": "আপনার কোর্স থেকে আয় শুরু করুন এবং একটি শিক্ষা সম্প্রদায় তৈরি করুন।",
+        "highlights": {
+          "courses": "সীমাহীন কোর্স",
+          "courses_desc": "আপনার প্রয়োজন অনুযায়ী যত কোর্স চান তৈরি করুন।",
+          "members": "৫০০ সদস্য পর্যন্ত",
+          "members_desc": "আপনার শিক্ষার্থী বাড়ান এবং এক জায়গায় পরিচালনা করুন।",
+          "payments": "পেমেন্ট গ্রহণ",
+          "payments_desc": "কোর্স বিক্রি করুন এবং সাবস্ক্রিপশন অফার করুন।",
+          "communities": "কমিউনিটি আলোচনা",
+          "communities_desc": "শিক্ষার্থীদের সংযুক্ত হতে এবং ধারণা শেয়ার করতে দিন।",
+          "podcasts": "পডকাস্ট তৈরি",
+          "podcasts_desc": "অডিও কন্টেন্ট দিয়ে শিক্ষার্থীদের কাছে পৌঁছান।",
+          "ai": "১,০০০ AI ক্রেডিট",
+          "ai_desc": "AI-চালিত লেখার টুল দিয়ে কন্টেন্ট তৈরি দ্রুত করুন।",
+          "analytics": "শিক্ষার্থী বিশ্লেষণ",
+          "analytics_desc": "অগ্রগতি এবং সম্পৃক্ততা ট্র্যাক করে কোর্স উন্নত করুন।"
+        }
+      },
+      "pro": {
+        "goal": "উন্নত টুল এবং সম্পূর্ণ নিয়ন্ত্রণ দিয়ে আপনার একাডেমি বাড়ান।",
+        "includes_standard": "Standard-এর সবকিছু, এবং আরও:",
+        "highlights": {
+          "members": "১,০০০ সদস্য পর্যন্ত",
+          "members_desc": "১০টি অ্যাডমিন সিট সহ বড় দল সমর্থন করুন।",
+          "ai": "৩,০০০ AI ক্রেডিট",
+          "ai_desc": "বেশি পরিমাণ কন্টেন্ট তৈরির জন্য আরও ক্রেডিট।",
+          "certifications": "সার্টিফিকেট প্রদান",
+          "certifications_desc": "কোর্স সম্পন্ন করলে শিক্ষার্থীদের সার্টিফিকেট দিন।",
+          "custom_domain": "কাস্টম ডোমেইন",
+          "custom_domain_desc": "সম্পূর্ণ ব্র্যান্ডেড একাডেমির জন্য নিজের ডোমেইন ব্যবহার করুন।",
+          "roles": "কাস্টম ভূমিকা ও অনুমতি",
+          "roles_desc": "আপনার সংস্থায় কে কী করতে পারে তা নিয়ন্ত্রণ করুন।",
+          "playgrounds": "ইন্টারেক্টিভ প্লেগ্রাউন্ড",
+          "playgrounds_desc": "শিক্ষার্থীদের হাতে-কলমে ইন্টারেক্টিভ অনুশীলনে পরীক্ষা-নিরীক্ষা ও অনুশীলন করতে দিন।",
+          "api": "API অ্যাক্সেস ও webhooks",
+          "api_desc": "আপনার বিদ্যমান টুলের সাথে সংযুক্ত করুন এবং ওয়ার্কফ্লো স্বয়ংক্রিয় করুন।"
+        }
+      }
     }
   }
 }

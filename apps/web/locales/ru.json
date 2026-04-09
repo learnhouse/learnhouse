@@ -91,8 +91,34 @@
         "communities": {
           "title": "Функция Standard",
           "description": "Сообщества — это премиум-функция, доступная только для организаций с планом Standard или выше. Обновитесь, чтобы разблокировать дискуссионные сообщества для ваших участников."
+        },
+        "analytics": {
+          "description": "Аналитика — премиум-функция, доступная только для организаций с планом Standard и выше. Обновите для получения данных о учащихся и контенте.",
+          "title": "Функция Standard"
+        },
+        "course_analytics": {
+          "description": "Аналитика курсов — премиум-функция, доступная только для организаций с планом Pro и выше. Обновите для получения детальных данных.",
+          "title": "Функция Pro"
+        },
+        "custom_domains": {
+          "description": "Пользовательские домены — премиум-функция, доступная для планов Standard и выше. Обновите для использования собственного домена.",
+          "title": "Функция Standard"
+        },
+        "podcasts": {
+          "description": "Подкасты — премиум-функция, доступная для планов Standard и выше. Обновите для создания и распространения подкастов.",
+          "title": "Функция Standard"
+        },
+        "seo": {
+          "description": "Инструменты SEO-оптимизации доступны только для планов Standard и выше. Обновите для настройки отображения в поисковых системах.",
+          "title": "Функция Standard"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) — премиум-функция для планов Enterprise. Обновите для безопасной аутентификации через провайдер идентификации.",
+          "title": "Функция Enterprise"
         }
-      }
+      },
+      "current_plan": "Текущий план",
+      "upgrade_to": "Обновить до"
     },
     "features": {
       "disabled": {
@@ -104,7 +130,8 @@
           "communities": "Сообщества",
           "podcasts": "Подкасты",
           "payments": "Платежи",
-          "trail": "Отслеживание прогресса"
+          "trail": "Отслеживание прогресса",
+          "boards": "Доски"
         },
         "public": {
           "title": "{{feature}} недоступен",
@@ -149,12 +176,18 @@
     "back": "Назад",
     "of": "из",
     "creating": "Создание...",
-    "view_details": "Подробнее"
+    "view_details": "Подробнее",
+    "boards": "Доски",
+    "close": "Закрыть",
+    "optional": "необязательно",
+    "playgrounds": "Площадки"
   },
   "banner": {
     "viewing_as_guest": "Вы просматриваете {{name}} как гость.",
     "join_organization": "Присоединиться к этой организации",
-    "to_access_features": "для доступа ко всем функциям."
+    "to_access_features": "для доступа ко всем функциям.",
+    "free_plan_upgrade": "Вы используете бесплатный план. Обновите подписку, чтобы разблокировать полный функционал.",
+    "free_plan_upgrade_button": "Обновить"
   },
   "auth": {
     "login": "Войти",
@@ -232,7 +265,66 @@
     "invite_required": "Требуется приглашение",
     "invite_required_desc": "Для присоединения к {{org}} требуется код приглашения",
     "invite_code": "Код приглашения",
-    "validate_invite": "Подтвердить приглашение"
+    "validate_invite": "Подтвердить приглашение",
+    "account_locked_message": "Ваш аккаунт временно заблокирован из-за слишком большого количества неудачных попыток входа. Попробуйте позже.",
+    "back_to_login": "Вернуться к входу",
+    "check_email_for_verification": "Проверьте вашу почту",
+    "check_inbox_message": "Проверьте входящие и нажмите на ссылку подтверждения.",
+    "create_your_account": "Создайте аккаунт",
+    "email_not_verified_message": "Подтвердите адрес электронной почты перед входом. Проверьте входящие.",
+    "email_verification_required": "Требуется подтверждение email",
+    "email_verification_required_join": "Подтвердите адрес электронной почты перед присоединением к организации.",
+    "email_verified_message": "Ваш email успешно подтверждён. Теперь вы можете войти.",
+    "email_verified_success": "Email подтверждён!",
+    "login_failed": "Ошибка входа",
+    "password_req_lowercase": "Минимум одна строчная буква (a-z)",
+    "password_req_min_length": "Минимум 8 символов",
+    "password_req_number": "Минимум одна цифра (0-9)",
+    "password_req_special": "Минимум один специальный символ (!@#$%...)",
+    "password_req_uppercase": "Минимум одна заглавная буква (A-Z)",
+    "password_requirements_not_met": "Пароль не соответствует требованиям",
+    "password_strength": "Надёжность пароля",
+    "password_strength_fair": "Средняя",
+    "password_strength_good": "Хорошая",
+    "password_strength_strong": "Сильная",
+    "password_strength_weak": "Слабая",
+    "proceed_to_login": "Перейти ко входу",
+    "rate_limited_message": "Слишком много попыток входа. Подождите несколько минут.",
+    "resend_verification_email": "Отправить письмо повторно",
+    "resend_verification_failed": "Не удалось отправить письмо повторно.",
+    "sign_in_with_sso": "Войти через SSO",
+    "sso_callback": {
+      "auth_failed": "Ошибка аутентификации",
+      "authenticating": "Аутентификация...",
+      "copied": "Скопировано!",
+      "copy_details": "Скопировать в буфер",
+      "error": "Аутентификация SSO не удалась. Попробуйте снова.",
+      "error_code": "Код ошибки",
+      "go_home": "На главную",
+      "hide_details": "Скрыть технические детали",
+      "missing_params": "Недопустимый обратный вызов SSO. Отсутствуют обязательные параметры.",
+      "please_wait": "Пожалуйста, подождите, пока мы проверяем вашу личность",
+      "provider": "Провайдер",
+      "redirecting": "Перенаправление в приложение...",
+      "show_details": "Показать технические детали",
+      "success": "Аутентификация успешна",
+      "tips": {
+        "access_denied": "Если вы случайно отклонили запрос на вход, попробуйте снова и примите разрешения.",
+        "domain_not_allowed": "Свяжитесь с администратором организации для проверки разрешённого домена email.",
+        "invalid_state": "Ваша сессия могла истечь. Войдите снова.",
+        "server_error": "Провайдер идентификации испытывает проблемы. Попробуйте позже."
+      },
+      "try_again": "Попробовать снова"
+    },
+    "sso_error": "Аутентификация SSO не удалась. Попробуйте снова.",
+    "try_again_in": "повторите через {{minutes}} мин",
+    "verification_email_resent": "Письмо подтверждения отправлено",
+    "verification_email_sent_message": "Мы отправили письмо подтверждения. Нажмите на ссылку в письме для подтверждения аккаунта.",
+    "verification_failed": "Ошибка подтверждения",
+    "verification_missing_params": "Отсутствуют параметры подтверждения. Проверьте ссылку.",
+    "verification_trouble": "Проблемы? Попробуйте запросить новое письмо со страницы входа.",
+    "verify_email_title": "Подтвердите email",
+    "verifying_email": "Подтверждение адреса email..."
   },
   "validation": {
     "required": "Обязательно",
@@ -510,14 +602,19 @@
         "still_working": "Ещё работаем...",
         "video_takes_time": "Анализ видео может занять 1-2 минуты",
         "video_hint": "Обработка видео может занять 1-2 минуты"
-      }
+      },
+      "from_existing": "Из существующего контента",
+      "from_existing_description": "Загрузите файлы с другой платформы и организуйте их в курс"
     },
     "usergroup_filter": {
       "all_courses": "All Courses",
       "filter_by_group": "Filter by group",
       "info_title": "User Group Filter",
       "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+    },
+    "copied": "Скопировано!",
+    "quit_course_confirm": "Вы уверены, что хотите покинуть курс? Весь прогресс будет потерян.",
+    "quit_course_title": "Покинуть курс?"
   },
   "communities": {
     "title": "Сообщества",
@@ -677,7 +774,99 @@
     "deleting_podcast": "Удаление подкаста...",
     "podcast_deleted_success": "Подкаст успешно удалён",
     "podcast_deleted_error": "Не удалось удалить подкаст",
-    "edit_content": "Редактировать контент"
+    "edit_content": "Редактировать контент",
+    "create_new_podcast": "Создать новый подкаст для организации",
+    "create_podcast": "Создать подкаст",
+    "create_podcast_btn": "Создать подкаст",
+    "create_podcasts_placeholder": "Создайте подкасты для распространения аудиоконтента",
+    "creating_podcast": "Создание подкаста...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "Поддерживаются файлы MP3, WAV или M4A",
+        "audio_label": "Аудиофайл",
+        "create": "Создать эпизод",
+        "create_error": "Не удалось создать эпизод",
+        "create_first": "Создать первый эпизод",
+        "created": "Эпизод создан",
+        "creating": "Создание эпизода...",
+        "delete": "Удалить",
+        "delete_confirm": "Удалить этот эпизод? Это действие необратимо.",
+        "delete_error": "Не удалось удалить эпизод",
+        "delete_title": "Удалить эпизод?",
+        "deleted": "Эпизод удалён",
+        "deleting": "Удаление эпизода...",
+        "description_label": "Описание",
+        "description_placeholder": "Введите описание эпизода",
+        "edit": "Редактировать",
+        "edit_episode": "Редактировать эпизод",
+        "edit_episode_description": "Обновить детали эпизода",
+        "new_episode": "Новый эпизод",
+        "new_episode_description": "Добавить новый эпизод к подкасту",
+        "no_audio": "Нет аудиофайла",
+        "no_episodes_description": "Начните с добавления первого эпизода",
+        "publish": "Опубликовать",
+        "replace_audio": "Заменить аудиофайл",
+        "save": "Сохранить изменения",
+        "title_label": "Название",
+        "title_placeholder": "Введите название эпизода",
+        "unpublish": "Снять с публикации",
+        "update_error": "Не удалось обновить эпизод",
+        "updated": "Эпизод обновлён",
+        "updating": "Обновление эпизода...",
+        "upload_audio": "Загрузить аудиофайл"
+      },
+      "form": {
+        "about": "О подкасте",
+        "about_max_length": "Описание не более 2000 символов",
+        "about_placeholder": "Расскажите слушателям о подкасте...",
+        "public_hint": "Любой может найти и прослушать этот подкаст",
+        "published_hint": "Показать подкаст на странице организации",
+        "tags_hint": "Разделяйте теги запятыми",
+        "tags_placeholder": "музыка, образование, технологии",
+        "thumbnail": "Миниатюра",
+        "thumbnail_hint": "Рекомендуемый размер: 1400x1400px. JPG или PNG.",
+        "upload_thumbnail": "Загрузить миниатюру",
+        "visibility": "Настройки видимости"
+      },
+      "save_changes": "Сохранить изменения",
+      "save_error": "Не удалось сохранить",
+      "saved": "Изменения сохранены",
+      "saving": "Сохранение...",
+      "tabs": {
+        "episodes": "Эпизоды",
+        "general": "Общие"
+      },
+      "view_podcast": "Просмотреть подкаст"
+    },
+    "failed_to_create_podcast": "Не удалось создать подкаст",
+    "form": {
+      "description_max_length": "Описание не более 500 символов",
+      "name_max_length": "Название не более 100 символов",
+      "name_min_length": "Название минимум 3 символа",
+      "name_required": "Название подкаста обязательно"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Отмена",
+        "description": "Заполните детали для создания нового подкаста",
+        "form": {
+          "description_label": "Описание",
+          "description_placeholder": "Введите описание подкаста",
+          "name_label": "Название подкаста",
+          "name_placeholder": "Введите название подкаста",
+          "public_label": "Сделать подкаст публичным"
+        },
+        "submit": "Создать подкаст",
+        "title": "Создать новый подкаст"
+      }
+    },
+    "podcast_created_success": "Подкаст успешно создан",
+    "podcast_name": "Название подкаста",
+    "podcast_name_required": "Название подкаста обязательно",
+    "podcast_tags": "Теги",
+    "podcast_thumbnail": "Миниатюра подкаста",
+    "podcast_visibility": "Видимость",
+    "search_results": "Найдено {{count}} подкастов для \"{{query}}\""
   },
   "collections": {
     "collections": "Коллекции",
@@ -753,7 +942,12 @@
     "size_large": "Большой размер",
     "change_color": "Изменить цвет",
     "preview_flip": "Предпросмотр переворота",
-    "activities_count": "{{count}} занятий"
+    "activities_count": "{{count}} занятий",
+    "copy_link": "Копировать ссылку",
+    "embed": "Встроить",
+    "embed_code_copied": "Код встраивания скопирован!",
+    "link_copied": "Ссылка скопирована!",
+    "share": "Поделиться"
   },
   "assignments": {
     "submit_assignment": "Сдать задание",
@@ -850,7 +1044,8 @@
     "security": "Безопасность",
     "my_courses": "Мои курсы",
     "no_purchased_courses": "Пока нет купленных курсов",
-    "purchased_courses_description": "Здесь появятся курсы, которые вы купили или на которые подписались"
+    "purchased_courses_description": "Здесь появятся курсы, которые вы купили или на которые подписались",
+    "purchases": "Покупки"
   },
   "user": {
     "user_settings": "Настройки пользователя",
@@ -1080,7 +1275,8 @@
     "no_biography": "Биография не предоставлена",
     "my_progress": "Мой прогресс",
     "no_courses_in_progress": "Нет курсов в процессе обучения",
-    "start_course_to_see_progress": "Начните курс, чтобы увидеть свой прогресс здесь"
+    "start_course_to_see_progress": "Начните курс, чтобы увидеть свой прогресс здесь",
+    "bio_placeholder": "Расскажите немного о себе..."
   },
   "roles": {
     "custom_role": "Пользовательская роль",
@@ -1107,22 +1303,69 @@
       "cards": {
         "courses": {
           "title": "Курсы",
-          "description": "Создавайте и управляйте курсами, главами и занятиями"
+          "description": "Создание и управление курсами, главами и активностями"
         },
         "organization": {
           "title": "Организация",
-          "description": "Настройте общие параметры вашей организации"
+          "description": "Настройка общих параметров вашей организации"
         },
         "users": {
           "title": "Пользователи",
-          "description": "Управляйте пользователями и ролями вашей организации"
+          "description": "Управление пользователями и ролями вашей организации"
         },
         "account_settings": {
           "title": "Настройки аккаунта",
-          "description": "Настройте свои личные данные, пароли, электронную почту"
+          "description": "Настройка персональных параметров, паролей и электронной почты"
         }
       },
-      "learnhouse_university": "Университет LearnHouse"
+      "learnhouse_university": "Университет LearnHouse",
+      "welcome_back": "С возвращением",
+      "plan": "тариф",
+      "create_course": "Создать курс",
+      "analytics": "Аналитика",
+      "members": "Участники",
+      "settings": "Настройки",
+      "courses": "Курсы",
+      "communities": "Сообщества",
+      "podcasts": "Подкасты",
+      "boards": "Доски",
+      "published": "опубликован",
+      "draft": "черновик",
+      "total_users": "Всего пользователей",
+      "public": "публичный",
+      "episodes": "эпизоды",
+      "participants": "участники",
+      "loading": "Загрузка...",
+      "enable_analytics_description": "Включите аналитику, чтобы видеть пользователей онлайн, регистрации и многое другое.",
+      "enable": "Включить",
+      "quick_stats": "Быстрая статистика",
+      "full_analytics": "Полная аналитика",
+      "live_now": "Сейчас онлайн",
+      "signups_30d": "Регистрации (30 дн.)",
+      "enrollments_30d": "Записи на курсы (30 дн.)",
+      "completions_30d": "Завершения (30 дн.)",
+      "recent_courses": "Последние курсы",
+      "view_all": "Показать все",
+      "no_courses_yet": "Курсов пока нет",
+      "create_your_first_course": "Создайте свой первый курс",
+      "chapter": "глава",
+      "chapters": "главы",
+      "recent_members": "Последние участники",
+      "total": "всего",
+      "no_members_yet": "Участников пока нет",
+      "unverified": "Не подтверждён",
+      "plan_and_usage": "Тариф и использование",
+      "unlimited": "Без ограничений",
+      "admin_seats": "Места администраторов",
+      "limit_reached": "Лимит достигнут",
+      "remaining": "осталось",
+      "usage_data_unavailable": "Данные об использовании недоступны",
+      "features": "Функции",
+      "off": "Выключено",
+      "ai_credits": "Кредиты ИИ",
+      "used": "использовано",
+      "no_credits_remaining": "Кредитов не осталось",
+      "includes_purchased": "Включая {{count}} купленных"
     },
     "courses": {
       "title": "Курсы",
@@ -1172,7 +1415,9 @@
           "content": "Контент",
           "access": "Доступ",
           "contributors": "Участники",
-          "certification": "Сертификация"
+          "certification": "Сертификация",
+          "analytics": "Аналитика",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Доступ запрещен",
@@ -1463,7 +1708,8 @@
             "general": "Общие",
             "thumbnail": "Миниатюра",
             "course": "Связанный курс",
-            "moderation": "Модерация"
+            "moderation": "Модерация",
+            "access": "Доступ"
           },
           "general": {
             "title": "Общие настройки",
@@ -1480,6 +1726,10 @@
           "moderation": {
             "title": "Модерация",
             "subtitle": "Настроить параметры модерации контента"
+          },
+          "access": {
+            "subtitle": "Управление доступом к этому сообществу",
+            "title": "Настройки доступа"
           }
         },
         "course": {
@@ -1592,6 +1842,60 @@
           "deleting": "Удаление сообщества...",
           "delete_success": "Сообщество успешно удалено",
           "delete_error": "Не удалось удалить сообщество"
+        },
+        "access": {
+          "public": {
+            "active": "Активно",
+            "confirmation_button": "Сделать публичным",
+            "confirmation_message": "Вы уверены, что хотите сделать это сообщество публичным?",
+            "confirmation_title": "Сделать публичным?",
+            "description": "Сообщество публично. Любой может просматривать и участвовать в обсуждениях.",
+            "title": "Публичное"
+          },
+          "restricted": {
+            "active": "Активно",
+            "confirmation_button": "Сделать ограниченным",
+            "confirmation_message": "Вы уверены? Только члены связанных групп будут иметь доступ.",
+            "confirmation_title": "Сделать ограниченным?",
+            "description": "Сообщество доступно только для членов выбранных групп пользователей.",
+            "title": "Ограниченное"
+          },
+          "subtitle": "Выберите, будет ли сообщество публичным или доступным только определённым группам",
+          "title": "Настройки доступа",
+          "toasts": {
+            "update_error": "Не удалось обновить настройки доступа",
+            "update_success": "Настройки доступа обновлены"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Удалить",
+              "link_to_usergroup": "Связать с группой"
+            },
+            "modals": {
+              "create_usergroup": "Создать группу пользователей",
+              "link_button": "Связать",
+              "link_description": "Выберите группу пользователей для связи с этим сообществом.",
+              "link_title": "Связать сообщество с группой",
+              "no_usergroups": "Нет доступных групп пользователей",
+              "unlink_button": "Удалить доступ",
+              "unlink_message": "Пользователи этой группы потеряют доступ к сообществу.",
+              "unlink_title": "Удалить доступ группы?",
+              "usergroup_name": "Название группы",
+              "warning": "Пользователи вне связанных групп потеряют доступ"
+            },
+            "subtitle": "Предоставьте доступ, связав сообщество с группами пользователей.",
+            "table": {
+              "actions": "Действия",
+              "name": "Название"
+            },
+            "title": "Группы пользователей",
+            "toasts": {
+              "link_error": "Ошибка {{status}}: {{detail}}",
+              "link_success": "Группа пользователей успешно связана",
+              "unlink_error": "Ошибка при удалении доступа группы",
+              "unlink_success": "Доступ группы успешно удалён"
+            }
+          }
         }
       },
       "structure": {
@@ -1733,6 +2037,75 @@
             }
           }
         }
+      },
+      "limit_reached": "Лимит курсов достигнут ({{limit}})",
+      "seo": {
+        "errors": {
+          "save_failed": "Не удалось сохранить настройки SEO"
+        },
+        "form": {
+          "canonical_url_hint": "Используйте, если курс дублируется в другом месте. Оставьте пустым для URL по умолчанию",
+          "canonical_url_label": "Каноничный URL",
+          "canonical_url_placeholder": "https://example.com/course/ваш-курс",
+          "description_hint": "Оставьте пустым для использования описания курса. Рекомендовано: 150-160 символов",
+          "description_label": "Мета-описание",
+          "description_placeholder": "Введите привлекательное описание для результатов поиска",
+          "enable_jsonld_hint": "Добавляет разметку Course schema.org для расширенных сниппетов",
+          "enable_jsonld_label": "Включить структурированные данные JSON-LD",
+          "keywords_hint": "Список ключевых слов через запятую",
+          "keywords_label": "Ключевые слова",
+          "keywords_placeholder": "слово1, слово2, слово3",
+          "og_description_label": "Описание OG",
+          "og_description_placeholder": "Описание для социальных сетей",
+          "og_image_hint": "URL изображения для социальных сетей. Оставьте пустым для миниатюры курса",
+          "og_image_label": "URL изображения OG",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "Заголовок OG",
+          "og_title_placeholder": "Заголовок для социальных сетей",
+          "robots_nofollow_hint": "При включении поисковые системы не будут переходить по ссылкам",
+          "robots_nofollow_label": "Запретить переход по ссылкам (nofollow)",
+          "robots_noindex_hint": "При включении поисковые системы не будут индексировать этот курс",
+          "robots_noindex_label": "Запретить индексацию (noindex)",
+          "title_hint": "Оставьте пустым для использования названия курса. Рекомендовано: 50-60 символов",
+          "title_label": "SEO-заголовок",
+          "title_placeholder": "Введите пользовательский заголовок для поисковых систем",
+          "twitter_card_label": "Тип карточки",
+          "twitter_card_summary": "Краткое описание",
+          "twitter_card_summary_large": "Описание с большим изображением",
+          "twitter_description_label": "Описание Twitter",
+          "twitter_description_placeholder": "Описание для Twitter",
+          "twitter_title_label": "Заголовок Twitter",
+          "twitter_title_placeholder": "Заголовок для Twitter"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Настройте отображение курса в поисковых системах",
+            "title": "Базовый SEO"
+          },
+          "opengraph": {
+            "subtitle": "Настройте отображение при публикации в социальных сетях",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Управление индексацией и расширенными сниппетами",
+            "title": "Роботы и структурированные данные"
+          },
+          "twitter": {
+            "subtitle": "Настройте отображение при публикации в Twitter/X",
+            "title": "Карточка Twitter"
+          }
+        },
+        "subtitle": "Оптимизация курса для поисковых систем и социальных сетей",
+        "title": "Настройки SEO",
+        "validation": {
+          "description_max_length": "Мета-описание не должно превышать 160 символов",
+          "invalid_url": "Введите корректный URL",
+          "og_description_max_length": "Описание OG не должно превышать 200 символов",
+          "og_title_max_length": "Заголовок OG не должен превышать 70 символов",
+          "title_max_length": "SEO-заголовок не должен превышать 70 символов",
+          "twitter_description_max_length": "Описание Twitter не должно превышать 200 символов",
+          "twitter_title_max_length": "Заголовок Twitter не должен превышать 70 символов"
+        }
       }
     },
     "organization": {
@@ -1746,7 +2119,10 @@
           "ai": "ИИ",
           "api": "Доступ к API",
           "features": "Функции",
-          "other": "Другое"
+          "other": "Другое",
+          "domains": "Домены",
+          "sso": "SSO",
+          "usage": "Использование"
         },
         "pages": {
           "general": {
@@ -1776,6 +2152,18 @@
           "features": {
             "title": "Функции",
             "subtitle": "Включение или отключение функций для вашей организации"
+          },
+          "domains": {
+            "subtitle": "Настройка пользовательских доменов для организации",
+            "title": "Пользовательские домены"
+          },
+          "sso": {
+            "subtitle": "Настройка SSO для организации",
+            "title": "Единый вход"
+          },
+          "usage": {
+            "subtitle": "Мониторинг использования ресурсов и лимитов плана",
+            "title": "Использование"
           }
         },
         "name": "Название организации",
@@ -1795,7 +2183,10 @@
         "updating": "Обновление организации...",
         "footer_text": "Текст подвала",
         "footer_text_placeholder": "Введите текст подвала...",
-        "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации"
+        "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации",
+        "watermark_desc": "Показывать водяной знак LearnHouse на страницах организации",
+        "watermark_free_plan": "Водяной знак всегда отображается на бесплатном плане",
+        "watermark_label": "Водяной знак \"Made with LearnHouse\""
       },
       "images": {
         "title": "Изображения и превью",
@@ -1854,7 +2245,8 @@
         "tabs": {
           "images": "Изображения и превью",
           "social": "Ссылки на соцсети",
-          "theme": "Тема"
+          "theme": "Тема",
+          "auth": "Авторизация"
         }
       },
       "socials": {
@@ -1926,6 +2318,14 @@
           "collections": {
             "title": "Коллекции",
             "description": "Разрешить организацию курсов в коллекции"
+          },
+          "courses": {
+            "description": "Включить курсы и отслеживание прогресса",
+            "title": "Курсы"
+          },
+          "podcasts": {
+            "description": "Включить создание подкастов и аудио контента",
+            "title": "Подкасты"
           }
         },
         "toasts": {
@@ -1933,7 +2333,8 @@
           "disabling": "Отключение {{feature}}...",
           "enabled": "{{feature}} включено",
           "disabled": "{{feature}} отключено",
-          "error": "Не удалось обновить конфигурацию {{feature}}"
+          "error": "Не удалось обновить конфигурацию {{feature}}",
+          "admin_only": "Только администраторы организации могут включать или отключать функции"
         }
       },
       "audit_logs": {
@@ -2176,6 +2577,45 @@
         "uploading": "Загрузка фона...",
         "upload_success": "Фоновое изображение загружено",
         "upload_error": "Не удалось загрузить изображение"
+      },
+      "sso": {
+        "allowed_domains": "Разрешённые домены email",
+        "allowed_domains_help": "Список доменов через запятую, разрешённых для SSO. Оставьте пустым для всех доменов.",
+        "auto_provision": "Автоматическое создание пользователей",
+        "auto_provision_desc": "Автоматически создавать аккаунты при первом входе через SSO.",
+        "delete": "Удалить конфигурацию SSO",
+        "delete_confirm": "Удалить конфигурацию SSO? Пользователи не смогут входить через SSO.",
+        "delete_error": "Не удалось удалить конфигурацию SSO",
+        "delete_success": "Конфигурация SSO удалена",
+        "deleting": "Удаление...",
+        "enable_sso": "Включить SSO",
+        "enable_sso_desc": "Разрешить аутентификацию через провайдер идентификации организации.",
+        "load_error": "Не удалось загрузить конфигурацию SSO",
+        "not_configured": "Не настроено",
+        "oidc_client_id": "ID клиента",
+        "oidc_client_secret": "Секрет клиента",
+        "oidc_client_secret_help": "Храните секрет в безопасности. Он используется для аутентификации с провайдером.",
+        "oidc_info": "Подключение к любому совместимому с OpenID Connect провайдеру идентификации.",
+        "oidc_issuer_url": "URL издателя",
+        "oidc_issuer_url_help": "URL издателя OIDC. Конечные точки будут обнаружены автоматически.",
+        "oidc_scopes": "Области",
+        "oidc_scopes_help": "OAuth-области для запроса (через пробел). По умолчанию: openid email profile",
+        "open_setup_portal": "Настроить провайдер идентификации",
+        "provider": "Провайдер SSO",
+        "save": "Сохранить конфигурацию",
+        "save_error": "Не удалось сохранить конфигурацию SSO",
+        "save_success": "Конфигурация SSO сохранена",
+        "saving": "Сохранение...",
+        "select_provider": "Выберите провайдера",
+        "setup_error": "Не удалось получить URL портала настройки",
+        "setup_not_available": "Портал настройки недоступен. Сначала настройте провайдера.",
+        "status_disabled": "Отключено",
+        "status_enabled": "Включено",
+        "subtitle": "Настройка корпоративного SSO для организации",
+        "title": "Единый вход (SSO)",
+        "workos_info": "WorkOS предоставляет корпоративный SSO с поддержкой SAML и OIDC.",
+        "workos_org_id": "ID организации WorkOS",
+        "workos_org_id_help": "Этот ID генерируется автоматически при настройке SSO через портал."
       }
     },
     "users": {
@@ -2334,7 +2774,8 @@
           "table": {
             "email": "Электронная почта",
             "signup_status": "Статус регистрации",
-            "email_sent": "Письмо отправлено"
+            "email_sent": "Письмо отправлено",
+            "actions": "Действия"
           },
           "status": {
             "pending": "Ожидает",
@@ -2343,12 +2784,34 @@
           "email_status": {
             "sent": "Отправлено",
             "no": "Нет"
-          }
+          },
+          "no_invites": "Нет ожидающих приглашений",
+          "no_results": "Приглашения не найдены",
+          "remove_button": "Удалить",
+          "remove_error": "Ошибка удаления приглашения",
+          "remove_message": "Удалить приглашение для {{email}}?",
+          "remove_success": "Приглашение удалено",
+          "remove_title": "Удалить приглашение",
+          "removing": "Удаление приглашения...",
+          "search_placeholder": "Поиск по email..."
         },
         "toasts": {
           "sending": "Отправка приглашения...",
           "success": "Приглашение отправлено",
-          "error": "Ошибка при отправке приглашения"
+          "error": "Ошибка при отправке приглашения",
+          "partial": "{{sent}} отправлено, {{failed}} не удалось"
+        },
+        "no_invite_code": "Нет",
+        "results": {
+          "failed_count": "{{count}} не удалось",
+          "sent_count": "{{count}} отправлено",
+          "skipped_count": "{{count}} уже приглашено",
+          "status": {
+            "already_invited": "Уже приглашён",
+            "email_failed": "Не удалось",
+            "sent": "Отправлено"
+          },
+          "summary_title": "Результаты"
         }
       },
       "usergroups": {
@@ -2377,7 +2840,9 @@
             },
             "status": {
               "linked": "Добавлен",
-              "not_linked": "Не добавлен"
+              "not_linked": "Не добавлен",
+              "in_group": "В группе",
+              "not_in_group": "Не в группе"
             },
             "actions": {
               "link": "Добавить",
@@ -2386,7 +2851,31 @@
             "toasts": {
               "link_success": "Пользователь успешно добавлен",
               "unlink_success": "Пользователь успешно удален",
-              "error": "Ошибка {{status}}: {{detail}}"
+              "error": "Ошибка {{status}}: {{detail}}",
+              "bulk_add_success": "{{count}} пользователей добавлено в группу",
+              "bulk_adding": "Добавление пользователей в группу...",
+              "bulk_error": "Произошла ошибка",
+              "bulk_remove_success": "{{count}} пользователей удалено из группы",
+              "bulk_removing": "Удаление пользователей из группы..."
+            },
+            "no_results": "Пользователи не найдены",
+            "no_users": "В организации пока нет пользователей",
+            "pagination": {
+              "page": "Страница {{current}} из {{total}}",
+              "showing": "Показано {{start}}-{{end}} из {{total}}"
+            },
+            "search_placeholder": "Поиск по имени или логину...",
+            "selection": {
+              "add_selected": "Добавить {{count}} в группу",
+              "clear": "Очистить",
+              "count": "Выбрано {{count}} пользователей",
+              "remove_selected": "Удалить {{count}} из группы",
+              "select_all_visible": "Выбрать все видимые"
+            },
+            "tabs": {
+              "all": "Все пользователи",
+              "in_group": "В группе",
+              "not_in_group": "Не в группе"
             }
           },
           "create": {
@@ -2429,7 +2918,18 @@
           "deleting": "Удаление...",
           "delete_success": "Группа пользователей удалена",
           "delete_error": "Ошибка при удалении группы пользователей"
-        }
+        },
+        "count": {
+          "plural": "групп",
+          "singular": "группа"
+        },
+        "member_count": {
+          "plural": "участников",
+          "singular": "участник"
+        },
+        "no_groups": "Групп пользователей пока нет",
+        "no_results": "Группы не найдены",
+        "search_placeholder": "Поиск групп..."
       },
       "roles": {
         "title": "Управление ролями и разрешениями",
@@ -2447,7 +2947,8 @@
         "actions": {
           "edit": "Редактировать",
           "delete": "Удалить",
-          "create": "Создать роль"
+          "create": "Создать роль",
+          "view_rights": "Просмотр прав"
         },
         "modals": {
           "create": {
@@ -2573,12 +3074,29 @@
             "title": "Удалить роль?",
             "message": "Это действие нельзя отменить. Все пользователи с этой ролью потеряют свои разрешения. Вы уверены, что хотите удалить эту роль?",
             "button": "Удалить роль"
+          },
+          "view_rights": {
+            "description": "Просмотр всех разрешений для этой роли",
+            "title": "{{roleName}} — Разрешения"
           }
         },
         "toasts": {
           "deleting": "Удаление...",
           "delete_success": "Роль удалена",
           "delete_error": "Ошибка при удалении роли"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Активности",
+            "collections": "Коллекции",
+            "coursechapters": "Главы курса",
+            "courses": "Курсы",
+            "dashboard": "Панель управления",
+            "organizations": "Организации",
+            "roles": "Роли",
+            "usergroups": "Группы пользователей",
+            "users": "Пользователи"
+          }
         }
       }
     },
@@ -3002,7 +3520,30 @@
         "suggestion_calculator_prompt": "Создайте калькулятор, показывающий пошаговые решения простых уравнений",
         "suggestion_timeline": "Временная шкала",
         "suggestion_timeline_prompt": "Создайте интерактивную временную шкалу с основными историческими событиями и раскрывающимися подробностями"
+      },
+      "button_block": {
+        "enter_link_url": "Введите URL ссылки"
       }
+    },
+    "ai_panel": {
+      "add_definition": "Добавить определение",
+      "add_examples": "Добавить примеры",
+      "add_quiz": "Добавить тест",
+      "add_summary": "Добавить резюме",
+      "add_tip": "Добавить совет",
+      "block_selected": "блок выбран",
+      "clear_chat": "Очистить чат",
+      "clear_selection": "Очистить выбор",
+      "expand": "Развернуть",
+      "how_can_i_help": "Как я могу помочь улучшить ваш контент?",
+      "improve_writing": "Улучшить текст",
+      "input_placeholder": "Попросите ИИ помочь с контентом...",
+      "question_add_quiz": "Добавить тест",
+      "question_improve": "Как это улучшить?",
+      "question_summary": "Добавить резюме",
+      "simplify": "Упростить",
+      "title": "Редактор ИИ",
+      "translate": "Перевести"
     }
   },
   "analytics": {
@@ -3388,6 +3929,447 @@
       },
       "pagination": {
         "range": "{{from}}–{{to}} из {{total}}"
+      }
+    },
+    "export": {
+      "button": "Экспорт",
+      "csv": "Скачать CSV",
+      "downloading": "Экспорт...",
+      "json": "Скачать JSON"
+    }
+  },
+  "onboarding": {
+    "getting_started": "Начало работы",
+    "all_done": "Всё готово!",
+    "all_set": "Вы готовы!",
+    "all_set_desc": "Вы завершили руководство по началу работы.",
+    "more_steps": "Ещё {{count}} шаг",
+    "more_steps_plural": "Ещё {{count}} шагов",
+    "show_less": "Показать меньше",
+    "skip": "Пропустить",
+    "got_it": "Понял, я готов создавать!",
+    "done": "Готово, я всё настроил!",
+    "steps": {
+      "create_course": {
+        "title": "Создайте свой первый курс",
+        "description": "Начните с создания нового курса для ваших учеников.",
+        "action": "Создать курс"
+      },
+      "add_activities": {
+        "title": "Добавьте активности в курс",
+        "description": "Добавьте контент: страницы, видео, документы и многое другое.",
+        "action": "Перейти к контенту"
+      },
+      "experience_editor": {
+        "title": "Попробуйте редактор",
+        "description": "Откройте редактор и узнайте, как создавать содержимое курса.",
+        "add_activity": "Добавить активность",
+        "dynamic_page": "Динамическая страница",
+        "click_edit": "Нажмите Редактировать",
+        "editor_features": "Что можно делать в редакторе:",
+        "slash_commands": "Введите / для слэш-команд",
+        "headings_lists": "Заголовки, списки и текст",
+        "images_media": "Изображения и медиа",
+        "video_embeds": "Видео и встраивание",
+        "tables_callouts": "Таблицы и выноски",
+        "interactive_blocks": "Интерактивные блоки"
+      },
+      "try_playgrounds": {
+        "title": "Интерактивное обучение с Playground",
+        "description": "Создавайте интерактивные страницы для самостоятельного обучения.",
+        "action": "Попробовать Playground"
+      },
+      "invite_users": {
+        "title": "Пригласите команду и учеников",
+        "description": "Добавьте преподавателей или поделитесь ссылкой для присоединения учеников.",
+        "action": "Пригласить пользователей"
+      },
+      "customize_org": {
+        "title": "Настройте свою организацию",
+        "description": "Добавьте логотип, цвета и сделайте её своей.",
+        "action": "Настроить"
+      },
+      "teach_the_world": {
+        "title": "Учитесь и развивайтесь",
+        "description": "Ресурсы, которые помогут вам максимально использовать LearnHouse.",
+        "classroom": "Классная комната",
+        "classroom_desc": "Узнайте, как развивать и управлять курсами",
+        "university": "Университет LearnHouse",
+        "university_desc": "Руководства, советы и лучшие практики"
+      }
+    },
+    "welcome": {
+      "title": "Добро пожаловать в LearnHouse",
+      "subtitle": "Создавайте курсы, приглашайте учеников и делитесь знаниями со всем миром.",
+      "get_started": "Начать",
+      "features_title": "Всё, что вам нужно",
+      "features_subtitle": "Все инструменты для создания и развития вашей образовательной платформы.",
+      "lets_go": "Поехали",
+      "features": {
+        "teach": "Учите чему угодно",
+        "teach_desc": "Создавайте структурированные курсы с главами и богатым контентом",
+        "interactive": "Сделайте интерактивным",
+        "interactive_desc": "Создавайте площадки, где ученики исследуют в своём темпе",
+        "community": "Создайте сообщество",
+        "community_desc": "Создавайте пространства для обсуждений, где ученики помогают друг другу",
+        "assess": "Оценивайте знания",
+        "assess_desc": "Создавайте задания и отслеживайте работы учеников",
+        "collaborate": "Сотрудничайте визуально",
+        "collaborate_desc": "Дайте ученикам общие доски для мозгового штурма и совместной работы",
+        "voice": "Поделитесь голосом",
+        "voice_desc": "Запускайте подкасты и распространяйте аудиоэпизоды среди учеников",
+        "certify": "Сертифицируйте учеников",
+        "certify_desc": "Выдавайте сертификаты, когда ученики завершат ваши курсы",
+        "impact": "Поймите свое влияние",
+        "impact_desc": "Отслеживайте вовлечённость и наблюдайте, как ученики прогрессируют со временем",
+        "team": "Расширяйте команду",
+        "team_desc": "Приглашайте преподавателей, управляйте ролями и организуйте группы учеников"
+      }
+    },
+    "farewell": {
+      "title": "Вы готовы учить мир",
+      "description": "Всё настроено. Ваши ученики ждут чего-то замечательного.",
+      "button": "Начать преподавать"
+    }
+  },
+  "boards": {
+    "access": {
+      "access_update_error": "Не удалось обновить доступ",
+      "actions": "Действия",
+      "active": "Активно",
+      "board_set_private": "Доска установлена как приватная",
+      "board_set_public": "Доска установлена как публичная",
+      "create_user_group": "Создать группу пользователей",
+      "description": "Управление доступом к этой доске",
+      "link": "Связать",
+      "link_error": "Не удалось связать: ",
+      "link_to_user_group": "Связать с группой пользователей",
+      "link_to_user_group_description": "Выберите группу пользователей для предоставления доступа к этой доске",
+      "link_to_usergroup_btn": "Связать с группой",
+      "make_board_private": "Сделать доску приватной",
+      "make_board_public": "Сделать доску публичной",
+      "no_user_groups": "Нет связанных групп пользователей",
+      "no_user_groups_available": "Нет доступных групп пользователей",
+      "private_description": "Только связанные группы могут получить доступ",
+      "private_option": "Только пользователи",
+      "public_description": "Все авторизованные члены организации имеют доступ",
+      "public_option": "Публичная",
+      "set_to_private": "Сделать приватной",
+      "set_to_private_confirm": "Только члены связанных групп смогут получить доступ к этой доске.",
+      "set_to_public": "Сделать публичной",
+      "set_to_public_confirm": "Все авторизованные члены организации смогут получить доступ.",
+      "title": "Управление доступом",
+      "unlink": "Отвязать",
+      "unlink_confirm": "Эта группа пользователей больше не будет иметь доступа.",
+      "unlink_error": "Не удалось отвязать: ",
+      "unlink_error_generic": "Не удалось отвязать группу",
+      "unlink_user_group": "Отвязать группу",
+      "user_group": "Группа пользователей",
+      "user_group_linked": "Группа пользователей связана",
+      "user_group_unlinked": "Группа пользователей отвязана",
+      "user_groups": "Группы пользователей",
+      "user_groups_description": "Управление группами с доступом к этой доске"
+    },
+    "activity_block": {
+      "no_activities": "Активности не найдены",
+      "no_courses": "Курсы не найдены",
+      "select_course": "Выберите курс",
+      "unsupported_type": "Неподдерживаемый тип активности"
+    },
+    "back_to_boards": "Назад к доскам",
+    "board_created": "Доска создана",
+    "board_created_error": "Не удалось создать доску",
+    "board_deleted_error": "Не удалось удалить доску",
+    "board_deleted_success": "Доска удалена",
+    "board_duplicated_error": "Не удалось дублировать доску",
+    "board_duplicated_success": "Доска дублирована",
+    "boards": "Доски",
+    "boards_deleted_partial": "{{success}} удалено, {{error}} не удалось",
+    "boards_deleted_success": "{{count}} доска(и) удалена(ы)",
+    "chat": {
+      "placeholder": "Напишите что-нибудь..."
+    },
+    "clear_selection": "Очистить",
+    "create_board": "Создать доску",
+    "create_new_board": "Создать новую доску",
+    "create_new_board_description": "Настроить новую доску для совместной работы",
+    "delete_board": "Удалить доску",
+    "delete_board_confirm": "Вы уверены, что хотите удалить эту доску? Это действие необратимо.",
+    "delete_board_title": "Удалить \"{{name}}\"",
+    "delete_boards_title": "Удалить доски",
+    "delete_selected": "Удалить выбранное",
+    "delete_selected_confirm": "Вы уверены, что хотите удалить {{count}} доска(и)? Это действие необратимо.",
+    "deleting_board": "Удаление доски...",
+    "deleting_boards": "Удаление {{count}} доска(и)...",
+    "description": "Описание",
+    "description_placeholder": "Краткое описание...",
+    "duplicate_board": "Дублировать доску",
+    "duplicate_board_confirm": "Будет создана копия доски с теми же настройками.",
+    "duplicate_board_title": "Дублировать \"{{name}}\"",
+    "duplicating_board": "Дублирование доски...",
+    "effects": {
+      "aurora": "Северное сияние",
+      "black_hole": "Чёрная дыра",
+      "blizzard": "Метель",
+      "earthquake": "Землетрясение",
+      "fireworks": "Фейерверк",
+      "glitch": "Глитч",
+      "inferno": "Пламя",
+      "lightning": "Молния",
+      "matrix": "Матрица",
+      "nuke": "Ядерный взрыв",
+      "title": "Эффекты"
+    },
+    "embed_block": {
+      "add_embed": "Добавить встраивание {{name}}",
+      "apply": "Применить",
+      "code": "Код",
+      "code_help": "Вставьте iframe или код встраивания",
+      "edit_embed": "Редактировать встраивание",
+      "edit_embed_code": "Редактировать код встраивания",
+      "edit_embed_url": "Редактировать URL встраивания",
+      "embed": "Встроить",
+      "paste_code": "Вставьте код встраивания",
+      "paste_url": "Вставьте URL встраивания",
+      "remove_embed": "Удалить встраивание",
+      "url": "URL",
+      "url_help": "Вставьте URL с YouTube, Figma, CodePen, Spotify и др."
+    },
+    "general": {
+      "board_updated": "Доска обновлена",
+      "board_updated_error": "Не удалось обновить доску",
+      "description": "Основная информация о доске",
+      "save_changes": "Сохранить изменения",
+      "saving": "Сохранение...",
+      "title": "Общие"
+    },
+    "member_count": "{{count}} участник",
+    "member_count_plural": "{{count}} участников",
+    "members": {
+      "actions": "Действия",
+      "add_member": "Добавить участника",
+      "add_member_description": "Найдите члена организации для добавления на доску",
+      "adding": "Добавление...",
+      "description": "Управление участниками доски",
+      "editor": "Редактор",
+      "member_added": "Участник добавлен",
+      "member_added_error": "Не удалось добавить участника (возможно, уже является участником)",
+      "member_limit_reached": "Лимит участников достигнут (макс. 10)",
+      "member_removed": "Участник удалён",
+      "member_removed_error": "Не удалось удалить участника",
+      "no_members": "Пока нет участников",
+      "no_users_found": "Пользователи не найдены",
+      "remove": "Удалить",
+      "remove_confirm": "Удалить {{name}} с доски?",
+      "remove_member": "Удалить участника",
+      "role": "Роль",
+      "role_label": "Роль:",
+      "search_placeholder": "Поиск по имени или email...",
+      "title": "Участники",
+      "user": "Пользователь",
+      "viewer": "Наблюдатель"
+    },
+    "name": "Название",
+    "name_placeholder": "напр. Планирование проекта",
+    "new_board": "Новая доска",
+    "no_boards_description": "Создайте первую доску для совместной работы.",
+    "no_boards_found": "Доски не найдены",
+    "no_boards_yet": "Досок пока нет",
+    "node_actions": {
+      "delete": "Удалить",
+      "delete_multiple": "Удалить {{count}} элементов",
+      "move_back": "Переместить назад",
+      "move_forward": "Переместить вперёд"
+    },
+    "open_board": "Открыть доску",
+    "pagination": {
+      "next": "Далее",
+      "page_of": "Страница {{current}} из {{total}}",
+      "previous": "Назад",
+      "results": "{{count}} результат для \"{{query}}\"",
+      "results_plural": "{{count}} результатов для \"{{query}}\""
+    },
+    "playground_block": {
+      "ai_content": "Контент, сгенерированный ИИ",
+      "calculator": "Калькулятор",
+      "chart": "Диаграмма",
+      "chat_header": "ИИ-площадка",
+      "check_preview": "Просмотрите предварительный вид слева",
+      "creating": "Создание...",
+      "description": "Создание интерактивных элементов с помощью ИИ",
+      "drawing": "Рисование",
+      "edit": "Редактировать",
+      "empty_state": "Опишите, что хотите создать, и смотрите, как оно оживает",
+      "flashcards": "Карточки",
+      "generate": "Сгенерировать",
+      "generating": "Генерация интерактивного контента...",
+      "input_placeholder": "Опишите, что хотите создать...",
+      "input_placeholder_refine": "Опишите изменения или улучшения...",
+      "max_iterations": "Достигнуто максимальное количество итераций. Сохраните работу!",
+      "prompt_text": "Опишите интерактивный элемент для генерации",
+      "quiz": "Тест",
+      "save_close": "Сохранить и закрыть",
+      "streaming": "Генерация...",
+      "timeline": "Временная шкала",
+      "title": "ИИ-площадка"
+    },
+    "private": "Приватная",
+    "public": "Публичная",
+    "search_placeholder": "Поиск досок...",
+    "select_all": "Выбрать всё",
+    "selected_count": "{{count}} выбрано",
+    "settings": "Настройки",
+    "share": {
+      "share_board": "Поделиться доской",
+      "share_this_board": "Поделиться этой доской"
+    },
+    "thumbnail": {
+      "alt": "Миниатюра доски",
+      "description": "Обложка доски на карточках",
+      "gallery": "Галерея",
+      "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. 8МБ.",
+      "thumbnail_updated": "Миниатюра обновлена",
+      "thumbnail_updated_error": "Не удалось загрузить миниатюру",
+      "title": "Миниатюра",
+      "upload_image": "Загрузить изображение",
+      "uploading": "Загрузка..."
+    },
+    "timer": {
+      "close": "Закрыть",
+      "pause": "Пауза",
+      "restart": "Перезапустить",
+      "resume": "Продолжить",
+      "set_timer": "Установить таймер",
+      "set_timer_title": "Установить таймер",
+      "times_up": "Время вышло!"
+    },
+    "toolbar": {
+      "activity": "Активность",
+      "add_card": "Добавить карточку",
+      "ai_playground": "ИИ-площадка",
+      "draw": "Рисовать",
+      "embed": "Встроить",
+      "frame": "Рамка",
+      "medium": "Средний",
+      "note": "Заметка",
+      "pan": "Перемещение",
+      "podcast": "Подкаст",
+      "redo": "Повторить",
+      "select": "Выбрать",
+      "sticker": "Стикер",
+      "sticky_note": "Стикер-заметка",
+      "thick": "Толстый",
+      "thin": "Тонкий",
+      "todo": "Задача",
+      "undo": "Отменить",
+      "webpage": "Веб-страница",
+      "youtube": "YouTube"
+    },
+    "try_different_search": "Попробуйте другой запрос",
+    "webpage_block": {
+      "add": "Добавить",
+      "blocking_notice": "Некоторые сайты могут блокировать встраивание",
+      "embed_webpage": "Встроить веб-страницу",
+      "open_in_new_tab": "Открыть в новой вкладке",
+      "reload": "Перезагрузить",
+      "url_placeholder": "https://example.com"
+    },
+    "youtube_block": {
+      "add": "Добавить",
+      "paste_url": "Вставьте YouTube URL",
+      "url_placeholder": "https://youtube.com/watch?v=..."
+    },
+    "zoom": {
+      "zoom_in": "Приблизить",
+      "zoom_out": "Отдалить"
+    }
+  },
+  "embed": {
+    "not_supported_description": "Этот тип активности требует аутентификации и не может быть встроен.",
+    "not_supported_title": "Эта активность не поддерживается",
+    "powered_by": "Работает на LearnHouse",
+    "visit_activity": "Перейти на страницу активности"
+  },
+  "migration": {
+    "accepted_formats": "Видео (MP4, WebM, MOV), Документы (PDF), Изображения (PNG, JPG, WebP), Аудио (MP3, WAV)",
+    "add_activity": "Добавить активность",
+    "add_chapter": "Добавить главу",
+    "ai_failed": "ИИ-предложение не удалось, переход к ручной организации",
+    "all_files_assigned": "Все файлы назначены",
+    "click_to_add_more": "Нажмите для добавления файлов",
+    "course_created": "Курс успешно создан!",
+    "course_name": "Название курса",
+    "course_name_placeholder": "напр. Основы Python для начинающих",
+    "course_structure": "Структура курса",
+    "create_course": "Создать курс",
+    "created_summary": "Создано {{chapters}} глав и {{activities}} активностей",
+    "creating_course": "Создание курса...",
+    "creating_description": "Загрузка файлов и настройка глав и активностей",
+    "creation_error_generic": "Что-то пошло не так. Попробуйте снова.",
+    "creation_failed": "Создание курса не удалось",
+    "description": "Краткое описание",
+    "description_placeholder": "напр. 3 модуля по основам, типам данных и функциям",
+    "drop_file_here": "Перетащите файл сюда",
+    "drop_files": "Перетащите файлы сюда или нажмите для выбора",
+    "go_to_course": "Перейти к курсу",
+    "new_activity": "Новая активность",
+    "new_chapter": "Новая глава",
+    "organize_manually": "Организовать вручную",
+    "organize_with_ai": "Организовать с ИИ",
+    "step_complete": "Завершение",
+    "step_organize": "Организация",
+    "step_upload": "Загрузка",
+    "subtitle": "Загрузите файлы и организуйте их в курс",
+    "title": "Миграция контента",
+    "try_again": "Попробовать снова",
+    "unassigned_files": "Неназначенные файлы",
+    "upload_failed": "Загрузка файла не удалась",
+    "uploading_files": "Загрузка файлов"
+  },
+  "upgrade_modal": {
+    "title": "Раскройте свой полный потенциал",
+    "subtitle": "Выберите план, соответствующий вашим образовательным целям.",
+    "choose_plan": "Выбрать {{plan}}",
+    "current_free_limits": "Бесплатный план: 1 курс · 10 участников · Без ИИ",
+    "plans": {
+      "standard": {
+        "goal": "Начните монетизировать свои курсы и создайте обучающее сообщество.",
+        "highlights": {
+          "courses": "Безлимитные курсы",
+          "courses_desc": "Создавайте столько курсов, сколько нужно — без ограничений на учебную программу.",
+          "members": "До 500 участников",
+          "members_desc": "Расширяйте базу учащихся и управляйте всем в одном месте.",
+          "payments": "Приём платежей",
+          "payments_desc": "Продавайте курсы и предлагайте подписки для получения дохода.",
+          "communities": "Обсуждения в сообществе",
+          "communities_desc": "Позвольте учащимся общаться, задавать вопросы и делиться идеями.",
+          "podcasts": "Создание подкастов",
+          "podcasts_desc": "Предлагайте аудиоконтент и охватывайте учащихся где угодно.",
+          "ai": "1 000 кредитов ИИ",
+          "ai_desc": "Ускорьте создание контента с помощью инструментов написания на базе ИИ.",
+          "analytics": "Аналитика учащихся",
+          "analytics_desc": "Отслеживайте прогресс и вовлечённость для улучшения курсов."
+        }
+      },
+      "pro": {
+        "goal": "Масштабируйте свою академию с помощью продвинутых инструментов и полного контроля.",
+        "includes_standard": "Всё из Standard, плюс:",
+        "highlights": {
+          "members": "До 1 000 участников",
+          "members_desc": "Поддерживайте крупные группы с до 10 администраторскими местами.",
+          "ai": "3 000 кредитов ИИ",
+          "ai_desc": "Больше кредитов для массового создания контента.",
+          "certifications": "Выдача сертификатов",
+          "certifications_desc": "Награждайте учащихся сертификатами при завершении курсов.",
+          "custom_domain": "Собственный домен",
+          "custom_domain_desc": "Используйте свой домен для брендированной академии.",
+          "roles": "Пользовательские роли и разрешения",
+          "roles_desc": "Точно контролируйте, кто что может делать в вашей организации.",
+          "playgrounds": "Интерактивные песочницы",
+          "playgrounds_desc": "Позвольте учащимся экспериментировать и практиковаться с интерактивными упражнениями.",
+          "api": "Доступ к API и вебхуки",
+          "api_desc": "Интегрируйтесь с существующими инструментами и автоматизируйте рабочие процессы."
+        }
       }
     }
   }
