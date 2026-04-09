@@ -1,4 +1,5 @@
 import logging
+import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -32,6 +33,17 @@ def _is_allowed_base_url(url: str) -> bool:
                 return True
         except re.error:
             pass
+
+    # Check against LEARNHOUSE_PLATFORM_URL (the main platform, e.g. https://www.learnhouse.app)
+    platform_url = os.environ.get("LEARNHOUSE_PLATFORM_URL", "").rstrip("/")
+    if platform_url:
+        parsed_url = urlparse(url_stripped)
+        parsed_platform = urlparse(platform_url)
+        # Normalize: strip www. from both hostnames for comparison
+        url_host = (parsed_url.hostname or "").removeprefix("www.")
+        platform_host = (parsed_platform.hostname or "").removeprefix("www.")
+        if url_host and url_host == platform_host and parsed_url.scheme == "https":
+            return True
 
     # In development mode, allow localhost
     if config.general_config.development_mode:
