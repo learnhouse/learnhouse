@@ -250,8 +250,9 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
   if (typeof window !== 'undefined') {
     const multi_org = isMultiOrgModeEnabled()
 
-    // In single-org mode or on custom domain, always use current origin
-    if (!multi_org || getCustomDomainFromContext()) {
+    // In single-org mode, on custom domain, or when orgslug is missing,
+    // always use current origin to avoid broken subdomain URLs
+    if (!multi_org || getCustomDomainFromContext() || !orgslug) {
       return `${window.location.origin}${path}`
     }
 
@@ -279,7 +280,7 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
   // Server-side fallback to config-based URL construction
   const multi_org = isMultiOrgModeEnabled()
   const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
-  if (multi_org) {
+  if (multi_org && orgslug) {
     const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
     const domain = getLEARNHOUSE_DOMAIN()
     return `${protocol}${orgslug}.${domain}${path}`
