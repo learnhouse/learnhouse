@@ -54,6 +54,40 @@ def _is_allowed_base_url(url: str) -> bool:
     return False
 
 
+def get_org_signup_base_url(org_slug: str, request: Request) -> str:
+    """
+    Return the org-scoped frontend base URL for invitation / signup links.
+
+    Invite emails must land on the org's own frontend subdomain so the
+    signup flow knows which org to join. Using ``get_base_url_from_request``
+    here breaks on multi-tenant SaaS because the request Origin may be the
+    platform root or the caller may be server-side with no Origin header at
+    all — producing a signup link at the platform root rather than the org.
+
+    Matches the ``{slug}.{hosting_config.domain}`` convention already used by
+    the SSO redirect flow.
+
+    Falls back to the request-derived base URL for:
+    - Self-hosted single-instance deployments (no subdomain concept).
+    - Development mode (``localhost:3000`` doesn't host working subdomains).
+    - Misconfigured deployments with no ``hosting_config.domain``.
+    """
+    config = get_learnhouse_config()
+
+    if (
+        config.hosting_config.self_hosted
+        or config.general_config.development_mode
+    ):
+        return get_base_url_from_request(request)
+
+    base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
+    if not base_domain or "localhost" in base_domain:
+        return get_base_url_from_request(request)
+
+    scheme = "https" if config.hosting_config.ssl else "http"
+    return f"{scheme}://{org_slug}.{base_domain}"
+
+
 def get_base_url_from_request(request: Request) -> str:
     """
     Extract the base URL from a FastAPI request.

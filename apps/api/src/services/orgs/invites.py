@@ -300,7 +300,7 @@ def send_invite_email(
     invite_code_uuid: str | None,
     user: UserRead,
     email: EmailStr,
-    base_url: str,
+    request: Request,
 ):
     invite_code = None
 
@@ -317,11 +317,15 @@ def send_invite_email(
                 if data:
                     invite_code = json.loads(data).get("invite_code")
 
-    # Build signup URL — include invite code if available
+    # Build signup URL rooted at the org's own frontend subdomain, NOT the
+    # platform root.
+    from src.services.email.utils import get_org_signup_base_url
+    org_base_url = get_org_signup_base_url(org.slug, request)
+
     if invite_code:
-        signup_url = f"{base_url}/signup?inviteCode={invite_code}"
+        signup_url = f"{org_base_url}/signup?inviteCode={invite_code}"
     else:
-        signup_url = f"{base_url}/signup"
+        signup_url = f"{org_base_url}/signup"
 
     try:
         result = send_invitation_email(

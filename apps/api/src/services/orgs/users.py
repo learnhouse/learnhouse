@@ -21,7 +21,6 @@ from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.security.features_utils.usage import decrease_feature_usage
 from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
-from src.services.email.utils import get_base_url_from_request
 from src.services.orgs.invites import send_invite_email
 from src.services.orgs.orgs import rbac_check
 from src.services.users.emails import send_role_changed_email
@@ -705,13 +704,12 @@ async def invite_batch_users(
         org = OrganizationRead.model_validate(org)
         user = UserRead.model_validate(user)
 
-        base_url = get_base_url_from_request(request)
         isEmailSent = send_invite_email(
             org,
             invite_code_uuid,
             user,
             email,
-            base_url,
+            request,
         )
 
         invited_user_object = {
