@@ -388,6 +388,15 @@ export default async function proxy(req: NextRequest) {
 
     let orgslug: string;
     const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
+
+    // SaaS root domain (learnhouse.io) with no subdomain → show the org picker
+    // instead of silently dropping users into the default org.
+    if (!extracted && !isLocalhostCheck(fullhost) && fullhost && isSameHost(fullhost, LEARNHOUSE_DOMAIN) && pathname === '/') {
+      const response = NextResponse.rewrite(new URL(`/home${search}`, req.url))
+      setInstanceCookies(response, instanceInfo)
+      return response
+    }
+
     if (extracted) {
       orgslug = extracted
     } else if (isLocalhostCheck(fullhost)) {
