@@ -1,7 +1,7 @@
 [project]
 description = "Learnhouse Backend"
 name = "learnhouse-api"
-version = "1.1.0"
+version = "1.1.1"
 requires-python = ">=3.14.3,<3.14.4"
 authors = [
     {name = "Badr B. (swve)"}
