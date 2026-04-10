@@ -876,19 +876,6 @@ async def read_user_assignment_task_submissions(
             detail="Assignment Task not found",
         )
 
-    # Check if assignment task submission exists
-    statement = select(AssignmentTaskSubmission).where(
-        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
-        AssignmentTaskSubmission.user_id == user_id,
-    )
-    assignment_task_submission = db_session.exec(statement).first()
-
-    if not assignment_task_submission:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment Task Submission not found",
-        )
-
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
     assignment = db_session.exec(statement).first()
@@ -911,6 +898,29 @@ async def read_user_assignment_task_submissions(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Ownership check: non-instructors may only read their own submissions
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+    if not is_instructor and int(user_id) != int(current_user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only view your own submissions",
+        )
+
+    # Check if assignment task submission exists
+    statement = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+        AssignmentTaskSubmission.user_id == user_id,
+    )
+    assignment_task_submission = db_session.exec(statement).first()
+
+    if not assignment_task_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task Submission not found",
+        )
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -1027,6 +1037,16 @@ async def read_assignment_task_submissions(
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Ownership check: non-instructors may only read their own submissions
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+    if not is_instructor and int(assignment_task_submission.user_id) != int(current_user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only view your own submissions",
+        )
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -1423,14 +1443,24 @@ async def read_user_assignment_submissions(
             detail="Course not found",
         )
 
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Ownership check: non-instructors may only read their own submissions
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+    if not is_instructor and int(user_id) != int(current_user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only view your own submissions",
+        )
+
     # Find assignments tasks for an assignment
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
         AssignmentUserSubmission.user_id == user_id,
     )
-
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     # return assignment tasks read
     return [
@@ -1686,6 +1716,29 @@ async def get_grade_assignment_submission(
         raise HTTPException(
             status_code=404,
             detail="Assignment not found",
+        )
+
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Ownership check: non-instructors may only read their own grade
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
+    if not is_instructor and str(user_id) != str(current_user.id):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only view your own grade",
         )
 
     # Check if assignment user submission exists
