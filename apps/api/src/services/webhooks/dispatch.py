@@ -18,6 +18,11 @@ from sqlmodel import Session, select, col, delete
 
 from src.core.events.database import engine
 from src.db.webhooks import WebhookEndpoint, WebhookDeliveryLog
+from src.services.utils.ssrf_guard import (
+    SSRFBlockedError,
+    assert_connected_peer_allowed,
+    resolve_and_validate_url,
+)
 from src.services.webhooks.crypto import decrypt_secret, compute_signature
 from src.services.webhooks.events import validate_event_data
 
@@ -181,11 +186,25 @@ async def _deliver_to_endpoint(
         )
 
         try:
-            resp = await client.post(ep.url, content=payload_bytes, headers=headers)
-            log_entry.response_status = resp.status_code
-            log_entry.response_body = resp.text[:500] if resp.text else None
-            log_entry.success = 200 <= resp.status_code < 300
+            # SSRF guard: resolve DNS, verify all returned IPs are public,
+            # then after the request verify the peer we actually connected
+            # to was one of the approved IPs (defeats DNS rebinding).
+            validated_ips = resolve_and_validate_url(ep.url)
 
+            resp = await client.post(ep.url, content=payload_bytes, headers=headers)
+            try:
+                assert_connected_peer_allowed(resp, validated_ips)
+            except SSRFBlockedError as ssrf_exc:
+                log_entry.success = False
+                log_entry.error_message = f"SSRF guard: {ssrf_exc}"[:1000]
+            else:
+                log_entry.response_status = resp.status_code
+                log_entry.response_body = resp.text[:500] if resp.text else None
+                log_entry.success = 200 <= resp.status_code < 300
+
+        except SSRFBlockedError as e:
+            log_entry.success = False
+            log_entry.error_message = f"SSRF guard: {e}"[:1000]
         except Exception as e:
             log_entry.success = False
             log_entry.error_message = str(e)[:1000]

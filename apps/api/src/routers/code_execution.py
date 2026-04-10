@@ -7,11 +7,15 @@ import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Form
 from pydantic import BaseModel
-from typing import Optional
+from sqlmodel import Session
+from typing import Optional, Union
 import httpx
 
 from config.config import get_learnhouse_config
-from src.security.auth import get_current_user
+from src.core.events.database import get_db_session
+from src.db.users import APITokenUser, PublicUser
+from src.security.auth import get_authenticated_user
+from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship
 from src.services.utils.upload_content import upload_file
 
 logger = logging.getLogger(__name__)
@@ -114,6 +118,48 @@ def _validate_storage_path(file_path: str) -> str:
     return full_path
 
 
+def _course_uuid_from_sqlite_path(file_path: str) -> str:
+    """
+    Extract the course_uuid from a sqlite storage path so we can run an RBAC
+    check before the file is read into the Judge0 sandbox.
+
+    Expected layout: ``orgs/{org_uuid}/courses/{course_uuid}/activities/...``
+    """
+    parts = file_path.replace('\\', '/').strip('/').split('/')
+    if len(parts) < 4 or parts[0] != 'orgs' or parts[2] != 'courses':
+        raise HTTPException(
+            status_code=400,
+            detail="sqlite_db_path must reference a course under orgs/{org_uuid}/courses/{course_uuid}/...",
+        )
+    course_uuid = parts[3]
+    if not course_uuid.startswith('course_'):
+        raise HTTPException(status_code=400, detail="Invalid course_uuid in sqlite_db_path")
+    return course_uuid
+
+
+async def _require_course_access(
+    request: Request,
+    current_user: Union[PublicUser, APITokenUser],
+    course_uuid: str,
+    action: str,
+    db_session: Session,
+) -> None:
+    """
+    Verify the caller has the requested RBAC action on the given course.
+
+    API tokens are not permitted here — code execution / sqlite upload are
+    interactive features tied to an authenticated user's course access.
+    """
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot use code execution or playground uploads",
+        )
+    await authorization_verify_based_on_roles_and_authorship(
+        request, current_user.id, action, course_uuid, db_session
+    )
+
+
 def _read_storage_file(file_path: str) -> bytes:
     """Read a file from storage (filesystem or S3)."""
     config = get_learnhouse_config()
@@ -193,8 +239,10 @@ async def _submit_single(
 
 @router.post("/execute")
 async def execute_code(
+    request: Request,
     body: ExecuteRequest,
-    _current_user=Depends(get_current_user),
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
+    db_session: Session = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
 
@@ -207,6 +255,10 @@ async def execute_code(
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
+        # Authorize: caller must have read access to the course that owns the sqlite file.
+        course_uuid = _course_uuid_from_sqlite_path(body.sqlite_db_path)
+        await _require_course_access(request, current_user, course_uuid, "read", db_session)
+
         db_bytes = _read_storage_file(body.sqlite_db_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
@@ -222,8 +274,10 @@ async def execute_code(
 
 @router.post("/execute-batch")
 async def execute_batch(
+    request: Request,
     body: ExecuteBatchRequest,
-    _current_user=Depends(get_current_user),
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
+    db_session: Session = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
 
@@ -236,6 +290,10 @@ async def execute_batch(
         zip_files = [{"name": f.name, "content": f.content} for f in body.additional_files]
 
     if language_id == SQL_LANGUAGE_ID and body.sqlite_db_path:
+        # Authorize: caller must have read access to the course that owns the sqlite file.
+        course_uuid = _course_uuid_from_sqlite_path(body.sqlite_db_path)
+        await _require_course_access(request, current_user, course_uuid, "read", db_session)
+
         db_bytes = _read_storage_file(body.sqlite_db_path)
         language_id = PYTHON3_LANGUAGE_ID
         source_code = _wrap_sql_in_python(body.source_code)
@@ -276,9 +334,19 @@ async def upload_sqlite_db(
     block_id: str = Form(),
     org_uuid: str = Form(),
     course_uuid: str = Form(),
-    _current_user=Depends(get_current_user),
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
+    db_session: Session = Depends(get_db_session),
 ):
-    """Upload a SQLite database file for a code playground block."""
+    """Upload a SQLite database file for a code playground block.
+
+    SECURITY: Requires authentication and update permission on the target
+    course — otherwise an attacker could overwrite any course's playground DB.
+    """
+    if not course_uuid.startswith("course_"):
+        raise HTTPException(status_code=400, detail="Invalid course_uuid")
+
+    await _require_course_access(request, current_user, course_uuid, "update", db_session)
+
     directory = f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/codePlayground/{block_id}"
 
     filename = await upload_file(
