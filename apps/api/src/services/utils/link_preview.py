@@ -1,78 +1,34 @@
-import ipaddress
-import socket
 import httpx
 from bs4 import BeautifulSoup, Tag
 from typing import Optional, Dict
 from urllib.parse import urljoin, urlparse
 from fastapi import HTTPException
 
-
-# Private/internal IP ranges that should never be accessed
-_BLOCKED_NETWORKS = [
-    ipaddress.ip_network("0.0.0.0/8"),
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("100.64.0.0/10"),
-    ipaddress.ip_network("127.0.0.0/8"),
-    ipaddress.ip_network("169.254.0.0/16"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.0.0.0/24"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("198.18.0.0/15"),
-    ipaddress.ip_network("::ffff:0:0/96"),  # IPv4-mapped IPv6
-    ipaddress.ip_network("::1/128"),
-    ipaddress.ip_network("fc00::/7"),
-    ipaddress.ip_network("fe80::/10"),
-]
+from src.services.utils.ssrf_guard import (
+    SSRFBlockedError,
+    assert_connected_peer_allowed,
+    resolve_and_validate_url,
+)
 
 _MAX_RESPONSE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
-def _validate_url(url: str) -> str:
-    """Validate URL to prevent SSRF attacks."""
-    parsed = urlparse(url)
-
-    if parsed.scheme not in ("http", "https"):
-        raise HTTPException(status_code=400, detail="Only http and https URLs are allowed")
-
-    if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="Invalid URL: no hostname")
-
-    hostname = parsed.hostname
-
-    # Block obvious internal hostnames
-    if hostname in ("localhost", "metadata.google.internal"):
-        raise HTTPException(status_code=400, detail="URL points to a blocked host")
-
-    # Resolve hostname and check against blocked IP ranges
-    try:
-        addr_infos = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
-        raise HTTPException(status_code=400, detail="Could not resolve hostname")
-
-    for _, _, _, _, sockaddr in addr_infos:
-        ip = ipaddress.ip_address(sockaddr[0])
-        # Normalize IPv4-mapped IPv6 addresses to their IPv4 equivalent
-        if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
-            ip = ip.ipv4_mapped
-        for network in _BLOCKED_NETWORKS:
-            if ip in network:
-                raise HTTPException(
-                    status_code=400,
-                    detail="URL points to a blocked address range",
-                )
-
-    return url
-
-
 async def fetch_link_preview(url: str) -> Dict[str, Optional[str]]:
-    validated_url = _validate_url(url)
+    try:
+        validated_ips = resolve_and_validate_url(url)
+    except SSRFBlockedError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
     async with httpx.AsyncClient(
         follow_redirects=False,
         timeout=10,
         max_redirects=0,
     ) as client:
-        response = await client.get(validated_url)
+        response = await client.get(url)
+        try:
+            assert_connected_peer_allowed(response, validated_ips)
+        except SSRFBlockedError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
 
         # Handle redirects manually to validate each hop
         redirect_count = 0
@@ -81,8 +37,15 @@ async def fetch_link_preview(url: str) -> Dict[str, Optional[str]]:
             redirect_url = str(response.next_request.url) if response.next_request else None
             if not redirect_url:
                 break
-            _validate_url(redirect_url)
+            try:
+                validated_ips = resolve_and_validate_url(redirect_url)
+            except SSRFBlockedError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
             response = await client.get(redirect_url)
+            try:
+                assert_connected_peer_allowed(response, validated_ips)
+            except SSRFBlockedError as exc:
+                raise HTTPException(status_code=400, detail=str(exc))
 
         response.raise_for_status()
 
