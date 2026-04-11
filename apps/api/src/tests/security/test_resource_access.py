@@ -612,8 +612,10 @@ class TestRequestScopedChecker:
     def test_new_checker_when_user_changes(self, mock_db_session):
         """If the same request is paired with a different user, return a fresh checker."""
         request = self._make_request()
-        u1 = Mock(spec=PublicUser); u1.id = 1
-        u2 = Mock(spec=PublicUser); u2.id = 2
+        u1 = Mock(spec=PublicUser)
+        u1.id = 1
+        u2 = Mock(spec=PublicUser)
+        u2.id = 2
         c1 = _get_request_checker(request, mock_db_session, u1)
         c2 = _get_request_checker(request, mock_db_session, u2)
         assert c1 is not c2
