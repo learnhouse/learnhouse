@@ -29,6 +29,7 @@ from src.security.rbac.rbac import (
 )
 from src.security.rbac import (
     AccessAction,
+    AccessContext,
     check_resource_access,
 )
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
@@ -39,71 +40,6 @@ from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
-
-
-async def _user_can_view_unpublished_course(
-    request: Request,
-    course: Course,
-    current_user: PublicUser | AnonymousUser,
-    db_session: Session,
-) -> bool:
-    """
-    Check if the user has permission to view an unpublished course.
-
-    Users can view unpublished courses if they are:
-    1. A resource author (creator, maintainer, or contributor) of the course
-    2. An admin or maintainer in the organization
-    3. A member of a UserGroup that has access to the course
-
-    Anonymous users cannot view unpublished courses.
-    """
-    # Anonymous users cannot view unpublished courses
-    if isinstance(current_user, AnonymousUser):
-        return False
-
-    # Superadmins can always view unpublished courses
-    if is_user_superadmin(current_user.id, db_session):
-        return True
-
-    # Check if user is a resource author of this course
-    author_statement = select(ResourceAuthor).where(
-        ResourceAuthor.resource_uuid == course.course_uuid,
-        ResourceAuthor.user_id == current_user.id,
-        ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
-    )
-    is_author = db_session.exec(author_statement).first()
-    if is_author:
-        return True
-
-    # Check if user has admin/maintainer role in the organization
-    role_statement = (
-        select(Role)
-        .join(UserOrganization)
-        .where(UserOrganization.org_id == course.org_id)
-        .where(UserOrganization.user_id == current_user.id)
-    )
-    user_roles = db_session.exec(role_statement).all()
-    for role in user_roles:
-        if role.id in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin or Maintainer role IDs
-            return True
-
-    # Check if user is a member of a UserGroup that has access to this course
-    usergroup_stmt = select(UserGroupResource).where(
-        UserGroupResource.resource_uuid == course.course_uuid
-    )
-    usergroup_resources = db_session.exec(usergroup_stmt).all()
-
-    if usergroup_resources:
-        usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
-        membership_stmt = select(UserGroupUser).where(
-            UserGroupUser.usergroup_id.in_(usergroup_ids),
-            UserGroupUser.user_id == current_user.id
-        )
-        membership = db_session.exec(membership_stmt).first()
-        if membership:
-            return True
-
-    return False
 
 
 async def get_course(
@@ -121,20 +57,16 @@ async def get_course(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
-
-    # Check if course is published - unpublished courses require special permission
-    if not course.published:
-        # Check if user can view unpublished courses
-        can_view_unpublished = await _user_can_view_unpublished_course(
-            request, course, current_user, db_session
-        )
-        if not can_view_unpublished:
-            raise HTTPException(
-                status_code=404,
-                detail="Course not found",
-            )
+    # DASHBOARD context lets authors/admins/usergroup members access unpublished
+    # courses; regular users still fall back to public view rules.
+    await check_resource_access(
+        request,
+        db_session,
+        current_user,
+        course.course_uuid,
+        AccessAction.READ,
+        context=AccessContext.DASHBOARD,
+    )
 
     # Get course authors with their roles
     authors_statement = (
@@ -243,20 +175,16 @@ async def get_course_meta(
     org = results[0][3]  # First result's Organization
     author_results = [(ra, u) for _, ra, u, _ in results if ra is not None and u is not None]
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
-
-    # Check if course is published - unpublished courses require special permission
-    if not course.published:
-        # Check if user can view unpublished courses
-        can_view_unpublished = await _user_can_view_unpublished_course(
-            request, course, current_user, db_session
-        )
-        if not can_view_unpublished:
-            raise HTTPException(
-                status_code=404,
-                detail="Course not found",
-            )
+    # DASHBOARD context lets authors/admins/usergroup members access unpublished
+    # courses; regular users still fall back to public view rules.
+    await check_resource_access(
+        request,
+        db_session,
+        current_user,
+        course.course_uuid,
+        AccessAction.READ,
+        context=AccessContext.DASHBOARD,
+    )
 
     # Permission check passed — try Redis cache for the heavy data
     # (shared across all authorized users for this course)
@@ -266,10 +194,19 @@ async def get_course_meta(
         if cached is not None:
             return FullCourseRead.model_validate(cached)
 
-    # Get course chapters
+    # Get course chapters — pass the already-loaded course to skip the
+    # duplicate SELECT inside get_course_chapters.
     chapters = []
     if course.id is not None:
-        chapters = await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities, slim=slim)
+        chapters = await get_course_chapters(
+            request,
+            course.id,
+            db_session,
+            current_user,
+            with_unpublished_activities,
+            slim=slim,
+            course=course,
+        )
 
     # Convert to AuthorWithRole objects
     authors = [
