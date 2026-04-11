@@ -773,7 +773,7 @@ wheels = [
 
 [[package]]
 name = "learnhouse-api"
-version = "1.0.1"
+version = "1.1.2"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
@@ -822,7 +822,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.14.3" },
     { name = "boto3", specifier = "==1.42.80" },
     { name = "botocore", specifier = "==1.42.80" },
-    { name = "cryptography", specifier = ">=45.0.0" },
+    { name = "cryptography", specifier = "==46.0.4" },
     { name = "defusedxml", specifier = "==0.7.1" },
     { name = "dnspython", specifier = "==2.8.0" },
     { name = "faker", specifier = "==40.12.0" },
