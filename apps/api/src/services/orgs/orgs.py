@@ -152,7 +152,7 @@ async def create_org(
     if org:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Organization already exists",
+            detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
     org = Organization.model_validate(org_object)
@@ -249,7 +249,7 @@ async def create_org_with_config(
     if org:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Organization already exists",
+            detail=f"The slug '{org_object.slug}' is already taken. Please choose a different slug.",
         )
 
     org = Organization.model_validate(org_object)
