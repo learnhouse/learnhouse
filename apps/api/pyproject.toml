@@ -12,7 +12,7 @@ dependencies = [
     "faker==40.13.0",
     "fastapi==0.135.3",
     "httpx==0.28.1",
-    "google-genai==1.70.0",
+    "google-genai==1.71.0",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.11",
     "pydantic[email]==2.12.5",
