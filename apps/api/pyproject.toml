@@ -32,7 +32,7 @@ dependencies = [
     "alembic-postgresql-enum==1.10.0",
     "sqlalchemy-utils==0.42.1",
     "stripe==14.4.1",
-    "cryptography>=45.0.0",
+    "cryptography==46.0.4",
     "pyjwt[crypto]==2.12.1",
     "beautifulsoup4==4.14.3",
     "pytest-asyncio==1.3.0",
