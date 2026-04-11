@@ -901,7 +901,7 @@ async def get_org_usage(
     from src.security.features_utils.usage import (
         _get_actual_usage,
         _get_actual_admin_seat_count,
-        _is_oss_mode,
+        _is_non_saas,
     )
     from src.security.features_utils.plans import get_plan_limit
 
@@ -914,7 +914,7 @@ async def get_org_usage(
     ).first()
 
     plan = _get_org_plan(org_config)
-    oss_mode = _is_oss_mode()
+    oss_mode = _is_non_saas()
 
     courses_usage = _get_actual_usage("courses", org_id, db_session)
     members_usage = _get_actual_usage("members", org_id, db_session)

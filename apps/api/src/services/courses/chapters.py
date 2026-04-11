@@ -213,10 +213,14 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
     slim: bool = False,
+    course: "Course | None" = None,
 ) -> List[ChapterRead]:
 
-    statement = select(Course).where(Course.id == course_id)
-    course = db_session.exec(statement).first()
+    # Skip the duplicate Course lookup when the caller (e.g. get_course_meta)
+    # already has the course in hand.
+    if course is None:
+        statement = select(Course).where(Course.id == course_id)
+        course = db_session.exec(statement).first()
 
     statement = (
         select(Chapter)
@@ -230,37 +234,104 @@ async def get_course_chapters(
 
     chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
 
-    # RBAC check
+    # RBAC check — cheap when the caller already ran it on this request
+    # (the checker is memoized on request.state).
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)  # type: ignore
 
-    # Get all activities for all chapters in a single query
     chapter_ids = [chapter.id for chapter in chapters]
     if chapter_ids:
-        activity_statement = (
-            select(ChapterActivity, Activity)
-            .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
-            .where(ChapterActivity.chapter_id.in_(chapter_ids))  # type: ignore
-            .order_by(ChapterActivity.chapter_id, ChapterActivity.order)  # type: ignore
-        )
-        if not with_unpublished_activities:
-            activity_statement = activity_statement.where(Activity.published == True)
+        if slim:
+            # SQL-level slim: project only the navigation columns. Activity.content
+            # (TipTap JSON) and Activity.details can be very large; excluding them
+            # from the SELECT is the biggest single win for course-tree payload.
+            activity_statement = (
+                select(
+                    ChapterActivity.chapter_id,
+                    Activity.id,
+                    Activity.org_id,
+                    Activity.course_id,
+                    Activity.name,
+                    Activity.activity_type,
+                    Activity.activity_sub_type,
+                    Activity.activity_uuid,
+                    Activity.published,
+                    Activity.creation_date,
+                    Activity.update_date,
+                    Activity.current_version,
+                    Activity.last_modified_by_id,
+                    ChapterActivity.order,
+                )
+                .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
+                .where(ChapterActivity.chapter_id.in_(chapter_ids))  # type: ignore
+                .order_by(ChapterActivity.chapter_id, ChapterActivity.order)  # type: ignore
+            )
+            if not with_unpublished_activities:
+                activity_statement = activity_statement.where(Activity.published == True)
 
-        activity_results = db_session.exec(activity_statement).all()
+            rows = db_session.exec(activity_statement).all()
 
-        # Group activities by chapter_id
-        chapter_activities_map: dict[int, list[ActivityRead]] = {}
-        seen: set[tuple[int, int]] = set()
-        for chapter_activity, activity in activity_results:
-            key = (chapter_activity.chapter_id, activity.id)
-            if key not in seen:
+            chapter_activities_map: dict[int, list[ActivityRead]] = {}
+            seen: set[tuple[int, int]] = set()
+            for row in rows:
+                (
+                    chapter_id_val,
+                    a_id,
+                    a_org_id,
+                    a_course_id,
+                    a_name,
+                    a_type,
+                    a_sub_type,
+                    a_uuid,
+                    a_published,
+                    a_creation,
+                    a_update,
+                    a_version,
+                    a_last_modified_by,
+                    _order,
+                ) = row
+                key = (chapter_id_val, a_id)
+                if key in seen:
+                    continue
                 seen.add(key)
-                activity_data = activity.model_dump()
-                if slim:
-                    # Strip heavy fields, keep only what's needed for navigation
-                    activity_data["content"] = {}
-                    activity_data["details"] = None
+                chapter_activities_map.setdefault(chapter_id_val, []).append(
+                    ActivityRead(
+                        id=a_id,
+                        org_id=a_org_id,
+                        course_id=a_course_id,
+                        name=a_name,
+                        activity_type=a_type,
+                        activity_sub_type=a_sub_type,
+                        content={},
+                        details=None,
+                        published=a_published,
+                        activity_uuid=a_uuid,
+                        creation_date=a_creation,
+                        update_date=a_update,
+                        current_version=a_version,
+                        last_modified_by_id=a_last_modified_by,
+                    )
+                )
+        else:
+            activity_statement = (
+                select(ChapterActivity, Activity)
+                .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
+                .where(ChapterActivity.chapter_id.in_(chapter_ids))  # type: ignore
+                .order_by(ChapterActivity.chapter_id, ChapterActivity.order)  # type: ignore
+            )
+            if not with_unpublished_activities:
+                activity_statement = activity_statement.where(Activity.published == True)
+
+            activity_results = db_session.exec(activity_statement).all()
+
+            chapter_activities_map = {}
+            seen = set()
+            for chapter_activity, activity in activity_results:
+                key = (chapter_activity.chapter_id, activity.id)
+                if key in seen:
+                    continue
+                seen.add(key)
                 chapter_activities_map.setdefault(chapter_activity.chapter_id, []).append(
-                    ActivityRead(**activity_data)
+                    ActivityRead(**activity.model_dump())
                 )
 
         for chapter in chapters:

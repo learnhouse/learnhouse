@@ -60,7 +60,15 @@ class ResourceAccessChecker:
         self.request = request
         self.db_session = db_session
         self.current_user = current_user
+        # Per-request memoization caches. Within a single request a given course
+        # page can trigger check_resource_access 2–3 times; without these caches
+        # each call re-runs the same author/admin/usergroup/resource lookups.
         self._resource_cache: dict = {}
+        self._author_cache: dict[str, bool] = {}
+        self._admin_cache: dict[str, bool] = {}
+        self._public_published_cache: dict[str, tuple[bool, bool]] = {}
+        self._usergroup_cache: dict[tuple[str, bool], bool] = {}
+        self._parent_uuid_cache: dict[str, Optional[str]] = {}
 
     async def check_access(
         self,
@@ -230,7 +238,9 @@ class ResourceAccessChecker:
                     context="dashboard",
                 )
 
-        # Fall through to public view rules
+        # Fall through to public view rules. Note: public_view's usergroup rule
+        # requires is_published=True, so usergroup members on unpublished
+        # resources still get denied here — which is the intended behavior.
         return await self._check_public_view_read_access(resource_uuid, config)
 
     async def _check_public_view_read_access(
@@ -623,6 +633,9 @@ class ResourceAccessChecker:
         if not config.parent_resource_type or not config.parent_id_field:
             return None
 
+        if resource_uuid in self._parent_uuid_cache:
+            return self._parent_uuid_cache[resource_uuid]
+
         # Get the child resource
         resource = await self._get_resource(resource_uuid, config)
         if not resource:
@@ -643,6 +656,7 @@ class ResourceAccessChecker:
 
         # Look up the parent resource to get its UUID
         parent_uuid = await self._get_parent_uuid_by_id(parent_id, parent_config)
+        self._parent_uuid_cache[resource_uuid] = parent_uuid
         return parent_uuid
 
     async def _get_parent_uuid_by_id(
@@ -689,21 +703,30 @@ class ResourceAccessChecker:
         config: ResourceConfig,
     ) -> tuple[bool, bool]:
         """Check if resource is public and published."""
+        cached = self._public_published_cache.get(resource_uuid)
+        if cached is not None:
+            return cached
+
         resource = await self._get_resource(resource_uuid, config)
         if not resource:
-            return False, False
+            result = (False, False)
+        else:
+            is_public = getattr(resource, 'public', False)
+            is_published = getattr(resource, 'published', True) if config.has_published_field else True
+            result = (is_public, is_published)
 
-        is_public = getattr(resource, 'public', False)
-        is_published = getattr(resource, 'published', True) if config.has_published_field else True
-
-        return is_public, is_published
+        self._public_published_cache[resource_uuid] = result
+        return result
 
     async def _is_resource_author(self, resource_uuid: str) -> bool:
         """Check if current user is the author of the resource."""
         user_id = self._get_user_id()
         if user_id == 0:
-            logger.info("[IS_AUTHOR] user_id=0, returning False")
             return False
+
+        cached = self._author_cache.get(resource_uuid)
+        if cached is not None:
+            return cached
 
         statement = select(ResourceAuthor).where(
             ResourceAuthor.resource_uuid == resource_uuid,
@@ -712,7 +735,7 @@ class ResourceAccessChecker:
         resource_author = self.db_session.exec(statement).first()
 
         if not resource_author:
-            logger.info(f"[IS_AUTHOR] No ResourceAuthor found for resource_uuid={resource_uuid}, user_id={user_id}")
+            self._author_cache[resource_uuid] = False
             return False
 
         valid_authorships = [
@@ -725,7 +748,7 @@ class ResourceAccessChecker:
             resource_author.authorship in valid_authorships and
             resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
         )
-        logger.info(f"[IS_AUTHOR] Found ResourceAuthor: authorship={resource_author.authorship}, status={resource_author.authorship_status}, is_valid={is_valid}")
+        self._author_cache[resource_uuid] = is_valid
         return is_valid
 
     async def _is_admin_or_maintainer(self, resource_uuid: str) -> bool:
@@ -734,15 +757,26 @@ class ResourceAccessChecker:
         if user_id == 0:
             return False
 
-        return await authorization_verify_based_on_org_admin_status(
+        cached = self._admin_cache.get(resource_uuid)
+        if cached is not None:
+            return cached
+
+        result = await authorization_verify_based_on_org_admin_status(
             self.request, user_id, "read", resource_uuid, self.db_session
         )
+        self._admin_cache[resource_uuid] = result
+        return result
 
     async def _check_usergroup_membership(self, resource_uuid: str, is_public: bool = False) -> bool:
         """Check if user has access via UserGroup membership."""
         user_id = self._get_user_id()
         if user_id == 0:
             return False
+
+        cache_key = (resource_uuid, is_public)
+        cached = self._usergroup_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         # Check if resource has any UserGroups linked
         usergroup_stmt = select(UserGroupResource).where(
@@ -754,6 +788,7 @@ class ResourceAccessChecker:
         # - Public resources: accessible to all authenticated users
         # - Non-public resources: not accessible (only authors/admins can access)
         if not usergroup_resources:
+            self._usergroup_cache[cache_key] = is_public
             return is_public
 
         # Check if user is a member of any linked UserGroup
@@ -764,7 +799,9 @@ class ResourceAccessChecker:
         )
         membership = self.db_session.exec(membership_stmt).first()
 
-        return membership is not None
+        result = membership is not None
+        self._usergroup_cache[cache_key] = result
+        return result
 
     async def _get_resource(self, resource_uuid: str, config: ResourceConfig):
         """Get the resource from the database with caching."""
@@ -821,6 +858,34 @@ class ResourceAccessChecker:
 
 # Convenience functions for quick access checks
 
+def _get_request_checker(
+    request: Request,
+    db_session: Session,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+) -> "ResourceAccessChecker":
+    """
+    Return a ResourceAccessChecker scoped to the current request, reusing the
+    same instance (and its memoization caches) across every RBAC call within
+    that request. This collapses what was previously 2–3× redundant author /
+    admin / usergroup / resource lookups per course endpoint.
+    """
+    existing = getattr(request.state, "rbac_checker", None)
+    if (
+        existing is not None
+        and existing.db_session is db_session
+        and existing.current_user is current_user
+    ):
+        return existing
+
+    checker = ResourceAccessChecker(request, db_session, current_user)
+    try:
+        request.state.rbac_checker = checker
+    except Exception:
+        # request.state may be unavailable in non-HTTP contexts (tests, tasks)
+        pass
+    return checker
+
+
 async def check_resource_access(
     request: Request,
     db_session: Session,
@@ -850,7 +915,7 @@ async def check_resource_access(
     Raises:
         HTTPException: If access denied and raise_on_deny is True
     """
-    checker = ResourceAccessChecker(request, db_session, current_user)
+    checker = _get_request_checker(request, db_session, current_user)
     decision = await checker.check_access(resource_uuid, action, context, require_ownership)
 
     if not decision.allowed and raise_on_deny:

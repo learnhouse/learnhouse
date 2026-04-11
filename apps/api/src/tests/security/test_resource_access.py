@@ -6,7 +6,7 @@ for the unified RBAC system.
 """
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 
@@ -16,7 +16,11 @@ from src.security.rbac.config import (
     get_resource_config,
     get_resource_type,
 )
-from src.security.rbac.resource_access import ResourceAccessChecker, check_resource_access
+from src.security.rbac.resource_access import (
+    ResourceAccessChecker,
+    check_resource_access,
+    _get_request_checker,
+)
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 
 
@@ -397,3 +401,269 @@ class TestAccessContextEnum:
     def test_context_count(self):
         """Test that AccessContext enum has exactly 2 values."""
         assert len(AccessContext) == 2
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# DASHBOARD-context semantics for courses.
+#
+# These tests lock in the intended behaviour of get_course / get_course_meta
+# after the rewrite that removed the bespoke _user_can_view_unpublished_course
+# helper in favour of a single check_resource_access(context=DASHBOARD) call.
+#
+# The critical invariant: usergroup members must NOT be able to read an
+# unpublished course through the DASHBOARD context. Only admins/authors can.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class TestDashboardContext:
+    """Lock in DASHBOARD-context read semantics for courses."""
+
+    @pytest.fixture
+    def mock_request(self):
+        request = Mock(spec=Request)
+        # Use a real object for state so attribute assignment works but starts empty
+        request.state = type("S", (), {})()
+        return request
+
+    @pytest.fixture
+    def mock_db_session(self):
+        return Mock(spec=Session)
+
+    @pytest.fixture
+    def mock_public_user(self):
+        user = Mock(spec=PublicUser)
+        user.id = 42
+        return user
+
+    def _make_checker(self, request, session, user, **overrides):
+        """Build a checker with the helper methods pre-mocked to the desired return values."""
+        checker = ResourceAccessChecker(request, session, user)
+        checker._is_admin_or_maintainer = AsyncMock(
+            return_value=overrides.get("is_admin", False)
+        )
+        checker._is_resource_author = AsyncMock(
+            return_value=overrides.get("is_author", False)
+        )
+        checker._is_public_and_published = AsyncMock(
+            return_value=overrides.get("public_published", (False, False))
+        )
+        checker._check_usergroup_membership = AsyncMock(
+            return_value=overrides.get("usergroup", False)
+        )
+        return checker
+
+    @pytest.mark.asyncio
+    async def test_admin_on_unpublished_course_is_allowed(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        checker = self._make_checker(
+            mock_request, mock_db_session, mock_public_user,
+            is_admin=True, public_published=(False, False),
+        )
+        decision = await checker.check_access(
+            "course_unpub_1", AccessAction.READ, AccessContext.DASHBOARD
+        )
+        assert decision.allowed is True
+        assert decision.via_admin is True
+
+    @pytest.mark.asyncio
+    async def test_author_on_unpublished_course_is_allowed(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        checker = self._make_checker(
+            mock_request, mock_db_session, mock_public_user,
+            is_author=True, public_published=(False, False),
+        )
+        decision = await checker.check_access(
+            "course_unpub_2", AccessAction.READ, AccessContext.DASHBOARD
+        )
+        assert decision.allowed is True
+        assert decision.via_authorship is True
+
+    @pytest.mark.asyncio
+    async def test_usergroup_member_on_unpublished_course_is_denied(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        """REGRESSION GUARD: a non-author/non-admin usergroup member must NOT
+        be able to read an unpublished course via DASHBOARD context.
+
+        Rule 5 of the public_view fallthrough only allows usergroup access
+        when is_published=True, so the dashboard path correctly denies this
+        combination."""
+        checker = self._make_checker(
+            mock_request, mock_db_session, mock_public_user,
+            is_admin=False, is_author=False,
+            public_published=(False, False),
+            usergroup=True,
+        )
+        with patch(
+            "src.security.rbac.resource_access.authorization_verify_based_on_roles",
+            new_callable=AsyncMock, return_value=False,
+        ):
+            decision = await checker.check_access(
+                "course_unpub_3", AccessAction.READ, AccessContext.DASHBOARD
+            )
+        assert decision.allowed is False
+
+    @pytest.mark.asyncio
+    async def test_anonymous_user_on_unpublished_course_is_denied(
+        self, mock_request, mock_db_session,
+    ):
+        """Anonymous users never see unpublished courses even via dashboard."""
+        checker = ResourceAccessChecker(mock_request, mock_db_session, AnonymousUser())
+        # Anonymous path goes straight to _check_anonymous_read_access which
+        # only inspects public/published flags.
+        checker._is_public_and_published = AsyncMock(return_value=(False, False))
+
+        decision = await checker.check_access(
+            "course_unpub_4", AccessAction.READ, AccessContext.DASHBOARD
+        )
+        assert decision.allowed is False
+
+    @pytest.mark.asyncio
+    async def test_regular_user_on_public_published_course_is_allowed(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        """Dashboard falls through to public_view, so public+published stays allowed."""
+        checker = self._make_checker(
+            mock_request, mock_db_session, mock_public_user,
+            public_published=(True, True),
+        )
+        decision = await checker.check_access(
+            "course_pub_1", AccessAction.READ, AccessContext.DASHBOARD
+        )
+        assert decision.allowed is True
+        assert decision.via_public is True
+
+    @pytest.mark.asyncio
+    async def test_usergroup_member_on_published_nonpublic_course_is_allowed(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        """Published + non-public + usergroup member: allowed via public_view rule 5."""
+        checker = self._make_checker(
+            mock_request, mock_db_session, mock_public_user,
+            public_published=(False, True),
+            usergroup=True,
+        )
+        with patch(
+            "src.security.rbac.resource_access.authorization_verify_based_on_roles",
+            new_callable=AsyncMock, return_value=False,
+        ):
+            decision = await checker.check_access(
+                "course_priv_1", AccessAction.READ, AccessContext.DASHBOARD
+            )
+        assert decision.allowed is True
+        assert decision.via_usergroup is True
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Request-scoped ResourceAccessChecker memoization.
+#
+# Course endpoints call check_resource_access() multiple times per request
+# (once in get_course_meta, once inside get_course_chapters, once per child
+# resource). The checker is now cached on request.state and its helper
+# methods short-circuit via per-instance dicts so repeated lookups are free.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class TestRequestScopedChecker:
+    """Lock in the single-checker-per-request contract and helper memoization."""
+
+    @pytest.fixture
+    def mock_db_session(self):
+        return Mock(spec=Session)
+
+    @pytest.fixture
+    def mock_public_user(self):
+        user = Mock(spec=PublicUser)
+        user.id = 7
+        return user
+
+    def _make_request(self):
+        request = Mock(spec=Request)
+        request.state = type("S", (), {})()
+        return request
+
+    def test_same_request_reuses_checker(self, mock_db_session, mock_public_user):
+        """Two _get_request_checker calls on the same request return the same instance."""
+        request = self._make_request()
+        first = _get_request_checker(request, mock_db_session, mock_public_user)
+        second = _get_request_checker(request, mock_db_session, mock_public_user)
+        assert first is second
+        assert getattr(request.state, "rbac_checker", None) is first
+
+    def test_different_requests_get_distinct_checkers(self, mock_db_session, mock_public_user):
+        """Different request objects each get their own checker."""
+        req1 = self._make_request()
+        req2 = self._make_request()
+        c1 = _get_request_checker(req1, mock_db_session, mock_public_user)
+        c2 = _get_request_checker(req2, mock_db_session, mock_public_user)
+        assert c1 is not c2
+
+    def test_new_checker_when_session_changes(self, mock_public_user):
+        """If the same request is somehow paired with a new session, return a fresh checker."""
+        request = self._make_request()
+        s1 = Mock(spec=Session)
+        s2 = Mock(spec=Session)
+        c1 = _get_request_checker(request, s1, mock_public_user)
+        c2 = _get_request_checker(request, s2, mock_public_user)
+        assert c1 is not c2
+
+    def test_new_checker_when_user_changes(self, mock_db_session):
+        """If the same request is paired with a different user, return a fresh checker."""
+        request = self._make_request()
+        u1 = Mock(spec=PublicUser); u1.id = 1
+        u2 = Mock(spec=PublicUser); u2.id = 2
+        c1 = _get_request_checker(request, mock_db_session, u1)
+        c2 = _get_request_checker(request, mock_db_session, u2)
+        assert c1 is not c2
+
+    @pytest.mark.asyncio
+    async def test_author_check_hits_cache(self, mock_db_session, mock_public_user):
+        """Pre-seeded _author_cache entry must bypass any DB work."""
+        request = self._make_request()
+        checker = ResourceAccessChecker(request, mock_db_session, mock_public_user)
+        checker._author_cache["course_cached_author"] = True
+
+        assert await checker._is_resource_author("course_cached_author") is True
+        mock_db_session.exec.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_admin_check_hits_cache(self, mock_db_session, mock_public_user):
+        request = self._make_request()
+        checker = ResourceAccessChecker(request, mock_db_session, mock_public_user)
+        checker._admin_cache["course_cached_admin"] = True
+
+        assert await checker._is_admin_or_maintainer("course_cached_admin") is True
+        mock_db_session.exec.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_public_published_check_hits_cache(self, mock_db_session, mock_public_user):
+        request = self._make_request()
+        checker = ResourceAccessChecker(request, mock_db_session, mock_public_user)
+        checker._public_published_cache["course_cached_pp"] = (True, True)
+
+        config = get_resource_config("course_cached_pp")
+        assert await checker._is_public_and_published("course_cached_pp", config) == (True, True)
+        mock_db_session.exec.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_usergroup_check_hits_cache(self, mock_db_session, mock_public_user):
+        request = self._make_request()
+        checker = ResourceAccessChecker(request, mock_db_session, mock_public_user)
+        checker._usergroup_cache[("course_cached_ug", False)] = True
+
+        assert await checker._check_usergroup_membership("course_cached_ug", False) is True
+        mock_db_session.exec.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_parent_uuid_resolution_hits_cache(self, mock_db_session, mock_public_user):
+        """Child→parent UUID resolution is cached per request."""
+        request = self._make_request()
+        checker = ResourceAccessChecker(request, mock_db_session, mock_public_user)
+        checker._parent_uuid_cache["chapter_xyz"] = "course_parent"
+
+        config = get_resource_config("chapter_xyz")
+        result = await checker._resolve_parent_resource_uuid("chapter_xyz", config)
+        assert result == "course_parent"
+        mock_db_session.exec.assert_not_called()
