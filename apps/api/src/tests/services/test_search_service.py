@@ -9,10 +9,8 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi import HTTPException
 
 from src.db.collections import Collection
-from src.db.collections_courses import CollectionCourse
 from src.db.courses.courses import Course
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
 

@@ -6,7 +6,6 @@ Covers: get_collection, create_collection, update_collection,
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException

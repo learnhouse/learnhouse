@@ -6,16 +6,18 @@ Covers: get_course, get_course_by_id, get_courses_orgslug,
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
 
-from src.db.courses.courses import Course, CourseRead
+from src.db.courses.courses import Course, CourseRead, FullCourseRead
+from src.security.rbac import AccessAction, AccessContext
 from src.services.courses.courses import (
     delete_course,
     get_course,
     get_course_by_id,
+    get_course_meta,
     get_courses_count_orgslug,
     get_courses_orgslug,
     search_courses,
@@ -43,6 +45,24 @@ def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
     return c
 
 
+def _make_course_read_payload(**overrides):
+    payload = dict(
+        id=1,
+        name="Cached Course",
+        description="Cached course description",
+        public=True,
+        published=True,
+        open_to_contributors=False,
+        org_id=1,
+        course_uuid="course_cached",
+        creation_date="2024-01-01",
+        update_date="2024-01-01",
+        authors=[],
+    )
+    payload.update(overrides)
+    return payload
+
+
 class TestGetCourse:
     """Tests for get_course()."""
 
@@ -66,6 +86,106 @@ class TestGetCourse:
 
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_get_course_uses_dashboard_context_for_access_check(
+        self, db, org, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ) as mock_access:
+            await get_course(mock_request, "course_test", admin_user, db)
+
+        mock_access.assert_awaited_once_with(
+            mock_request,
+            db,
+            admin_user,
+            "course_test",
+            AccessAction.READ,
+            context=AccessContext.DASHBOARD,
+        )
+
+
+class TestGetCourseMeta:
+    """Tests for get_course_meta()."""
+
+    @pytest.mark.asyncio
+    async def test_get_course_meta_returns_cached_payload(
+        self, db, org, course, admin_user, mock_request
+    ):
+        cached = FullCourseRead(
+            id=course.id,
+            name=course.name,
+            description=course.description,
+            public=course.public,
+            published=course.published,
+            open_to_contributors=course.open_to_contributors,
+            org_id=course.org_id,
+            course_uuid=course.course_uuid,
+            creation_date=course.creation_date,
+            update_date=course.update_date,
+            org_uuid=org.org_uuid,
+            authors=[],
+            chapters=[],
+        ).model_dump(mode="json")
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.cache.get_cached_course_meta",
+            return_value=cached,
+        ), patch(
+            "src.services.courses.chapters.get_course_chapters",
+            new_callable=AsyncMock,
+        ) as mock_chapters:
+            result = await get_course_meta(
+                mock_request,
+                "course_test",
+                False,
+                admin_user,
+                db,
+                slim=True,
+            )
+
+        assert isinstance(result, FullCourseRead)
+        assert result.course_uuid == "course_test"
+        mock_chapters.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_course_meta_passes_prefetched_course_and_caches_result(
+        self, db, org, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.cache.get_cached_course_meta",
+            return_value=None,
+        ), patch(
+            "src.services.courses.cache.set_cached_course_meta",
+        ) as mock_set_cache, patch(
+            "src.services.courses.chapters.get_course_chapters",
+            new_callable=AsyncMock,
+            return_value=[],
+        ) as mock_chapters:
+            result = await get_course_meta(
+                mock_request,
+                "course_test",
+                False,
+                admin_user,
+                db,
+                slim=True,
+            )
+
+        assert result.org_uuid == "org_test"
+        mock_chapters.assert_awaited_once()
+        call = mock_chapters.await_args
+        assert call.args[:5] == (mock_request, course.id, db, admin_user, False)
+        assert call.kwargs["slim"] is True
+        assert call.kwargs["course"].id == course.id
+        mock_set_cache.assert_called_once_with("course_test", True, result.model_dump())
 
 
 class TestGetCourseById:
@@ -93,6 +213,24 @@ class TestGetCourseById:
 
 class TestGetCoursesOrgslug:
     """Tests for get_courses_orgslug()."""
+
+    @pytest.mark.asyncio
+    async def test_get_courses_orgslug_anonymous_uses_cache(
+        self, anonymous_user, mock_request
+    ):
+        cached = [_make_course_read_payload()]
+
+        with patch(
+            "src.services.courses.cache.get_cached_courses_list",
+            return_value=cached,
+        ) as mock_cache:
+            result = await get_courses_orgslug(
+                mock_request, anonymous_user, "test-org", Mock()
+            )
+
+        mock_cache.assert_called_once_with("test-org", 1, 10)
+        assert len(result) == 1
+        assert result[0].course_uuid == "course_cached"
 
     @pytest.mark.asyncio
     async def test_get_courses_orgslug_returns_courses(
@@ -158,6 +296,35 @@ class TestGetCoursesOrgslug:
             )
 
         assert len(result) == 2
+
+    @pytest.mark.asyncio
+    async def test_get_courses_orgslug_include_unpublished_for_admin(
+        self, db, org, course, admin_user, mock_request, bypass_rbac
+    ):
+        _make_course(
+            db,
+            org,
+            id=12,
+            name="Draft Course",
+            course_uuid="course_draft",
+            public=False,
+            published=False,
+        )
+
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=False
+        ):
+            result = await get_courses_orgslug(
+                mock_request,
+                admin_user,
+                "test-org",
+                db,
+                include_unpublished=True,
+            )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_test" in uuids
+        assert "course_draft" in uuids
 
 
 class TestGetCoursesCountOrgslug:
