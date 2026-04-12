@@ -30,20 +30,15 @@ jobs:
         run: uv sync
         working-directory: apps/api
 
-      - name: Run tests
-        run: uv run pytest src/tests/ -v --tb=short
-        working-directory: apps/api
-        env:
-          TESTING: "true"
-
-      - name: Run security tests with coverage
-        run: uv run pytest src/tests/security/ --cov=src.security --cov-report=html --cov-report=term-missing
+      - name: Run tests with coverage
+        run: uv run pytest src/tests/ -v --tb=short --cov=src --cov-report=html --cov-report=term-missing --cov-fail-under=25
         working-directory: apps/api
         env:
           TESTING: "true"
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: coverage-report
           path: apps/api/htmlcov/
