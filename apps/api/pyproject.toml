@@ -63,3 +63,22 @@ filterwarnings = [
     "ignore:.*Instrumentation will have no effect.*",
     "ignore:.*handler names should be lower-case.*",
 ]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/tests/*",
+    "src/services/ai/*",
+    "src/routers/ai/*",
+    "src/routers/code_execution.py",
+    "src/routers/stream.py",
+]
+
+[tool.coverage.report]
+fail_under = 25
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__",
+]
