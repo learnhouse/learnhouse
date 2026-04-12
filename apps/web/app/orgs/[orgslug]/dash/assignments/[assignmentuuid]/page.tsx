@@ -42,7 +42,7 @@ function AssignmentEdit() {
     }
     
     return (
-        <div className='flex w-full flex-col'>
+        <div className='flex w-full flex-col h-screen'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
                 <div className='flex flex-col bg-white z-10 nice-shadow relative'>
                     <div className='flex justify-between mr-10 h-full'>
@@ -85,7 +85,7 @@ function AssignmentEdit() {
                         </div>
                     </div>
                 </div>
-                <div className="flex h-full w-full">
+                <div className="flex flex-1 min-h-0 w-full">
                     {selectedSubPage === 'editor' && <AssignmentEditorSubPage assignmentuuid={params.assignmentuuid} />}
                     {selectedSubPage === 'submissions' && <AssignmentSubmissionsSubPage assignment_uuid={params.assignmentuuid} />}
                 </div>

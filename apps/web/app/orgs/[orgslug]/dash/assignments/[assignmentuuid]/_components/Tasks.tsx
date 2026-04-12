@@ -1,6 +1,6 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { FileUp, ListTodo, PanelLeftOpen, Plus, Type } from 'lucide-react';
+import { Code2, FileUp, ListTodo, PanelLeftOpen, Plus, Type } from 'lucide-react';
 import React, { useEffect } from 'react'
 import NewTaskModal from './Modals/NewTaskModal';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
@@ -27,8 +27,8 @@ function AssignmentTasks({ assignment_uuid }: any) {
                 {assignments && assignments?.assignment_tasks?.length < 10 && (<Modal
                     isDialogOpen={isNewTaskModalOpen}
                     onOpenChange={setIsNewTaskModalOpen}
-                    minHeight="sm"
-                    minWidth='sm'
+                    minHeight="no-min"
+                    minWidth='md'
                     dialogContent={
                         <NewTaskModal assignment_uuid={assignment_uuid} closeModal={setIsNewTaskModalOpen} />
                     }
@@ -54,6 +54,7 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                         {task.assignment_type === 'QUIZ' && <ListTodo size={15} />}
                                         {task.assignment_type === 'FILE_SUBMISSION' && <FileUp size={15} />}
                                         {task.assignment_type === 'FORM' && <Type size={15} />}
+                                        {task.assignment_type === 'CODE' && <Code2 size={15} />}
                                     </div>
                                     <div className='font-semibold text-sm'>{task.title}</div>
                                 </div>

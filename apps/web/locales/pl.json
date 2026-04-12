@@ -907,6 +907,7 @@
     "quiz": "Quiz",
     "file_submission": "Przesłanie pliku",
     "form": "Formularz",
+    "code": "Code",
     "interactive": "Interaktywny",
     "activities": "Aktywności",
     "current_activity": "Bieżąca aktywność",
@@ -965,6 +966,7 @@
     "points": "punkty/punktów",
     "current_points": "Aktualne punkty: {{points}}",
     "grade": "Ocena",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Termin oddania"
   },
   "certificate": {
@@ -3158,6 +3160,10 @@
           "form": {
             "title": "Formularz",
             "description": "Formularz do wypełnienia dla uczniów"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3208,10 +3214,12 @@
         "actions": {
           "reject": "Odrzuć zadanie",
           "set_final_grade": "Ustaw ocenę końcową",
-          "mark_as_done": "Oznacz aktywność użytkownika jako ukończoną"
+          "mark_as_done": "Oznacz aktywność użytkownika jako ukończoną",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Zadanie zostało pomyślnie odrzucone"
+          "reject_success": "Zadanie zostało pomyślnie odrzucone",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

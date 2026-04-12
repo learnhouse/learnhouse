@@ -1136,6 +1136,7 @@
     "quiz": "Quiz",
     "file_submission": "File Submission",
     "form": "Form",
+    "code": "Code",
     "interactive": "Interactive",
     "activities": "Activities",
     "current_activity": "Current Activity",
@@ -1200,6 +1201,7 @@
     "points": "points",
     "current_points": "Current points: {{points}}",
     "grade": "Grade",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Due Date"
   },
   "certificate": {
@@ -3387,6 +3389,10 @@
           "form": {
             "title": "Form",
             "description": "Fill-in-the-blank forms for students"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3425,6 +3431,22 @@
           "submitted": "Submitted",
           "graded": "Graded"
         },
+        "filters": {
+          "all": "All"
+        },
+        "sort": {
+          "label": "Sort",
+          "date": "Date",
+          "name": "Name",
+          "status": "Status"
+        },
+        "stats": {
+          "total": "Total"
+        },
+        "search_placeholder": "Search by name or email...",
+        "loading": "Loading submissions...",
+        "empty": "No submissions found",
+        "grade_label": "Grade:",
         "submission_label": "Submission",
         "evaluate": "Evaluate",
         "evaluate_modal": {
@@ -3437,10 +3459,12 @@
         "actions": {
           "reject": "Reject Assignment",
           "set_final_grade": "Set final grade",
-          "mark_as_done": "Mark Activity as Done for User"
+          "mark_as_done": "Mark Activity as Done for User",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Assignment rejected successfully"
+          "reject_success": "Assignment rejected successfully",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

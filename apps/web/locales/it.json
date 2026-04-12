@@ -884,6 +884,7 @@
     "quiz": "Quiz",
     "file_submission": "Invio file",
     "form": "Modulo",
+    "code": "Code",
     "interactive": "Interattivo",
     "activities": "Attività",
     "current_activity": "Attività attuale",
@@ -942,6 +943,7 @@
     "points": "punti",
     "current_points": "Punti attuali: {{points}}",
     "grade": "Voto",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Data di scadenza"
   },
   "certificate": {
@@ -3133,6 +3135,10 @@
           "form": {
             "title": "Modulo",
             "description": "Moduli da compilare per gli studenti"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3183,10 +3189,12 @@
         "actions": {
           "reject": "Rifiuta compito",
           "set_final_grade": "Imposta voto finale",
-          "mark_as_done": "Segna attività come completata per l'utente"
+          "mark_as_done": "Segna attività come completata per l'utente",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Compito rifiutato con successo"
+          "reject_success": "Compito rifiutato con successo",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

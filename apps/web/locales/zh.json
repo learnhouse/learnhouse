@@ -894,6 +894,7 @@
     "quiz": "测验",
     "file_submission": "文件提交",
     "form": "表单",
+    "code": "Code",
     "interactive": "互动",
     "activities": "活动",
     "current_activity": "当前活动",
@@ -952,6 +953,7 @@
     "points": "分",
     "current_points": "当前分数：{{points}}",
     "grade": "成绩",
+    "run_autograde": "Run Auto-grade",
     "due_date": "截止日期"
   },
   "certificate": {
@@ -3145,6 +3147,10 @@
           "form": {
             "title": "表单",
             "description": "供学生填写的问卷"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3195,10 +3201,12 @@
         "actions": {
           "reject": "拒绝作业",
           "set_final_grade": "设置最终成绩",
-          "mark_as_done": "将此活动标记为用户已完成"
+          "mark_as_done": "将此活动标记为用户已完成",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "作业拒绝成功"
+          "reject_success": "作业拒绝成功",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

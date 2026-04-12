@@ -2,7 +2,7 @@ import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/Ass
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getAPIUrl } from '@services/config/config';
 import { createAssignmentTask } from '@services/courses/assignments'
-import { AArrowUp, FileUp, ListTodo } from 'lucide-react'
+import { AArrowUp, Code2, FileUp, ListTodo } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
@@ -47,33 +47,42 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
 
 
   return (
-    <div className='flex space-x-6 mx-auto justify-center items-center'>
+    <div className='flex flex-wrap gap-8 mx-auto justify-center items-start py-6'>
       <div
         onClick={() => createTask('QUIZ')}
-        className='flex flex-col space-y-2 justify-center  text-center pt-10'>
+        className='flex flex-col space-y-2 justify-center text-center'>
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <ListTodo size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.quiz.title')}</p>
-        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.quiz.description')}</p>
+        <p className='text-lg text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.quiz.title')}</p>
+        <p className='text-xs text-gray-400 w-36 mx-auto leading-relaxed'>{t('dashboard.assignments.editor.task_types.quiz.description')}</p>
       </div>
       <div
         onClick={() => createTask('FILE_SUBMISSION')}
-        className='flex flex-col space-y-2 justify-center  text-center pt-10'>
+        className='flex flex-col space-y-2 justify-center text-center'>
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <FileUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.file_submission.title')}</p>
-        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.file_submission.description')}</p>
+        <p className='text-lg text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.file_submission.title')}</p>
+        <p className='text-xs text-gray-400 w-36 mx-auto leading-relaxed'>{t('dashboard.assignments.editor.task_types.file_submission.description')}</p>
       </div>
       <div
         onClick={() => createTask('FORM')}
-        className='flex flex-col space-y-2 justify-center  text-center pt-10'>
+        className='flex flex-col space-y-2 justify-center text-center'>
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <AArrowUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.form.title')}</p>
-        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.form.description')}</p>
+        <p className='text-lg text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.form.title')}</p>
+        <p className='text-xs text-gray-400 w-36 mx-auto leading-relaxed'>{t('dashboard.assignments.editor.task_types.form.description')}</p>
+      </div>
+      <div
+        onClick={() => createTask('CODE')}
+        className='flex flex-col space-y-2 justify-center text-center'>
+        <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
+          <Code2 size={30} />
+        </div>
+        <p className='text-lg text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.code.title')}</p>
+        <p className='text-xs text-gray-400 w-36 mx-auto leading-relaxed'>{t('dashboard.assignments.editor.task_types.code.description')}</p>
       </div>
     </div>
   )

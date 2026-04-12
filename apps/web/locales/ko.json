@@ -894,6 +894,7 @@
     "quiz": "퀴즈",
     "file_submission": "파일 제출",
     "form": "폼",
+    "code": "Code",
     "interactive": "인터랙티브",
     "activities": "활동",
     "current_activity": "현재 활동",
@@ -952,6 +953,7 @@
     "points": "점수",
     "current_points": "현재 점수: {{points}}",
     "grade": "성적",
+    "run_autograde": "Run Auto-grade",
     "due_date": "제출 기한"
   },
   "certificate": {
@@ -3145,6 +3147,10 @@
           "form": {
             "title": "폼",
             "description": "학생들을 위한 빈칸 채우기 양식"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3195,10 +3201,12 @@
         "actions": {
           "reject": "과제 반려",
           "set_final_grade": "최종 성적 설정",
-          "mark_as_done": "사용자의 활동을 완료로 표시"
+          "mark_as_done": "사용자의 활동을 완료로 표시",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "과제가 성공적으로 반려되었습니다"
+          "reject_success": "과제가 성공적으로 반려되었습니다",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {
