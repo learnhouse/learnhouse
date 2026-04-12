@@ -1,6 +1,5 @@
 import logging
 
-import pytest
 
 from src.services.webhooks.events import WEBHOOK_EVENTS, validate_event_data
 
