@@ -44,6 +44,16 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
 
+    // Anti-paste guard for student inputs. Only active when the teacher
+    // enabled anti_copy_paste on the assignment AND we're in the student view.
+    const antiPasteEnabled =
+        view === 'student' && !!assignment?.assignment_object?.anti_copy_paste;
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        if (!antiPasteEnabled) return;
+        e.preventDefault();
+        toast.error(t('dashboard.assignments.editor.task_editor.general.paste_blocked'));
+    };
+
     /* TEACHER VIEW CODE */
     const [questions, setQuestions] = useState<FormSchema[]>(
         view === 'teacher' ? [
@@ -491,6 +501,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                         )?.answer || ''}
                                                         onChange={(e) => handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
                                                         onBlur={(e) => handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                                        onPaste={handlePaste}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
                                                         className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"

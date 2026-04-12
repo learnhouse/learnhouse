@@ -954,7 +954,8 @@
     "current_points": "現在の点数: {{points}}",
     "grade": "評価",
     "run_autograde": "Run Auto-grade",
-    "due_date": "提出期限"
+    "due_date": "提出期限",
+    "task_breakdown": "タスクの内訳"
   },
   "certificate": {
     "certificate": "修了証",
@@ -3124,6 +3125,11 @@
             "update_success": "課題が正常に更新されました",
             "update_error": "課題の更新中にエラーが発生しました。後でももう一度お試しください。"
           }
+        },
+        "title_prefix": "課題:",
+        "header_badges": {
+          "auto_grading": "自動採点",
+          "anti_copy_paste": "ペースト禁止"
         }
       },
       "editor": {
@@ -3149,6 +3155,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "短答",
+            "description": "学生がテキスト回答を入力し、承認済みの回答と比較されます"
+          },
+          "number_answer": {
+            "title": "数値回答",
+            "description": "学生が数値を入力し、許容範囲で採点されます"
           }
         },
         "toasts": {
@@ -3166,8 +3180,6 @@
             "hint": "ヒント",
             "reference_file": "参考ファイル",
             "reference_file_info": "対応形式: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "最大評価値",
-            "max_grade_error": "値は20から100の間である必要があります",
             "submit": "送信",
             "download": "ダウンロード",
             "change_reference_file": "参考ファイルを変更",
@@ -3177,7 +3189,66 @@
             "sign_in_required": "ファイルをアップロードするにはサインインしてください",
             "auth_required": "認証が必要です。ファイルをアップロードするにはサインインしてください。",
             "auth_required_submit": "認証が必要です。タスクを提出するにはサインインしてください。",
-            "hint_optional": "ヒント（任意）"
+            "hint_optional": "ヒント（任意）",
+            "paste_blocked": "この課題ではペーストが無効です",
+            "paste_blocked_hint": "ペーストは無効です — 直接答えを入力してください。"
+          },
+          "code": {
+            "student_behavior_label": "学生の動作",
+            "allow_student_run_label": "学生がコードを実行できるようにする",
+            "allow_student_run_description": "学生ビューにテスト実行ボタンを表示し、提出前にコードを試せるようにします。",
+            "show_test_details_label": "失敗時に期待と実際を表示",
+            "show_test_details_description": "表示されているテストが失敗したとき、期待される出力と受け取った出力を表示します。",
+            "show_hidden_count_label": "非表示テスト数を表示",
+            "show_hidden_count_description": "非表示テストの数を学生に示すバッジを表示します。",
+            "require_passing_label": "表示テストの合格を要求",
+            "require_passing_description": "すべての表示テストが合格するまで保存ボタンをブロックします。",
+            "must_pass_toast": "保存する前にすべての表示テストに合格する必要があります。",
+            "must_pass_hint": "保存する前にすべての表示テストが合格する必要があります。",
+            "show_solution_label": "提出後に解答を表示",
+            "show_solution_description": "学生が作業を保存した後、教師の参照解答を表示します。",
+            "reference_solution_label": "参照解答"
+          },
+          "short_answer": {
+            "prompt_label": "問題の文",
+            "prompt_placeholder": "モロッコの首都は？",
+            "answers_label": "承認済みの回答",
+            "answer_placeholder": "ラバト",
+            "add_answer": "別の回答を追加",
+            "no_answers_error": "保存前に少なくとも1つの承認済み回答を追加してください",
+            "match_mode_label": "回答の照合方法",
+            "match_modes": {
+              "exact": "完全一致",
+              "case_insensitive": "大文字小文字を区別しない（推奨）",
+              "contains": "回答が含まれる",
+              "regex": "正規表現"
+            },
+            "explanation_label": "説明（正解時に表示）",
+            "explanation_placeholder": "任意 — 正解の理由を説明",
+            "your_answer_placeholder": "回答を入力...",
+            "student_answer_label": "学生の回答",
+            "accepted_answers_label": "承認済みの回答",
+            "no_answer": "回答なし",
+            "correct": "正解",
+            "incorrect": "惜しい — もう一度試してください"
+          },
+          "number_answer": {
+            "prompt_label": "問題の文",
+            "prompt_placeholder": "地球上の重力加速度は？",
+            "correct_value_label": "正解値",
+            "tolerance_label": "許容範囲 (±)",
+            "unit_label": "単位（任意）",
+            "unit_placeholder": "m/s²、kg、°C...",
+            "unit_hint": "回答欄の横に表示されます。強制されません。",
+            "explanation_label": "説明（正解時に表示）",
+            "explanation_placeholder": "任意 — 解き方を説明",
+            "preview_label": "受け付け",
+            "your_answer_placeholder": "数値を入力...",
+            "student_answer_label": "学生の回答",
+            "accepted_range_label": "受付範囲",
+            "no_answer": "回答なし",
+            "correct": "正解",
+            "incorrect": "惜しい — もう一度試してください"
           }
         }
       },
@@ -3200,11 +3271,46 @@
           "reject": "課題を却下",
           "set_final_grade": "最終評価を設定",
           "mark_as_done": "ユーザーのアクティビティを完了にする",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "提出物を削除し、学生に再提出を許可します",
+          "set_final_grade_description": "アクティビティを完了せずに成績を計算して保存します",
+          "finalize_description": "最終成績を設定し、学生のアクティビティを完了としてマークします"
         },
         "toasts": {
           "reject_success": "課題を正常に却下しました",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "すべて"
+        },
+        "sort": {
+          "label": "並べ替え",
+          "date": "提出日",
+          "name": "学生名",
+          "status": "ステータス",
+          "grade": "成績",
+          "needs_grading": "採点が必要なもの先",
+          "late_first": "遅れた提出先",
+          "recently_graded": "最近採点されたもの先"
+        },
+        "stats": {
+          "total": "合計"
+        },
+        "search_placeholder": "名前またはメールで検索...",
+        "loading": "提出物を読み込み中...",
+        "empty": "提出物が見つかりません",
+        "grade_label": "成績：",
+        "preview": {
+          "current_grade": "現在の成績",
+          "passing": "合格",
+          "not_passing": "不合格",
+          "not_submitted": "未提出"
+        },
+        "feedback": {
+          "label": "総合フィードバック",
+          "optional": "任意",
+          "placeholder": "提出物全体についてコメントを書いてください。学生は成績の横で確認できます。",
+          "hint": "空欄にすると、以前のフィードバックは変更されずに保持されます。"
         }
       },
       "modals": {
@@ -3223,11 +3329,28 @@
             "grading_types": {
               "alphabet": "アルファベット",
               "numeric": "数値",
-              "percentage": "パーセンテージ"
+              "percentage": "パーセンテージ",
+              "pass_fail": "合格 / 不合格",
+              "gpa_scale": "GPAスケール"
             },
             "cancel": "キャンセル",
             "save": "変更を保存",
-            "saving": "保存中..."
+            "saving": "保存中...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F の文字成績",
+              "numeric": "0から100のスコア",
+              "percentage": "パーセンテージでの成績",
+              "pass_fail": "シンプルな合否判定",
+              "gpa_scale": "4.0段階評価"
+            },
+            "grading_options_label": "採点オプション",
+            "auto_grading_label": "自動採点",
+            "auto_grading_description": "学生が提出したときに自動的にアクティビティを採点して完了します。すべてのタスクが人間のレビューなしで採点できる場合にのみ機能します。",
+            "anti_copy_paste_label": "コピー＆ペーストをブロック",
+            "anti_copy_paste_description": "ペーストイベントをブロックしてAI生成の回答の貼り付けを抑制します。注：これは抑止力です。",
+            "auto_grading_disabled_file": "自動採点は利用できません — この課題には人間のレビューが必要なファイル提出タスクがあります。",
+            "grading_type_hint": "成績の学生への表示方法",
+            "grading_options_hint": "提出時の動作"
           },
           "toasts": {
             "updating": "課題を更新中...",
@@ -3249,9 +3372,25 @@
             "grading_types": {
               "alphabet": "アルファベット",
               "numeric": "数値",
-              "percentage": "パーセンテージ"
+              "percentage": "パーセンテージ",
+              "pass_fail": "合格 / 不合格",
+              "gpa_scale": "GPAスケール"
             },
-            "submit": "アクティビティを作成"
+            "submit": "アクティビティを作成",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F の文字成績",
+              "numeric": "0から100のスコア",
+              "percentage": "パーセンテージでの成績",
+              "pass_fail": "シンプルな合否判定",
+              "gpa_scale": "4.0段階評価"
+            },
+            "grading_options_label": "採点オプション",
+            "auto_grading_label": "自動採点",
+            "auto_grading_description": "学生が提出したときに自動的にアクティビティを採点して完了します。すべてのタスクが人間のレビューなしで採点できる場合にのみ機能します。",
+            "anti_copy_paste_label": "コピー＆ペーストをブロック",
+            "anti_copy_paste_description": "ペーストイベントをブロックしてAI生成の回答の貼り付けを抑制します。注：これは抑止力です。",
+            "grading_type_hint": "成績の学生への表示方法",
+            "grading_options_hint": "提出時の動作"
           },
           "toasts": {
             "creating": "課題を作成中...",

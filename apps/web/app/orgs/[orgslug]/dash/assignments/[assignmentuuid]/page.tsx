@@ -1,6 +1,23 @@
 'use client';
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, Pencil, UserRoundPen, Backpack } from 'lucide-react'
+import {
+    ALargeSmall,
+    BookOpen,
+    BookX,
+    EllipsisVertical,
+    Eye,
+    GraduationCap,
+    Hash,
+    Layers2,
+    Monitor,
+    Pencil,
+    Percent,
+    Shield,
+    ThumbsUp,
+    UserRoundPen,
+    Backpack,
+    Zap,
+} from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
@@ -49,8 +66,9 @@ function AssignmentEdit() {
                         <div className="pl-10 mr-10 tracking-tighter">
                             <BrdCmpx />
                             <div className="w-100 flex justify-between">
-                                <div className="flex font-bold text-2xl">
+                                <div className="flex flex-col space-y-2">
                                     <AssignmentTitle />
+                                    <AssignmentInfoBadges />
                                 </div>
                             </div>
                         </div>
@@ -201,7 +219,10 @@ function PublishingState() {
                 <EditAssignmentModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
-                    assignment={assignment?.assignment_object}
+                    assignment={{
+                        ...assignment?.assignment_object,
+                        assignment_tasks: assignment?.assignment_tasks,
+                    }}
                     accessToken={access_token}
                 />
             )}
@@ -212,10 +233,56 @@ function PublishingState() {
 function AssignmentTitle() {
     const { t } = useTranslation()
     const assignment = useAssignments() as any;
-    
+    const name = assignment?.assignment_object?.title;
+
     return (
-        <div className="flex items-center gap-2">
-            {t('dashboard.assignments.detail.title')}
+        <div className="flex items-baseline gap-2 font-bold text-2xl">
+            <span className="text-gray-400">{t('dashboard.assignments.detail.title_prefix')}</span>
+            <span className="text-gray-900 truncate max-w-[500px]">{name || '...'}</span>
+        </div>
+    );
+}
+
+// Map grading_type enum value → {icon, label key, color classes}. Keeping this
+// inline (instead of importing from the modal) to avoid cross-module coupling
+// for a tiny lookup table.
+const GRADING_TYPE_DISPLAY: Record<string, { icon: React.ReactNode; labelKey: string; color: string }> = {
+    ALPHABET: { icon: <ALargeSmall size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.alphabet', color: 'text-violet-700 bg-violet-50' },
+    NUMERIC: { icon: <Hash size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.numeric', color: 'text-blue-700 bg-blue-50' },
+    PERCENTAGE: { icon: <Percent size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.percentage', color: 'text-emerald-700 bg-emerald-50' },
+    PASS_FAIL: { icon: <ThumbsUp size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.pass_fail', color: 'text-amber-700 bg-amber-50' },
+    GPA_SCALE: { icon: <GraduationCap size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.gpa_scale', color: 'text-rose-700 bg-rose-50' },
+};
+
+function AssignmentInfoBadges() {
+    const { t } = useTranslation();
+    const assignment = useAssignments() as any;
+    const obj = assignment?.assignment_object;
+    if (!obj) return null;
+
+    const gradingType = obj.grading_type as string | undefined;
+    const gradingDisplay = gradingType ? GRADING_TYPE_DISPLAY[gradingType] : null;
+
+    return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+            {gradingDisplay && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full nice-shadow text-xs font-semibold ${gradingDisplay.color}`}>
+                    {gradingDisplay.icon}
+                    <span>{t(gradingDisplay.labelKey)}</span>
+                </div>
+            )}
+            {obj.auto_grading && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full nice-shadow text-xs font-semibold text-amber-700 bg-amber-50">
+                    <Zap size={13} />
+                    <span>{t('dashboard.assignments.detail.header_badges.auto_grading')}</span>
+                </div>
+            )}
+            {obj.anti_copy_paste && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full nice-shadow text-xs font-semibold text-cyan-700 bg-cyan-50">
+                    <Shield size={13} />
+                    <span>{t('dashboard.assignments.detail.header_badges.anti_copy_paste')}</span>
+                </div>
+            )}
         </div>
     );
 }

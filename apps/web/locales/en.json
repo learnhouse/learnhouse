@@ -1192,6 +1192,7 @@
     "submit_for_grading": "Submit for grading",
     "grading_in_progress": "Grading in progress",
     "graded": "Graded",
+    "task_breakdown": "Task breakdown",
     "assignment_submitted_success": "Assignment submitted for grading",
     "failed_submit_assignment": "Failed to submit assignment for grading",
     "assignment_description": "Assignment Description",
@@ -3343,6 +3344,11 @@
       },
       "detail": {
         "title": "Assignment Tools",
+        "title_prefix": "Assignment :",
+        "header_badges": {
+          "auto_grading": "Auto-graded",
+          "anti_copy_paste": "Paste blocked"
+        },
         "tabs": {
           "editor": "Editor",
           "submissions": "Submissions"
@@ -3393,6 +3399,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Short answer",
+            "description": "Students type a text answer graded against your accepted answers"
+          },
+          "number_answer": {
+            "title": "Number answer",
+            "description": "Students enter a number graded with tolerance"
           }
         },
         "toasts": {
@@ -3410,8 +3424,6 @@
             "hint": "Hint",
             "reference_file": "Reference file",
             "reference_file_info": "Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Max Grade Value",
-            "max_grade_error": "Value should be between 20 and 100",
             "submit": "Submit",
             "download": "Download",
             "change_reference_file": "Change Reference File",
@@ -3421,7 +3433,66 @@
             "sign_in_required": "Please sign in to upload files",
             "auth_required": "Authentication required. Please sign in to upload files.",
             "auth_required_submit": "Authentication required. Please sign in to submit your task.",
-            "hint_optional": "Hint (optional)"
+            "hint_optional": "Hint (optional)",
+            "paste_blocked": "Pasting is disabled for this assignment",
+            "paste_blocked_hint": "Pasting is disabled — type your answer directly."
+          },
+          "short_answer": {
+            "prompt_label": "Question prompt",
+            "prompt_placeholder": "What is the capital of Morocco?",
+            "answers_label": "Accepted answers",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Add another answer",
+            "no_answers_error": "Add at least one accepted answer before saving",
+            "match_mode_label": "How to match answers",
+            "match_modes": {
+              "exact": "Exact match",
+              "case_insensitive": "Case insensitive (recommended)",
+              "contains": "Contains the answer anywhere",
+              "regex": "Regular expression"
+            },
+            "explanation_label": "Explanation (shown on correct answer)",
+            "explanation_placeholder": "Optional — explain why the answer is correct",
+            "your_answer_placeholder": "Type your answer...",
+            "student_answer_label": "Student's answer",
+            "accepted_answers_label": "Accepted answers",
+            "no_answer": "No answer submitted",
+            "correct": "Correct",
+            "incorrect": "Not quite — try again"
+          },
+          "number_answer": {
+            "prompt_label": "Question prompt",
+            "prompt_placeholder": "What is the acceleration due to gravity on Earth?",
+            "correct_value_label": "Correct value",
+            "tolerance_label": "Tolerance (±)",
+            "unit_label": "Unit (optional)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Shown next to the answer field. Not enforced — students only type numbers.",
+            "explanation_label": "Explanation (shown on correct answer)",
+            "explanation_placeholder": "Optional — explain how to arrive at the answer",
+            "preview_label": "Accepts",
+            "your_answer_placeholder": "Enter a number...",
+            "student_answer_label": "Student's answer",
+            "accepted_range_label": "Accepted range",
+            "no_answer": "No answer submitted",
+            "correct": "Correct",
+            "incorrect": "Not quite — try again"
+          },
+          "code": {
+            "student_behavior_label": "Student behavior",
+            "allow_student_run_label": "Let students run their code",
+            "allow_student_run_description": "Show the Run Tests button in the student view so they can try their code before submitting.",
+            "show_test_details_label": "Show expected vs actual on failures",
+            "show_test_details_description": "When a visible test fails, reveal the expected and received output. Turn off to prevent students from reverse-engineering the answer.",
+            "show_hidden_count_label": "Show hidden test count",
+            "show_hidden_count_description": "Display a badge telling students how many hidden tests exist. Turn off to keep even the count secret.",
+            "require_passing_label": "Require passing visible tests",
+            "require_passing_description": "Block the save button until every visible test passes. Useful for \"must compile\" gating.",
+            "must_pass_toast": "You need to pass all visible tests before saving.",
+            "must_pass_hint": "All visible tests must pass before you can save.",
+            "show_solution_label": "Reveal solution after submit",
+            "show_solution_description": "Once the student has saved their work, show the teacher's reference solution as a collapsible panel.",
+            "reference_solution_label": "Reference solution"
           }
         }
       },
@@ -3436,12 +3507,28 @@
         },
         "sort": {
           "label": "Sort",
-          "date": "Date",
-          "name": "Name",
-          "status": "Status"
+          "date": "Date submitted",
+          "name": "Student name",
+          "status": "Status",
+          "grade": "Grade",
+          "needs_grading": "Needs grading first",
+          "late_first": "Late submissions first",
+          "recently_graded": "Recently graded first"
         },
         "stats": {
           "total": "Total"
+        },
+        "preview": {
+          "current_grade": "Current grade",
+          "passing": "Passing",
+          "not_passing": "Not passing",
+          "not_submitted": "Not submitted"
+        },
+        "feedback": {
+          "label": "Overall feedback",
+          "optional": "optional",
+          "placeholder": "Write a comment about the overall submission. The student will see this next to their grade.",
+          "hint": "Leave this empty to keep any previous feedback unchanged."
         },
         "search_placeholder": "Search by name or email...",
         "loading": "Loading submissions...",
@@ -3458,9 +3545,12 @@
         "reference_document": "Reference Document",
         "actions": {
           "reject": "Reject Assignment",
+          "reject_description": "Deletes the submission and lets the student resubmit",
           "set_final_grade": "Set final grade",
+          "set_final_grade_description": "Calculates and saves the grade without completing the activity",
           "mark_as_done": "Mark Activity as Done for User",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "finalize_description": "Sets the final grade and marks the activity as done for the student"
         },
         "toasts": {
           "reject_success": "Assignment rejected successfully",
@@ -3479,12 +3569,29 @@
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
             "grading_type_label": "Grading Type",
+            "grading_type_hint": "How grades are displayed to students",
             "grading_type_required": "Please provide a grading type for your assignment",
             "grading_types": {
               "alphabet": "Alphabet",
               "numeric": "Numeric",
-              "percentage": "Percentage"
+              "percentage": "Percentage",
+              "pass_fail": "Pass / Fail",
+              "gpa_scale": "GPA Scale"
             },
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F letter grades",
+              "numeric": "Score from 0 to 100",
+              "percentage": "Grade as a percentage",
+              "pass_fail": "Simple pass or fail",
+              "gpa_scale": "4.0 grade point scale"
+            },
+            "grading_options_label": "Grading options",
+            "grading_options_hint": "Behavior on submission",
+            "auto_grading_label": "Automatic grading",
+            "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human (quizzes, forms, code).",
+            "auto_grading_disabled_file": "Automatic grading is unavailable because this assignment has a file submission task that needs human review.",
+            "anti_copy_paste_label": "Block copy & paste",
+            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent — tech-savvy students can bypass it.",
             "cancel": "Cancel",
             "save": "Save Changes",
             "saving": "Saving..."
@@ -3505,12 +3612,28 @@
             "due_date_label": "Due Date",
             "due_date_required": "Please provide a due date for your assignment",
             "grading_type_label": "Grading Type",
+            "grading_type_hint": "How grades are displayed to students",
             "grading_type_required": "Please provide a grading type for your assignment",
             "grading_types": {
               "alphabet": "Alphabet",
               "numeric": "Numeric",
-              "percentage": "Percentage"
+              "percentage": "Percentage",
+              "pass_fail": "Pass / Fail",
+              "gpa_scale": "GPA Scale"
             },
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F letter grades",
+              "numeric": "Score from 0 to 100",
+              "percentage": "Grade as a percentage",
+              "pass_fail": "Simple pass or fail",
+              "gpa_scale": "4.0 grade point scale"
+            },
+            "grading_options_label": "Grading options",
+            "grading_options_hint": "Behavior on submission",
+            "auto_grading_label": "Automatic grading",
+            "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human.",
+            "anti_copy_paste_label": "Block copy & paste",
+            "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent — it can be bypassed.",
             "submit": "Create activity"
           },
           "toasts": {

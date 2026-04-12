@@ -1,6 +1,6 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
-import { Code2, FileUp, ListTodo, PanelLeftOpen, Plus, Type } from 'lucide-react';
+import { Code2, FileUp, Hash, ListTodo, PanelLeftOpen, Pencil, Plus, Type } from 'lucide-react';
 import React, { useEffect } from 'react'
 import NewTaskModal from './Modals/NewTaskModal';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
@@ -55,6 +55,8 @@ function AssignmentTasks({ assignment_uuid }: any) {
                                         {task.assignment_type === 'FILE_SUBMISSION' && <FileUp size={15} />}
                                         {task.assignment_type === 'FORM' && <Type size={15} />}
                                         {task.assignment_type === 'CODE' && <Code2 size={15} />}
+                                        {task.assignment_type === 'SHORT_ANSWER' && <Pencil size={15} />}
+                                        {task.assignment_type === 'NUMBER_ANSWER' && <Hash size={15} />}
                                     </div>
                                     <div className='font-semibold text-sm'>{task.title}</div>
                                 </div>

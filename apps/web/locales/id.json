@@ -967,7 +967,8 @@
     "current_points": "Poin saat ini: {{points}}",
     "grade": "Nilai",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Tenggat Waktu"
+    "due_date": "Tenggat Waktu",
+    "task_breakdown": "Rincian tugas"
   },
   "certificate": {
     "certificate": "Sertifikat",
@@ -3137,6 +3138,11 @@
             "update_success": "Tugas telah berhasil diperbarui",
             "update_error": "Kesalahan memperbarui tugas, silakan coba lagi nanti."
           }
+        },
+        "title_prefix": "Tugas:",
+        "header_badges": {
+          "auto_grading": "Nilai otomatis",
+          "anti_copy_paste": "Tempel diblokir"
         }
       },
       "editor": {
@@ -3162,6 +3168,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Jawaban singkat",
+            "description": "Siswa mengetik jawaban teks yang dinilai terhadap jawaban yang diterima"
+          },
+          "number_answer": {
+            "title": "Jawaban angka",
+            "description": "Siswa memasukkan angka yang dinilai dengan toleransi"
           }
         },
         "toasts": {
@@ -3179,8 +3193,6 @@
             "hint": "Petunjuk",
             "reference_file": "File referensi",
             "reference_file_info": "Format yang diizinkan: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Nilai Maksimal",
-            "max_grade_error": "Nilai harus antara 20 dan 100",
             "submit": "Kirim",
             "download": "Unduh",
             "change_reference_file": "Ubah File Referensi",
@@ -3190,7 +3202,66 @@
             "sign_in_required": "Silakan masuk untuk mengunggah file",
             "auth_required": "Autentikasi diperlukan. Silakan masuk untuk mengunggah file.",
             "auth_required_submit": "Autentikasi diperlukan. Silakan masuk untuk mengirimkan tugas Anda.",
-            "hint_optional": "Petunjuk (opsional)"
+            "hint_optional": "Petunjuk (opsional)",
+            "paste_blocked": "Menempel dinonaktifkan untuk tugas ini",
+            "paste_blocked_hint": "Menempel dinonaktifkan — ketik jawaban Anda langsung."
+          },
+          "code": {
+            "student_behavior_label": "Perilaku siswa",
+            "allow_student_run_label": "Izinkan siswa menjalankan kode",
+            "allow_student_run_description": "Tampilkan tombol Jalankan Tes di tampilan siswa agar mereka dapat mencoba kode sebelum mengirim.",
+            "show_test_details_label": "Tampilkan diharapkan vs aktual pada kegagalan",
+            "show_test_details_description": "Ketika tes visible gagal, tampilkan output yang diharapkan dan diterima.",
+            "show_hidden_count_label": "Tampilkan jumlah tes tersembunyi",
+            "show_hidden_count_description": "Tampilkan lencana yang memberi tahu siswa berapa banyak tes tersembunyi yang ada.",
+            "require_passing_label": "Wajib lulus tes visible",
+            "require_passing_description": "Blokir tombol simpan sampai semua tes visible lulus.",
+            "must_pass_toast": "Anda harus lulus semua tes visible sebelum menyimpan.",
+            "must_pass_hint": "Semua tes visible harus lulus sebelum menyimpan.",
+            "show_solution_label": "Ungkapkan solusi setelah kirim",
+            "show_solution_description": "Setelah siswa menyimpan pekerjaannya, tampilkan solusi referensi guru.",
+            "reference_solution_label": "Solusi referensi"
+          },
+          "short_answer": {
+            "prompt_label": "Teks pertanyaan",
+            "prompt_placeholder": "Apa ibu kota Maroko?",
+            "answers_label": "Jawaban yang diterima",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Tambah jawaban lain",
+            "no_answers_error": "Tambah setidaknya satu jawaban yang diterima sebelum menyimpan",
+            "match_mode_label": "Cara mencocokkan jawaban",
+            "match_modes": {
+              "exact": "Cocok persis",
+              "case_insensitive": "Tidak peka huruf besar (disarankan)",
+              "contains": "Mengandung jawaban di mana saja",
+              "regex": "Ekspresi reguler"
+            },
+            "explanation_label": "Penjelasan (ditampilkan pada jawaban benar)",
+            "explanation_placeholder": "Opsional — jelaskan mengapa jawabannya benar",
+            "your_answer_placeholder": "Ketik jawaban Anda...",
+            "student_answer_label": "Jawaban siswa",
+            "accepted_answers_label": "Jawaban yang diterima",
+            "no_answer": "Tidak ada jawaban dikirim",
+            "correct": "Benar",
+            "incorrect": "Belum tepat — coba lagi"
+          },
+          "number_answer": {
+            "prompt_label": "Teks pertanyaan",
+            "prompt_placeholder": "Berapa percepatan gravitasi di Bumi?",
+            "correct_value_label": "Nilai benar",
+            "tolerance_label": "Toleransi (±)",
+            "unit_label": "Satuan (opsional)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Ditampilkan di samping kolom jawaban. Tidak diwajibkan.",
+            "explanation_label": "Penjelasan (ditampilkan pada jawaban benar)",
+            "explanation_placeholder": "Opsional — jelaskan cara mendapatkan jawabannya",
+            "preview_label": "Menerima",
+            "your_answer_placeholder": "Masukkan angka...",
+            "student_answer_label": "Jawaban siswa",
+            "accepted_range_label": "Rentang yang diterima",
+            "no_answer": "Tidak ada jawaban dikirim",
+            "correct": "Benar",
+            "incorrect": "Belum tepat — coba lagi"
           }
         }
       },
@@ -3213,11 +3284,46 @@
           "reject": "Tolak Tugas",
           "set_final_grade": "Tetapkan nilai akhir",
           "mark_as_done": "Tandai Aktivitas sebagai Selesai untuk Pengguna",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "Menghapus pengumpulan dan mengizinkan siswa mengumpulkan ulang",
+          "set_final_grade_description": "Menghitung dan menyimpan nilai tanpa menyelesaikan aktivitas",
+          "finalize_description": "Menetapkan nilai akhir dan menandai aktivitas sebagai selesai untuk siswa"
         },
         "toasts": {
           "reject_success": "Tugas berhasil ditolak",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Semua"
+        },
+        "sort": {
+          "label": "Urutkan",
+          "date": "Tanggal pengumpulan",
+          "name": "Nama siswa",
+          "status": "Status",
+          "grade": "Nilai",
+          "needs_grading": "Perlu dinilai dulu",
+          "late_first": "Terlambat dulu",
+          "recently_graded": "Baru dinilai dulu"
+        },
+        "stats": {
+          "total": "Total"
+        },
+        "search_placeholder": "Cari berdasarkan nama atau email...",
+        "loading": "Memuat pengumpulan...",
+        "empty": "Tidak ada pengumpulan ditemukan",
+        "grade_label": "Nilai:",
+        "preview": {
+          "current_grade": "Nilai saat ini",
+          "passing": "Lulus",
+          "not_passing": "Tidak lulus",
+          "not_submitted": "Tidak dikumpulkan"
+        },
+        "feedback": {
+          "label": "Umpan balik keseluruhan",
+          "optional": "opsional",
+          "placeholder": "Tulis komentar tentang keseluruhan pengumpulan. Siswa akan melihatnya di samping nilai mereka.",
+          "hint": "Biarkan kosong untuk mempertahankan umpan balik sebelumnya tanpa perubahan."
         }
       },
       "modals": {
@@ -3236,11 +3342,28 @@
             "grading_types": {
               "alphabet": "Alfabet",
               "numeric": "Numerik",
-              "percentage": "Persentase"
+              "percentage": "Persentase",
+              "pass_fail": "Lulus / Gagal",
+              "gpa_scale": "Skala IPK"
             },
             "cancel": "Batal",
             "save": "Simpan Perubahan",
-            "saving": "Menyimpan..."
+            "saving": "Menyimpan...",
+            "grading_type_descriptions": {
+              "alphabet": "Nilai huruf A, B, C, D, F",
+              "numeric": "Skor dari 0 sampai 100",
+              "percentage": "Nilai sebagai persentase",
+              "pass_fail": "Sederhana lulus atau gagal",
+              "gpa_scale": "Skala poin 4.0"
+            },
+            "grading_options_label": "Opsi penilaian",
+            "auto_grading_label": "Penilaian otomatis",
+            "auto_grading_description": "Nilai dan selesaikan aktivitas secara otomatis saat siswa mengirim. Hanya bekerja ketika setiap tugas dapat dinilai tanpa tinjauan manusia.",
+            "anti_copy_paste_label": "Blokir salin & tempel",
+            "anti_copy_paste_description": "Cegah menempel jawaban buatan AI dengan memblokir event paste. Catatan: ini hanya pencegah.",
+            "auto_grading_disabled_file": "Penilaian otomatis tidak tersedia karena tugas ini memiliki pengumpulan file yang memerlukan tinjauan manusia.",
+            "grading_type_hint": "Bagaimana nilai ditampilkan kepada siswa",
+            "grading_options_hint": "Perilaku saat pengiriman"
           },
           "toasts": {
             "updating": "Memperbarui tugas...",
@@ -3262,9 +3385,25 @@
             "grading_types": {
               "alphabet": "Alfabet",
               "numeric": "Numerik",
-              "percentage": "Persentase"
+              "percentage": "Persentase",
+              "pass_fail": "Lulus / Gagal",
+              "gpa_scale": "Skala IPK"
             },
-            "submit": "Buat aktivitas"
+            "submit": "Buat aktivitas",
+            "grading_type_descriptions": {
+              "alphabet": "Nilai huruf A, B, C, D, F",
+              "numeric": "Skor dari 0 sampai 100",
+              "percentage": "Nilai sebagai persentase",
+              "pass_fail": "Sederhana lulus atau gagal",
+              "gpa_scale": "Skala poin 4.0"
+            },
+            "grading_options_label": "Opsi penilaian",
+            "auto_grading_label": "Penilaian otomatis",
+            "auto_grading_description": "Nilai dan selesaikan aktivitas secara otomatis saat siswa mengirim. Hanya bekerja ketika setiap tugas dapat dinilai tanpa tinjauan manusia.",
+            "anti_copy_paste_label": "Blokir salin & tempel",
+            "anti_copy_paste_description": "Cegah menempel jawaban buatan AI dengan memblokir event paste. Catatan: ini hanya pencegah.",
+            "grading_type_hint": "Bagaimana nilai ditampilkan kepada siswa",
+            "grading_options_hint": "Perilaku saat pengiriman"
           },
           "toasts": {
             "creating": "Membuat tugas...",

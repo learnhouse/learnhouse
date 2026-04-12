@@ -967,7 +967,8 @@
     "current_points": "বর্তমান পয়েন্ট: {{points}}",
     "grade": "গ্রেড",
     "run_autograde": "Run Auto-grade",
-    "due_date": "জমা দেওয়ার শেষ তারিখ"
+    "due_date": "জমা দেওয়ার শেষ তারিখ",
+    "task_breakdown": "কাজের বিবরণ"
   },
   "certificate": {
     "certificate": "শংসাপত্র",
@@ -3137,6 +3138,11 @@
             "update_success": "অ্যাসাইনমেন্ট সফলভাবে আপডেট করা হয়েছে",
             "update_error": "অ্যাসাইনমেন্ট আপডেট করতে ত্রুটি, দয়া করে পরে আবার চেষ্টা করুন।"
           }
+        },
+        "title_prefix": "অ্যাসাইনমেন্ট:",
+        "header_badges": {
+          "auto_grading": "স্বয়ংক্রিয় গ্রেডিং",
+          "anti_copy_paste": "পেস্ট ব্লকড"
         }
       },
       "editor": {
@@ -3162,6 +3168,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "সংক্ষিপ্ত উত্তর",
+            "description": "শিক্ষার্থীরা একটি টেক্সট উত্তর টাইপ করে যা আপনার গৃহীত উত্তরগুলির বিরুদ্ধে গ্রেড করা হয়"
+          },
+          "number_answer": {
+            "title": "সংখ্যা উত্তর",
+            "description": "শিক্ষার্থীরা একটি সংখ্যা প্রবেশ করান যা সহনশীলতার সাথে গ্রেড করা হয়"
           }
         },
         "toasts": {
@@ -3179,8 +3193,6 @@
             "hint": "হিন্ট",
             "reference_file": "রেফারেন্স ফাইল",
             "reference_file_info": "অনুমোদিত ফরম্যাট: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "সর্বোচ্চ গ্রেড ভ্যালু",
-            "max_grade_error": "ভ্যালু ২০ থেকে ১০০ এর মধ্যে হতে হবে",
             "submit": "জমা দিন",
             "download": "ডাউনলোড",
             "change_reference_file": "রেফারেন্স ফাইল পরিবর্তন করুন",
@@ -3190,7 +3202,66 @@
             "sign_in_required": "ফাইল আপলোড করতে দয়া করে সাইন ইন করুন",
             "auth_required": "অথেন্টিকেশন প্রয়োজন। ফাইল আপলোড করতে দয়া করে সাইন ইন করুন।",
             "auth_required_submit": "অথেন্টিকেশন প্রয়োজন। আপনার কাজ জমা দিতে দয়া করে সাইন ইন করুন।",
-            "hint_optional": "হিন্ট (ঐচ্ছিক)"
+            "hint_optional": "হিন্ট (ঐচ্ছিক)",
+            "paste_blocked": "এই অ্যাসাইনমেন্টের জন্য পেস্ট নিষ্ক্রিয়",
+            "paste_blocked_hint": "পেস্ট নিষ্ক্রিয় — আপনার উত্তর সরাসরি টাইপ করুন।"
+          },
+          "code": {
+            "student_behavior_label": "শিক্ষার্থীর আচরণ",
+            "allow_student_run_label": "শিক্ষার্থীদের কোড চালানোর অনুমতি দিন",
+            "allow_student_run_description": "শিক্ষার্থী ভিউতে রান টেস্ট বোতাম দেখান যাতে তারা জমা দেওয়ার আগে তাদের কোড চেষ্টা করতে পারে।",
+            "show_test_details_label": "ব্যর্থতায় প্রত্যাশিত বনাম প্রকৃত দেখান",
+            "show_test_details_description": "যখন একটি দৃশ্যমান পরীক্ষা ব্যর্থ হয়, প্রত্যাশিত এবং প্রাপ্ত আউটপুট প্রকাশ করুন।",
+            "show_hidden_count_label": "লুকানো পরীক্ষার সংখ্যা দেখান",
+            "show_hidden_count_description": "শিক্ষার্থীদের জানাতে একটি ব্যাজ প্রদর্শন করুন কতগুলি লুকানো পরীক্ষা বিদ্যমান।",
+            "require_passing_label": "দৃশ্যমান পরীক্ষায় উত্তীর্ণ হওয়া আবশ্যক",
+            "require_passing_description": "প্রতিটি দৃশ্যমান পরীক্ষায় উত্তীর্ণ না হওয়া পর্যন্ত সংরক্ষণ বোতাম ব্লক করুন।",
+            "must_pass_toast": "সংরক্ষণ করার আগে আপনাকে সমস্ত দৃশ্যমান পরীক্ষায় উত্তীর্ণ হতে হবে।",
+            "must_pass_hint": "সংরক্ষণ করার আগে সমস্ত দৃশ্যমান পরীক্ষায় উত্তীর্ণ হতে হবে।",
+            "show_solution_label": "জমা দেওয়ার পরে সমাধান প্রকাশ করুন",
+            "show_solution_description": "শিক্ষার্থী তার কাজ সংরক্ষণ করার পরে, শিক্ষকের রেফারেন্স সমাধান দেখান।",
+            "reference_solution_label": "রেফারেন্স সমাধান"
+          },
+          "short_answer": {
+            "prompt_label": "প্রশ্নের বিষয়",
+            "prompt_placeholder": "মরক্কোর রাজধানী কী?",
+            "answers_label": "গৃহীত উত্তরসমূহ",
+            "answer_placeholder": "রাবাত",
+            "add_answer": "আরেকটি উত্তর যোগ করুন",
+            "no_answers_error": "সংরক্ষণের আগে কমপক্ষে একটি গৃহীত উত্তর যোগ করুন",
+            "match_mode_label": "উত্তর কীভাবে মিলাতে হবে",
+            "match_modes": {
+              "exact": "সঠিক মিল",
+              "case_insensitive": "কেস-অসংবেদনশীল (প্রস্তাবিত)",
+              "contains": "উত্তর যে কোন জায়গায় আছে",
+              "regex": "রেগুলার এক্সপ্রেশন"
+            },
+            "explanation_label": "ব্যাখ্যা (সঠিক উত্তরে দেখানো হয়)",
+            "explanation_placeholder": "ঐচ্ছিক — কেন উত্তরটি সঠিক তা ব্যাখ্যা করুন",
+            "your_answer_placeholder": "আপনার উত্তর টাইপ করুন...",
+            "student_answer_label": "শিক্ষার্থীর উত্তর",
+            "accepted_answers_label": "গৃহীত উত্তরসমূহ",
+            "no_answer": "কোন উত্তর জমা হয়নি",
+            "correct": "সঠিক",
+            "incorrect": "ঠিক না — আবার চেষ্টা করুন"
+          },
+          "number_answer": {
+            "prompt_label": "প্রশ্নের বিষয়",
+            "prompt_placeholder": "পৃথিবীতে মাধ্যাকর্ষণের কারণে ত্বরণ কত?",
+            "correct_value_label": "সঠিক মান",
+            "tolerance_label": "সহনশীলতা (±)",
+            "unit_label": "একক (ঐচ্ছিক)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "উত্তর ক্ষেত্রের পাশে দেখানো হয়েছে। বাধ্যতামূলক নয়।",
+            "explanation_label": "ব্যাখ্যা (সঠিক উত্তরে দেখানো হয়)",
+            "explanation_placeholder": "ঐচ্ছিক — উত্তরে পৌঁছানোর উপায় ব্যাখ্যা করুন",
+            "preview_label": "গ্রহণ করে",
+            "your_answer_placeholder": "একটি সংখ্যা প্রবেশ করান...",
+            "student_answer_label": "শিক্ষার্থীর উত্তর",
+            "accepted_range_label": "গৃহীত পরিসর",
+            "no_answer": "কোন উত্তর জমা হয়নি",
+            "correct": "সঠিক",
+            "incorrect": "ঠিক না — আবার চেষ্টা করুন"
           }
         }
       },
@@ -3213,11 +3284,46 @@
           "reject": "অ্যাসাইনমেন্ট প্রত্যাখ্যান করুন",
           "set_final_grade": "চূড়ান্ত গ্রেড সেট করুন",
           "mark_as_done": "ব্যবহারকারীর জন্য কার্যক্রম সম্পন্ন হিসেবে চিহ্নিত করুন",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "জমাটি মুছে ফেলে এবং শিক্ষার্থীকে পুনরায় জমা দিতে দেয়",
+          "set_final_grade_description": "কার্যকলাপ সম্পূর্ণ না করে গ্রেড গণনা এবং সংরক্ষণ করে",
+          "finalize_description": "চূড়ান্ত গ্রেড সেট করে এবং শিক্ষার্থীর জন্য কার্যকলাপ সম্পন্ন হিসেবে চিহ্নিত করে"
         },
         "toasts": {
           "reject_success": "অ্যাসাইনমেন্ট সফলভাবে প্রত্যাখ্যান করা হয়েছে",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "সব"
+        },
+        "sort": {
+          "label": "সাজান",
+          "date": "জমা দেওয়ার তারিখ",
+          "name": "শিক্ষার্থীর নাম",
+          "status": "অবস্থা",
+          "grade": "গ্রেড",
+          "needs_grading": "আগে গ্রেডিং প্রয়োজন",
+          "late_first": "দেরিতে জমা প্রথমে",
+          "recently_graded": "সম্প্রতি গ্রেড করা প্রথমে"
+        },
+        "stats": {
+          "total": "মোট"
+        },
+        "search_placeholder": "নাম বা ইমেইল দিয়ে খুঁজুন...",
+        "loading": "জমাগুলি লোড হচ্ছে...",
+        "empty": "কোন জমা পাওয়া যায়নি",
+        "grade_label": "গ্রেড:",
+        "preview": {
+          "current_grade": "বর্তমান গ্রেড",
+          "passing": "পাস",
+          "not_passing": "পাস নয়",
+          "not_submitted": "জমা দেওয়া হয়নি"
+        },
+        "feedback": {
+          "label": "সামগ্রিক প্রতিক্রিয়া",
+          "optional": "ঐচ্ছিক",
+          "placeholder": "সামগ্রিক জমা দেওয়া সম্পর্কে একটি মন্তব্য লিখুন। শিক্ষার্থী এটি তার গ্রেডের পাশে দেখতে পাবে।",
+          "hint": "পূর্ববর্তী প্রতিক্রিয়া অপরিবর্তিত রাখতে এটি খালি রাখুন।"
         }
       },
       "modals": {
@@ -3236,11 +3342,28 @@
             "grading_types": {
               "alphabet": "বর্ণমালা",
               "numeric": "সংখ্যাসূচক",
-              "percentage": "শতকরা"
+              "percentage": "শতকরা",
+              "pass_fail": "পাস / ফেল",
+              "gpa_scale": "GPA স্কেল"
             },
             "cancel": "বাতিল",
             "save": "পরিবর্তনগুলি সংরক্ষণ করুন",
-            "saving": "সংরক্ষণ হচ্ছে..."
+            "saving": "সংরক্ষণ হচ্ছে...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F অক্ষর গ্রেড",
+              "numeric": "0 থেকে 100 স্কোর",
+              "percentage": "শতাংশ হিসেবে গ্রেড",
+              "pass_fail": "সাধারণ পাস বা ফেল",
+              "gpa_scale": "4.0 গ্রেড পয়েন্ট স্কেল"
+            },
+            "grading_options_label": "গ্রেডিং বিকল্প",
+            "auto_grading_label": "স্বয়ংক্রিয় গ্রেডিং",
+            "auto_grading_description": "শিক্ষার্থী জমা দিলে স্বয়ংক্রিয়ভাবে গ্রেড এবং কার্যকলাপ সম্পূর্ণ করুন। শুধুমাত্র যখন প্রতিটি কাজ মানব পর্যালোচনা ছাড়া গ্রেড করা যায়।",
+            "anti_copy_paste_label": "কপি এবং পেস্ট ব্লক",
+            "anti_copy_paste_description": "পেস্ট ইভেন্ট ব্লক করে AI-উৎপন্ন উত্তর পেস্ট নিরুৎসাহিত করুন। নোট: এটি একটি প্রতিবন্ধক।",
+            "auto_grading_disabled_file": "স্বয়ংক্রিয় গ্রেডিং উপলব্ধ নয় কারণ এই অ্যাসাইনমেন্টে একটি ফাইল জমা কাজ রয়েছে যা মানব পর্যালোচনা প্রয়োজন।",
+            "grading_type_hint": "শিক্ষার্থীদের কাছে গ্রেড কীভাবে প্রদর্শিত হয়",
+            "grading_options_hint": "জমা দেওয়ার সময় আচরণ"
           },
           "toasts": {
             "updating": "অ্যাসাইনমেন্ট আপডেট হচ্ছে...",
@@ -3262,9 +3385,25 @@
             "grading_types": {
               "alphabet": "বর্ণমালা",
               "numeric": "সংখ্যাসূচক",
-              "percentage": "শতকরা"
+              "percentage": "শতকরা",
+              "pass_fail": "পাস / ফেল",
+              "gpa_scale": "GPA স্কেল"
             },
-            "submit": "কার্যক্রম তৈরি করুন"
+            "submit": "কার্যক্রম তৈরি করুন",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F অক্ষর গ্রেড",
+              "numeric": "0 থেকে 100 স্কোর",
+              "percentage": "শতাংশ হিসেবে গ্রেড",
+              "pass_fail": "সাধারণ পাস বা ফেল",
+              "gpa_scale": "4.0 গ্রেড পয়েন্ট স্কেল"
+            },
+            "grading_options_label": "গ্রেডিং বিকল্প",
+            "auto_grading_label": "স্বয়ংক্রিয় গ্রেডিং",
+            "auto_grading_description": "শিক্ষার্থী জমা দিলে স্বয়ংক্রিয়ভাবে গ্রেড এবং কার্যকলাপ সম্পূর্ণ করুন। শুধুমাত্র যখন প্রতিটি কাজ মানব পর্যালোচনা ছাড়া গ্রেড করা যায়।",
+            "anti_copy_paste_label": "কপি এবং পেস্ট ব্লক",
+            "anti_copy_paste_description": "পেস্ট ইভেন্ট ব্লক করে AI-উৎপন্ন উত্তর পেস্ট নিরুৎসাহিত করুন। নোট: এটি একটি প্রতিবন্ধক।",
+            "grading_type_hint": "শিক্ষার্থীদের কাছে গ্রেড কীভাবে প্রদর্শিত হয়",
+            "grading_options_hint": "জমা দেওয়ার সময় আচরণ"
           },
           "toasts": {
             "creating": "অ্যাসাইনমেন্ট তৈরি হচ্ছে...",

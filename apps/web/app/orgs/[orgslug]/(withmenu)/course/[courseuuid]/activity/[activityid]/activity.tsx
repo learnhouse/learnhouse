@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, UserRoundPen, Edit2, Maximize2, Minimize2 } from 'lucide-react'
+import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2 } from 'lucide-react'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -1241,7 +1241,21 @@ function AssignmentTools(props: {
   const { t } = useTranslation();
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
-  const [finalGrade, setFinalGrade] = React.useState(null) as any;
+  const [gradeData, setGradeData] = React.useState<any>(null);
+  const [isGradeExpanded, setIsGradeExpanded] = React.useState(false);
+  const gradeCardRef = React.useRef<HTMLDivElement>(null);
+
+  // Close the expanded grade panel when the user clicks outside it.
+  React.useEffect(() => {
+    if (!isGradeExpanded) return;
+    const handler = (e: MouseEvent) => {
+      if (gradeCardRef.current && !gradeCardRef.current.contains(e.target as Node)) {
+        setIsGradeExpanded(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isGradeExpanded]);
 
   const submitForGradingUI = async () => {
     if (props.assignment) {
@@ -1265,41 +1279,13 @@ function AssignmentTools(props: {
       props.assignment?.assignment_uuid,
       session.data?.tokens?.access_token
     );
-
     if (res.success) {
-      const { grade, max_grade, grading_type } = res.data;
-      let displayGrade;
-
-      switch (grading_type) {
-        case 'ALPHABET':
-          displayGrade = convertNumericToAlphabet(grade, max_grade);
-          break;
-        case 'NUMERIC':
-          displayGrade = `${grade}/${max_grade}`;
-          break;
-        case 'PERCENTAGE':
-          const percentage = (grade / max_grade) * 100;
-          displayGrade = `${percentage.toFixed(2)}%`;
-          break;
-        default:
-          displayGrade = 'Unknown grading type';
-      }
-
-      // Use displayGrade here, e.g., update state or display it
-      setFinalGrade(displayGrade);
-    } else {
+      // The backend returns a rich grade object: display_grade, points_summary,
+      // percentage_display, passed, overall_feedback, etc. We just render it —
+      // no client-side math.
+      setGradeData(res.data);
     }
   };
-
-  // Helper function to convert numeric grade to alphabet grade
-  function convertNumericToAlphabet(grade: any, maxGrade: any) {
-    const percentage = (grade / maxGrade) * 100;
-    if (percentage >= 90) return 'A';
-    if (percentage >= 80) return 'B';
-    if (percentage >= 70) return 'C';
-    if (percentage >= 60) return 'D';
-    return 'F';
-  }
 
   useEffect(() => {
     if ( submission && submission.length > 0 && submission[0].submission_status === 'GRADED') {
@@ -1342,16 +1328,106 @@ function AssignmentTools(props: {
   }
 
   if (submission[0].submission_status === 'GRADED') {
+    // Fallback string if the server response hasn't hydrated yet or is old.
+    const displayGrade = gradeData?.display_grade
+      ?? (gradeData ? `${gradeData.grade}/${gradeData.max_grade}` : '...');
+    const pointsSummary = gradeData?.points_summary;
+    const percentageDisplay = gradeData?.percentage_display;
+    const passed = gradeData?.passed;
+    const feedback = gradeData?.overall_feedback;
+    const tasks = gradeData?.tasks as any[] | undefined;
+    const bgClass = passed === false ? 'bg-rose-600' : 'bg-teal-600';
+    const chipBg = passed === false ? 'bg-white text-rose-700' : 'bg-white text-teal-800';
+
     return (
-      <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-        <div className="flex items-center space-x-2">
-          <CheckCircle size={17} />
-          <span className="text-xs flex space-x-2 font-bold items-center">
-            <span>{t('assignments.graded')} </span>
-            <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span>
+      <div ref={gradeCardRef} className="relative">
+        {/* Compact pill — same footprint and alignment as the Next button */}
+        <button
+          type="button"
+          onClick={() => setIsGradeExpanded((v) => !v)}
+          className={`${bgClass} rounded-md px-3 sm:px-4 nice-shadow flex flex-col items-start text-left p-2 sm:p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+        >
+          <span className="text-[10px] font-bold mb-1 uppercase text-white/90">
+            {t('common.status')}
           </span>
-        </div>
+          <div className="flex items-center space-x-1.5">
+            <CheckCircle size={15} className="shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold">{t('assignments.graded')}</span>
+            <span className={`${chipBg} px-1.5 py-0.5 rounded-md text-[11px] font-bold`}>
+              {displayGrade}
+            </span>
+            <ChevronRight
+              size={15}
+              className={`shrink-0 transition-transform ${isGradeExpanded ? 'rotate-90' : ''}`}
+            />
+          </div>
+        </button>
+
+        {/* Expanded detail popover */}
+        {isGradeExpanded && (
+          <div
+            className={`${bgClass} rounded-md p-3 text-white nice-shadow absolute z-50 mt-2 w-[300px] right-0 sm:right-auto sm:left-0 animate-in fade-in-0 zoom-in-95 duration-150`}
+          >
+            {/* Header row */}
+            <div className="flex items-center justify-between pb-2">
+              <div className="flex items-center space-x-2">
+                <CheckCircle size={15} />
+                <span className="text-xs font-bold">{t('assignments.graded')}</span>
+                <span className={`${chipBg} px-1.5 py-0.5 rounded-md text-xs font-bold`}>
+                  {displayGrade}
+                </span>
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                passed === false ? 'bg-white/20' : 'bg-white/20'
+              }`}>
+                {passed === false
+                  ? t('dashboard.assignments.submissions.preview.not_passing')
+                  : t('dashboard.assignments.submissions.preview.passing')}
+              </span>
+            </div>
+
+            {(pointsSummary || percentageDisplay) && (
+              <div className="flex items-center space-x-2 text-[11px] text-white/80 font-medium pb-2 border-b border-white/20">
+                {pointsSummary && <span>{pointsSummary}</span>}
+                {pointsSummary && percentageDisplay && <span>·</span>}
+                {percentageDisplay && <span>{percentageDisplay}</span>}
+              </div>
+            )}
+
+            {tasks && tasks.length > 0 && (
+              <div className="flex flex-col mt-2 space-y-1">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-white/70">
+                  {t('assignments.task_breakdown')}
+                </p>
+                {tasks.map((tb: any) => (
+                  <div key={tb.assignment_task_uuid} className="flex items-center justify-between space-x-2">
+                    <span className="text-[11px] text-white/90 truncate" title={tb.description || `Task ${tb.index}`}>
+                      {tb.index}. {tb.description || `Task ${tb.index}`}
+                    </span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-none ${
+                      !tb.submitted
+                        ? 'bg-white/20 text-white/70'
+                        : tb.percentage >= 60
+                          ? 'bg-white text-emerald-700'
+                          : 'bg-white text-rose-700'
+                    }`}>
+                      {tb.submitted ? tb.percentage_display : '—'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {feedback && (
+              <div className="flex items-start space-x-1.5 mt-2 pt-2 border-t border-white/20">
+                <MessageSquare size={11} className="mt-0.5 text-white/80 flex-none" />
+                <p className="text-[11px] text-white/90 leading-snug whitespace-pre-wrap">
+                  {feedback}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     )
   }

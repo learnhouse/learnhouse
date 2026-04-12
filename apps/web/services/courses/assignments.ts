@@ -243,11 +243,18 @@ export async function putUserSubmission(
 export async function putFinalGrade(
   user_id: string,
   assignmentUUID: string,
-  access_token: string
+  access_token: string,
+  overall_feedback?: string | null
 ) {
+  // Only send a body when the caller actually passed feedback — otherwise the
+  // backend leaves any existing note alone.
+  const body =
+    overall_feedback !== undefined && overall_feedback !== null
+      ? { overall_feedback }
+      : null
   const result: any = await fetch(
     `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}/grade`,
-    RequestBodyWithAuthHeader('POST', null, null, access_token)
+    RequestBodyWithAuthHeader('POST', body, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

@@ -967,7 +967,8 @@
     "current_points": "वर्तमान अंक: {{points}}",
     "grade": "ग्रेड",
     "run_autograde": "Run Auto-grade",
-    "due_date": "नियत तारीख"
+    "due_date": "नियत तारीख",
+    "task_breakdown": "कार्य विवरण"
   },
   "certificate": {
     "certificate": "प्रमाणपत्र",
@@ -3137,6 +3138,11 @@
             "update_success": "असाइनमेंट सफलतापूर्वक अपडेट किया गया है",
             "update_error": "असाइनमेंट अपडेट करने में त्रुटि, कृपया बाद में पुनः प्रयास करें।"
           }
+        },
+        "title_prefix": "असाइनमेंट:",
+        "header_badges": {
+          "auto_grading": "स्वतः ग्रेड",
+          "anti_copy_paste": "पेस्ट अवरुद्ध"
         }
       },
       "editor": {
@@ -3162,6 +3168,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "संक्षिप्त उत्तर",
+            "description": "छात्र टेक्स्ट उत्तर टाइप करते हैं जो आपके स्वीकृत उत्तरों के विरुद्ध मूल्यांकित होता है"
+          },
+          "number_answer": {
+            "title": "संख्यात्मक उत्तर",
+            "description": "छात्र एक संख्या दर्ज करते हैं जो सहनशीलता के साथ मूल्यांकित होती है"
           }
         },
         "toasts": {
@@ -3179,8 +3193,6 @@
             "hint": "संकेत",
             "reference_file": "संदर्भ फ़ाइल",
             "reference_file_info": "अनुमत प्रारूप: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "अधिकतम ग्रेड मूल्य",
-            "max_grade_error": "मूल्य 20 और 100 के बीच होना चाहिए",
             "submit": "सबमिट करें",
             "download": "डाउनलोड करें",
             "change_reference_file": "संदर्भ फ़ाइल बदलें",
@@ -3190,7 +3202,66 @@
             "sign_in_required": "फ़ाइलें अपलोड करने के लिए कृपया साइन इन करें",
             "auth_required": "प्रमाणीकरण आवश्यक है। फ़ाइलें अपलोड करने के लिए कृपया साइन इन करें।",
             "auth_required_submit": "प्रमाणीकरण आवश्यक है। अपना कार्य सबमिट करने के लिए कृपया साइन इन करें।",
-            "hint_optional": "संकेत (वैकल्पिक)"
+            "hint_optional": "संकेत (वैकल्पिक)",
+            "paste_blocked": "इस असाइनमेंट के लिए पेस्ट अक्षम है",
+            "paste_blocked_hint": "पेस्ट अक्षम है — अपना उत्तर सीधे टाइप करें।"
+          },
+          "code": {
+            "student_behavior_label": "छात्र व्यवहार",
+            "allow_student_run_label": "छात्रों को कोड चलाने दें",
+            "allow_student_run_description": "छात्र दृश्य में रन टेस्ट बटन दिखाएं ताकि वे सबमिट करने से पहले अपना कोड आजमा सकें।",
+            "show_test_details_label": "विफलता पर अपेक्षित बनाम वास्तविक दिखाएं",
+            "show_test_details_description": "जब कोई दृश्य परीक्षण विफल हो जाए, तो अपेक्षित और प्राप्त आउटपुट प्रकट करें।",
+            "show_hidden_count_label": "छिपे हुए परीक्षणों की संख्या दिखाएं",
+            "show_hidden_count_description": "छात्रों को बताने के लिए बैज प्रदर्शित करें कि कितने छिपे हुए परीक्षण मौजूद हैं।",
+            "require_passing_label": "दृश्य परीक्षणों को पास करना आवश्यक",
+            "require_passing_description": "सभी दृश्य परीक्षण पास होने तक सेव बटन को ब्लॉक करें।",
+            "must_pass_toast": "सेव करने से पहले आपको सभी दृश्य परीक्षणों को पास करना होगा।",
+            "must_pass_hint": "सेव करने से पहले सभी दृश्य परीक्षण पास होने चाहिए।",
+            "show_solution_label": "सबमिट के बाद समाधान प्रकट करें",
+            "show_solution_description": "छात्र द्वारा अपना कार्य सहेजने के बाद, शिक्षक का संदर्भ समाधान दिखाएं।",
+            "reference_solution_label": "संदर्भ समाधान"
+          },
+          "short_answer": {
+            "prompt_label": "प्रश्न",
+            "prompt_placeholder": "मोरक्को की राजधानी क्या है?",
+            "answers_label": "स्वीकृत उत्तर",
+            "answer_placeholder": "रबात",
+            "add_answer": "एक और उत्तर जोड़ें",
+            "no_answers_error": "सहेजने से पहले कम से कम एक स्वीकृत उत्तर जोड़ें",
+            "match_mode_label": "उत्तरों का मिलान कैसे करें",
+            "match_modes": {
+              "exact": "सटीक मिलान",
+              "case_insensitive": "केस संवेदनहीन (अनुशंसित)",
+              "contains": "उत्तर कहीं भी शामिल है",
+              "regex": "रेगुलर एक्सप्रेशन"
+            },
+            "explanation_label": "स्पष्टीकरण (सही उत्तर पर दिखाया गया)",
+            "explanation_placeholder": "वैकल्पिक — समझाएं क्यों उत्तर सही है",
+            "your_answer_placeholder": "अपना उत्तर लिखें...",
+            "student_answer_label": "छात्र का उत्तर",
+            "accepted_answers_label": "स्वीकृत उत्तर",
+            "no_answer": "कोई उत्तर नहीं भेजा गया",
+            "correct": "सही",
+            "incorrect": "बिल्कुल नहीं — फिर कोशिश करें"
+          },
+          "number_answer": {
+            "prompt_label": "प्रश्न",
+            "prompt_placeholder": "पृथ्वी पर गुरुत्वाकर्षण त्वरण क्या है?",
+            "correct_value_label": "सही मान",
+            "tolerance_label": "सहनशीलता (±)",
+            "unit_label": "इकाई (वैकल्पिक)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "उत्तर फ़ील्ड के बगल में दिखाया गया। लागू नहीं।",
+            "explanation_label": "स्पष्टीकरण (सही उत्तर पर दिखाया गया)",
+            "explanation_placeholder": "वैकल्पिक — उत्तर तक पहुंचने का तरीका समझाएं",
+            "preview_label": "स्वीकार करता है",
+            "your_answer_placeholder": "एक संख्या दर्ज करें...",
+            "student_answer_label": "छात्र का उत्तर",
+            "accepted_range_label": "स्वीकृत सीमा",
+            "no_answer": "कोई उत्तर नहीं भेजा गया",
+            "correct": "सही",
+            "incorrect": "बिल्कुल नहीं — फिर कोशिश करें"
           }
         }
       },
@@ -3213,11 +3284,46 @@
           "reject": "असाइनमेंट अस्वीकार करें",
           "set_final_grade": "अंतिम ग्रेड सेट करें",
           "mark_as_done": "उपयोगकर्ता के लिए गतिविधि को पूर्ण के रूप में चिह्नित करें",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "सबमिशन हटाता है और छात्र को दोबारा सबमिट करने देता है",
+          "set_final_grade_description": "गतिविधि पूरी किए बिना ग्रेड की गणना और सहेजता है",
+          "finalize_description": "अंतिम ग्रेड सेट करता है और छात्र के लिए गतिविधि को पूर्ण के रूप में चिह्नित करता है"
         },
         "toasts": {
           "reject_success": "असाइनमेंट सफलतापूर्वक अस्वीकार कर दिया गया",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "सभी"
+        },
+        "sort": {
+          "label": "क्रमबद्ध करें",
+          "date": "जमा करने की तारीख",
+          "name": "छात्र का नाम",
+          "status": "स्थिति",
+          "grade": "ग्रेड",
+          "needs_grading": "ग्रेडिंग की आवश्यकता पहले",
+          "late_first": "देरी वाले पहले",
+          "recently_graded": "हाल ही में ग्रेड किए गए पहले"
+        },
+        "stats": {
+          "total": "कुल"
+        },
+        "search_placeholder": "नाम या ईमेल से खोजें...",
+        "loading": "सबमिशन लोड हो रहे हैं...",
+        "empty": "कोई सबमिशन नहीं मिला",
+        "grade_label": "ग्रेड:",
+        "preview": {
+          "current_grade": "वर्तमान ग्रेड",
+          "passing": "उत्तीर्ण",
+          "not_passing": "अनुत्तीर्ण",
+          "not_submitted": "प्रस्तुत नहीं किया"
+        },
+        "feedback": {
+          "label": "समग्र प्रतिक्रिया",
+          "optional": "वैकल्पिक",
+          "placeholder": "समग्र सबमिशन के बारे में एक टिप्पणी लिखें। छात्र इसे अपने ग्रेड के बगल में देखेगा।",
+          "hint": "पिछली प्रतिक्रिया को अपरिवर्तित रखने के लिए इसे खाली छोड़ दें।"
         }
       },
       "modals": {
@@ -3236,11 +3342,28 @@
             "grading_types": {
               "alphabet": "वर्णमाला",
               "numeric": "संख्यात्मक",
-              "percentage": "प्रतिशत"
+              "percentage": "प्रतिशत",
+              "pass_fail": "पास / फेल",
+              "gpa_scale": "GPA स्केल"
             },
             "cancel": "रद्द करें",
             "save": "बदलाव सहेजें",
-            "saving": "सहेजा जा रहा है..."
+            "saving": "सहेजा जा रहा है...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F अक्षर ग्रेड",
+              "numeric": "0 से 100 तक स्कोर",
+              "percentage": "प्रतिशत में ग्रेड",
+              "pass_fail": "सरल पास या फेल",
+              "gpa_scale": "4.0 ग्रेड पॉइंट स्केल"
+            },
+            "grading_options_label": "ग्रेडिंग विकल्प",
+            "auto_grading_label": "स्वचालित ग्रेडिंग",
+            "auto_grading_description": "छात्र के सबमिट करने पर स्वचालित रूप से गतिविधि को ग्रेड करें और पूरा करें। केवल तब काम करता है जब हर कार्य मानव समीक्षा के बिना ग्रेड किया जा सकता है।",
+            "anti_copy_paste_label": "कॉपी और पेस्ट ब्लॉक करें",
+            "anti_copy_paste_description": "पेस्ट इवेंट को ब्लॉक करके AI-जनित उत्तरों को पेस्ट करने से हतोत्साहित करें। नोट: यह एक निवारक है।",
+            "auto_grading_disabled_file": "स्वचालित ग्रेडिंग उपलब्ध नहीं है क्योंकि इस असाइनमेंट में फ़ाइल सबमिशन कार्य है जिसे मानव समीक्षा की आवश्यकता है।",
+            "grading_type_hint": "छात्रों को ग्रेड कैसे दिखाए जाते हैं",
+            "grading_options_hint": "सबमिशन पर व्यवहार"
           },
           "toasts": {
             "updating": "असाइनमेंट अपडेट किया जा रहा है...",
@@ -3262,9 +3385,25 @@
             "grading_types": {
               "alphabet": "वर्णमाला",
               "numeric": "संख्यात्मक",
-              "percentage": "प्रतिशत"
+              "percentage": "प्रतिशत",
+              "pass_fail": "पास / फेल",
+              "gpa_scale": "GPA स्केल"
             },
-            "submit": "गतिविधि बनाएं"
+            "submit": "गतिविधि बनाएं",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F अक्षर ग्रेड",
+              "numeric": "0 से 100 तक स्कोर",
+              "percentage": "प्रतिशत में ग्रेड",
+              "pass_fail": "सरल पास या फेल",
+              "gpa_scale": "4.0 ग्रेड पॉइंट स्केल"
+            },
+            "grading_options_label": "ग्रेडिंग विकल्प",
+            "auto_grading_label": "स्वचालित ग्रेडिंग",
+            "auto_grading_description": "छात्र के सबमिट करने पर स्वचालित रूप से गतिविधि को ग्रेड करें और पूरा करें। केवल तब काम करता है जब हर कार्य मानव समीक्षा के बिना ग्रेड किया जा सकता है।",
+            "anti_copy_paste_label": "कॉपी और पेस्ट ब्लॉक करें",
+            "anti_copy_paste_description": "पेस्ट इवेंट को ब्लॉक करके AI-जनित उत्तरों को पेस्ट करने से हतोत्साहित करें। नोट: यह एक निवारक है।",
+            "grading_type_hint": "छात्रों को ग्रेड कैसे दिखाए जाते हैं",
+            "grading_options_hint": "सबमिशन पर व्यवहार"
           },
           "toasts": {
             "creating": "असाइनमेंट बनाया जा रहा है...",

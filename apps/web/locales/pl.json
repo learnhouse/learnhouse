@@ -967,7 +967,8 @@
     "current_points": "Aktualne punkty: {{points}}",
     "grade": "Ocena",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Termin oddania"
+    "due_date": "Termin oddania",
+    "task_breakdown": "Podział zadań"
   },
   "certificate": {
     "certificate": "Certyfikat",
@@ -3139,6 +3140,11 @@
             "update_success": "Zadanie zostało pomyślnie zaktualizowane",
             "update_error": "Wystąpił błąd podczas aktualizacji zadania. Spróbuj ponownie później."
           }
+        },
+        "title_prefix": "Zadanie:",
+        "header_badges": {
+          "auto_grading": "Auto-ocena",
+          "anti_copy_paste": "Wklejanie zablok."
         }
       },
       "editor": {
@@ -3164,6 +3170,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Krótka odpowiedź",
+            "description": "Uczniowie wpisują odpowiedź tekstową oceniana względem twoich akceptowanych odpowiedzi"
+          },
+          "number_answer": {
+            "title": "Odpowiedź liczbowa",
+            "description": "Uczniowie wprowadzają liczbę ocenianą z tolerancją"
           }
         },
         "toasts": {
@@ -3181,8 +3195,6 @@
             "hint": "Wskazówka",
             "reference_file": "Plik referencyjny",
             "reference_file_info": "Dozwolone formaty: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Maksymalna ocena",
-            "max_grade_error": "Wartość musi mieścić się w przedziale od 20 do 100",
             "submit": "Wyślij",
             "download": "Pobierz",
             "change_reference_file": "Zmień plik referencyjny",
@@ -3192,7 +3204,66 @@
             "sign_in_required": "Zaloguj się, aby przesłać pliki",
             "auth_required": "Wymagana autoryzacja. Zaloguj się, aby przesłać pliki.",
             "auth_required_submit": "Wymagana autoryzacja. Zaloguj się, aby przesłać zadanie składowe.",
-            "hint_optional": "Wskazówka (opcjonalnie)"
+            "hint_optional": "Wskazówka (opcjonalnie)",
+            "paste_blocked": "Wklejanie jest wyłączone dla tego zadania",
+            "paste_blocked_hint": "Wklejanie jest wyłączone — wpisz swoją odpowiedź bezpośrednio."
+          },
+          "code": {
+            "student_behavior_label": "Zachowanie ucznia",
+            "allow_student_run_label": "Pozwól uczniom uruchamiać kod",
+            "allow_student_run_description": "Pokaż przycisk Uruchom Testy w widoku ucznia, aby mogli wypróbować kod przed wysłaniem.",
+            "show_test_details_label": "Pokaż oczekiwane vs rzeczywiste przy błędach",
+            "show_test_details_description": "Gdy widoczny test się nie powiedzie, ujawnij oczekiwane i otrzymane wyjście.",
+            "show_hidden_count_label": "Pokaż liczbę ukrytych testów",
+            "show_hidden_count_description": "Wyświetl plakietkę informującą uczniów ile ukrytych testów istnieje.",
+            "require_passing_label": "Wymagaj zaliczenia widocznych testów",
+            "require_passing_description": "Zablokuj przycisk zapisz dopóki wszystkie widoczne testy nie przejdą.",
+            "must_pass_toast": "Musisz zaliczyć wszystkie widoczne testy przed zapisaniem.",
+            "must_pass_hint": "Wszystkie widoczne testy muszą przejść przed zapisaniem.",
+            "show_solution_label": "Ujawnij rozwiązanie po wysłaniu",
+            "show_solution_description": "Gdy uczeń zapisze swoją pracę, pokaż rozwiązanie referencyjne nauczyciela.",
+            "reference_solution_label": "Rozwiązanie referencyjne"
+          },
+          "short_answer": {
+            "prompt_label": "Treść pytania",
+            "prompt_placeholder": "Jaka jest stolica Maroka?",
+            "answers_label": "Akceptowane odpowiedzi",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Dodaj kolejną odpowiedź",
+            "no_answers_error": "Dodaj przynajmniej jedną akceptowaną odpowiedź przed zapisaniem",
+            "match_mode_label": "Jak dopasowywać odpowiedzi",
+            "match_modes": {
+              "exact": "Dokładne dopasowanie",
+              "case_insensitive": "Bez rozróżniania wielkości liter (zalecane)",
+              "contains": "Zawiera odpowiedź",
+              "regex": "Wyrażenie regularne"
+            },
+            "explanation_label": "Wyjaśnienie (pokazywane przy poprawnej odpowiedzi)",
+            "explanation_placeholder": "Opcjonalne — wyjaśnij dlaczego odpowiedź jest poprawna",
+            "your_answer_placeholder": "Wpisz swoją odpowiedź...",
+            "student_answer_label": "Odpowiedź ucznia",
+            "accepted_answers_label": "Akceptowane odpowiedzi",
+            "no_answer": "Brak przesłanej odpowiedzi",
+            "correct": "Poprawnie",
+            "incorrect": "Nie do końca — spróbuj ponownie"
+          },
+          "number_answer": {
+            "prompt_label": "Treść pytania",
+            "prompt_placeholder": "Jakie jest przyspieszenie grawitacyjne na Ziemi?",
+            "correct_value_label": "Poprawna wartość",
+            "tolerance_label": "Tolerancja (±)",
+            "unit_label": "Jednostka (opcjonalnie)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Wyświetlana obok pola odpowiedzi. Niewymagana.",
+            "explanation_label": "Wyjaśnienie (pokazywane przy poprawnej odpowiedzi)",
+            "explanation_placeholder": "Opcjonalne — wyjaśnij jak dojść do odpowiedzi",
+            "preview_label": "Akceptuje",
+            "your_answer_placeholder": "Wprowadź liczbę...",
+            "student_answer_label": "Odpowiedź ucznia",
+            "accepted_range_label": "Akceptowany zakres",
+            "no_answer": "Brak przesłanej odpowiedzi",
+            "correct": "Poprawnie",
+            "incorrect": "Nie do końca — spróbuj ponownie"
           }
         }
       },
@@ -3215,11 +3286,46 @@
           "reject": "Odrzuć zadanie",
           "set_final_grade": "Ustaw ocenę końcową",
           "mark_as_done": "Oznacz aktywność użytkownika jako ukończoną",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "Usuwa zgłoszenie i pozwala studentowi ponownie przesłać",
+          "set_final_grade_description": "Oblicza i zapisuje ocenę bez kończenia aktywności",
+          "finalize_description": "Ustawia ocenę końcową i oznacza aktywność jako ukończoną dla studenta"
         },
         "toasts": {
           "reject_success": "Zadanie zostało pomyślnie odrzucone",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Wszystkie"
+        },
+        "sort": {
+          "label": "Sortuj",
+          "date": "Data przesłania",
+          "name": "Imię ucznia",
+          "status": "Status",
+          "grade": "Ocena",
+          "needs_grading": "Do oceny najpierw",
+          "late_first": "Spóźnione najpierw",
+          "recently_graded": "Ostatnio ocenione"
+        },
+        "stats": {
+          "total": "Łącznie"
+        },
+        "search_placeholder": "Szukaj po nazwisku lub emailu...",
+        "loading": "Ładowanie zgłoszeń...",
+        "empty": "Nie znaleziono zgłoszeń",
+        "grade_label": "Ocena:",
+        "preview": {
+          "current_grade": "Aktualna ocena",
+          "passing": "Zaliczone",
+          "not_passing": "Niezaliczone",
+          "not_submitted": "Nie przesłano"
+        },
+        "feedback": {
+          "label": "Ogólna opinia",
+          "optional": "opcjonalne",
+          "placeholder": "Napisz komentarz o całym zgłoszeniu. Uczeń zobaczy go obok swojej oceny.",
+          "hint": "Zostaw puste, aby zachować poprzednią opinię bez zmian."
         }
       },
       "modals": {
@@ -3238,11 +3344,28 @@
             "grading_types": {
               "alphabet": "Alfabetyczne",
               "numeric": "Liczbowe",
-              "percentage": "Procentowe"
+              "percentage": "Procentowe",
+              "pass_fail": "Zaliczenie / Niezaliczenie",
+              "gpa_scale": "Skala GPA"
             },
             "cancel": "Anuluj",
             "save": "Zapisz zmiany",
-            "saving": "Zapisywanie..."
+            "saving": "Zapisywanie...",
+            "grading_type_descriptions": {
+              "alphabet": "Oceny literowe A, B, C, D, F",
+              "numeric": "Wynik od 0 do 100",
+              "percentage": "Ocena procentowa",
+              "pass_fail": "Proste zaliczenie lub niezaliczenie",
+              "gpa_scale": "Skala punktowa 4.0"
+            },
+            "grading_options_label": "Opcje oceniania",
+            "auto_grading_label": "Automatyczne ocenianie",
+            "auto_grading_description": "Oceniaj i kończ aktywność automatycznie gdy uczeń prześle. Działa tylko gdy każde zadanie może być ocenione bez udziału człowieka.",
+            "anti_copy_paste_label": "Blokuj kopiowanie i wklejanie",
+            "anti_copy_paste_description": "Zniechęcaj do wklejania odpowiedzi wygenerowanych przez AI blokując zdarzenia wklejania. Uwaga: jest to środek odstraszający.",
+            "auto_grading_disabled_file": "Automatyczne ocenianie jest niedostępne ponieważ to zadanie zawiera przesłanie pliku które wymaga przeglądu przez człowieka.",
+            "grading_type_hint": "Jak oceny są wyświetlane uczniom",
+            "grading_options_hint": "Zachowanie przy wysłaniu"
           },
           "toasts": {
             "updating": "Aktualizowanie zadania...",
@@ -3264,9 +3387,25 @@
             "grading_types": {
               "alphabet": "Alfabetyczne",
               "numeric": "Liczbowe",
-              "percentage": "Procentowe"
+              "percentage": "Procentowe",
+              "pass_fail": "Zaliczenie / Niezaliczenie",
+              "gpa_scale": "Skala GPA"
             },
-            "submit": "Utwórz aktywność"
+            "submit": "Utwórz aktywność",
+            "grading_type_descriptions": {
+              "alphabet": "Oceny literowe A, B, C, D, F",
+              "numeric": "Wynik od 0 do 100",
+              "percentage": "Ocena procentowa",
+              "pass_fail": "Proste zaliczenie lub niezaliczenie",
+              "gpa_scale": "Skala punktowa 4.0"
+            },
+            "grading_options_label": "Opcje oceniania",
+            "auto_grading_label": "Automatyczne ocenianie",
+            "auto_grading_description": "Oceniaj i kończ aktywność automatycznie gdy uczeń prześle. Działa tylko gdy każde zadanie może być ocenione bez udziału człowieka.",
+            "anti_copy_paste_label": "Blokuj kopiowanie i wklejanie",
+            "anti_copy_paste_description": "Zniechęcaj do wklejania odpowiedzi wygenerowanych przez AI blokując zdarzenia wklejania. Uwaga: jest to środek odstraszający.",
+            "grading_type_hint": "Jak oceny są wyświetlane uczniom",
+            "grading_options_hint": "Zachowanie przy wysłaniu"
           },
           "toasts": {
             "creating": "Tworzenie zadania...",
