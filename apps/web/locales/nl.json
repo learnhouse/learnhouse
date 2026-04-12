@@ -884,6 +884,7 @@
     "quiz": "Quiz",
     "file_submission": "Bestand indienen",
     "form": "Formulier",
+    "code": "Code",
     "interactive": "Interactief",
     "activities": "Activiteiten",
     "current_activity": "Huidige activiteit",
@@ -942,6 +943,7 @@
     "points": "punten",
     "current_points": "Huidige punten: {{points}}",
     "grade": "Cijfer",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Inleverdatum"
   },
   "certificate": {
@@ -3135,6 +3137,10 @@
           "form": {
             "title": "Formulier",
             "description": "Een invulformulier voor studenten"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3185,10 +3191,12 @@
         "actions": {
           "reject": "Opdracht afwijzen",
           "set_final_grade": "Eindcijfer instellen",
-          "mark_as_done": "Markeer gebruikersactiviteit als voltooid"
+          "mark_as_done": "Markeer gebruikersactiviteit als voltooid",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Opdracht succesvol afgewezen"
+          "reject_success": "Opdracht succesvol afgewezen",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

@@ -116,7 +116,7 @@ export function AssignmentTaskGeneralEdit() {
             </FormField>
 
             {/* Submit button */}
-            <Form.Submit >
+            <Form.Submit asChild>
                 <button
                     type="submit"
                     className="flex items-center justify-center w-full px-4 py-2 mt-4 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"

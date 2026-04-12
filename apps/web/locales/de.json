@@ -884,6 +884,7 @@
     "quiz": "Quiz",
     "file_submission": "Dateieinreichung",
     "form": "Formular",
+    "code": "Code",
     "interactive": "Interaktiv",
     "activities": "Aktivitäten",
     "current_activity": "Aktuelle Aktivität",
@@ -942,6 +943,7 @@
     "points": "Punkte",
     "current_points": "Aktuelle Punkte: {{points}}",
     "grade": "Note",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Fälligkeitsdatum"
   },
   "certificate": {
@@ -3133,6 +3135,10 @@
           "form": {
             "title": "Formular",
             "description": "Lückentext-Formulare für Schüler"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3183,10 +3189,12 @@
         "actions": {
           "reject": "Aufgabe ablehnen",
           "set_final_grade": "Endnote festlegen",
-          "mark_as_done": "Aktivität für Benutzer als erledigt markieren"
+          "mark_as_done": "Aktivität für Benutzer als erledigt markieren",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Aufgabe erfolgreich abgelehnt"
+          "reject_success": "Aufgabe erfolgreich abgelehnt",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

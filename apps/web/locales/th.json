@@ -907,6 +907,7 @@
     "quiz": "ควิซ",
     "file_submission": "ส่งไฟล์",
     "form": "แบบฟอร์ม",
+    "code": "Code",
     "interactive": "โต้ตอบ",
     "activities": "กิจกรรม",
     "current_activity": "กิจกรรมปัจจุบัน",
@@ -965,6 +966,7 @@
     "points": "คะแนน",
     "current_points": "คะแนนปัจจุบัน: {{points}}",
     "grade": "เกรด",
+    "run_autograde": "Run Auto-grade",
     "due_date": "กำหนดส่ง"
   },
   "certificate": {
@@ -3158,6 +3160,10 @@
           "form": {
             "title": "แบบฟอร์ม",
             "description": "แบบฟอร์มสำหรับให้ผู้เรียนกรอกข้อมูล"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3208,10 +3214,12 @@
         "actions": {
           "reject": "ตีกลับงาน",
           "set_final_grade": "ตั้งคะแนนสุดท้าย",
-          "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น"
+          "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "ตีกลับงานสำเร็จแล้ว"
+          "reject_success": "ตีกลับงานสำเร็จแล้ว",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

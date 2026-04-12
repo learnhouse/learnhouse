@@ -907,6 +907,7 @@
     "quiz": "কুইজ",
     "file_submission": "ফাইল জমা",
     "form": "ফর্ম",
+    "code": "Code",
     "interactive": "ইন্টারেক্টিভ",
     "activities": "ক্রিয়াকলাপসমূহ",
     "current_activity": "বর্তমান ক্রিয়াকলাপ",
@@ -965,6 +966,7 @@
     "points": "পয়েন্ট",
     "current_points": "বর্তমান পয়েন্ট: {{points}}",
     "grade": "গ্রেড",
+    "run_autograde": "Run Auto-grade",
     "due_date": "জমা দেওয়ার শেষ তারিখ"
   },
   "certificate": {
@@ -3156,6 +3158,10 @@
           "form": {
             "title": "ফর্ম",
             "description": "ছাত্রদের জন্য শূন্যস্থান পূরণ ফর্ম"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3206,10 +3212,12 @@
         "actions": {
           "reject": "অ্যাসাইনমেন্ট প্রত্যাখ্যান করুন",
           "set_final_grade": "চূড়ান্ত গ্রেড সেট করুন",
-          "mark_as_done": "ব্যবহারকারীর জন্য কার্যক্রম সম্পন্ন হিসেবে চিহ্নিত করুন"
+          "mark_as_done": "ব্যবহারকারীর জন্য কার্যক্রম সম্পন্ন হিসেবে চিহ্নিত করুন",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "অ্যাসাইনমেন্ট সফলভাবে প্রত্যাখ্যান করা হয়েছে"
+          "reject_success": "অ্যাসাইনমেন্ট সফলভাবে প্রত্যাখ্যান করা হয়েছে",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

@@ -907,6 +907,7 @@
     "quiz": "Тест",
     "file_submission": "Отправка файла",
     "form": "Форма",
+    "code": "Code",
     "interactive": "Интерактив",
     "activities": "Занятия",
     "current_activity": "Текущее занятие",
@@ -965,6 +966,7 @@
     "points": "баллов",
     "current_points": "Текущие баллы: {{points}}",
     "grade": "Оценка",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Срок сдачи"
   },
   "certificate": {
@@ -3158,6 +3160,10 @@
           "form": {
             "title": "Форма",
             "description": "Анкеты для заполнения учениками"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3208,10 +3214,12 @@
         "actions": {
           "reject": "Отклонить задание",
           "set_final_grade": "Установить итоговую оценку",
-          "mark_as_done": "Отметить занятие как выполненное для пользователя"
+          "mark_as_done": "Отметить занятие как выполненное для пользователя",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Задание успешно отклонено"
+          "reject_success": "Задание успешно отклонено",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

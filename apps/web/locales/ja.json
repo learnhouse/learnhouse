@@ -894,6 +894,7 @@
     "quiz": "クイズ",
     "file_submission": "ファイル提出",
     "form": "フォーム",
+    "code": "Code",
     "interactive": "インタラクティブ",
     "activities": "アクティビティ",
     "current_activity": "現在のアクティビティ",
@@ -952,6 +953,7 @@
     "points": "点数",
     "current_points": "現在の点数: {{points}}",
     "grade": "評価",
+    "run_autograde": "Run Auto-grade",
     "due_date": "提出期限"
   },
   "certificate": {
@@ -3143,6 +3145,10 @@
           "form": {
             "title": "フォーム",
             "description": "受講生が入力するフォーム"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3193,10 +3199,12 @@
         "actions": {
           "reject": "課題を却下",
           "set_final_grade": "最終評価を設定",
-          "mark_as_done": "ユーザーのアクティビティを完了にする"
+          "mark_as_done": "ユーザーのアクティビティを完了にする",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "課題を正常に却下しました"
+          "reject_success": "課題を正常に却下しました",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

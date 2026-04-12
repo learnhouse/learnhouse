@@ -884,6 +884,7 @@
     "quiz": "Questionário",
     "file_submission": "Envio de Arquivo",
     "form": "Formulário",
+    "code": "Code",
     "interactive": "Interativo",
     "activities": "Atividades",
     "current_activity": "Atividade Atual",
@@ -942,6 +943,7 @@
     "points": "pontos",
     "current_points": "Pontos atuais: {{points}}",
     "grade": "Nota",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Data de Entrega"
   },
   "certificate": {
@@ -3135,6 +3137,10 @@
           "form": {
             "title": "Formulário",
             "description": "Formulários de preenchimento para estudantes"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3185,10 +3191,12 @@
         "actions": {
           "reject": "Rejeitar Tarefa",
           "set_final_grade": "Definir nota final",
-          "mark_as_done": "Marcar Atividade como Concluída para o Usuário"
+          "mark_as_done": "Marcar Atividade como Concluída para o Usuário",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Tarefa rejeitada com sucesso"
+          "reject_success": "Tarefa rejeitada com sucesso",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

@@ -907,6 +907,7 @@
     "quiz": "Sınav",
     "file_submission": "Dosya Gönderimi",
     "form": "Form",
+    "code": "Code",
     "interactive": "Etkileşimli",
     "activities": "Aktiviteler",
     "current_activity": "Mevcut Aktivite",
@@ -965,6 +966,7 @@
     "points": "puan",
     "current_points": "Mevcut puan: {{points}}",
     "grade": "Not",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Son Teslim Tarihi"
   },
   "certificate": {
@@ -3158,6 +3160,10 @@
           "form": {
             "title": "Form",
             "description": "Öğrencilerin doldurması için form"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3208,10 +3214,12 @@
         "actions": {
           "reject": "Gönderimi Reddet",
           "set_final_grade": "Final Notunu Belirle",
-          "mark_as_done": "Kullanıcı aktivitesini tamamlandı olarak işaretle"
+          "mark_as_done": "Kullanıcı aktivitesini tamamlandı olarak işaretle",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Gönderim başarıyla reddedildi"
+          "reject_success": "Gönderim başarıyla reddedildi",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

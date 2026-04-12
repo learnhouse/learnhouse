@@ -894,6 +894,7 @@
     "quiz": "اختبار",
     "file_submission": "تسليم ملف",
     "form": "نموذج",
+    "code": "Code",
     "interactive": "تفاعلي",
     "activities": "الأنشطة",
     "current_activity": "النشاط الحالي",
@@ -952,6 +953,7 @@
     "points": "نقاط",
     "current_points": "النقاط الحالية: {{points}}",
     "grade": "الدرجة",
+    "run_autograde": "Run Auto-grade",
     "due_date": "تاريخ الاستحقاق"
   },
   "certificate": {
@@ -3143,6 +3145,10 @@
           "form": {
             "title": "نموذج",
             "description": "استبيانات يملأها الطلاب"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3193,10 +3199,12 @@
         "actions": {
           "reject": "رفض الواجب",
           "set_final_grade": "تحديد الدرجة النهائية",
-          "mark_as_done": "تحديد النشاط كمكتمل للمستخدم"
+          "mark_as_done": "تحديد النشاط كمكتمل للمستخدم",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "تم رفض الواجب بنجاح"
+          "reject_success": "تم رفض الواجب بنجاح",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

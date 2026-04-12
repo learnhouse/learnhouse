@@ -907,6 +907,7 @@
     "quiz": "Trắc nghiệm",
     "file_submission": "Nộp tệp",
     "form": "Biểu mẫu",
+    "code": "Code",
     "interactive": "Tương tác",
     "activities": "Hoạt động",
     "current_activity": "Hoạt động hiện tại",
@@ -965,6 +966,7 @@
     "points": "điểm",
     "current_points": "Điểm hiện tại: {{points}}",
     "grade": "Điểm số",
+    "run_autograde": "Run Auto-grade",
     "due_date": "Hạn nộp"
   },
   "certificate": {
@@ -3158,6 +3160,10 @@
           "form": {
             "title": "Biểu mẫu",
             "description": "Một biểu mẫu để người học điền vào"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3208,10 +3214,12 @@
         "actions": {
           "reject": "Từ chối bài nộp",
           "set_final_grade": "Đặt điểm cuối cùng",
-          "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong"
+          "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "Đã từ chối bài nộp thành công"
+          "reject_success": "Đã từ chối bài nộp thành công",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {

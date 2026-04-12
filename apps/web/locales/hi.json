@@ -907,6 +907,7 @@
     "quiz": "प्रश्नोत्तरी",
     "file_submission": "फ़ाइल सबमिशन",
     "form": "फॉर्म",
+    "code": "Code",
     "interactive": "इंटरएक्टिव",
     "activities": "गतिविधियां",
     "current_activity": "वर्तमान गतिविधि",
@@ -965,6 +966,7 @@
     "points": "अंक",
     "current_points": "वर्तमान अंक: {{points}}",
     "grade": "ग्रेड",
+    "run_autograde": "Run Auto-grade",
     "due_date": "नियत तारीख"
   },
   "certificate": {
@@ -3156,6 +3158,10 @@
           "form": {
             "title": "फॉर्म",
             "description": "छात्रों के लिए खाली स्थान भरें फॉर्म"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
           }
         },
         "toasts": {
@@ -3206,10 +3212,12 @@
         "actions": {
           "reject": "असाइनमेंट अस्वीकार करें",
           "set_final_grade": "अंतिम ग्रेड सेट करें",
-          "mark_as_done": "उपयोगकर्ता के लिए गतिविधि को पूर्ण के रूप में चिह्नित करें"
+          "mark_as_done": "उपयोगकर्ता के लिए गतिविधि को पूर्ण के रूप में चिह्नित करें",
+          "finalize": "Finalize & Complete"
         },
         "toasts": {
-          "reject_success": "असाइनमेंट सफलतापूर्वक अस्वीकार कर दिया गया"
+          "reject_success": "असाइनमेंट सफलतापूर्वक अस्वीकार कर दिया गया",
+          "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
       "modals": {
