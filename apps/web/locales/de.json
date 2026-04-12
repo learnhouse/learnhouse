@@ -944,7 +944,8 @@
     "current_points": "Aktuelle Punkte: {{points}}",
     "grade": "Note",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Fälligkeitsdatum"
+    "due_date": "Fälligkeitsdatum",
+    "task_breakdown": "Aufgaben-Aufschlüsselung"
   },
   "certificate": {
     "certificate": "Zertifikat",
@@ -3114,6 +3115,11 @@
             "update_success": "Die Aufgabe wurde erfolgreich aktualisiert",
             "update_error": "Fehler beim Aktualisieren der Aufgabe, bitte versuchen Sie es später erneut."
           }
+        },
+        "title_prefix": "Aufgabe:",
+        "header_badges": {
+          "auto_grading": "Autom. bewertet",
+          "anti_copy_paste": "Einfügen gesperrt"
         }
       },
       "editor": {
@@ -3139,6 +3145,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Kurze Antwort",
+            "description": "Schüler tippen eine Textantwort, die gegen akzeptierte Antworten geprüft wird"
+          },
+          "number_answer": {
+            "title": "Numerische Antwort",
+            "description": "Schüler geben eine Zahl ein, die mit Toleranz bewertet wird"
           }
         },
         "toasts": {
@@ -3156,8 +3170,6 @@
             "hint": "Hinweis",
             "reference_file": "Referenzdatei",
             "reference_file_info": "Erlaubte Formate: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Maximaler Notenwert",
-            "max_grade_error": "Der Wert sollte zwischen 20 und 100 liegen",
             "submit": "Absenden",
             "download": "Herunterladen",
             "change_reference_file": "Referenzdatei ändern",
@@ -3167,7 +3179,66 @@
             "sign_in_required": "Bitte melden Sie sich an, um Dateien hochzuladen",
             "auth_required": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Dateien hochzuladen.",
             "auth_required_submit": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Ihre Aufgabenstellung einzureichen.",
-            "hint_optional": "Hinweis (optional)"
+            "hint_optional": "Hinweis (optional)",
+            "paste_blocked": "Einfügen ist für diese Aufgabe deaktiviert",
+            "paste_blocked_hint": "Einfügen ist deaktiviert — gib deine Antwort direkt ein."
+          },
+          "code": {
+            "student_behavior_label": "Schülerverhalten",
+            "allow_student_run_label": "Schülern erlauben, Code auszuführen",
+            "allow_student_run_description": "Zeige die Run-Tests-Schaltfläche in der Schüleransicht, damit sie ihren Code vor dem Einreichen ausprobieren können.",
+            "show_test_details_label": "Erwartet vs. tatsächlich bei Fehlern zeigen",
+            "show_test_details_description": "Wenn ein sichtbarer Test fehlschlägt, zeige die erwartete und erhaltene Ausgabe. Ausschalten, um Reverse-Engineering zu verhindern.",
+            "show_hidden_count_label": "Anzahl versteckter Tests anzeigen",
+            "show_hidden_count_description": "Zeige ein Badge das Schülern sagt, wie viele versteckte Tests existieren.",
+            "require_passing_label": "Bestehen sichtbarer Tests erforderlich",
+            "require_passing_description": "Blockiere die Speichern-Schaltfläche bis alle sichtbaren Tests bestehen.",
+            "must_pass_toast": "Du musst alle sichtbaren Tests bestehen bevor du speichern kannst.",
+            "must_pass_hint": "Alle sichtbaren Tests müssen bestehen bevor du speichern kannst.",
+            "show_solution_label": "Lösung nach Einreichen zeigen",
+            "show_solution_description": "Sobald der Schüler seine Arbeit gespeichert hat, zeige die Referenzlösung des Lehrers als einklappbares Panel.",
+            "reference_solution_label": "Referenzlösung"
+          },
+          "short_answer": {
+            "prompt_label": "Frage",
+            "prompt_placeholder": "Was ist die Hauptstadt von Marokko?",
+            "answers_label": "Akzeptierte Antworten",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Weitere Antwort hinzufügen",
+            "no_answers_error": "Füge mindestens eine akzeptierte Antwort hinzu",
+            "match_mode_label": "Wie Antworten abgeglichen werden",
+            "match_modes": {
+              "exact": "Exakter Treffer",
+              "case_insensitive": "Groß-/Kleinschreibung ignorieren (empfohlen)",
+              "contains": "Enthält die Antwort irgendwo",
+              "regex": "Regulärer Ausdruck"
+            },
+            "explanation_label": "Erklärung (bei richtiger Antwort)",
+            "explanation_placeholder": "Optional — erkläre warum die Antwort richtig ist",
+            "your_answer_placeholder": "Gib deine Antwort ein...",
+            "student_answer_label": "Antwort des Schülers",
+            "accepted_answers_label": "Akzeptierte Antworten",
+            "no_answer": "Keine Antwort eingereicht",
+            "correct": "Richtig",
+            "incorrect": "Leider nicht — versuch es nochmal"
+          },
+          "number_answer": {
+            "prompt_label": "Frage",
+            "prompt_placeholder": "Wie groß ist die Erdbeschleunigung?",
+            "correct_value_label": "Richtiger Wert",
+            "tolerance_label": "Toleranz (±)",
+            "unit_label": "Einheit (optional)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Wird neben dem Antwortfeld angezeigt. Nicht erzwungen.",
+            "explanation_label": "Erklärung (bei richtiger Antwort)",
+            "explanation_placeholder": "Optional — erkläre wie man zur Antwort kommt",
+            "preview_label": "Akzeptiert",
+            "your_answer_placeholder": "Zahl eingeben...",
+            "student_answer_label": "Antwort des Schülers",
+            "accepted_range_label": "Akzeptierter Bereich",
+            "no_answer": "Keine Antwort eingereicht",
+            "correct": "Richtig",
+            "incorrect": "Leider nicht — versuch es nochmal"
           }
         }
       },
@@ -3190,11 +3261,46 @@
           "reject": "Aufgabe ablehnen",
           "set_final_grade": "Endnote festlegen",
           "mark_as_done": "Aktivität für Benutzer als erledigt markieren",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "Löscht die Einreichung und lässt den Schüler erneut einreichen",
+          "set_final_grade_description": "Berechnet und speichert die Note ohne die Aktivität abzuschließen",
+          "finalize_description": "Setzt die Endnote und markiert die Aktivität als erledigt für den Schüler"
         },
         "toasts": {
           "reject_success": "Aufgabe erfolgreich abgelehnt",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Alle"
+        },
+        "sort": {
+          "label": "Sortieren",
+          "date": "Abgabedatum",
+          "name": "Schülername",
+          "status": "Status",
+          "grade": "Note",
+          "needs_grading": "Zuerst zu benotende",
+          "late_first": "Verspätete zuerst",
+          "recently_graded": "Zuletzt benotete zuerst"
+        },
+        "stats": {
+          "total": "Gesamt"
+        },
+        "search_placeholder": "Nach Name oder E-Mail suchen...",
+        "loading": "Einreichungen werden geladen...",
+        "empty": "Keine Einreichungen gefunden",
+        "grade_label": "Note:",
+        "preview": {
+          "current_grade": "Aktuelle Note",
+          "passing": "Bestanden",
+          "not_passing": "Nicht bestanden",
+          "not_submitted": "Nicht eingereicht"
+        },
+        "feedback": {
+          "label": "Gesamtfeedback",
+          "optional": "optional",
+          "placeholder": "Schreibe einen Kommentar zur gesamten Abgabe. Der Schüler sieht ihn neben seiner Note.",
+          "hint": "Leer lassen, um vorheriges Feedback unverändert zu lassen."
         }
       },
       "modals": {
@@ -3213,11 +3319,28 @@
             "grading_types": {
               "alphabet": "Alphabetisch",
               "numeric": "Numerisch",
-              "percentage": "Prozentual"
+              "percentage": "Prozentual",
+              "pass_fail": "Bestanden / Nicht bestanden",
+              "gpa_scale": "GPA-Skala"
             },
             "cancel": "Abbrechen",
             "save": "Änderungen speichern",
-            "saving": "Wird gespeichert..."
+            "saving": "Wird gespeichert...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F Buchstabennoten",
+              "numeric": "Punktzahl von 0 bis 100",
+              "percentage": "Note als Prozentsatz",
+              "pass_fail": "Einfach bestanden oder nicht bestanden",
+              "gpa_scale": "4,0 Notenpunktskala"
+            },
+            "grading_options_label": "Bewertungsoptionen",
+            "auto_grading_label": "Automatische Bewertung",
+            "auto_grading_description": "Bewerte die Aufgabe automatisch beim Einreichen des Schülers. Funktioniert nur wenn alle Aufgaben ohne menschliche Überprüfung bewertet werden können.",
+            "anti_copy_paste_label": "Kopieren & Einfügen blockieren",
+            "anti_copy_paste_description": "Entmutige das Einfügen KI-generierter Antworten durch Blockieren von Paste-Events. Hinweis: dies ist nur ein Abschreckungsmittel.",
+            "auto_grading_disabled_file": "Automatische Bewertung ist nicht verfügbar, da diese Aufgabe einen Datei-Upload enthält, der menschliche Überprüfung benötigt.",
+            "grading_type_hint": "Wie Noten den Schülern angezeigt werden",
+            "grading_options_hint": "Verhalten bei Einreichung"
           },
           "toasts": {
             "updating": "Aufgabe wird aktualisiert...",
@@ -3239,9 +3362,25 @@
             "grading_types": {
               "alphabet": "Alphabetisch",
               "numeric": "Numerisch",
-              "percentage": "Prozentual"
+              "percentage": "Prozentual",
+              "pass_fail": "Bestanden / Nicht bestanden",
+              "gpa_scale": "GPA-Skala"
             },
-            "submit": "Aktivität erstellen"
+            "submit": "Aktivität erstellen",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F Buchstabennoten",
+              "numeric": "Punktzahl von 0 bis 100",
+              "percentage": "Note als Prozentsatz",
+              "pass_fail": "Einfach bestanden oder nicht bestanden",
+              "gpa_scale": "4,0 Notenpunktskala"
+            },
+            "grading_options_label": "Bewertungsoptionen",
+            "auto_grading_label": "Automatische Bewertung",
+            "auto_grading_description": "Bewerte die Aufgabe automatisch beim Einreichen des Schülers. Funktioniert nur wenn alle Aufgaben ohne menschliche Überprüfung bewertet werden können.",
+            "anti_copy_paste_label": "Kopieren & Einfügen blockieren",
+            "anti_copy_paste_description": "Entmutige das Einfügen KI-generierter Antworten durch Blockieren von Paste-Events. Hinweis: dies ist nur ein Abschreckungsmittel.",
+            "grading_type_hint": "Wie Noten den Schülern angezeigt werden",
+            "grading_options_hint": "Verhalten bei Einreichung"
           },
           "toasts": {
             "creating": "Aufgabe wird erstellt...",

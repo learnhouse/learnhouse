@@ -9,6 +9,8 @@ class GradingTypeEnum(str, Enum):
     ALPHABET = "ALPHABET"
     NUMERIC = "NUMERIC"
     PERCENTAGE = "PERCENTAGE"
+    PASS_FAIL = "PASS_FAIL"
+    GPA_SCALE = "GPA_SCALE"
 
 
 class AssignmentBase(SQLModel):
@@ -19,6 +21,14 @@ class AssignmentBase(SQLModel):
     due_date: str
     published: Optional[bool] = False
     grading_type: GradingTypeEnum
+    # When True, submissions are graded + marked as done automatically on
+    # submit. Only applies when every task is auto-gradable (no file uploads
+    # which require a human). Teacher can still override by re-grading later.
+    auto_grading: Optional[bool] = False
+    # When True, the student-facing task views block paste events on code
+    # editors and text inputs. This is a soft deterrent — it can be bypassed
+    # but it discourages casual AI-assisted copy/paste.
+    anti_copy_paste: Optional[bool] = False
 
     org_id: int
     course_id: int
@@ -49,6 +59,8 @@ class AssignmentUpdate(SQLModel):
     due_date: Optional[str] = None
     published: Optional[bool] = None
     grading_type: Optional[GradingTypeEnum] = None
+    auto_grading: Optional[bool] = None
+    anti_copy_paste: Optional[bool] = None
     org_id: Optional[int] = None
     course_id: Optional[int] = None
     chapter_id: Optional[int] = None
@@ -90,8 +102,10 @@ class Assignment(AssignmentBase, table=True):
 class AssignmentTaskTypeEnum(str, Enum):
     FILE_SUBMISSION = "FILE_SUBMISSION"
     QUIZ = "QUIZ"
-    FORM = "FORM"  
+    FORM = "FORM"
     CODE = "CODE"
+    SHORT_ANSWER = "SHORT_ANSWER"
+    NUMBER_ANSWER = "NUMBER_ANSWER"
     OTHER = "OTHER"
 
 
@@ -104,7 +118,12 @@ class AssignmentTaskBase(SQLModel):
     reference_file: Optional[str] = None
     assignment_type: AssignmentTaskTypeEnum
     contents: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-    max_grade_value: int = 0  # Value is always between 0-100
+    # Internal grading scale for this task. Defaults to 100 — every task is
+    # graded out of 100 (a percentage). The field stays in the DB because
+    # legacy assignments set different values which, when summed, yielded a
+    # weighted average. New tasks and the UI always use 100, so the
+    # compute_assignment_grade math produces a simple average across tasks.
+    max_grade_value: int = 100
 
 
 class AssignmentTaskCreate(AssignmentTaskBase):
@@ -169,7 +188,7 @@ class AssignmentTaskSubmissionBase(SQLModel):
     """Represents the common fields for an assignment task submission."""
     assignment_task_submission_uuid: str
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-    grade: int = 0  # Value is always between 0-100
+    grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
     assignment_type: AssignmentTaskTypeEnum
 
@@ -211,7 +230,7 @@ class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     assignment_task_submission_uuid: str
     task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-    grade: int = 0  # Value is always between 0-100
+    grade: int = 0  # Task-local raw score; aggregated into AssignmentUserSubmission.grade
     task_submission_grade_feedback: str
     assignment_type: AssignmentTaskTypeEnum
 
@@ -257,6 +276,9 @@ class AssignmentUserSubmissionBase(SQLModel):
         AssignmentUserSubmissionStatus.SUBMITTED
     )
     grade: int
+    # Optional overall note left by the instructor on the assignment as a whole
+    # (separate from task_submission_grade_feedback which is per-task).
+    overall_feedback: Optional[str] = None
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )
@@ -287,6 +309,7 @@ class AssignmentUserSubmissionUpdate(SQLModel):
 
     submission_status: Optional[AssignmentUserSubmissionStatus] = None
     grade: Optional[str] = None
+    overall_feedback: Optional[str] = None
     user_id: Optional[int] = None
     assignment_id: Optional[int] = None
 
@@ -303,6 +326,7 @@ class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
         AssignmentUserSubmissionStatus.SUBMITTED
     )
     grade: int
+    overall_feedback: Optional[str] = None
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )

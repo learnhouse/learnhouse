@@ -352,7 +352,7 @@
     --z-overlay: 120;
     --z-editor-toolbar: 130;
     --z-editor-bubble: 135;
-    --z-tooltip: 150;
+    --z-tooltip: 250;
     --z-modal-backdrop: 200;
     --z-modal: 210;
     --z-modal-content: 220;

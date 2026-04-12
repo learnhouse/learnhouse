@@ -944,7 +944,8 @@
     "current_points": "Puntos actuales: {{points}}",
     "grade": "Nota",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Fecha límite"
+    "due_date": "Fecha límite",
+    "task_breakdown": "Desglose por tarea"
   },
   "certificate": {
     "certificate": "Certificado",
@@ -3114,6 +3115,11 @@
             "update_success": "La tarea se ha actualizado con éxito",
             "update_error": "Error al actualizar la tarea, inténtalo de nuevo más tarde."
           }
+        },
+        "title_prefix": "Tarea:",
+        "header_badges": {
+          "auto_grading": "Calific. automática",
+          "anti_copy_paste": "Pegar bloqueado"
         }
       },
       "editor": {
@@ -3139,6 +3145,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Respuesta corta",
+            "description": "Los estudiantes escriben una respuesta de texto evaluada contra tus respuestas aceptadas"
+          },
+          "number_answer": {
+            "title": "Respuesta numérica",
+            "description": "Los estudiantes introducen un número evaluado con tolerancia"
           }
         },
         "toasts": {
@@ -3156,8 +3170,6 @@
             "hint": "Pista",
             "reference_file": "Archivo de referencia",
             "reference_file_info": "Formatos permitidos: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Nota máxima",
-            "max_grade_error": "El valor debe estar entre 20 y 100",
             "submit": "Enviar",
             "download": "Descargar",
             "change_reference_file": "Cambiar archivo de referencia",
@@ -3167,7 +3179,66 @@
             "sign_in_required": "Inicia sesión para subir archivos",
             "auth_required": "Autenticación requerida. Inicia sesión para subir archivos.",
             "auth_required_submit": "Autenticación requerida. Inicia sesión para enviar tu tarea.",
-            "hint_optional": "Pista (opcional)"
+            "hint_optional": "Pista (opcional)",
+            "paste_blocked": "Pegar está desactivado para esta tarea",
+            "paste_blocked_hint": "Pegar está desactivado — escribe tu respuesta directamente."
+          },
+          "code": {
+            "student_behavior_label": "Comportamiento del estudiante",
+            "allow_student_run_label": "Permitir a estudiantes ejecutar su código",
+            "allow_student_run_description": "Muestra el botón Ejecutar Tests en la vista del estudiante para que puedan probar su código antes de enviar.",
+            "show_test_details_label": "Mostrar esperado vs real en fallos",
+            "show_test_details_description": "Cuando una prueba visible falla, muestra la salida esperada y recibida. Desactiva para evitar ingeniería inversa.",
+            "show_hidden_count_label": "Mostrar número de pruebas ocultas",
+            "show_hidden_count_description": "Muestra una insignia que indica cuántas pruebas ocultas existen.",
+            "require_passing_label": "Requerir aprobar pruebas visibles",
+            "require_passing_description": "Bloquea el botón guardar hasta que todas las pruebas visibles pasen.",
+            "must_pass_toast": "Debes pasar todas las pruebas visibles antes de guardar.",
+            "must_pass_hint": "Todas las pruebas visibles deben pasar antes de guardar.",
+            "show_solution_label": "Revelar solución después de enviar",
+            "show_solution_description": "Una vez que el estudiante haya guardado su trabajo, muestra la solución de referencia del profesor.",
+            "reference_solution_label": "Solución de referencia"
+          },
+          "short_answer": {
+            "prompt_label": "Enunciado de la pregunta",
+            "prompt_placeholder": "¿Cuál es la capital de Marruecos?",
+            "answers_label": "Respuestas aceptadas",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Añadir otra respuesta",
+            "no_answers_error": "Añade al menos una respuesta aceptada antes de guardar",
+            "match_mode_label": "Cómo comparar respuestas",
+            "match_modes": {
+              "exact": "Coincidencia exacta",
+              "case_insensitive": "Sin distinguir mayúsculas (recomendado)",
+              "contains": "Contiene la respuesta en cualquier parte",
+              "regex": "Expresión regular"
+            },
+            "explanation_label": "Explicación (mostrada en respuesta correcta)",
+            "explanation_placeholder": "Opcional — explica por qué la respuesta es correcta",
+            "your_answer_placeholder": "Escribe tu respuesta...",
+            "student_answer_label": "Respuesta del estudiante",
+            "accepted_answers_label": "Respuestas aceptadas",
+            "no_answer": "Sin respuesta enviada",
+            "correct": "Correcto",
+            "incorrect": "No exactamente — intenta de nuevo"
+          },
+          "number_answer": {
+            "prompt_label": "Enunciado de la pregunta",
+            "prompt_placeholder": "¿Cuál es la aceleración de la gravedad en la Tierra?",
+            "correct_value_label": "Valor correcto",
+            "tolerance_label": "Tolerancia (±)",
+            "unit_label": "Unidad (opcional)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Se muestra junto al campo de respuesta. No obligatoria.",
+            "explanation_label": "Explicación (mostrada en respuesta correcta)",
+            "explanation_placeholder": "Opcional — explica cómo llegar a la respuesta",
+            "preview_label": "Acepta",
+            "your_answer_placeholder": "Introduce un número...",
+            "student_answer_label": "Respuesta del estudiante",
+            "accepted_range_label": "Rango aceptado",
+            "no_answer": "Sin respuesta enviada",
+            "correct": "Correcto",
+            "incorrect": "No exactamente — intenta de nuevo"
           }
         }
       },
@@ -3190,11 +3261,46 @@
           "reject": "Rechazar tarea",
           "set_final_grade": "Establecer nota final",
           "mark_as_done": "Marcar actividad como hecha para el usuario",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "Elimina la entrega y permite al estudiante volver a enviar",
+          "set_final_grade_description": "Calcula y guarda la nota sin completar la actividad",
+          "finalize_description": "Establece la nota final y marca la actividad como completada para el estudiante"
         },
         "toasts": {
           "reject_success": "Tarea rechazada con éxito",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Todos"
+        },
+        "sort": {
+          "label": "Ordenar",
+          "date": "Fecha de entrega",
+          "name": "Nombre del estudiante",
+          "status": "Estado",
+          "grade": "Nota",
+          "needs_grading": "Por calificar primero",
+          "late_first": "Entregas tardías primero",
+          "recently_graded": "Calificadas recientemente"
+        },
+        "stats": {
+          "total": "Total"
+        },
+        "search_placeholder": "Buscar por nombre o correo...",
+        "loading": "Cargando entregas...",
+        "empty": "No se encontraron entregas",
+        "grade_label": "Nota:",
+        "preview": {
+          "current_grade": "Nota actual",
+          "passing": "Aprobado",
+          "not_passing": "Reprobado",
+          "not_submitted": "No entregado"
+        },
+        "feedback": {
+          "label": "Comentario general",
+          "optional": "opcional",
+          "placeholder": "Escribe un comentario sobre la entrega. El estudiante lo verá junto a su nota.",
+          "hint": "Déjalo vacío para mantener cualquier comentario anterior sin cambios."
         }
       },
       "modals": {
@@ -3213,11 +3319,28 @@
             "grading_types": {
               "alphabet": "Alfabético",
               "numeric": "Numérico",
-              "percentage": "Porcentaje"
+              "percentage": "Porcentaje",
+              "pass_fail": "Aprobado / Reprobado",
+              "gpa_scale": "Escala GPA"
             },
             "cancel": "Cancelar",
             "save": "Guardar cambios",
-            "saving": "Guardando..."
+            "saving": "Guardando...",
+            "grading_type_descriptions": {
+              "alphabet": "Calificaciones con letras A, B, C, D, F",
+              "numeric": "Puntuación de 0 a 100",
+              "percentage": "Calificación como porcentaje",
+              "pass_fail": "Simple aprobado o reprobado",
+              "gpa_scale": "Escala de puntos 4.0"
+            },
+            "grading_options_label": "Opciones de calificación",
+            "auto_grading_label": "Calificación automática",
+            "auto_grading_description": "Califica y completa la actividad automáticamente cuando el estudiante entrega. Solo funciona cuando cada tarea puede calificarse sin revisión humana.",
+            "anti_copy_paste_label": "Bloquear copiar y pegar",
+            "anti_copy_paste_description": "Desalienta pegar respuestas generadas por IA bloqueando los eventos de pegado. Nota: es un disuasivo, se puede evitar.",
+            "auto_grading_disabled_file": "La calificación automática no está disponible porque esta tarea tiene una entrega de archivo que necesita revisión humana.",
+            "grading_type_hint": "Cómo se muestran las notas a los estudiantes",
+            "grading_options_hint": "Comportamiento al enviar"
           },
           "toasts": {
             "updating": "Actualizando tarea...",
@@ -3239,9 +3362,25 @@
             "grading_types": {
               "alphabet": "Alfabético",
               "numeric": "Numérico",
-              "percentage": "Porcentaje"
+              "percentage": "Porcentaje",
+              "pass_fail": "Aprobado / Reprobado",
+              "gpa_scale": "Escala GPA"
             },
-            "submit": "Crear actividad"
+            "submit": "Crear actividad",
+            "grading_type_descriptions": {
+              "alphabet": "Calificaciones con letras A, B, C, D, F",
+              "numeric": "Puntuación de 0 a 100",
+              "percentage": "Calificación como porcentaje",
+              "pass_fail": "Simple aprobado o reprobado",
+              "gpa_scale": "Escala de puntos 4.0"
+            },
+            "grading_options_label": "Opciones de calificación",
+            "auto_grading_label": "Calificación automática",
+            "auto_grading_description": "Califica y completa la actividad automáticamente cuando el estudiante entrega. Solo funciona cuando cada tarea puede calificarse sin revisión humana.",
+            "anti_copy_paste_label": "Bloquear copiar y pegar",
+            "anti_copy_paste_description": "Desalienta pegar respuestas generadas por IA bloqueando los eventos de pegado. Nota: es un disuasivo, se puede evitar.",
+            "grading_type_hint": "Cómo se muestran las notas a los estudiantes",
+            "grading_options_hint": "Comportamiento al enviar"
           },
           "toasts": {
             "creating": "Creando tarea...",

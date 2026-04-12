@@ -24,7 +24,14 @@ import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/Assign
 import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useTranslation } from 'react-i18next';
 
-type SortField = 'date' | 'name' | 'status';
+type SortField =
+    | 'date'             // when the student submitted
+    | 'name'             // student display name
+    | 'status'           // LATE → SUBMITTED → GRADED (or reverse)
+    | 'grade'            // numeric grade value — highest / lowest first
+    | 'needs_grading'    // put LATE/SUBMITTED before GRADED so teachers see what to review
+    | 'late_first'       // LATE submissions at the top
+    | 'recently_graded'; // GRADED first, then sorted by submission date
 type SortDirection = 'asc' | 'desc';
 type StatusFilter = 'ALL' | 'LATE' | 'SUBMITTED' | 'GRADED';
 
@@ -42,7 +49,16 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
     const { data: assignmentSubmissions } = useSWR(
         `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`,
         (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
+        {
+            // Keep the submissions view in near real-time: poll every 10s, and
+            // refetch whenever the teacher refocuses the tab or reconnects.
+            // 10s is a reasonable floor — auto-graded submissions should show
+            // up without the teacher having to manually refresh the page.
+            refreshInterval: 10000,
+            revalidateOnFocus: true,
+            revalidateOnReconnect: true,
+            dedupingInterval: 5000,
+        }
     );
 
     const stats = useMemo(() => {
@@ -66,6 +82,10 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
         { field: 'date', label: t('dashboard.assignments.submissions.sort.date') },
         { field: 'name', label: t('dashboard.assignments.submissions.sort.name') },
         { field: 'status', label: t('dashboard.assignments.submissions.sort.status') },
+        { field: 'grade', label: t('dashboard.assignments.submissions.sort.grade') },
+        { field: 'needs_grading', label: t('dashboard.assignments.submissions.sort.needs_grading') },
+        { field: 'late_first', label: t('dashboard.assignments.submissions.sort.late_first') },
+        { field: 'recently_graded', label: t('dashboard.assignments.submissions.sort.recently_graded') },
     ];
 
     return (
@@ -239,7 +259,17 @@ function SubmissionsList({
         );
     }
 
+    // Priority tables used by the status-based sorts. Lower numbers come first
+    // when `sortDirection === 'asc'`.
     const statusOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 2 };
+    // needsGradingOrder: ungraded (LATE + SUBMITTED) before GRADED
+    const needsGradingOrder: Record<string, number> = { LATE: 0, SUBMITTED: 0, GRADED: 1 };
+    // lateFirstOrder: LATE first, everything else after
+    const lateFirstOrder: Record<string, number> = { LATE: 0, SUBMITTED: 1, GRADED: 1 };
+    // recentlyGradedOrder: GRADED first, then everything else
+    const recentlyGradedOrder: Record<string, number> = { GRADED: 0, LATE: 1, SUBMITTED: 1 };
+
+    const dateMs = (s: any) => new Date(s.creation_date).getTime();
 
     const filtered = submissions
         .filter((s: any) => {
@@ -249,11 +279,40 @@ function SubmissionsList({
         .sort((a: any, b: any) => {
             let cmp = 0;
             if (sortField === 'date') {
-                cmp = new Date(a.creation_date).getTime() - new Date(b.creation_date).getTime();
+                cmp = dateMs(a) - dateMs(b);
             } else if (sortField === 'status') {
                 cmp = (statusOrder[a.submission_status] ?? 1) - (statusOrder[b.submission_status] ?? 1);
+                // Tiebreak by date so stable output in groups
+                if (cmp === 0) cmp = dateMs(a) - dateMs(b);
+            } else if (sortField === 'grade') {
+                // Sort by numeric grade. Ungraded rows (grade === 0 AND status !== GRADED)
+                // sink to the bottom regardless of direction so teachers see the
+                // actually-graded ones first.
+                const aGraded = a.submission_status === 'GRADED';
+                const bGraded = b.submission_status === 'GRADED';
+                if (aGraded !== bGraded) return aGraded ? -1 : 1;
+                cmp = (Number(a.grade) || 0) - (Number(b.grade) || 0);
+                if (cmp === 0) cmp = dateMs(a) - dateMs(b);
+            } else if (sortField === 'needs_grading') {
+                cmp = (needsGradingOrder[a.submission_status] ?? 1) - (needsGradingOrder[b.submission_status] ?? 1);
+                // Inside the "needs grading" bucket, show oldest first (they've
+                // been waiting longest). Inside the "graded" bucket, newest first.
+                if (cmp === 0) {
+                    const oldestFirst = a.submission_status !== 'GRADED';
+                    cmp = oldestFirst ? dateMs(a) - dateMs(b) : dateMs(b) - dateMs(a);
+                }
+            } else if (sortField === 'late_first') {
+                cmp = (lateFirstOrder[a.submission_status] ?? 1) - (lateFirstOrder[b.submission_status] ?? 1);
+                if (cmp === 0) cmp = dateMs(a) - dateMs(b);
+            } else if (sortField === 'recently_graded') {
+                cmp = (recentlyGradedOrder[a.submission_status] ?? 1) - (recentlyGradedOrder[b.submission_status] ?? 1);
+                // Inside the graded bucket, newest updates first
+                if (cmp === 0) cmp = dateMs(b) - dateMs(a);
             } else {
-                cmp = new Date(a.creation_date).getTime() - new Date(b.creation_date).getTime();
+                // name and any unknown: delegate to date as a safe fallback
+                // (name sort happens inside the row component since user data
+                // is fetched there)
+                cmp = dateMs(a) - dateMs(b);
             }
             return sortDirection === 'asc' ? cmp : -cmp;
         });

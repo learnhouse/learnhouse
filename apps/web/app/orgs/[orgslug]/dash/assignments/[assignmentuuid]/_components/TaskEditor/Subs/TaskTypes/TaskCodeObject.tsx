@@ -29,6 +29,10 @@ import {
   EyeOff,
   ChevronDown,
   ChevronRight,
+  ShieldCheck,
+  BookOpen,
+  Lock,
+  Settings2,
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -84,6 +88,13 @@ type CodeTaskContents = {
   solution_code: string
   grading_mode: 'equal_weight' | 'binary' | 'custom_weights'
   test_cases: CodeTestCase[]
+  // Student-facing behavior. All default to the classic behavior so existing
+  // code tasks keep working unchanged after this upgrade.
+  allow_student_run?: boolean             // student can click Run Tests (default true)
+  show_test_details_on_fail?: boolean     // reveal Expected/Got on a failed test (default true)
+  show_hidden_test_count?: boolean        // show "N hidden tests" badge (default true)
+  require_passing_to_submit?: boolean     // student must pass visible tests to save (default false)
+  show_solution_after_submit?: boolean    // show reference solution once a submission exists (default false)
 }
 
 type CodeTestResult = {
@@ -129,6 +140,28 @@ const DEFAULT_CONTENTS: CodeTaskContents = {
   test_cases: [
     { id: 'tc_' + uuidv4(), label: 'Test 1', stdin: '', expectedStdout: '', hidden: false, weight: 1 },
   ],
+  allow_student_run: true,
+  show_test_details_on_fail: true,
+  show_hidden_test_count: true,
+  require_passing_to_submit: false,
+  show_solution_after_submit: false,
+}
+
+// Helper: merge a contents blob from the API with the student-behavior
+// defaults so missing fields fall back to the pre-upgrade behavior.
+function normalizeCodeContents(raw: any): CodeTaskContents {
+  return {
+    language_id: raw?.language_id ?? 71,
+    starter_code: raw?.starter_code ?? '',
+    solution_code: raw?.solution_code ?? '',
+    grading_mode: raw?.grading_mode ?? 'equal_weight',
+    test_cases: raw?.test_cases ?? [],
+    allow_student_run: raw?.allow_student_run ?? true,
+    show_test_details_on_fail: raw?.show_test_details_on_fail ?? true,
+    show_hidden_test_count: raw?.show_hidden_test_count ?? true,
+    require_passing_to_submit: raw?.require_passing_to_submit ?? false,
+    show_solution_after_submit: raw?.show_solution_after_submit ?? false,
+  }
 }
 
 function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectProps) {
@@ -176,18 +209,43 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
     )
   }, [contents.language_id])
 
+  // Anti-copy-paste: if the assignment has anti_copy_paste enabled, inject a
+  // CodeMirror extension that blocks paste events and shows a toast. Only
+  // applied in the student view — teachers and graders can paste freely.
+  const antiPasteEnabled =
+    view === 'student' && !!assignment?.assignment_object?.anti_copy_paste
+
+  const [pasteBlockerExt, setPasteBlockerExt] = useState<any[]>([])
+  useEffect(() => {
+    if (!antiPasteEnabled) {
+      setPasteBlockerExt([])
+      return
+    }
+    // Dynamic import keeps the view module out of the bundle unless needed
+    import('@codemirror/view').then(({ EditorView }) => {
+      setPasteBlockerExt([
+        EditorView.domEventHandlers({
+          paste: (event: ClipboardEvent) => {
+            event.preventDefault()
+            event.stopPropagation()
+            toast.error(t('dashboard.assignments.editor.task_editor.general.paste_blocked'))
+            return true
+          },
+        }),
+      ])
+    })
+  }, [antiPasteEnabled, t])
+
+  const studentCmExtensions = antiPasteEnabled
+    ? [...cmExtensions, ...pasteBlockerExt]
+    : cmExtensions
+
   // --- TEACHER VIEW ---
   useEffect(() => {
     if (view === 'teacher' && assignmentTaskState?.assignmentTask?.contents) {
       const c = assignmentTaskState.assignmentTask.contents
       if (c.language_id !== undefined) {
-        setContents({
-          language_id: c.language_id ?? 71,
-          starter_code: c.starter_code ?? '',
-          solution_code: c.solution_code ?? '',
-          grading_mode: c.grading_mode ?? 'equal_weight',
-          test_cases: c.test_cases ?? DEFAULT_CONTENTS.test_cases,
-        })
+        setContents(normalizeCodeContents(c))
         setCode(c.starter_code ?? '')
       }
     }
@@ -201,13 +259,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
         setAssignmentTaskOutsideProvider(res.data)
         const c = res.data.contents
         if (c) {
-          setContents({
-            language_id: c.language_id ?? 71,
-            starter_code: c.starter_code ?? '',
-            solution_code: c.solution_code ?? '',
-            grading_mode: c.grading_mode ?? 'equal_weight',
-            test_cases: c.test_cases ?? [],
-          })
+          setContents(normalizeCodeContents(c))
           setCode(c.starter_code ?? '')
           setInitialCode(c.starter_code ?? '')
         }
@@ -298,9 +350,27 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
     }
   }
 
+  // Student-gating helpers: derived from the student-behavior flags.
+  // `visibleResults` is the subset of run results that are NOT hidden test
+  // cases — those are the only ones the student can see and reason about.
+  const visibleResults = results.filter((r) => {
+    const tc = contents.test_cases.find((t) => t.id === r.id)
+    return !tc?.hidden
+  })
+  const allVisiblePassing =
+    visibleResults.length > 0 && visibleResults.every((r) => r.passed)
+  // Only enforce the "must pass" gate when the teacher turned it on.
+  const submissionGatedByPassing = contents.require_passing_to_submit === true
+  const submissionBlocked = submissionGatedByPassing && !allVisiblePassing
+
   // --- SUBMIT (student) ---
   async function submitFC() {
     if (!assignmentTaskUUID) return
+    // Enforce "must pass all visible tests" gate if the teacher enabled it.
+    if (submissionBlocked) {
+      toast.error(t('dashboard.assignments.editor.task_editor.code.must_pass_toast'))
+      return
+    }
     const values = {
       assignment_task_submission_uuid: userSubmissions?.assignment_task_submission_uuid || null,
       task_submission: {
@@ -679,6 +749,51 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
               ))}
             </div>
 
+            {/* Student behavior options */}
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-1.5 text-slate-500">
+                <Settings2 size={13} />
+                <p className="text-xs font-semibold">{t('dashboard.assignments.editor.task_editor.code.student_behavior_label')}</p>
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <CodeOptionToggle
+                  icon={<Play size={13} />}
+                  label={t('dashboard.assignments.editor.task_editor.code.allow_student_run_label')}
+                  description={t('dashboard.assignments.editor.task_editor.code.allow_student_run_description')}
+                  checked={contents.allow_student_run !== false}
+                  onChange={(v) => setContents((prev) => ({ ...prev, allow_student_run: v }))}
+                />
+                <CodeOptionToggle
+                  icon={<Eye size={13} />}
+                  label={t('dashboard.assignments.editor.task_editor.code.show_test_details_label')}
+                  description={t('dashboard.assignments.editor.task_editor.code.show_test_details_description')}
+                  checked={contents.show_test_details_on_fail !== false}
+                  onChange={(v) => setContents((prev) => ({ ...prev, show_test_details_on_fail: v }))}
+                />
+                <CodeOptionToggle
+                  icon={<EyeOff size={13} />}
+                  label={t('dashboard.assignments.editor.task_editor.code.show_hidden_count_label')}
+                  description={t('dashboard.assignments.editor.task_editor.code.show_hidden_count_description')}
+                  checked={contents.show_hidden_test_count !== false}
+                  onChange={(v) => setContents((prev) => ({ ...prev, show_hidden_test_count: v }))}
+                />
+                <CodeOptionToggle
+                  icon={<ShieldCheck size={13} />}
+                  label={t('dashboard.assignments.editor.task_editor.code.require_passing_label')}
+                  description={t('dashboard.assignments.editor.task_editor.code.require_passing_description')}
+                  checked={contents.require_passing_to_submit === true}
+                  onChange={(v) => setContents((prev) => ({ ...prev, require_passing_to_submit: v }))}
+                />
+                <CodeOptionToggle
+                  icon={<BookOpen size={13} />}
+                  label={t('dashboard.assignments.editor.task_editor.code.show_solution_label')}
+                  description={t('dashboard.assignments.editor.task_editor.code.show_solution_description')}
+                  checked={contents.show_solution_after_submit === true}
+                  onChange={(v) => setContents((prev) => ({ ...prev, show_solution_after_submit: v }))}
+                />
+              </div>
+            </div>
+
             {/* Run Tests (teacher) */}
             <div className="flex items-center space-x-2">
               <button
@@ -704,7 +819,8 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
               <span className="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600 rounded-full">
                 {selectedLang?.name || 'Unknown'}
               </span>
-              {hiddenTestCount > 0 && (
+              {/* Hidden-test badge only if the task allows showing the count */}
+              {hiddenTestCount > 0 && contents.show_hidden_test_count !== false && (
                 <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700 rounded-full">
                   {hiddenTestCount} hidden test{hiddenTestCount > 1 ? 's' : ''}
                 </span>
@@ -717,7 +833,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
                 <CodeMirror
                   value={code}
                   onChange={(val) => setCode(val)}
-                  extensions={cmExtensions}
+                  extensions={studentCmExtensions}
                   theme={cmTheme}
                   style={cmStyles}
                   height="300px"
@@ -725,21 +841,78 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
                 />
               )}
             </div>
+            {antiPasteEnabled && (
+              <div className="flex items-center space-x-1.5 text-[10px] text-amber-600 bg-amber-50 rounded-md px-2 py-1 w-fit">
+                <span>🔒</span>
+                <span>{t('dashboard.assignments.editor.task_editor.general.paste_blocked_hint')}</span>
+              </div>
+            )}
 
-            {/* Run Button */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={runCode}
-                disabled={isRunning}
-                className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
-              >
-                {isRunning ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-                <span>{isRunning ? 'Running...' : 'Run Tests'}</span>
-              </button>
-            </div>
+            {/* Run Button — only if the task allows students to run */}
+            {contents.allow_student_run !== false && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={runCode}
+                  disabled={isRunning}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-semibold bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {isRunning ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                  <span>{isRunning ? 'Running...' : 'Run Tests'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Submission gating notice — when the teacher requires passing
+                all visible tests before save. */}
+            {submissionGatedByPassing && !allVisiblePassing && (
+              <div className="flex items-center space-x-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2.5 py-1.5 w-fit">
+                <ShieldCheck size={13} />
+                <span>{t('dashboard.assignments.editor.task_editor.code.must_pass_hint')}</span>
+              </div>
+            )}
 
             {/* Results */}
-            {showResults && <TestResultsPanel results={results} testCases={contents.test_cases} view="student" />}
+            {showResults && (
+              <TestResultsPanel
+                results={results}
+                testCases={contents.test_cases}
+                view="student"
+                showDetailsOnFail={contents.show_test_details_on_fail !== false}
+              />
+            )}
+
+            {/* Reference solution — revealed after a saved submission when
+                the teacher chose to show it. */}
+            {contents.show_solution_after_submit === true &&
+              contents.solution_code &&
+              userSubmissions && (
+                <div className="flex flex-col space-y-1">
+                  <button
+                    onClick={() => setShowSolution(!showSolution)}
+                    className="flex items-center space-x-1 text-xs font-semibold text-slate-600 hover:text-slate-800 w-fit"
+                  >
+                    {showSolution ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    <BookOpen size={13} />
+                    <span>{t('dashboard.assignments.editor.task_editor.code.reference_solution_label')}</span>
+                  </button>
+                  {showSolution && (
+                    <div className={`rounded-md overflow-hidden ${cmClassName}`}>
+                      {cmTheme && (
+                        <CodeMirror
+                          value={contents.solution_code}
+                          extensions={cmExtensions}
+                          theme={cmTheme}
+                          style={cmStyles}
+                          height="220px"
+                          readOnly
+                          editable={false}
+                          basicSetup={{ lineNumbers: true, foldGutter: false }}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
           </>
         )}
 
@@ -825,10 +998,12 @@ function TestResultsPanel({
   results,
   testCases,
   view,
+  showDetailsOnFail = true,
 }: {
   results: CodeTestResult[]
   testCases: CodeTestCase[]
   view: 'student' | 'grading'
+  showDetailsOnFail?: boolean
 }) {
   const passedCount = results.filter((r) => r.passed).length
   const totalCount = results.length
@@ -853,6 +1028,9 @@ function TestResultsPanel({
         {results.map((result) => {
           const tc = testCases.find((t) => t.id === result.id)
           const isHidden = tc?.hidden && view === 'student'
+          // Teachers always see details. In the student view, failure details
+          // are hidden when the task disables details OR the test is hidden.
+          const detailsSuppressed = view === 'student' && !showDetailsOnFail
           return (
             <div
               key={result.id}
@@ -871,7 +1049,7 @@ function TestResultsPanel({
                   <span className="text-[10px] text-slate-400 ml-auto">{result.time}s</span>
                 )}
               </div>
-              {!result.passed && !isHidden && (
+              {!result.passed && !isHidden && !detailsSuppressed && (
                 <div className="mt-1.5 pl-6 text-xs space-y-0.5">
                   {result.expected_stdout !== null && (
                     <div>
@@ -908,6 +1086,46 @@ function TestResultsPanel({
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function CodeOptionToggle({
+  icon,
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  icon: React.ReactNode
+  label: string
+  description: string
+  checked: boolean
+  onChange: (next: boolean) => void
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2 p-2 rounded-md bg-white border border-slate-200">
+      <div className="flex items-start gap-2 flex-1 min-w-0">
+        <div className="mt-0.5 flex-none text-slate-500">{icon}</div>
+        <div className="flex flex-col min-w-0">
+          <p className="text-[11px] font-bold text-slate-700">{label}</p>
+          <p className="text-[10px] text-slate-500 leading-snug mt-0.5">{description}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        aria-pressed={checked}
+        className={`relative flex-none inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+          checked ? 'bg-slate-700' : 'bg-slate-200 hover:bg-slate-300'
+        }`}
+      >
+        <span
+          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${
+            checked ? 'translate-x-3.5' : 'translate-x-0.5'
+          }`}
+        />
+      </button>
     </div>
   )
 }

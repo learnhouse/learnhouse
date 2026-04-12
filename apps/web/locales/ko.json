@@ -954,7 +954,8 @@
     "current_points": "현재 점수: {{points}}",
     "grade": "성적",
     "run_autograde": "Run Auto-grade",
-    "due_date": "제출 기한"
+    "due_date": "제출 기한",
+    "task_breakdown": "과제별 내역"
   },
   "certificate": {
     "certificate": "수료증",
@@ -3126,6 +3127,11 @@
             "update_success": "과제가 성공적으로 업데이트되었습니다",
             "update_error": "과제 업데이트 중 오류가 발생했습니다. 나중에 다시 시도해 주세요."
           }
+        },
+        "title_prefix": "과제:",
+        "header_badges": {
+          "auto_grading": "자동 채점",
+          "anti_copy_paste": "붙여넣기 차단"
         }
       },
       "editor": {
@@ -3151,6 +3157,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "단답형",
+            "description": "학생이 텍스트 답변을 입력하고 승인된 답변과 비교됩니다"
+          },
+          "number_answer": {
+            "title": "숫자 답변",
+            "description": "학생이 숫자를 입력하고 허용 오차로 채점됩니다"
           }
         },
         "toasts": {
@@ -3168,8 +3182,6 @@
             "hint": "힌트",
             "reference_file": "참조 파일",
             "reference_file_info": "허용 형식: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "최대 성적 수치",
-            "max_grade_error": "수치는 20에서 100 사이여야 합니다",
             "submit": "제출",
             "download": "다운로드",
             "change_reference_file": "참조 파일 변경",
@@ -3179,7 +3191,66 @@
             "sign_in_required": "파일을 업로드하려면 로그인하세요",
             "auth_required": "인증이 필요합니다. 파일을 업로드하려면 로그인하세요.",
             "auth_required_submit": "인증이 필요합니다. 태스크를 제출하려면 로그인하세요.",
-            "hint_optional": "힌트 (선택 사항)"
+            "hint_optional": "힌트 (선택 사항)",
+            "paste_blocked": "이 과제에서는 붙여넣기가 비활성화됩니다",
+            "paste_blocked_hint": "붙여넣기가 비활성화됨 — 답을 직접 입력하세요."
+          },
+          "code": {
+            "student_behavior_label": "학생 동작",
+            "allow_student_run_label": "학생이 코드를 실행하도록 허용",
+            "allow_student_run_description": "학생 보기에 테스트 실행 버튼을 표시하여 제출 전에 코드를 시도해볼 수 있도록 합니다.",
+            "show_test_details_label": "실패 시 예상 대 실제 표시",
+            "show_test_details_description": "표시된 테스트가 실패하면 예상 및 수신된 출력을 공개합니다.",
+            "show_hidden_count_label": "숨겨진 테스트 수 표시",
+            "show_hidden_count_description": "숨겨진 테스트가 몇 개 있는지 학생에게 알려주는 배지를 표시합니다.",
+            "require_passing_label": "표시된 테스트 통과 필수",
+            "require_passing_description": "모든 표시된 테스트가 통과할 때까지 저장 버튼을 차단합니다.",
+            "must_pass_toast": "저장하기 전에 모든 표시된 테스트를 통과해야 합니다.",
+            "must_pass_hint": "저장하기 전에 모든 표시된 테스트가 통과해야 합니다.",
+            "show_solution_label": "제출 후 솔루션 공개",
+            "show_solution_description": "학생이 작업을 저장한 후 교사의 참조 솔루션을 표시합니다.",
+            "reference_solution_label": "참조 솔루션"
+          },
+          "short_answer": {
+            "prompt_label": "문제 내용",
+            "prompt_placeholder": "모로코의 수도는?",
+            "answers_label": "허용된 답변",
+            "answer_placeholder": "라바트",
+            "add_answer": "다른 답변 추가",
+            "no_answers_error": "저장 전에 최소 하나의 허용된 답변을 추가하세요",
+            "match_mode_label": "답변 매칭 방법",
+            "match_modes": {
+              "exact": "정확히 일치",
+              "case_insensitive": "대소문자 구분 안함 (권장)",
+              "contains": "답변이 포함됨",
+              "regex": "정규 표현식"
+            },
+            "explanation_label": "설명 (정답 시 표시)",
+            "explanation_placeholder": "선택 — 왜 정답인지 설명",
+            "your_answer_placeholder": "답변을 입력...",
+            "student_answer_label": "학생 답변",
+            "accepted_answers_label": "허용된 답변",
+            "no_answer": "제출된 답변 없음",
+            "correct": "정답",
+            "incorrect": "틀렸어요 — 다시 시도하세요"
+          },
+          "number_answer": {
+            "prompt_label": "문제 내용",
+            "prompt_placeholder": "지구의 중력 가속도는?",
+            "correct_value_label": "정답 값",
+            "tolerance_label": "허용 오차 (±)",
+            "unit_label": "단위 (선택)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "답변 필드 옆에 표시됩니다. 강제되지 않음.",
+            "explanation_label": "설명 (정답 시 표시)",
+            "explanation_placeholder": "선택 — 답을 구하는 방법을 설명",
+            "preview_label": "허용",
+            "your_answer_placeholder": "숫자를 입력...",
+            "student_answer_label": "학생 답변",
+            "accepted_range_label": "허용 범위",
+            "no_answer": "제출된 답변 없음",
+            "correct": "정답",
+            "incorrect": "틀렸어요 — 다시 시도하세요"
           }
         }
       },
@@ -3202,11 +3273,46 @@
           "reject": "과제 반려",
           "set_final_grade": "최종 성적 설정",
           "mark_as_done": "사용자의 활동을 완료로 표시",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "제출물을 삭제하고 학생이 다시 제출할 수 있게 합니다",
+          "set_final_grade_description": "활동을 완료하지 않고 성적을 계산하고 저장합니다",
+          "finalize_description": "최종 성적을 설정하고 학생의 활동을 완료로 표시합니다"
         },
         "toasts": {
           "reject_success": "과제가 성공적으로 반려되었습니다",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "전체"
+        },
+        "sort": {
+          "label": "정렬",
+          "date": "제출 날짜",
+          "name": "학생 이름",
+          "status": "상태",
+          "grade": "성적",
+          "needs_grading": "채점 필요 먼저",
+          "late_first": "늦은 제출 먼저",
+          "recently_graded": "최근 채점 먼저"
+        },
+        "stats": {
+          "total": "전체"
+        },
+        "search_placeholder": "이름 또는 이메일로 검색...",
+        "loading": "제출물 로딩 중...",
+        "empty": "제출물이 없습니다",
+        "grade_label": "성적:",
+        "preview": {
+          "current_grade": "현재 성적",
+          "passing": "합격",
+          "not_passing": "불합격",
+          "not_submitted": "미제출"
+        },
+        "feedback": {
+          "label": "전체 피드백",
+          "optional": "선택",
+          "placeholder": "제출물 전반에 대한 의견을 작성하세요. 학생이 성적 옆에서 확인할 수 있습니다.",
+          "hint": "이전 피드백을 변경하지 않으려면 비워두세요."
         }
       },
       "modals": {
@@ -3225,11 +3331,28 @@
             "grading_types": {
               "alphabet": "알파벳",
               "numeric": "수치",
-              "percentage": "백분율"
+              "percentage": "백분율",
+              "pass_fail": "합격 / 불합격",
+              "gpa_scale": "GPA 척도"
             },
             "cancel": "취소",
             "save": "변경 사항 저장",
-            "saving": "저장 중..."
+            "saving": "저장 중...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F 문자 성적",
+              "numeric": "0에서 100까지 점수",
+              "percentage": "백분율 성적",
+              "pass_fail": "단순 합격 또는 불합격",
+              "gpa_scale": "4.0 학점 척도"
+            },
+            "grading_options_label": "채점 옵션",
+            "auto_grading_label": "자동 채점",
+            "auto_grading_description": "학생이 제출하면 자동으로 활동을 채점하고 완료합니다. 모든 과제가 사람의 검토 없이 채점 가능할 때만 작동합니다.",
+            "anti_copy_paste_label": "복사 및 붙여넣기 차단",
+            "anti_copy_paste_description": "붙여넣기 이벤트를 차단하여 AI 생성 답변 붙여넣기를 억제합니다. 참고: 이것은 억제책입니다.",
+            "auto_grading_disabled_file": "자동 채점을 사용할 수 없습니다 — 이 과제에는 사람의 검토가 필요한 파일 제출 과제가 있습니다.",
+            "grading_type_hint": "학생에게 성적이 표시되는 방식",
+            "grading_options_hint": "제출 시 동작"
           },
           "toasts": {
             "updating": "과제 업데이트 중...",
@@ -3251,9 +3374,25 @@
             "grading_types": {
               "alphabet": "알파벳",
               "numeric": "수치",
-              "percentage": "백분율"
+              "percentage": "백분율",
+              "pass_fail": "합격 / 불합격",
+              "gpa_scale": "GPA 척도"
             },
-            "submit": "활동 생성"
+            "submit": "활동 생성",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F 문자 성적",
+              "numeric": "0에서 100까지 점수",
+              "percentage": "백분율 성적",
+              "pass_fail": "단순 합격 또는 불합격",
+              "gpa_scale": "4.0 학점 척도"
+            },
+            "grading_options_label": "채점 옵션",
+            "auto_grading_label": "자동 채점",
+            "auto_grading_description": "학생이 제출하면 자동으로 활동을 채점하고 완료합니다. 모든 과제가 사람의 검토 없이 채점 가능할 때만 작동합니다.",
+            "anti_copy_paste_label": "복사 및 붙여넣기 차단",
+            "anti_copy_paste_description": "붙여넣기 이벤트를 차단하여 AI 생성 답변 붙여넣기를 억제합니다. 참고: 이것은 억제책입니다.",
+            "grading_type_hint": "학생에게 성적이 표시되는 방식",
+            "grading_options_hint": "제출 시 동작"
           },
           "toasts": {
             "creating": "과제 생성 중...",

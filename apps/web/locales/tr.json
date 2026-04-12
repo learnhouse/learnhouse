@@ -967,7 +967,8 @@
     "current_points": "Mevcut puan: {{points}}",
     "grade": "Not",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Son Teslim Tarihi"
+    "due_date": "Son Teslim Tarihi",
+    "task_breakdown": "Görev dökümü"
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -3139,6 +3140,11 @@
             "update_success": "Ödev başarıyla güncellendi",
             "update_error": "Ödev güncellenirken hata oluştu. Lütfen daha sonra tekrar deneyin."
           }
+        },
+        "title_prefix": "Ödev:",
+        "header_badges": {
+          "auto_grading": "Oto. notlama",
+          "anti_copy_paste": "Yapıştırma eng."
         }
       },
       "editor": {
@@ -3164,6 +3170,14 @@
           "code": {
             "title": "Code",
             "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Kısa cevap",
+            "description": "Öğrenciler kabul ettiğiniz cevaplara karşı notlandırılan bir metin cevabı yazar"
+          },
+          "number_answer": {
+            "title": "Sayısal cevap",
+            "description": "Öğrenciler tolerans ile notlandırılan bir sayı girer"
           }
         },
         "toasts": {
@@ -3181,8 +3195,6 @@
             "hint": "İpucu",
             "reference_file": "Referans Dosya",
             "reference_file_info": "Desteklenen formatlar: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Maksimum Not",
-            "max_grade_error": "Not 20 ile 100 arasında olmalıdır",
             "submit": "Gönder",
             "download": "İndir",
             "change_reference_file": "Referans Dosยayı Değiştir",
@@ -3192,7 +3204,66 @@
             "sign_in_required": "Dosya yüklemek için lütfen giriş yapın",
             "auth_required": "Kimlik doğrulaması gerekiyor. Dosya yüklemek için giriş yapın.",
             "auth_required_submit": "Kimlik doğrulaması gerekiyor. Görevi göndermek için giriş yapın.",
-            "hint_optional": "İpucu (isteğe bağlı)"
+            "hint_optional": "İpucu (isteğe bağlı)",
+            "paste_blocked": "Bu ödev için yapıştırma devre dışı",
+            "paste_blocked_hint": "Yapıştırma devre dışı — cevabınızı doğrudan yazın."
+          },
+          "code": {
+            "student_behavior_label": "Öğrenci davranışı",
+            "allow_student_run_label": "Öğrencilerin kodu çalıştırmasına izin ver",
+            "allow_student_run_description": "Öğrenci görünümünde Testleri Çalıştır düğmesini göster böylece göndermeden önce kodlarını deneyebilirler.",
+            "show_test_details_label": "Başarısızlıkta beklenen vs gerçek göster",
+            "show_test_details_description": "Görünür bir test başarısız olduğunda beklenen ve alınan çıktıyı göster.",
+            "show_hidden_count_label": "Gizli test sayısını göster",
+            "show_hidden_count_description": "Öğrencilere kaç gizli test olduğunu söyleyen bir rozet göster.",
+            "require_passing_label": "Görünür testlerin geçmesini gerektir",
+            "require_passing_description": "Tüm görünür testler geçene kadar kaydet düğmesini engelle.",
+            "must_pass_toast": "Kaydetmeden önce tüm görünür testleri geçmeniz gerekir.",
+            "must_pass_hint": "Kaydetmeden önce tüm görünür testlerin geçmesi gerekir.",
+            "show_solution_label": "Gönderimden sonra çözümü göster",
+            "show_solution_description": "Öğrenci çalışmasını kaydettikten sonra öğretmenin referans çözümünü göster.",
+            "reference_solution_label": "Referans çözüm"
+          },
+          "short_answer": {
+            "prompt_label": "Soru metni",
+            "prompt_placeholder": "Fas’ın başkenti nedir?",
+            "answers_label": "Kabul edilen cevaplar",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Başka bir cevap ekle",
+            "no_answers_error": "Kaydetmeden önce en az bir kabul edilen cevap ekleyin",
+            "match_mode_label": "Cevaplar nasıl eşleştirilir",
+            "match_modes": {
+              "exact": "Tam eşleşme",
+              "case_insensitive": "Büyük-küçük harfe duyarsız (önerilir)",
+              "contains": "Cevabı herhangi bir yerde içerir",
+              "regex": "Düzenli ifade"
+            },
+            "explanation_label": "Açıklama (doğru cevapta gösterilir)",
+            "explanation_placeholder": "İsteğe bağlı — cevabın neden doğru olduğunu açıklayın",
+            "your_answer_placeholder": "Cevabınızı yazın...",
+            "student_answer_label": "Öğrenci cevabı",
+            "accepted_answers_label": "Kabul edilen cevaplar",
+            "no_answer": "Cevap gönderilmedi",
+            "correct": "Doğru",
+            "incorrect": "Pek değil — tekrar deneyin"
+          },
+          "number_answer": {
+            "prompt_label": "Soru metni",
+            "prompt_placeholder": "Dünya’da yerçekimi ivmesi nedir?",
+            "correct_value_label": "Doğru değer",
+            "tolerance_label": "Tolerans (±)",
+            "unit_label": "Birim (isteğe bağlı)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Cevap alanının yanında gösterilir. Zorunlu değildir.",
+            "explanation_label": "Açıklama (doğru cevapta gösterilir)",
+            "explanation_placeholder": "İsteğe bağlı — cevaba nasıl ulaşılacağını açıklayın",
+            "preview_label": "Kabul eder",
+            "your_answer_placeholder": "Bir sayı girin...",
+            "student_answer_label": "Öğrenci cevabı",
+            "accepted_range_label": "Kabul edilen aralık",
+            "no_answer": "Cevap gönderilmedi",
+            "correct": "Doğru",
+            "incorrect": "Pek değil — tekrar deneyin"
           }
         }
       },
@@ -3215,11 +3286,46 @@
           "reject": "Gönderimi Reddet",
           "set_final_grade": "Final Notunu Belirle",
           "mark_as_done": "Kullanıcı aktivitesini tamamlandı olarak işaretle",
-          "finalize": "Finalize & Complete"
+          "finalize": "Finalize & Complete",
+          "reject_description": "Gönderiyi siler ve öğrencinin tekrar göndermesine izin verir",
+          "set_final_grade_description": "Aktiviteyi tamamlamadan notu hesaplar ve kaydeder",
+          "finalize_description": "Son notu belirler ve öğrenci için aktiviteyi tamamlanmış olarak işaretler"
         },
         "toasts": {
           "reject_success": "Gönderim başarıyla reddedildi",
           "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Tümü"
+        },
+        "sort": {
+          "label": "Sırala",
+          "date": "Gönderim tarihi",
+          "name": "Öğrenci adı",
+          "status": "Durum",
+          "grade": "Not",
+          "needs_grading": "Önce notlandırılacak",
+          "late_first": "Önce gecikmiş olanlar",
+          "recently_graded": "Son notlandırılanlar"
+        },
+        "stats": {
+          "total": "Toplam"
+        },
+        "search_placeholder": "İsim veya e-posta ile ara...",
+        "loading": "Gönderiler yükleniyor...",
+        "empty": "Gönderi bulunamadı",
+        "grade_label": "Not:",
+        "preview": {
+          "current_grade": "Mevcut not",
+          "passing": "Geçti",
+          "not_passing": "Kaldı",
+          "not_submitted": "Gönderilmedi"
+        },
+        "feedback": {
+          "label": "Genel geri bildirim",
+          "optional": "isteğe bağlı",
+          "placeholder": "Teslimat hakkında genel bir yorum yazın. Öğrenci bunu notunun yanında görecek.",
+          "hint": "Önceki geri bildirimi değiştirmek istemiyorsanız boş bırakın."
         }
       },
       "modals": {
@@ -3238,11 +3344,28 @@
             "grading_types": {
               "alphabet": "Alfabetik",
               "numeric": "Sayısal",
-              "percentage": "Yüzdelik"
+              "percentage": "Yüzdelik",
+              "pass_fail": "Geçti / Kaldı",
+              "gpa_scale": "GPA Ölçeği"
             },
             "cancel": "İptal",
             "save": "Değişiklikleri Kaydet",
-            "saving": "Kaydediliyor..."
+            "saving": "Kaydediliyor...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F harf notları",
+              "numeric": "0 ile 100 arası puan",
+              "percentage": "Yüzde olarak not",
+              "pass_fail": "Basit geçti veya kaldı",
+              "gpa_scale": "4.0 not ölçeği"
+            },
+            "grading_options_label": "Notlandırma seçenekleri",
+            "auto_grading_label": "Otomatik notlandırma",
+            "auto_grading_description": "Öğrenci gönderdiğinde aktiviteyi otomatik olarak notlandır ve tamamla. Sadece her görevin insan incelemesi olmadan notlandırılabileceği durumlarda çalışır.",
+            "anti_copy_paste_label": "Kopyala ve yapıştır engelle",
+            "anti_copy_paste_description": "Yapıştır olaylarını engelleyerek AI tarafından oluşturulan yanıtları yapıştırmayı caydırın. Not: bu caydırıcıdır.",
+            "auto_grading_disabled_file": "Otomatik notlandırma kullanılamaz — bu ödevde insan incelemesi gerektiren bir dosya gönderim görevi var.",
+            "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
+            "grading_options_hint": "Gönderimde davranış"
           },
           "toasts": {
             "updating": "Ödev güncelleniyor...",
@@ -3264,9 +3387,25 @@
             "grading_types": {
               "alphabet": "Alfabetik",
               "numeric": "Sayısal",
-              "percentage": "Yüzdelik"
+              "percentage": "Yüzdelik",
+              "pass_fail": "Geçti / Kaldı",
+              "gpa_scale": "GPA Ölçeği"
             },
-            "submit": "Aktivite Oluştur"
+            "submit": "Aktivite Oluştur",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F harf notları",
+              "numeric": "0 ile 100 arası puan",
+              "percentage": "Yüzde olarak not",
+              "pass_fail": "Basit geçti veya kaldı",
+              "gpa_scale": "4.0 not ölçeği"
+            },
+            "grading_options_label": "Notlandırma seçenekleri",
+            "auto_grading_label": "Otomatik notlandırma",
+            "auto_grading_description": "Öğrenci gönderdiğinde aktiviteyi otomatik olarak notlandır ve tamamla. Sadece her görevin insan incelemesi olmadan notlandırılabileceği durumlarda çalışır.",
+            "anti_copy_paste_label": "Kopyala ve yapıştır engelle",
+            "anti_copy_paste_description": "Yapıştır olaylarını engelleyerek AI tarafından oluşturulan yanıtları yapıştırmayı caydırın. Not: bu caydırıcıdır.",
+            "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
+            "grading_options_hint": "Gönderimde davranış"
           },
           "toasts": {
             "creating": "Ödev oluşturuluyor...",
