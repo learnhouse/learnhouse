@@ -1,6 +1,23 @@
 'use client';
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, Pencil, UserRoundPen, Backpack } from 'lucide-react'
+import {
+    ALargeSmall,
+    BookOpen,
+    BookX,
+    EllipsisVertical,
+    Eye,
+    GraduationCap,
+    Hash,
+    Layers2,
+    Monitor,
+    Pencil,
+    Percent,
+    Shield,
+    ThumbsUp,
+    UserRoundPen,
+    Backpack,
+    Zap,
+} from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
@@ -42,15 +59,16 @@ function AssignmentEdit() {
     }
     
     return (
-        <div className='flex w-full flex-col'>
+        <div className='flex w-full flex-col h-screen'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
                 <div className='flex flex-col bg-white z-10 nice-shadow relative'>
                     <div className='flex justify-between mr-10 h-full'>
                         <div className="pl-10 mr-10 tracking-tighter">
                             <BrdCmpx />
                             <div className="w-100 flex justify-between">
-                                <div className="flex font-bold text-2xl">
+                                <div className="flex flex-col space-y-2">
                                     <AssignmentTitle />
+                                    <AssignmentInfoBadges />
                                 </div>
                             </div>
                         </div>
@@ -85,7 +103,7 @@ function AssignmentEdit() {
                         </div>
                     </div>
                 </div>
-                <div className="flex h-full w-full">
+                <div className="flex flex-1 min-h-0 w-full">
                     {selectedSubPage === 'editor' && <AssignmentEditorSubPage assignmentuuid={params.assignmentuuid} />}
                     {selectedSubPage === 'submissions' && <AssignmentSubmissionsSubPage assignment_uuid={params.assignmentuuid} />}
                 </div>
@@ -201,7 +219,10 @@ function PublishingState() {
                 <EditAssignmentModal
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
-                    assignment={assignment?.assignment_object}
+                    assignment={{
+                        ...assignment?.assignment_object,
+                        assignment_tasks: assignment?.assignment_tasks,
+                    }}
                     accessToken={access_token}
                 />
             )}
@@ -212,10 +233,73 @@ function PublishingState() {
 function AssignmentTitle() {
     const { t } = useTranslation()
     const assignment = useAssignments() as any;
-    
+    const name = assignment?.assignment_object?.title;
+
     return (
-        <div className="flex items-center gap-2">
-            {t('dashboard.assignments.detail.title')}
+        <div className="flex items-baseline gap-2 font-bold text-2xl">
+            <span className="text-gray-400">{t('dashboard.assignments.detail.title_prefix')}</span>
+            <span className="text-gray-900 truncate max-w-[500px]">{name || '...'}</span>
+        </div>
+    );
+}
+
+// Skeuomorphic badge tokens — vertical gradient + colored ring + colored
+// drop shadow + inset white highlight for a soft "raised pill" look. Same
+// values used in the assignments dashboard (page.tsx in /dash/assignments)
+// so the design language matches across both views.
+const BADGE_BASE =
+    'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset whitespace-nowrap';
+
+const BADGE_VIOLET =
+    'bg-gradient-to-b from-violet-50 to-violet-100 text-violet-700 ring-violet-300/40 shadow-[0_1px_2px_rgba(139,92,246,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+const BADGE_BLUE =
+    'bg-gradient-to-b from-blue-50 to-blue-100 text-blue-700 ring-blue-300/40 shadow-[0_1px_2px_rgba(59,130,246,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+const BADGE_EMERALD =
+    'bg-gradient-to-b from-emerald-50 to-emerald-100 text-emerald-700 ring-emerald-300/40 shadow-[0_1px_2px_rgba(16,185,129,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+const BADGE_AMBER =
+    'bg-gradient-to-b from-amber-50 to-amber-100 text-amber-700 ring-amber-300/40 shadow-[0_1px_2px_rgba(245,158,11,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+const BADGE_ROSE =
+    'bg-gradient-to-b from-rose-50 to-rose-100 text-rose-700 ring-rose-300/40 shadow-[0_1px_2px_rgba(244,63,94,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+const BADGE_CYAN =
+    'bg-gradient-to-b from-cyan-50 to-cyan-100 text-cyan-700 ring-cyan-300/40 shadow-[0_1px_2px_rgba(6,182,212,0.18),inset_0_1px_0_rgba(255,255,255,0.85)]';
+
+const GRADING_TYPE_DISPLAY: Record<string, { icon: React.ReactNode; labelKey: string; color: string }> = {
+    ALPHABET: { icon: <ALargeSmall size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.alphabet', color: BADGE_VIOLET },
+    NUMERIC: { icon: <Hash size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.numeric', color: BADGE_BLUE },
+    PERCENTAGE: { icon: <Percent size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.percentage', color: BADGE_EMERALD },
+    PASS_FAIL: { icon: <ThumbsUp size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.pass_fail', color: BADGE_AMBER },
+    GPA_SCALE: { icon: <GraduationCap size={13} />, labelKey: 'dashboard.assignments.modals.edit.form.grading_types.gpa_scale', color: BADGE_ROSE },
+};
+
+function AssignmentInfoBadges() {
+    const { t } = useTranslation();
+    const assignment = useAssignments() as any;
+    const obj = assignment?.assignment_object;
+    if (!obj) return null;
+
+    const gradingType = obj.grading_type as string | undefined;
+    const gradingDisplay = gradingType ? GRADING_TYPE_DISPLAY[gradingType] : null;
+
+    return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+            {gradingDisplay && (
+                <div className={`${BADGE_BASE} ${gradingDisplay.color}`}>
+                    {gradingDisplay.icon}
+                    <span>{t(gradingDisplay.labelKey)}</span>
+                </div>
+            )}
+            {obj.auto_grading && (
+                <div className={`${BADGE_BASE} ${BADGE_AMBER}`}>
+                    <Zap size={13} />
+                    <span>{t('dashboard.assignments.detail.header_badges.auto_grading')}</span>
+                </div>
+            )}
+            {obj.anti_copy_paste && (
+                <div className={`${BADGE_BASE} ${BADGE_CYAN}`}>
+                    <Shield size={13} />
+                    <span>{t('dashboard.assignments.detail.header_badges.anti_copy_paste')}</span>
+                </div>
+            )}
         </div>
     );
 }

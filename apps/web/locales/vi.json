@@ -907,6 +907,7 @@
     "quiz": "Trắc nghiệm",
     "file_submission": "Nộp tệp",
     "form": "Biểu mẫu",
+    "code": "Code",
     "interactive": "Tương tác",
     "activities": "Hoạt động",
     "current_activity": "Hoạt động hiện tại",
@@ -965,7 +966,13 @@
     "points": "điểm",
     "current_points": "Điểm hiện tại: {{points}}",
     "grade": "Điểm số",
-    "due_date": "Hạn nộp"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "Hạn nộp",
+    "task_breakdown": "Chi tiết nhiệm vụ",
+    "no_grade_details": "Chưa có chi tiết điểm.",
+    "task_passed": "Đạt",
+    "task_not_passed": "Không đạt",
+    "score": "điểm"
   },
   "certificate": {
     "certificate": "Chứng chỉ",
@@ -3108,7 +3115,27 @@
         "course_editor": "Trình chỉnh sửa khóa học",
         "editor": "Trình chỉnh sửa",
         "submissions": "Bài nộp",
-        "no_assignments": "Chưa có bài tập nào cho khóa học này. Hãy tạo một bài tập trong trình chỉnh sửa khóa học."
+        "no_assignments": "Chưa có bài tập nào cho khóa học này. Hãy tạo một bài tập trong trình chỉnh sửa khóa học.",
+        "untitled": "Bài tập không có tiêu đề",
+        "search_placeholder": "Tìm bài tập theo tên hoặc mô tả...",
+        "loading": "Đang tải bài tập...",
+        "empty": "Chưa có bài tập",
+        "empty_filtered": "Không có bài tập nào khớp với bộ lọc của bạn",
+        "clear_filters": "Xóa bộ lọc",
+        "showing_count": "Hiển thị {{shown}} trong số {{total}} bài tập",
+        "stats": {
+          "total": "Tổng",
+          "published": "Đã xuất bản",
+          "drafts": "Bản nháp",
+          "auto_graded": "Tự động chấm"
+        },
+        "filters": {
+          "all": "Tất cả",
+          "published": "Đã xuất bản",
+          "drafts": "Bản nháp",
+          "auto_graded": "Chỉ tự động chấm",
+          "hide_empty": "Ẩn khóa học trống"
+        }
       },
       "detail": {
         "title": "Công cụ bài tập",
@@ -3137,6 +3164,11 @@
             "update_success": "Đã cập nhật bài tập thành công",
             "update_error": "Đã xảy ra lỗi khi cập nhật bài tập. Vui lòng thử lại sau."
           }
+        },
+        "title_prefix": "Bài tập:",
+        "header_badges": {
+          "auto_grading": "Tự động chấm",
+          "anti_copy_paste": "Chặn dán"
         }
       },
       "editor": {
@@ -3158,6 +3190,18 @@
           "form": {
             "title": "Biểu mẫu",
             "description": "Một biểu mẫu để người học điền vào"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Câu trả lời ngắn",
+            "description": "Học sinh nhập câu trả lời văn bản được chấm điểm so với các câu trả lời được chấp nhận của bạn"
+          },
+          "number_answer": {
+            "title": "Câu trả lời số",
+            "description": "Học sinh nhập một số được chấm điểm với dung sai"
           }
         },
         "toasts": {
@@ -3175,8 +3219,6 @@
             "hint": "Gợi ý",
             "reference_file": "Tệp tham khảo",
             "reference_file_info": "Các định dạng được hỗ trợ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Điểm tối đa",
-            "max_grade_error": "Điểm phải nằm trong khoảng từ 20 đến 100",
             "submit": "Nộp",
             "download": "Tải xuống",
             "change_reference_file": "Thay đổi tệp tham khảo",
@@ -3186,7 +3228,66 @@
             "sign_in_required": "Vui lòng đăng nhập để tải tệp lên",
             "auth_required": "Yêu cầu xác thực. Đăng nhập để tải tệp lên.",
             "auth_required_submit": "Yêu cầu xác thực. Đăng nhập để nộp nhiệm vụ.",
-            "hint_optional": "Gợi ý (tùy chọn)"
+            "hint_optional": "Gợi ý (tùy chọn)",
+            "paste_blocked": "Dán bị vô hiệu hóa cho bài tập này",
+            "paste_blocked_hint": "Dán bị vô hiệu hóa — nhập câu trả lời trực tiếp."
+          },
+          "code": {
+            "student_behavior_label": "Hành vi học sinh",
+            "allow_student_run_label": "Cho phép học sinh chạy mã",
+            "allow_student_run_description": "Hiển thị nút Chạy Test trong giao diện học sinh để họ có thể thử mã trước khi nộp.",
+            "show_test_details_label": "Hiển thị kỳ vọng vs thực tế khi thất bại",
+            "show_test_details_description": "Khi một bài test hiển thị thất bại, cho thấy đầu ra kỳ vọng và nhận được.",
+            "show_hidden_count_label": "Hiển thị số bài test ẩn",
+            "show_hidden_count_description": "Hiển thị huy hiệu cho học sinh biết có bao nhiêu bài test ẩn.",
+            "require_passing_label": "Yêu cầu vượt qua bài test hiển thị",
+            "require_passing_description": "Chặn nút lưu cho đến khi tất cả bài test hiển thị đều vượt qua.",
+            "must_pass_toast": "Bạn cần vượt qua tất cả bài test hiển thị trước khi lưu.",
+            "must_pass_hint": "Tất cả bài test hiển thị phải vượt qua trước khi lưu.",
+            "show_solution_label": "Tiết lộ giải pháp sau khi nộp",
+            "show_solution_description": "Sau khi học sinh đã lưu công việc, hiển thị giải pháp tham khảo của giáo viên.",
+            "reference_solution_label": "Giải pháp tham khảo"
+          },
+          "short_answer": {
+            "prompt_label": "Nội dung câu hỏi",
+            "prompt_placeholder": "Thủ đô của Maroc là gì?",
+            "answers_label": "Câu trả lời được chấp nhận",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Thêm câu trả lời khác",
+            "no_answers_error": "Thêm ít nhất một câu trả lời được chấp nhận trước khi lưu",
+            "match_mode_label": "Cách khớp câu trả lời",
+            "match_modes": {
+              "exact": "Khớp chính xác",
+              "case_insensitive": "Không phân biệt hoa thường (khuyến nghị)",
+              "contains": "Chứa câu trả lời ở bất kỳ đâu",
+              "regex": "Biểu thức chính quy"
+            },
+            "explanation_label": "Giải thích (hiện khi trả lời đúng)",
+            "explanation_placeholder": "Tùy chọn — giải thích tại sao câu trả lời đúng",
+            "your_answer_placeholder": "Nhập câu trả lời...",
+            "student_answer_label": "Câu trả lời học sinh",
+            "accepted_answers_label": "Câu trả lời được chấp nhận",
+            "no_answer": "Không có câu trả lời được gửi",
+            "correct": "Đúng",
+            "incorrect": "Chưa đúng — thử lại"
+          },
+          "number_answer": {
+            "prompt_label": "Nội dung câu hỏi",
+            "prompt_placeholder": "Gia tốc trọng trường trên Trái Đất là gì?",
+            "correct_value_label": "Giá trị đúng",
+            "tolerance_label": "Dung sai (±)",
+            "unit_label": "Đơn vị (tùy chọn)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Hiển thị bên cạnh trường câu trả lời. Không bắt buộc.",
+            "explanation_label": "Giải thích (hiện khi trả lời đúng)",
+            "explanation_placeholder": "Tùy chọn — giải thích cách có được câu trả lời",
+            "preview_label": "Chấp nhận",
+            "your_answer_placeholder": "Nhập một số...",
+            "student_answer_label": "Câu trả lời học sinh",
+            "accepted_range_label": "Phạm vi chấp nhận",
+            "no_answer": "Không có câu trả lời được gửi",
+            "correct": "Đúng",
+            "incorrect": "Chưa đúng — thử lại"
           }
         }
       },
@@ -3208,10 +3309,47 @@
         "actions": {
           "reject": "Từ chối bài nộp",
           "set_final_grade": "Đặt điểm cuối cùng",
-          "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong"
+          "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong",
+          "finalize": "Finalize & Complete",
+          "reject_description": "Xóa bài nộp và cho phép học sinh nộp lại",
+          "set_final_grade_description": "Tính toán và lưu điểm mà không hoàn thành hoạt động",
+          "finalize_description": "Đặt điểm cuối cùng và đánh dấu hoạt động là hoàn thành cho học sinh"
         },
         "toasts": {
-          "reject_success": "Đã từ chối bài nộp thành công"
+          "reject_success": "Đã từ chối bài nộp thành công",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Tất cả"
+        },
+        "sort": {
+          "label": "Sắp xếp",
+          "date": "Ngày nộp",
+          "name": "Tên học sinh",
+          "status": "Trạng thái",
+          "grade": "Điểm",
+          "needs_grading": "Cần chấm điểm trước",
+          "late_first": "Nộp muộn trước",
+          "recently_graded": "Chấm gần đây trước"
+        },
+        "stats": {
+          "total": "Tổng"
+        },
+        "search_placeholder": "Tìm theo tên hoặc email...",
+        "loading": "Đang tải bài nộp...",
+        "empty": "Không tìm thấy bài nộp",
+        "grade_label": "Điểm:",
+        "preview": {
+          "current_grade": "Điểm hiện tại",
+          "passing": "Đạt",
+          "not_passing": "Không đạt",
+          "not_submitted": "Chưa nộp"
+        },
+        "feedback": {
+          "label": "Phản hồi tổng thể",
+          "optional": "tùy chọn",
+          "placeholder": "Viết nhận xét về bài nộp tổng thể. Học sinh sẽ thấy nó bên cạnh điểm của mình.",
+          "hint": "Để trống để giữ nhận xét trước đó không thay đổi."
         }
       },
       "modals": {
@@ -3230,11 +3368,28 @@
             "grading_types": {
               "alphabet": "Bảng chữ cái",
               "numeric": "Số học",
-              "percentage": "Phần trăm"
+              "percentage": "Phần trăm",
+              "pass_fail": "Đạt / Không đạt",
+              "gpa_scale": "Thang GPA"
             },
             "cancel": "Hủy",
             "save": "Lưu thay đổi",
-            "saving": "Đang lưu..."
+            "saving": "Đang lưu...",
+            "grading_type_descriptions": {
+              "alphabet": "Điểm chữ A, B, C, D, F",
+              "numeric": "Điểm từ 0 đến 100",
+              "percentage": "Điểm theo phần trăm",
+              "pass_fail": "Đơn giản đạt hoặc không đạt",
+              "gpa_scale": "Thang điểm 4.0"
+            },
+            "grading_options_label": "Tùy chọn chấm điểm",
+            "auto_grading_label": "Chấm điểm tự động",
+            "auto_grading_description": "Chấm điểm và hoàn thành hoạt động tự động khi học sinh nộp. Chỉ hoạt động khi mọi nhiệm vụ có thể được chấm mà không cần con người.",
+            "anti_copy_paste_label": "Chặn sao chép và dán",
+            "anti_copy_paste_description": "Ngăn cản dán câu trả lời do AI tạo bằng cách chặn sự kiện dán. Lưu ý: đây là biện pháp răn đe.",
+            "auto_grading_disabled_file": "Chấm điểm tự động không khả dụng vì bài tập này có nhiệm vụ nộp tệp cần sự xem xét của con người.",
+            "grading_type_hint": "Cách điểm được hiển thị cho học sinh",
+            "grading_options_hint": "Hành vi khi nộp"
           },
           "toasts": {
             "updating": "Đang cập nhật bài tập...",
@@ -3256,9 +3411,25 @@
             "grading_types": {
               "alphabet": "Bảng chữ cái",
               "numeric": "Số học",
-              "percentage": "Phần trăm"
+              "percentage": "Phần trăm",
+              "pass_fail": "Đạt / Không đạt",
+              "gpa_scale": "Thang GPA"
             },
-            "submit": "Tạo hoạt động"
+            "submit": "Tạo hoạt động",
+            "grading_type_descriptions": {
+              "alphabet": "Điểm chữ A, B, C, D, F",
+              "numeric": "Điểm từ 0 đến 100",
+              "percentage": "Điểm theo phần trăm",
+              "pass_fail": "Đơn giản đạt hoặc không đạt",
+              "gpa_scale": "Thang điểm 4.0"
+            },
+            "grading_options_label": "Tùy chọn chấm điểm",
+            "auto_grading_label": "Chấm điểm tự động",
+            "auto_grading_description": "Chấm điểm và hoàn thành hoạt động tự động khi học sinh nộp. Chỉ hoạt động khi mọi nhiệm vụ có thể được chấm mà không cần con người.",
+            "anti_copy_paste_label": "Chặn sao chép và dán",
+            "anti_copy_paste_description": "Ngăn cản dán câu trả lời do AI tạo bằng cách chặn sự kiện dán. Lưu ý: đây là biện pháp răn đe.",
+            "grading_type_hint": "Cách điểm được hiển thị cho học sinh",
+            "grading_options_hint": "Hành vi khi nộp"
           },
           "toasts": {
             "creating": "Đang tạo bài tập...",

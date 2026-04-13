@@ -1,7 +1,7 @@
 'use client'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import React, { createContext, useContext, useEffect } from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
 import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
@@ -10,7 +10,6 @@ export const AssignmentContext = createContext({})
 export function AssignmentProvider({ children, assignment_uuid }: { children: React.ReactNode, assignment_uuid: string }) {
     const session = useLHSession() as any
     const accessToken = session?.data?.tokens?.access_token
-    const [assignmentsFull, setAssignmentsFull] = React.useState({ assignment_object: null, assignment_tasks: null, course_object: null , activity_object: null})
 
     const { data: assignment, error: assignmentError } = useSWR(
         `${getAPIUrl()}assignments/${assignment_uuid}`,
@@ -22,29 +21,30 @@ export function AssignmentProvider({ children, assignment_uuid }: { children: Re
         (url) => swrFetcher(url, accessToken)
     )
 
-    const course_id = assignment?.course_id
-
-    const { data: course_object, error: courseObjectError } = useSWR(
-        course_id ? `${getAPIUrl()}courses/id/${course_id}` : null,
-        (url) => swrFetcher(url, accessToken)
-    )
-
-    const activity_id = assignment?.activity_id
-
-    const { data: activity_object, error: activityObjectError } = useSWR(
-        activity_id ? `${getAPIUrl()}activities/id/${activity_id}` : null,
-        (url) => swrFetcher(url, accessToken)
-    )
-
-    useEffect(() => {
-        if (assignment && assignment_tasks && (!course_id || course_object) && (!activity_id || activity_object)) {
-            setAssignmentsFull({ assignment_object: assignment, assignment_tasks: assignment_tasks, course_object: course_object, activity_object: activity_object })
+    // course_uuid/activity_uuid are now embedded in the assignment payload
+    // (joined server-side) so we don't need separate /courses/id and
+    // /activities/id round trips. We synthesize tiny shim objects to keep
+    // existing consumers (which read .course_uuid / .activity_uuid) working
+    // without changes. useMemo (vs useState+useEffect) means the provider
+    // value is correct on the same render the SWR data lands, with no
+    // wasted null-context render cycle.
+    const assignmentsFull = useMemo(() => {
+        if (!assignment || !assignment_tasks) return null
+        return {
+            assignment_object: assignment,
+            assignment_tasks: assignment_tasks,
+            course_object: assignment.course_uuid
+                ? { course_uuid: assignment.course_uuid }
+                : null,
+            activity_object: assignment.activity_uuid
+                ? { activity_uuid: assignment.activity_uuid }
+                : null,
         }
-    }, [assignment, assignment_tasks, course_object, activity_object, course_id, activity_id])
+    }, [assignment, assignment_tasks])
 
-    if (assignmentError || assignmentTasksError || courseObjectError || activityObjectError) return <div></div>
+    if (assignmentError || assignmentTasksError) return <div></div>
 
-    if (!assignment || !assignment_tasks || (course_id && !course_object) || (activity_id && !activity_object)) return <div></div>
+    if (!assignmentsFull) return <div></div>
 
     return <AssignmentContext.Provider value={assignmentsFull}>{children}</AssignmentContext.Provider>
 }

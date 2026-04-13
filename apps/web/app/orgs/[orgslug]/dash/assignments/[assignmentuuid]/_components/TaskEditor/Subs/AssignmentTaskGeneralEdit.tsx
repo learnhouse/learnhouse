@@ -26,22 +26,18 @@ export function AssignmentTaskGeneralEdit() {
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
     const assignment = useAssignments() as any
 
-    const validate = (values: any) => {
-        const errors: any = {};
-        if (values.max_grade_value < 20 || values.max_grade_value > 100) {
-            errors.max_grade_value = t('dashboard.assignments.editor.task_editor.general.max_grade_error');
-        }
-        return errors;
-    };
+    // No validate function — the teacher no longer configures points per task.
+    // All tasks are graded out of 100 (a percentage). max_grade_value is still
+    // sent in the update payload for backwards compatibility with legacy tasks
+    // but is fixed at 100 for any edit from this screen.
 
     const formik = useFormik({
         initialValues: {
             title: assignmentTaskState.assignmentTask.title,
             description: assignmentTaskState.assignmentTask.description,
             hint: assignmentTaskState.assignmentTask.hint,
-            max_grade_value: assignmentTaskState.assignmentTask.max_grade_value,
+            max_grade_value: 100,
         },
-        validate,
         onSubmit: async values => {
             const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token)
             if (res) {
@@ -104,19 +100,8 @@ export function AssignmentTaskGeneralEdit() {
                 </Form.Control>
             </FormField>
 
-            <FormField name="max_grade_value">
-                <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.max_grade_value')} message={formik.errors.max_grade_value} />
-                <Form.Control asChild>
-                    <Input
-                        onChange={formik.handleChange}
-                        value={formik.values.max_grade_value}
-                        type="number"
-                    />
-                </Form.Control>
-            </FormField>
-
             {/* Submit button */}
-            <Form.Submit >
+            <Form.Submit asChild>
                 <button
                     type="submit"
                     className="flex items-center justify-center w-full px-4 py-2 mt-4 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"

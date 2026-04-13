@@ -1,4 +1,7 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException
+from pydantic import BaseModel
 from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
@@ -37,10 +40,19 @@ from src.services.courses.activities.assignments import (
     read_user_assignment_submissions_me,
     read_user_assignment_task_submissions,
     read_user_assignment_task_submissions_me,
+    read_user_assignment_task_submissions_me_batch,
     update_assignment,
     update_assignment_submission,
     update_assignment_task,
 )
+
+
+class GradeSubmissionBody(BaseModel):
+    """Optional body for the final-grade endpoint. Lets the instructor leave
+    an overall feedback note at the same time they finalize the grade."""
+
+    overall_feedback: Optional[str] = None
+
 
 router = APIRouter()
 
@@ -285,6 +297,24 @@ async def api_read_user_assignment_task_submissions(
     )
 
 
+@router.get("/{assignment_uuid}/tasks/submissions/me")
+async def api_read_user_assignment_task_submissions_me_batch(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Read all current-user task submissions for an assignment in one round trip.
+    Returns a map keyed by assignment_task_uuid (value is null if no submission).
+    Registered before the per-task variant so the literal `submissions` path
+    segment isn't shadowed by `{assignment_task_uuid}`.
+    """
+    return await read_user_assignment_task_submissions_me_batch(
+        request, assignment_uuid, current_user, db_session
+    )
+
+
 @router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/me")
 async def api_read_user_assignment_task_submissions_me(
     request: Request,
@@ -458,15 +488,22 @@ async def api_final_grade_submission(
     request: Request,
     assignment_uuid: str,
     user_id: str,
+    body: Optional[GradeSubmissionBody] = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     """
-    Grade submissions for an assignment from a user
+    Compute and store the final grade for an assignment submission. Accepts
+    an optional overall_feedback note that will be stored alongside the grade.
     """
 
     return await grade_assignment_submission(
-        request, user_id, assignment_uuid, current_user, db_session
+        request,
+        user_id,
+        assignment_uuid,
+        current_user,
+        db_session,
+        overall_feedback=body.overall_feedback if body else None,
     )
 
 

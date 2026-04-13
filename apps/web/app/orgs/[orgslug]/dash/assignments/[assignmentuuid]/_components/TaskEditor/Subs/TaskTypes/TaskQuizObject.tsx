@@ -1,13 +1,16 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
+import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAssignmentTask, getAssignmentTaskSubmissionsMe, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
+import { getAPIUrl } from '@services/config/config';
+import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
+import { mutate } from 'swr';
 
 type QuizSchema = {
     questionText: string;
@@ -50,6 +53,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
     const assignmentTaskState = useAssignmentsTask() as any;
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
+    const taskSubmissionsMap = useAssignmentTaskSubmissions();
 
 
     /* TEACHER VIEW CODE */
@@ -163,6 +167,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         });
     }
 
+    // Used only by grading view — student view hydrates from useAssignments() context
     async function getAssignmentTaskUI() {
         if (assignmentTaskUUID) {
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
@@ -174,20 +179,31 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         }
     }
 
-    async function getAssignmentTaskSubmissionFromUserUI() {
-        if (assignmentTaskUUID) {
-            const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res.success) {
-                setUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
-                setInitialUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
+    function hydrateTaskFromContext() {
+        if (!assignmentTaskUUID) return;
+        const task = assignment?.assignment_tasks?.find(
+            (t: any) => t.assignment_task_uuid === assignmentTaskUUID
+        );
+        if (task) {
+            setAssignmentTaskOutsideProvider(task);
+            if (task.contents?.questions) {
+                setQuestions(task.contents.questions);
             }
+        }
+    }
 
+    function hydrateSubmissionFromBatch() {
+        if (!assignmentTaskUUID) return;
+        const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
+        if (sub) {
+            setUserSubmissions({
+                ...sub.task_submission,
+                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+            });
+            setInitialUserSubmissions({
+                ...sub.task_submission,
+                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+            });
         }
     }
 
@@ -244,6 +260,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 };
                 setUserSubmissions(updatedUserSubmissionsWithUUID);
                 setInitialUserSubmissions(updatedUserSubmissionsWithUUID);
+                mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
             } else {
                 toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }
@@ -321,24 +338,23 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         if (view == 'teacher' && assignmentTaskState.assignmentTask.contents?.questions) {
             setQuestions(assignmentTaskState.assignmentTask.contents.questions);
         }
-        // Student area
+        // Student area: hydrate from already-fetched context payloads.
         else if (view == 'student') {
-            getAssignmentTaskUI();
-            getAssignmentTaskSubmissionFromUserUI();
+            hydrateTaskFromContext();
+            hydrateSubmissionFromBatch();
         }
 
-        // Grading area
+        // Grading area: per-task fetches are fine here (one task at a time).
         else if (view == 'grading') {
             getAssignmentTaskUI();
-            //setQuestions(assignmentTaskState.assignmentTask.contents.questions);
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
 
         }
-    }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token]);
+    }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token, taskSubmissionsMap]);
 
     if (questions && questions.length >= 0) {
         return (
-            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} view={view} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz">
+            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} view={view} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz" autoGradable={true}>
                 <div className="flex flex-col space-y-6">
                     {questions && questions.map((question, qIndex) => (
                         <div key={qIndex} className="flex flex-col space-y-1.5">

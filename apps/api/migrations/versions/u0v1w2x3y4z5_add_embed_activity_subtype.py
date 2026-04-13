@@ -1,7 +1,7 @@
 """Add embed activity subtype
 
 Revision ID: u0v1w2x3y4z5
-Revises: s8t9u0v1w2x3
+Revises: s8t9u0v1w2x4
 Create Date: 2026-04-04 00:00:00.000000
 
 """
@@ -14,7 +14,7 @@ from alembic_postgresql_enum import TableReference  # type: ignore
 
 # revision identifiers, used by Alembic.
 revision: str = 'u0v1w2x3y4z5'
-down_revision: Union[str, None] = 's8t9u0v1w2x3'
+down_revision: Union[str, None] = 's8t9u0v1w2x4'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

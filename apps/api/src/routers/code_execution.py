@@ -306,8 +306,26 @@ async def execute_batch(
             judge0_cfg, language_id, source_code, tc.stdin, additional_files_b64
         )
         status = r.get("status", {})
-        actual = (r.get("stdout") or "").rstrip("\n")
-        expected = tc.expected_stdout.rstrip("\n")
+        # Normalize both outputs before comparing:
+        # - splitlines handles \n, \r\n, and \r equivalently
+        # - rstrip each line removes accidental trailing spaces / tabs /
+        #   carriage returns (a very common source of false failures when a
+        #   teacher types the expected value in a textarea)
+        # - drop trailing empty lines so `print("x")` (outputs "x\n") matches
+        #   `x` with or without a trailing newline in the expected field
+        # We intentionally preserve leading whitespace on each line so that
+        # indentation-sensitive tests (trees, tables, Python REPL output)
+        # still work correctly.
+        def normalize_output(s: str | None) -> str:
+            if not s:
+                return ""
+            lines = [line.rstrip() for line in s.splitlines()]
+            while lines and lines[-1] == "":
+                lines.pop()
+            return "\n".join(lines)
+
+        actual = normalize_output(r.get("stdout"))
+        expected = normalize_output(tc.expected_stdout)
         passed = status.get("id") == 3 and actual == expected
         return {
             "id": tc.id,

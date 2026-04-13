@@ -884,6 +884,7 @@
     "quiz": "Questionário",
     "file_submission": "Envio de Arquivo",
     "form": "Formulário",
+    "code": "Code",
     "interactive": "Interativo",
     "activities": "Atividades",
     "current_activity": "Atividade Atual",
@@ -942,7 +943,13 @@
     "points": "pontos",
     "current_points": "Pontos atuais: {{points}}",
     "grade": "Nota",
-    "due_date": "Data de Entrega"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "Data de Entrega",
+    "task_breakdown": "Detalhamento das tarefas",
+    "no_grade_details": "Ainda não há detalhes da nota disponíveis.",
+    "task_passed": "Aprovado",
+    "task_not_passed": "Não aprovado",
+    "score": "pontuação"
   },
   "certificate": {
     "certificate": "Certificado",
@@ -3085,7 +3092,27 @@
         "course_editor": "Editor de Curso",
         "editor": "Editor",
         "submissions": "Envios",
-        "no_assignments": "Nenhuma tarefa disponível para este curso, crie tarefas de curso a partir do editor de curso"
+        "no_assignments": "Nenhuma tarefa disponível para este curso, crie tarefas de curso a partir do editor de curso",
+        "untitled": "Tarefa sem título",
+        "search_placeholder": "Buscar tarefas por nome ou descrição...",
+        "loading": "Carregando tarefas...",
+        "empty": "Ainda não há tarefas",
+        "empty_filtered": "Nenhuma tarefa corresponde aos seus filtros",
+        "clear_filters": "Limpar filtros",
+        "showing_count": "Mostrando {{shown}} de {{total}} tarefas",
+        "stats": {
+          "total": "Total",
+          "published": "Publicadas",
+          "drafts": "Rascunhos",
+          "auto_graded": "Auto-avaliadas"
+        },
+        "filters": {
+          "all": "Todas",
+          "published": "Publicadas",
+          "drafts": "Rascunhos",
+          "auto_graded": "Apenas auto-avaliadas",
+          "hide_empty": "Ocultar cursos vazios"
+        }
       },
       "detail": {
         "title": "Ferramentas de Tarefa",
@@ -3114,6 +3141,11 @@
             "update_success": "A tarefa foi atualizada com sucesso",
             "update_error": "Erro ao atualizar tarefa, tente novamente mais tarde."
           }
+        },
+        "title_prefix": "Tarefa:",
+        "header_badges": {
+          "auto_grading": "Auto-avaliado",
+          "anti_copy_paste": "Colar bloqueado"
         }
       },
       "editor": {
@@ -3135,6 +3167,18 @@
           "form": {
             "title": "Formulário",
             "description": "Formulários de preenchimento para estudantes"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Resposta curta",
+            "description": "Os alunos digitam uma resposta de texto avaliada contra suas respostas aceitas"
+          },
+          "number_answer": {
+            "title": "Resposta numérica",
+            "description": "Os alunos inserem um número avaliado com tolerância"
           }
         },
         "toasts": {
@@ -3152,8 +3196,6 @@
             "hint": "Dica",
             "reference_file": "Arquivo de referência",
             "reference_file_info": "Formatos permitidos: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Valor da Nota Máxima",
-            "max_grade_error": "O valor deve estar entre 20 e 100",
             "submit": "Enviar",
             "download": "Baixar",
             "change_reference_file": "Alterar Arquivo de Referência",
@@ -3163,7 +3205,66 @@
             "sign_in_required": "Faça login para enviar arquivos",
             "auth_required": "Autenticação necessária. Faça login para enviar arquivos.",
             "auth_required_submit": "Autenticação necessária. Faça login para enviar sua atividade.",
-            "hint_optional": "Dica (opcional)"
+            "hint_optional": "Dica (opcional)",
+            "paste_blocked": "Colar está desativado para esta tarefa",
+            "paste_blocked_hint": "Colar está desativado — digite sua resposta diretamente."
+          },
+          "code": {
+            "student_behavior_label": "Comportamento do aluno",
+            "allow_student_run_label": "Permitir alunos executarem código",
+            "allow_student_run_description": "Mostre o botão Executar Testes na visão do aluno para que possam tentar o código antes de enviar.",
+            "show_test_details_label": "Mostrar esperado vs real em falhas",
+            "show_test_details_description": "Quando um teste visível falha, revela a saída esperada e recebida.",
+            "show_hidden_count_label": "Mostrar número de testes ocultos",
+            "show_hidden_count_description": "Mostre uma insígnia indicando aos alunos quantos testes ocultos existem.",
+            "require_passing_label": "Exigir passar nos testes visíveis",
+            "require_passing_description": "Bloqueie o botão salvar até que todos os testes visíveis passem.",
+            "must_pass_toast": "Você precisa passar em todos os testes visíveis antes de salvar.",
+            "must_pass_hint": "Todos os testes visíveis devem passar antes de salvar.",
+            "show_solution_label": "Revelar solução após enviar",
+            "show_solution_description": "Depois que o aluno salvar seu trabalho, mostre a solução de referência do professor.",
+            "reference_solution_label": "Solução de referência"
+          },
+          "short_answer": {
+            "prompt_label": "Enunciado da pergunta",
+            "prompt_placeholder": "Qual é a capital de Marrocos?",
+            "answers_label": "Respostas aceitas",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Adicionar outra resposta",
+            "no_answers_error": "Adicione pelo menos uma resposta aceita antes de salvar",
+            "match_mode_label": "Como comparar respostas",
+            "match_modes": {
+              "exact": "Correspondência exata",
+              "case_insensitive": "Sem diferenciar maiúsculas (recomendado)",
+              "contains": "Contém a resposta em qualquer lugar",
+              "regex": "Expressão regular"
+            },
+            "explanation_label": "Explicação (mostrada em resposta correta)",
+            "explanation_placeholder": "Opcional — explique por que a resposta está correta",
+            "your_answer_placeholder": "Digite sua resposta...",
+            "student_answer_label": "Resposta do aluno",
+            "accepted_answers_label": "Respostas aceitas",
+            "no_answer": "Nenhuma resposta enviada",
+            "correct": "Correto",
+            "incorrect": "Não exatamente — tente novamente"
+          },
+          "number_answer": {
+            "prompt_label": "Enunciado da pergunta",
+            "prompt_placeholder": "Qual é a aceleração da gravidade na Terra?",
+            "correct_value_label": "Valor correto",
+            "tolerance_label": "Tolerância (±)",
+            "unit_label": "Unidade (opcional)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Mostrada ao lado do campo de resposta. Não obrigatória.",
+            "explanation_label": "Explicação (mostrada em resposta correta)",
+            "explanation_placeholder": "Opcional — explique como chegar à resposta",
+            "preview_label": "Aceita",
+            "your_answer_placeholder": "Digite um número...",
+            "student_answer_label": "Resposta do aluno",
+            "accepted_range_label": "Faixa aceita",
+            "no_answer": "Nenhuma resposta enviada",
+            "correct": "Correto",
+            "incorrect": "Não exatamente — tente novamente"
           }
         }
       },
@@ -3185,10 +3286,47 @@
         "actions": {
           "reject": "Rejeitar Tarefa",
           "set_final_grade": "Definir nota final",
-          "mark_as_done": "Marcar Atividade como Concluída para o Usuário"
+          "mark_as_done": "Marcar Atividade como Concluída para o Usuário",
+          "finalize": "Finalize & Complete",
+          "reject_description": "Exclui a submissão e permite ao aluno reenviar",
+          "set_final_grade_description": "Calcula e salva a nota sem concluir a atividade",
+          "finalize_description": "Define a nota final e marca a atividade como concluída para o aluno"
         },
         "toasts": {
-          "reject_success": "Tarefa rejeitada com sucesso"
+          "reject_success": "Tarefa rejeitada com sucesso",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Todos"
+        },
+        "sort": {
+          "label": "Ordenar",
+          "date": "Data de envio",
+          "name": "Nome do aluno",
+          "status": "Estado",
+          "grade": "Nota",
+          "needs_grading": "Para avaliar primeiro",
+          "late_first": "Atrasadas primeiro",
+          "recently_graded": "Avaliadas recentemente"
+        },
+        "stats": {
+          "total": "Total"
+        },
+        "search_placeholder": "Pesquisar por nome ou email...",
+        "loading": "Carregando submissões...",
+        "empty": "Nenhuma submissão encontrada",
+        "grade_label": "Nota:",
+        "preview": {
+          "current_grade": "Nota atual",
+          "passing": "Aprovado",
+          "not_passing": "Reprovado",
+          "not_submitted": "Não enviado"
+        },
+        "feedback": {
+          "label": "Comentário geral",
+          "optional": "opcional",
+          "placeholder": "Escreva um comentário sobre a submissão como um todo. O aluno verá isso ao lado da sua nota.",
+          "hint": "Deixe em branco para manter qualquer comentário anterior inalterado."
         }
       },
       "modals": {
@@ -3207,11 +3345,28 @@
             "grading_types": {
               "alphabet": "Alfabeto",
               "numeric": "Numérico",
-              "percentage": "Porcentagem"
+              "percentage": "Porcentagem",
+              "pass_fail": "Aprovado / Reprovado",
+              "gpa_scale": "Escala GPA"
             },
             "cancel": "Cancelar",
             "save": "Salvar Alterações",
-            "saving": "Salvando..."
+            "saving": "Salvando...",
+            "grading_type_descriptions": {
+              "alphabet": "Notas em letras A, B, C, D, F",
+              "numeric": "Pontuação de 0 a 100",
+              "percentage": "Nota em porcentagem",
+              "pass_fail": "Simples aprovado ou reprovado",
+              "gpa_scale": "Escala de pontos 4.0"
+            },
+            "grading_options_label": "Opções de avaliação",
+            "auto_grading_label": "Avaliação automática",
+            "auto_grading_description": "Avalia e completa a atividade automaticamente quando o aluno envia. Funciona apenas quando cada tarefa pode ser avaliada sem revisão humana.",
+            "anti_copy_paste_label": "Bloquear copiar e colar",
+            "anti_copy_paste_description": "Desencoraje colar respostas geradas por IA bloqueando eventos de colar. Nota: é um dissuasor.",
+            "auto_grading_disabled_file": "A avaliação automática não está disponível porque esta tarefa tem uma entrega de arquivo que precisa de revisão humana.",
+            "grading_type_hint": "Como as notas são mostradas aos alunos",
+            "grading_options_hint": "Comportamento ao enviar"
           },
           "toasts": {
             "updating": "Atualizando tarefa...",
@@ -3233,9 +3388,25 @@
             "grading_types": {
               "alphabet": "Alfabeto",
               "numeric": "Numérico",
-              "percentage": "Porcentagem"
+              "percentage": "Porcentagem",
+              "pass_fail": "Aprovado / Reprovado",
+              "gpa_scale": "Escala GPA"
             },
-            "submit": "Criar atividade"
+            "submit": "Criar atividade",
+            "grading_type_descriptions": {
+              "alphabet": "Notas em letras A, B, C, D, F",
+              "numeric": "Pontuação de 0 a 100",
+              "percentage": "Nota em porcentagem",
+              "pass_fail": "Simples aprovado ou reprovado",
+              "gpa_scale": "Escala de pontos 4.0"
+            },
+            "grading_options_label": "Opções de avaliação",
+            "auto_grading_label": "Avaliação automática",
+            "auto_grading_description": "Avalia e completa a atividade automaticamente quando o aluno envia. Funciona apenas quando cada tarefa pode ser avaliada sem revisão humana.",
+            "anti_copy_paste_label": "Bloquear copiar e colar",
+            "anti_copy_paste_description": "Desencoraje colar respostas geradas por IA bloqueando eventos de colar. Nota: é um dissuasor.",
+            "grading_type_hint": "Como as notas são mostradas aos alunos",
+            "grading_options_hint": "Comportamento ao enviar"
           },
           "toasts": {
             "creating": "Criando tarefa...",

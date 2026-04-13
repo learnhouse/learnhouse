@@ -884,6 +884,7 @@
     "quiz": "Quiz",
     "file_submission": "Bestand indienen",
     "form": "Formulier",
+    "code": "Code",
     "interactive": "Interactief",
     "activities": "Activiteiten",
     "current_activity": "Huidige activiteit",
@@ -942,7 +943,13 @@
     "points": "punten",
     "current_points": "Huidige punten: {{points}}",
     "grade": "Cijfer",
-    "due_date": "Inleverdatum"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "Inleverdatum",
+    "task_breakdown": "Taakoverzicht",
+    "no_grade_details": "Nog geen cijferdetails beschikbaar.",
+    "task_passed": "Geslaagd",
+    "task_not_passed": "Niet geslaagd",
+    "score": "score"
   },
   "certificate": {
     "certificate": "Certificaat",
@@ -3085,7 +3092,27 @@
         "course_editor": "Cursus Editor",
         "editor": "Editor",
         "submissions": "Inzendingen",
-        "no_assignments": "Er zijn geen opdrachten voor deze cursus. Maak cursusopdrachten aan in de cursus editor"
+        "no_assignments": "Er zijn geen opdrachten voor deze cursus. Maak cursusopdrachten aan in de cursus editor",
+        "untitled": "Naamloze opdracht",
+        "search_placeholder": "Zoek opdrachten op naam of beschrijving...",
+        "loading": "Opdrachten laden...",
+        "empty": "Nog geen opdrachten",
+        "empty_filtered": "Geen opdrachten komen overeen met je filters",
+        "clear_filters": "Filters wissen",
+        "showing_count": "{{shown}} van {{total}} opdrachten weergegeven",
+        "stats": {
+          "total": "Totaal",
+          "published": "Gepubliceerd",
+          "drafts": "Concepten",
+          "auto_graded": "Auto-beoordeeld"
+        },
+        "filters": {
+          "all": "Alle",
+          "published": "Gepubliceerd",
+          "drafts": "Concepten",
+          "auto_graded": "Alleen auto-beoordeeld",
+          "hide_empty": "Lege cursussen verbergen"
+        }
       },
       "detail": {
         "title": "Opdracht Tooling",
@@ -3114,6 +3141,11 @@
             "update_success": "Opdracht succesvol bijgewerkt",
             "update_error": "Er is een fout opgetreden bij het bijwerken van de opdracht. Probeer het later opnieuw."
           }
+        },
+        "title_prefix": "Opdracht:",
+        "header_badges": {
+          "auto_grading": "Auto-beoord.",
+          "anti_copy_paste": "Plakken geblokkeerd"
         }
       },
       "editor": {
@@ -3135,6 +3167,18 @@
           "form": {
             "title": "Formulier",
             "description": "Een invulformulier voor studenten"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Kort antwoord",
+            "description": "Studenten typen een tekstantwoord dat wordt beoordeeld tegen jouw geaccepteerde antwoorden"
+          },
+          "number_answer": {
+            "title": "Numeriek antwoord",
+            "description": "Studenten voeren een getal in dat wordt beoordeeld met tolerantie"
           }
         },
         "toasts": {
@@ -3152,8 +3196,6 @@
             "hint": "Tip",
             "reference_file": "Referentiebestand",
             "reference_file_info": "Toegestane formaten: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Maximale cijferwaarde",
-            "max_grade_error": "Waarde moet tussen 20 en 100 liggen",
             "submit": "Verzenden",
             "download": "Downloaden",
             "change_reference_file": "Referentiebestand wijzigen",
@@ -3163,7 +3205,66 @@
             "sign_in_required": "Log in om bestanden te uploaden",
             "auth_required": "Authenticatie vereist. Log in om bestanden te uploaden.",
             "auth_required_submit": "Authenticatie vereist. Log in om de taak in te dienen.",
-            "hint_optional": "Tip (optioneel)"
+            "hint_optional": "Tip (optioneel)",
+            "paste_blocked": "Plakken is uitgeschakeld voor deze opdracht",
+            "paste_blocked_hint": "Plakken is uitgeschakeld — typ je antwoord direct."
+          },
+          "code": {
+            "student_behavior_label": "Studentgedrag",
+            "allow_student_run_label": "Laat studenten code uitvoeren",
+            "allow_student_run_description": "Toon de Run Tests-knop in de studentweergave zodat ze hun code kunnen proberen voor inzending.",
+            "show_test_details_label": "Toon verwacht vs werkelijk bij fouten",
+            "show_test_details_description": "Wanneer een zichtbare test faalt, toon de verwachte en ontvangen uitvoer.",
+            "show_hidden_count_label": "Toon aantal verborgen tests",
+            "show_hidden_count_description": "Toon een badge die studenten vertelt hoeveel verborgen tests er zijn.",
+            "require_passing_label": "Slagen voor zichtbare tests vereist",
+            "require_passing_description": "Blokkeer de opslaan-knop totdat alle zichtbare tests slagen.",
+            "must_pass_toast": "Je moet alle zichtbare tests slagen voordat je kunt opslaan.",
+            "must_pass_hint": "Alle zichtbare tests moeten slagen voordat je kunt opslaan.",
+            "show_solution_label": "Onthul oplossing na inzending",
+            "show_solution_description": "Zodra de student zijn werk heeft opgeslagen, toon de referentieoplossing van de docent.",
+            "reference_solution_label": "Referentieoplossing"
+          },
+          "short_answer": {
+            "prompt_label": "Vraagstelling",
+            "prompt_placeholder": "Wat is de hoofdstad van Marokko?",
+            "answers_label": "Geaccepteerde antwoorden",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Voeg nog een antwoord toe",
+            "no_answers_error": "Voeg minstens één geaccepteerd antwoord toe",
+            "match_mode_label": "Hoe antwoorden vergelijken",
+            "match_modes": {
+              "exact": "Exacte overeenkomst",
+              "case_insensitive": "Hoofdletterongevoelig (aanbevolen)",
+              "contains": "Bevat het antwoord ergens",
+              "regex": "Reguliere expressie"
+            },
+            "explanation_label": "Uitleg (getoond bij juist antwoord)",
+            "explanation_placeholder": "Optioneel — leg uit waarom het antwoord juist is",
+            "your_answer_placeholder": "Typ je antwoord...",
+            "student_answer_label": "Antwoord van student",
+            "accepted_answers_label": "Geaccepteerde antwoorden",
+            "no_answer": "Geen antwoord ingediend",
+            "correct": "Juist",
+            "incorrect": "Niet helemaal — probeer opnieuw"
+          },
+          "number_answer": {
+            "prompt_label": "Vraagstelling",
+            "prompt_placeholder": "Wat is de versnelling door zwaartekracht op aarde?",
+            "correct_value_label": "Juiste waarde",
+            "tolerance_label": "Tolerantie (±)",
+            "unit_label": "Eenheid (optioneel)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Getoond naast het antwoordveld. Niet afgedwongen.",
+            "explanation_label": "Uitleg (getoond bij juist antwoord)",
+            "explanation_placeholder": "Optioneel — leg uit hoe je tot het antwoord komt",
+            "preview_label": "Accepteert",
+            "your_answer_placeholder": "Voer een getal in...",
+            "student_answer_label": "Antwoord van student",
+            "accepted_range_label": "Geaccepteerd bereik",
+            "no_answer": "Geen antwoord ingediend",
+            "correct": "Juist",
+            "incorrect": "Niet helemaal — probeer opnieuw"
           }
         }
       },
@@ -3185,10 +3286,47 @@
         "actions": {
           "reject": "Opdracht afwijzen",
           "set_final_grade": "Eindcijfer instellen",
-          "mark_as_done": "Markeer gebruikersactiviteit als voltooid"
+          "mark_as_done": "Markeer gebruikersactiviteit als voltooid",
+          "finalize": "Finalize & Complete",
+          "reject_description": "Verwijdert de inzending en laat de student opnieuw indienen",
+          "set_final_grade_description": "Berekent en slaat het cijfer op zonder de activiteit te voltooien",
+          "finalize_description": "Stelt het eindcijfer in en markeert de activiteit als voltooid voor de student"
         },
         "toasts": {
-          "reject_success": "Opdracht succesvol afgewezen"
+          "reject_success": "Opdracht succesvol afgewezen",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Alle"
+        },
+        "sort": {
+          "label": "Sorteren",
+          "date": "Inleverdatum",
+          "name": "Naam student",
+          "status": "Status",
+          "grade": "Cijfer",
+          "needs_grading": "Eerst beoordelen",
+          "late_first": "Te laat eerst",
+          "recently_graded": "Recent beoordeeld eerst"
+        },
+        "stats": {
+          "total": "Totaal"
+        },
+        "search_placeholder": "Zoeken op naam of e-mail...",
+        "loading": "Inzendingen laden...",
+        "empty": "Geen inzendingen gevonden",
+        "grade_label": "Cijfer:",
+        "preview": {
+          "current_grade": "Huidig cijfer",
+          "passing": "Geslaagd",
+          "not_passing": "Gezakt",
+          "not_submitted": "Niet ingediend"
+        },
+        "feedback": {
+          "label": "Algemene feedback",
+          "optional": "optioneel",
+          "placeholder": "Schrijf een commentaar over de hele inzending. De student ziet dit naast zijn cijfer.",
+          "hint": "Laat leeg om eerdere feedback ongewijzigd te houden."
         }
       },
       "modals": {
@@ -3207,11 +3345,28 @@
             "grading_types": {
               "alphabet": "Alfabet",
               "numeric": "Numeriek",
-              "percentage": "Percentage"
+              "percentage": "Percentage",
+              "pass_fail": "Geslaagd / Gezakt",
+              "gpa_scale": "GPA-schaal"
             },
             "cancel": "Annuleren",
             "save": "Wijzigingen opslaan",
-            "saving": "Opslaan..."
+            "saving": "Opslaan...",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F lettercijfers",
+              "numeric": "Score van 0 tot 100",
+              "percentage": "Cijfer als percentage",
+              "pass_fail": "Eenvoudig geslaagd of gezakt",
+              "gpa_scale": "4,0 puntenschaal"
+            },
+            "grading_options_label": "Beoordelingsopties",
+            "auto_grading_label": "Automatisch beoordelen",
+            "auto_grading_description": "Beoordeel en voltooi de activiteit automatisch wanneer de student indient. Werkt alleen wanneer elke taak zonder menselijke beoordeling kan worden beoordeeld.",
+            "anti_copy_paste_label": "Kopiëren & plakken blokkeren",
+            "anti_copy_paste_description": "Ontmoedig het plakken van AI-gegenereerde antwoorden door plakgebeurtenissen te blokkeren. Let op: dit is een afschrikmiddel.",
+            "auto_grading_disabled_file": "Automatisch beoordelen is niet beschikbaar omdat deze opdracht een bestandsinzending heeft die menselijke beoordeling vereist.",
+            "grading_type_hint": "Hoe cijfers aan studenten worden getoond",
+            "grading_options_hint": "Gedrag bij inzenden"
           },
           "toasts": {
             "updating": "Opdracht bijwerken...",
@@ -3233,9 +3388,25 @@
             "grading_types": {
               "alphabet": "Alfabet",
               "numeric": "Numeriek",
-              "percentage": "Percentage"
+              "percentage": "Percentage",
+              "pass_fail": "Geslaagd / Gezakt",
+              "gpa_scale": "GPA-schaal"
             },
-            "submit": "Activiteit aanmaken"
+            "submit": "Activiteit aanmaken",
+            "grading_type_descriptions": {
+              "alphabet": "A, B, C, D, F lettercijfers",
+              "numeric": "Score van 0 tot 100",
+              "percentage": "Cijfer als percentage",
+              "pass_fail": "Eenvoudig geslaagd of gezakt",
+              "gpa_scale": "4,0 puntenschaal"
+            },
+            "grading_options_label": "Beoordelingsopties",
+            "auto_grading_label": "Automatisch beoordelen",
+            "auto_grading_description": "Beoordeel en voltooi de activiteit automatisch wanneer de student indient. Werkt alleen wanneer elke taak zonder menselijke beoordeling kan worden beoordeeld.",
+            "anti_copy_paste_label": "Kopiëren & plakken blokkeren",
+            "anti_copy_paste_description": "Ontmoedig het plakken van AI-gegenereerde antwoorden door plakgebeurtenissen te blokkeren. Let op: dit is een afschrikmiddel.",
+            "grading_type_hint": "Hoe cijfers aan studenten worden getoond",
+            "grading_options_hint": "Gedrag bij inzenden"
           },
           "toasts": {
             "creating": "Opdracht aanmaken...",

@@ -4,6 +4,9 @@ import React, { useEffect } from 'react'
 import TaskQuizObject from './TaskTypes/TaskQuizObject';
 import TaskFileObject from './TaskTypes/TaskFileObject';
 import TaskFormObject from './TaskTypes/TaskFormObject';
+import TaskCodeObject from './TaskTypes/TaskCodeObject';
+import TaskShortAnswerObject from './TaskTypes/TaskShortAnswerObject';
+import TaskNumberAnswerObject from './TaskTypes/TaskNumberAnswerObject';
 
 function AssignmentTaskContentEdit() {
     const session = useLHSession() as any;
@@ -20,6 +23,9 @@ function AssignmentTaskContentEdit() {
             {assignment_task?.assignmentTask.assignment_type === 'QUIZ' && <TaskQuizObject view='teacher' />}
             {assignment_task?.assignmentTask.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject view='teacher' />}
             {assignment_task?.assignmentTask.assignment_type === 'FORM' && <TaskFormObject view='teacher' assignmentTaskUUID={assignment_task?.assignmentTask.assignment_task_uuid} />}
+            {assignment_task?.assignmentTask.assignment_type === 'CODE' && <TaskCodeObject view='teacher' />}
+            {assignment_task?.assignmentTask.assignment_type === 'SHORT_ANSWER' && <TaskShortAnswerObject view='teacher' />}
+            {assignment_task?.assignmentTask.assignment_type === 'NUMBER_ANSWER' && <TaskNumberAnswerObject view='teacher' />}
         </div>
     )
 }

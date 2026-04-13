@@ -884,6 +884,7 @@
     "quiz": "Quiz",
     "file_submission": "Rendu de fichier",
     "form": "Formulaire",
+    "code": "Code",
     "interactive": "Interactif",
     "activities": "Activités",
     "current_activity": "Activité en cours",
@@ -942,7 +943,13 @@
     "points": "points",
     "current_points": "Points : {{points}}",
     "grade": "Noter",
-    "due_date": "Échéance"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "Échéance",
+    "task_breakdown": "Détail des tâches",
+    "no_grade_details": "Aucun détail de note disponible pour le moment.",
+    "task_passed": "Réussi",
+    "task_not_passed": "Échoué",
+    "score": "score"
   },
   "certificate": {
     "certificate": "Certificat",
@@ -3083,7 +3090,27 @@
         "course_editor": "Éditeur de cours",
         "editor": "Éditeur",
         "submissions": "Soumissions",
-        "no_assignments": "Aucun devoir disponible pour ce cours, créez des devoirs depuis l'éditeur de cours"
+        "no_assignments": "Aucun devoir disponible pour ce cours, créez des devoirs depuis l'éditeur de cours",
+        "untitled": "Devoir sans titre",
+        "search_placeholder": "Rechercher des devoirs par nom ou description...",
+        "loading": "Chargement des devoirs...",
+        "empty": "Pas encore de devoirs",
+        "empty_filtered": "Aucun devoir ne correspond à vos filtres",
+        "clear_filters": "Effacer les filtres",
+        "showing_count": "Affichage de {{shown}} sur {{total}} devoirs",
+        "stats": {
+          "total": "Total",
+          "published": "Publiés",
+          "drafts": "Brouillons",
+          "auto_graded": "Auto-notés"
+        },
+        "filters": {
+          "all": "Tous",
+          "published": "Publiés",
+          "drafts": "Brouillons",
+          "auto_graded": "Auto-notés uniquement",
+          "hide_empty": "Masquer les cours vides"
+        }
       },
       "detail": {
         "title": "Outils de devoir",
@@ -3112,6 +3139,11 @@
             "update_success": "Le devoir a été mis à jour avec succès",
             "update_error": "Erreur lors de la mise à jour du devoir, veuillez réessayer plus tard."
           }
+        },
+        "title_prefix": "Devoir :",
+        "header_badges": {
+          "auto_grading": "Auto-noté",
+          "anti_copy_paste": "Collage bloqué"
         }
       },
       "editor": {
@@ -3133,6 +3165,18 @@
           "form": {
             "title": "Formulaire",
             "description": "Formulaires à compléter pour les étudiants"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "Réponse courte",
+            "description": "Les étudiants tapent une réponse textuelle évaluée contre vos réponses acceptées"
+          },
+          "number_answer": {
+            "title": "Réponse numérique",
+            "description": "Les étudiants saisissent un nombre évalué avec tolérance"
           }
         },
         "toasts": {
@@ -3150,8 +3194,6 @@
             "hint": "Indice",
             "reference_file": "Fichier de référence",
             "reference_file_info": "Formats autorisés : pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "Valeur de note maximale",
-            "max_grade_error": "La valeur doit être comprise entre 20 et 100",
             "submit": "Soumettre",
             "download": "Télécharger",
             "change_reference_file": "Changer le fichier de référence",
@@ -3161,7 +3203,66 @@
             "sign_in_required": "Veuillez vous connecter pour télécharger des fichiers",
             "auth_required": "Authentification requise. Veuillez vous connecter pour télécharger des fichiers.",
             "auth_required_submit": "Authentification requise. Veuillez vous connecter pour soumettre votre tâche.",
-            "hint_optional": "Indice (optionnel)"
+            "hint_optional": "Indice (optionnel)",
+            "paste_blocked": "Le collage est désactivé pour ce devoir",
+            "paste_blocked_hint": "Le collage est désactivé — tapez votre réponse directement."
+          },
+          "code": {
+            "student_behavior_label": "Comportement de l’étudiant",
+            "allow_student_run_label": "Permettre aux étudiants d’exécuter leur code",
+            "allow_student_run_description": "Afficher le bouton Exécuter les tests dans la vue étudiant pour qu’ils puissent essayer leur code avant de soumettre.",
+            "show_test_details_label": "Afficher attendu vs réel sur échecs",
+            "show_test_details_description": "Quand un test visible échoue, révéler la sortie attendue et reçue. Désactiver pour empêcher l’ingénierie inverse.",
+            "show_hidden_count_label": "Afficher le nombre de tests cachés",
+            "show_hidden_count_description": "Afficher un badge indiquant aux étudiants combien de tests cachés existent.",
+            "require_passing_label": "Exiger la réussite des tests visibles",
+            "require_passing_description": "Bloquer le bouton enregistrer jusqu’à ce que tous les tests visibles passent.",
+            "must_pass_toast": "Vous devez réussir tous les tests visibles avant d’enregistrer.",
+            "must_pass_hint": "Tous les tests visibles doivent passer avant d’enregistrer.",
+            "show_solution_label": "Révéler la solution après soumission",
+            "show_solution_description": "Une fois que l’étudiant a enregistré son travail, afficher la solution de référence de l’enseignant.",
+            "reference_solution_label": "Solution de référence"
+          },
+          "short_answer": {
+            "prompt_label": "Énoncé de la question",
+            "prompt_placeholder": "Quelle est la capitale du Maroc ?",
+            "answers_label": "Réponses acceptées",
+            "answer_placeholder": "Rabat",
+            "add_answer": "Ajouter une autre réponse",
+            "no_answers_error": "Ajoutez au moins une réponse acceptée avant d’enregistrer",
+            "match_mode_label": "Comment comparer les réponses",
+            "match_modes": {
+              "exact": "Correspondance exacte",
+              "case_insensitive": "Insensible à la casse (recommandé)",
+              "contains": "Contient la réponse n’importe où",
+              "regex": "Expression régulière"
+            },
+            "explanation_label": "Explication (montrée pour une bonne réponse)",
+            "explanation_placeholder": "Facultatif — expliquez pourquoi la réponse est correcte",
+            "your_answer_placeholder": "Tapez votre réponse...",
+            "student_answer_label": "Réponse de l’étudiant",
+            "accepted_answers_label": "Réponses acceptées",
+            "no_answer": "Aucune réponse soumise",
+            "correct": "Correct",
+            "incorrect": "Pas tout à fait — réessayez"
+          },
+          "number_answer": {
+            "prompt_label": "Énoncé de la question",
+            "prompt_placeholder": "Quelle est l’accélération due à la gravité sur Terre ?",
+            "correct_value_label": "Valeur correcte",
+            "tolerance_label": "Tolérance (±)",
+            "unit_label": "Unité (facultatif)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "Affichée à côté du champ de réponse. Non imposée.",
+            "explanation_label": "Explication (montrée pour une bonne réponse)",
+            "explanation_placeholder": "Facultatif — expliquez comment arriver à la réponse",
+            "preview_label": "Accepte",
+            "your_answer_placeholder": "Entrez un nombre...",
+            "student_answer_label": "Réponse de l’étudiant",
+            "accepted_range_label": "Plage acceptée",
+            "no_answer": "Aucune réponse soumise",
+            "correct": "Correct",
+            "incorrect": "Pas tout à fait — réessayez"
           }
         }
       },
@@ -3183,10 +3284,47 @@
         "actions": {
           "reject": "Rejeter le devoir",
           "set_final_grade": "Définir la note finale",
-          "mark_as_done": "Marquer l'activité comme terminée pour l'utilisateur"
+          "mark_as_done": "Marquer l'activité comme terminée pour l'utilisateur",
+          "finalize": "Finalize & Complete",
+          "reject_description": "Supprime la soumission et permet à l’étudiant de resoumettre",
+          "set_final_grade_description": "Calcule et enregistre la note sans terminer l’activité",
+          "finalize_description": "Définit la note finale et marque l’activité comme terminée pour l’étudiant"
         },
         "toasts": {
-          "reject_success": "Devoir rejeté avec succès"
+          "reject_success": "Devoir rejeté avec succès",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "Tous"
+        },
+        "sort": {
+          "label": "Trier",
+          "date": "Date de soumission",
+          "name": "Nom de l’étudiant",
+          "status": "Statut",
+          "grade": "Note",
+          "needs_grading": "À noter en premier",
+          "late_first": "En retard en premier",
+          "recently_graded": "Récemment notés"
+        },
+        "stats": {
+          "total": "Total"
+        },
+        "search_placeholder": "Rechercher par nom ou email...",
+        "loading": "Chargement des soumissions...",
+        "empty": "Aucune soumission trouvée",
+        "grade_label": "Note :",
+        "preview": {
+          "current_grade": "Note actuelle",
+          "passing": "Réussi",
+          "not_passing": "Échoué",
+          "not_submitted": "Non soumis"
+        },
+        "feedback": {
+          "label": "Commentaire général",
+          "optional": "facultatif",
+          "placeholder": "Écrivez un commentaire sur l’ensemble de la soumission. L’étudiant le verra à côté de sa note.",
+          "hint": "Laissez vide pour conserver tout commentaire précédent."
         }
       },
       "modals": {
@@ -3205,11 +3343,28 @@
             "grading_types": {
               "alphabet": "Alphabétique",
               "numeric": "Numérique",
-              "percentage": "Pourcentage"
+              "percentage": "Pourcentage",
+              "pass_fail": "Réussi / Échoué",
+              "gpa_scale": "Échelle GPA"
             },
             "cancel": "Annuler",
             "save": "Enregistrer les modifications",
-            "saving": "Enregistrement..."
+            "saving": "Enregistrement...",
+            "grading_type_descriptions": {
+              "alphabet": "Notes en lettres A, B, C, D, F",
+              "numeric": "Score de 0 à 100",
+              "percentage": "Note en pourcentage",
+              "pass_fail": "Simple réussite ou échec",
+              "gpa_scale": "Échelle de points 4.0"
+            },
+            "grading_options_label": "Options de notation",
+            "auto_grading_label": "Notation automatique",
+            "auto_grading_description": "Note et complète l’activité automatiquement quand l’étudiant soumet. Fonctionne seulement quand chaque tâche peut être notée sans intervention humaine.",
+            "anti_copy_paste_label": "Bloquer copier-coller",
+            "anti_copy_paste_description": "Découragez le collage de réponses générées par IA en bloquant les événements de collage. Note : c’est un dissuasif et peut être contourné.",
+            "auto_grading_disabled_file": "La notation automatique est indisponible car ce devoir contient une tâche de soumission de fichier qui nécessite une révision humaine.",
+            "grading_type_hint": "Comment les notes sont affichées aux étudiants",
+            "grading_options_hint": "Comportement à la soumission"
           },
           "toasts": {
             "updating": "Mise à jour du devoir...",
@@ -3231,9 +3386,25 @@
             "grading_types": {
               "alphabet": "Alphabétique",
               "numeric": "Numérique",
-              "percentage": "Pourcentage"
+              "percentage": "Pourcentage",
+              "pass_fail": "Réussi / Échoué",
+              "gpa_scale": "Échelle GPA"
             },
-            "submit": "Créer l'activité"
+            "submit": "Créer l'activité",
+            "grading_type_descriptions": {
+              "alphabet": "Notes en lettres A, B, C, D, F",
+              "numeric": "Score de 0 à 100",
+              "percentage": "Note en pourcentage",
+              "pass_fail": "Simple réussite ou échec",
+              "gpa_scale": "Échelle de points 4.0"
+            },
+            "grading_options_label": "Options de notation",
+            "auto_grading_label": "Notation automatique",
+            "auto_grading_description": "Note et complète l’activité automatiquement quand l’étudiant soumet. Fonctionne seulement quand chaque tâche peut être notée sans intervention humaine.",
+            "anti_copy_paste_label": "Bloquer copier-coller",
+            "anti_copy_paste_description": "Découragez le collage de réponses générées par IA en bloquant les événements de collage. Note : c’est un dissuasif et peut être contourné.",
+            "grading_type_hint": "Comment les notes sont affichées aux étudiants",
+            "grading_options_hint": "Comportement à la soumission"
           },
           "toasts": {
             "creating": "Création du devoir...",

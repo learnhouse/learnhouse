@@ -894,6 +894,7 @@
     "quiz": "测验",
     "file_submission": "文件提交",
     "form": "表单",
+    "code": "Code",
     "interactive": "互动",
     "activities": "活动",
     "current_activity": "当前活动",
@@ -952,7 +953,13 @@
     "points": "分",
     "current_points": "当前分数：{{points}}",
     "grade": "成绩",
-    "due_date": "截止日期"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "截止日期",
+    "task_breakdown": "任务明细",
+    "no_grade_details": "暂无成绩详情。",
+    "task_passed": "通过",
+    "task_not_passed": "未通过",
+    "score": "得分"
   },
   "certificate": {
     "certificate": "证书",
@@ -3095,7 +3102,27 @@
         "course_editor": "课程编辑器",
         "editor": "编辑器",
         "submissions": "提交内容",
-        "no_assignments": "此课程尚无作业，请在课程编辑器中创建作业"
+        "no_assignments": "此课程尚无作业，请在课程编辑器中创建作业",
+        "untitled": "未命名作业",
+        "search_placeholder": "按名称或描述搜索作业...",
+        "loading": "加载作业中...",
+        "empty": "暂无作业",
+        "empty_filtered": "没有匹配筛选条件的作业",
+        "clear_filters": "清除筛选",
+        "showing_count": "显示 {{total}} 个作业中的 {{shown}} 个",
+        "stats": {
+          "total": "总计",
+          "published": "已发布",
+          "drafts": "草稿",
+          "auto_graded": "自动评分"
+        },
+        "filters": {
+          "all": "全部",
+          "published": "已发布",
+          "drafts": "草稿",
+          "auto_graded": "仅自动评分",
+          "hide_empty": "隐藏空课程"
+        }
       },
       "detail": {
         "title": "作业工具",
@@ -3124,6 +3151,11 @@
             "update_success": "作业更新成功",
             "update_error": "更新作业出错，请稍后重试。"
           }
+        },
+        "title_prefix": "作业：",
+        "header_badges": {
+          "auto_grading": "自动评分",
+          "anti_copy_paste": "禁止粘贴"
         }
       },
       "editor": {
@@ -3145,6 +3177,18 @@
           "form": {
             "title": "表单",
             "description": "供学生填写的问卷"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "简答",
+            "description": "学生输入文本答案，与您接受的答案进行比对"
+          },
+          "number_answer": {
+            "title": "数字答案",
+            "description": "学生输入一个数字，带容差评分"
           }
         },
         "toasts": {
@@ -3162,8 +3206,6 @@
             "hint": "提示",
             "reference_file": "参考文件",
             "reference_file_info": "允许的格式：pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "最大分值",
-            "max_grade_error": "分值必须在 20 到 100 之间",
             "submit": "提交",
             "download": "下载",
             "change_reference_file": "更改参考文件",
@@ -3173,7 +3215,66 @@
             "sign_in_required": "请登录以上传文件",
             "auth_required": "需要身份验证。请登录以上传文件。",
             "auth_required_submit": "需要身份验证。请登录以提交任务。",
-            "hint_optional": "提示（可选）"
+            "hint_optional": "提示（可选）",
+            "paste_blocked": "此作业已禁用粘贴",
+            "paste_blocked_hint": "粘贴已禁用 — 直接输入您的答案。"
+          },
+          "code": {
+            "student_behavior_label": "学生行为",
+            "allow_student_run_label": "允许学生运行代码",
+            "allow_student_run_description": "在学生视图中显示运行测试按钮，以便他们在提交前可以尝试他们的代码。",
+            "show_test_details_label": "失败时显示预期与实际",
+            "show_test_details_description": "当可见测试失败时，显示预期和收到的输出。",
+            "show_hidden_count_label": "显示隐藏测试数量",
+            "show_hidden_count_description": "显示徽章告诉学生有多少个隐藏测试。",
+            "require_passing_label": "要求通过可见测试",
+            "require_passing_description": "在所有可见测试通过之前阻止保存按钮。",
+            "must_pass_toast": "保存前必须通过所有可见测试。",
+            "must_pass_hint": "保存前所有可见测试都必须通过。",
+            "show_solution_label": "提交后显示解决方案",
+            "show_solution_description": "学生保存作业后，显示老师的参考解决方案。",
+            "reference_solution_label": "参考解决方案"
+          },
+          "short_answer": {
+            "prompt_label": "问题提示",
+            "prompt_placeholder": "摩洛哥的首都是什么？",
+            "answers_label": "接受的答案",
+            "answer_placeholder": "拉巴特",
+            "add_answer": "添加另一个答案",
+            "no_answers_error": "保存前至少添加一个接受的答案",
+            "match_mode_label": "如何匹配答案",
+            "match_modes": {
+              "exact": "完全匹配",
+              "case_insensitive": "不区分大小写（推荐）",
+              "contains": "包含答案",
+              "regex": "正则表达式"
+            },
+            "explanation_label": "解释（答对时显示）",
+            "explanation_placeholder": "可选 — 解释为什么答案是正确的",
+            "your_answer_placeholder": "输入您的答案...",
+            "student_answer_label": "学生的答案",
+            "accepted_answers_label": "接受的答案",
+            "no_answer": "未提交答案",
+            "correct": "正确",
+            "incorrect": "不太对 — 再试一次"
+          },
+          "number_answer": {
+            "prompt_label": "问题提示",
+            "prompt_placeholder": "地球上的重力加速度是多少？",
+            "correct_value_label": "正确值",
+            "tolerance_label": "容差 (±)",
+            "unit_label": "单位（可选）",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "显示在答案字段旁边。不强制。",
+            "explanation_label": "解释（答对时显示）",
+            "explanation_placeholder": "可选 — 解释如何得出答案",
+            "preview_label": "接受",
+            "your_answer_placeholder": "输入一个数字...",
+            "student_answer_label": "学生的答案",
+            "accepted_range_label": "接受范围",
+            "no_answer": "未提交答案",
+            "correct": "正确",
+            "incorrect": "不太对 — 再试一次"
           }
         }
       },
@@ -3195,10 +3296,47 @@
         "actions": {
           "reject": "拒绝作业",
           "set_final_grade": "设置最终成绩",
-          "mark_as_done": "将此活动标记为用户已完成"
+          "mark_as_done": "将此活动标记为用户已完成",
+          "finalize": "Finalize & Complete",
+          "reject_description": "删除提交并允许学生重新提交",
+          "set_final_grade_description": "计算并保存成绩，不完成活动",
+          "finalize_description": "设置最终成绩并将活动标记为学生已完成"
         },
         "toasts": {
-          "reject_success": "作业拒绝成功"
+          "reject_success": "作业拒绝成功",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "全部"
+        },
+        "sort": {
+          "label": "排序",
+          "date": "提交日期",
+          "name": "学生姓名",
+          "status": "状态",
+          "grade": "成绩",
+          "needs_grading": "需要评分优先",
+          "late_first": "迟交优先",
+          "recently_graded": "最近评分优先"
+        },
+        "stats": {
+          "total": "总计"
+        },
+        "search_placeholder": "按姓名或邮箱搜索...",
+        "loading": "正在加载提交...",
+        "empty": "未找到提交",
+        "grade_label": "成绩：",
+        "preview": {
+          "current_grade": "当前成绩",
+          "passing": "通过",
+          "not_passing": "未通过",
+          "not_submitted": "未提交"
+        },
+        "feedback": {
+          "label": "总体反馈",
+          "optional": "可选",
+          "placeholder": "写一条关于整个提交的评论。学生将在其成绩旁看到此内容。",
+          "hint": "留空以保持之前的反馈不变。"
         }
       },
       "modals": {
@@ -3217,11 +3355,28 @@
             "grading_types": {
               "alphabet": "字母等级",
               "numeric": "数值等级",
-              "percentage": "百分比"
+              "percentage": "百分比",
+              "pass_fail": "通过 / 不通过",
+              "gpa_scale": "GPA等级"
             },
             "cancel": "取消",
             "save": "保存更改",
-            "saving": "保存中..."
+            "saving": "保存中...",
+            "grading_type_descriptions": {
+              "alphabet": "A、B、C、D、F 字母等级",
+              "numeric": "0到100分",
+              "percentage": "百分比成绩",
+              "pass_fail": "简单的通过或不通过",
+              "gpa_scale": "4.0绩点制"
+            },
+            "grading_options_label": "评分选项",
+            "auto_grading_label": "自动评分",
+            "auto_grading_description": "学生提交时自动评分并完成活动。仅在每个任务都可以无需人工审核进行评分时有效。",
+            "anti_copy_paste_label": "阻止复制和粘贴",
+            "anti_copy_paste_description": "通过阻止粘贴事件来劝阻粘贴 AI 生成的答案。注意：这是一种威慑手段。",
+            "auto_grading_disabled_file": "自动评分不可用 — 此作业包含需要人工审核的文件提交任务。",
+            "grading_type_hint": "成绩如何向学生显示",
+            "grading_options_hint": "提交时的行为"
           },
           "toasts": {
             "updating": "正在更新作业...",
@@ -3243,9 +3398,25 @@
             "grading_types": {
               "alphabet": "字母等级",
               "numeric": "数值等级",
-              "percentage": "百分比"
+              "percentage": "百分比",
+              "pass_fail": "通过 / 不通过",
+              "gpa_scale": "GPA等级"
             },
-            "submit": "创建活动"
+            "submit": "创建活动",
+            "grading_type_descriptions": {
+              "alphabet": "A、B、C、D、F 字母等级",
+              "numeric": "0到100分",
+              "percentage": "百分比成绩",
+              "pass_fail": "简单的通过或不通过",
+              "gpa_scale": "4.0绩点制"
+            },
+            "grading_options_label": "评分选项",
+            "auto_grading_label": "自动评分",
+            "auto_grading_description": "学生提交时自动评分并完成活动。仅在每个任务都可以无需人工审核进行评分时有效。",
+            "anti_copy_paste_label": "阻止复制和粘贴",
+            "anti_copy_paste_description": "通过阻止粘贴事件来劝阻粘贴 AI 生成的答案。注意：这是一种威慑手段。",
+            "grading_type_hint": "成绩如何向学生显示",
+            "grading_options_hint": "提交时的行为"
           },
           "toasts": {
             "creating": "正在创建作业...",

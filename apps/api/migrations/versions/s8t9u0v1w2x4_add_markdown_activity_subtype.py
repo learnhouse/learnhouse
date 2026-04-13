@@ -1,9 +1,12 @@
 """Add markdown activity subtype
 
-Revision ID: s8t9u0v1w2x3
-Revises: r7s8t9u0v1w2
+Revision ID: s8t9u0v1w2x4
+Revises: s8t9u0v1w2x3
 Create Date: 2026-04-04 00:00:00.000000
 
+Previously collided with ``s8t9u0v1w2x3_add_webhook_tables.py`` which also
+declared ``revision = 's8t9u0v1w2x3'``. Renamed to ``s8t9u0v1w2x4`` and
+chained after the webhook migration so the graph is unambiguous.
 """
 from typing import Sequence, Union
 
@@ -13,8 +16,8 @@ import sqlmodel  # noqa: F401
 from alembic_postgresql_enum import TableReference  # type: ignore
 
 # revision identifiers, used by Alembic.
-revision: str = 's8t9u0v1w2x3'
-down_revision: Union[str, None] = 'r7s8t9u0v1w2'
+revision: str = 's8t9u0v1w2x4'
+down_revision: Union[str, None] = 's8t9u0v1w2x3'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
