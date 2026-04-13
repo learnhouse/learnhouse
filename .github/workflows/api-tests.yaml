@@ -37,7 +37,7 @@ jobs:
           TESTING: "true"
 
       - name: Upload API coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: apps/api/coverage.xml
           flags: api
