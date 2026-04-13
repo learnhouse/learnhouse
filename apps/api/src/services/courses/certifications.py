@@ -411,6 +411,37 @@ async def get_user_certificates_for_course(
     return result
 
 
+def is_course_fully_completed(
+    user_id: int,
+    course_id: int,
+    db_session: Session,
+) -> bool:
+    """
+    Pure completion check: returns True iff every activity in the course has
+    a completed TrailStep for the given user. No side effects, no certificate
+    involvement.
+
+    Use this for firing completion-related events (webhooks, analytics). The
+    older ``check_course_completion_and_create_certificate`` returns True only
+    when a new certificate row is created, which is False for courses without
+    a configured certification even when the course is actually complete —
+    use it only for its certificate side effect.
+    """
+    act_query = select(ChapterActivity).where(ChapterActivity.course_id == course_id)
+    course_activities = db_session.scalars(act_query).all()
+    if not course_activities:
+        return False
+
+    step_query = select(TrailStep).where(
+        TrailStep.user_id == user_id,
+        TrailStep.course_id == course_id,
+        TrailStep.complete == True,
+    )
+    completed_activities = db_session.scalars(step_query).all()
+
+    return len(completed_activities) >= len(course_activities)
+
+
 async def check_course_completion_and_create_certificate(
     request: Request,
     user_id: int,
@@ -418,8 +449,14 @@ async def check_course_completion_and_create_certificate(
     db_session: Session,
 ) -> bool:
     """
-    Check if all activities in a course are completed and create certificate if so
-    
+    Check if all activities in a course are completed and create certificate if so.
+
+    NOTE: Returns True only when this call *creates a new certificate row*.
+    That is False for courses without a certification even when the course is
+    actually complete — do NOT use this return value as the trigger for
+    ``course_completed`` webhooks. Use :func:`is_course_fully_completed` for
+    that, and call this function purely for the certificate side effect.
+
     SECURITY NOTES:
     - This function is called by the system when activities are completed
     - It should only create certificates for users who have actually completed the course
