@@ -36,7 +36,7 @@ def _fetch_stripe_data(stripe_customer_id: str, offer_type: str, stripe_acc_id: 
             stripe_customer_id,
             expand=["invoice_settings.default_payment_method"],
             stripe_account=stripe_acc_id,
-        )
+        ).to_dict()
 
         # Payment method
         pm = customer.get("invoice_settings", {}).get("default_payment_method")
@@ -55,7 +55,7 @@ def _fetch_stripe_data(stripe_customer_id: str, offer_type: str, stripe_acc_id: 
             stripe_account=stripe_acc_id,
         )
         if charges.data:
-            charge = charges.data[0]
+            charge = charges.data[0].to_dict()
             if charge.get("paid"):
                 result["last_charge_date"] = datetime.fromtimestamp(charge["created"]).isoformat()
                 result["last_charge_amount"] = charge.get("amount_captured", 0) / 100
@@ -69,7 +69,7 @@ def _fetch_stripe_data(stripe_customer_id: str, offer_type: str, stripe_acc_id: 
                 stripe_account=stripe_acc_id,
             )
             if subs.data:
-                sub = subs.data[0]
+                sub = subs.data[0].to_dict()
                 result["next_billing_date"] = datetime.fromtimestamp(
                     sub["current_period_end"]
                 ).isoformat()

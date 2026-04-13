@@ -348,7 +348,7 @@ class StripePaymentProvider(IPaymentProvider):
 
         try:
             event_type = event.type
-            event_data = event.data.object
+            event_data = event.data.object.to_dict()
 
             stripe_account_id = getattr(event, "account", None)
             if not stripe_account_id:
