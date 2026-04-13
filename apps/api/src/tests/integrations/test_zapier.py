@@ -247,6 +247,20 @@ class TestZapierMe:
         assert result.org_name == "Test Org"
         assert result.token_name == "Test Token"
 
+    def test_me_raises_when_org_missing(self, db, user):
+        orphan_token = APITokenUser(
+            id=99,
+            user_uuid="apitoken_orphan",
+            username="api_token",
+            org_id=9999,
+            token_name="Orphan",
+            created_by_user_id=user.id,
+        )
+        with _patch_plan_pro():
+            with pytest.raises(HTTPException) as exc:
+                asyncio.run(zapier_me(ctx=(orphan_token, db)))
+        assert exc.value.status_code == 404
+
     def test_me_rejects_free_plan(self, db, token_user):
         from src.routers.integrations.zapier import _require_pro_plan
         with _patch_plan_free(), patch(
@@ -257,6 +271,26 @@ class TestZapierMe:
                 _require_pro_plan(token_user.org_id, db)
         assert exc.value.status_code == 403
         assert "Pro plan" in exc.value.detail
+
+    def test_require_pro_plan_passes_on_pro(self, db, token_user):
+        from src.routers.integrations.zapier import _require_pro_plan
+        with _patch_plan_pro(), patch(
+            "src.routers.integrations.zapier.plan_meets_requirement",
+            return_value=True,
+        ):
+            assert _require_pro_plan(token_user.org_id, db) is None
+
+    def test_zapier_context_returns_api_user_and_session(self, db, token_user):
+        from src.routers.integrations.zapier import _zapier_context
+        with _patch_plan_pro(), patch(
+            "src.routers.integrations.zapier.plan_meets_requirement",
+            return_value=True,
+        ):
+            api_user, session = _zapier_context(
+                current_user=token_user, db_session=db
+            )
+        assert api_user is token_user
+        assert session is db
 
 
 # ── /events ─────────────────────────────────────────────────────────────────
