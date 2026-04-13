@@ -1,11 +1,11 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
-import { BookPlus, BookUser, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save, Type } from 'lucide-react'
+import { BookPlus, BookUser, Code2, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save, Type } from 'lucide-react'
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 
 type AssignmentBoxProps = {
-    type: 'quiz' | 'file' | 'form'
+    type: 'quiz' | 'file' | 'form' | 'code'
     view?: 'teacher' | 'student' | 'grading' | 'custom-grading'
     maxPoints?: number
     currentPoints?: number
@@ -14,10 +14,11 @@ type AssignmentBoxProps = {
     gradeFC?: () => void
     gradeCustomFC?: (grade: number) => void
     showSavingDisclaimer?: boolean
+    autoGradable?: boolean
     children: React.ReactNode
 }
 
-function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, children }: AssignmentBoxProps) {
+function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, autoGradable, children }: AssignmentBoxProps) {
     const { t } = useTranslation()
     const [customGrade, setCustomGrade] = React.useState<number>(0)
     const submission = useAssignmentSubmission() as any
@@ -46,6 +47,11 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                             <div className='flex space-x-1.5 items-center'>
                                 <Type size={17} />
                                 <p>{t('activities.form')}</p>
+                            </div>}
+                        {type === 'code' &&
+                            <div className='flex space-x-1.5 items-center'>
+                                <Code2 size={17} />
+                                <p>{t('activities.code')}</p>
                             </div>}
                     </div>
 
@@ -98,13 +104,15 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                     {/* Grading button */}
                     {view === 'grading' &&
                         <div
-                            className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 cursor-pointer rounded-md gap-2 sm:space-x-2 items-center bg-linear-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60'>
-                            <p className='font-semibold px-2 text-xs text-orange-700'>{t('assignments.current_points', { points: currentPoints })}</p>
+                            className='flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 rounded-md gap-2 sm:space-x-2 items-center'>
+                            {currentPoints !== undefined && currentPoints > 0 && (
+                                <p className='font-semibold px-2 text-xs text-emerald-700 bg-emerald-50 rounded-full py-0.5'>{currentPoints}/{maxPoints} {t('assignments.points')}</p>
+                            )}
                             <div
                                 onClick={() => gradeFC && gradeFC()}
-                                className='bg-linear-to-bl text-orange-700 bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2 ml-auto'>
+                                className='cursor-pointer bg-orange-50 text-orange-700 hover:bg-orange-100 items-center flex rounded-md px-2 py-1 space-x-1.5 transition-colors'>
                                 <BookPlus size={14} />
-                                <p className='text-xs font-semibold'>{t('assignments.grade')}</p>
+                                <p className='text-xs font-semibold'>{autoGradable ? t('assignments.run_autograde') : t('assignments.grade')}</p>
                             </div>
                         </div>
                     }

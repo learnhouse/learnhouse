@@ -907,6 +907,7 @@
     "quiz": "ควิซ",
     "file_submission": "ส่งไฟล์",
     "form": "แบบฟอร์ม",
+    "code": "Code",
     "interactive": "โต้ตอบ",
     "activities": "กิจกรรม",
     "current_activity": "กิจกรรมปัจจุบัน",
@@ -965,7 +966,13 @@
     "points": "คะแนน",
     "current_points": "คะแนนปัจจุบัน: {{points}}",
     "grade": "เกรด",
-    "due_date": "กำหนดส่ง"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "กำหนดส่ง",
+    "task_breakdown": "รายละเอียดงาน",
+    "no_grade_details": "ยังไม่มีรายละเอียดคะแนน",
+    "task_passed": "ผ่าน",
+    "task_not_passed": "ไม่ผ่าน",
+    "score": "คะแนน"
   },
   "certificate": {
     "certificate": "ใบประกาศนียบัตร",
@@ -3108,7 +3115,27 @@
         "course_editor": "เครื่องมือแก้ไขคอร์ส",
         "editor": "เครื่องมือแก้ไข",
         "submissions": "การส่งงาน",
-        "no_assignments": "ยังไม่มีงานที่มอบหมายสำหรับคอร์สนี้ สร้างงานในเครื่องมือแก้ไขคอร์ส"
+        "no_assignments": "ยังไม่มีงานที่มอบหมายสำหรับคอร์สนี้ สร้างงานในเครื่องมือแก้ไขคอร์ส",
+        "untitled": "งานไม่มีชื่อ",
+        "search_placeholder": "ค้นหางานตามชื่อหรือคำอธิบาย...",
+        "loading": "กำลังโหลดงาน...",
+        "empty": "ยังไม่มีงาน",
+        "empty_filtered": "ไม่มีงานที่ตรงกับตัวกรองของคุณ",
+        "clear_filters": "ล้างตัวกรอง",
+        "showing_count": "แสดง {{shown}} จาก {{total}} งาน",
+        "stats": {
+          "total": "ทั้งหมด",
+          "published": "เผยแพร่แล้ว",
+          "drafts": "ฉบับร่าง",
+          "auto_graded": "ให้คะแนนอัตโนมัติ"
+        },
+        "filters": {
+          "all": "ทั้งหมด",
+          "published": "เผยแพร่แล้ว",
+          "drafts": "ฉบับร่าง",
+          "auto_graded": "เฉพาะให้คะแนนอัตโนมัติ",
+          "hide_empty": "ซ่อนคอร์สที่ว่างเปล่า"
+        }
       },
       "detail": {
         "title": "เครื่องมืองานที่มอบหมาย",
@@ -3137,6 +3164,11 @@
             "update_success": "อัปเดตงานสำเร็จแล้ว",
             "update_error": "เกิดข้อผิดพลาดในการอัปเดตงาน โปรดลองอีกครั้งในภายหลัง"
           }
+        },
+        "title_prefix": "งาน:",
+        "header_badges": {
+          "auto_grading": "ให้คะแนนอัตโนมัติ",
+          "anti_copy_paste": "ห้ามวาง"
         }
       },
       "editor": {
@@ -3158,6 +3190,18 @@
           "form": {
             "title": "แบบฟอร์ม",
             "description": "แบบฟอร์มสำหรับให้ผู้เรียนกรอกข้อมูล"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "คำตอบสั้น",
+            "description": "นักเรียนพิมพ์คำตอบข้อความที่ให้คะแนนตามคำตอบที่ยอมรับของคุณ"
+          },
+          "number_answer": {
+            "title": "คำตอบตัวเลข",
+            "description": "นักเรียนป้อนตัวเลขที่ให้คะแนนพร้อมความคลาดเคลื่อน"
           }
         },
         "toasts": {
@@ -3175,8 +3219,6 @@
             "hint": "คำใบ้",
             "reference_file": "ไฟล์อ้างอิง",
             "reference_file_info": "รูปแบบที่รองรับ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "คะแนนสูงสุด",
-            "max_grade_error": "คะแนนต้องอยู่ระหว่าง 20 ถึง 100",
             "submit": "ส่ง",
             "download": "ดาวน์โหลด",
             "change_reference_file": "เปลี่ยนไฟล์อ้างอิง",
@@ -3186,7 +3228,66 @@
             "sign_in_required": "โปรดเข้าสู่ระบบเพื่ออัปโหลดไฟล์",
             "auth_required": "จำเป็นต้องยืนยันตัวตน โปรดเข้าสู่ระบบเพื่ออัปโหลดไฟล์",
             "auth_required_submit": "จำเป็นต้องยืนยันตัวตน โปรดเข้าสู่ระบบเพื่อส่งภารกิจ",
-            "hint_optional": "คำใบ้ (ระบุหรือไม่ก็ได้)"
+            "hint_optional": "คำใบ้ (ระบุหรือไม่ก็ได้)",
+            "paste_blocked": "การวางถูกปิดใช้งานสำหรับงานนี้",
+            "paste_blocked_hint": "การวางถูกปิดใช้งาน — พิมพ์คำตอบของคุณโดยตรง"
+          },
+          "code": {
+            "student_behavior_label": "พฤติกรรมนักเรียน",
+            "allow_student_run_label": "อนุญาตให้นักเรียนรันโค้ด",
+            "allow_student_run_description": "แสดงปุ่มรันการทดสอบในมุมมองนักเรียนเพื่อให้พวกเขาสามารถลองโค้ดก่อนส่ง",
+            "show_test_details_label": "แสดงคาดหวังกับจริงเมื่อล้มเหลว",
+            "show_test_details_description": "เมื่อการทดสอบที่มองเห็นล้มเหลว เปิดเผยผลลัพธ์ที่คาดหวังและได้รับ",
+            "show_hidden_count_label": "แสดงจำนวนการทดสอบที่ซ่อน",
+            "show_hidden_count_description": "แสดงป้ายบอกนักเรียนว่ามีการทดสอบที่ซ่อนอยู่กี่อัน",
+            "require_passing_label": "ต้องผ่านการทดสอบที่มองเห็น",
+            "require_passing_description": "บล็อกปุ่มบันทึกจนกว่าการทดสอบที่มองเห็นทั้งหมดจะผ่าน",
+            "must_pass_toast": "คุณต้องผ่านการทดสอบที่มองเห็นทั้งหมดก่อนที่จะบันทึก",
+            "must_pass_hint": "การทดสอบที่มองเห็นทั้งหมดต้องผ่านก่อนที่จะบันทึก",
+            "show_solution_label": "เผยเฉลยหลังส่ง",
+            "show_solution_description": "เมื่อนักเรียนบันทึกงานแล้ว แสดงเฉลยของครู",
+            "reference_solution_label": "เฉลยอ้างอิง"
+          },
+          "short_answer": {
+            "prompt_label": "คำถาม",
+            "prompt_placeholder": "เมืองหลวงของโมร็อกโกคือ?",
+            "answers_label": "คำตอบที่ยอมรับ",
+            "answer_placeholder": "ราบัต",
+            "add_answer": "เพิ่มคำตอบอื่น",
+            "no_answers_error": "เพิ่มคำตอบที่ยอมรับอย่างน้อยหนึ่งคำตอบก่อนบันทึก",
+            "match_mode_label": "วิธีจับคู่คำตอบ",
+            "match_modes": {
+              "exact": "จับคู่แบบแน่นอน",
+              "case_insensitive": "ไม่คำนึงถึงตัวพิมพ์ใหญ่-เล็ก (แนะนำ)",
+              "contains": "มีคำตอบที่ใดก็ได้",
+              "regex": "นิพจน์ปกติ"
+            },
+            "explanation_label": "คำอธิบาย (แสดงเมื่อตอบถูก)",
+            "explanation_placeholder": "ตัวเลือก — อธิบายว่าทำไมคำตอบจึงถูกต้อง",
+            "your_answer_placeholder": "พิมพ์คำตอบของคุณ...",
+            "student_answer_label": "คำตอบของนักเรียน",
+            "accepted_answers_label": "คำตอบที่ยอมรับ",
+            "no_answer": "ไม่มีคำตอบที่ส่ง",
+            "correct": "ถูกต้อง",
+            "incorrect": "ไม่ค่อยใช่ — ลองอีกครั้ง"
+          },
+          "number_answer": {
+            "prompt_label": "คำถาม",
+            "prompt_placeholder": "ความเร่งเนื่องจากแรงโน้มถ่วงบนโลกคืออะไร?",
+            "correct_value_label": "ค่าที่ถูกต้อง",
+            "tolerance_label": "ความคลาดเคลื่อน (±)",
+            "unit_label": "หน่วย (ตัวเลือก)",
+            "unit_placeholder": "m/s², kg, °C...",
+            "unit_hint": "แสดงข้างช่องคำตอบ ไม่บังคับ",
+            "explanation_label": "คำอธิบาย (แสดงเมื่อตอบถูก)",
+            "explanation_placeholder": "ตัวเลือก — อธิบายวิธีหาคำตอบ",
+            "preview_label": "ยอมรับ",
+            "your_answer_placeholder": "ป้อนตัวเลข...",
+            "student_answer_label": "คำตอบของนักเรียน",
+            "accepted_range_label": "ช่วงที่ยอมรับ",
+            "no_answer": "ไม่มีคำตอบที่ส่ง",
+            "correct": "ถูกต้อง",
+            "incorrect": "ไม่ค่อยใช่ — ลองอีกครั้ง"
           }
         }
       },
@@ -3208,10 +3309,47 @@
         "actions": {
           "reject": "ตีกลับงาน",
           "set_final_grade": "ตั้งคะแนนสุดท้าย",
-          "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น"
+          "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น",
+          "finalize": "Finalize & Complete",
+          "reject_description": "ลบงานที่ส่งและอนุญาตให้นักเรียนส่งใหม่",
+          "set_final_grade_description": "คำนวณและบันทึกเกรดโดยไม่เสร็จสิ้นกิจกรรม",
+          "finalize_description": "ตั้งเกรดสุดท้ายและทำเครื่องหมายกิจกรรมว่าเสร็จสิ้นสำหรับนักเรียน"
         },
         "toasts": {
-          "reject_success": "ตีกลับงานสำเร็จแล้ว"
+          "reject_success": "ตีกลับงานสำเร็จแล้ว",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "ทั้งหมด"
+        },
+        "sort": {
+          "label": "เรียงลำดับ",
+          "date": "วันที่ส่ง",
+          "name": "ชื่อนักเรียน",
+          "status": "สถานะ",
+          "grade": "เกรด",
+          "needs_grading": "ต้องให้คะแนนก่อน",
+          "late_first": "ส่งช้าก่อน",
+          "recently_graded": "ให้คะแนนล่าสุดก่อน"
+        },
+        "stats": {
+          "total": "ทั้งหมด"
+        },
+        "search_placeholder": "ค้นหาด้วยชื่อหรืออีเมล...",
+        "loading": "กำลังโหลดงานที่ส่ง...",
+        "empty": "ไม่พบงานที่ส่ง",
+        "grade_label": "เกรด:",
+        "preview": {
+          "current_grade": "เกรดปัจจุบัน",
+          "passing": "ผ่าน",
+          "not_passing": "ไม่ผ่าน",
+          "not_submitted": "ยังไม่ส่ง"
+        },
+        "feedback": {
+          "label": "ข้อเสนอแนะโดยรวม",
+          "optional": "ไม่บังคับ",
+          "placeholder": "เขียนความคิดเห็นเกี่ยวกับการส่งงานโดยรวม นักเรียนจะเห็นข้อความนี้ข้างเกรดของตน",
+          "hint": "เว้นว่างไว้เพื่อเก็บข้อเสนอแนะก่อนหน้าไว้ไม่เปลี่ยนแปลง"
         }
       },
       "modals": {
@@ -3230,11 +3368,28 @@
             "grading_types": {
               "alphabet": "ตัวอักษร",
               "numeric": "ตัวเลข",
-              "percentage": "เปอร์เซ็นต์"
+              "percentage": "เปอร์เซ็นต์",
+              "pass_fail": "ผ่าน / ไม่ผ่าน",
+              "gpa_scale": "มาตราส่วน GPA"
             },
             "cancel": "ยกเลิก",
             "save": "บันทึกการเปลี่ยนแปลง",
-            "saving": "กำลังบันทึก..."
+            "saving": "กำลังบันทึก...",
+            "grading_type_descriptions": {
+              "alphabet": "เกรดตัวอักษร A, B, C, D, F",
+              "numeric": "คะแนน 0 ถึง 100",
+              "percentage": "เกรดเป็นเปอร์เซ็นต์",
+              "pass_fail": "ผ่านหรือไม่ผ่านอย่างง่าย",
+              "gpa_scale": "มาตราส่วนเกรด 4.0"
+            },
+            "grading_options_label": "ตัวเลือกการให้คะแนน",
+            "auto_grading_label": "ให้คะแนนอัตโนมัติ",
+            "auto_grading_description": "ให้คะแนนและเสร็จสิ้นกิจกรรมโดยอัตโนมัติเมื่อนักเรียนส่งงาน ทำงานเฉพาะเมื่อทุกงานสามารถให้คะแนนได้โดยไม่ต้องให้มนุษย์ตรวจสอบ",
+            "anti_copy_paste_label": "บล็อกการคัดลอกและวาง",
+            "anti_copy_paste_description": "ป้องกันการวางคำตอบที่สร้างโดย AI โดยบล็อกเหตุการณ์วาง หมายเหตุ: นี่เป็นเพียงมาตรการป้องกัน",
+            "auto_grading_disabled_file": "การให้คะแนนอัตโนมัติไม่สามารถใช้ได้เพราะงานนี้มีการส่งไฟล์ที่ต้องการการตรวจสอบจากมนุษย์",
+            "grading_type_hint": "วิธีแสดงเกรดให้นักเรียน",
+            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน"
           },
           "toasts": {
             "updating": "กำลังอัปเดตงาน...",
@@ -3256,9 +3411,25 @@
             "grading_types": {
               "alphabet": "ตัวอักษร",
               "numeric": "ตัวเลข",
-              "percentage": "เปอร์เซ็นต์"
+              "percentage": "เปอร์เซ็นต์",
+              "pass_fail": "ผ่าน / ไม่ผ่าน",
+              "gpa_scale": "มาตราส่วน GPA"
             },
-            "submit": "สร้างกิจกรรม"
+            "submit": "สร้างกิจกรรม",
+            "grading_type_descriptions": {
+              "alphabet": "เกรดตัวอักษร A, B, C, D, F",
+              "numeric": "คะแนน 0 ถึง 100",
+              "percentage": "เกรดเป็นเปอร์เซ็นต์",
+              "pass_fail": "ผ่านหรือไม่ผ่านอย่างง่าย",
+              "gpa_scale": "มาตราส่วนเกรด 4.0"
+            },
+            "grading_options_label": "ตัวเลือกการให้คะแนน",
+            "auto_grading_label": "ให้คะแนนอัตโนมัติ",
+            "auto_grading_description": "ให้คะแนนและเสร็จสิ้นกิจกรรมโดยอัตโนมัติเมื่อนักเรียนส่งงาน ทำงานเฉพาะเมื่อทุกงานสามารถให้คะแนนได้โดยไม่ต้องให้มนุษย์ตรวจสอบ",
+            "anti_copy_paste_label": "บล็อกการคัดลอกและวาง",
+            "anti_copy_paste_description": "ป้องกันการวางคำตอบที่สร้างโดย AI โดยบล็อกเหตุการณ์วาง หมายเหตุ: นี่เป็นเพียงมาตรการป้องกัน",
+            "grading_type_hint": "วิธีแสดงเกรดให้นักเรียน",
+            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน"
           },
           "toasts": {
             "creating": "กำลังสร้างงาน...",

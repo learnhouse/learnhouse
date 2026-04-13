@@ -1,15 +1,18 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
+import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
-import { getAssignmentTask, getAssignmentTaskSubmissionsMe, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
+import { getAPIUrl } from '@services/config/config';
+import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
 import { getTaskFileSubmissionDir } from '@services/media/media';
 import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { mutate } from 'swr';
 
 type FileSchema = {
     fileUUID: string;
@@ -33,6 +36,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     const [assignmentTask, setAssignmentTask] = React.useState<any>(null);
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
+    const taskSubmissionsMap = useAssignmentTaskSubmissions();
 
     /* TEACHER VIEW CODE */
     /* TEACHER VIEW CODE */
@@ -75,29 +79,26 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 fileUUID: res.data.file_uuid,
                 assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
             })
+            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
             setIsLoading(false)
             setError('')
         }
     }
 
-    async function getAssignmentTaskSubmissionFromUserUI() {
-        if (!access_token) {
-            // Silently fail if not authenticated
-            return;
-        }
-        
-        if (assignmentTaskUUID) {
-            const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-            if (res.success) {
-                setUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
-                setInitialUserSubmissions({
-                    ...res.data.task_submission,
-                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                });
-            }
+    // Hydrate from the batch task-submissions cache instead of calling
+    // /submissions/me per task. Re-runs when the batch payload arrives.
+    function hydrateSubmissionFromBatch() {
+        if (!assignmentTaskUUID) return;
+        const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
+        if (sub) {
+            setUserSubmissions({
+                ...sub.task_submission,
+                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+            });
+            setInitialUserSubmissions({
+                ...sub.task_submission,
+                assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+            });
         }
     }
 
@@ -130,24 +131,36 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 };
                 setUserSubmissions(updatedUserSubmissions);
                 setInitialUserSubmissions(updatedUserSubmissions);
+                mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
             } else {
                 toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }
         }
     };
 
+    // Used only by grading view — student view hydrates from useAssignments() context
     async function getAssignmentTaskUI() {
         if (!access_token) {
-            // Silently fail if not authenticated
             return;
         }
-        
+
         if (assignmentTaskUUID) {
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
             if (res.success) {
                 setAssignmentTask(res.data);
                 setAssignmentTaskOutsideProvider(res.data);
             }
+        }
+    }
+
+    function hydrateTaskFromContext() {
+        if (!assignmentTaskUUID) return;
+        const task = assignment?.assignment_tasks?.find(
+            (t: any) => t.assignment_task_uuid === assignmentTaskUUID
+        );
+        if (task) {
+            setAssignmentTask(task);
+            setAssignmentTaskOutsideProvider(task);
         }
     }
 
@@ -215,20 +228,18 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     /* GRADING VIEW CODE */
     const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
     useEffect(() => {
-        // Student area
+        // Student area: hydrate from already-fetched context payloads.
         if (view === 'student') {
-            getAssignmentTaskUI()
-            getAssignmentTaskSubmissionFromUserUI()
+            hydrateTaskFromContext()
+            hydrateSubmissionFromBatch()
         }
 
-        // Grading area
+        // Grading area: per-task fetches are fine here (one task at a time).
         else if (view == 'custom-grading') {
             getAssignmentTaskUI();
-            //setQuestions(assignmentTaskState.assignmentTask.contents.questions);
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
         }
-    }
-        , [assignmentTaskUUID])
+    }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
 
     return (
         <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">

@@ -894,6 +894,7 @@
     "quiz": "اختبار",
     "file_submission": "تسليم ملف",
     "form": "نموذج",
+    "code": "Code",
     "interactive": "تفاعلي",
     "activities": "الأنشطة",
     "current_activity": "النشاط الحالي",
@@ -952,7 +953,13 @@
     "points": "نقاط",
     "current_points": "النقاط الحالية: {{points}}",
     "grade": "الدرجة",
-    "due_date": "تاريخ الاستحقاق"
+    "run_autograde": "Run Auto-grade",
+    "due_date": "تاريخ الاستحقاق",
+    "task_breakdown": "تفصيل المهام",
+    "no_grade_details": "لا توجد تفاصيل للدرجة بعد.",
+    "task_passed": "ناجح",
+    "task_not_passed": "غير ناجح",
+    "score": "النتيجة"
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -3093,7 +3100,27 @@
         "course_editor": "محرر الدورة",
         "editor": "المحرر",
         "submissions": "التسليمات",
-        "no_assignments": "لا توجد واجبات لهذه الدورة، أنشئ واجبات في محرر الدورة"
+        "no_assignments": "لا توجد واجبات لهذه الدورة، أنشئ واجبات في محرر الدورة",
+        "untitled": "واجب بدون عنوان",
+        "search_placeholder": "ابحث عن الواجبات بالاسم أو الوصف...",
+        "loading": "جاري تحميل الواجبات...",
+        "empty": "لا توجد واجبات بعد",
+        "empty_filtered": "لا توجد واجبات تطابق عوامل التصفية",
+        "clear_filters": "مسح عوامل التصفية",
+        "showing_count": "عرض {{shown}} من {{total}} واجب",
+        "stats": {
+          "total": "الإجمالي",
+          "published": "منشور",
+          "drafts": "مسودات",
+          "auto_graded": "تقييم تلقائي"
+        },
+        "filters": {
+          "all": "الكل",
+          "published": "منشور",
+          "drafts": "مسودات",
+          "auto_graded": "التقييم التلقائي فقط",
+          "hide_empty": "إخفاء الدورات الفارغة"
+        }
       },
       "detail": {
         "title": "أدوات الواجب",
@@ -3122,6 +3149,11 @@
             "update_success": "تم تحديث الواجب بنجاح",
             "update_error": "خطأ أثناء تحديث الواجب، يرجى المحاولة لاحقاً."
           }
+        },
+        "title_prefix": "الواجب:",
+        "header_badges": {
+          "auto_grading": "تقييم تلقائي",
+          "anti_copy_paste": "اللصق محظور"
         }
       },
       "editor": {
@@ -3143,6 +3175,18 @@
           "form": {
             "title": "نموذج",
             "description": "استبيانات يملأها الطلاب"
+          },
+          "code": {
+            "title": "Code",
+            "description": "Code challenge with automated test case grading"
+          },
+          "short_answer": {
+            "title": "إجابة قصيرة",
+            "description": "يكتب الطلاب إجابة نصية تُقارن بإجاباتك المقبولة"
+          },
+          "number_answer": {
+            "title": "إجابة رقمية",
+            "description": "يُدخل الطلاب رقمًا يتم تقييمه مع هامش تسامح"
           }
         },
         "toasts": {
@@ -3160,8 +3204,6 @@
             "hint": "تلميح",
             "reference_file": "ملف مرجعي",
             "reference_file_info": "التنسيقات المسموحة: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
-            "max_grade_value": "القيمة القصوى للدرجة",
-            "max_grade_error": "القيمة يجب أن تكون بين 20 و 100",
             "submit": "تسليم",
             "download": "تحميل",
             "change_reference_file": "تغيير الملف المرجعي",
@@ -3171,7 +3213,66 @@
             "sign_in_required": "يرجى تسجيل الدخول لرفع الملفات",
             "auth_required": "المصادقة مطلوبة. يرجى تسجيل الدخول لرفع الملفات.",
             "auth_required_submit": "المصادقة مطلوبة. يرجى تسجيل الدخول لتسليم المهمة.",
-            "hint_optional": "تلميح (اختياري)"
+            "hint_optional": "تلميح (اختياري)",
+            "paste_blocked": "اللصق معطّل لهذا الواجب",
+            "paste_blocked_hint": "اللصق معطّل — اكتب إجابتك مباشرة."
+          },
+          "code": {
+            "student_behavior_label": "سلوك الطالب",
+            "allow_student_run_label": "السماح للطلاب بتشغيل التعليمات البرمجية",
+            "allow_student_run_description": "إظهار زر تشغيل الاختبارات في عرض الطالب حتى يتمكن من تجربة التعليمات البرمجية قبل التسليم.",
+            "show_test_details_label": "إظهار المتوقع مقابل الفعلي عند الفشل",
+            "show_test_details_description": "عند فشل اختبار مرئي، إظهار المخرجات المتوقعة والمستلمة. أوقف التشغيل لمنع الطلاب من الهندسة العكسية.",
+            "show_hidden_count_label": "إظهار عدد الاختبارات المخفية",
+            "show_hidden_count_description": "عرض شارة تخبر الطلاب بعدد الاختبارات المخفية. أوقف التشغيل لإخفاء حتى العدد.",
+            "require_passing_label": "اشتراط اجتياز الاختبارات المرئية",
+            "require_passing_description": "منع زر الحفظ حتى تجتاز كل اختبار مرئي.",
+            "must_pass_toast": "يجب عليك اجتياز جميع الاختبارات المرئية قبل الحفظ.",
+            "must_pass_hint": "يجب اجتياز جميع الاختبارات المرئية قبل الحفظ.",
+            "show_solution_label": "كشف الحل بعد التسليم",
+            "show_solution_description": "بعد حفظ الطالب لعمله، أظهر حل المعلم المرجعي كلوحة قابلة للطي.",
+            "reference_solution_label": "الحل المرجعي"
+          },
+          "short_answer": {
+            "prompt_label": "نص السؤال",
+            "prompt_placeholder": "ما عاصمة المغرب؟",
+            "answers_label": "الإجابات المقبولة",
+            "answer_placeholder": "الرباط",
+            "add_answer": "إضافة إجابة أخرى",
+            "no_answers_error": "أضف إجابة مقبولة واحدة على الأقل قبل الحفظ",
+            "match_mode_label": "كيفية مطابقة الإجابات",
+            "match_modes": {
+              "exact": "تطابق دقيق",
+              "case_insensitive": "غير حساس لحالة الأحرف (موصى به)",
+              "contains": "يحتوي على الإجابة",
+              "regex": "تعبير عادي"
+            },
+            "explanation_label": "شرح (يُعرض عند الإجابة الصحيحة)",
+            "explanation_placeholder": "اختياري — اشرح سبب صحة الإجابة",
+            "your_answer_placeholder": "اكتب إجابتك...",
+            "student_answer_label": "إجابة الطالب",
+            "accepted_answers_label": "الإجابات المقبولة",
+            "no_answer": "لم تُقدَّم إجابة",
+            "correct": "صحيح",
+            "incorrect": "ليس صحيحًا تمامًا — حاول مرة أخرى"
+          },
+          "number_answer": {
+            "prompt_label": "نص السؤال",
+            "prompt_placeholder": "ما هو تسارع الجاذبية الأرضية؟",
+            "correct_value_label": "القيمة الصحيحة",
+            "tolerance_label": "التسامح (±)",
+            "unit_label": "الوحدة (اختياري)",
+            "unit_placeholder": "م/ث²، كجم، °م...",
+            "unit_hint": "تُعرض بجانب حقل الإجابة. غير مفروضة — يُدخل الطلاب أرقامًا فقط.",
+            "explanation_label": "شرح (يُعرض عند الإجابة الصحيحة)",
+            "explanation_placeholder": "اختياري — اشرح كيفية الوصول للإجابة",
+            "preview_label": "يقبل",
+            "your_answer_placeholder": "أدخل رقمًا...",
+            "student_answer_label": "إجابة الطالب",
+            "accepted_range_label": "النطاق المقبول",
+            "no_answer": "لم تُقدَّم إجابة",
+            "correct": "صحيح",
+            "incorrect": "ليس صحيحًا تمامًا — حاول مرة أخرى"
           }
         }
       },
@@ -3193,10 +3294,47 @@
         "actions": {
           "reject": "رفض الواجب",
           "set_final_grade": "تحديد الدرجة النهائية",
-          "mark_as_done": "تحديد النشاط كمكتمل للمستخدم"
+          "mark_as_done": "تحديد النشاط كمكتمل للمستخدم",
+          "finalize": "Finalize & Complete",
+          "reject_description": "يحذف التقديم ويسمح للطالب بإعادة التقديم",
+          "set_final_grade_description": "يحسب ويحفظ الدرجة دون إكمال النشاط",
+          "finalize_description": "يحدد الدرجة النهائية ويعلم النشاط كمكتمل للطالب"
         },
         "toasts": {
-          "reject_success": "تم رفض الواجب بنجاح"
+          "reject_success": "تم رفض الواجب بنجاح",
+          "finalize_success": "Assignment graded and activity marked as complete"
+        },
+        "filters": {
+          "all": "الكل"
+        },
+        "sort": {
+          "label": "ترتيب",
+          "date": "تاريخ التسليم",
+          "name": "اسم الطالب",
+          "status": "الحالة",
+          "grade": "الدرجة",
+          "needs_grading": "يحتاج تصحيح أولاً",
+          "late_first": "المتأخرون أولاً",
+          "recently_graded": "تم تقييمه مؤخراً"
+        },
+        "stats": {
+          "total": "الإجمالي"
+        },
+        "search_placeholder": "البحث بالاسم أو البريد الإلكتروني...",
+        "loading": "جاري تحميل التقديمات...",
+        "empty": "لا توجد تقديمات",
+        "grade_label": "الدرجة:",
+        "preview": {
+          "current_grade": "الدرجة الحالية",
+          "passing": "ناجح",
+          "not_passing": "غير ناجح",
+          "not_submitted": "لم يُقدَّم"
+        },
+        "feedback": {
+          "label": "الملاحظات العامة",
+          "optional": "اختياري",
+          "placeholder": "اكتب تعليقاً حول التسليم بشكل عام. سيراه الطالب بجانب درجته.",
+          "hint": "اتركه فارغاً للإبقاء على أي ملاحظات سابقة دون تغيير."
         }
       },
       "modals": {
@@ -3215,11 +3353,28 @@
             "grading_types": {
               "alphabet": "أبجدي",
               "numeric": "رقمي",
-              "percentage": "نسبة مئوية"
+              "percentage": "نسبة مئوية",
+              "pass_fail": "ناجح / راسب",
+              "gpa_scale": "مقياس GPA"
             },
             "cancel": "إلغاء",
             "save": "حفظ التغييرات",
-            "saving": "جاري الحفظ..."
+            "saving": "جاري الحفظ...",
+            "grading_type_descriptions": {
+              "alphabet": "درجات حرفية A، B، C، D، F",
+              "numeric": "درجة من 0 إلى 100",
+              "percentage": "الدرجة كنسبة مئوية",
+              "pass_fail": "ناجح أو راسب بسيط",
+              "gpa_scale": "مقياس نقاط 4.0"
+            },
+            "grading_options_label": "خيارات التقييم",
+            "auto_grading_label": "التقييم التلقائي",
+            "auto_grading_description": "تقييم وإكمال النشاط تلقائياً عند تسليم الطالب. يعمل فقط عندما يمكن تقييم كل مهمة بدون مراجعة بشرية.",
+            "anti_copy_paste_label": "حظر النسخ واللصق",
+            "anti_copy_paste_description": "تثبيط لصق إجابات مولّدة بالذكاء الاصطناعي بحظر أحداث اللصق. ملاحظة: هذا رادع ويمكن تجاوزه.",
+            "auto_grading_disabled_file": "التقييم التلقائي غير متاح لأن هذا الواجب يحتوي على مهمة تسليم ملف تحتاج إلى مراجعة بشرية.",
+            "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
+            "grading_options_hint": "السلوك عند التسليم"
           },
           "toasts": {
             "updating": "جاري تحديث الواجب...",
@@ -3241,9 +3396,25 @@
             "grading_types": {
               "alphabet": "أبجدي",
               "numeric": "رقمي",
-              "percentage": "نسبة مئوية"
+              "percentage": "نسبة مئوية",
+              "pass_fail": "ناجح / راسب",
+              "gpa_scale": "مقياس GPA"
             },
-            "submit": "إنشاء النشاط"
+            "submit": "إنشاء النشاط",
+            "grading_type_descriptions": {
+              "alphabet": "درجات حرفية A، B، C، D، F",
+              "numeric": "درجة من 0 إلى 100",
+              "percentage": "الدرجة كنسبة مئوية",
+              "pass_fail": "ناجح أو راسب بسيط",
+              "gpa_scale": "مقياس نقاط 4.0"
+            },
+            "grading_options_label": "خيارات التقييم",
+            "auto_grading_label": "التقييم التلقائي",
+            "auto_grading_description": "تقييم وإكمال النشاط تلقائياً عند تسليم الطالب. يعمل فقط عندما يمكن تقييم كل مهمة بدون مراجعة بشرية.",
+            "anti_copy_paste_label": "حظر النسخ واللصق",
+            "anti_copy_paste_description": "تثبيط لصق إجابات مولّدة بالذكاء الاصطناعي بحظر أحداث اللصق. ملاحظة: هذا رادع ويمكن تجاوزه.",
+            "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
+            "grading_options_hint": "السلوك عند التسليم"
           },
           "toasts": {
             "creating": "جاري إنشاء الواجب...",

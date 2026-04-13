@@ -47,10 +47,14 @@ function AssignmentTaskEditor({ page }: any) {
         , [assignmentTaskState, assignmentTaskStateHook, selectedSubPage, assignment])
 
     return (
-        <div className="flex flex-col font-black text-sm w-full z-20">
+        <div className="flex flex-col font-black text-sm w-full z-20 h-full min-h-0">
             {assignmentTaskState.assignmentTask && Object.keys(assignmentTaskState.assignmentTask).length > 0 && (
-                <div className='flex flex-col space-y-3'>
-                    <div className='flex flex-col bg-white pl-10 pr-10 text-sm tracking-tight z-10 nice-shadow pt-5 mb-3 relative'>
+                <>
+                    {/* Task header + tabs: flex-none so it stays fixed at the
+                        top of the editor panel. No sticky/overflow here — the
+                        surrounding page's tabs bar shadow renders cleanly
+                        above it. */}
+                    <div className='flex flex-col bg-white pl-10 pr-10 text-sm tracking-tight z-10 nice-shadow pt-5 mb-3 relative flex-none'>
                         <div className='flex py-1 justify-between items-center'>
                             <div className='font-semibold text-lg '>
                                 {assignmentTaskState?.assignmentTask.title}
@@ -91,11 +95,17 @@ function AssignmentTaskEditor({ page }: any) {
                             </div>
                         </div>
                     </div>
-                    <div className='ml-10 mr-10 mt-10 mx-auto bg-white rounded-xl shadow-xs px-6 py-5 nice-shadow'>
-                        {selectedSubPage === 'general' && <AssignmentTaskGeneralEdit />}
-                        {selectedSubPage === 'content' && <AssignmentTaskContentEdit />}
+                    {/* Scrollable body — only this area scrolls. flex-1
+                        claims the remaining height; min-h-0 allows the flex
+                        child to shrink below its content size so the
+                        overflow kicks in correctly. */}
+                    <div className='flex-1 min-h-0 overflow-y-auto pb-10'>
+                        <div className='ml-10 mr-10 mt-10 mx-auto bg-white rounded-xl shadow-xs px-6 py-5 nice-shadow'>
+                            {selectedSubPage === 'general' && <AssignmentTaskGeneralEdit />}
+                            {selectedSubPage === 'content' && <AssignmentTaskContentEdit />}
+                        </div>
                     </div>
-                </div>
+                </>
             )}
             {Object.keys(assignmentTaskState.assignmentTask).length == 0 && (
                 <div className='flex flex-col h-full bg-white pl-10 pr-10 text-sm tracking-tight z-10 nice-shadow pt-5 relative'>

@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, UserRoundPen, Edit2, Maximize2, Minimize2 } from 'lucide-react'
+import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2, Trophy, Sparkles, XCircle } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -19,7 +20,8 @@ import { mutate } from 'swr'
 import useSWR from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { useMediaQuery } from 'usehooks-ts'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { useMediaQuery, useWindowSize } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -36,6 +38,8 @@ import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useTranslation } from 'react-i18next'
 import { useAnalytics } from '@/hooks/useAnalytics'
+
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 
 // Lazy load heavy components
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
@@ -274,13 +278,19 @@ function ActivityClient(props: ActivityClientProps) {
       case 'TYPE_ASSIGNMENT':
         return assignment ? (
           <Suspense fallback={<LoadingFallback />}>
-            <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
-              <AssignmentsTaskProvider>
-                <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+            {/* AssignmentSubmissionProvider wraps AssignmentProvider (instead
+                of being nested inside it) so that BOTH providers mount in the
+                same render cycle and kick off their SWR calls in parallel.
+                Otherwise AssignmentSubmissionProvider would wait for
+                AssignmentProvider's gated load before firing its own
+                requests, adding an extra round-trip phase. */}
+            <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+              <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                <AssignmentsTaskProvider>
                   <AssignmentStudentActivity />
-                </AssignmentSubmissionProvider>
-              </AssignmentsTaskProvider>
-            </AssignmentProvider>
+                </AssignmentsTaskProvider>
+              </AssignmentProvider>
+            </AssignmentSubmissionProvider>
           </Suspense>
         ) : null;
       case 'TYPE_SCORM':
@@ -1241,7 +1251,12 @@ function AssignmentTools(props: {
   const { t } = useTranslation();
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
-  const [finalGrade, setFinalGrade] = React.useState(null) as any;
+  const [gradeData, setGradeData] = React.useState<any>(null);
+  const [isGradeModalOpen, setIsGradeModalOpen] = React.useState(false);
+  const { width: windowWidth, height: windowHeight } = useWindowSize();
+  // Ensures the auto-open-on-mount logic only fires once per page view,
+  // so the modal doesn't pop back open every time gradeData refreshes.
+  const hasAutoOpenedRef = React.useRef(false);
 
   const submitForGradingUI = async () => {
     if (props.assignment) {
@@ -1265,41 +1280,13 @@ function AssignmentTools(props: {
       props.assignment?.assignment_uuid,
       session.data?.tokens?.access_token
     );
-
     if (res.success) {
-      const { grade, max_grade, grading_type } = res.data;
-      let displayGrade;
-
-      switch (grading_type) {
-        case 'ALPHABET':
-          displayGrade = convertNumericToAlphabet(grade, max_grade);
-          break;
-        case 'NUMERIC':
-          displayGrade = `${grade}/${max_grade}`;
-          break;
-        case 'PERCENTAGE':
-          const percentage = (grade / max_grade) * 100;
-          displayGrade = `${percentage.toFixed(2)}%`;
-          break;
-        default:
-          displayGrade = 'Unknown grading type';
-      }
-
-      // Use displayGrade here, e.g., update state or display it
-      setFinalGrade(displayGrade);
-    } else {
+      // The backend returns a rich grade object: display_grade, points_summary,
+      // percentage_display, passed, overall_feedback, etc. We just render it —
+      // no client-side math.
+      setGradeData(res.data);
     }
   };
-
-  // Helper function to convert numeric grade to alphabet grade
-  function convertNumericToAlphabet(grade: any, maxGrade: any) {
-    const percentage = (grade / maxGrade) * 100;
-    if (percentage >= 90) return 'A';
-    if (percentage >= 80) return 'B';
-    if (percentage >= 70) return 'C';
-    if (percentage >= 60) return 'D';
-    return 'F';
-  }
 
   useEffect(() => {
     if ( submission && submission.length > 0 && submission[0].submission_status === 'GRADED') {
@@ -1307,6 +1294,20 @@ function AssignmentTools(props: {
     }
   }
     , [submission, props.assignment])
+
+  // Auto-open the grade details modal when the student lands on a GRADED
+  // assignment that was auto-graded. We only do this once per mount so it
+  // doesn't reopen every time SWR re-hydrates the grade data in the
+  // background.
+  useEffect(() => {
+    if (hasAutoOpenedRef.current) return;
+    if (!gradeData) return;
+    if (!submission || submission.length === 0) return;
+    if (submission[0].submission_status !== 'GRADED') return;
+    if (!props.assignment?.auto_grading) return;
+    hasAutoOpenedRef.current = true;
+    setIsGradeModalOpen(true);
+  }, [gradeData, submission, props.assignment]);
 
   if (!submission || submission.length === 0) {
     return (
@@ -1342,17 +1343,185 @@ function AssignmentTools(props: {
   }
 
   if (submission[0].submission_status === 'GRADED') {
+    // Fallback string if the server response hasn't hydrated yet or is old.
+    const displayGrade = gradeData?.display_grade
+      ?? (gradeData ? `${gradeData.grade}/${gradeData.max_grade}` : '...');
+    const pointsSummary = gradeData?.points_summary;
+    const percentageDisplay = gradeData?.percentage_display;
+    const passed = gradeData?.passed;
+    const feedback = gradeData?.overall_feedback;
+    const tasks = gradeData?.tasks as any[] | undefined;
+    const isPassing = passed !== false;
+    const pillBg = isPassing ? 'bg-teal-600' : 'bg-rose-600';
+    const pillChip = isPassing ? 'bg-white text-teal-800' : 'bg-white text-rose-700';
+
     return (
-      <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
-        <div className="flex items-center space-x-2">
-          <CheckCircle size={17} />
-          <span className="text-xs flex space-x-2 font-bold items-center">
-            <span>{t('assignments.graded')} </span>
-            <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span>
+      <>
+        {/* Compact pill — same footprint and alignment as the Next button */}
+        <button
+          type="button"
+          onClick={() => setIsGradeModalOpen(true)}
+          className={`${pillBg} rounded-md px-3 sm:px-4 nice-shadow flex flex-col items-start text-left p-2 sm:p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+        >
+          <span className="text-[10px] font-bold mb-1 uppercase text-white/90">
+            {t('common.status')}
           </span>
-        </div>
-      </div>
+          <div className="flex items-center space-x-1.5">
+            <CheckCircle size={15} className="shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold">{t('assignments.graded')}</span>
+            <span className={`${pillChip} px-1.5 py-0.5 rounded-md text-[11px] font-bold`}>
+              {displayGrade}
+            </span>
+            <ChevronRight size={15} className="shrink-0" />
+          </div>
+        </button>
+
+        {/* Confetti for passing students — fires once each time the modal
+            opens because react-confetti with recycle={false} plays through
+            and the conditional remount restarts it. */}
+        {isGradeModalOpen && isPassing && gradeData && (
+          <div className="fixed inset-0 pointer-events-none z-[300]">
+            <ReactConfetti
+              width={windowWidth}
+              height={windowHeight}
+              numberOfPieces={220}
+              recycle={false}
+              gravity={0.18}
+              tweenDuration={6000}
+              colors={['#10b981', '#14b8a6', '#06b6d4', '#fbbf24', '#f59e0b', '#ec4899']}
+            />
+          </div>
+        )}
+
+        {/* Detail modal — opens on click and auto-opens once when the
+            assignment is auto-graded so students see their result right
+            away. */}
+        <Modal
+          isDialogOpen={isGradeModalOpen}
+          onOpenChange={(open: boolean) => setIsGradeModalOpen(open)}
+          minWidth="sm"
+          noPadding
+          dialogContent={
+            <div className="flex flex-col">
+              {/* Hero */}
+              <div className={`relative px-6 pt-8 pb-7 overflow-hidden ${
+                isPassing
+                  ? 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'
+                  : 'bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50'
+              }`}>
+                {/* Decorative blobs */}
+                <div className={`absolute -top-12 -right-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
+                  isPassing ? 'bg-emerald-300' : 'bg-rose-300'
+                }`} />
+                <div className={`absolute -bottom-16 -left-12 w-44 h-44 rounded-full blur-3xl opacity-40 ${
+                  isPassing ? 'bg-cyan-300' : 'bg-amber-300'
+                }`} />
+
+                <div className="relative flex flex-col items-center text-center space-y-3">
+                  <div className={`relative w-[72px] h-[72px] rounded-full flex items-center justify-center nice-shadow bg-white`}>
+                    {isPassing ? (
+                      <Trophy size={34} className="text-emerald-600" strokeWidth={2.2} />
+                    ) : (
+                      <XCircle size={36} className="text-rose-600" strokeWidth={2.2} />
+                    )}
+                    {isPassing && (
+                      <>
+                        <Sparkles size={16} className="absolute -top-1 -right-1 text-amber-500 drop-shadow" />
+                        <Sparkles size={12} className="absolute -bottom-1 -left-1 text-amber-400 drop-shadow" />
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
+                      isPassing ? 'text-emerald-700' : 'text-rose-700'
+                    }`}>
+                      {isPassing
+                        ? t('dashboard.assignments.submissions.preview.passing')
+                        : t('dashboard.assignments.submissions.preview.not_passing')}
+                    </p>
+                    <h2 className="text-5xl font-black text-gray-900 tracking-tight leading-none">
+                      {displayGrade}
+                    </h2>
+                    {(pointsSummary || percentageDisplay) && (
+                      <p className="text-sm text-gray-500 font-medium pt-1">
+                        {[percentageDisplay, pointsSummary].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="px-6 pt-5 pb-6 space-y-5">
+                {tasks && tasks.length > 0 && (
+                  <div className="space-y-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      {t('assignments.task_breakdown')}
+                    </p>
+                    <div className="space-y-1.5">
+                      {tasks.map((tb: any) => {
+                        const pct = Math.max(0, Math.min(100, tb.percentage || 0));
+                        const passedTask = tb.submitted && pct >= 60;
+                        return (
+                          <div
+                            key={tb.assignment_task_uuid}
+                            className="relative overflow-hidden rounded-lg bg-gray-50 px-3 py-2.5"
+                          >
+                            {tb.submitted && (
+                              <div
+                                className={`absolute inset-y-0 left-0 transition-all ${
+                                  passedTask ? 'bg-emerald-100/70' : 'bg-rose-100/70'
+                                }`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            )}
+                            <div className="relative flex items-center justify-between gap-3">
+                              <span className="text-sm text-gray-700 truncate" title={tb.description || `Task ${tb.index}`}>
+                                <span className="font-bold text-gray-400 mr-1.5">{tb.index}.</span>
+                                {tb.description || `Task ${tb.index}`}
+                              </span>
+                              <span className={`text-xs font-bold flex-none ${
+                                !tb.submitted
+                                  ? 'text-gray-400'
+                                  : passedTask
+                                    ? 'text-emerald-700'
+                                    : 'text-rose-700'
+                              }`}>
+                                {tb.submitted ? tb.percentage_display : '—'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {feedback && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      <MessageSquare size={11} />
+                      <span>{t('dashboard.assignments.submissions.feedback.label')}</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {feedback}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!tasks?.length && !feedback && (
+                  <p className="text-sm text-gray-400 text-center py-4">
+                    {t('assignments.no_grade_details')}
+                  </p>
+                )}
+              </div>
+            </div>
+          }
+        />
+      </>
     )
   }
 
