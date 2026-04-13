@@ -32,6 +32,11 @@ from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.services.webhooks.crypto import encrypt_secret
 from src.services.webhooks.events import WEBHOOK_EVENTS
+# Reuse the same SSRF guard as the manual webhook create path so both code
+# paths enforce identical validation. The leading underscore is conventional,
+# not enforced — importing it here is deliberate to avoid duplicating the
+# logic across files.
+from src.services.webhooks.webhooks import _validate_webhook_url
 
 
 router = APIRouter()
@@ -237,6 +242,7 @@ async def zapier_create_subscription(
 ) -> ZapierSubscriptionResponse:
     api_user, db_session = ctx
     _validate_event(payload.event)
+    _validate_webhook_url(payload.target_url)
 
     now = str(datetime.now())
     description = f"Zapier: {payload.zap_name}" if payload.zap_name else "Zapier integration"
@@ -258,7 +264,10 @@ async def zapier_create_subscription(
         source="zapier",
         zap_name=payload.zap_name,
         zap_id=payload.zap_id,
-        created_by_user_id=0,
+        # Attribute the row to whoever originally created the API token that
+        # Zapier is using. webhook_endpoint.created_by_user_id has a NOT NULL
+        # FK to user.id, so we cannot leave this as 0 or None.
+        created_by_user_id=api_user.created_by_user_id,
         creation_date=now,
         update_date=now,
     )

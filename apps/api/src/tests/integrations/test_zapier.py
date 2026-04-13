@@ -19,6 +19,7 @@ from starlette.requests import Request
 
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
+from src.db.roles import Role
 from src.db.usergroups import UserGroup
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User
@@ -50,7 +51,12 @@ def engine():
 
     @event.listens_for(engine, "connect")
     def _set_sqlite_pragma(dbapi_connection, connection_record):
-        pass
+        # Enforce foreign key constraints in SQLite — off by default there,
+        # which previously hid a bug where webhook_endpoint.created_by_user_id
+        # was being set to 0 (passes SQLite, fails Postgres FK check at prod).
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON")
+        cursor.close()
 
     for table in SQLModel.metadata.tables.values():
         for col in table.columns:
@@ -102,7 +108,26 @@ def other_org(db):
 
 
 @pytest.fixture
-def user(db, org):
+def role(db):
+    # Prerequisite row for UserOrganization.role_id FK. Kept minimal — tests
+    # don't exercise role-based authorization, only that the membership row
+    # can be inserted under FK enforcement.
+    r = Role(
+        id=1,
+        name="Test Role",
+        description="",
+        rights={},
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(r)
+    db.commit()
+    db.refresh(r)
+    return r
+
+
+@pytest.fixture
+def user(db, org, role):
     u = User(
         id=1,
         username="testuser",
@@ -119,7 +144,7 @@ def user(db, org):
         UserOrganization(
             user_id=u.id,
             org_id=org.id,
-            role_id=1,
+            role_id=role.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
@@ -141,14 +166,41 @@ def token_user(org, user):
 
 
 @pytest.fixture
-def other_token(other_org):
+def other_user(db, other_org, role):
+    u = User(
+        id=99,
+        username="otheruser",
+        first_name="Other",
+        last_name="User",
+        email="other@example.com",
+        password="hashed",
+        user_uuid="user_other",
+    )
+    db.add(u)
+    db.commit()
+    db.refresh(u)
+    db.add(
+        UserOrganization(
+            user_id=u.id,
+            org_id=other_org.id,
+            role_id=role.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+    )
+    db.commit()
+    return u
+
+
+@pytest.fixture
+def other_token(other_org, other_user):
     return APITokenUser(
         id=2,
         user_uuid="apitoken_other",
         username="api_token",
         org_id=other_org.id,
         token_name="Other Token",
-        created_by_user_id=99,
+        created_by_user_id=other_user.id,
     )
 
 
@@ -382,6 +434,12 @@ class TestZapierSubscriptions:
         assert stored.zap_id == "zap_abc"
         assert stored.events == ["course_completed"]
         assert stored.secret_encrypted  # defence-in-depth secret persisted
+        # Regression: must attribute the row to the API token's creator so
+        # production Postgres's FK to user.id is satisfied. SQLite used in
+        # these tests does not enforce FKs by default, so we check the value
+        # explicitly here.
+        assert stored.created_by_user_id == token_user.created_by_user_id
+        assert stored.created_by_user_id != 0
 
     def test_create_rejects_unknown_event(self, db, token_user, request_obj):
         payload = ZapierSubscriptionCreate(
