@@ -945,7 +945,11 @@
     "grade": "Cijfer",
     "run_autograde": "Run Auto-grade",
     "due_date": "Inleverdatum",
-    "task_breakdown": "Taakoverzicht"
+    "task_breakdown": "Taakoverzicht",
+    "no_grade_details": "Nog geen cijferdetails beschikbaar.",
+    "task_passed": "Geslaagd",
+    "task_not_passed": "Niet geslaagd",
+    "score": "score"
   },
   "certificate": {
     "certificate": "Certificaat",

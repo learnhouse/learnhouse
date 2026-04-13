@@ -955,7 +955,11 @@
     "grade": "成绩",
     "run_autograde": "Run Auto-grade",
     "due_date": "截止日期",
-    "task_breakdown": "任务明细"
+    "task_breakdown": "任务明细",
+    "no_grade_details": "暂无成绩详情。",
+    "task_passed": "通过",
+    "task_not_passed": "未通过",
+    "score": "得分"
   },
   "certificate": {
     "certificate": "证书",

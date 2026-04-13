@@ -955,7 +955,11 @@
     "grade": "성적",
     "run_autograde": "Run Auto-grade",
     "due_date": "제출 기한",
-    "task_breakdown": "과제별 내역"
+    "task_breakdown": "과제별 내역",
+    "no_grade_details": "아직 성적 세부 정보가 없습니다.",
+    "task_passed": "통과",
+    "task_not_passed": "미통과",
+    "score": "점수"
   },
   "certificate": {
     "certificate": "수료증",

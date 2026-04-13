@@ -40,24 +40,9 @@ const DEFAULT_CONTENTS: NumberAnswerContents = {
   explanation: '',
 }
 
-/**
- * Check a student's numeric answer against the configured value + tolerance.
- * Both values are parsed as floats so "9.81" is valid. Returns false for
- * unparseable inputs (blank, "abc", etc.) so the student can't accidentally
- * get credit for a non-answer.
- */
-function checkNumberAnswer(
-  answerRaw: string,
-  correctValue: number,
-  tolerance: number
-): boolean {
-  const cleaned = (answerRaw ?? '').trim().replace(',', '.')
-  if (!cleaned) return false
-  const parsed = Number.parseFloat(cleaned)
-  if (!Number.isFinite(parsed)) return false
-  const diff = Math.abs(parsed - correctValue)
-  return diff <= Math.abs(tolerance)
-}
+// NOTE: numeric grading runs server-side via _check_number_answer in
+// assignments.py. The student's answer is stored as-is on save; the backend
+// re-parses and compares against correct_value ± tolerance during finalize.
 
 function normalizeContents(raw: any): NumberAnswerContents {
   return {
@@ -178,27 +163,22 @@ function TaskNumberAnswerObject({
     }
   }
 
-  // --- SUBMIT (student) ---
+  // --- SAVE PROGRESS (student) ---
+  // Matches the QUIZ / FORM pattern: persist the draft answer only. Grading
+  // is done server-side via _server_verified_task_grade when the assignment
+  // is finalized — either by the auto-grade path on submission or by the
+  // teacher clicking "Set final grade". Keeping the client out of the
+  // grading loop also means DevTools tampering can't inflate the score.
   async function submitFC() {
     if (!assignmentTaskUUID) return
-    const maxPoints = assignmentTaskOutsideProvider?.max_grade_value ?? 100
-    const passed = checkNumberAnswer(
-      studentAnswer,
-      contents.correct_value,
-      contents.tolerance
-    )
-    const grade = passed ? maxPoints : 0
     const values = {
       assignment_task_submission_uuid:
         userSubmissions?.assignment_task_submission_uuid || null,
       task_submission: {
         answer: studentAnswer,
-        passed,
       },
-      grade,
-      task_submission_grade_feedback: passed
-        ? t('dashboard.assignments.editor.task_editor.number_answer.correct')
-        : t('dashboard.assignments.editor.task_editor.number_answer.incorrect'),
+      grade: 0,
+      task_submission_grade_feedback: '',
     }
     const res = await handleAssignmentTaskSubmission(
       values,
@@ -342,6 +322,9 @@ function TaskNumberAnswerObject({
         )}
 
         {/* === STUDENT VIEW === */}
+        {/* Saving is just persisting a draft — no Correct/Incorrect feedback
+            here. The student sees their grade after the whole assignment is
+            graded (visible in the activity header badge). */}
         {view === 'student' && (
           <>
             {contents.prompt && (
@@ -362,33 +345,6 @@ function TaskNumberAnswerObject({
                 <span className="text-sm font-medium text-slate-500">{contents.unit}</span>
               )}
             </div>
-            {userSubmissions && userSubmissions.grade !== undefined && userSubmissions.grade !== null && (
-              <div
-                className={`flex items-start space-x-2 p-3 rounded-md text-sm ${
-                  userSubmissions.grade > 0
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-700 border border-rose-200'
-                }`}
-              >
-                {userSubmissions.grade > 0 ? (
-                  <CheckCircle2 size={16} className="flex-none mt-0.5" />
-                ) : (
-                  <XCircle size={16} className="flex-none mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {userSubmissions.grade > 0
-                      ? t('dashboard.assignments.editor.task_editor.number_answer.correct')
-                      : t('dashboard.assignments.editor.task_editor.number_answer.incorrect')}
-                  </p>
-                  {contents.explanation && userSubmissions.grade > 0 && (
-                    <p className="text-xs mt-1 text-emerald-600/80 whitespace-pre-wrap">
-                      {contents.explanation}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </>
         )}
 

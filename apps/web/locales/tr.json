@@ -968,7 +968,11 @@
     "grade": "Not",
     "run_autograde": "Run Auto-grade",
     "due_date": "Son Teslim Tarihi",
-    "task_breakdown": "Görev dökümü"
+    "task_breakdown": "Görev dökümü",
+    "no_grade_details": "Henüz not detayı yok.",
+    "task_passed": "Geçti",
+    "task_not_passed": "Geçmedi",
+    "score": "skor"
   },
   "certificate": {
     "certificate": "Sertifika",

@@ -968,7 +968,11 @@
     "grade": "Оценка",
     "run_autograde": "Run Auto-grade",
     "due_date": "Срок сдачи",
-    "task_breakdown": "Разбивка по задачам"
+    "task_breakdown": "Разбивка по задачам",
+    "no_grade_details": "Подробности оценки пока недоступны.",
+    "task_passed": "Зачтено",
+    "task_not_passed": "Не зачтено",
+    "score": "балл"
   },
   "certificate": {
     "certificate": "Сертификат",

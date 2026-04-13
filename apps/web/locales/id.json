@@ -968,7 +968,11 @@
     "grade": "Nilai",
     "run_autograde": "Run Auto-grade",
     "due_date": "Tenggat Waktu",
-    "task_breakdown": "Rincian tugas"
+    "task_breakdown": "Rincian tugas",
+    "no_grade_details": "Belum ada detail nilai.",
+    "task_passed": "Lulus",
+    "task_not_passed": "Tidak lulus",
+    "score": "skor"
   },
   "certificate": {
     "certificate": "Sertifikat",

@@ -56,6 +56,7 @@ const Modal = (params: ModalParams) => {
         "border border-gray-200",
         "shadow-lg",
         "p-0",
+        "overflow-hidden",
         "sm:w-[90vw] sm:max-w-[90vw]",
         "md:w-auto md:max-w-[90vw]",
         "lg:max-w-[85vw]",

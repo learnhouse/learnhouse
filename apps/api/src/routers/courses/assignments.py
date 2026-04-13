@@ -40,6 +40,7 @@ from src.services.courses.activities.assignments import (
     read_user_assignment_submissions_me,
     read_user_assignment_task_submissions,
     read_user_assignment_task_submissions_me,
+    read_user_assignment_task_submissions_me_batch,
     update_assignment,
     update_assignment_submission,
     update_assignment_task,
@@ -293,6 +294,24 @@ async def api_read_user_assignment_task_submissions(
     """
     return await read_user_assignment_task_submissions(
         request, assignment_task_uuid, user_id, current_user, db_session
+    )
+
+
+@router.get("/{assignment_uuid}/tasks/submissions/me")
+async def api_read_user_assignment_task_submissions_me_batch(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Read all current-user task submissions for an assignment in one round trip.
+    Returns a map keyed by assignment_task_uuid (value is null if no submission).
+    Registered before the per-task variant so the literal `submissions` path
+    segment isn't shadowed by `{assignment_task_uuid}`.
+    """
+    return await read_user_assignment_task_submissions_me_batch(
+        request, assignment_uuid, current_user, db_session
     )
 
 

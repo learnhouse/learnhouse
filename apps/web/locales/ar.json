@@ -955,7 +955,11 @@
     "grade": "الدرجة",
     "run_autograde": "Run Auto-grade",
     "due_date": "تاريخ الاستحقاق",
-    "task_breakdown": "تفصيل المهام"
+    "task_breakdown": "تفصيل المهام",
+    "no_grade_details": "لا توجد تفاصيل للدرجة بعد.",
+    "task_passed": "ناجح",
+    "task_not_passed": "غير ناجح",
+    "score": "النتيجة"
   },
   "certificate": {
     "certificate": "الشهادة",

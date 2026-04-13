@@ -968,7 +968,11 @@
     "grade": "Ocena",
     "run_autograde": "Run Auto-grade",
     "due_date": "Termin oddania",
-    "task_breakdown": "Podział zadań"
+    "task_breakdown": "Podział zadań",
+    "no_grade_details": "Brak szczegółów oceny.",
+    "task_passed": "Zaliczone",
+    "task_not_passed": "Niezaliczone",
+    "score": "wynik"
   },
   "certificate": {
     "certificate": "Certyfikat",

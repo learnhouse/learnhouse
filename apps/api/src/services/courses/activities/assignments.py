@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import math
 import re
 from datetime import datetime
@@ -51,6 +53,8 @@ from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 
+logger = logging.getLogger(__name__)
+
 
 def _block_api_tokens(current_user: PublicUser | AnonymousUser | APITokenUser) -> None:
     """
@@ -103,15 +107,18 @@ AUTO_GRADABLE_TASK_TYPES = frozenset(
 # against the stored task contents during auto-grading, instead of trusting
 # whatever grade the client-side component computed and posted.
 #
-# CODE is NOT in this set because it's already graded live via Judge0 when
-# the student runs tests — the stored grade reflects real server-side
-# execution, so re-running it during auto-grade would just be redundant.
+# CODE is included: on auto-grade, the backend spins up a fresh Judge0
+# batch against the student's stored source_code using the teacher's
+# configured test_cases + grading_mode. The client-stored grade is
+# ignored (students save with grade=0 today), so without server-side
+# re-grading CODE tasks silently award zero.
 SERVER_VERIFIED_TASK_TYPES = frozenset(
     {
         AssignmentTaskTypeEnum.SHORT_ANSWER,
         AssignmentTaskTypeEnum.NUMBER_ANSWER,
         AssignmentTaskTypeEnum.QUIZ,
         AssignmentTaskTypeEnum.FORM,
+        AssignmentTaskTypeEnum.CODE,
     }
 )
 
@@ -279,12 +286,122 @@ def _grade_form_task(contents: dict, submission_data: dict, task_max: int) -> in
     return round(correct_blanks / total_blanks * task_max)
 
 
-def _server_verified_task_grade(task, task_submission):
+def _normalize_code_output(s):
+    """
+    Normalization for Judge0 stdout comparison. Same logic as the client
+    and as the one-off version in code_execution.py — strips trailing
+    whitespace per line and drops trailing blank lines so ``print("x")``
+    matches ``x`` and Windows line endings don't cause false failures.
+    """
+    if not s:
+        return ""
+    lines = [line.rstrip() for line in s.splitlines()]
+    while lines and lines[-1] == "":
+        lines.pop()
+    return "\n".join(lines)
+
+
+async def _grade_code_task_async(task, task_submission):
+    """
+    Re-grade a CODE task server-side by running the student's stored
+    source code against the teacher's configured test cases via Judge0.
+
+    Grading modes (mirrors TaskCodeObject.tsx > gradeFC):
+    - ``binary``: full marks only when every test passes, else 0.
+    - ``custom_weights``: ``round(passed_weight / total_weight * max)``.
+    - ``equal_weight`` (default): ``round(passed / total * max)``.
+
+    Returns an int grade in [0, max_grade_value]. Returns ``None`` when
+    Judge0 isn't configured or reachable — the caller leaves the stored
+    grade alone in that case rather than silently zeroing students out.
+    """
+    # Deferred import to avoid a circular dependency at module load time
+    from src.routers.code_execution import _get_judge0_config, _submit_single
+
+    if task_submission is None:
+        return 0
+
+    contents = task.contents or {}
+    submission_data = task_submission.task_submission or {}
+    source_code = submission_data.get("source_code", "") or ""
+    if not source_code.strip():
+        # Student hasn't written any code yet → zero, consistent with other types
+        return 0
+
+    # Prefer the language_id the student actually submitted with — falls back
+    # to the task's configured language if missing.
+    language_id = submission_data.get("language_id") or contents.get("language_id")
+    if language_id is None:
+        return 0
+
+    test_cases = contents.get("test_cases") or []
+    if not test_cases:
+        return 0
+
+    task_max = int(task.max_grade_value or 0)
+    if task_max <= 0:
+        return 0
+
+    try:
+        judge0_cfg = _get_judge0_config()
+    except HTTPException:
+        # Judge0 not configured — can't verify; leave the stored grade alone
+        logger.warning(
+            "Judge0 not configured; skipping server-side CODE grading for task %s",
+            getattr(task, "assignment_task_uuid", "?"),
+        )
+        return None
+
+    async def run_one(tc):
+        stdin = tc.get("stdin") or ""
+        # Teacher-configured tests use camelCase `expectedStdout` in the
+        # frontend contents schema. Tolerate both spellings.
+        expected = tc.get("expectedStdout") or tc.get("expected_stdout") or ""
+        try:
+            r = await _submit_single(
+                judge0_cfg, int(language_id), source_code, stdin
+            )
+        except Exception:
+            logger.exception(
+                "Judge0 call failed during CODE grading for task %s",
+                getattr(task, "assignment_task_uuid", "?"),
+            )
+            return (tc, False)
+        status = r.get("status") or {}
+        actual = _normalize_code_output(r.get("stdout"))
+        passed = status.get("id") == 3 and actual == _normalize_code_output(expected)
+        return (tc, passed)
+
+    results = await asyncio.gather(*(run_one(tc) for tc in test_cases))
+    passed_count = sum(1 for _, passed in results if passed)
+    total_count = len(results)
+    grading_mode = contents.get("grading_mode") or "equal_weight"
+
+    if grading_mode == "binary":
+        return task_max if total_count > 0 and passed_count == total_count else 0
+
+    if grading_mode == "custom_weights":
+        total_weight = sum(int(tc.get("weight") or 1) for tc in test_cases)
+        passed_weight = sum(
+            int(tc.get("weight") or 1) for tc, passed in results if passed
+        )
+        if total_weight <= 0:
+            return 0
+        return round(passed_weight / total_weight * task_max)
+
+    # equal_weight (default)
+    if total_count <= 0:
+        return 0
+    return round(passed_count / total_count * task_max)
+
+
+async def _server_verified_task_grade(task, task_submission):
     """
     If this task type is in SERVER_VERIFIED_TASK_TYPES, re-compute its
     grade from the stored task contents + submission data and return it.
-    Returns ``None`` for task types we don't verify — the caller should
-    fall back to ``task_submission.grade`` in that case.
+    Returns ``None`` for task types we don't verify, or when the CODE
+    grader can't reach Judge0 — the caller should fall back to
+    ``task_submission.grade`` in both cases.
     """
     if task.assignment_type not in SERVER_VERIFIED_TASK_TYPES:
         return None
@@ -316,6 +433,9 @@ def _server_verified_task_grade(task, task_submission):
 
     if task.assignment_type == AssignmentTaskTypeEnum.FORM:
         return _grade_form_task(contents, submission_data, task_max)
+
+    if task.assignment_type == AssignmentTaskTypeEnum.CODE:
+        return await _grade_code_task_async(task, task_submission)
 
     return None
 
@@ -497,31 +617,28 @@ async def read_assignment(
     db_session: Session,
 ):
     _block_api_tokens(current_user)
-    # Check if assignment exists
-    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
-    assignment = db_session.exec(statement).first()
+    statement = (
+        select(Assignment, Course.course_uuid, Activity.activity_uuid)
+        .join(Course, Course.id == Assignment.course_id)  # type: ignore
+        .join(Activity, Activity.id == Assignment.activity_id)  # type: ignore
+        .where(Assignment.assignment_uuid == assignment_uuid)
+    )
+    row = db_session.exec(statement).first()
 
-    if not assignment:
+    if not row:
         raise HTTPException(
             status_code=404,
             detail="Assignment not found",
         )
 
-    # Check if course exists
-    statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    assignment, course_uuid, activity_uuid = row
 
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
-
-    # return assignment read
-    return AssignmentRead.model_validate(assignment)
+    result = AssignmentRead.model_validate(assignment)
+    result.course_uuid = course_uuid
+    result.activity_uuid = activity_uuid
+    return result
 
 
 async def read_assignment_from_activity_uuid(
@@ -531,41 +648,28 @@ async def read_assignment_from_activity_uuid(
     db_session: Session,
 ):
     _block_api_tokens(current_user)
-    # Check if activity exists
-    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    statement = (
+        select(Assignment, Course.course_uuid, Activity.activity_uuid)
+        .join(Activity, Activity.id == Assignment.activity_id)  # type: ignore
+        .join(Course, Course.id == Assignment.course_id)  # type: ignore
+        .where(Activity.activity_uuid == activity_uuid)
+    )
+    row = db_session.exec(statement).first()
 
-    if not activity:
-        raise HTTPException(
-            status_code=404,
-            detail="Activity not found",
-        )
-
-    # Check if course exists
-    statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
-
-    # Check if assignment exists
-    statement = select(Assignment).where(Assignment.activity_id == activity.id)
-    assignment = db_session.exec(statement).first()
-
-    if not assignment:
+    if not row:
         raise HTTPException(
             status_code=404,
             detail="Assignment not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    assignment, course_uuid, activity_uuid_val = row
 
-    # return assignment read
-    return AssignmentRead.model_validate(assignment)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+
+    result = AssignmentRead.model_validate(assignment)
+    result.course_uuid = course_uuid
+    result.activity_uuid = activity_uuid_val
+    return result
 
 
 async def update_assignment(
@@ -1306,6 +1410,57 @@ async def read_user_assignment_task_submissions(
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
+
+
+async def read_user_assignment_task_submissions_me_batch(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+):
+    """Return a map of {assignment_task_uuid: submission | None} for the
+    current user across every task in the assignment, in a single round trip.
+    Replaces N per-task /submissions/me calls from the activity view."""
+    _block_api_tokens(current_user)
+
+    assignment_row = db_session.exec(
+        select(Assignment, Course.course_uuid)
+        .join(Course, Course.id == Assignment.course_id)  # type: ignore
+        .where(Assignment.assignment_uuid == assignment_uuid)
+    ).first()
+
+    if not assignment_row:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    assignment, course_uuid = assignment_row
+
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
+
+    rows = db_session.exec(
+        select(AssignmentTask, AssignmentTaskSubmission)
+        .outerjoin(
+            AssignmentTaskSubmission,
+            (AssignmentTaskSubmission.assignment_task_id == AssignmentTask.id)  # type: ignore
+            & (AssignmentTaskSubmission.user_id == current_user.id),  # type: ignore
+        )
+        .where(AssignmentTask.assignment_id == assignment.id)
+        # ASC ordering means that if legacy data has multiple submissions per
+        # (task,user) — handle_assignment_task_submission is upsert so this
+        # shouldn't happen in normal flow — the dict comprehension below
+        # overwrites lower ids with higher ones, leaving the most recent
+        # submission as the winning value.
+        .order_by(AssignmentTaskSubmission.id.asc())  # type: ignore
+    ).all()
+
+    return {
+        task.assignment_task_uuid: (
+            AssignmentTaskSubmissionRead.model_validate(sub) if sub else None
+        )
+        for task, sub in rows
+    }
 
 
 async def read_user_assignment_task_submissions_me(
@@ -2080,7 +2235,7 @@ async def _apply_grade_and_finalize(
     # so tampering is caught and future reads see the correct number.
     for task in assignment_tasks:
         ts = task_submissions_by_task_id.get(task.id)
-        verified = _server_verified_task_grade(task, ts)
+        verified = await _server_verified_task_grade(task, ts)
         if verified is None or ts is None:
             continue
         if int(ts.grade or 0) != verified:

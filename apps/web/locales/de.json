@@ -945,7 +945,11 @@
     "grade": "Note",
     "run_autograde": "Run Auto-grade",
     "due_date": "Fälligkeitsdatum",
-    "task_breakdown": "Aufgaben-Aufschlüsselung"
+    "task_breakdown": "Aufgaben-Aufschlüsselung",
+    "no_grade_details": "Noch keine Bewertungsdetails verfügbar.",
+    "task_passed": "Bestanden",
+    "task_not_passed": "Nicht bestanden",
+    "score": "Punkte"
   },
   "certificate": {
     "certificate": "Zertifikat",

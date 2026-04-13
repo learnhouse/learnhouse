@@ -40,40 +40,10 @@ const DEFAULT_CONTENTS: ShortAnswerContents = {
   explanation: '',
 }
 
-/**
- * Compare a student's free-text answer against an array of accepted answers
- * using the configured match mode. Returns true on the first match.
- *
- * All modes trim whitespace. regex mode wraps the pattern in `^...$` so a
- * teacher writing `hello` doesn't accidentally match "hello world".
- */
-function checkShortAnswer(
-  answer: string,
-  acceptedAnswers: string[],
-  mode: MatchMode
-): boolean {
-  const trimmed = (answer ?? '').trim()
-  if (!trimmed) return false
-  for (const raw of acceptedAnswers) {
-    const expected = (raw ?? '').trim()
-    if (!expected) continue
-    if (mode === 'exact') {
-      if (trimmed === expected) return true
-    } else if (mode === 'case_insensitive') {
-      if (trimmed.toLowerCase() === expected.toLowerCase()) return true
-    } else if (mode === 'contains') {
-      if (trimmed.toLowerCase().includes(expected.toLowerCase())) return true
-    } else if (mode === 'regex') {
-      try {
-        const re = new RegExp(`^${expected}$`, 'i')
-        if (re.test(trimmed)) return true
-      } catch {
-        // Invalid regex — treat as non-match rather than throwing in the student view
-      }
-    }
-  }
-  return false
-}
+// NOTE: the student's answer is NOT checked in the browser. Grading runs
+// server-side via _check_short_answer in assignments.py so students can't
+// tamper with the grade via DevTools and so the "save draft" pattern works
+// (save repeatedly without giving away whether the answer is correct).
 
 function normalizeContents(raw: any): ShortAnswerContents {
   return {
@@ -209,27 +179,25 @@ function TaskShortAnswerObject({
     }
   }
 
-  // --- SUBMIT (student) ---
+  // --- SAVE PROGRESS (student) ---
+  // Matches the QUIZ / FORM pattern: just persist the student's answer. We
+  // deliberately send grade=0 and no feedback — the actual grading happens
+  // server-side when the student submits the whole assignment for grading
+  // (which triggers _server_verified_task_grade in the backend), or when
+  // the teacher clicks "Set final grade" in the EvaluateAssignment modal.
+  // This lets the student save drafts without being told whether they got
+  // it right, and prevents client-side tampering (the backend re-grades
+  // from the stored answer no matter what the client sends).
   async function submitFC() {
     if (!assignmentTaskUUID) return
-    const maxPoints = assignmentTaskOutsideProvider?.max_grade_value ?? 100
-    const passed = checkShortAnswer(
-      studentAnswer,
-      contents.correct_answers,
-      contents.match_mode
-    )
-    const grade = passed ? maxPoints : 0
     const values = {
       assignment_task_submission_uuid:
         userSubmissions?.assignment_task_submission_uuid || null,
       task_submission: {
         answer: studentAnswer,
-        passed,
       },
-      grade,
-      task_submission_grade_feedback: passed
-        ? t('dashboard.assignments.editor.task_editor.short_answer.correct')
-        : t('dashboard.assignments.editor.task_editor.short_answer.incorrect'),
+      grade: 0,
+      task_submission_grade_feedback: '',
     }
     const res = await handleAssignmentTaskSubmission(
       values,
@@ -392,6 +360,9 @@ function TaskShortAnswerObject({
         )}
 
         {/* === STUDENT VIEW === */}
+        {/* No Correct/Incorrect banner here — saving is just persisting a
+            draft. The student learns their grade after the whole assignment
+            is submitted + graded (visible in the activity header badge). */}
         {view === 'student' && (
           <>
             {contents.prompt && (
@@ -405,33 +376,6 @@ function TaskShortAnswerObject({
               )}
               className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-md bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
             />
-            {userSubmissions && userSubmissions.grade !== undefined && userSubmissions.grade !== null && (
-              <div
-                className={`flex items-start space-x-2 p-3 rounded-md text-sm ${
-                  userSubmissions.grade > 0
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-700 border border-rose-200'
-                }`}
-              >
-                {userSubmissions.grade > 0 ? (
-                  <CheckCircle2 size={16} className="flex-none mt-0.5" />
-                ) : (
-                  <XCircle size={16} className="flex-none mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {userSubmissions.grade > 0
-                      ? t('dashboard.assignments.editor.task_editor.short_answer.correct')
-                      : t('dashboard.assignments.editor.task_editor.short_answer.incorrect')}
-                  </p>
-                  {contents.explanation && userSubmissions.grade > 0 && (
-                    <p className="text-xs mt-1 text-emerald-600/80 whitespace-pre-wrap">
-                      {contents.explanation}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </>
         )}
 

@@ -968,7 +968,11 @@
     "grade": "গ্রেড",
     "run_autograde": "Run Auto-grade",
     "due_date": "জমা দেওয়ার শেষ তারিখ",
-    "task_breakdown": "কাজের বিবরণ"
+    "task_breakdown": "কাজের বিবরণ",
+    "no_grade_details": "এখনও কোনও গ্রেড বিবরণ উপলব্ধ নেই।",
+    "task_passed": "উত্তীর্ণ",
+    "task_not_passed": "অনুত্তীর্ণ",
+    "score": "স্কোর"
   },
   "certificate": {
     "certificate": "শংসাপত্র",
