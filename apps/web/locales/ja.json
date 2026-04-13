@@ -3096,7 +3096,27 @@
         "course_editor": "コースエディター",
         "editor": "エディター",
         "submissions": "提出物",
-        "no_assignments": "このコースに利用可能な課題はありません。コースエディターから課題を作成してください"
+        "no_assignments": "このコースに利用可能な課題はありません。コースエディターから課題を作成してください",
+        "untitled": "無題の課題",
+        "search_placeholder": "名前または説明で課題を検索...",
+        "loading": "課題を読み込み中...",
+        "empty": "まだ課題がありません",
+        "empty_filtered": "フィルタに一致する課題がありません",
+        "clear_filters": "フィルタをクリア",
+        "showing_count": "{{total}}件中{{shown}}件の課題を表示",
+        "stats": {
+          "total": "合計",
+          "published": "公開済み",
+          "drafts": "下書き",
+          "auto_graded": "自動採点"
+        },
+        "filters": {
+          "all": "すべて",
+          "published": "公開済み",
+          "drafts": "下書き",
+          "auto_graded": "自動採点のみ",
+          "hide_empty": "空のコースを非表示"
+        }
       },
       "detail": {
         "title": "課題ツール",

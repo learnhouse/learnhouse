@@ -3086,7 +3086,27 @@
         "course_editor": "Kurs-Editor",
         "editor": "Editor",
         "submissions": "Einreichungen",
-        "no_assignments": "Keine Aufgaben für diesen Kurs verfügbar, erstellen Sie Kursaufgaben im Kurs-Editor"
+        "no_assignments": "Keine Aufgaben für diesen Kurs verfügbar, erstellen Sie Kursaufgaben im Kurs-Editor",
+        "untitled": "Unbenannte Aufgabe",
+        "search_placeholder": "Aufgaben nach Name oder Beschreibung suchen...",
+        "loading": "Aufgaben werden geladen...",
+        "empty": "Noch keine Aufgaben",
+        "empty_filtered": "Keine Aufgaben entsprechen deinen Filtern",
+        "clear_filters": "Filter zurücksetzen",
+        "showing_count": "{{shown}} von {{total}} Aufgaben angezeigt",
+        "stats": {
+          "total": "Gesamt",
+          "published": "Veröffentlicht",
+          "drafts": "Entwürfe",
+          "auto_graded": "Auto-bewertet"
+        },
+        "filters": {
+          "all": "Alle",
+          "published": "Veröffentlicht",
+          "drafts": "Entwürfe",
+          "auto_graded": "Nur auto-bewertete",
+          "hide_empty": "Leere Kurse ausblenden"
+        }
       },
       "detail": {
         "title": "Aufgaben-Tools",

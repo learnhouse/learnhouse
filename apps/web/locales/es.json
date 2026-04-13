@@ -3086,7 +3086,27 @@
         "course_editor": "Editor de cursos",
         "editor": "Editor",
         "submissions": "Envíos",
-        "no_assignments": "No hay tareas disponibles para este curso, crea tareas desde el editor de cursos"
+        "no_assignments": "No hay tareas disponibles para este curso, crea tareas desde el editor de cursos",
+        "untitled": "Tarea sin título",
+        "search_placeholder": "Buscar tareas por nombre o descripción...",
+        "loading": "Cargando tareas...",
+        "empty": "Aún no hay tareas",
+        "empty_filtered": "Ninguna tarea coincide con tus filtros",
+        "clear_filters": "Limpiar filtros",
+        "showing_count": "Mostrando {{shown}} de {{total}} tareas",
+        "stats": {
+          "total": "Total",
+          "published": "Publicadas",
+          "drafts": "Borradores",
+          "auto_graded": "Auto-calificadas"
+        },
+        "filters": {
+          "all": "Todas",
+          "published": "Publicadas",
+          "drafts": "Borradores",
+          "auto_graded": "Solo auto-calificadas",
+          "hide_empty": "Ocultar cursos vacíos"
+        }
       },
       "detail": {
         "title": "Herramientas de tarea",

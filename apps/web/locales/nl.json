@@ -3088,7 +3088,27 @@
         "course_editor": "Cursus Editor",
         "editor": "Editor",
         "submissions": "Inzendingen",
-        "no_assignments": "Er zijn geen opdrachten voor deze cursus. Maak cursusopdrachten aan in de cursus editor"
+        "no_assignments": "Er zijn geen opdrachten voor deze cursus. Maak cursusopdrachten aan in de cursus editor",
+        "untitled": "Naamloze opdracht",
+        "search_placeholder": "Zoek opdrachten op naam of beschrijving...",
+        "loading": "Opdrachten laden...",
+        "empty": "Nog geen opdrachten",
+        "empty_filtered": "Geen opdrachten komen overeen met je filters",
+        "clear_filters": "Filters wissen",
+        "showing_count": "{{shown}} van {{total}} opdrachten weergegeven",
+        "stats": {
+          "total": "Totaal",
+          "published": "Gepubliceerd",
+          "drafts": "Concepten",
+          "auto_graded": "Auto-beoordeeld"
+        },
+        "filters": {
+          "all": "Alle",
+          "published": "Gepubliceerd",
+          "drafts": "Concepten",
+          "auto_graded": "Alleen auto-beoordeeld",
+          "hide_empty": "Lege cursussen verbergen"
+        }
       },
       "detail": {
         "title": "Opdracht Tooling",

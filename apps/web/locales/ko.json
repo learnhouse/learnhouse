@@ -3098,7 +3098,27 @@
         "course_editor": "코스 에디터",
         "editor": "에디터",
         "submissions": "제출물",
-        "no_assignments": "이 코스에 대한 과제가 없습니다. 코스 에디터에서 코스 과제를 만드세요"
+        "no_assignments": "이 코스에 대한 과제가 없습니다. 코스 에디터에서 코스 과제를 만드세요",
+        "untitled": "제목 없는 과제",
+        "search_placeholder": "이름 또는 설명으로 과제 검색...",
+        "loading": "과제 로딩 중...",
+        "empty": "아직 과제가 없습니다",
+        "empty_filtered": "필터와 일치하는 과제가 없습니다",
+        "clear_filters": "필터 지우기",
+        "showing_count": "{{total}}개 중 {{shown}}개 과제 표시",
+        "stats": {
+          "total": "전체",
+          "published": "게시됨",
+          "drafts": "초안",
+          "auto_graded": "자동 채점"
+        },
+        "filters": {
+          "all": "전체",
+          "published": "게시됨",
+          "drafts": "초안",
+          "auto_graded": "자동 채점만",
+          "hide_empty": "빈 코스 숨기기"
+        }
       },
       "detail": {
         "title": "과제 도구",

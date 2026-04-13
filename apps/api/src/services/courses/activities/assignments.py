@@ -103,17 +103,15 @@ AUTO_GRADABLE_TASK_TYPES = frozenset(
 # against the stored task contents during auto-grading, instead of trusting
 # whatever grade the client-side component computed and posted.
 #
-# QUIZ, FORM, and CODE are NOT in this set:
-#   - QUIZ and FORM: their client-side grading is a pre-existing pattern
-#     across the codebase; re-verifying them on the server would require a
-#     bigger refactor of their content schemas. Their grades are taken at
-#     face value for now.
-#   - CODE: graded live via Judge0 when the student runs tests, so the
-#     stored grade already reflects real server-side execution.
+# CODE is NOT in this set because it's already graded live via Judge0 when
+# the student runs tests — the stored grade reflects real server-side
+# execution, so re-running it during auto-grade would just be redundant.
 SERVER_VERIFIED_TASK_TYPES = frozenset(
     {
         AssignmentTaskTypeEnum.SHORT_ANSWER,
         AssignmentTaskTypeEnum.NUMBER_ANSWER,
+        AssignmentTaskTypeEnum.QUIZ,
+        AssignmentTaskTypeEnum.FORM,
     }
 )
 
@@ -187,6 +185,100 @@ def _check_number_answer(answer_raw, correct_value, tolerance) -> bool:
     return abs(parsed - correct) <= tol
 
 
+def _grade_quiz_task(contents: dict, submission_data: dict, task_max: int) -> int:
+    """
+    Server-side mirror of TaskQuizObject.tsx > gradeFC.
+
+    Each option in each question is worth one point. The student earns a
+    point for that option when their checkbox state (true / false) matches
+    ``option.assigned_right_answer``. Missing submissions are treated as
+    ``False`` (the student didn't check the option), which matches what the
+    client does in submitFC when it fills in unsubmitted options.
+
+    Returns a grade in [0, task_max], rounded.
+    """
+    questions = contents.get("questions") or []
+    # Snapshot of submissions stored under task_submission.task_submission
+    submissions = submission_data.get("submissions") or []
+
+    # Index student answers by (questionUUID, optionUUID) for O(1) lookup
+    answer_by_key: dict = {}
+    for sub in submissions:
+        if not isinstance(sub, dict):
+            continue
+        q_uuid = sub.get("questionUUID")
+        o_uuid = sub.get("optionUUID")
+        if q_uuid and o_uuid:
+            answer_by_key[(q_uuid, o_uuid)] = bool(sub.get("answer"))
+
+    total_options = 0
+    correct_options = 0
+    for question in questions:
+        if not isinstance(question, dict):
+            continue
+        q_uuid = question.get("questionUUID")
+        options = question.get("options") or []
+        for option in options:
+            if not isinstance(option, dict):
+                continue
+            total_options += 1
+            o_uuid = option.get("optionUUID")
+            expected = bool(option.get("assigned_right_answer"))
+            student_answer = answer_by_key.get((q_uuid, o_uuid), False)
+            if student_answer == expected:
+                correct_options += 1
+
+    if total_options == 0 or task_max <= 0:
+        return 0
+    return round(correct_options / total_options * task_max)
+
+
+def _grade_form_task(contents: dict, submission_data: dict, task_max: int) -> int:
+    """
+    Server-side mirror of TaskFormObject.tsx > gradeFC.
+
+    Each blank in each question is worth one point. The comparison is
+    case-insensitive and trim-whitespace, matching the client behavior.
+
+    Returns a grade in [0, task_max], rounded.
+    """
+    questions = contents.get("questions") or []
+    submissions = submission_data.get("submissions") or []
+
+    # Index student answers by (questionUUID, blankUUID)
+    answer_by_key: dict = {}
+    for sub in submissions:
+        if not isinstance(sub, dict):
+            continue
+        q_uuid = sub.get("questionUUID")
+        b_uuid = sub.get("blankUUID")
+        if q_uuid and b_uuid:
+            answer_by_key[(q_uuid, b_uuid)] = sub.get("answer")
+
+    total_blanks = 0
+    correct_blanks = 0
+    for question in questions:
+        if not isinstance(question, dict):
+            continue
+        q_uuid = question.get("questionUUID")
+        blanks = question.get("blanks") or []
+        for blank in blanks:
+            if not isinstance(blank, dict):
+                continue
+            total_blanks += 1
+            b_uuid = blank.get("blankUUID")
+            correct_value = blank.get("correctAnswer", "")
+            student_value = answer_by_key.get((q_uuid, b_uuid), "")
+            if student_value is None or correct_value is None:
+                continue
+            if str(student_value).strip().lower() == str(correct_value).strip().lower():
+                correct_blanks += 1
+
+    if total_blanks == 0 or task_max <= 0:
+        return 0
+    return round(correct_blanks / total_blanks * task_max)
+
+
 def _server_verified_task_grade(task, task_submission):
     """
     If this task type is in SERVER_VERIFIED_TASK_TYPES, re-compute its
@@ -201,25 +293,31 @@ def _server_verified_task_grade(task, task_submission):
 
     contents = task.contents or {}
     submission_data = task_submission.task_submission or {}
-    student_answer = submission_data.get("answer")
     task_max = int(task.max_grade_value or 0)
 
     if task.assignment_type == AssignmentTaskTypeEnum.SHORT_ANSWER:
         passed = _check_short_answer(
-            student_answer,
+            submission_data.get("answer"),
             contents.get("correct_answers", []),
             contents.get("match_mode"),
         )
-    elif task.assignment_type == AssignmentTaskTypeEnum.NUMBER_ANSWER:
+        return task_max if passed else 0
+
+    if task.assignment_type == AssignmentTaskTypeEnum.NUMBER_ANSWER:
         passed = _check_number_answer(
-            student_answer,
+            submission_data.get("answer"),
             contents.get("correct_value"),
             contents.get("tolerance"),
         )
-    else:
-        return None
+        return task_max if passed else 0
 
-    return task_max if passed else 0
+    if task.assignment_type == AssignmentTaskTypeEnum.QUIZ:
+        return _grade_quiz_task(contents, submission_data, task_max)
+
+    if task.assignment_type == AssignmentTaskTypeEnum.FORM:
+        return _grade_form_task(contents, submission_data, task_max)
+
+    return None
 
 
 def _percentage_to_letter_grade(percentage: float) -> str:

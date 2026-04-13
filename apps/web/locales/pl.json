@@ -3111,7 +3111,27 @@
         "course_editor": "Edytor kursu",
         "editor": "Edytor",
         "submissions": "Przesłane prace",
-        "no_assignments": "Brak zadań dla tego kursu. Utwórz zadania w edytorze kursu"
+        "no_assignments": "Brak zadań dla tego kursu. Utwórz zadania w edytorze kursu",
+        "untitled": "Bezimienne zadanie",
+        "search_placeholder": "Szukaj zadań po nazwie lub opisie...",
+        "loading": "Ładowanie zadań...",
+        "empty": "Brak zadań",
+        "empty_filtered": "Żadne zadania nie pasują do filtrów",
+        "clear_filters": "Wyczyść filtry",
+        "showing_count": "Wyświetlanie {{shown}} z {{total}} zadań",
+        "stats": {
+          "total": "Łącznie",
+          "published": "Opublikowane",
+          "drafts": "Wersje robocze",
+          "auto_graded": "Auto-oceniane"
+        },
+        "filters": {
+          "all": "Wszystkie",
+          "published": "Opublikowane",
+          "drafts": "Wersje robocze",
+          "auto_graded": "Tylko auto-oceniane",
+          "hide_empty": "Ukryj puste kursy"
+        }
       },
       "detail": {
         "title": "Narzędzia zadań",
