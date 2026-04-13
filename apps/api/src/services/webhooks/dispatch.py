@@ -213,8 +213,9 @@ async def _deliver_to_endpoint(
         with Session(engine) as db_session:
             db_session.add(log_entry)
             db_session.commit()
+            success = bool(log_entry.success)
 
-        if log_entry.success:
+        if success:
             break
 
         # Retry with backoff if not the last attempt
@@ -230,18 +231,20 @@ def _prune_delivery_logs(webhook_id: int) -> None:
     """Keep only the most recent LOG_RETENTION_PER_ENDPOINT logs per endpoint."""
     try:
         with Session(engine) as db_session:
-            cutoff_row = db_session.exec(
+            ordered_ids = db_session.exec(
                 select(WebhookDeliveryLog.id)
                 .where(WebhookDeliveryLog.webhook_id == webhook_id)
                 .order_by(col(WebhookDeliveryLog.id).desc())
-                .offset(LOG_RETENTION_PER_ENDPOINT)
-                .limit(1)
-            ).first()
-            if cutoff_row is not None:
+            ).all()
+            stale_ids = [
+                row if isinstance(row, int) else row[0]
+                for row in ordered_ids[LOG_RETENTION_PER_ENDPOINT:]
+            ]
+            if stale_ids:
                 db_session.exec(
                     delete(WebhookDeliveryLog).where(
                         WebhookDeliveryLog.webhook_id == webhook_id,
-                        WebhookDeliveryLog.id <= cutoff_row,
+                        WebhookDeliveryLog.id.in_(stale_ids),
                     )
                 )
                 db_session.commit()

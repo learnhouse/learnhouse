@@ -7,14 +7,36 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
-from src.db.organization_config import OrganizationConfig
-from src.db.organizations import Organization, OrganizationCreate, OrganizationRead
+from src.db.organization_config import OrganizationConfig, SeoOrgConfig
+from src.db.organizations import Organization, OrganizationCreate, OrganizationRead, OrganizationUpdate
 from src.services.orgs.orgs import (
     _build_org_read_with_resolved,
     create_org,
+    create_org_with_config,
     get_organization_by_slug,
     get_organization_by_uuid,
+    get_org_join_mechanism,
+    update_org,
+    update_org_ai_config,
+    update_org_landing,
+    update_org_seo_config,
+    update_org_signup_mechanism,
+    update_org_with_config_no_auth,
 )
+
+
+def _make_org_config(db, org, config):
+    org_config = OrganizationConfig(
+        id=None,
+        org_id=org.id,
+        config=config,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db.add(org_config)
+    db.commit()
+    db.refresh(org_config)
+    return org_config
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +219,174 @@ class TestCreateOrg:
 
         assert exc_info.value.status_code == 403
         assert "Enterprise Edition" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    @patch("src.routers.users._invalidate_session_cache")
+    async def test_create_org_with_config_success(
+        self, mock_cache, mock_multi_org, mock_request, db, admin_user
+    ):
+        new_org = OrganizationCreate(
+            name="Configured Org",
+            slug="configured-org",
+            email="configured@org.com",
+        )
+        submitted_config = {"config_version": "2.0", "plan": "free", "admin_toggles": {}}
+
+        result = await create_org_with_config(
+            mock_request, new_org, admin_user, db, submitted_config
+        )
+
+        assert isinstance(result, OrganizationRead)
+        assert result.slug == "configured-org"
+        stored_config = db.exec(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == result.id)
+        ).first()
+        assert stored_config.config["config_version"] == "2.0"
+
+
+class TestUpdateOrg:
+    @pytest.mark.asyncio
+    async def test_update_org_and_no_auth_config_update(
+        self, mock_request, db, org, admin_user
+    ):
+        _make_org_config(db, org, {"config_version": "2.0", "plan": "free"})
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            updated = await update_org(
+                mock_request,
+                OrganizationUpdate(name="Updated Org", slug="updated-org"),
+                org.id,
+                admin_user,
+                db,
+            )
+            config_result = await update_org_with_config_no_auth(
+                mock_request,
+                {"config_version": "2.0", "plan": "pro"},
+                org.id,
+                db,
+            )
+
+        assert updated.name == "Updated Org"
+        assert updated.slug == "updated-org"
+        assert config_result == {"detail": "Organization updated"}
+        stored = db.exec(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        ).first()
+        assert stored.config["plan"] == "pro"
+
+    @pytest.mark.asyncio
+    async def test_update_org_duplicate_slug_and_missing_config(
+        self, mock_request, db, org, other_org, admin_user
+    ):
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as slug_exc:
+                await update_org(
+                    mock_request,
+                    OrganizationUpdate(slug=other_org.slug),
+                    org.id,
+                    admin_user,
+                    db,
+                )
+        assert slug_exc.value.status_code == 409
+
+        with pytest.raises(HTTPException) as config_exc:
+            await update_org_with_config_no_auth(
+                mock_request,
+                {"config_version": "2.0"},
+                org.id,
+                db,
+            )
+        assert config_exc.value.status_code == 404
+
+
+class TestOrgConfigUpdates:
+    @pytest.mark.asyncio
+    async def test_signup_mechanism_ai_landing_seo_and_join_mechanism_v2(
+        self, mock_request, db, org, admin_user
+    ):
+        _make_org_config(
+            db,
+            org,
+            {
+                "config_version": "2.0",
+                "plan": "free",
+                "admin_toggles": {"members": {"signup_mode": "open"}},
+                "customization": {},
+            },
+        )
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.orgs.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            signup = await update_org_signup_mechanism(
+                mock_request, "inviteOnly", org.id, admin_user, db
+            )
+            ai = await update_org_ai_config(
+                mock_request, True, org.id, admin_user, db, copilot_enabled=False
+            )
+            landing = await update_org_landing(
+                mock_request, {"hero": "Hello"}, org.id, admin_user, db
+            )
+            seo = await update_org_seo_config(
+                mock_request,
+                SeoOrgConfig(default_meta_description="SEO desc"),
+                org.id,
+                admin_user,
+                db,
+            )
+            join_mechanism = await get_org_join_mechanism(
+                mock_request, org.id, admin_user, db
+            )
+
+        stored = db.exec(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        ).first()
+        assert signup == {"detail": "Signup mechanism updated"}
+        assert ai == {"detail": "AI configuration updated"}
+        assert landing == {"detail": "Landing object updated"}
+        assert seo == {"detail": "SEO configuration updated"}
+        assert join_mechanism == "inviteOnly"
+        assert stored.config["customization"]["landing"] == {"hero": "Hello"}
+        assert (
+            stored.config["customization"]["seo"]["default_meta_description"]
+            == "SEO desc"
+        )
+        assert stored.config["admin_toggles"]["ai"]["disabled"] is False
+
+    @pytest.mark.asyncio
+    async def test_join_mechanism_v1_and_missing_org(self, mock_request, db, org, admin_user):
+        _make_org_config(
+            db,
+            org,
+            {
+                "config_version": "1.4",
+                "features": {"members": {"signup_mode": "inviteOnly"}},
+            },
+        )
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            join_mechanism = await get_org_join_mechanism(
+                mock_request, org.id, admin_user, db
+            )
+        assert join_mechanism == "inviteOnly"
+
+        with pytest.raises(HTTPException) as missing_exc:
+            await get_org_join_mechanism(mock_request, 999, admin_user, db)
+        assert missing_exc.value.status_code == 404
 
 
 class TestBuildOrgReadWithResolved:
