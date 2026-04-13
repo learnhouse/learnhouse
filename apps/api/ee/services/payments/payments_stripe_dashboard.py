@@ -36,6 +36,8 @@ def _ts(unix: int) -> str:
 def _fmt_customer(c) -> dict:
     if not c or isinstance(c, str):
         return {"id": c, "name": None, "email": None}
+    if hasattr(c, "to_dict"):
+        c = c.to_dict()
     return {"id": c.get("id"), "name": c.get("name"), "email": c.get("email")}
 
 
@@ -51,7 +53,7 @@ async def get_stripe_overview(org_id: int, db_session: Session) -> dict:
         (s["plan"]["amount"] / 100)
         * (12 if s["plan"]["interval"] == "year" else 1)
         / (12 if s["plan"]["interval"] == "year" else 1)
-        for s in subs_active.auto_paging_iter()
+        for s in (item.to_dict() for item in subs_active.auto_paging_iter())
         if s.get("plan")
     )
 
@@ -63,7 +65,8 @@ async def get_stripe_overview(org_id: int, db_session: Session) -> dict:
     recent_charges = []
 
     charges_page = stripe.Charge.list(limit=100, stripe_account=acc_id)
-    for i, ch in enumerate(charges_page.auto_paging_iter()):
+    for i, ch_obj in enumerate(charges_page.auto_paging_iter()):
+        ch = ch_obj.to_dict()
         if ch.get("paid") and not ch.get("refunded"):
             total_revenue += ch["amount_captured"] / 100
         if ch.get("customer"):
@@ -121,7 +124,8 @@ async def get_stripe_charges(
     page = stripe.Charge.list(**params)
 
     charges = []
-    for ch in page.data:
+    for ch_obj in page.data:
+        ch = ch_obj.to_dict()
         charges.append({
             "id": ch["id"],
             "amount": ch["amount"] / 100,
@@ -162,7 +166,8 @@ async def get_stripe_subscriptions(
     )
 
     subs = []
-    for s in page.auto_paging_iter():
+    for s_obj in page.auto_paging_iter():
+        s = s_obj.to_dict()
         pm = s.get("default_payment_method")
         card = None
         if pm and isinstance(pm, dict) and pm.get("card"):
