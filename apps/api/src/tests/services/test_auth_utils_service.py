@@ -1,0 +1,186 @@
+"""Tests for src/services/auth/utils.py."""
+
+from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from fastapi import HTTPException
+from starlette.requests import Request
+
+from src.db.users import User
+from src.services.auth.utils import get_google_user_info, signWithGoogle
+
+
+class TestAuthUtilsService:
+    @pytest.mark.asyncio
+    async def test_get_google_user_info_success_and_failure(self):
+        response = Mock(status_code=200)
+        response.json.return_value = {"email": "google@test.com"}
+
+        with patch("src.services.auth.utils.httpx.AsyncClient") as mock_client:
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                return_value=response
+            )
+            result = await get_google_user_info("access-token")
+
+        assert result == {"email": "google@test.com"}
+        mock_client.return_value.__aenter__.return_value.get.assert_awaited_once_with(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": "Bearer access-token"},
+        )
+
+        error_response = Mock(status_code=403)
+        with patch("src.services.auth.utils.httpx.AsyncClient") as mock_client:
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                return_value=error_response
+            )
+            with pytest.raises(HTTPException) as exc_info:
+                await get_google_user_info("bad-token")
+
+        assert exc_info.value.status_code == 403
+        assert exc_info.value.detail == "Failed to fetch user info from Google"
+
+    @pytest.mark.asyncio
+    async def test_sign_with_google_creates_user_with_and_without_org(
+        self,
+    ):
+        request = Mock(spec=Request)
+        current_user = Mock()
+        db_session = Mock()
+        db_session.exec.return_value.first.return_value = None
+
+        without_org_result = SimpleNamespace(user_uuid="created-without-org")
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            return_value={},
+        ), patch(
+            "src.services.auth.utils.create_user_without_org",
+            new_callable=AsyncMock,
+            return_value=without_org_result,
+        ) as mock_create_without_org, patch(
+            "src.services.auth.utils.random.randint",
+            return_value=42,
+        ):
+            result = await signWithGoogle(
+                request=request,
+                access_token="access-token",
+                email="fallback@test.com",
+                org_id=None,
+                current_user=current_user,
+                db_session=db_session,
+            )
+
+        assert result is without_org_result
+        mock_create_without_org.assert_awaited_once()
+        created_user = mock_create_without_org.call_args.args[3]
+        assert created_user.email == "fallback@test.com"
+        assert created_user.username == "fallback42"
+        assert created_user.first_name == ""
+        assert created_user.last_name == ""
+        assert created_user.avatar_image == ""
+
+        org_result = SimpleNamespace(user_uuid="created-with-org")
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            return_value={
+                "email": "google@test.com",
+                "given_name": "Ada",
+                "family_name": "Lovelace",
+                "picture": "https://example.com/avatar.png",
+            },
+        ), patch(
+            "src.services.auth.utils.create_user",
+            new_callable=AsyncMock,
+            return_value=org_result,
+        ) as mock_create_with_org, patch(
+            "src.services.auth.utils.random.randint",
+            return_value=42,
+        ):
+            result = await signWithGoogle(
+                request=request,
+                access_token="access-token",
+                email="fallback@test.com",
+                org_id=10,
+                current_user=current_user,
+                db_session=db_session,
+            )
+
+        assert result is org_result
+        mock_create_with_org.assert_awaited_once()
+        created_user = mock_create_with_org.call_args.args[3]
+        assert created_user.email == "google@test.com"
+        assert created_user.username == "AdaLovelace42"
+        assert created_user.first_name == "Ada"
+        assert created_user.last_name == "Lovelace"
+        assert created_user.avatar_image == "https://example.com/avatar.png"
+
+    @pytest.mark.asyncio
+    async def test_sign_with_google_existing_user_updates_and_logs_in(
+        self,
+    ):
+        request = Mock(spec=Request)
+        request.client = SimpleNamespace(host="10.0.0.7")
+        current_user = Mock()
+        user = User(
+            id=1,
+            username="existing",
+            first_name="Existing",
+            last_name="User",
+            email="existing@test.com",
+            password="hashed",
+            user_uuid="user_existing",
+            email_verified=False,
+            signup_method=None,
+            creation_date=str(datetime.now(timezone.utc)),
+            update_date=str(datetime.now(timezone.utc)),
+        )
+        db_session = Mock()
+        db_session.exec.return_value.first.return_value = user
+
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            return_value={"email": "existing@test.com"},
+        ), patch(
+            "src.services.auth.utils.get_client_ip",
+            return_value="10.0.0.7",
+        ), patch("src.services.auth.utils.update_login_info") as mock_update_login:
+            result = await signWithGoogle(
+                request=request,
+                access_token="access-token",
+                email="fallback@test.com",
+                org_id=None,
+                current_user=current_user,
+                db_session=db_session,
+            )
+
+        assert result.email == "existing@test.com"
+        assert user.email_verified is True
+        assert user.signup_method == "google"
+        db_session.add.assert_called_once_with(user)
+        db_session.commit.assert_called_once()
+        db_session.refresh.assert_called_once_with(user)
+        mock_update_login.assert_called_once_with(user, "10.0.0.7", db_session)
+
+    @pytest.mark.asyncio
+    async def test_sign_with_google_missing_email_raises(self):
+        request = Mock(spec=Request)
+        db_session = Mock()
+        current_user = Mock()
+
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            return_value={},
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await signWithGoogle(
+                    request=request,
+                    access_token="access-token",
+                    email="",
+                    org_id=None,
+                    current_user=current_user,
+                    db_session=db_session,
+                )
+
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == "No email address available from Google or request"
