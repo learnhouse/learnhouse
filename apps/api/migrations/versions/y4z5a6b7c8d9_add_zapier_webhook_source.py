@@ -1,7 +1,7 @@
 """Add source, zap_name, zap_id to webhook_endpoint for Zapier integration
 
-Revision ID: w2x3y4z5a6b7
-Revises: v1w2x3y4z5a6
+Revision ID: y4z5a6b7c8d9
+Revises: x3y4z5a6b7c8
 Create Date: 2026-04-13 00:00:00.000000
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa  # noqa: F401
 import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
-revision: str = 'w2x3y4z5a6b7'
-down_revision: Union[str, None] = 'v1w2x3y4z5a6'
+revision: str = 'y4z5a6b7c8d9'
+down_revision: Union[str, None] = 'x3y4z5a6b7c8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
