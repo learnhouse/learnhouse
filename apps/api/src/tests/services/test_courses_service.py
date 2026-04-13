@@ -212,6 +212,66 @@ class TestGetCourseMeta:
         assert call.kwargs["course"].id == course.id
         mock_set_cache.assert_called_once_with("course_test", True, result.model_dump())
 
+    @pytest.mark.asyncio
+    async def test_get_course_meta_skips_chapters_when_course_id_missing(
+        self, org, mock_request, admin_user
+    ):
+        course = Course(
+            id=None,
+            name="Detached Course",
+            description="Detached course description",
+            public=True,
+            published=False,
+            open_to_contributors=False,
+            org_id=org.id,
+            course_uuid="course_detached",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        fake_rows = [(course, None, None, org)]
+        fake_exec = Mock(all=Mock(return_value=fake_rows))
+        fake_db = Mock(exec=Mock(return_value=fake_exec))
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.FullCourseRead",
+            side_effect=lambda **kwargs: kwargs,
+        ), patch(
+            "src.services.courses.chapters.get_course_chapters",
+            new_callable=AsyncMock,
+        ) as mock_chapters:
+            result = await get_course_meta(
+                mock_request,
+                "course_detached",
+                True,
+                admin_user,
+                fake_db,
+            )
+
+        assert result["course_uuid"] == "course_detached"
+        mock_chapters.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_course_meta_not_found_raises(self, mock_request, admin_user):
+        fake_db = Mock(exec=Mock(return_value=Mock(all=Mock(return_value=[]))))
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_course_meta(
+                    mock_request,
+                    "missing-course",
+                    False,
+                    admin_user,
+                    fake_db,
+                )
+
+        assert exc_info.value.status_code == 404
+
 
 class TestGetCourseById:
     """Tests for get_course_by_id()."""
@@ -392,6 +452,42 @@ class TestGetCoursesOrgslug:
         uuids = [c.course_uuid for c in result]
         assert "course_superadmin_draft" in uuids
 
+    @pytest.mark.asyncio
+    async def test_get_courses_orgslug_groups_multiple_authors(
+        self, db, org, course, regular_user, admin_user, mock_request, bypass_rbac
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=regular_user.id,
+                authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=False
+        ):
+            result = await get_courses_orgslug(
+                mock_request, admin_user, "test-org", db
+            )
+
+        assert len(result) == 1
+        assert len(result[0].authors) >= 2
+
 
 class TestGetCoursesCountOrgslug:
     """Tests for get_courses_count_orgslug()."""
@@ -435,6 +531,16 @@ class TestGetCoursesCountOrgslug:
 
         assert count == 2
 
+    @pytest.mark.asyncio
+    async def test_get_courses_count_orgslug_authenticated_user_branch(
+        self, db, org, course, regular_user, mock_request
+    ):
+        count = await get_courses_count_orgslug(
+            mock_request, regular_user, "test-org", db
+        )
+
+        assert count == 1
+
 
 class TestDeleteCourse:
     """Tests for delete_course()."""
@@ -470,6 +576,44 @@ class TestDeleteCourse:
 
 
 class TestCourseMutationsAndRights:
+    @pytest.mark.asyncio
+    async def test_create_course_without_thumbnail_uses_defaults(
+        self, db, org, admin_user, mock_request, bypass_webhooks
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.courses.upload_thumbnail",
+            new_callable=AsyncMock,
+        ) as mock_upload, patch(
+            "src.services.courses.courses.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            created = await create_course(
+                mock_request,
+                org.id,
+                CourseCreate(
+                    org_id=org.id,
+                    name="Default Course",
+                    description="Default desc",
+                    public=False,
+                    published=False,
+                    open_to_contributors=False,
+                ),
+                admin_user,
+                db,
+            )
+
+        assert created.thumbnail_image == ""
+        assert created.thumbnail_video == ""
+        assert created.thumbnail_type == ThumbnailType.IMAGE
+        mock_upload.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_create_course_and_get_user_courses(
         self, db, org, admin_user, regular_user, mock_request, bypass_webhooks
@@ -511,6 +655,32 @@ class TestCourseMutationsAndRights:
         assert created.thumbnail_image == "thumb.png"
         assert created.authors[0].user.id == admin_user.id
         assert user_courses[0].course_uuid == created.course_uuid
+
+    @pytest.mark.asyncio
+    async def test_create_course_and_get_user_courses_empty_after_lookup(
+        self, db, org, admin_user, mock_request, bypass_webhooks
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid="course_missing_lookup",
+                user_id=999,
+                authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ):
+            result = await get_user_courses(
+                mock_request, admin_user, 999, db
+            )
+
+        assert result == []
 
     @pytest.mark.asyncio
     async def test_update_course_thumbnail_and_sensitive_fields(
@@ -573,6 +743,40 @@ class TestCourseMutationsAndRights:
         assert thumbnail_updated.thumbnail_video == "video.mp4"
         assert updated.name == "Updated Course"
         assert forbidden_exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_update_course_open_to_contributors_owner_path(
+        self, db, org, course, admin_user, mock_request
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            updated = await update_course(
+                mock_request,
+                CourseUpdate(open_to_contributors=True),
+                course.course_uuid,
+                admin_user,
+                db,
+            )
+
+        assert updated.open_to_contributors is True
 
     @pytest.mark.asyncio
     async def test_update_course_thumbnail_image_sets_both(
@@ -752,6 +956,36 @@ class TestCourseMutationsAndRights:
                 )
 
         assert exc_info.value.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_update_course_thumbnail_missing_course_raises(
+        self, db, admin_user, mock_request
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await update_course_thumbnail(
+                mock_request,
+                "missing-course",
+                admin_user,
+                db,
+                thumbnail_file=Mock(filename="thumb.png"),
+            )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_course_missing_course_raises(
+        self, db, admin_user, mock_request
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await update_course(
+                mock_request,
+                CourseUpdate(name="Missing"),
+                "missing-course",
+                admin_user,
+                db,
+            )
+
+        assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_clone_course_happy_path_clones_content_and_authorship(
@@ -941,6 +1175,175 @@ class TestCourseMutationsAndRights:
 
         assert missing_org_exc.value.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_clone_course_regular_user_and_storage_helpers(
+        self, db, org, course, regular_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.file_exists",
+            return_value=False,
+        ), patch(
+            "src.services.courses.courses._copy_storage_file"
+        ), patch(
+            "src.services.courses.courses._delete_storage_file"
+        ), patch(
+            "src.services.courses.courses._copy_storage_directory"
+        ), patch(
+            "os.makedirs"
+        ):
+            cloned = await clone_course(
+                mock_request,
+                course.course_uuid,
+                regular_user,
+                db,
+            )
+
+        author = db.exec(
+            select(ResourceAuthor).where(
+                ResourceAuthor.resource_uuid == cloned.course_uuid
+            )
+        ).first()
+
+        assert cloned.name == "Test Course (Copy)"
+        assert author is not None
+        assert author.user_id == regular_user.id
+
+    @pytest.mark.asyncio
+    async def test_clone_course_image_and_pdf_blocks_cover_rename_and_ast_failure(
+        self, db, org, course, admin_user, mock_request
+    ):
+        chapter = Chapter(
+            name="Clone Chapter 2",
+            description="Clone chapter 2 description",
+            thumbnail_image="chapter2.png",
+            org_id=org.id,
+            course_id=course.id,
+            chapter_uuid="chapter_clone_2",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(chapter)
+        db.commit()
+        db.refresh(chapter)
+
+        db.add(
+            CourseChapter(
+                order=1,
+                course_id=course.id,
+                chapter_id=chapter.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+
+        activity = Activity(
+            name="Clone Activity 2",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            content={"activity_uuid": "activity_clone_2", "file_id": "block_old_2"},
+            details={"level": 2},
+            published=True,
+            org_id=org.id,
+            course_id=course.id,
+            activity_uuid="activity_clone_2",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(activity)
+        db.commit()
+        db.refresh(activity)
+
+        db.add(
+            ChapterActivity(
+                order=1,
+                chapter_id=chapter.id,
+                activity_id=activity.id,
+                course_id=course.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            Block(
+                block_type=BlockTypeEnum.BLOCK_IMAGE,
+                content={"activity_uuid": "activity_clone_2", "file_id": "block_old_2"},
+                org_id=org.id,
+                course_id=course.id,
+                chapter_id=chapter.id,
+                activity_id=activity.id,
+                block_uuid="block_old_2",
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            Block(
+                block_type=BlockTypeEnum.BLOCK_DOCUMENT_PDF,
+                content={"activity_uuid": "activity_clone_2", "file_id": "block_old_3"},
+                org_id=org.id,
+                course_id=course.id,
+                chapter_id=chapter.id,
+                activity_id=activity.id,
+                block_uuid="block_old_3",
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.file_exists",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.list_directory",
+            return_value=["asset.txt"],
+        ), patch(
+            "src.services.courses.courses._copy_storage_file"
+        ) as mock_copy_file, patch(
+            "src.services.courses.courses._delete_storage_file"
+        ) as mock_delete_file, patch(
+            "src.services.courses.courses._copy_storage_directory"
+        ), patch(
+            "src.services.courses.courses.logger.error"
+        ), patch(
+            "ast.literal_eval",
+            side_effect=ValueError("bad literal"),
+        ), patch(
+            "os.makedirs"
+        ):
+            cloned = await clone_course(
+                mock_request,
+                course.course_uuid,
+                admin_user,
+                db,
+        )
+
+        assert cloned.name == "Test Course (Copy)"
+        assert mock_copy_file.call_count >= 2
+        assert mock_delete_file.call_count >= 2
+
 
 class TestSearchCourses:
     """Tests for search_courses()."""
@@ -1016,6 +1419,19 @@ class TestSearchCourses:
         uuids = [c.course_uuid for c in result]
         assert "course_draft_search" in uuids
 
+    @pytest.mark.asyncio
+    async def test_search_courses_superadmin_uses_unbounded_branch(
+        self, db, org, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=True
+        ):
+            result = await search_courses(
+                mock_request, admin_user, "test-org", "Test", db, limit=500
+            )
+
+        assert any(c.course_uuid == "course_test" for c in result)
+
 
 class TestGetUserCoursesAndRights:
     """Additional tests for get_user_courses() and get_course_user_rights()."""
@@ -1080,3 +1496,134 @@ class TestGetUserCoursesAndRights:
         assert maintainer_rights["permissions"]["manage_access"] is True
         assert contributor_rights["ownership"]["is_contributor"] is True
         assert contributor_rights["permissions"]["update"] is True
+
+    @pytest.mark.asyncio
+    async def test_get_course_user_rights_not_found(
+        self, db, mock_request, admin_user
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await get_course_user_rights(
+                mock_request, "missing-course", admin_user, db
+            )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_storage_helper_branches_cover_local_and_s3_paths(self):
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "os.makedirs"
+        ) as mock_makedirs, patch(
+            "shutil.copy2"
+        ) as mock_copy2:
+            from src.services.courses.courses import _copy_storage_file
+
+            _copy_storage_file("src.txt", "dst/child.txt")
+
+        mock_makedirs.assert_called_once()
+        mock_copy2.assert_called_once_with("src.txt", "dst/child.txt")
+
+        with patch(
+            "src.services.courses.transfer.storage_utils.delete_storage_file"
+        ) as mock_delete:
+            from src.services.courses.courses import _delete_storage_file
+
+            _delete_storage_file("file.txt")
+
+        mock_delete.assert_called_once_with("file.txt")
+
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "os.path.exists",
+            return_value=True,
+        ), patch(
+            "shutil.copytree"
+        ) as mock_copytree:
+            from src.services.courses.courses import _copy_storage_directory
+
+            _copy_storage_directory("srcdir", "dstdir")
+
+        mock_copytree.assert_called_once_with("srcdir", "dstdir", dirs_exist_ok=True)
+
+        class _FakePaginator:
+            def paginate(self, Bucket, Prefix):  # noqa: N803
+                return [{"Contents": [{"Key": "srcdir/file.txt"}]}]
+
+        class _FakeS3Client:
+            def __init__(self, raise_on_copy: bool = False):
+                self.raise_on_copy = raise_on_copy
+                self.copied = []
+
+            def get_paginator(self, name):
+                return _FakePaginator()
+
+            def copy_object(self, **kwargs):
+                if self.raise_on_copy:
+                    raise RuntimeError("copy failed")
+                self.copied.append(kwargs)
+
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.read_file_content",
+            return_value=b"payload",
+        ), patch(
+            "src.services.courses.transfer.storage_utils.upload_to_s3"
+        ) as mock_upload:
+            from src.services.courses.courses import _copy_storage_file
+
+            _copy_storage_file("src.txt", "dst.txt")
+
+        mock_upload.assert_called_once_with("dst.txt", b"payload")
+
+        fake_client = _FakeS3Client()
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.get_storage_client",
+            return_value=fake_client,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.get_s3_bucket_name",
+            return_value="bucket",
+        ):
+            from src.services.courses.courses import _copy_storage_directory
+
+            _copy_storage_directory("srcdir", "dstdir")
+
+        assert fake_client.copied[0]["Key"] == "dstdir/file.txt"
+
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.get_storage_client",
+            return_value=None,
+        ):
+            from src.services.courses.courses import _copy_storage_directory
+
+            _copy_storage_directory("srcdir", "dstdir")
+
+        fake_client_error = _FakeS3Client(raise_on_copy=True)
+        with patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.get_storage_client",
+            return_value=fake_client_error,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.get_s3_bucket_name",
+            return_value="bucket",
+        ), patch(
+            "src.services.courses.courses.logger.error"
+        ) as mock_logger_error:
+            from src.services.courses.courses import _copy_storage_directory
+
+            _copy_storage_directory("srcdir", "dstdir")
+
+        mock_logger_error.assert_called_once()

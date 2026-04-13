@@ -147,13 +147,20 @@ class TestCustomDomainHelpers:
         assert info.cname_record_value == f"test-org.{custom_domains_service.LEARNHOUSE_DOMAIN}"
         assert "DNS records" in info.instructions
 
+    def test_helper_functions_cover_apex_domain_instructions(self):
+        info = get_verification_instructions("example.com", "token456", "org-slug")
+
+        assert info.txt_record_host == "_learnhouse-verification"
+        assert info.cname_record_host == "@"
+        assert info.cname_record_value == f"org-slug.{custom_domains_service.LEARNHOUSE_DOMAIN}"
+
 
 class TestAddCustomDomain:
     @pytest.mark.asyncio
     async def test_add_custom_domain_success_and_persistence(
         self, mock_request, db, org, admin_user
     ):
-        payload = {"domain": "HTTPS://Docs.Example.com/path"}
+        payload = {"domain": "HTTP://Docs.Example.com/path"}
 
         with patch(
             "src.services.orgs.custom_domains.generate_verification_token",
@@ -559,6 +566,23 @@ class TestVerifyDomainDns:
         assert "temporarily unavailable" in message
         assert import_error_domain.check_error == "DNS verification unavailable"
 
+        dns_error_domain = _make_custom_domain(
+            db,
+            org.id,
+            domain="dns-error.example.com",
+            status="pending",
+            verification_token="token-dns-error",
+        )
+        dns_module, resolver_module = _install_fake_dns_module(
+            resolve_side_effect=RuntimeError("resolver boom"),
+        )
+        with patch.dict(sys.modules, {"dns": dns_module, "dns.resolver": resolver_module}):
+            success, message = await verify_domain_dns(dns_error_domain, db, org.slug)
+
+        assert success is False
+        assert "resolver boom" in message
+        assert dns_error_domain.check_error == "resolver boom"
+
 
 class TestCustomDomainDeletionAndListing:
     @pytest.mark.asyncio
@@ -777,3 +801,105 @@ class TestResolveAndSslStatus:
             "status": "provisioning",
             "message": "SSL certificate is being provisioned. This usually takes a few minutes after domain verification.",
         }
+
+        with patch(
+            "src.services.orgs.custom_domains.socket.create_connection",
+            side_effect=RuntimeError("ssl boom"),
+        ):
+            unknown_result = await check_domain_ssl_status(
+                mock_request,
+                db,
+                org.id,
+                verified.domain_uuid,
+                admin_user,
+            )
+
+        assert unknown_result == {
+            "has_ssl": False,
+            "status": "unknown",
+            "message": "Could not determine SSL status.",
+        }
+
+    @pytest.mark.asyncio
+    async def test_custom_domain_missing_org_and_domain_paths(
+        self, mock_request, db, org, admin_user
+    ):
+        domain = _make_custom_domain(
+            db,
+            org.id,
+            domain="paths.example.com",
+            status="verified",
+            verification_token="token-paths",
+        )
+
+        with patch(
+            "src.services.orgs.custom_domains.require_org_membership",
+            return_value=None,
+        ):
+            with pytest.raises(HTTPException) as list_org_exc:
+                await list_custom_domains(mock_request, db, 999, admin_user)
+            with pytest.raises(HTTPException) as info_org_exc:
+                await get_domain_verification_info(
+                    mock_request,
+                    db,
+                    999,
+                    domain.domain_uuid,
+                    admin_user,
+                )
+        with patch(
+            "src.services.orgs.custom_domains.require_org_admin",
+            return_value=None,
+        ):
+            with pytest.raises(HTTPException) as verify_org_exc:
+                await verify_custom_domain(
+                    mock_request,
+                    db,
+                    999,
+                    domain.domain_uuid,
+                    admin_user,
+                )
+            with pytest.raises(HTTPException) as ssl_org_exc:
+                await check_domain_ssl_status(
+                    mock_request,
+                    db,
+                    999,
+                    domain.domain_uuid,
+                    admin_user,
+                )
+
+        with patch(
+            "src.services.orgs.custom_domains.require_org_membership",
+            return_value=None,
+        ):
+            with pytest.raises(HTTPException) as info_domain_exc:
+                await get_domain_verification_info(
+                    mock_request,
+                    db,
+                    org.id,
+                    "missing-domain",
+                    admin_user,
+                )
+            with pytest.raises(HTTPException) as verify_domain_exc:
+                await verify_custom_domain(
+                    mock_request,
+                    db,
+                    org.id,
+                    "missing-domain",
+                    admin_user,
+                )
+            with pytest.raises(HTTPException) as ssl_domain_exc:
+                await check_domain_ssl_status(
+                    mock_request,
+                    db,
+                    org.id,
+                    "missing-domain",
+                    admin_user,
+                )
+
+        assert list_org_exc.value.status_code == 404
+        assert info_org_exc.value.status_code == 404
+        assert verify_org_exc.value.status_code == 404
+        assert ssl_org_exc.value.status_code == 403
+        assert info_domain_exc.value.status_code == 404
+        assert verify_domain_exc.value.status_code == 404
+        assert ssl_domain_exc.value.status_code == 404

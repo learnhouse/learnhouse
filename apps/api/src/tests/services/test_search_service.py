@@ -6,12 +6,15 @@ Covers: _escape_like_wildcards, search_across_org (collections, users,
 """
 
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.db.collections import Collection
+from src.db.users import APITokenUser
 from src.db.courses.courses import Course
+from src.db.collections_courses import CollectionCourse
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
 
 
@@ -155,3 +158,162 @@ class TestSearchAcrossOrg:
             )
 
         assert result.users == []
+
+    @pytest.mark.asyncio
+    async def test_search_api_token_without_rights_skips_token_check(
+        self, db, org, mock_request
+    ):
+        token_user = APITokenUser(org_id=org.id, rights=None, token_name="demo")
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ), patch(
+            "src.services.search.search.is_org_member",
+            return_value=False,
+        ):
+            result = await search_across_org(
+                mock_request, token_user, "test-org", "Test", db
+            )
+
+        assert result.courses == []
+        assert result.collections == []
+        assert result.users == []
+
+    @pytest.mark.asyncio
+    async def test_search_api_token_rejects_cross_org_access(
+        self, db, org, mock_request
+    ):
+        token_user = APITokenUser(
+            org_id=999,
+            rights={"search": {"action_read": True}},
+            token_name="demo",
+        )
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            with pytest.raises(Exception) as exc_info:
+                await search_across_org(
+                    mock_request, token_user, "test-org", "Test", db
+                )
+
+        assert getattr(exc_info.value, "status_code", None) == 403
+
+    @pytest.mark.asyncio
+    async def test_search_api_token_dict_rights_branches(
+        self, db, org, mock_request
+    ):
+        allowed_token = APITokenUser(
+            org_id=org.id,
+            rights={"search": {"action_read": True}},
+            token_name="demo",
+        )
+        denied_token = APITokenUser(
+            org_id=org.id,
+            rights={"search": {"action_read": False}},
+            token_name="demo",
+        )
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ), patch(
+            "src.services.search.search.is_org_member",
+            return_value=False,
+        ):
+            allowed = await search_across_org(
+                mock_request, allowed_token, "test-org", "Test", db
+            )
+
+        assert allowed.users == []
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            with pytest.raises(Exception) as exc_info:
+                await search_across_org(
+                    mock_request, denied_token, "test-org", "Test", db
+                )
+
+        assert getattr(exc_info.value, "status_code", None) == 403
+
+    @pytest.mark.asyncio
+    async def test_search_api_token_object_rights_branches(
+        self, db, org, mock_request
+    ):
+        allowed_token = APITokenUser(
+            org_id=org.id,
+            rights={},
+            token_name="demo",
+        )
+        allowed_token.rights = SimpleNamespace(
+            search=SimpleNamespace(action_read=True)
+        )
+        denied_token = APITokenUser(
+            org_id=org.id,
+            rights={},
+            token_name="demo",
+        )
+        denied_token.rights = SimpleNamespace(
+            search=SimpleNamespace(action_read=False)
+        )
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ), patch(
+            "src.services.search.search.is_org_member",
+            return_value=False,
+        ):
+            allowed = await search_across_org(
+                mock_request, allowed_token, "test-org", "Test", db
+            )
+
+        assert allowed.collections == []
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            with pytest.raises(Exception) as exc_info:
+                await search_across_org(
+                    mock_request, denied_token, "test-org", "Test", db
+                )
+
+        assert getattr(exc_info.value, "status_code", None) == 403
+
+    @pytest.mark.asyncio
+    async def test_search_deduplicates_collection_courses(
+        self, db, org, anonymous_user, mock_request, collection, course
+    ):
+        db.add(
+            CollectionCourse(
+                collection_id=collection.id,
+                course_id=course.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            result = await search_across_org(
+                mock_request, anonymous_user, "test-org", "Test", db
+            )
+
+        assert len(result.collections) == 1
+        assert len(result.collections[0].courses) == 1

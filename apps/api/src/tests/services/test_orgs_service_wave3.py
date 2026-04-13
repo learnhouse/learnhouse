@@ -18,20 +18,24 @@ from src.db.organizations import (
     Organization,
     OrganizationCreate,
     OrganizationRead,
+    OrganizationUpdate,
 )
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, InternalUser
 from src.services.orgs.orgs import (
     _update_feature_toggle,
+    create_org,
     create_org_with_config,
     delete_org,
     get_org_join_mechanism,
     get_orgs_by_user,
     get_orgs_by_user_admin,
     rbac_check,
+    update_org_boards_config,
     update_org_ai_config,
     update_org_auth_branding_config,
     update_org_color_config,
+    update_org_collections_config,
     update_org_communities_config,
     update_org_courses_config,
     update_org_favicon,
@@ -45,6 +49,7 @@ from src.services.orgs.orgs import (
     update_org_preview,
     update_org_seo_config,
     update_org_signup_mechanism,
+    update_org,
     update_org_thumbnail,
     update_org_watermark_config,
     update_org_with_config_no_auth,
@@ -140,6 +145,119 @@ class TestOrgCreationAndListingWave3:
         mock_invalidate.assert_called_once_with(admin_user.id)
 
     @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    @patch("src.routers.users._invalidate_session_cache")
+    async def test_create_org_config_logging_branches(
+        self,
+        mock_invalidate,
+        mock_multi_org,
+        mock_request,
+        db,
+        admin_user,
+    ):
+        original_exec = db.exec
+
+        def exec_side_effect(statement):
+            if "organizationconfig" in str(statement).lower():
+                return SimpleNamespace(first=lambda: None)
+            return original_exec(statement)
+
+        with patch.object(db, "exec", side_effect=exec_side_effect), patch(
+            "src.services.orgs.orgs.OrganizationConfig.model_validate",
+            return_value=OrganizationConfig(
+                org_id=0,
+                config={},
+                creation_date="",
+                update_date="",
+            ),
+        ):
+            created = await create_org(
+                mock_request,
+                OrganizationCreate(
+                    name="No Config Org",
+                    slug="no-config-org",
+                    email="noconfig@org.com",
+                ),
+                admin_user,
+                db,
+            )
+            created_with_config = await create_org_with_config(
+                mock_request,
+                OrganizationCreate(
+                    name="No Config Org 2",
+                    slug="no-config-org-2",
+                    email="noconfig2@org.com",
+                ),
+                admin_user,
+                db,
+                {"config_version": "2.0", "plan": "free"},
+            )
+
+        assert created.slug == "no-config-org"
+        assert created_with_config.slug == "no-config-org-2"
+        assert mock_invalidate.call_count == 2
+
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    async def test_create_org_with_config_failure_branches(
+        self,
+        mock_multi_org,
+        mock_request,
+        db,
+        org,
+        admin_user,
+        anonymous_user,
+    ):
+        duplicate = OrganizationCreate(
+            name="Duplicate Config Org",
+            slug="test-org",
+            email="dup-config@org.com",
+        )
+
+        with pytest.raises(HTTPException) as duplicate_exc:
+            await create_org_with_config(
+                mock_request,
+                duplicate,
+                admin_user,
+                db,
+                {"config_version": "2.0", "plan": "free"},
+            )
+        assert duplicate_exc.value.status_code == 409
+
+        unique = OrganizationCreate(
+            name="Anon Config Org",
+            slug="anon-config-org",
+            email="anon-config@org.com",
+        )
+        with pytest.raises(HTTPException) as anon_exc:
+            await create_org_with_config(
+                mock_request,
+                unique,
+                anonymous_user,
+                db,
+                {"config_version": "2.0", "plan": "free"},
+            )
+        assert anon_exc.value.status_code == 409
+
+        with patch(
+            "src.services.orgs.orgs.is_multi_org_allowed",
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as ee_exc:
+                await create_org_with_config(
+                    mock_request,
+                    OrganizationCreate(
+                        name="Blocked Config Org",
+                        slug="blocked-config-org",
+                        email="blocked-config@org.com",
+                    ),
+                    admin_user,
+                    db,
+                    {"config_version": "2.0", "plan": "free"},
+                )
+        assert ee_exc.value.status_code == 403
+
+    @pytest.mark.asyncio
     async def test_get_org_lists_and_join_mechanism_missing_config(
         self,
         mock_request,
@@ -202,6 +320,161 @@ class TestOrgCreationAndListingWave3:
                 )
 
         assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_missing_org_branches_across_org_settings(
+        self,
+        mock_request,
+        db,
+        admin_user,
+    ):
+        missing_id = 99999
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as config_exc:
+                await update_org_with_config_no_auth(
+                    mock_request,
+                    {"config_version": "2.0", "plan": "free"},
+                    missing_id,
+                    db,
+                )
+        assert config_exc.value.status_code == 404
+
+        no_org_calls = [
+            (update_org, (OrganizationUpdate(name="Missing", slug="missing"),)),
+            (update_org_logo, (SimpleNamespace(filename="logo.png"),)),
+            (update_org_favicon, (SimpleNamespace(filename="favicon.png"),)),
+            (update_org_thumbnail, (SimpleNamespace(filename="thumbnail.png"),)),
+            (update_org_preview, (SimpleNamespace(filename="preview.png"),)),
+            (delete_org, tuple()),
+            (update_org_signup_mechanism, ("inviteOnly",)),
+            (update_org_ai_config, (True,)),
+            (update_org_communities_config, (True,)),
+            (update_org_collections_config, (True,)),
+            (update_org_courses_config, (True,)),
+            (update_org_podcasts_config, (True,)),
+            (update_org_boards_config, (True,)),
+            (update_org_playgrounds_config, (True,)),
+            (update_org_color_config, ("#123456",)),
+            (update_org_footer_text_config, ("Footer",)),
+            (update_org_font_config, ("Inter",)),
+            (update_org_watermark_config, (True,)),
+            (update_org_auth_branding_config, (
+                AuthBrandingConfig(
+                    welcome_message="Hi",
+                    background_type="gradient",
+                    background_image="",
+                    text_color="light",
+                ),
+            )),
+            (upload_org_auth_background_service, (SimpleNamespace(filename="bg.png"),)),
+            (update_org_landing, ({"headline": "Hi"},)),
+            (upload_org_landing_content_service, (SimpleNamespace(filename="landing.txt"),)),
+            (update_org_seo_config, (
+                SeoOrgConfig(
+                    default_meta_title_suffix="S",
+                    default_meta_description="D",
+                ),
+            )),
+            (upload_org_og_image_service, (SimpleNamespace(filename="og.png"),)),
+        ]
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+        ):
+            for func, args in no_org_calls:
+                with pytest.raises(HTTPException) as exc_info:
+                    await func(mock_request, *args, missing_id, admin_user, db)
+                assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_missing_config_branches_and_api_token_dict_rights(
+        self,
+        mock_request,
+        db,
+        org,
+        admin_user,
+    ):
+        _make_org_config(
+            db,
+            org,
+            {
+                "config_version": "2.0",
+                "plan": "free",
+                "admin_toggles": {"members": {"signup_mode": "open"}},
+                "customization": {},
+            },
+        )
+        config_row = db.exec(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        ).first()
+        assert config_row is not None
+        db.delete(config_row)
+        db.commit()
+
+        with patch(
+            "src.services.orgs.orgs.rbac_check",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch(
+            "src.services.orgs.orgs.upload_org_favicon",
+            new_callable=AsyncMock,
+            return_value="stored-favicon.png",
+        ):
+            missing_config_calls = [
+                (update_org_favicon, (SimpleNamespace(filename="favicon.png"),)),
+                (update_org_signup_mechanism, ("inviteOnly",)),
+                (update_org_ai_config, (True,)),
+                (update_org_communities_config, (True,)),
+                (update_org_collections_config, (True,)),
+                (update_org_boards_config, (True,)),
+                (update_org_color_config, ("#abcdef",)),
+                (update_org_footer_text_config, ("Footer",)),
+                (update_org_font_config, ("Manrope",)),
+                (update_org_watermark_config, (True,)),
+                (update_org_auth_branding_config, (
+                    AuthBrandingConfig(
+                        welcome_message="Welcome",
+                        background_type="custom",
+                        background_image="bg.png",
+                        text_color="dark",
+                    ),
+                )),
+                (update_org_landing, ({"headline": "Hello"},)),
+                (update_org_seo_config, (
+                    SeoOrgConfig(
+                        default_meta_title_suffix="Suffix",
+                        default_meta_description="SEO",
+                    ),
+                )),
+            ]
+
+            for func, args in missing_config_calls:
+                with pytest.raises(HTTPException) as exc_info:
+                    await func(mock_request, *args, org.id, admin_user, db)
+                assert exc_info.value.status_code == 404
+
+        dict_rights = APITokenUser(
+            org_id=org.id,
+            rights={"organizations": {"action_update": True}},
+            token_name="dict-update",
+            created_by_user_id=1,
+        )
+        assert await rbac_check(mock_request, org.org_uuid, dict_rights, "update", db)
+
+        dict_rights_denied = APITokenUser(
+            org_id=org.id,
+            rights={"organizations": {"action_update": False}},
+            token_name="dict-denied",
+            created_by_user_id=1,
+        )
+        with pytest.raises(HTTPException) as denied_exc:
+            await rbac_check(mock_request, org.org_uuid, dict_rights_denied, "update", db)
+        assert denied_exc.value.status_code == 403
 
 
 class TestOrgUploadAndDeleteWave3:

@@ -300,5 +300,8 @@ def get_db_session():
         yield session
 
 async def close_database(app: FastAPI):
+    db_engine = getattr(app, "db_engine", None)
+    if db_engine is not None and hasattr(db_engine, "dispose"):
+        db_engine.dispose()
     logging.info("LearnHouse has been shut down.")
     return app

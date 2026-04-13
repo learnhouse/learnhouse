@@ -25,6 +25,15 @@ from src.security.features_utils.plan_check import (
     require_plan_for_usergroups,
 )
 
+PLAN_DEPENDENCIES = [
+    ("Analytics", require_plan("pro", "Analytics")),
+    ("Usergroups", require_plan_for_usergroups("pro", "Usergroups")),
+    ("Certificates", require_plan_for_certifications("pro", "Certificates")),
+    ("Boards", require_plan_for_boards("pro", "Boards")),
+    ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds")),
+    ("Communities", require_plan_for_community("standard", "Communities")),
+]
+
 
 def _request(path_params=None, query_params=None):
     query_string = urlencode(query_params or {}).encode()
@@ -79,6 +88,15 @@ class TestPlanCheck:
 
         assert exc.value.status_code == 403
 
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="oss",
+        ), patch(
+            "src.security.features_utils.plan_check.EE_ONLY_FEATURES",
+            {"boards"},
+        ):
+            assert _check_mode_bypass("Analytics") is True
+
     def test_get_org_plan_versions_and_missing_config(self, db, org):
         _make_org_config(
             db,
@@ -123,11 +141,55 @@ class TestPlanCheck:
             with pytest.raises(HTTPException) as missing_org_exc:
                 await dependency(_request(path_params={"org_id": "abc"}), db)
 
+            with pytest.raises(HTTPException) as invalid_query_exc:
+                await dependency(_request(query_params={"org_id": "abc"}), db)
+
         assert low_plan_exc.value.status_code == 403
         assert missing_org_exc.value.status_code == 400
+        assert invalid_query_exc.value.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_require_plan_for_usergroups(self, db, org):
+    @pytest.mark.parametrize("feature_name, dependency", PLAN_DEPENDENCIES)
+    async def test_require_plan_mode_bypass_allows_request(self, db, feature_name, dependency):
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="ee",
+        ):
+            assert await dependency(_request(), db) is True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("feature_name", "dependency", "request_kwargs", "expected_status"),
+        [
+            ("Analytics", require_plan("pro", "Analytics"), {"path_params": {"org_id": "abc"}}, 400),
+            ("Analytics", require_plan("pro", "Analytics"), {"query_params": {"org_id": "abc"}}, 400),
+            ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"path_params": {"usergroup_id": "abc"}}, 200),
+            ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Certificates", require_plan_for_certifications("pro", "Certificates"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Certificates", require_plan_for_certifications("pro", "Certificates"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Boards", require_plan_for_boards("pro", "Boards"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Boards", require_plan_for_boards("pro", "Boards"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Communities", require_plan_for_community("standard", "Communities"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Communities", require_plan_for_community("standard", "Communities"), {"query_params": {"org_id": "abc"}}, 200),
+        ],
+    )
+    async def test_require_plan_invalid_ids(self, db, feature_name, dependency, request_kwargs, expected_status):
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="saas",
+        ):
+            if expected_status == 400:
+                with pytest.raises(HTTPException) as exc:
+                    await dependency(_request(**request_kwargs), db)
+                assert exc.value.status_code == 400
+            else:
+                assert await dependency(_request(**request_kwargs), db) is True
+
+    @pytest.mark.asyncio
+    async def test_require_plan_for_usergroups_success_and_no_org(self, db, org):
         _make_org_config(db, org, {"config_version": "2.0", "plan": "standard"})
         usergroup = UserGroup(
             org_id=org.id,
@@ -147,17 +209,25 @@ class TestPlanCheck:
             return_value="saas",
         ), patch(
             "src.security.features_utils.plan_check.plan_meets_requirement",
+            return_value=True,
+        ):
+            assert await dependency(_request(), db) is True
+            assert await dependency(_request(path_params={"usergroup_id": str(usergroup.id)}), db) is True
+
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="saas",
+        ), patch(
+            "src.security.features_utils.plan_check.plan_meets_requirement",
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
                 await dependency(_request(path_params={"usergroup_id": str(usergroup.id)}), db)
 
-            assert await dependency(_request(path_params={"usergroup_id": "missing"}), db) is True
-
         assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_require_plan_for_certifications(self, db, org, course, regular_user):
+    async def test_require_plan_for_certifications_variants(self, db, org, course, regular_user):
         _make_org_config(db, org, {"config_version": "2.0", "plan": "enterprise"})
         cert = Certifications(
             certification_uuid="cert_test",
@@ -187,6 +257,7 @@ class TestPlanCheck:
             "src.security.features_utils.plan_check.plan_meets_requirement",
             return_value=True,
         ):
+            assert await dependency(_request(), db) is True
             assert (
                 await dependency(_request(path_params={"certification_uuid": cert.certification_uuid}), db)
                 is True
@@ -202,6 +273,18 @@ class TestPlanCheck:
                 )
                 is True
             )
+
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="saas",
+        ), patch(
+            "src.security.features_utils.plan_check.plan_meets_requirement",
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await dependency(_request(path_params={"certification_uuid": cert.certification_uuid}), db)
+
+        assert exc.value.status_code == 403
 
     @pytest.mark.asyncio
     async def test_require_plan_for_board_playground_and_community(self, db, org):
@@ -242,28 +325,59 @@ class TestPlanCheck:
         db.add(community)
         db.commit()
 
+        board_dependency = require_plan_for_boards("pro", "Boards")
+        playground_dependency = require_plan_for_playgrounds("pro", "Playgrounds")
+        community_dependency = require_plan_for_community("free", "Communities")
+
         with patch(
             "src.security.features_utils.plan_check.get_deployment_mode",
             return_value="saas",
         ), patch(
             "src.security.features_utils.plan_check.plan_meets_requirement",
-            side_effect=[False, False, True],
+            return_value=True,
         ):
-            with pytest.raises(HTTPException) as board_exc:
-                await require_plan_for_boards("pro", "Boards")(
-                    _request(path_params={"board_uuid": board.board_uuid}), db
-                )
-            with pytest.raises(HTTPException) as playground_exc:
-                await require_plan_for_playgrounds("pro", "Playgrounds")(
-                    _request(path_params={"playground_uuid": playground.playground_uuid}), db
-                )
-
+            assert await board_dependency(_request(), db) is True
+            assert await playground_dependency(_request(), db) is True
+            assert await community_dependency(_request(), db) is True
             assert (
-                await require_plan_for_community("free", "Communities")(
-                    _request(path_params={"community_uuid": community.community_uuid}), db
+                await board_dependency(_request(path_params={"board_uuid": board.board_uuid}), db)
+                is True
+            )
+            assert (
+                await playground_dependency(
+                    _request(path_params={"playground_uuid": playground.playground_uuid}),
+                    db,
+                )
+                is True
+            )
+            assert (
+                await community_dependency(
+                    _request(path_params={"community_uuid": community.community_uuid}),
+                    db,
                 )
                 is True
             )
 
+        with patch(
+            "src.security.features_utils.plan_check.get_deployment_mode",
+            return_value="saas",
+        ), patch(
+            "src.security.features_utils.plan_check.plan_meets_requirement",
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as board_exc:
+                await board_dependency(_request(path_params={"board_uuid": board.board_uuid}), db)
+            with pytest.raises(HTTPException) as playground_exc:
+                await playground_dependency(
+                    _request(path_params={"playground_uuid": playground.playground_uuid}),
+                    db,
+                )
+            with pytest.raises(HTTPException) as community_exc:
+                await community_dependency(
+                    _request(path_params={"community_uuid": community.community_uuid}),
+                    db,
+                )
+
         assert board_exc.value.status_code == 403
         assert playground_exc.value.status_code == 403
+        assert community_exc.value.status_code == 403

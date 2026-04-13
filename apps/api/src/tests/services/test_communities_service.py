@@ -153,7 +153,12 @@ class TestCommunitiesService:
             updated = await update_community(
                 mock_request,
                 created.community_uuid,
-                CommunityUpdate(name="Updated", moderation_words=["x"]),
+                CommunityUpdate(
+                    name="Updated",
+                    description="Updated Desc",
+                    public=False,
+                    moderation_words=["x"],
+                ),
                 admin_user,
                 db,
             )
@@ -168,6 +173,8 @@ class TestCommunitiesService:
         assert linked.course_id == course.id
         assert by_course.community_uuid == created.community_uuid
         assert updated.name == "Updated"
+        assert updated.description == "Updated Desc"
+        assert updated.public is False
         assert updated.moderation_words == ["x"]
         assert unlinked.course_id is None
         assert deleted == {"detail": "Community deleted"}
@@ -244,6 +251,250 @@ class TestCommunitiesService:
         assert len(admin_result) == 2
 
     @pytest.mark.asyncio
+    async def test_community_admin_and_error_branches(
+        self, db, org, other_org, admin_user, anonymous_user, mock_request
+    ):
+        course = _make_course(db, org, id=20, course_uuid="course_admin")
+        community = _make_community(
+            db,
+            org,
+            id=21,
+            community_uuid="community_admin",
+            public=False,
+        )
+        _linked_community = _make_community(
+            db,
+            org,
+            id=22,
+            community_uuid="community_linked",
+            public=False,
+            course_id=course.id,
+        )
+        other_org_community = _make_community(
+            db,
+            org,
+            id=23,
+            community_uuid="community_other_org",
+            public=False,
+        )
+
+        with patch(
+            "src.services.communities.communities.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.communities.authorization_verify_based_on_roles",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch(
+            "src.services.communities.communities.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.communities.communities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            admin_rights_result = await get_community_user_rights(
+                mock_request, community.community_uuid, admin_user, db
+            )
+            anon_rights_result = await get_community_user_rights(
+                mock_request, community.community_uuid, anonymous_user, db
+            )
+            admin_list_result = await get_communities_by_org(
+                mock_request, org.id, admin_user, db
+            )
+            orphan_course = _make_course(
+                db,
+                org,
+                id=24,
+                course_uuid="course_orphan",
+            )
+            no_link_result = await get_community_by_course(
+                mock_request, orphan_course.course_uuid, admin_user, db
+            )
+            with pytest.raises(HTTPException) as create_missing_org_exc:
+                await create_community(
+                    mock_request,
+                    9999,
+                    CommunityCreate(name="Missing Org", description="Desc", public=True),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as get_missing_exc:
+                await get_community(mock_request, "missing-community", admin_user, db)
+            with pytest.raises(HTTPException) as course_missing_exc:
+                await get_community_by_course(
+                    mock_request, "missing-course", admin_user, db
+                )
+            with pytest.raises(HTTPException) as update_missing_exc:
+                await update_community(
+                    mock_request,
+                    "missing-community",
+                    CommunityUpdate(name="Missing"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as delete_missing_exc:
+                await delete_community(
+                    mock_request, "missing-community", admin_user, db
+                )
+            with pytest.raises(HTTPException) as link_missing_community_exc:
+                await link_community_to_course(
+                    mock_request, "missing-community", course.course_uuid, admin_user, db
+                )
+            with pytest.raises(HTTPException) as link_missing_course_exc:
+                await link_community_to_course(
+                    mock_request, community.community_uuid, "missing-course", admin_user, db
+                )
+            with pytest.raises(HTTPException) as unlink_missing_exc:
+                await unlink_community_from_course(
+                    mock_request, "missing-community", admin_user, db
+                )
+
+        with patch(
+            "src.services.communities.communities.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.communities.authorization_verify_based_on_roles",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.communities.communities.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.communities.communities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as create_denied_exc:
+                await create_community(
+                    mock_request,
+                    org.id,
+                    CommunityCreate(name="Denied", description="Desc", public=True),
+                    admin_user,
+                    db,
+                )
+            existing_linked_community = _make_community(
+                db,
+                org,
+                id=24,
+                community_uuid="community_existing_link",
+                course_id=course.id,
+            )
+            with pytest.raises(HTTPException) as link_same_org_exc:
+                await link_community_to_course(
+                    mock_request,
+                    community.community_uuid,
+                    course.course_uuid,
+                    admin_user,
+                    db,
+                )
+            assert existing_linked_community.course_id == course.id
+
+        other_course = _make_course(
+            db,
+            other_org,
+            id=25,
+            course_uuid="course_other_org",
+        )
+        with patch(
+            "src.services.communities.communities.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as link_org_exc:
+                await link_community_to_course(
+                    mock_request,
+                    other_org_community.community_uuid,
+                    other_course.course_uuid,
+                    admin_user,
+                    db,
+                )
+
+        assert admin_rights_result["permissions"]["create"] is True
+        assert admin_rights_result["permissions"]["update"] is True
+        assert admin_rights_result["permissions"]["delete"] is True
+        assert admin_rights_result["ownership"]["is_admin"] is True
+        assert admin_rights_result["ownership"]["is_maintainer_role"] is True
+        assert admin_rights_result["permissions"]["read"] is True
+        assert anon_rights_result["permissions"]["read"] is False
+        assert len(admin_list_result) == 3
+        assert no_link_result is None
+        assert create_missing_org_exc.value.status_code == 404
+        assert get_missing_exc.value.status_code == 404
+        assert course_missing_exc.value.status_code == 404
+        assert update_missing_exc.value.status_code == 404
+        assert delete_missing_exc.value.status_code == 404
+        assert link_missing_community_exc.value.status_code == 404
+        assert link_missing_course_exc.value.status_code == 404
+        assert unlink_missing_exc.value.status_code == 404
+        assert create_denied_exc.value.status_code == 403
+        assert link_same_org_exc.value.status_code == 400
+        assert link_org_exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_community_user_rights_anonymous_and_no_access(
+        self, db, org, anonymous_user, regular_user, mock_request
+    ):
+        public_community = _make_community(
+            db,
+            org,
+            id=30,
+            community_uuid="community_public_rights",
+            public=True,
+        )
+        private_community = _make_community(
+            db,
+            org,
+            id=31,
+            community_uuid="community_private_rights",
+            public=False,
+        )
+        usergroup = _make_usergroup(db, org, id=32, usergroup_uuid="ug_private_rights")
+        db.add(
+            UserGroupResource(
+                usergroup_id=usergroup.id,
+                resource_uuid=private_community.community_uuid,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+        private_group = _make_usergroup(db, org, id=51)
+        db.add(
+            UserGroupResource(
+                usergroup_id=private_group.id,
+                resource_uuid=private_community.community_uuid,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.communities.communities.authorization_verify_based_on_roles",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.communities.communities.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            anonymous_rights = await get_community_user_rights(
+                mock_request, public_community.community_uuid, anonymous_user, db
+            )
+            private_rights = await get_community_user_rights(
+                mock_request, private_community.community_uuid, regular_user, db
+            )
+
+        assert anonymous_rights["permissions"]["read"] is True
+        assert anonymous_rights["access"]["via_public"] is True
+        assert private_rights["permissions"]["read"] is False
+        assert private_rights["permissions"]["create_discussion"] is False
+        assert private_rights["access"]["via_public"] is False
+        assert private_rights["access"]["has_usergroup_restriction"] is True
+
+    @pytest.mark.asyncio
     async def test_community_error_paths(self, db, org, admin_user, mock_request):
         course = _make_course(db, org, id=2, course_uuid="course_two")
         community = _make_community(db, org, id=10, course_id=course.id)
@@ -285,14 +536,17 @@ class TestCommunitiesService:
 class TestDiscussionsService:
     def test_hot_score_and_label_validation(self):
         now = datetime.now(timezone.utc).isoformat()
+        naive = datetime.now().replace(tzinfo=None).isoformat()
         old = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
         assert calculate_hot_score(10, now) > calculate_hot_score(10, old)
+        assert isinstance(calculate_hot_score(5, naive), float)
+        assert isinstance(calculate_hot_score(5, "not-a-timestamp"), float)
         assert validate_label("question") == "question"
         assert validate_label("nope") == "general"
 
     @pytest.mark.asyncio
     async def test_discussion_crud_and_sorting(
-        self, db, org, admin_user, mock_request
+        self, db, org, admin_user, anonymous_user, mock_request
     ):
         community = _make_community(db, org)
         with patch(
@@ -331,7 +585,9 @@ class TestDiscussionsService:
             updated = await update_discussion(
                 mock_request,
                 created.discussion_uuid,
-                DiscussionUpdate(title="Updated", label="idea", emoji=""),
+                DiscussionUpdate(
+                    title="Updated", content="Updated body", label="idea", emoji=""
+                ),
                 admin_user,
                 db,
             )
@@ -340,6 +596,14 @@ class TestDiscussionsService:
             )
             locked = await lock_discussion(
                 mock_request, created.discussion_uuid, True, admin_user, db
+            )
+            upvotes = await get_discussions_by_community(
+                mock_request,
+                community.community_uuid,
+                admin_user,
+                db,
+                sort_by=DiscussionSortBy.UPVOTES,
+                label="idea",
             )
 
         older = _make_discussion(
@@ -380,6 +644,16 @@ class TestDiscussionsService:
                 db,
                 sort_by=DiscussionSortBy.HOT,
             )
+            empty_community = _make_community(
+                db, org, id=21, community_uuid="community_empty"
+            )
+            empty = await get_discussions_by_community(
+                mock_request,
+                empty_community.community_uuid,
+                admin_user,
+                db,
+                limit=0,
+            )
 
         with patch(
             "src.services.communities.discussions.authorization_verify_if_user_is_anon",
@@ -396,10 +670,13 @@ class TestDiscussionsService:
         assert fetched.has_voted is True
         assert updated.label == "idea"
         assert updated.emoji is None
+        assert updated.content == "Updated body"
         assert pinned.is_pinned is True
         assert locked.is_locked is True
+        assert upvotes[0].discussion_uuid == created.discussion_uuid
         assert recent[0].is_pinned is True
         assert hot[0].is_pinned is True
+        assert empty == []
         assert deleted == {"detail": "Discussion deleted"}
 
     @pytest.mark.asyncio
@@ -463,3 +740,188 @@ class TestDiscussionsService:
                     mock_request, discussion.discussion_uuid, True, regular_user, db
                 )
         assert pin_exc.value.status_code == 403
+
+        with patch(
+            "src.services.communities.discussions.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as list_missing_exc:
+                await get_discussions_by_community(
+                    mock_request,
+                    "community_missing_discussions",
+                    admin_user,
+                    db,
+                )
+        assert list_missing_exc.value.status_code == 404
+
+        with patch(
+            "src.services.communities.discussions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as update_missing_discussion_exc:
+                await update_discussion(
+                    mock_request,
+                    "discussion_missing",
+                    DiscussionUpdate(content="No such discussion"),
+                    admin_user,
+                    db,
+                )
+        assert update_missing_discussion_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_discussion_missing_and_permission_paths(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        community = _make_community(db, org, id=30, community_uuid="community_discussion_paths")
+        discussion = _make_discussion(
+            db,
+            community,
+            org,
+            admin_user.id,
+            discussion_uuid="discussion_discussion_paths",
+        )
+        orphan_discussion = Discussion(
+            title="Orphan",
+            content="Body",
+            label="general",
+            emoji=None,
+            community_id=987654,
+            org_id=org.id,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_orphan",
+            upvote_count=0,
+            edit_count=0,
+            is_pinned=False,
+            is_locked=False,
+            creation_date="2024-01-01T00:00:00+00:00",
+            update_date="2024-01-01T00:00:00+00:00",
+        )
+        db.add(orphan_discussion)
+        db.commit()
+        db.refresh(orphan_discussion)
+
+        with patch(
+            "src.services.communities.discussions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions.validate_discussion_content",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as create_exc:
+                await create_discussion(
+                    mock_request,
+                    "community_missing",
+                    "Title",
+                    "Body",
+                    "question",
+                    admin_user,
+                    db,
+                )
+        assert create_exc.value.status_code == 404
+
+        with pytest.raises(HTTPException) as missing_discussion_exc:
+            await get_discussion(mock_request, "discussion_missing", admin_user, db)
+        assert missing_discussion_exc.value.status_code == 404
+
+        with patch(
+            "src.services.communities.discussions.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as orphan_get_exc:
+                await get_discussion(
+                    mock_request, orphan_discussion.discussion_uuid, admin_user, db
+                )
+        assert orphan_get_exc.value.status_code == 404
+
+        with patch(
+            "src.services.communities.discussions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as update_forbidden_exc:
+                await update_discussion(
+                    mock_request,
+                    discussion.discussion_uuid,
+                    DiscussionUpdate(content="No permission"),
+                    regular_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as pin_forbidden_exc:
+                await pin_discussion(
+                    mock_request, discussion.discussion_uuid, True, regular_user, db
+                )
+            with pytest.raises(HTTPException) as lock_forbidden_exc:
+                await lock_discussion(
+                    mock_request, discussion.discussion_uuid, True, regular_user, db
+                )
+            with pytest.raises(HTTPException) as delete_forbidden_exc:
+                await delete_discussion(
+                    mock_request, discussion.discussion_uuid, regular_user, db
+                )
+        assert update_forbidden_exc.value.status_code == 403
+        assert pin_forbidden_exc.value.status_code == 403
+        assert lock_forbidden_exc.value.status_code == 403
+        assert delete_forbidden_exc.value.status_code == 403
+
+        with patch(
+            "src.services.communities.discussions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as pin_missing_exc:
+                await pin_discussion(
+                    mock_request, "discussion_missing", True, admin_user, db
+                )
+            with pytest.raises(HTTPException) as lock_missing_exc:
+                await lock_discussion(
+                    mock_request, "discussion_missing", True, admin_user, db
+                )
+            with pytest.raises(HTTPException) as delete_missing_exc:
+                await delete_discussion(
+                    mock_request, "discussion_missing", admin_user, db
+                )
+        assert pin_missing_exc.value.status_code == 404
+        assert lock_missing_exc.value.status_code == 404
+        assert delete_missing_exc.value.status_code == 404
+
+        with patch(
+            "src.services.communities.discussions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.discussions.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            with pytest.raises(HTTPException) as update_orphan_exc:
+                await update_discussion(
+                    mock_request,
+                    orphan_discussion.discussion_uuid,
+                    DiscussionUpdate(content="Still no community"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as pin_orphan_exc:
+                await pin_discussion(
+                    mock_request, orphan_discussion.discussion_uuid, True, admin_user, db
+                )
+            with pytest.raises(HTTPException) as lock_orphan_exc:
+                await lock_discussion(
+                    mock_request, orphan_discussion.discussion_uuid, True, admin_user, db
+                )
+            with pytest.raises(HTTPException) as delete_orphan_exc:
+                await delete_discussion(
+                    mock_request, orphan_discussion.discussion_uuid, admin_user, db
+                )
+        assert update_orphan_exc.value.status_code == 404
+        assert pin_orphan_exc.value.status_code == 404
+        assert lock_orphan_exc.value.status_code == 404
+        assert delete_orphan_exc.value.status_code == 404

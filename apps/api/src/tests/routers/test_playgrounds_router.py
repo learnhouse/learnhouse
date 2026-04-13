@@ -1,5 +1,6 @@
 """Router tests for src/routers/playgrounds/*.py."""
 
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -8,16 +9,27 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.courses.courses import Course
 from src.db.playground_reactions import PlaygroundReactionSummary, ReactionUser
 from src.db.playgrounds import Playground, PlaygroundRead
 from src.routers.playgrounds.playgrounds import router as playgrounds_router
 from src.routers.playgrounds.playgrounds_generator import router as playgrounds_generator_router
+from src.routers.playgrounds.playgrounds_generator import (
+    _get_course_context,
+    event_generator as playground_event_generator,
+    get_org_ai_model as get_playground_org_ai_model,
+)
 from src.security.auth import get_current_user
 from src.security.features_utils.dependencies import require_playgrounds_feature
 
 
 async def _single_chunk_stream():
     yield "chunk"
+
+
+async def _failing_stream():
+    yield "chunk"
+    raise RuntimeError("boom")
 
 
 @pytest.fixture
@@ -85,6 +97,334 @@ def _mock_reaction_summary() -> PlaygroundReactionSummary:
 
 
 class TestPlaygroundsRouter:
+    @pytest.mark.asyncio
+    async def test_playground_generator_helpers_and_error_paths(
+        self, client, db, org, other_org, admin_user
+    ):
+        board = Playground(
+            id=2,
+            org_id=org.id,
+            name="Playground",
+            description="Desc",
+            thumbnail_image="",
+            access_type="authenticated",
+            published=False,
+            course_uuid=None,
+            html_content="<div>seed</div>",
+            playground_uuid="playground_test",
+            course_id=None,
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(board)
+        db.commit()
+
+        orphan_playground = Playground(
+            id=3,
+            org_id=999,
+            name="Orphan",
+            description="Desc",
+            thumbnail_image="",
+            access_type="authenticated",
+            published=False,
+            course_uuid=None,
+            html_content="",
+            playground_uuid="playground_orphan",
+            course_id=None,
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(orphan_playground)
+        db.commit()
+
+        events = []
+        async for item in playground_event_generator(_failing_stream(), "session-error"):
+            events.append(item)
+        assert json.loads(events[0].removeprefix("data: ").strip()) == {
+            "type": "chunk",
+            "content": "chunk",
+        }
+        assert json.loads(events[-1].removeprefix("data: ").strip()) == {
+            "type": "error",
+            "message": "An internal error occurred.",
+        }
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_plan",
+            return_value="pro",
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.plan_meets_requirement",
+            return_value=True,
+        ):
+            assert get_playground_org_ai_model(org.id, db) == "gemini-3-flash-preview"
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_plan",
+            side_effect=RuntimeError("boom"),
+        ):
+            assert get_playground_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_plan",
+            return_value="basic",
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.plan_meets_requirement",
+            return_value=False,
+        ):
+            assert get_playground_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+
+        course = Course(
+            id=10,
+            name="Course",
+            description="Desc",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=org.id,
+            course_uuid="course_test",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(course)
+        db.commit()
+
+        assert _get_course_context(None, org.id, db, "Prompt") == (None, None)
+        assert _get_course_context("missing-course", org.id, db, "Prompt") == (None, None)
+        other_org_course = Course(
+            id=11,
+            name="Other",
+            description="Desc",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=other_org.id,
+            course_uuid="course_other",
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(other_org_course)
+        db.commit()
+        assert _get_course_context("course_other", org.id, db, "Prompt") == (None, None)
+
+        with patch(
+            "src.services.ai.rag.query_service.query_course_rag",
+            return_value={"context": "rag-context"},
+        ):
+            assert _get_course_context("course_test", org.id, db, "Prompt") == (
+                "rag-context",
+                course.id,
+            )
+
+        with patch(
+            "src.services.ai.rag.query_service.query_course_rag",
+            side_effect=RuntimeError("rag boom"),
+        ):
+            assert _get_course_context("course_test", org.id, db, "Prompt") == (
+                None,
+                course.id,
+            )
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=None,
+        ):
+            response = await client.get("/api/v1/playgrounds/generate/session/missing")
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.services.playgrounds.playgrounds._get_user_rights",
+            return_value={"playgrounds": {"action_update": False, "action_update_own": False}},
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/start",
+                json={
+                    "playground_uuid": "missing",
+                    "prompt": "Build it",
+                    "context": {
+                        "playground_name": "Playground",
+                        "playground_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.services.playgrounds.playgrounds._get_user_rights",
+            return_value={"playgrounds": {"action_update": False, "action_update_own": False}},
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/start",
+                json={
+                    "playground_uuid": "playground_orphan",
+                    "prompt": "Build it",
+                    "context": {
+                        "playground_name": "Playground",
+                        "playground_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.services.playgrounds.playgrounds._get_user_rights",
+            return_value={"playgrounds": {}},
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/start",
+                json={
+                    "playground_uuid": "playground_test",
+                    "prompt": "Build it",
+                    "context": {
+                        "playground_name": "Playground",
+                        "playground_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 403
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=3,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_test",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_test",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 400
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="different",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_test",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 400
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_test",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+        ), patch(
+            "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.services.playgrounds.playgrounds._get_user_rights",
+            return_value={"playgrounds": {"action_update": False, "action_update_own": False}},
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_test",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 403
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_missing",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_missing",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.playgrounds.playgrounds_generator.get_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                playground_uuid="playground_orphan",
+                context=SimpleNamespace(course_uuid=None),
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/playgrounds/generate/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "playground_uuid": "playground_orphan",
+                    "message": "Refine it",
+                },
+            )
+        assert response.status_code == 404
+
     async def test_playground_crud_and_reaction_endpoints(self, client):
         with patch(
             "src.routers.playgrounds.playgrounds.create_playground",

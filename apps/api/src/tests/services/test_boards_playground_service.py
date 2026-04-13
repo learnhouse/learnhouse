@@ -61,6 +61,58 @@ class TestBoardsPlaygroundService:
         assert restored.session_uuid == "pg_test"
         fake_redis.setex.assert_called_once()
 
+    def test_redis_and_session_error_paths(self):
+        context = BoardsPlaygroundContext(
+            board_name="Board Name", board_description="Board Description"
+        )
+        session = BoardsPlaygroundSessionData(
+            session_uuid="pg_test",
+            block_uuid="block_1",
+            board_uuid="board_1",
+            iteration_count=0,
+            max_iterations=6,
+            message_history=[],
+            current_html=None,
+            context=context,
+        )
+
+        with patch(
+            "src.services.boards.boards_playground.LH_CONFIG",
+            SimpleNamespace(
+                redis_config=SimpleNamespace(redis_connection_string="")
+            ),
+        ):
+            assert get_redis_connection() is None
+
+        with patch(
+            "src.services.boards.boards_playground.redis.from_url",
+            side_effect=RuntimeError("boom"),
+        ), patch(
+            "src.services.boards.boards_playground.LH_CONFIG",
+            SimpleNamespace(
+                redis_config=SimpleNamespace(redis_connection_string="redis://test")
+            ),
+        ):
+            assert get_redis_connection() is None
+
+        with patch(
+            "src.services.boards.boards_playground.get_redis_connection",
+            return_value=None,
+        ):
+            assert get_boards_playground_session("pg_test") is None
+            assert save_boards_playground_session(session) is False
+
+        fake_redis = Mock()
+        fake_redis.get.return_value = "not-json"
+        fake_redis.setex.side_effect = RuntimeError("boom")
+
+        with patch(
+            "src.services.boards.boards_playground.get_redis_connection",
+            return_value=fake_redis,
+        ):
+            assert get_boards_playground_session("pg_test") is None
+            assert save_boards_playground_session(session) is False
+
     def test_create_session_prompt_and_extract_html(self):
         context = BoardsPlaygroundContext(
             board_name="Physics Board", board_description="Motion demos"
@@ -79,6 +131,11 @@ class TestBoardsPlaygroundService:
             extract_html_from_response("```html\n<div>demo</div>\n```")
             == "<div>demo</div>"
         )
+        assert (
+            extract_html_from_response("```\n<div>plain</div>\n```")
+            == "<div>plain</div>"
+        )
+        assert extract_html_from_response("  <div>raw</div>  ") == "<div>raw</div>"
         save_session.assert_called_once()
 
     @pytest.mark.asyncio
@@ -134,3 +191,53 @@ class TestBoardsPlaygroundService:
             ]
 
         assert error_chunks == ["Error: boom"]
+
+    @pytest.mark.asyncio
+    async def test_generate_stream_iteration_branch_and_trim_history(self):
+        context = BoardsPlaygroundContext(
+            board_name="Math Board", board_description="Fractions"
+        )
+        session = BoardsPlaygroundSessionData(
+            session_uuid="pg_test",
+            block_uuid="block_1",
+            board_uuid="board_1",
+            iteration_count=1,
+            max_iterations=6,
+            message_history=[
+                BoardsPlaygroundMessage(role="user", content=f"msg-{index}")
+                for index in range(13)
+            ],
+            current_html="<html>current</html>",
+            context=context,
+        )
+        generate_mock = Mock(
+            return_value=iter([_Chunk("<!DOCTYPE html>"), _Chunk("<html>updated</html>")])
+        )
+        fake_client = SimpleNamespace(
+            models=SimpleNamespace(generate_content_stream=generate_mock)
+        )
+
+        with patch(
+            "src.services.boards.boards_playground.get_gemini_client",
+            return_value=fake_client,
+        ), patch(
+            "src.services.boards.boards_playground.save_boards_playground_session"
+        ) as save_session:
+            chunks = [
+                chunk
+                async for chunk in generate_boards_playground_stream(
+                    "Update it", session, current_html="<html>current</html>"
+                )
+            ]
+
+        assert "".join(chunks) == "<!DOCTYPE html><html>updated</html>"
+        assert session.iteration_count == 2
+        assert session.current_html == "<!DOCTYPE html><html>updated</html>"
+        assert len(session.message_history) == 12
+        assert any(msg.content == "msg-12" for msg in session.message_history)
+        call_kwargs = generate_mock.call_args.kwargs
+        assert call_kwargs["model"] == "gemini-2.0-flash"
+        iteration_prompt = call_kwargs["contents"][-1]["parts"][0]["text"]
+        assert "CURRENT HTML CODE" in iteration_prompt
+        assert "Update it" in iteration_prompt
+        save_session.assert_called_once()
