@@ -346,6 +346,62 @@ class TestWebhookCrud:
         assert deleted == {"detail": "Webhook endpoint deleted successfully"}
         assert db.get(WebhookEndpoint, endpoint.id) is None
 
+    async def test_update_webhook_endpoint_rejects_events_edit_on_zapier_managed(
+        self, db, org, admin_user, mock_request
+    ):
+        endpoint = _make_webhook_endpoint(db, org)
+        endpoint.source = "zapier"
+        db.add(endpoint)
+        db.commit()
+
+        with patch(
+            "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.webhooks.webhooks.require_org_admin"
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await webhooks.update_webhook_endpoint(
+                    mock_request,
+                    db,
+                    org.id,
+                    endpoint.webhook_uuid,
+                    WebhookEndpointUpdate(events=["course_created"]),
+                    admin_user,
+                )
+
+        assert exc.value.status_code == 400
+        assert "Zapier-managed" in exc.value.detail
+        assert "events" in exc.value.detail
+
+    async def test_update_webhook_endpoint_rejects_url_edit_on_zapier_managed(
+        self, db, org, admin_user, mock_request
+    ):
+        endpoint = _make_webhook_endpoint(db, org)
+        endpoint.source = "zapier"
+        db.add(endpoint)
+        db.commit()
+
+        with patch(
+            "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.webhooks.webhooks.require_org_admin"
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await webhooks.update_webhook_endpoint(
+                    mock_request,
+                    db,
+                    org.id,
+                    endpoint.webhook_uuid,
+                    WebhookEndpointUpdate(url="https://example.org/new"),
+                    admin_user,
+                )
+
+        assert exc.value.status_code == 400
+        assert "Zapier-managed" in exc.value.detail
+        assert "URL" in exc.value.detail
+
     async def test_update_webhook_endpoint_not_found(
         self, db, org, admin_user, mock_request
     ):
