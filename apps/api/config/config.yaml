@@ -70,3 +70,18 @@ tinybird_config:
   api_url: ""
   ingest_token: ""
   read_token: ""
+
+clickhouse_config:
+  # Set url to enable ClickHouse as the analytics backend.
+  # HTTP interface URL, e.g. "https://clickhouse.example.com:8443" or "http://localhost:8123".
+  # Schema: run apps/api/src/services/analytics/clickhouse_schema.sql against the database
+  # before first ingest.
+  url: ""
+  database: "default"
+  username: ""
+  password: ""
+  events_table: "events"
+
+# Analytics backend selection. Leave empty to auto-select (Tinybird wins if both set).
+# Set to "tinybird" or "clickhouse" to force a specific backend.
+analytics_backend: ""

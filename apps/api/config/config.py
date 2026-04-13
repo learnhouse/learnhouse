@@ -19,6 +19,17 @@ class TinybirdConfig(BaseModel):
     read_token: str     # Token with PIPE:READ or SQL:READ scope
 
 
+class ClickHouseConfig(BaseModel):
+    url: str            # HTTP interface URL, e.g. "http://localhost:8123"
+    database: str       # Database name, e.g. "default"
+    username: str
+    password: str
+    events_table: str   # Table name, e.g. "events"
+
+
+AnalyticsBackendLiteral = Literal["tinybird", "clickhouse", ""]
+
+
 class Judge0Config(BaseModel):
     api_url: str
     client_id: str | None
@@ -108,6 +119,8 @@ class LearnHouseConfig(BaseModel):
     mailing_config: MailingConfig
     payments_config: InternalPaymentsConfig
     tinybird_config: TinybirdConfig | None
+    clickhouse_config: ClickHouseConfig | None
+    analytics_backend: AnalyticsBackendLiteral
     judge0_config: Judge0Config | None
 
 
@@ -322,6 +335,36 @@ def get_learnhouse_config() -> LearnHouseConfig:
             read_token=tinybird_read_token,
         )
 
+    # ClickHouse config — auto-enabled when URL is set
+    env_clickhouse_url = os.environ.get("LEARNHOUSE_CLICKHOUSE_URL")
+    env_clickhouse_database = os.environ.get("LEARNHOUSE_CLICKHOUSE_DATABASE")
+    env_clickhouse_username = os.environ.get("LEARNHOUSE_CLICKHOUSE_USERNAME")
+    env_clickhouse_password = os.environ.get("LEARNHOUSE_CLICKHOUSE_PASSWORD")
+    env_clickhouse_events_table = os.environ.get("LEARNHOUSE_CLICKHOUSE_EVENTS_TABLE")
+
+    clickhouse_url = env_clickhouse_url or yaml_config.get("clickhouse_config", {}).get("url", "")
+    clickhouse_database = env_clickhouse_database or yaml_config.get("clickhouse_config", {}).get("database", "default")
+    clickhouse_username = env_clickhouse_username or yaml_config.get("clickhouse_config", {}).get("username", "")
+    clickhouse_password = env_clickhouse_password or yaml_config.get("clickhouse_config", {}).get("password", "")
+    clickhouse_events_table = env_clickhouse_events_table or yaml_config.get("clickhouse_config", {}).get("events_table", "events")
+
+    clickhouse_config = None
+    if clickhouse_url:
+        clickhouse_config = ClickHouseConfig(
+            url=clickhouse_url.rstrip("/"),
+            database=clickhouse_database or "default",
+            username=clickhouse_username,
+            password=clickhouse_password,
+            events_table=clickhouse_events_table or "events",
+        )
+
+    # Analytics backend selector — "tinybird", "clickhouse", or "" for auto
+    env_analytics_backend = os.environ.get("LEARNHOUSE_ANALYTICS_BACKEND")
+    analytics_backend_raw = (env_analytics_backend or yaml_config.get("analytics_backend", "") or "").strip().lower()
+    if analytics_backend_raw not in ("tinybird", "clickhouse", ""):
+        analytics_backend_raw = ""
+    analytics_backend: AnalyticsBackendLiteral = analytics_backend_raw  # type: ignore[assignment]
+
     # Judge0 config — auto-enabled when API URL is set
     env_judge0_api_url = os.environ.get("LEARNHOUSE_JUDGE0_API_URL")
     env_judge0_client_id = os.environ.get("LEARNHOUSE_JUDGE0_CLIENT_ID")
@@ -425,6 +468,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
             )
         ),
         tinybird_config=tinybird_config,
+        clickhouse_config=clickhouse_config,
+        analytics_backend=analytics_backend,
         judge0_config=judge0_config,
     )
 
