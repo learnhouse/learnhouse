@@ -10,7 +10,10 @@ from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
 from src.db.users import AnonymousUser, PublicUser
-from src.services.courses.certifications import check_course_completion_and_create_certificate
+from src.services.courses.certifications import (
+    check_course_completion_and_create_certificate,
+    is_course_fully_completed,
+)
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -288,12 +291,31 @@ async def add_activity_to_trail(
             },
         )
 
-    # Check if all activities in the course are completed and create certificate if so
+    # Fire COURSE_COMPLETED when this specific activity completion pushed the
+    # course over the finish line. Two conditions:
+    #   1. This call actually added a new TrailStep (is_new_completion) — so
+    #      it represents a real transition, not a re-visit of an already-done
+    #      activity.
+    #   2. All activities in the course now have completed TrailSteps.
+    #
+    # We intentionally do NOT use ``check_course_completion_and_create_certificate``'s
+    # return value here because it only reports True when a new certificate
+    # row is created — courses without a configured certification would never
+    # fire this webhook otherwise. See that function's docstring for context.
     course_was_completed = False
-    if course and course.id:
-        course_was_completed = await check_course_completion_and_create_certificate(
-            request, user.id, course.id, db_session
-        )
+    if is_new_completion and course and course.id:
+        course_was_completed = is_course_fully_completed(user.id, course.id, db_session)
+
+    # Always run the certificate side effect when the course is complete,
+    # regardless of whether a cert is configured (the function no-ops if none).
+    if course_was_completed and course and course.id:
+        try:
+            await check_course_completion_and_create_certificate(
+                request, user.id, course.id, db_session
+            )
+        except Exception:
+            # Certificate creation must not block the webhook dispatch.
+            pass
 
     if course_was_completed:
         await track(
