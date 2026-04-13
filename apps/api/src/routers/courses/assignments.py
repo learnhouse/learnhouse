@@ -11,13 +11,6 @@ from src.db.courses.assignments import (
     AssignmentUpdate,
     AssignmentUserSubmissionCreate,
 )
-
-
-class GradeSubmissionBody(BaseModel):
-    """Optional body for the final-grade endpoint. Lets the instructor leave
-    an overall feedback note at the same time they finalize the grade."""
-
-    overall_feedback: Optional[str] = None
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
@@ -51,6 +44,14 @@ from src.services.courses.activities.assignments import (
     update_assignment_submission,
     update_assignment_task,
 )
+
+
+class GradeSubmissionBody(BaseModel):
+    """Optional body for the final-grade endpoint. Lets the instructor leave
+    an overall feedback note at the same time they finalize the grade."""
+
+    overall_feedback: Optional[str] = None
+
 
 router = APIRouter()
 

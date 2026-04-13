@@ -3086,7 +3086,27 @@
         "course_editor": "Éditeur de cours",
         "editor": "Éditeur",
         "submissions": "Soumissions",
-        "no_assignments": "Aucun devoir disponible pour ce cours, créez des devoirs depuis l'éditeur de cours"
+        "no_assignments": "Aucun devoir disponible pour ce cours, créez des devoirs depuis l'éditeur de cours",
+        "untitled": "Devoir sans titre",
+        "search_placeholder": "Rechercher des devoirs par nom ou description...",
+        "loading": "Chargement des devoirs...",
+        "empty": "Pas encore de devoirs",
+        "empty_filtered": "Aucun devoir ne correspond à vos filtres",
+        "clear_filters": "Effacer les filtres",
+        "showing_count": "Affichage de {{shown}} sur {{total}} devoirs",
+        "stats": {
+          "total": "Total",
+          "published": "Publiés",
+          "drafts": "Brouillons",
+          "auto_graded": "Auto-notés"
+        },
+        "filters": {
+          "all": "Tous",
+          "published": "Publiés",
+          "drafts": "Brouillons",
+          "auto_graded": "Auto-notés uniquement",
+          "hide_empty": "Masquer les cours vides"
+        }
       },
       "detail": {
         "title": "Outils de devoir",

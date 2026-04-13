@@ -3111,7 +3111,27 @@
         "course_editor": "Trình chỉnh sửa khóa học",
         "editor": "Trình chỉnh sửa",
         "submissions": "Bài nộp",
-        "no_assignments": "Chưa có bài tập nào cho khóa học này. Hãy tạo một bài tập trong trình chỉnh sửa khóa học."
+        "no_assignments": "Chưa có bài tập nào cho khóa học này. Hãy tạo một bài tập trong trình chỉnh sửa khóa học.",
+        "untitled": "Bài tập không có tiêu đề",
+        "search_placeholder": "Tìm bài tập theo tên hoặc mô tả...",
+        "loading": "Đang tải bài tập...",
+        "empty": "Chưa có bài tập",
+        "empty_filtered": "Không có bài tập nào khớp với bộ lọc của bạn",
+        "clear_filters": "Xóa bộ lọc",
+        "showing_count": "Hiển thị {{shown}} trong số {{total}} bài tập",
+        "stats": {
+          "total": "Tổng",
+          "published": "Đã xuất bản",
+          "drafts": "Bản nháp",
+          "auto_graded": "Tự động chấm"
+        },
+        "filters": {
+          "all": "Tất cả",
+          "published": "Đã xuất bản",
+          "drafts": "Bản nháp",
+          "auto_graded": "Chỉ tự động chấm",
+          "hide_empty": "Ẩn khóa học trống"
+        }
       },
       "detail": {
         "title": "Công cụ bài tập",

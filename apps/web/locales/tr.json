@@ -3111,7 +3111,27 @@
         "course_editor": "Kurs Editörü",
         "editor": "Editör",
         "submissions": "Gönderimler",
-        "no_assignments": "Bu kurs için henüz ödev yok. Kurs editöründe bir tane oluşturun."
+        "no_assignments": "Bu kurs için henüz ödev yok. Kurs editöründe bir tane oluşturun.",
+        "untitled": "Başlıksız ödev",
+        "search_placeholder": "Ödevleri isim veya açıklamaya göre ara...",
+        "loading": "Ödevler yükleniyor...",
+        "empty": "Henüz ödev yok",
+        "empty_filtered": "Filtrelerinize uyan ödev yok",
+        "clear_filters": "Filtreleri temizle",
+        "showing_count": "{{total}} ödevden {{shown}} tanesi gösteriliyor",
+        "stats": {
+          "total": "Toplam",
+          "published": "Yayında",
+          "drafts": "Taslaklar",
+          "auto_graded": "Oto-notlu"
+        },
+        "filters": {
+          "all": "Tümü",
+          "published": "Yayında",
+          "drafts": "Taslaklar",
+          "auto_graded": "Sadece oto-notlu",
+          "hide_empty": "Boş kursları gizle"
+        }
       },
       "detail": {
         "title": "Ödev Aracı",

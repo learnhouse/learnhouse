@@ -3088,7 +3088,27 @@
         "course_editor": "Editor de Curso",
         "editor": "Editor",
         "submissions": "Envios",
-        "no_assignments": "Nenhuma tarefa disponível para este curso, crie tarefas de curso a partir do editor de curso"
+        "no_assignments": "Nenhuma tarefa disponível para este curso, crie tarefas de curso a partir do editor de curso",
+        "untitled": "Tarefa sem título",
+        "search_placeholder": "Buscar tarefas por nome ou descrição...",
+        "loading": "Carregando tarefas...",
+        "empty": "Ainda não há tarefas",
+        "empty_filtered": "Nenhuma tarefa corresponde aos seus filtros",
+        "clear_filters": "Limpar filtros",
+        "showing_count": "Mostrando {{shown}} de {{total}} tarefas",
+        "stats": {
+          "total": "Total",
+          "published": "Publicadas",
+          "drafts": "Rascunhos",
+          "auto_graded": "Auto-avaliadas"
+        },
+        "filters": {
+          "all": "Todas",
+          "published": "Publicadas",
+          "drafts": "Rascunhos",
+          "auto_graded": "Apenas auto-avaliadas",
+          "hide_empty": "Ocultar cursos vazios"
+        }
       },
       "detail": {
         "title": "Ferramentas de Tarefa",

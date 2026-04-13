@@ -3098,7 +3098,27 @@
         "course_editor": "课程编辑器",
         "editor": "编辑器",
         "submissions": "提交内容",
-        "no_assignments": "此课程尚无作业，请在课程编辑器中创建作业"
+        "no_assignments": "此课程尚无作业，请在课程编辑器中创建作业",
+        "untitled": "未命名作业",
+        "search_placeholder": "按名称或描述搜索作业...",
+        "loading": "加载作业中...",
+        "empty": "暂无作业",
+        "empty_filtered": "没有匹配筛选条件的作业",
+        "clear_filters": "清除筛选",
+        "showing_count": "显示 {{total}} 个作业中的 {{shown}} 个",
+        "stats": {
+          "total": "总计",
+          "published": "已发布",
+          "drafts": "草稿",
+          "auto_graded": "自动评分"
+        },
+        "filters": {
+          "all": "全部",
+          "published": "已发布",
+          "drafts": "草稿",
+          "auto_graded": "仅自动评分",
+          "hide_empty": "隐藏空课程"
+        }
       },
       "detail": {
         "title": "作业工具",

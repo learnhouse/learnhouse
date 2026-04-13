@@ -3340,7 +3340,27 @@
         "course_editor": "Course Editor",
         "editor": "Editor",
         "submissions": "Submissions",
-        "no_assignments": "No assignments available for this course, create course assignments from the course editor"
+        "untitled": "Untitled assignment",
+        "no_assignments": "No assignments available for this course, create course assignments from the course editor",
+        "search_placeholder": "Search assignments by name or description...",
+        "loading": "Loading assignments...",
+        "empty": "No assignments yet",
+        "empty_filtered": "No assignments match your filters",
+        "clear_filters": "Clear filters",
+        "showing_count": "Showing {{shown}} of {{total}} assignments",
+        "stats": {
+          "total": "Total",
+          "published": "Published",
+          "drafts": "Drafts",
+          "auto_graded": "Auto-graded"
+        },
+        "filters": {
+          "all": "All",
+          "published": "Published",
+          "drafts": "Drafts",
+          "auto_graded": "Auto-graded only",
+          "hide_empty": "Hide empty courses"
+        }
       },
       "detail": {
         "title": "Assignment Tools",

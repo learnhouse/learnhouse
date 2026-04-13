@@ -3109,7 +3109,27 @@
         "course_editor": "Editor Kursus",
         "editor": "Editor",
         "submissions": "Pengiriman",
-        "no_assignments": "Tidak ada tugas yang tersedia untuk kursus ini, buat tugas kursus dari editor kursus"
+        "no_assignments": "Tidak ada tugas yang tersedia untuk kursus ini, buat tugas kursus dari editor kursus",
+        "untitled": "Tugas tanpa judul",
+        "search_placeholder": "Cari tugas berdasarkan nama atau deskripsi...",
+        "loading": "Memuat tugas...",
+        "empty": "Belum ada tugas",
+        "empty_filtered": "Tidak ada tugas yang cocok dengan filter Anda",
+        "clear_filters": "Hapus filter",
+        "showing_count": "Menampilkan {{shown}} dari {{total}} tugas",
+        "stats": {
+          "total": "Total",
+          "published": "Dipublikasikan",
+          "drafts": "Draft",
+          "auto_graded": "Auto-dinilai"
+        },
+        "filters": {
+          "all": "Semua",
+          "published": "Dipublikasikan",
+          "drafts": "Draft",
+          "auto_graded": "Hanya auto-dinilai",
+          "hide_empty": "Sembunyikan kursus kosong"
+        }
       },
       "detail": {
         "title": "Alat Tugas",

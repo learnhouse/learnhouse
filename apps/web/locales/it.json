@@ -3086,7 +3086,27 @@
         "course_editor": "Editor del corso",
         "editor": "Editor",
         "submissions": "Invii",
-        "no_assignments": "Nessun compito disponibile per questo corso, crea compiti del corso dall'editor del corso"
+        "no_assignments": "Nessun compito disponibile per questo corso, crea compiti del corso dall'editor del corso",
+        "untitled": "Compito senza titolo",
+        "search_placeholder": "Cerca compiti per nome o descrizione...",
+        "loading": "Caricamento compiti...",
+        "empty": "Nessun compito ancora",
+        "empty_filtered": "Nessun compito corrisponde ai filtri",
+        "clear_filters": "Cancella filtri",
+        "showing_count": "Visualizzazione di {{shown}} di {{total}} compiti",
+        "stats": {
+          "total": "Totale",
+          "published": "Pubblicati",
+          "drafts": "Bozze",
+          "auto_graded": "Auto-valutati"
+        },
+        "filters": {
+          "all": "Tutti",
+          "published": "Pubblicati",
+          "drafts": "Bozze",
+          "auto_graded": "Solo auto-valutati",
+          "hide_empty": "Nascondi corsi vuoti"
+        }
       },
       "detail": {
         "title": "Strumenti compito",
