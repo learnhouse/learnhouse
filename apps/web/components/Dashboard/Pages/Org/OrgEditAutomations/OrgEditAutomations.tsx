@@ -46,8 +46,31 @@ import {
   CheckCircle,
   XCircle,
   ExternalLink,
-  Bolt,
 } from 'lucide-react'
+
+// Zapier brand mark — the 8-point orange blossom from Zapier's brand system.
+// Rendered inline so we don't need to ship an image asset, and scales cleanly
+// at any size. Brand color #FF4A00.
+const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
+  size = 20,
+  className,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+  >
+    <g fill="#FF4A00">
+      <ellipse cx="50" cy="50" rx="9" ry="42" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(45 50 50)" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(90 50 50)" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(135 50 50)" />
+    </g>
+  </svg>
+)
 import {
   WebhookEndpoint,
   WebhookEndpointCreated,
@@ -331,47 +354,53 @@ const OrgEditAutomations: React.FC = () => {
       descriptionKey="common.plans.feature_restricted.webhooks.description"
     >
       <>
-        {/* ── Zapier hero card ─────────────────────────────────────── */}
-        <div className="sm:mx-10 mx-0 mb-6 rounded-xl nice-shadow overflow-hidden relative bg-gradient-to-br from-[#FF4F00] to-[#FF7A29] text-white">
-          <div className="px-6 py-5 flex items-start gap-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-white/15 flex items-center justify-center backdrop-blur-sm">
-              <Bolt size={24} className="text-white" fill="white" />
+        {/* ── Zapier hero card (subtle variant) ────────────────────── */}
+        <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
+          <div className="px-5 py-4 flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#FFF5F0] flex items-center justify-center nice-shadow">
+              <ZapierLogo size={22} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="font-bold text-xl tracking-tight">Connect LearnHouse to Zapier</h2>
-                <Badge className="bg-white/20 text-white border-white/30 text-[10px] font-semibold uppercase tracking-wider">
-                  {zapierWebhooks.length} active {zapierWebhooks.length === 1 ? 'Zap' : 'Zaps'}
-                </Badge>
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-gray-800 text-[15px]">Zapier</h2>
+                {zapierWebhooks.length > 0 && (
+                  <Badge className="bg-[#FFF5F0] text-[#FF4A00] border border-[#FFE5D6] text-[10px] font-semibold uppercase tracking-wider hover:bg-[#FFF5F0]">
+                    {zapierWebhooks.length} active {zapierWebhooks.length === 1 ? 'Zap' : 'Zaps'}
+                  </Badge>
+                )}
               </div>
-              <p className="text-white/90 text-sm mb-3 max-w-2xl">
-                Trigger thousands of third-party apps from LearnHouse events — send Slack messages on course completion, add learners to a mailing list on signup, or push enrollment data to your CRM. No code required.
+              <p className="text-gray-500 text-xs mt-0.5">
+                Connect LearnHouse to thousands of apps without writing code.
               </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                <a
-                  href="https://zapier.com/apps/learnhouse/integrations"
-                  target="_blank"
-                  rel="noopener noreferrer"
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <a
+                href="https://zapier.com/app/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-700 text-xs"
+              >
+                Manage Zaps
+              </a>
+              <a
+                href="https://zapier.com/apps/learnhouse/integrations"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
-                  <Button className="bg-white text-[#FF4F00] hover:bg-white/90 font-semibold">
-                    Connect to Zapier
-                    <ExternalLink size={14} className="ml-2" />
-                  </Button>
-                </a>
-                <a
-                  href="https://zapier.com/app/dashboard"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/80 hover:text-white text-sm underline underline-offset-2"
-                >
-                  Manage your Zaps
-                </a>
-              </div>
+                  Connect
+                  <ExternalLink size={12} className="ml-1.5" />
+                </Button>
+              </a>
             </div>
           </div>
 
           {zapierWebhooks.length > 0 && (
-            <div className="bg-black/10 backdrop-blur-sm border-t border-white/10 px-6 py-3">
+            <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/60">
               <div className="space-y-1.5">
                 {zapierWebhooks.map((zap) => (
                   <ZapierRow
@@ -1005,13 +1034,13 @@ const ZapierRow: React.FC<{
 }> = ({ zap, onToggleActive, onDelete, onViewLogs }) => {
   const title = zap.zap_name || zap.description || 'Zapier integration'
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 transition-colors">
+    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-gray-200 transition-colors">
       <Switch checked={zap.is_active} onCheckedChange={onToggleActive} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="font-medium text-sm text-white truncate">{title}</p>
+          <p className="font-medium text-sm text-gray-800 truncate">{title}</p>
           {zap.events[0] && (
-            <code className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white/95 font-mono flex-shrink-0">
+            <code className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono flex-shrink-0">
               {zap.events[0]}
             </code>
           )}
@@ -1022,7 +1051,7 @@ const ZapierRow: React.FC<{
           variant="ghost"
           size="sm"
           onClick={onViewLogs}
-          className="text-white/80 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+          className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0"
           title="View delivery logs"
         >
           <Clock size={14} />
@@ -1031,7 +1060,7 @@ const ZapierRow: React.FC<{
           variant="ghost"
           size="sm"
           onClick={onDelete}
-          className="text-white/80 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+          className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
           title="Disconnect this Zap"
         >
           <Trash2 size={14} />
