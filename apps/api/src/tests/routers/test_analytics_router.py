@@ -188,6 +188,17 @@ class TestAnalyticsHelpers:
         assert enriched[0]["course_name"] == "Course 2"
         assert enriched[0]["activity_name"] == "Activity 1"
 
+    def test_build_sql_validates_parameter_types_and_course_uuid(self):
+        template = "SELECT {org_id} AS org_id, {days} AS days"
+
+        assert analytics_router_module._build_sql(template, 1, 7) == "SELECT 1 AS org_id, 7 AS days"
+
+        with pytest.raises(HTTPException, match="Invalid parameter types"):
+            analytics_router_module._build_sql(template, "bad", 7)
+
+        with pytest.raises(HTTPException, match="Invalid course_uuid"):
+            analytics_router_module._build_sql(template, 1, 7, "bad course")
+
     @pytest.mark.asyncio
     async def test_execute_tinybird_query_cache_and_error_paths(self):
         cached = {"data": [{"ok": True}], "rows": 1, "meta": []}

@@ -226,6 +226,48 @@ class TestImportHelpers:
         assert "Suspicious compression ratio" in compression_exc.value.detail
 
     @pytest.mark.asyncio
+    async def test_analyze_import_package_handles_unexpected_errors(
+        self,
+        db,
+        org,
+        admin_user,
+        mock_request,
+        tmp_path,
+        monkeypatch,
+    ):
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        manifest = {
+            "format": "learnhouse-course-export",
+            "courses": [{"course_uuid": "course-1", "path": "course-1"}],
+        }
+        package_bytes = _zip_bytes(
+            {
+                "manifest.json": json.dumps(manifest).encode(),
+                "course-1/course.json": json.dumps({"course_uuid": "course-1"}).encode(),
+            }
+        )
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.zipfile.ZipFile",
+            side_effect=RuntimeError("zip exploded"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await analyze_import_package(
+                    mock_request,
+                    _upload_file(package_bytes),
+                    org.id,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 500
+        assert "zip exploded" in exc_info.value.detail
+        assert not any(tmp_path.iterdir())
+
+    @pytest.mark.asyncio
     async def test_analyze_import_package_handles_missing_manifest_and_org_rbac_errors(
         self,
         db,
@@ -612,6 +654,44 @@ class TestImportHelpers:
         assert "Failed to upload thumbnail" in exc_info.value.detail
 
     @pytest.mark.asyncio
+    async def test_import_single_course_orders_chapters_before_importing(self, db, org, admin_user, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        course_path = tmp_path / "course-order"
+        chapters_dir = course_path / "chapters"
+        (chapters_dir / "chapter-b").mkdir(parents=True)
+        (chapters_dir / "chapter-a").mkdir(parents=True)
+        (course_path / "course.json").write_text(json.dumps({"name": "Order Test"}))
+        (chapters_dir / "chapter-b" / "chapter.json").write_text(json.dumps({"name": "B", "order": 2}))
+        (chapters_dir / "chapter-a" / "chapter.json").write_text(json.dumps({"name": "A", "order": 1}))
+
+        chapter_calls = []
+
+        async def _fake_import_chapter(**kwargs):
+            chapter_calls.append(kwargs["chapter_data"]["name"])
+            return SimpleNamespace()
+
+        with patch(
+            "src.services.courses.transfer.import_service._import_chapter",
+            side_effect=_fake_import_chapter,
+        ), patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.import_service.uuid4",
+            side_effect=_uuid_factory(),
+        ):
+            await _import_single_course(
+                course_path=str(course_path),
+                organization=org,
+                current_user=admin_user,
+                options=ImportOptions(course_uuids=["course-order"]),
+                db_session=db,
+                new_course_uuid="course-order-new",
+            )
+
+        assert chapter_calls == ["A", "B"]
+
+    @pytest.mark.asyncio
     async def test_import_chapter_orders_activities_and_calls_helper(self, db, org, course, tmp_path):
         chapter_path = tmp_path / "chapter"
         chapter_path.mkdir()
@@ -724,6 +804,78 @@ class TestImportHelpers:
         assert activity.details == {"note": "keep"}
 
     @pytest.mark.asyncio
+    async def test_import_activity_creates_target_dir_without_source_files_and_keeps_bad_json_content(
+        self,
+        db,
+        org,
+        course,
+        chapter,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.chdir(tmp_path)
+        activity_path = tmp_path / "activity-empty"
+        blocks_dir = activity_path / "blocks" / "block-old"
+        blocks_dir.mkdir(parents=True)
+        (blocks_dir / "block.json").write_text(
+            json.dumps({"block_type": "BLOCK_VIDEO", "content": {"file_id": "old-file"}})
+        )
+
+        mock_db_session = MagicMock()
+        original_json_loads = json.loads
+
+        async def _fake_import_block(**kwargs):
+            return "block-new", {
+                "block_uuid": ("block-old", "block-new"),
+                "activity_uuid": ("old-activity", "activity-new"),
+                "file_id": ("old-file", "file-new"),
+            }
+
+        def _loads(text, *args, **kwargs):
+            if '"block_type"' in text:
+                return original_json_loads(text, *args, **kwargs)
+            raise json.JSONDecodeError("boom", text, 0)
+
+        with patch(
+            "src.services.courses.transfer.import_service._import_block",
+            side_effect=_fake_import_block,
+        ), patch(
+            "src.services.courses.transfer.import_service.json.loads",
+            side_effect=_loads,
+        ), patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=False,
+        ):
+            activity = await _import_activity(
+                activity_path=str(activity_path),
+                activity_data={
+                    "name": "Activity",
+                    "activity_type": "TYPE_DYNAMIC",
+                    "activity_sub_type": "SUBTYPE_DYNAMIC_PAGE",
+                    "content": {
+                        "block": "block-old",
+                        "file_id": "old-file",
+                        "activity_uuid": "old-activity",
+                    },
+                    "details": {"note": "keep"},
+                    "published": False,
+                    "order": 1,
+                },
+                new_course=SimpleNamespace(id=course.id),
+                new_chapter=SimpleNamespace(id=chapter.id),
+                new_course_path="content/orgs/org_test/courses/course_new",
+                organization=org,
+                db_session=mock_db_session,
+            )
+
+        assert activity.content == {
+            "block": "block-old",
+            "file_id": "old-file",
+            "activity_uuid": "old-activity",
+        }
+        assert (tmp_path / "content/orgs/org_test/courses/course_new/activities").exists()
+
+    @pytest.mark.asyncio
     async def test_import_block_renames_files_and_updates_references(
         self,
         db,
@@ -778,6 +930,40 @@ class TestImportHelpers:
         assert files[0] != "asset.txt"
 
     @pytest.mark.asyncio
+    async def test_import_block_uses_custom_type_for_invalid_block_type(
+        self,
+        db,
+        org,
+        course,
+        chapter,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.chdir(tmp_path)
+        new_block_uuid, content_updates = await _import_block(
+            block_data={"block_type": "not-a-real-type", "content": {}},
+            original_block_uuid="block-old",
+            new_activity=SimpleNamespace(id=1, activity_uuid="activity-new"),
+            new_activity_path=str(
+                tmp_path
+                / "content"
+                / "orgs"
+                / org.org_uuid
+                / "courses"
+                / "course_new"
+                / "activities"
+                / "activity_new"
+            ),
+            new_course=SimpleNamespace(id=course.id),
+            new_chapter=SimpleNamespace(id=chapter.id),
+            organization=org,
+            db_session=db,
+        )
+
+        assert new_block_uuid.startswith("block_")
+        assert content_updates["block_uuid"] == ("block-old", new_block_uuid)
+
+    @pytest.mark.asyncio
     async def test_import_block_raises_when_uploading_renamed_file_fails(
         self,
         db,
@@ -820,6 +1006,57 @@ class TestImportHelpers:
 
         assert exc_info.value.status_code == 500
         assert "Failed to upload block file" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_import_block_deletes_old_s3_key_after_renaming_block_file(
+        self,
+        db,
+        org,
+        course,
+        chapter,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.chdir(tmp_path)
+        new_activity_path = tmp_path / "content" / "orgs" / org.org_uuid / "courses" / "course_new" / "activities" / "activity_new"
+        original_block_dir = new_activity_path / "dynamic" / "blocks" / "videoBlock" / "block-old"
+        original_block_dir.mkdir(parents=True)
+        (original_block_dir / "asset.txt").write_bytes(b"asset")
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.import_service.upload_file_to_s3",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.import_service.delete_storage_file"
+        ) as delete_storage_file, patch(
+            "src.services.courses.transfer.import_service.uuid4",
+            side_effect=_uuid_factory(),
+        ):
+            new_block_uuid, content_updates = await _import_block(
+                block_data={
+                    "block_type": "BLOCK_VIDEO",
+                    "content": {
+                        "file_id": "old-file",
+                        "activity_uuid": "old-activity",
+                    },
+                },
+                original_block_uuid="block-old",
+                new_activity=SimpleNamespace(id=1, activity_uuid="activity-new"),
+                new_activity_path=str(new_activity_path),
+                new_course=SimpleNamespace(id=course.id),
+                new_chapter=SimpleNamespace(id=chapter.id),
+                organization=org,
+                db_session=db,
+            )
+
+        assert content_updates["file_id"][0] == "old-file"
+        delete_storage_file.assert_called_once_with(
+            f"{new_activity_path}/dynamic/blocks/videoBlock/block-old/asset.txt"
+        )
+        assert (new_activity_path / "dynamic" / "blocks" / "videoBlock" / new_block_uuid).exists()
 
     @pytest.mark.parametrize(
         "block_type, expected_folder",

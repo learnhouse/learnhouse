@@ -1,7 +1,8 @@
 """Tests for src/services/orgs/join.py."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -109,6 +110,67 @@ class TestOrgJoinService:
             )
         ).first()
         assert row is not None
+
+    @pytest.mark.asyncio
+    async def test_join_org_open_success_uses_user_uuid_lookup(self, mock_request, db, org):
+        user = _make_user(db, id=15, user_uuid="user_15")
+        _make_org_config(db, org, signup_mode="open", version="1.0")
+
+        with patch(
+            "src.services.orgs.join.check_limits_with_usage"
+        ), patch(
+            "src.services.orgs.join.get_org_join_mechanism",
+            new=AsyncMock(return_value="open"),
+        ), patch(
+            "src.services.orgs.join.increase_feature_usage"
+        ), patch(
+            "src.routers.users._invalidate_session_cache"
+        ):
+            result = await join_org(
+                mock_request,
+                JoinOrg(org_id=org.id, user_id=user.user_uuid),
+                user,
+                db,
+            )
+
+        assert result == "Great, You're part of the Organization"
+
+    @pytest.mark.asyncio
+    async def test_join_org_user_not_found(self, mock_request, db, org):
+        _make_org_config(db, org, signup_mode="open", version="1.0")
+
+        with patch(
+            "src.services.orgs.join.check_limits_with_usage"
+        ), patch(
+            "src.services.orgs.join.get_org_join_mechanism",
+            new=AsyncMock(return_value="open"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await join_org(
+                    mock_request,
+                    JoinOrg(org_id=org.id, user_id="missing-user"),
+                    _make_user(db, id=16, user_uuid="user_16"),
+                    db,
+                )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_join_org_missing_org(self, mock_request, db, anonymous_user):
+        mock_db = Mock()
+        mock_db.exec.return_value.first.return_value = None
+
+        with patch("src.services.orgs.join.check_limits_with_usage") as mock_limits:
+            with pytest.raises(HTTPException) as exc_info:
+                await join_org(
+                    mock_request,
+                    JoinOrg(org_id=999, user_id="user_1"),
+                    anonymous_user,
+                    mock_db,
+                )
+
+        assert exc_info.value.status_code == 404
+        mock_limits.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_join_org_invite_only_success_with_usergroup(
@@ -248,3 +310,50 @@ class TestOrgJoinService:
                     db,
                 )
         assert denied_exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_join_org_invite_only_missing_ids_and_open_missing_ids(
+        self, mock_request, org, anonymous_user
+    ):
+        invite_db = Mock()
+        invite_db.exec.side_effect = [
+            SimpleNamespace(first=lambda: org),
+            SimpleNamespace(first=lambda: SimpleNamespace(id=None, email_verified=True)),
+            SimpleNamespace(first=lambda: None),
+        ]
+        open_db = Mock()
+        open_db.exec.side_effect = [
+            SimpleNamespace(first=lambda: org),
+            SimpleNamespace(first=lambda: SimpleNamespace(id=None, email_verified=True)),
+            SimpleNamespace(first=lambda: None),
+        ]
+
+        with patch(
+            "src.services.orgs.join.check_limits_with_usage"
+        ), patch(
+            "src.services.orgs.join.get_org_join_mechanism",
+            new=AsyncMock(return_value="inviteOnly"),
+        ):
+            with pytest.raises(HTTPException) as invite_exc:
+                await join_org(
+                    mock_request,
+                    JoinOrg(org_id=org.id, user_id="user_17", invite_code="ABC"),
+                    anonymous_user,
+                    invite_db,
+                )
+        assert invite_exc.value.status_code == 403
+
+        with patch(
+            "src.services.orgs.join.check_limits_with_usage"
+        ), patch(
+            "src.services.orgs.join.get_org_join_mechanism",
+            new=AsyncMock(return_value="open"),
+        ):
+            with pytest.raises(HTTPException) as open_exc:
+                await join_org(
+                    mock_request,
+                    JoinOrg(org_id=org.id, user_id="user_18"),
+                    anonymous_user,
+                    open_db,
+                )
+        assert open_exc.value.status_code == 403

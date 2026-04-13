@@ -53,6 +53,18 @@ def _make_response(
     return response
 
 
+class _FakeSoup:
+    def __init__(self, *, title_text=None, links=None):
+        self.title = SimpleNamespace(string=title_text) if title_text is not None else None
+        self._links = links or []
+
+    def find(self, *_args, **_kwargs):
+        return None
+
+    def find_all(self, *_args, **_kwargs):
+        return self._links
+
+
 @pytest.mark.asyncio
 async def test_fetch_link_preview_success_with_redirect_and_relative_assets():
     redirect_url = "https://example.com/final"
@@ -106,6 +118,59 @@ async def test_fetch_link_preview_success_with_redirect_and_relative_assets():
     assert mock_validate.call_args_list[0].args == ("https://example.com/start",)
     assert mock_validate.call_args_list[1].args == (redirect_url,)
     assert mock_peer_allowed.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_breaks_when_redirect_has_no_next_request():
+    response = _make_response(
+        is_redirect=True,
+        html="<html><head><title>Loop</title></head></html>",
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ) as mock_peer_allowed, patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result["title"] == "Loop"
+    assert result["favicon"] == "https://example.com/favicon.ico"
+    assert fake_client.requested_urls == ["https://example.com/page"]
+    mock_peer_allowed.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_blocks_redirect_url_validation_errors():
+    redirect_url = "https://example.com/blocked"
+    response = _make_response(
+        is_redirect=True,
+        next_request_url=redirect_url,
+        html="<html><head><title>Redirect</title></head></html>",
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        side_effect=[{"93.184.216.34"}, SSRFBlockedError("blocked redirect URL")],
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ) as mock_peer_allowed, patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await fetch_link_preview("https://example.com/page")
+
+    assert exc_info.value.status_code == 400
+    assert "blocked redirect URL" in exc_info.value.detail
+    assert fake_client.requested_urls == ["https://example.com/page"]
+    mock_peer_allowed.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -233,6 +298,31 @@ async def test_fetch_link_preview_blocks_redirect_peer_validation_and_fallback_f
 
     assert exc_info.value.status_code == 400
     assert "blocked redirect peer" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_skips_non_tag_links_when_discovering_favicon():
+    response = _make_response(
+        html="<html><head><title>Title</title></head><body></body></html>",
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ), patch(
+        "src.services.utils.link_preview.BeautifulSoup",
+        return_value=_FakeSoup(title_text="Title", links=[object()]),
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result["title"] == "Title"
+    assert result["favicon"] == "https://example.com/favicon.ico"
 
 
 @pytest.mark.asyncio

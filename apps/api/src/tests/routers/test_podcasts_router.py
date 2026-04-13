@@ -146,3 +146,11 @@ class TestPodcastsRouter:
         with patch("src.routers.podcasts.episodes.upload_episode_thumbnail_file", new_callable=AsyncMock, return_value=_mock_episode(thumbnail_image="thumb.png")):
             response = await client.put("/api/v1/podcasts/episodes/episode_test/thumbnail", files={"thumbnail": ("t.png", b"img", "image/png")})
         assert response.status_code == 200
+
+    async def test_episode_endpoints_missing_podcast(self, client, db):
+        with patch.object(db, "exec") as mock_exec:
+            mock_exec.return_value.first.return_value = None
+            response = await client.get("/api/v1/podcasts/podcast_missing/episodes")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Podcast not found"

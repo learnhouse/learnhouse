@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,7 +12,7 @@ from httpx import ASGITransport, AsyncClient
 from src.core.events.database import get_db_session
 from src.db.courses.course_updates import CourseUpdateRead
 from src.db.courses.courses import CourseRead, FullCourseRead, ThumbnailType
-from src.routers.courses.courses import router as courses_router
+from src.routers.courses.courses import BatchExportRequest, ImportRequest, router as courses_router
 from src.security.auth import get_current_user
 from src.security.features_utils.dependencies import require_courses_feature
 from src.services.courses.transfer.models import ImportAnalysisResponse, ImportCourseInfo, ImportCourseResult, ImportResult
@@ -175,6 +176,24 @@ class TestGetCoursesCount:
 
 
 class TestImportExportEndpoints:
+    def test_batch_export_request_validation(self):
+        too_many_course_uuids = [str(uuid.uuid4()) for _ in range(21)]
+
+        with pytest.raises(ValueError, match="Maximum 20 courses"):
+            BatchExportRequest(course_uuids=too_many_course_uuids)
+
+        with pytest.raises(ValueError, match="At least one course UUID"):
+            BatchExportRequest(course_uuids=[])
+
+    def test_import_request_validation(self):
+        too_many_course_uuids = [str(uuid.uuid4()) for _ in range(21)]
+
+        with pytest.raises(ValueError, match="Maximum 20 courses"):
+            ImportRequest(temp_id="temp", course_uuids=too_many_course_uuids)
+
+        with pytest.raises(ValueError, match="At least one course UUID"):
+            ImportRequest(temp_id="temp", course_uuids=[])
+
     async def test_export_courses_batch(self, client):
         zip_path = _temp_zip_file()
         try:
