@@ -57,6 +57,7 @@ class TestImportHelpers:
         assert not validate_zip(b"nope")
         assert sanitize_path("/%2e%2e/course//chapters/../activity/file.txt") == "course/chapters/activity/file.txt"
         assert sanitize_path("../..//evil\x00/path") == "evil/path"
+        assert sanitize_path("..") == ""
 
     @pytest.mark.asyncio
     async def test_analyze_import_package_success(self, db, org, admin_user, mock_request, tmp_path, monkeypatch):
@@ -218,6 +219,48 @@ class TestImportHelpers:
         assert "Suspicious compression ratio" in compression_exc.value.detail
 
     @pytest.mark.asyncio
+    async def test_analyze_import_package_handles_missing_manifest_and_org_rbac_errors(
+        self,
+        db,
+        org,
+        admin_user,
+        mock_request,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        package_bytes = _zip_bytes({"course-1/course.json": b"{}"})
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.os.unlink"
+        ):
+            with pytest.raises(HTTPException) as manifest_exc:
+                await analyze_import_package(
+                    mock_request,
+                    _upload_file(package_bytes),
+                    org.id,
+                    admin_user,
+                    db,
+                )
+
+        assert manifest_exc.value.status_code == 400
+        assert "manifest.json not found" in manifest_exc.value.detail
+
+        with pytest.raises(HTTPException) as org_exc:
+            await analyze_import_package(
+                mock_request,
+                _upload_file(package_bytes),
+                999,
+                admin_user,
+                db,
+            )
+
+        assert org_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
     async def test_analyze_import_package_missing_org(self, db, mock_request, tmp_path, monkeypatch):
         monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
         with pytest.raises(HTTPException) as exc_info:
@@ -298,6 +341,126 @@ class TestImportHelpers:
         increase_usage.assert_called_once_with("courses", org.id, db)
         delete_storage_directory.assert_called_once()
         assert not os.path.exists(tmp_path / f"{temp_id}-importing")
+
+    @pytest.mark.asyncio
+    async def test_import_courses_handles_missing_org_and_path_errors(
+        self,
+        db,
+        org,
+        admin_user,
+        mock_request,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        with pytest.raises(HTTPException) as org_exc:
+            await import_courses(
+                mock_request,
+                "missing-temp",
+                999,
+                ImportOptions(course_uuids=["course-1"]),
+                admin_user,
+                db,
+            )
+        assert org_exc.value.status_code == 404
+
+        temp_id = "temp-failed"
+        work_dir = tmp_path / f"{temp_id}-importing"
+        extracted_dir = work_dir / "extracted"
+        extracted_dir.mkdir(parents=True)
+        (extracted_dir / "manifest.json").write_text(
+            json.dumps({"courses": [{"course_uuid": "course-1", "path": "course-1"}]})
+        )
+        (tmp_path / temp_id).mkdir()
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.os.rename",
+            side_effect=OSError("busy"),
+        ):
+            with pytest.raises(HTTPException) as locked_exc:
+                await import_courses(
+                    mock_request,
+                    temp_id,
+                    org.id,
+                    ImportOptions(course_uuids=["course-1"]),
+                    admin_user,
+                    db,
+                )
+
+        assert locked_exc.value.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_import_single_course_handles_invalid_thumbnail_and_s3_block_copy(
+        self,
+        db,
+        org,
+        admin_user,
+        tmp_path,
+        monkeypatch,
+    ):
+        monkeypatch.chdir(tmp_path)
+        course_path = tmp_path / "course-invalid"
+        thumbnails_dir = course_path / "thumbnails"
+        thumbnails_dir.mkdir(parents=True)
+        (course_path / "course.json").write_text(
+            json.dumps({"name": "Course", "thumbnail_type": "not-valid", "thumbnail_image": "thumb.png"})
+        )
+        (thumbnails_dir / "thumb.png").write_bytes(b"thumb")
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.import_service.upload_file_to_s3",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.import_service.uuid4",
+            side_effect=_uuid_factory(),
+        ):
+            course = await _import_single_course(
+                course_path=str(course_path),
+                organization=org,
+                current_user=admin_user,
+                options=ImportOptions(course_uuids=["course-invalid"]),
+                db_session=db,
+                new_course_uuid="course-invalid-new",
+            )
+
+        assert course.thumbnail_type == ThumbnailType.IMAGE
+
+        with patch(
+            "src.services.courses.transfer.import_service.is_s3_enabled",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.import_service.upload_directory_to_s3",
+            return_value=False,
+        ):
+            activity_path = tmp_path / "activity-s3"
+            files_dir = activity_path / "files"
+            files_dir.mkdir(parents=True)
+            (activity_path / "blocks").mkdir()
+            (activity_path / "activity.json").write_text("{}")
+
+            with pytest.raises(HTTPException) as upload_exc:
+                await _import_activity(
+                    activity_path=str(activity_path),
+                    activity_data={
+                        "name": "A",
+                        "activity_type": "TYPE_DYNAMIC",
+                        "activity_sub_type": "SUBTYPE_DYNAMIC_PAGE",
+                    },
+                    new_course=SimpleNamespace(id=1),
+                    new_chapter=SimpleNamespace(id=1),
+                    new_course_path="content/orgs/org_test/courses/course_new",
+                    organization=org,
+                    db_session=db,
+                )
+
+        assert upload_exc.value.status_code == 500
+        assert "Failed to upload activity files" in upload_exc.value.detail
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

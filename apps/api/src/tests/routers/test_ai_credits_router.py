@@ -7,7 +7,11 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
-from src.routers.orgs.ai_credits import router as ai_credits_router
+from src.routers.orgs.ai_credits import (
+    router as ai_credits_router,
+    verify_user_is_org_admin,
+    verify_user_is_org_member,
+)
 from src.security.auth import get_current_user
 
 
@@ -30,6 +34,27 @@ async def client(app):
 
 
 class TestAICreditsRouter:
+    async def test_org_member_and_admin_wrappers(self, db, org):
+        with patch(
+            "src.routers.orgs.ai_credits.is_org_member",
+            return_value=True,
+        ), patch(
+            "src.routers.orgs.ai_credits.is_org_admin",
+            return_value=True,
+        ):
+            assert await verify_user_is_org_member(1, 1, db)
+            assert await verify_user_is_org_admin(1, 1, db)
+
+        with patch(
+            "src.routers.orgs.ai_credits.is_org_member",
+            return_value=False,
+        ), patch(
+            "src.routers.orgs.ai_credits.is_org_admin",
+            return_value=False,
+        ):
+            assert not await verify_user_is_org_member(1, 1, db)
+            assert not await verify_user_is_org_admin(1, 1, db)
+
     async def test_get_org_ai_credits_success_and_summary_error(
         self, client, org
     ):
@@ -114,6 +139,17 @@ class TestAICreditsRouter:
         )
         assert response.status_code == 404
 
+        with patch(
+            "src.routers.orgs.ai_credits.verify_user_is_org_admin",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            response = await client.post(
+                f"/api/v1/orgs/{org.id}/ai-credits/add",
+                json={"amount": 10},
+            )
+        assert response.status_code == 403
+
     async def test_reset_org_ai_credits_success_and_forbidden(self, client, org):
         with patch(
             "src.routers.orgs.ai_credits.verify_user_is_org_admin",
@@ -134,3 +170,5 @@ class TestAICreditsRouter:
 
         assert response.status_code == 403
 
+        response = await client.post("/api/v1/orgs/9999/ai-credits/reset")
+        assert response.status_code == 404

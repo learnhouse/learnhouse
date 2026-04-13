@@ -42,3 +42,19 @@ def test_get_password_requirements_returns_expected_items():
         "has_special",
     ]
     assert requirements[-1]["description"].startswith("At least one special character")
+
+
+def test_validate_password_complexity_flags_missing_lowercase_only():
+    result = validate_password_complexity("UPPER123!")
+
+    assert result.is_valid is False
+    assert result.requirements == {
+        "min_length": True,
+        "has_uppercase": True,
+        "has_lowercase": False,
+        "has_number": True,
+        "has_special": True,
+    }
+    assert result.errors == [
+        "Password must contain at least one lowercase letter",
+    ]
