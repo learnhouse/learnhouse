@@ -199,3 +199,63 @@ async def test_fetch_link_preview_rejects_oversized_responses():
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Response too large"
 
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_blocks_redirect_peer_validation_and_fallback_favicon():
+    redirect_url = "https://example.com/redirected"
+    response = _make_response(
+        is_redirect=True,
+        next_request_url=redirect_url,
+        html="<html><head><title>Redirect</title></head></html>",
+    )
+    fake_client = _FakeAsyncClient(
+        [
+            response,
+            _make_response(
+                url=redirect_url,
+                html="<html><head><title>Redirected</title></head></html>",
+            ),
+        ]
+    )
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        side_effect=[{"93.184.216.34"}, {"93.184.216.34"}],
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed",
+        side_effect=[None, SSRFBlockedError("blocked redirect peer")],
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await fetch_link_preview("https://example.com/page")
+
+    assert exc_info.value.status_code == 400
+    assert "blocked redirect peer" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_fetch_link_preview_uses_fallback_favicon_for_relative_icon():
+    response = _make_response(
+        html=(
+            "<html><head>"
+            "<title>Title</title>"
+            '<link rel="icon" href="/favicon-alt.ico">'
+            "</head></html>"
+        )
+    )
+    fake_client = _FakeAsyncClient([response])
+
+    with patch(
+        "src.services.utils.link_preview.resolve_and_validate_url",
+        return_value={"93.184.216.34"},
+    ), patch(
+        "src.services.utils.link_preview.assert_connected_peer_allowed"
+    ), patch(
+        "src.services.utils.link_preview.httpx.AsyncClient",
+        return_value=fake_client,
+    ):
+        result = await fetch_link_preview("https://example.com/page")
+
+    assert result["favicon"] == "https://example.com/favicon-alt.ico"

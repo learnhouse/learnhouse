@@ -1,6 +1,6 @@
 """Router tests for src/routers/auth.py."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -143,6 +143,40 @@ class TestAuthHelpers:
         with patch("src.routers.auth.isDevModeEnabled", return_value=True):
             assert get_token_expiry_ms() is None
 
+    def test_get_token_expiry_ms_uses_expiry_window(self):
+        fixed_now = datetime(2026, 1, 1, 12, 0, 0, tzinfo=datetime.now().astimezone().tzinfo)
+        with patch("src.routers.auth.isDevModeEnabled", return_value=False), patch(
+            "src.routers.auth.JWT_ACCESS_TOKEN_EXPIRES",
+            timedelta(minutes=15),
+        ), patch("src.routers.auth.datetime") as datetime_mock:
+            datetime_mock.now.return_value = fixed_now
+            expiry_ms = get_token_expiry_ms()
+
+        assert expiry_ms == int((fixed_now + timedelta(minutes=15)).timestamp() * 1000)
+
+    def test_cookie_domain_and_secure_fallback_branches(self):
+        empty_request = Mock()
+        empty_request.headers = {}
+
+        invalid_ip_request = Mock()
+        invalid_ip_request.client = SimpleNamespace(host="not-an-ip")
+        invalid_ip_request.headers = {}
+        invalid_ip_request.url = SimpleNamespace(scheme="http")
+
+        http_proxy_request = Mock()
+        http_proxy_request.client = SimpleNamespace(host="127.0.0.1")
+        http_proxy_request.headers = {"x-forwarded-proto": "http"}
+        http_proxy_request.url = SimpleNamespace(scheme="https")
+
+        with patch("src.routers.auth.get_learnhouse_config", return_value=_mock_config()), patch(
+            "src.routers.auth.isDevModeEnabled",
+            return_value=False,
+        ):
+            assert get_cookie_domain_for_request(empty_request) == ".learnhouse.test"
+            assert is_request_secure(None) is True
+            assert is_request_secure(invalid_ip_request) is True
+            assert is_request_secure(http_proxy_request) is False
+
 
 class TestAuthRouter:
     async def test_refresh_success(self, client):
@@ -172,6 +206,21 @@ class TestAuthRouter:
 
         assert response.status_code == 200
         assert response.json()["access_token"] == "new-access-token"
+
+    async def test_refresh_invalid_token(self, client):
+        with patch(
+            "src.routers.auth.check_refresh_rate_limit",
+            return_value=(True, None),
+        ), patch(
+            "src.routers.auth.decode_refresh_token",
+            return_value=None,
+        ):
+            response = await client.get(
+                "/api/v1/auth/refresh",
+                cookies={JWT_REFRESH_COOKIE_NAME: "refresh-token"},
+            )
+
+        assert response.status_code == 401
 
     async def test_refresh_rate_limited_and_missing_token(self, client):
         with patch(
@@ -265,6 +314,52 @@ class TestAuthRouter:
             )
         assert response.status_code == 403
 
+    async def test_login_rate_limited_and_account_locked(self, client, auth_user):
+        with patch(
+            "src.routers.auth.check_login_rate_limit",
+            return_value=(False, 120),
+        ):
+            response = await client.post(
+                "/api/v1/auth/login",
+                data={"username": auth_user.email, "password": "secret"},
+            )
+        assert response.status_code == 429
+
+        with patch(
+            "src.routers.auth.check_login_rate_limit",
+            return_value=(True, None),
+        ), patch(
+            "src.routers.auth.check_account_locked",
+            return_value=(True, 90),
+        ):
+            response = await client.post(
+                "/api/v1/auth/login",
+                data={"username": auth_user.email, "password": "secret"},
+            )
+        assert response.status_code == 423
+
+    async def test_login_failed_attempt_locks_account(self, client, auth_user):
+        with patch(
+            "src.routers.auth.check_login_rate_limit",
+            return_value=(True, None),
+        ), patch(
+            "src.routers.auth.check_account_locked",
+            return_value=(False, None),
+        ), patch(
+            "src.routers.auth.authenticate_user",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.routers.auth.record_failed_login",
+            return_value=(True, 120),
+        ):
+            response = await client.post(
+                "/api/v1/auth/login",
+                data={"username": auth_user.email, "password": "bad"},
+            )
+
+        assert response.status_code == 423
+
     async def test_oauth_logout_and_email_endpoints(self, client, auth_user):
         with patch(
             "src.routers.auth.signWithGoogle",
@@ -326,6 +421,23 @@ class TestAuthRouter:
                 json={"email": auth_user.email, "org_id": 1},
             )
         assert response.status_code == 200
+
+    async def test_oauth_failure_path(self, client):
+        with patch(
+            "src.routers.auth.signWithGoogle",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                json={
+                    "email": "missing@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+
+        assert response.status_code == 401
 
     async def test_verify_email_rate_limited_and_logout_unauthenticated(self, client):
         with patch(

@@ -179,6 +179,27 @@ class TestCreateCertification:
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
+    @pytest.mark.asyncio
+    async def test_create_certification_rbac_failure_bubbles(
+        self, db, course, admin_user, mock_request
+    ):
+        certification_object = CertificationCreate(course_id=course.id, config={})
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await create_certification(
+                    mock_request,
+                    certification_object,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 403
+
 
 class TestGetCertification:
     @pytest.mark.asyncio
@@ -255,6 +276,27 @@ class TestGetCertification:
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
+    @pytest.mark.asyncio
+    async def test_get_certification_rbac_failure_bubbles(
+        self, db, course, admin_user, mock_request
+    ):
+        certification = _create_certification(db, course, cert_uuid="cert_get_denied")
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_certification(
+                    mock_request,
+                    certification.certification_uuid,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 403
+
 
 class TestGetCertificationsByCourse:
     @pytest.mark.asyncio
@@ -307,6 +349,20 @@ class TestGetCertificationsByCourse:
             )
 
         assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_certifications_by_course_missing_course(
+        self, db, admin_user, mock_request
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await get_certifications_by_course(
+                mock_request,
+                "missing-course",
+                admin_user,
+                db,
+            )
+
+        assert exc_info.value.status_code == 404
 
 
 class TestUpdateCertification:
@@ -397,6 +453,32 @@ class TestUpdateCertification:
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
+    @pytest.mark.asyncio
+    async def test_update_certification_rbac_failure_bubbles(
+        self, db, course, admin_user, mock_request
+    ):
+        certification = _create_certification(
+            db,
+            course,
+            cert_uuid="cert_update_denied",
+        )
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await update_certification(
+                    mock_request,
+                    certification.certification_uuid,
+                    CertificationUpdate(config={"template": "new"}),
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 403
+
 
 class TestDeleteCertification:
     @pytest.mark.asyncio
@@ -476,6 +558,31 @@ class TestDeleteCertification:
 
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_delete_certification_rbac_failure_bubbles(
+        self, db, course, admin_user, mock_request
+    ):
+        certification = _create_certification(
+            db,
+            course,
+            cert_uuid="cert_delete_denied",
+        )
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await delete_certification(
+                    mock_request,
+                    certification.certification_uuid,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 403
 
 
 class TestCreateCertificateUser:
@@ -625,6 +732,112 @@ class TestCreateCertificateUser:
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_rbac_failure_bubbles(
+        self, db, course, admin_user, regular_user, mock_request
+    ):
+        certification = _create_certification(db, course, cert_uuid="cert_claim_denied")
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await create_certificate_user(
+                    mock_request,
+                    regular_user.id,
+                    certification.id,
+                    db,
+                    current_user=admin_user,
+                )
+
+        assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_missing_certification(
+        self, db, mock_request, regular_user
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await create_certificate_user(
+                mock_request,
+                regular_user.id,
+                9999,
+                db,
+                current_user=None,
+            )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_tracks_failures_are_swallowed(
+        self, db, course, admin_user, regular_user, mock_request
+    ):
+        certification = _create_certification(db, course, cert_uuid="cert_claim_track")
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.certifications.track",
+            new_callable=AsyncMock,
+            side_effect=Exception("boom"),
+        ), patch(
+            "src.services.courses.certifications.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks:
+            result = await create_certificate_user(
+                mock_request,
+                regular_user.id,
+                certification.id,
+                db,
+                current_user=admin_user,
+            )
+
+        assert result.certification_id == certification.id
+        mock_webhooks.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_missing_user_uuid_falls_back_to_user(
+        self, db, course, admin_user, mock_request
+    ):
+        certification = _create_certification(db, course, cert_uuid="cert_claim_fallback")
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.certifications.track",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.certifications.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            result = await create_certificate_user(
+                mock_request,
+                admin_user.id,
+                certification.id,
+                db,
+                current_user=admin_user,
+            )
+
+        assert result.user_certification_uuid.split("-")[2] == admin_user.user_uuid[-4:]
+
+    @pytest.mark.asyncio
+    async def test_create_certificate_user_missing_user_without_current_user_404(
+        self, db, mock_request
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await create_certificate_user(
+                mock_request,
+                9999,
+                9999,
+                db,
+                current_user=None,
+            )
+
+        assert exc_info.value.status_code == 404
+
 
 class TestUserCertificatesForCourse:
     @pytest.mark.asyncio
@@ -679,6 +892,55 @@ class TestUserCertificatesForCourse:
             )
 
         assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_user_certificates_for_course_no_certification_ids(
+        self, db, course, regular_user, mock_request
+    ):
+        certification = Certifications(
+            id=0,
+            course_id=course.id,
+            config={},
+            certification_uuid="cert_zero_id",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(certification)
+        db.commit()
+        _create_certificate_user(
+            db,
+            certification,
+            regular_user,
+            cert_user_id=2,
+            user_certification_uuid="AB-20240101-TEST-002",
+        )
+
+        with patch(
+            "src.services.courses.certifications.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await get_user_certificates_for_course(
+                mock_request,
+                course.course_uuid,
+                regular_user,
+                db,
+            )
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_user_certificates_for_course_missing_course(
+        self, db, regular_user, mock_request
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await get_user_certificates_for_course(
+                mock_request,
+                "missing-course",
+                regular_user,
+                db,
+            )
+
+        assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_user_certificates_for_course_no_certificate_users(
@@ -781,6 +1043,112 @@ class TestCompletionHelpers:
 
         assert result is False
 
+    @pytest.mark.asyncio
+    async def test_check_course_completion_and_create_certificate_missing_certification(
+        self, db, course, org, regular_user, activity, mock_request
+    ):
+        _create_trail_complete_graph(db, org, course, regular_user)
+        trail_step = TrailStep(
+            complete=True,
+            teacher_verified=False,
+            grade="",
+            data={},
+            trailrun_id=1,
+            trail_id=1,
+            activity_id=activity.id,
+            course_id=course.id,
+            org_id=org.id,
+            user_id=regular_user.id,
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail_step)
+        db.commit()
+
+        result = await check_course_completion_and_create_certificate(
+            mock_request,
+            regular_user.id,
+            course.id,
+            db,
+        )
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_check_course_completion_and_create_certificate_reraises_http_error(
+        self, db, course, org, regular_user, activity, mock_request
+    ):
+        _create_certification(db, course, cert_uuid="cert_completion_bubbles")
+        _create_trail_complete_graph(db, org, course, regular_user)
+        trail_step = TrailStep(
+            complete=True,
+            teacher_verified=False,
+            grade="",
+            data={},
+            trailrun_id=1,
+            trail_id=1,
+            activity_id=activity.id,
+            course_id=course.id,
+            org_id=org.id,
+            user_id=regular_user.id,
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail_step)
+        db.commit()
+
+        with patch(
+            "src.services.courses.certifications.create_certificate_user",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=500, detail="boom"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await check_course_completion_and_create_certificate(
+                    mock_request,
+                    regular_user.id,
+                    course.id,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_check_course_completion_and_create_certificate_duplicate_certificate(
+        self, db, course, org, regular_user, mock_request
+    ):
+        certification = _create_certification(
+            db,
+            course,
+            cert_uuid="cert_completion_duplicate",
+        )
+        _create_trail_complete_graph(db, org, course, regular_user)
+        trail_step = TrailStep(
+            complete=True,
+            teacher_verified=False,
+            grade="",
+            data={},
+            trailrun_id=1,
+            trail_id=1,
+            activity_id=1,
+            course_id=course.id,
+            org_id=org.id,
+            user_id=regular_user.id,
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(trail_step)
+        db.commit()
+        _create_certificate_user(db, certification, regular_user)
+
+        result = await check_course_completion_and_create_certificate(
+            mock_request,
+            regular_user.id,
+            course.id,
+            db,
+        )
+
+        assert result is False
+
 
 class TestCertificateLookup:
     @pytest.mark.asyncio
@@ -855,6 +1223,29 @@ class TestCertificateLookup:
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
+    @pytest.mark.asyncio
+    async def test_get_certificate_by_user_certification_uuid_missing_certification(
+        self, db, course, regular_user, mock_request
+    ):
+        certification = _create_certification(
+            db,
+            course,
+            cert_uuid="cert_lookup_missing_cert",
+        )
+        certificate_user = _create_certificate_user(db, certification, regular_user)
+        db.delete(db.get(Certifications, certification.id))
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_certificate_by_user_certification_uuid(
+                mock_request,
+                certificate_user.user_certification_uuid,
+                regular_user,
+                db,
+            )
+
+        assert exc_info.value.status_code == 404
+
 
 class TestGetAllUserCertificates:
     @pytest.mark.asyncio
@@ -887,6 +1278,67 @@ class TestGetAllUserCertificates:
         result = await get_all_user_certificates(
             mock_request,
             admin_user,
+            db,
+        )
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_all_user_certificates_missing_relations(
+        self, db, course, regular_user, mock_request
+    ):
+        orphan_cert = Certifications(
+            id=1,
+            course_id=0,
+            config={},
+            certification_uuid="cert_no_course",
+            creation_date="2024-01-01T00:00:00",
+            update_date="2024-01-01T00:00:00",
+        )
+        db.add(orphan_cert)
+        db.commit()
+        _create_certificate_user(
+            db,
+            orphan_cert,
+            regular_user,
+            cert_user_id=3,
+            user_certification_uuid="AB-20240101-TEST-003",
+        )
+        orphan_link = CertificateUser(
+            id=4,
+            user_id=regular_user.id,
+            certification_id=9999,
+            user_certification_uuid="AB-20240101-TEST-999",
+            created_at="2024-01-01T00:00:00",
+            updated_at="2024-01-01T00:00:00",
+        )
+        db.add(orphan_link)
+        db.commit()
+
+        result = await get_all_user_certificates(
+            mock_request,
+            regular_user,
+            db,
+        )
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_all_user_certificates_missing_course_or_certification(
+        self, db, course, regular_user, mock_request
+    ):
+        certification = _create_certification(
+            db,
+            course,
+            cert_uuid="cert_all_missing_course",
+        )
+        _create_certificate_user(db, certification, regular_user)
+        db.delete(db.get(Course, course.id))
+        db.commit()
+
+        result = await get_all_user_certificates(
+            mock_request,
+            regular_user,
             db,
         )
 

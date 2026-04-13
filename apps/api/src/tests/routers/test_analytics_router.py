@@ -76,12 +76,16 @@ class TestAnalyticsHelpers:
         request = SimpleNamespace(query_params={"days": "14"})
         assert _parse_safe_params(3, request, 30) == (3, 14)
         assert _validate_course_uuid("course_1") == "course_1"
+        assert _validate_course_uuid("c" * 100) == "c" * 100
 
         with pytest.raises(HTTPException):
             _parse_safe_params("bad", request, 30)
 
         with pytest.raises(HTTPException):
             _validate_course_uuid("bad course")
+
+        with pytest.raises(HTTPException):
+            _validate_course_uuid("c" * 101)
 
         with pytest.raises(HTTPException):
             _build_sql("select {org_id} {days}", "bad", 7)
@@ -111,6 +115,9 @@ class TestAnalyticsHelpers:
         with patch("src.routers.analytics.httpx.AsyncClient", return_value=fake_client):
             assert _get_read_client() is fake_client
 
+        monkeypatch.setattr(analytics_router_module, "_read_client", fake_client)
+        assert _get_read_client() is fake_client
+
     def test_verify_org_membership_and_admin(self):
         db = Mock()
 
@@ -133,6 +140,16 @@ class TestAnalyticsHelpers:
         membership_result = _result(first_result=membership)
         role_result = _result(first_result=SimpleNamespace(rights={"organizations": {"action_update": False}}))
         db.exec.side_effect = [membership_result, role_result]
+        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+            with pytest.raises(HTTPException, match="Admin access required"):
+                _verify_org_admin(1, 10, db)
+
+        db.exec.side_effect = [_result(first_result=None)]
+        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+            with pytest.raises(HTTPException, match="Admin access required"):
+                _verify_org_admin(1, 10, db)
+
+        db.exec.side_effect = [membership_result, _result(first_result=None)]
         with patch("src.routers.analytics.is_user_superadmin", return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
                 _verify_org_admin(1, 10, db)
@@ -161,6 +178,22 @@ class TestAnalyticsHelpers:
         assert enriched[0]["last_activity_name"] == "Activity 2"
         assert enriched[1]["course_uuid"] == "course_2"
         assert enriched[1]["course_name"] == "Course 2"
+
+    def test_enrich_with_metadata_empty_and_missing_course_resolution(self):
+        db = Mock()
+        assert _enrich_with_metadata([], db) == []
+
+        rows = [{"activity_uuid": "activity_1"}]
+        db.exec.side_effect = [
+            _result(all_result=[SimpleNamespace(activity_uuid="activity_1", name="Activity 1", course_id=2)]),
+            _result(all_result=[SimpleNamespace(id=2, course_uuid="course_2", name="Course 2", thumbnail_image="thumb")]),
+        ]
+
+        enriched = _enrich_with_metadata(rows, db)
+
+        assert enriched[0]["course_uuid"] == "course_2"
+        assert enriched[0]["course_name"] == "Course 2"
+        assert enriched[0]["activity_name"] == "Activity 1"
 
     @pytest.mark.asyncio
     async def test_execute_tinybird_query_cache_and_error_paths(self):
@@ -247,6 +280,11 @@ class TestAnalyticsRouter:
             response = await client.get("/api/v1/analytics/plan-info?org_id=1")
         assert response.status_code == 200
         assert response.json()["tier"] == "advanced"
+
+        app.dependency_overrides[get_current_user] = lambda: AnonymousUser()
+        response = await client.get("/api/v1/analytics/plan-info?org_id=1")
+        assert response.status_code == 401
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1)
 
     async def test_ingest_frontend_event_branches(self, client, app):
         app.dependency_overrides[get_current_user] = lambda: AnonymousUser()
@@ -369,6 +407,26 @@ class TestAnalyticsRouter:
             response = await client.get("/api/v1/analytics/dashboard/not_a_query?org_id=1")
         assert response.status_code == 404
 
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="starter",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=False,
+        ):
+            response = await client.get("/api/v1/analytics/dashboard/db/unknown_query?org_id=1")
+        assert response.status_code == 404
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="starter",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=False,
+        ):
+            response = await client.get("/api/v1/analytics/dashboard/db/grade_distribution?org_id=1")
+        assert response.status_code == 403
+
     async def test_dashboard_db_and_course_routes(self, client, db_session):
         db_session.exec.side_effect = [_result(all_result=[(90, 2), (100, 1)])]
         with _analytics_guard_patches(), patch(
@@ -451,6 +509,30 @@ class TestAnalyticsRouter:
             )
         assert response.status_code == 403
 
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="pro",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=True,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/dashboard/course/detail/unknown_detail?org_id=1&course_uuid=course_1"
+            )
+        assert response.status_code == 404
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="pro",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=True,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/dashboard/course/detail/course_recent_enrollments?org_id=1&course_uuid=bad course"
+            )
+        assert response.status_code == 400
+
     async def test_export_json_csv_and_errors(self, client):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
@@ -485,3 +567,78 @@ class TestAnalyticsRouter:
         with _analytics_guard_patches():
             response = await client.get("/api/v1/analytics/export?org_id=1&format=json")
         assert response.status_code == 400
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._enrich_with_metadata",
+            side_effect=lambda rows, db: rows,
+        ), patch(
+            "src.routers.analytics._execute_tinybird_query",
+            new_callable=AsyncMock,
+            return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users,unknown_query"
+            )
+        assert response.status_code == 200
+
+        with _analytics_guard_patches():
+            response = await client.get("/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&days=bad")
+        assert response.status_code == 400
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics._enrich_with_metadata",
+            side_effect=lambda rows, db: rows,
+        ), patch(
+            "src.routers.analytics._execute_tinybird_query",
+            new_callable=AsyncMock,
+            return_value={"data": [{"course_uuid": "course_1", "user_id": 1}], "rows": 1, "meta": []},
+        ):
+            response = await client.get(
+                "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users&course_uuid=course_1"
+            )
+        assert response.status_code == 200
+
+    async def test_dashboard_unknown_and_course_plan_and_query_validation(self, client):
+        with _analytics_guard_patches():
+            response = await client.get("/api/v1/analytics/dashboard/detail/unknown_detail?org_id=1")
+        assert response.status_code == 404
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="starter",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=False,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/dashboard/course/detail/course_recent_enrollments?org_id=1&course_uuid=course_1"
+            )
+        assert response.status_code == 403
+
+        with _analytics_guard_patches(), patch(
+            "src.routers.analytics.get_org_plan",
+            return_value="pro",
+        ), patch(
+            "src.routers.analytics.plan_meets_requirement",
+            return_value=True,
+        ):
+            response = await client.get(
+                "/api/v1/analytics/dashboard/course/unknown_course_query?org_id=1&course_uuid=course_1"
+            )
+        assert response.status_code == 404
+
+    async def test_anonymous_routes_return_401(self, client, app):
+        app.dependency_overrides[get_current_user] = lambda: AnonymousUser()
+        routes = [
+            "/api/v1/analytics/dashboard/detail/detail_signups?org_id=1",
+            "/api/v1/analytics/dashboard/daily_active_users?org_id=1",
+            "/api/v1/analytics/dashboard/db/grade_distribution?org_id=1",
+            "/api/v1/analytics/dashboard/course/detail/course_recent_enrollments?org_id=1&course_uuid=course_1",
+            "/api/v1/analytics/dashboard/course/course_overview_stats?org_id=1&course_uuid=course_1",
+            "/api/v1/analytics/export?org_id=1&format=json&queries=daily_active_users",
+            "/api/v1/analytics/plan-info?org_id=1",
+        ]
+
+        for route in routes:
+            response = await client.get(route)
+            assert response.status_code == 401

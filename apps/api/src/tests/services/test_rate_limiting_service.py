@@ -18,6 +18,7 @@ from src.services.security.rate_limiting import (
     check_verification_resend_rate_limit,
     get_client_ip,
     get_redis_connection,
+    increment_rate_limit,
 )
 
 
@@ -102,6 +103,15 @@ def test_get_client_ip_handles_proxy_and_fallback_paths(
     assert get_client_ip(_request(client_host=client_host, headers=headers)) == expected
 
 
+def test_get_client_ip_ignores_invalid_real_ip_and_falls_back_to_direct_ip():
+    request = _request(
+        client_host="127.0.0.1",
+        headers={"X-Real-IP": "not-an-ip"},
+    )
+
+    assert get_client_ip(request) == "127.0.0.1"
+
+
 def test_is_trusted_proxy_checks_loopback_and_private_ranges():
     assert _is_trusted_proxy("127.0.0.1") is True
     assert _is_trusted_proxy("10.1.2.3") is True
@@ -149,6 +159,42 @@ def test_check_rate_limit_blocks_when_limit_is_reached():
     fake_redis.incr.assert_not_called()
 
 
+def test_check_rate_limit_blocks_uses_ttl_when_positive():
+    fake_redis = Mock()
+    fake_redis.get.return_value = b"3"
+    fake_redis.ttl.return_value = 12
+
+    allowed, count, retry_after = check_rate_limit(
+        key="login:203.0.113.9",
+        max_attempts=3,
+        window_seconds=60,
+        r=fake_redis,
+    )
+
+    assert allowed is False
+    assert count == 3
+    assert retry_after == 12
+
+
+def test_check_rate_limit_increments_uses_default_window_when_ttl_missing():
+    fake_redis = Mock()
+    fake_redis.get.return_value = b"1"
+    fake_redis.ttl.return_value = 0
+    fake_redis.incr.return_value = 2
+
+    allowed, count, retry_after = check_rate_limit(
+        key="login:203.0.113.9",
+        max_attempts=10,
+        window_seconds=60,
+        r=fake_redis,
+    )
+
+    assert allowed is True
+    assert count == 2
+    assert retry_after == 60
+    fake_redis.incr.assert_called_once_with("rate_limit:login:203.0.113.9")
+
+
 def test_check_rate_limit_increments_existing_counter():
     fake_redis = Mock()
     fake_redis.get.return_value = b"1"
@@ -166,6 +212,21 @@ def test_check_rate_limit_increments_existing_counter():
     assert count == 2
     assert retry_after == 15
     fake_redis.incr.assert_called_once_with("rate_limit:signup:203.0.113.9")
+
+
+def test_increment_rate_limit_existing_and_missing_keys():
+    fake_redis = Mock()
+    fake_redis.exists.side_effect = [True, False]
+
+    with patch(
+        "src.services.security.rate_limiting.get_redis_connection",
+        return_value=fake_redis,
+    ):
+        increment_rate_limit("login:203.0.113.9", 60)
+        increment_rate_limit("signup:203.0.113.9", 120)
+
+    fake_redis.incr.assert_called_once_with("rate_limit:login:203.0.113.9")
+    fake_redis.setex.assert_called_once_with("rate_limit:signup:203.0.113.9", 120, 1)
 
 
 @pytest.mark.parametrize(

@@ -51,6 +51,39 @@ def _mock_pack(**overrides) -> OrgPackRead:
 
 
 class TestInternalPacksRouter:
+    async def test_verify_platform_key_errors(self, client):
+        old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
+        os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+        try:
+            response = await client.post(
+                "/api/v1/internal/packs/1/activate",
+                headers={"x-platform-key": "platform-secret"},
+                json={"pack_id": "ai_500", "platform_subscription_id": "sub_123"},
+            )
+        finally:
+            if old is None:
+                os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+            else:
+                os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
+
+        assert response.status_code == 500
+
+        old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
+        os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = "platform-secret"
+        try:
+            response = await client.post(
+                "/api/v1/internal/packs/1/activate",
+                headers={"x-platform-key": "wrong-key"},
+                json={"pack_id": "ai_500", "platform_subscription_id": "sub_123"},
+            )
+        finally:
+            if old is None:
+                os.environ.pop("LEARNHOUSE_PLATFORM_API_KEY", None)
+            else:
+                os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = old
+
+        assert response.status_code == 403
+
     async def test_activate_pack(self, client):
         old = os.environ.get("LEARNHOUSE_PLATFORM_API_KEY")
         os.environ["LEARNHOUSE_PLATFORM_API_KEY"] = "platform-secret"
@@ -155,6 +188,9 @@ class TestOrgPacksRouter:
         assert response.json()["active_packs"][0]["pack_id"] == "ai_500"
         assert len(response.json()["available_packs"]) > 0
 
+        response = await client.get("/api/v1/orgs/999/packs")
+        assert response.status_code == 404
+
     async def test_get_org_packs_forbidden(self, client, org):
         with patch(
             "src.routers.orgs.packs.is_org_admin",
@@ -176,6 +212,14 @@ class TestOrgPacksRouter:
 
         assert response.status_code == 200
         assert response.json()["active_pack_count"] == 1
+
+        with patch(
+            "src.routers.orgs.packs.is_org_admin",
+            return_value=False,
+        ):
+            response = await client.get(f"/api/v1/orgs/{org.id}/packs/summary")
+
+        assert response.status_code == 403
 
     async def test_get_org_pack_summary_missing_org(self, client):
         response = await client.get("/api/v1/orgs/999/packs/summary")

@@ -60,3 +60,21 @@ class TestValidateEventData:
             validate_event_data("totally_fake_event", {"a": 1})
 
         assert "not registered" in caplog.text.lower()
+
+    def test_validate_event_data_skips_when_schema_is_none(self, caplog):
+        original = WEBHOOK_EVENTS.get("test_none_schema")
+        WEBHOOK_EVENTS["test_none_schema"] = {
+            "category": "Test",
+            "description": "No schema event",
+            "data_schema": None,
+        }
+        try:
+            with caplog.at_level(logging.WARNING):
+                validate_event_data("test_none_schema", {"ignored": True})
+
+            assert caplog.text == ""
+        finally:
+            if original is None:
+                del WEBHOOK_EVENTS["test_none_schema"]
+            else:
+                WEBHOOK_EVENTS["test_none_schema"] = original
