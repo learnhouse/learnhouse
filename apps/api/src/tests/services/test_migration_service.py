@@ -62,43 +62,31 @@ def _write_manifest(base_dir: Path, temp_id: str, files: list[dict]) -> Path:
 
 def test_cleanup_old_temp_migrations_branches(monkeypatch, tmp_path):
     base = tmp_path / "content" / "temp" / "migrations"
-    removed = []
-
-    monkeypatch.setattr(
-        migrations.os.path,
-        "exists",
-        lambda path: path == str(base),
-    )
+    monkeypatch.setattr(migrations, "TEMP_MIGRATION_DIR", str(base))
+    # Early return when the migration directory does not exist.
     migrations.cleanup_old_temp_migrations()
 
     old_entry = base / "old-temp"
     fresh_entry = base / "fresh-temp"
+    broken_entry = base / "broken-temp"
     base.mkdir(parents=True)
     old_entry.mkdir()
     fresh_entry.mkdir()
+    broken_entry.mkdir()
+    os.utime(old_entry, (0, 0))
+    os.utime(fresh_entry, None)
 
-    monkeypatch.setattr(migrations.os.path, "exists", lambda path: True)
-    monkeypatch.setattr(migrations.os, "listdir", lambda path: ["old-temp", "fresh-temp", "broken-temp"])
-    monkeypatch.setattr(
-        migrations.os.path,
-        "isdir",
-        lambda path: path.endswith("old-temp") or path.endswith("fresh-temp") or path.endswith("broken-temp"),
-    )
     monkeypatch.setattr(
         migrations.os.path,
         "getmtime",
         lambda path: 0 if path.endswith("old-temp") else (_ for _ in ()).throw(OSError("broken")),
     )
-    monkeypatch.setattr(migrations.time, "time", lambda: 7200)
-    monkeypatch.setattr(
-        migrations.shutil,
-        "rmtree",
-        lambda path, ignore_errors=True: removed.append(path),
-    )
 
     migrations.cleanup_old_temp_migrations(max_age_minutes=30)
 
-    assert removed == [os.path.join("content", "temp", "migrations", "old-temp")]
+    assert not old_entry.exists()
+    assert fresh_entry.exists()
+    assert broken_entry.exists()
 
 
 def test_uuid_and_path_helpers_and_fallback_structure():

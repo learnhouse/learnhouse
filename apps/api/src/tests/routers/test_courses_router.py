@@ -189,7 +189,7 @@ class TestImportExportEndpoints:
                 )
 
             assert response.status_code == 200
-            assert response.headers["content-type"] == "application/zip"
+            assert response.headers["content-type"].startswith("application/zip")
         finally:
             if os.path.exists(zip_path):
                 os.unlink(zip_path)
@@ -239,6 +239,7 @@ class TestImportExportEndpoints:
 
         assert response.status_code == 200
         assert response.json()["successful"] == 1
+        assert response.json()["failed"] == 0
 
     async def test_export_single_course(self, client):
         zip_path = _temp_zip_file()

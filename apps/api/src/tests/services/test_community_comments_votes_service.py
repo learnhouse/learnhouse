@@ -1,5 +1,4 @@
 """Tests for community comment and vote services."""
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -261,7 +260,7 @@ class TestCommunityCommentsAndVotes:
         assert duplicate_exc.value.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_error_branches_for_missing_resources_and_empty_votes(
+    async def test_comment_vote_error_branches(
         self, db, org, admin_user, regular_user, mock_request
     ):
         community = _make_community(db, org, community_uuid="community_error_paths")
@@ -312,26 +311,9 @@ class TestCommunityCommentsAndVotes:
         db.add(orphan_comment)
         db.commit()
 
-        temp_community = _make_community(
-            db, org, community_uuid="community_missing_for_votes"
-        )
-        temp_discussion = _make_discussion(
-            db,
-            temp_community,
-            org,
-            author_id=admin_user.id,
-            discussion_uuid="discussion_missing_community_votes",
-        )
-        temp_community_comment = _make_comment(
-            db,
-            temp_discussion,
-            author_id=admin_user.id,
-            comment_uuid="comment_missing_community",
-        )
-        temp_discussion.community_id = 9999
-        db.add(temp_discussion)
+        discussion.community_id = 9999
+        db.add(discussion)
         db.commit()
-        db.expire_all()
 
         with patch(
             "src.services.communities.comment_votes.authorization_verify_if_user_is_anon",
@@ -347,10 +329,39 @@ class TestCommunityCommentsAndVotes:
                     mock_request, orphan_comment.comment_uuid, regular_user, db
                 )
             with pytest.raises(HTTPException) as missing_community_exc:
-                await upvote_comment(
-                    mock_request, temp_community_comment.comment_uuid, regular_user, db
-                )
+                await upvote_comment(mock_request, comment.comment_uuid, regular_user, db)
 
+        assert missing_comment_exc.value.status_code == 404
+        assert missing_discussion_exc.value.status_code == 404
+        assert missing_community_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_comment_vote_duplicate_and_lookup_paths(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        community = _make_community(db, org, community_uuid="community_vote_lookup")
+        discussion = _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_vote_lookup",
+        )
+        comment = _make_comment(
+            db,
+            discussion,
+            author_id=admin_user.id,
+            comment_uuid="comment_vote_lookup",
+            upvote_count=1,
+        )
+
+        with patch(
+            "src.services.communities.comment_votes.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.comment_votes.check_resource_access",
+            new_callable=AsyncMock,
+        ):
             comment_vote = DiscussionCommentVote(
                 comment_id=comment.id,
                 user_id=regular_user.id,
@@ -376,7 +387,47 @@ class TestCommunityCommentsAndVotes:
                 )
 
         anonymous_votes = await get_user_votes_for_comments([comment.id, 123], 0, db)
-        known_votes = await get_user_votes_for_comments([comment.id, 123], regular_user.id, db)
+        known_votes = await get_user_votes_for_comments(
+            [comment.id, 123], regular_user.id, db
+        )
+
+        assert duplicate_comment_vote_exc.value.status_code == 400
+        assert missing_remove_comment_exc.value.status_code == 404
+        assert missing_remove_vote_exc.value.status_code == 400
+        assert anonymous_votes == {comment.id: False, 123: False}
+        assert known_votes[comment.id] is False
+
+    @pytest.mark.asyncio
+    async def test_discussion_vote_error_branches_and_lookup_paths(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        community = _make_community(db, org, community_uuid="community_discussion_votes")
+        discussion = _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_votes_error_paths",
+        )
+        orphan_discussion = Discussion(
+            id=99,
+            title="Orphan",
+            content="Body",
+            label="general",
+            emoji=None,
+            community_id=999,
+            org_id=org.id,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_orphan_vote",
+            upvote_count=0,
+            edit_count=0,
+            is_pinned=False,
+            is_locked=False,
+            creation_date="2024-01-01T00:00:00+00:00",
+            update_date="2024-01-01T00:00:00+00:00",
+        )
+        db.add(orphan_discussion)
+        db.commit()
 
         with patch(
             "src.services.communities.votes.authorization_verify_if_user_is_anon",
@@ -389,7 +440,9 @@ class TestCommunityCommentsAndVotes:
             new_callable=AsyncMock,
         ):
             with pytest.raises(HTTPException) as missing_discussion_vote_exc:
-                await upvote_discussion(mock_request, "missing_discussion", regular_user, db)
+                await upvote_discussion(
+                    mock_request, "missing_discussion", regular_user, db
+                )
             with pytest.raises(HTTPException) as missing_community_vote_exc:
                 await upvote_discussion(
                     mock_request, orphan_discussion.discussion_uuid, regular_user, db
@@ -420,10 +473,40 @@ class TestCommunityCommentsAndVotes:
                 )
 
         anonymous_discussion_votes = await get_user_votes_for_discussions(
-            mock_request, [discussion.discussion_uuid, "missing"], SimpleNamespace(id=0), db
+            mock_request, [discussion.discussion_uuid, "missing"], regular_user.model_copy(update={"id": 0}), db
         )
         known_discussion_votes = await get_user_votes_for_discussions(
             mock_request, [discussion.discussion_uuid, "missing"], regular_user, db
+        )
+
+        assert missing_discussion_vote_exc.value.status_code == 404
+        assert missing_community_vote_exc.value.status_code == 404
+        assert duplicate_vote_exc.value.status_code == 400
+        assert missing_remove_discussion_exc.value.status_code == 404
+        assert missing_remove_vote_exc.value.status_code == 400
+        assert anonymous_discussion_votes == {
+            discussion.discussion_uuid: False,
+            "missing": False,
+        }
+        assert known_discussion_votes[discussion.discussion_uuid] is False
+
+    @pytest.mark.asyncio
+    async def test_comment_creation_and_delete_error_branches(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        community = _make_community(db, org, community_uuid="community_comment_errors")
+        discussion = _make_discussion(
+            db,
+            community,
+            org,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_comment_errors",
+        )
+        comment = _make_comment(
+            db,
+            discussion,
+            author_id=admin_user.id,
+            comment_uuid="comment_comment_errors",
         )
 
         with patch(
@@ -471,29 +554,26 @@ class TestCommunityCommentsAndVotes:
                     mock_request, locked.discussion_uuid, "Hi", regular_user, db
                 )
 
-            temp_comment_community = _make_community(
-                db, org, community_uuid="community_missing_for_comments"
-            )
-            temp_comment_discussion = _make_discussion(
+            missing_community_discussion = _make_discussion(
                 db,
-                temp_comment_community,
+                community,
                 org,
                 author_id=admin_user.id,
                 discussion_uuid="discussion_missing_community_comments",
             )
-            temp_comment_discussion.community_id = 9999
-            db.add(temp_comment_discussion)
+            missing_community_discussion.community_id = 9999
+            db.add(missing_community_discussion)
             db.commit()
             temp_comment_delete = _make_comment(
                 db,
-                temp_comment_discussion,
+                missing_community_discussion,
                 author_id=admin_user.id,
                 comment_uuid="comment_missing_community_delete",
             )
             with pytest.raises(HTTPException) as missing_community_comment_exc:
                 await create_comment(
                     mock_request,
-                    temp_comment_discussion.discussion_uuid,
+                    missing_community_discussion.discussion_uuid,
                     "Hi",
                     regular_user,
                     db,
@@ -505,7 +585,10 @@ class TestCommunityCommentsAndVotes:
                 )
             with pytest.raises(HTTPException) as missing_get_comments_community_exc:
                 await get_comments_by_discussion(
-                    mock_request, temp_comment_discussion.discussion_uuid, regular_user, db
+                    mock_request,
+                    missing_community_discussion.discussion_uuid,
+                    regular_user,
+                    db,
                 )
 
             with pytest.raises(HTTPException) as missing_update_comment_exc:
@@ -552,24 +635,6 @@ class TestCommunityCommentsAndVotes:
                     mock_request, orphan_delete_comment.comment_uuid, regular_user, db
                 )
 
-        assert missing_comment_exc.value.status_code == 404
-        assert missing_discussion_exc.value.status_code == 404
-        assert missing_community_exc.value.status_code == 404
-        assert duplicate_comment_vote_exc.value.status_code == 400
-        assert missing_remove_comment_exc.value.status_code == 404
-        assert missing_remove_vote_exc.value.status_code == 400
-        assert anonymous_votes == {comment.id: False, 123: False}
-        assert known_votes[comment.id] is False
-        assert missing_discussion_vote_exc.value.status_code == 404
-        assert missing_community_vote_exc.value.status_code == 404
-        assert duplicate_vote_exc.value.status_code == 400
-        assert missing_remove_discussion_exc.value.status_code == 404
-        assert missing_remove_vote_exc.value.status_code == 400
-        assert anonymous_discussion_votes == {
-            discussion.discussion_uuid: False,
-            "missing": False,
-        }
-        assert known_discussion_votes[discussion.discussion_uuid] is False
         assert missing_discussion_comment_exc.value.status_code == 404
         assert locked_comment_exc.value.status_code == 403
         assert missing_community_comment_exc.value.status_code == 404

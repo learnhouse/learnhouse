@@ -51,6 +51,13 @@ def _uuid_factory():
     return lambda: UUID(int=next(values))
 
 
+def _set_import_temp_dir(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "src.services.courses.transfer.import_service.TEMP_IMPORT_DIR",
+        str(tmp_path),
+    )
+
+
 class TestImportHelpers:
     def test_validate_zip_and_sanitize_path(self):
         assert validate_zip(b"PK\x03\x04hello")
@@ -84,7 +91,7 @@ class TestImportHelpers:
                 "course-1/chapters/chapter-a/activities/activity-a/file.txt": b"file",
             }
         )
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
 
         with patch(
             "src.services.courses.transfer.import_service.check_resource_access",
@@ -149,7 +156,7 @@ class TestImportHelpers:
         expected_status,
         expected_detail,
     ):
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         package_bytes = _zip_bytes(files)
 
         with patch(
@@ -178,7 +185,7 @@ class TestImportHelpers:
         tmp_path,
         monkeypatch,
     ):
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         big_package = _zip_bytes(
             {
                 "manifest.json": json.dumps(
@@ -228,7 +235,7 @@ class TestImportHelpers:
         tmp_path,
         monkeypatch,
     ):
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         package_bytes = _zip_bytes({"course-1/course.json": b"{}"})
 
         with patch(
@@ -262,7 +269,7 @@ class TestImportHelpers:
 
     @pytest.mark.asyncio
     async def test_analyze_import_package_missing_org(self, db, mock_request, tmp_path, monkeypatch):
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         with pytest.raises(HTTPException) as exc_info:
             await analyze_import_package(
                 mock_request,
@@ -295,7 +302,7 @@ class TestImportHelpers:
             ],
         }
         (temp_dir / "manifest.json").write_text(json.dumps(manifest))
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
 
         import_side_effect = [
             SimpleNamespace(course_uuid="course-new-1", name="Imported One"),
@@ -352,7 +359,7 @@ class TestImportHelpers:
         tmp_path,
         monkeypatch,
     ):
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         with pytest.raises(HTTPException) as org_exc:
             await import_courses(
                 mock_request,
@@ -836,10 +843,10 @@ class TestImportHelpers:
         os.utime(stale_root, (old_time, old_time))
         os.utime(fresh_root, (new_time, new_time))
 
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path / "missing"))
+        _set_import_temp_dir(monkeypatch, tmp_path / "missing")
         cleanup_old_temp_imports()
 
-        monkeypatch.setattr("src.services.courses.transfer.import_service.TEMP_IMPORT_DIR", str(tmp_path))
+        _set_import_temp_dir(monkeypatch, tmp_path)
         with patch("src.services.courses.transfer.import_service.time.time", return_value=old_time + 31 * 60):
             cleanup_old_temp_imports(max_age_minutes=30)
 

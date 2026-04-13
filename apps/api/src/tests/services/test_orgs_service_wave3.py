@@ -91,7 +91,7 @@ class TestOrgCreationAndListingWave3:
     @pytest.mark.asyncio
     @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
     @patch("src.routers.users._invalidate_session_cache")
-    async def test_create_and_update_with_model_configs(
+    async def test_create_org_with_config_persists_v2_config(
         self,
         mock_invalidate,
         mock_multi_org,
@@ -126,6 +126,34 @@ class TestOrgCreationAndListingWave3:
         assert stored is not None
         assert stored.config["plan"] == "pro"
 
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    @patch("src.routers.users._invalidate_session_cache")
+    async def test_update_org_with_config_no_auth_updates_existing_config(
+        self,
+        mock_invalidate,
+        mock_multi_org,
+        mock_request,
+        db,
+        admin_user,
+    ):
+        new_org = OrganizationCreate(
+            name="Wave3 Org",
+            slug="wave3-org",
+            email="wave3@org.com",
+        )
+
+        created = await create_org_with_config(
+            mock_request,
+            new_org,
+            admin_user,
+            db,
+            OrganizationConfigV2Base(
+                plan="pro",
+                customization={"landing": {"hero": "created"}},
+            ),
+        )
+
         updated = await update_org_with_config_no_auth(
             mock_request,
             OrganizationConfigV2Base(
@@ -147,7 +175,7 @@ class TestOrgCreationAndListingWave3:
     @pytest.mark.asyncio
     @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
     @patch("src.routers.users._invalidate_session_cache")
-    async def test_create_org_config_logging_branches(
+    async def test_create_org_skips_missing_config_logging(
         self,
         mock_invalidate,
         mock_multi_org,
@@ -181,7 +209,38 @@ class TestOrgCreationAndListingWave3:
                 admin_user,
                 db,
             )
-            created_with_config = await create_org_with_config(
+
+        assert created.slug == "no-config-org"
+        assert mock_invalidate.call_count == 1
+
+    @pytest.mark.asyncio
+    @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
+    @patch("src.routers.users._invalidate_session_cache")
+    async def test_create_org_with_config_skips_missing_config_logging(
+        self,
+        mock_invalidate,
+        mock_multi_org,
+        mock_request,
+        db,
+        admin_user,
+    ):
+        original_exec = db.exec
+
+        def exec_side_effect(statement):
+            if "organizationconfig" in str(statement).lower():
+                return SimpleNamespace(first=lambda: None)
+            return original_exec(statement)
+
+        with patch.object(db, "exec", side_effect=exec_side_effect), patch(
+            "src.services.orgs.orgs.OrganizationConfig.model_validate",
+            return_value=OrganizationConfig(
+                org_id=0,
+                config={},
+                creation_date="",
+                update_date="",
+            ),
+        ):
+            created = await create_org_with_config(
                 mock_request,
                 OrganizationCreate(
                     name="No Config Org 2",
@@ -193,9 +252,8 @@ class TestOrgCreationAndListingWave3:
                 {"config_version": "2.0", "plan": "free"},
             )
 
-        assert created.slug == "no-config-org"
-        assert created_with_config.slug == "no-config-org-2"
-        assert mock_invalidate.call_count == 2
+        assert created.slug == "no-config-org-2"
+        assert mock_invalidate.call_count == 1
 
     @pytest.mark.asyncio
     @patch("src.services.orgs.orgs.is_multi_org_allowed", return_value=True)
@@ -258,7 +316,7 @@ class TestOrgCreationAndListingWave3:
         assert ee_exc.value.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_org_lists_and_join_mechanism_missing_config(
+    async def test_get_org_listing_filters_orgs_by_membership(
         self,
         mock_request,
         db,
@@ -298,6 +356,13 @@ class TestOrgCreationAndListingWave3:
         )
         assert {item.slug for item in regular_orgs} == {"test-org"}
 
+    @pytest.mark.asyncio
+    async def test_get_org_join_mechanism_missing_config_404(
+        self,
+        mock_request,
+        db,
+        admin_user,
+    ):
         missing_org = Organization(
             id=99,
             name="Missing Config Org",
@@ -322,28 +387,9 @@ class TestOrgCreationAndListingWave3:
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_missing_org_branches_across_org_settings(
-        self,
-        mock_request,
-        db,
-        admin_user,
-    ):
-        missing_id = 99999
-
-        with patch(
-            "src.services.orgs.orgs.rbac_check",
-            new_callable=AsyncMock,
-        ):
-            with pytest.raises(HTTPException) as config_exc:
-                await update_org_with_config_no_auth(
-                    mock_request,
-                    {"config_version": "2.0", "plan": "free"},
-                    missing_id,
-                    db,
-                )
-        assert config_exc.value.status_code == 404
-
-        no_org_calls = [
+    @pytest.mark.parametrize(
+        "func,args",
+        [
             (update_org, (OrganizationUpdate(name="Missing", slug="missing"),)),
             (update_org_logo, (SimpleNamespace(filename="logo.png"),)),
             (update_org_favicon, (SimpleNamespace(filename="favicon.png"),)),
@@ -380,19 +426,28 @@ class TestOrgCreationAndListingWave3:
                 ),
             )),
             (upload_org_og_image_service, (SimpleNamespace(filename="og.png"),)),
-        ]
+        ],
+    )
+    async def test_missing_org_branches_across_org_settings(
+        self,
+        mock_request,
+        db,
+        admin_user,
+        func,
+        args,
+    ):
+        missing_id = 99999
 
         with patch(
             "src.services.orgs.orgs.rbac_check",
             new_callable=AsyncMock,
         ):
-            for func, args in no_org_calls:
-                with pytest.raises(HTTPException) as exc_info:
-                    await func(mock_request, *args, missing_id, admin_user, db)
-                assert exc_info.value.status_code == 404
+            with pytest.raises(HTTPException) as exc_info:
+                await func(mock_request, *args, missing_id, admin_user, db)
+        assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_missing_config_branches_and_api_token_dict_rights(
+    async def test_missing_config_branches_raise_404(
         self,
         mock_request,
         db,
@@ -458,6 +513,13 @@ class TestOrgCreationAndListingWave3:
                     await func(mock_request, *args, org.id, admin_user, db)
                 assert exc_info.value.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_api_token_dict_rights_update_allowed_and_denied(
+        self,
+        mock_request,
+        db,
+        org,
+    ):
         dict_rights = APITokenUser(
             org_id=org.id,
             rights={"organizations": {"action_update": True}},

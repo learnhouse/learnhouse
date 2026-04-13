@@ -60,6 +60,14 @@ class FakeTask:
         callback(self)
 
 
+def _fake_create_task(task):
+    def _create_task(coro):
+        coro.close()
+        return task
+
+    return _create_task
+
+
 def _make_pack(db, org, **overrides):
     pack = OrgPack(
         id=overrides.pop("id", None),
@@ -126,7 +134,7 @@ class TestPackLifecycle:
             new=Mock(),
         ) as dispatch_webhooks, patch(
             "src.services.packs.packs.asyncio.create_task",
-            return_value=fake_task,
+            side_effect=_fake_create_task(fake_task),
         ) as create_task, patch(
             "src.services.packs.packs._background_tasks",
             new=background_tasks,
@@ -253,7 +261,7 @@ class TestPackLifecycle:
             new=Mock(),
         ) as dispatch_webhooks, patch(
             "src.services.packs.packs.asyncio.create_task",
-            return_value=fake_task,
+            side_effect=_fake_create_task(fake_task),
         ) as create_task, patch(
             "src.services.packs.packs._background_tasks",
             new=background_tasks,
