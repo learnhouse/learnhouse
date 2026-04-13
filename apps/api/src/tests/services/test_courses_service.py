@@ -10,17 +10,42 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
+from sqlmodel import select
 
-from src.db.courses.courses import Course, CourseRead, FullCourseRead
+from src.db.courses.courses import (
+    Course,
+    CourseCreate,
+    CourseRead,
+    CourseUpdate,
+    FullCourseRead,
+    ThumbnailType,
+)
+from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
+from src.db.courses.blocks import Block, BlockTypeEnum
+from src.db.courses.chapters import Chapter
+from src.db.courses.chapter_activities import ChapterActivity
+from src.db.courses.course_chapters import CourseChapter
+from src.db.resource_authors import (
+    ResourceAuthor,
+    ResourceAuthorshipEnum,
+    ResourceAuthorshipStatusEnum,
+)
+from src.db.users import APITokenUser
 from src.security.rbac import AccessAction, AccessContext
 from src.services.courses.courses import (
+    clone_course,
+    create_course,
     delete_course,
     get_course,
     get_course_by_id,
     get_course_meta,
+    get_course_user_rights,
     get_courses_count_orgslug,
     get_courses_orgslug,
+    get_user_courses,
     search_courses,
+    update_course,
+    update_course_thumbnail,
 )
 
 
@@ -257,6 +282,19 @@ class TestGetCoursesOrgslug:
         assert result == []
 
     @pytest.mark.asyncio
+    async def test_get_courses_orgslug_existing_org_without_courses(
+        self, db, other_org, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=False
+        ):
+            result = await get_courses_orgslug(
+                mock_request, admin_user, other_org.slug, db
+            )
+
+        assert result == []
+
+    @pytest.mark.asyncio
     async def test_get_courses_orgslug_anonymous_only_public_published(
         self, db, org, course, anonymous_user, mock_request, bypass_rbac
     ):
@@ -326,6 +364,34 @@ class TestGetCoursesOrgslug:
         assert "course_test" in uuids
         assert "course_draft" in uuids
 
+    @pytest.mark.asyncio
+    async def test_get_courses_orgslug_include_unpublished_for_superadmin(
+        self, db, org, course, admin_user, mock_request, bypass_rbac
+    ):
+        _make_course(
+            db,
+            org,
+            id=13,
+            name="Superadmin Draft",
+            course_uuid="course_superadmin_draft",
+            public=False,
+            published=False,
+        )
+
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=True
+        ):
+            result = await get_courses_orgslug(
+                mock_request,
+                admin_user,
+                "test-org",
+                db,
+                include_unpublished=True,
+            )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_superadmin_draft" in uuids
+
 
 class TestGetCoursesCountOrgslug:
     """Tests for get_courses_count_orgslug()."""
@@ -353,6 +419,21 @@ class TestGetCoursesCountOrgslug:
 
         # Only the public+published fixture course counts
         assert count == 1
+
+    @pytest.mark.asyncio
+    async def test_get_courses_count_orgslug_superadmin_counts_all(
+        self, db, org, course, admin_user, mock_request, bypass_rbac
+    ):
+        _make_course(db, org, id=21, name="Hidden", course_uuid="course_hidden", public=False, published=False)
+
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=True
+        ):
+            count = await get_courses_count_orgslug(
+                mock_request, admin_user, "test-org", db
+            )
+
+        assert count == 2
 
 
 class TestDeleteCourse:
@@ -386,6 +467,479 @@ class TestDeleteCourse:
             await delete_course(mock_request, "nonexistent_uuid", admin_user, db)
 
         assert exc_info.value.status_code == 404
+
+
+class TestCourseMutationsAndRights:
+    @pytest.mark.asyncio
+    async def test_create_course_and_get_user_courses(
+        self, db, org, admin_user, regular_user, mock_request, bypass_webhooks
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.courses.upload_thumbnail",
+            new_callable=AsyncMock,
+            return_value="thumb.png",
+        ):
+            created = await create_course(
+                mock_request,
+                org.id,
+                CourseCreate(
+                    org_id=org.id,
+                    name="Created Course",
+                    description="Desc",
+                    public=True,
+                    published=False,
+                    open_to_contributors=False,
+                ),
+                admin_user,
+                db,
+                thumbnail_file=Mock(filename="thumb.png"),
+                thumbnail_type=ThumbnailType.IMAGE,
+            )
+
+        user_courses = await get_user_courses(
+            mock_request, regular_user, admin_user.id, db
+        )
+
+        assert created.name == "Created Course"
+        assert created.thumbnail_image == "thumb.png"
+        assert created.authors[0].user.id == admin_user.id
+        assert user_courses[0].course_uuid == created.course_uuid
+
+    @pytest.mark.asyncio
+    async def test_update_course_thumbnail_and_sensitive_fields(
+        self, db, org, course, admin_user, regular_user, mock_request, bypass_webhooks
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.upload_thumbnail",
+            new_callable=AsyncMock,
+            return_value="video.mp4",
+        ):
+            thumbnail_updated = await update_course_thumbnail(
+                mock_request,
+                course.course_uuid,
+                admin_user,
+                db,
+                thumbnail_file=Mock(filename="video.mp4"),
+                thumbnail_type=ThumbnailType.VIDEO,
+            )
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            updated = await update_course(
+                mock_request,
+                CourseUpdate(name="Updated Course", published=False),
+                course.course_uuid,
+                admin_user,
+                db,
+            )
+
+            with pytest.raises(HTTPException) as forbidden_exc:
+                await update_course(
+                    mock_request,
+                    CourseUpdate(public=False),
+                    course.course_uuid,
+                    regular_user,
+                    db,
+                )
+
+        assert thumbnail_updated.thumbnail_video == "video.mp4"
+        assert updated.name == "Updated Course"
+        assert forbidden_exc.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_update_course_thumbnail_image_sets_both(
+        self, db, org, course, admin_user, mock_request
+    ):
+        course.thumbnail_video = "existing.mp4"
+        db.add(course)
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.upload_thumbnail",
+            new_callable=AsyncMock,
+            return_value="cover.png",
+        ):
+            updated = await update_course_thumbnail(
+                mock_request,
+                course.course_uuid,
+                admin_user,
+                db,
+                thumbnail_file=Mock(filename="cover.png"),
+                thumbnail_type=ThumbnailType.IMAGE,
+            )
+
+        assert updated.thumbnail_image == "cover.png"
+        assert updated.thumbnail_type == ThumbnailType.BOTH
+
+    @pytest.mark.asyncio
+    async def test_update_course_publish_dispatches_webhook(
+        self, db, org, course, admin_user, mock_request
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        course.published = False
+        db.add(course)
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.services.courses.courses.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks:
+            updated = await update_course(
+                mock_request,
+                CourseUpdate(published=True),
+                course.course_uuid,
+                admin_user,
+                db,
+            )
+
+        assert updated.published is True
+        mock_webhooks.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_get_course_user_rights_variants(
+        self, db, org, course, admin_user, regular_user, anonymous_user, mock_request
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.CREATOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.security.rbac.rbac.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch(
+            "src.security.rbac.rbac.authorization_verify_based_on_roles",
+            new_callable=AsyncMock,
+            side_effect=[True, True],
+        ):
+            admin_rights = await get_course_user_rights(
+                mock_request, course.course_uuid, admin_user, db
+            )
+
+        anon_rights = await get_course_user_rights(
+            mock_request, course.course_uuid, anonymous_user, db
+        )
+
+        assert admin_rights["ownership"]["is_creator"] is True
+        assert admin_rights["permissions"]["manage_access"] is True
+        assert admin_rights["permissions"]["create"] is True
+        assert anon_rights["permissions"]["read"] is True
+        assert anon_rights["permissions"]["update"] is False
+
+    @pytest.mark.asyncio
+    async def test_create_course_uses_api_token_creator_and_video_thumbnail(
+        self, db, org, regular_user, mock_request
+    ):
+        token_user = APITokenUser(
+            org_id=org.id,
+            created_by_user_id=regular_user.id,
+        )
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.courses.upload_thumbnail",
+            new_callable=AsyncMock,
+            return_value="thumb.mp4",
+        ), patch(
+            "src.services.courses.courses.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ) as mock_webhooks:
+            created = await create_course(
+                mock_request,
+                org.id,
+                CourseCreate(
+                    org_id=org.id,
+                    name="Token Created Course",
+                    description="Token desc",
+                    public=True,
+                    published=True,
+                    open_to_contributors=False,
+                ),
+                token_user,
+                db,
+                thumbnail_file=Mock(filename="thumb.mp4"),
+                thumbnail_type=ThumbnailType.VIDEO,
+            )
+
+        author = db.exec(
+            select(ResourceAuthor).where(
+                ResourceAuthor.resource_uuid == created.course_uuid
+            )
+        ).first()
+
+        assert created.thumbnail_video == "thumb.mp4"
+        assert created.thumbnail_type == ThumbnailType.VIDEO
+        assert author is not None
+        assert author.user_id == regular_user.id
+        mock_webhooks.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_update_course_thumbnail_missing_file_raises(
+        self, db, org, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await update_course_thumbnail(
+                    mock_request,
+                    course.course_uuid,
+                    admin_user,
+                    db,
+                    thumbnail_file=None,
+                )
+
+        assert exc_info.value.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_clone_course_happy_path_clones_content_and_authorship(
+        self, db, org, course, admin_user, regular_user, mock_request
+    ):
+        course.thumbnail_image = "cover.png"
+        course.thumbnail_video = "intro.mp4"
+        course.thumbnail_type = ThumbnailType.BOTH
+        db.add(course)
+        db.commit()
+
+        chapter = Chapter(
+            name="Clone Chapter",
+            description="Clone chapter description",
+            thumbnail_image="chapter.png",
+            org_id=org.id,
+            course_id=course.id,
+            chapter_uuid="chapter_clone",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(chapter)
+        db.commit()
+        db.refresh(chapter)
+
+        db.add(
+            CourseChapter(
+                order=1,
+                course_id=course.id,
+                chapter_id=chapter.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+
+        activity = Activity(
+            name="Clone Activity",
+            activity_type=ActivityTypeEnum.TYPE_DYNAMIC,
+            activity_sub_type=ActivitySubTypeEnum.SUBTYPE_DYNAMIC_PAGE,
+            content={"activity_uuid": "activity_clone", "file_id": "block_old"},
+            details={"level": 1},
+            published=True,
+            org_id=org.id,
+            course_id=course.id,
+            activity_uuid="activity_clone",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(activity)
+        db.commit()
+        db.refresh(activity)
+
+        db.add(
+            ChapterActivity(
+                order=1,
+                chapter_id=chapter.id,
+                activity_id=activity.id,
+                course_id=course.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            Block(
+                block_type=BlockTypeEnum.BLOCK_VIDEO,
+                content={"activity_uuid": "activity_clone", "file_id": "block_old"},
+                org_id=org.id,
+                course_id=course.id,
+                chapter_id=chapter.id,
+                activity_id=activity.id,
+                block_uuid="block_old",
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        token_user = APITokenUser(
+            org_id=org.id,
+            created_by_user_id=regular_user.id,
+        )
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ), patch(
+            "src.services.courses.transfer.storage_utils.is_s3_enabled",
+            return_value=False,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.file_exists",
+            return_value=True,
+        ), patch(
+            "src.services.courses.transfer.storage_utils.list_directory",
+            return_value=["asset.txt"],
+        ), patch(
+            "src.services.courses.courses._copy_storage_file"
+        ) as mock_copy_file, patch(
+            "src.services.courses.courses._delete_storage_file"
+        ) as mock_delete_file, patch(
+            "src.services.courses.courses._copy_storage_directory"
+        ) as mock_copy_dir, patch(
+            "os.makedirs"
+        ):
+            cloned = await clone_course(
+                mock_request,
+                course.course_uuid,
+                token_user,
+                db,
+            )
+
+        cloned_course = db.exec(
+            select(Course).where(Course.course_uuid == cloned.course_uuid)
+        ).first()
+        cloned_author = db.exec(
+            select(ResourceAuthor).where(
+                ResourceAuthor.resource_uuid == cloned.course_uuid
+            )
+        ).first()
+
+        assert cloned.name == "Test Course (Copy)"
+        assert cloned.public is False
+        assert cloned.published is False
+        assert cloned.thumbnail_image
+        assert cloned.thumbnail_video
+        assert cloned_author is not None
+        assert cloned_author.user_id == regular_user.id
+        assert cloned_course is not None
+        assert cloned_course.course_uuid == cloned.course_uuid
+        assert mock_copy_file.call_count >= 3
+        mock_delete_file.assert_called_once()
+        mock_copy_dir.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_clone_course_missing_course_and_org_failures(
+        self, db, org, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ):
+            with pytest.raises(HTTPException) as missing_course_exc:
+                await clone_course(
+                    mock_request,
+                    "missing-course",
+                    admin_user,
+                    db,
+                )
+
+        assert missing_course_exc.value.status_code == 404
+
+        orphan = Course(
+            id=99,
+            name="Orphan",
+            description="Orphan course",
+            public=True,
+            published=True,
+            open_to_contributors=False,
+            org_id=999,
+            course_uuid="course_orphan",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(orphan)
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ):
+            with pytest.raises(HTTPException) as missing_org_exc:
+                await clone_course(
+                    mock_request,
+                    "course_orphan",
+                    admin_user,
+                    db,
+                )
+
+        assert missing_org_exc.value.status_code == 404
 
 
 class TestSearchCourses:
@@ -426,3 +980,103 @@ class TestSearchCourses:
 
         uuids = [c.course_uuid for c in result]
         assert "course_secret" not in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_authenticated_author_sees_unpublished(
+        self, db, org, regular_user, mock_request
+    ):
+        authored = _make_course(
+            db,
+            org,
+            id=31,
+            name="Draft Searchable",
+            course_uuid="course_draft_search",
+            public=False,
+            published=False,
+        )
+        db.add(
+            ResourceAuthor(
+                resource_uuid=authored.course_uuid,
+                user_id=regular_user.id,
+                authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.courses.courses.is_user_superadmin", return_value=False
+        ):
+            result = await search_courses(
+                mock_request, regular_user, "test-org", "Draft Searchable", db
+            )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_draft_search" in uuids
+
+
+class TestGetUserCoursesAndRights:
+    """Additional tests for get_user_courses() and get_course_user_rights()."""
+
+    @pytest.mark.asyncio
+    async def test_get_user_courses_empty_when_no_authors(
+        self, db, org, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.courses.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ):
+            result = await get_user_courses(
+                mock_request, admin_user, 999, db
+            )
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_course_user_rights_for_maintainer_and_contributor(
+        self, db, org, course, admin_user, regular_user, mock_request
+    ):
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=admin_user.id,
+                authorship=ResourceAuthorshipEnum.MAINTAINER,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.add(
+            ResourceAuthor(
+                resource_uuid=course.course_uuid,
+                user_id=regular_user.id,
+                authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+                authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.security.rbac.rbac.authorization_verify_based_on_org_admin_status",
+            new_callable=AsyncMock,
+            return_value=False,
+        ), patch(
+            "src.security.rbac.rbac.authorization_verify_based_on_roles",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            maintainer_rights = await get_course_user_rights(
+                mock_request, course.course_uuid, admin_user, db
+            )
+            contributor_rights = await get_course_user_rights(
+                mock_request, course.course_uuid, regular_user, db
+            )
+
+        assert maintainer_rights["ownership"]["is_maintainer"] is True
+        assert maintainer_rights["permissions"]["manage_access"] is True
+        assert contributor_rights["ownership"]["is_contributor"] is True
+        assert contributor_rights["permissions"]["update"] is True
