@@ -968,7 +968,11 @@
     "grade": "Điểm số",
     "run_autograde": "Run Auto-grade",
     "due_date": "Hạn nộp",
-    "task_breakdown": "Chi tiết nhiệm vụ"
+    "task_breakdown": "Chi tiết nhiệm vụ",
+    "no_grade_details": "Chưa có chi tiết điểm.",
+    "task_passed": "Đạt",
+    "task_not_passed": "Không đạt",
+    "score": "điểm"
   },
   "certificate": {
     "certificate": "Chứng chỉ",

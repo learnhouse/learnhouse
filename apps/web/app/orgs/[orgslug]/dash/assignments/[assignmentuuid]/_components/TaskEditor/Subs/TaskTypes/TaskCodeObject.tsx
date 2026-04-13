@@ -1,5 +1,6 @@
 'use client'
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
+import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import {
   useAssignmentsTask,
   useAssignmentsTaskDispatch,
@@ -8,7 +9,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
 import {
   getAssignmentTask,
-  getAssignmentTaskSubmissionsMe,
   getAssignmentTaskSubmissionsUser,
   handleAssignmentTaskSubmission,
   updateAssignmentTask,
@@ -39,6 +39,7 @@ import toast from 'react-hot-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'react-i18next'
 import dynamic from 'next/dynamic'
+import { mutate } from 'swr'
 
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
@@ -171,6 +172,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
+  const taskSubmissionsMap = useAssignmentTaskSubmissions()
 
   // Editor state
   const [contents, setContents] = useState<CodeTaskContents>(DEFAULT_CONTENTS)
@@ -252,6 +254,12 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   }, [view, assignmentTaskState])
 
   // --- STUDENT VIEW ---
+  // Task data and the user's submission are fetched once at the assignment
+  // level (AssignmentContext.assignment_tasks + AssignmentTaskSubmissionsContext).
+  // Looking them up here avoids N per-task /assignments/task and
+  // /submissions/me round trips on activity load.
+
+  // --- GRADING VIEW ---
   async function getAssignmentTaskUI() {
     if (assignmentTaskUUID) {
       const res = await getAssignmentTask(assignmentTaskUUID, access_token)
@@ -267,27 +275,6 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
     }
   }
 
-  async function getAssignmentTaskSubmissionFromUserUI() {
-    if (assignmentTaskUUID) {
-      const res = await getAssignmentTaskSubmissionsMe(
-        assignmentTaskUUID,
-        assignment.assignment_object.assignment_uuid,
-        access_token
-      )
-      if (res.success && res.data) {
-        setUserSubmissions(res.data)
-        if (res.data.task_submission?.source_code) {
-          setCode(res.data.task_submission.source_code)
-          setInitialCode(res.data.task_submission.source_code)
-        }
-        if (res.data.task_submission?.results) {
-          setResults(res.data.task_submission.results)
-        }
-      }
-    }
-  }
-
-  // --- GRADING VIEW ---
   async function getAssignmentTaskSubmissionFromIdentifiedUserUI() {
     if (assignmentTaskUUID && user_id) {
       const res = await getAssignmentTaskSubmissionsUser(
@@ -310,12 +297,39 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
     }
   }
 
-  // Initialize based on view
+  // Hydrate student view from already-fetched assignment context + batch
+  // submissions map. Re-runs when either context payload arrives.
   useEffect(() => {
-    if (view === 'student') {
-      getAssignmentTaskUI()
-      getAssignmentTaskSubmissionFromUserUI()
-    } else if (view === 'grading') {
+    if (view !== 'student' || !assignmentTaskUUID) return
+    const task = assignment?.assignment_tasks?.find(
+      (t: any) => t.assignment_task_uuid === assignmentTaskUUID
+    )
+    if (task) {
+      setAssignmentTaskOutsideProvider(task)
+      const c = task.contents
+      if (c) {
+        setContents(normalizeCodeContents(c))
+        setCode(c.starter_code ?? '')
+        setInitialCode(c.starter_code ?? '')
+      }
+    }
+    const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null
+    if (sub) {
+      setUserSubmissions(sub)
+      if (sub.task_submission?.source_code) {
+        setCode(sub.task_submission.source_code)
+        setInitialCode(sub.task_submission.source_code)
+      }
+      if (sub.task_submission?.results) {
+        setResults(sub.task_submission.results)
+      }
+    }
+  }, [view, assignmentTaskUUID, assignment?.assignment_tasks, taskSubmissionsMap])
+
+  // Grading view still uses per-task fetches — there's only ever one task
+  // open at a time in the grading modal so the N+1 cost doesn't apply.
+  useEffect(() => {
+    if (view === 'grading') {
       getAssignmentTaskUI()
       getAssignmentTaskSubmissionFromIdentifiedUserUI()
     }
@@ -391,6 +405,11 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
       setUserSubmissions(res.data)
       setInitialCode(code)
       setShowSavingDisclaimer(false)
+      // Refresh the batch task-submissions cache so peer Task*Objects (and
+      // a future re-mount of this one) see the new submission state.
+      mutate(
+        `${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`
+      )
       toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
     } else {
       toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))

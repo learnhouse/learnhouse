@@ -945,7 +945,11 @@
     "grade": "Voto",
     "run_autograde": "Run Auto-grade",
     "due_date": "Data di scadenza",
-    "task_breakdown": "Dettaglio attività"
+    "task_breakdown": "Dettaglio attività",
+    "no_grade_details": "Nessun dettaglio del voto disponibile al momento.",
+    "task_passed": "Superato",
+    "task_not_passed": "Non superato",
+    "score": "punteggio"
   },
   "certificate": {
     "certificate": "Certificato",

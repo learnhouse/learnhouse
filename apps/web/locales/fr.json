@@ -945,7 +945,11 @@
     "grade": "Noter",
     "run_autograde": "Run Auto-grade",
     "due_date": "Échéance",
-    "task_breakdown": "Détail des tâches"
+    "task_breakdown": "Détail des tâches",
+    "no_grade_details": "Aucun détail de note disponible pour le moment.",
+    "task_passed": "Réussi",
+    "task_not_passed": "Échoué",
+    "score": "score"
   },
   "certificate": {
     "certificate": "Certificat",

@@ -955,7 +955,11 @@
     "grade": "評価",
     "run_autograde": "Run Auto-grade",
     "due_date": "提出期限",
-    "task_breakdown": "タスクの内訳"
+    "task_breakdown": "タスクの内訳",
+    "no_grade_details": "成績の詳細はまだありません。",
+    "task_passed": "合格",
+    "task_not_passed": "不合格",
+    "score": "スコア"
   },
   "certificate": {
     "certificate": "修了証",

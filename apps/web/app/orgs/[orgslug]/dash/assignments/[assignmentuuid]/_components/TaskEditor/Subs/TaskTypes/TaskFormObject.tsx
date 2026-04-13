@@ -1,13 +1,16 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
+import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAssignmentTask, getAssignmentTaskSubmissionsMe, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
+import { getAPIUrl } from '@services/config/config';
+import { getAssignmentTask, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
+import { mutate } from 'swr';
 
 type FormSchema = {
     questionText: string;
@@ -43,6 +46,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
     const assignmentTaskState = useAssignmentsTask() as any;
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
+    const taskSubmissionsMap = useAssignmentTaskSubmissions();
 
     // Anti-paste guard for student inputs. Only active when the teacher
     // enabled anti_copy_paste on the assignment AND we're in the student view.
@@ -224,6 +228,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             setUserSubmissions(updatedUserSubmissions);
             setInitialUserSubmissions(updatedUserSubmissions);
             setShowSavingDisclaimer(false);
+            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`);
         } else {
             console.error('Submission error:', res);
             toast.error('Error submitting form, please retry later.');
@@ -294,36 +299,47 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
     }
 
     useEffect(() => {
+        // Used only by grading view — student view hydrates from useAssignments() context
         const loadAssignmentTask = async () => {
             if (assignmentTaskUUID) {
                 const res = await getAssignmentTask(assignmentTaskUUID, access_token);
                 if (res.success) {
                     setAssignmentTaskOutsideProvider(res.data);
-                    // Only set questions if they exist and we're not in teacher view, or if we're in teacher view and there are existing questions
                     if (res.data.contents?.questions && res.data.contents.questions.length > 0) {
                         setQuestions(res.data.contents.questions);
                     } else if (view !== 'teacher') {
-                        // For non-teacher views, set empty array if no questions exist
                         setQuestions([]);
                     }
-                    // For teacher view, keep the initial state if no questions exist
                 }
             }
         };
 
-        const loadUserSubmissions = async () => {
-            if (view === 'student' && assignmentTaskUUID) {
-                const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
-                if (res.success) {
-                    setUserSubmissions({
-                        ...res.data.task_submission,
-                        assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                    });
-                    setInitialUserSubmissions({
-                        ...res.data.task_submission,
-                        assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
-                    });
+        // Hydrate task data + user submission for the student view from the
+        // already-fetched AssignmentContext + batch task-submissions map. No
+        // per-task network calls.
+        const hydrateStudentFromContext = () => {
+            if (!assignmentTaskUUID) return;
+            const task = assignment?.assignment_tasks?.find(
+                (t: any) => t.assignment_task_uuid === assignmentTaskUUID
+            );
+            if (task) {
+                setAssignmentTaskOutsideProvider(task);
+                if (task.contents?.questions && task.contents.questions.length > 0) {
+                    setQuestions(task.contents.questions);
+                } else {
+                    setQuestions([]);
                 }
+            }
+            const sub = taskSubmissionsMap?.[assignmentTaskUUID] ?? null;
+            if (sub) {
+                setUserSubmissions({
+                    ...sub.task_submission,
+                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                });
+                setInitialUserSubmissions({
+                    ...sub.task_submission,
+                    assignment_task_submission_uuid: sub.assignment_task_submission_uuid,
+                });
             }
         };
 
@@ -340,17 +356,16 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                 loadAssignmentTask();
             }
         }
-        // Student area
+        // Student area: zero per-task network calls.
         else if (view === 'student') {
-            loadAssignmentTask();
-            loadUserSubmissions();
+            hydrateStudentFromContext();
         }
-        // Grading area
+        // Grading area: per-task fetches are fine here (one task at a time).
         else if (view === 'grading') {
             loadAssignmentTask();
             getAssignmentTaskSubmissionFromIdentifiedUserUI();
         }
-    }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token, assignmentTaskUUID, view]);
+    }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token, assignmentTaskUUID, view, taskSubmissionsMap]);
 
     useEffect(() => {
         if (JSON.stringify(userSubmissions) !== JSON.stringify(initialUserSubmissions)) {

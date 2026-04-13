@@ -49,6 +49,10 @@ class AssignmentRead(AssignmentBase):
     assignment_uuid: str
     creation_date: Optional[str] = None
     update_date: Optional[str] = None
+    # Populated by the read service from a joined query so the frontend can
+    # build file-ref URLs without a second round-trip per request.
+    course_uuid: Optional[str] = None
+    activity_uuid: Optional[str] = None
 
 
 class AssignmentUpdate(SQLModel):

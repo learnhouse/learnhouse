@@ -968,7 +968,11 @@
     "grade": "เกรด",
     "run_autograde": "Run Auto-grade",
     "due_date": "กำหนดส่ง",
-    "task_breakdown": "รายละเอียดงาน"
+    "task_breakdown": "รายละเอียดงาน",
+    "no_grade_details": "ยังไม่มีรายละเอียดคะแนน",
+    "task_passed": "ผ่าน",
+    "task_not_passed": "ไม่ผ่าน",
+    "score": "คะแนน"
   },
   "certificate": {
     "certificate": "ใบประกาศนียบัตร",

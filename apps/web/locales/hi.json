@@ -968,7 +968,11 @@
     "grade": "ग्रेड",
     "run_autograde": "Run Auto-grade",
     "due_date": "नियत तारीख",
-    "task_breakdown": "कार्य विवरण"
+    "task_breakdown": "कार्य विवरण",
+    "no_grade_details": "अभी तक कोई ग्रेड विवरण उपलब्ध नहीं।",
+    "task_passed": "उत्तीर्ण",
+    "task_not_passed": "अनुत्तीर्ण",
+    "score": "स्कोर"
   },
   "certificate": {
     "certificate": "प्रमाणपत्र",
