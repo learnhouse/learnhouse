@@ -139,6 +139,160 @@ class TestOrgInvitesService:
         assert group_exc.value.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_invite_code_error_branches(
+        self, mock_request, db, org, admin_user
+    ):
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(None),
+        ):
+            with pytest.raises(HTTPException) as create_redis_exc:
+                await create_invite_code(mock_request, org.id, admin_user, db)
+            with pytest.raises(HTTPException) as get_codes_redis_exc:
+                await get_invite_codes(mock_request, org.id, admin_user, db)
+            with pytest.raises(HTTPException) as get_code_redis_exc:
+                await get_invite_code(
+                    mock_request,
+                    org.id,
+                    "ABC12345",
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as delete_redis_exc:
+                await delete_invite_code(
+                    mock_request,
+                    org.id,
+                    "org_invite_code_test",
+                    admin_user,
+                    db,
+                )
+
+        assert create_redis_exc.value.status_code == 500
+        assert get_codes_redis_exc.value.status_code == 500
+        assert get_code_redis_exc.value.status_code == 500
+        assert delete_redis_exc.value.status_code == 500
+
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.invites.redis.Redis.from_url",
+            return_value=_fake_redis(),
+        ):
+            with pytest.raises(HTTPException) as create_org_exc:
+                await create_invite_code(mock_request, 999, admin_user, db)
+            with pytest.raises(HTTPException) as get_codes_org_exc:
+                await get_invite_codes(mock_request, 999, admin_user, db)
+            with pytest.raises(HTTPException) as get_code_org_exc:
+                await get_invite_code(
+                    mock_request,
+                    999,
+                    "ABC12345",
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as delete_org_exc:
+                await delete_invite_code(
+                    mock_request,
+                    999,
+                    "org_invite_code_missing",
+                    admin_user,
+                    db,
+                )
+
+        assert create_org_exc.value.status_code == 404
+        assert get_codes_org_exc.value.status_code == 404
+        assert get_code_org_exc.value.status_code == 404
+        assert delete_org_exc.value.status_code == 404
+
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.invites.redis.Redis.from_url",
+            return_value=None,
+        ):
+            with pytest.raises(HTTPException) as create_conn_exc:
+                await create_invite_code(mock_request, org.id, admin_user, db)
+            with pytest.raises(HTTPException) as get_codes_conn_exc:
+                await get_invite_codes(mock_request, org.id, admin_user, db)
+            with pytest.raises(HTTPException) as get_code_conn_exc:
+                await get_invite_code(
+                    mock_request,
+                    org.id,
+                    "ABC12345",
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as delete_conn_exc:
+                await delete_invite_code(
+                    mock_request,
+                    org.id,
+                    "org_invite_code_test",
+                    admin_user,
+                    db,
+                )
+
+        assert create_conn_exc.value.status_code == 500
+        assert get_codes_conn_exc.value.status_code == 500
+        assert get_code_conn_exc.value.status_code == 500
+        assert delete_conn_exc.value.status_code == 500
+
+        invite_payload = {
+            "invite_code": "ABC12345",
+            "invite_code_uuid": "org_invite_code_test",
+            "invite_code_expires": 123,
+            "invite_code_type": "signup",
+            "created_at": "2024-01-01T00:00:00",
+            "created_by": admin_user.user_uuid,
+        }
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.invites.redis.Redis.from_url",
+            return_value=_fake_redis(scan_keys=[], values={b"invite-key": json.dumps(invite_payload)}),
+        ):
+            with pytest.raises(HTTPException) as get_code_missing_exc:
+                await get_invite_code(
+                    mock_request,
+                    org.id,
+                    "MISSING",
+                    admin_user,
+                    db,
+                )
+        assert get_code_missing_exc.value.status_code == 404
+
+        with patch(
+            "src.services.orgs.invites.get_learnhouse_config",
+            return_value=_fake_config(),
+        ), patch(
+            "src.services.orgs.invites.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.orgs.invites.redis.Redis.from_url",
+            return_value=_fake_redis(scan_keys=[]),
+        ):
+            with pytest.raises(HTTPException) as delete_missing_keys_exc:
+                await delete_invite_code(
+                    mock_request,
+                    org.id,
+                    "org_invite_code_missing",
+                    admin_user,
+                    db,
+                )
+        assert delete_missing_keys_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
     async def test_get_invite_codes_enriches_usergroup_name(
         self, mock_request, db, org, admin_user
     ):

@@ -13,7 +13,10 @@ Tests cover:
 - Regex-based origin matching
 """
 
-from unittest.mock import MagicMock, patch
+import asyncio
+import re
+from unittest.mock import AsyncMock, MagicMock, patch
+from starlette.responses import JSONResponse
 
 
 # Mock config before importing the middleware
@@ -111,6 +114,41 @@ class TestCSRFOriginValidation:
             mw = CSRFProtectionMiddleware(MagicMock())
             assert mw.is_allowed_origin("http://localhost:3000") is False
 
+    def test_invalid_regex_is_logged_and_disabled(self):
+        with patch("src.security.csrf.re.compile", side_effect=re.error("bad regex")), patch(
+            "src.security.csrf.logger.error"
+        ) as mock_error, patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=[],
+            allowed_regexp=r"[",
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware
+
+            mw = CSRFProtectionMiddleware(MagicMock())
+
+        assert mw.compiled_regexp is None
+        mock_error.assert_called_once()
+
+    def test_extract_origin_invalid_url_returns_none(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=["https://example.com"]
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware
+
+            mw = CSRFProtectionMiddleware(MagicMock())
+
+        with patch("urllib.parse.urlparse", side_effect=Exception("boom")):
+            assert mw._extract_origin_from_url("not-a-url") is None
+
+    def test_development_mode_allows_missing_headers(self):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=[],
+            development_mode=True
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware
+
+            mw = CSRFProtectionMiddleware(MagicMock())
+            assert mw.is_allowed_origin(None, None) is True
+
 
 class TestCSRFExemptions:
     """Test CSRF exemption logic."""
@@ -189,3 +227,56 @@ class TestCSRFExemptions:
         assert "GET" not in STATE_CHANGING_METHODS
         assert "HEAD" not in STATE_CHANGING_METHODS
         assert "OPTIONS" not in STATE_CHANGING_METHODS
+
+
+class TestCSRFMiddlewareDispatch:
+    def _make_middleware(self, *, allowed_origins=None, allowed_regexp="", development_mode=False):
+        with patch("src.security.csrf.get_learnhouse_config", return_value=_make_mock_config(
+            allowed_origins=allowed_origins or ["https://example.com"],
+            allowed_regexp=allowed_regexp,
+            development_mode=development_mode,
+        )):
+            from src.security.csrf import CSRFProtectionMiddleware
+
+            return CSRFProtectionMiddleware(MagicMock())
+
+    def test_non_state_changing_method_bypasses(self):
+        mw = self._make_middleware()
+        req = _make_request(method="GET")
+        call_next = AsyncMock(return_value="ok")
+
+        result = asyncio.run(mw.dispatch(req, call_next))
+
+        assert result == "ok"
+        call_next.assert_awaited_once_with(req)
+
+    def test_csrf_exempt_request_bypasses(self):
+        mw = self._make_middleware()
+        req = _make_request(method="POST", headers={"authorization": "Bearer lh_abc"})
+        call_next = AsyncMock(return_value="ok")
+
+        result = asyncio.run(mw.dispatch(req, call_next))
+
+        assert result == "ok"
+        call_next.assert_awaited_once_with(req)
+
+    def test_allowed_origin_request_passes(self):
+        mw = self._make_middleware(allowed_origins=["https://example.com"])
+        req = _make_request(method="POST", headers={"origin": "https://example.com"})
+        call_next = AsyncMock(return_value="ok")
+
+        result = asyncio.run(mw.dispatch(req, call_next))
+
+        assert result == "ok"
+        call_next.assert_awaited_once_with(req)
+
+    def test_rejected_origin_returns_jsonresponse(self):
+        mw = self._make_middleware(allowed_origins=["https://example.com"])
+        req = _make_request(method="POST", headers={"origin": "https://evil.com"})
+        call_next = AsyncMock(return_value="ok")
+
+        result = asyncio.run(mw.dispatch(req, call_next))
+
+        assert isinstance(result, JSONResponse)
+        assert result.status_code == 403
+        call_next.assert_not_awaited()

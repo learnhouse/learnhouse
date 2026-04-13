@@ -1,5 +1,6 @@
 """Router tests for src/routers/communities/communities.py and discussions.py."""
 
+from io import BytesIO
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,6 +8,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
+from src.db.communities.communities import Community
 from src.db.communities.communities import CommunityRead
 from src.db.users import UserRead
 from src.routers.communities.communities import router as communities_router
@@ -102,6 +104,10 @@ def _mock_comment(**overrides):
     }
     data.update(overrides)
     return data
+
+
+def _upload_file():
+    return ("thumb.png", BytesIO(b"thumb"), "image/png")
 
 
 class TestCommunitiesRouter:
@@ -218,3 +224,63 @@ class TestCommunitiesRouter:
         with patch("src.routers.communities.discussions.toggle_reaction", new_callable=AsyncMock, return_value={"toggled": True}):
             response = await client.post("/api/v1/discussions/d1/reactions", json={"emoji": "👍"})
         assert response.status_code == 200
+
+    async def test_community_thumbnail_endpoint_branches(self, client, db, org, admin_user):
+        community = Community(
+            id=21,
+            name="Community With Thumb",
+            description="Desc",
+            public=True,
+            thumbnail_image="old-thumb.png",
+            org_id=org.id,
+            course_id=None,
+            community_uuid="community_thumb",
+            moderation_words=[],
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        orphan_community = Community(
+            id=22,
+            name="Orphan Community",
+            description="Desc",
+            public=True,
+            thumbnail_image="",
+            org_id=999,
+            course_id=None,
+            community_uuid="community_orphan",
+            moderation_words=[],
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(community)
+        db.add(orphan_community)
+        db.commit()
+
+        with patch("src.routers.communities.communities.check_resource_access", new_callable=AsyncMock), patch(
+            "src.routers.communities.communities.upload_community_thumbnail",
+            new_callable=AsyncMock,
+            return_value="new-thumb.png",
+        ):
+            response = await client.put(
+                "/api/v1/communities/community_thumb/thumbnail",
+                files={"thumbnail": _upload_file()},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["thumbnail_image"] == "new-thumb.png"
+
+        with patch("src.routers.communities.communities.check_resource_access", new_callable=AsyncMock):
+            no_file_response = await client.put(
+                "/api/v1/communities/community_thumb/thumbnail"
+            )
+            missing_community_response = await client.put(
+                "/api/v1/communities/missing/thumbnail"
+            )
+            missing_org_response = await client.put(
+                "/api/v1/communities/community_orphan/thumbnail"
+            )
+
+        assert no_file_response.status_code == 200
+        assert no_file_response.json()["thumbnail_image"] == "new-thumb.png"
+        assert missing_community_response.status_code == 404
+        assert missing_org_response.status_code == 404

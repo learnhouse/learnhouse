@@ -53,7 +53,8 @@ def engine():
             if isinstance(col.type, JSONB):
                 col.type = JSON()
     SQLModel.metadata.create_all(engine)
-    return engine
+    yield engine
+    engine.dispose()
 
 
 @pytest.fixture

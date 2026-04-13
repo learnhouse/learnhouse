@@ -1,5 +1,6 @@
 """Router tests for src/routers/boards/*.py."""
 
+import json
 import os
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -12,12 +13,21 @@ from src.core.events.database import get_db_session
 from src.db.boards import Board, BoardMemberRead, BoardRead
 from src.routers.boards.boards import internal_router, router as boards_router
 from src.routers.boards.boards_playground import router as boards_playground_router
+from src.routers.boards.boards_playground import (
+    event_generator as boards_event_generator,
+    get_org_ai_model as get_boards_org_ai_model,
+)
 from src.security.auth import get_current_user
 from src.security.features_utils.dependencies import require_boards_feature
 
 
 async def _single_chunk_stream():
     yield "chunk"
+
+
+async def _failing_stream():
+    yield "chunk"
+    raise RuntimeError("boom")
 
 
 @pytest.fixture
@@ -71,6 +81,366 @@ def _mock_member(**overrides) -> BoardMemberRead:
 
 
 class TestBoardsRouter:
+    async def test_boards_playground_helpers_and_error_paths(
+        self, client, db, org, other_org, admin_user
+    ):
+        board = Board(
+            id=2,
+            org_id=org.id,
+            name="Board",
+            description="Desc",
+            thumbnail_image="",
+            public=True,
+            board_uuid="board_test",
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(board)
+        db.commit()
+
+        orphan_board = Board(
+            id=3,
+            org_id=999,
+            name="Orphan",
+            description="Desc",
+            thumbnail_image="",
+            public=True,
+            board_uuid="board_orphan",
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(orphan_board)
+        db.commit()
+
+        events = []
+        async for item in boards_event_generator(_failing_stream(), "session-error"):
+            events.append(item)
+        assert json.loads(events[0].removeprefix("data: ").strip()) == {
+            "type": "chunk",
+            "content": "chunk",
+        }
+        assert json.loads(events[-1].removeprefix("data: ").strip()) == {
+            "type": "error",
+            "message": "An internal error occurred.",
+        }
+
+        with patch(
+            "src.routers.boards.boards_playground.get_org_plan",
+            return_value="pro",
+        ), patch(
+            "src.routers.boards.boards_playground.plan_meets_requirement",
+            return_value=True,
+        ):
+            assert get_boards_org_ai_model(org.id, db) == "gemini-3-flash-preview"
+
+        with patch(
+            "src.routers.boards.boards_playground.get_org_plan",
+            side_effect=RuntimeError("boom"),
+        ):
+            assert get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+
+        with patch(
+            "src.routers.boards.boards_playground.get_org_plan",
+            return_value="basic",
+        ), patch(
+            "src.routers.boards.boards_playground.plan_meets_requirement",
+            return_value=False,
+        ):
+            assert get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+
+        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.routers.boards.boards_playground.create_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.boards.boards_playground.generate_boards_playground_stream",
+            return_value=_single_chunk_stream(),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/start",
+                json={
+                    "board_uuid": "missing",
+                    "block_uuid": "block1",
+                    "prompt": "Prompt",
+                    "context": {
+                        "board_name": "Board",
+                        "board_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 404
+
+        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.routers.boards.boards_playground.create_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.boards.boards_playground.generate_boards_playground_stream",
+            return_value=_single_chunk_stream(),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/start",
+                json={
+                    "board_uuid": "board_orphan",
+                    "block_uuid": "block1",
+                    "prompt": "Prompt",
+                    "context": {
+                        "board_name": "Board",
+                        "board_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 404
+
+        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.routers.boards.boards_playground.create_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.boards.boards_playground.generate_boards_playground_stream",
+            return_value=_single_chunk_stream(),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/start",
+                json={
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "prompt": "Prompt",
+                    "context": {
+                        "board_name": "Board",
+                        "board_description": "Desc",
+                    },
+                },
+            )
+        assert response.status_code == 200
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=None,
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "missing",
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=3,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_test",
+                block_uuid="block1",
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 400
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="different",
+                block_uuid="block1",
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 400
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_missing",
+                block_uuid="block1",
+                message_history=[],
+            ),
+        ), patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_missing",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 404
+
+        missing_org_board = Board(
+            id=4,
+            org_id=999,
+            name="MissingOrg",
+            description="Desc",
+            thumbnail_image="",
+            public=True,
+            board_uuid="board_missing_org",
+            created_by=admin_user.id,
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(missing_org_board)
+        db.commit()
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_missing_org",
+                block_uuid="block1",
+                message_history=[],
+            ),
+        ), patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_missing_org",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_test",
+                block_uuid="different",
+                message_history=[],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 400
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=SimpleNamespace(
+                session_uuid="session1",
+                iteration_count=0,
+                max_iterations=3,
+                current_html="<div></div>",
+                board_uuid="board_test",
+                block_uuid="block1",
+                message_history=[],
+            ),
+        ), patch(
+            "src.routers.boards.boards_playground.check_ai_credits"
+        ), patch(
+            "src.routers.boards.boards_playground.deduct_ai_credit"
+        ), patch(
+            "src.routers.boards.boards_playground.get_org_ai_model",
+            return_value="gemini-test",
+        ), patch(
+            "src.routers.boards.boards_playground.generate_boards_playground_stream",
+            return_value=_single_chunk_stream(),
+        ):
+            response = await client.post(
+                "/api/v1/boards/playground/iterate",
+                json={
+                    "session_uuid": "session1",
+                    "board_uuid": "board_test",
+                    "block_uuid": "block1",
+                    "message": "More",
+                },
+            )
+        assert response.status_code == 200
+
+        with patch(
+            "src.routers.boards.boards_playground.get_boards_playground_session",
+            return_value=None,
+        ):
+            response = await client.get("/api/v1/boards/playground/session/missing")
+        assert response.status_code == 404
+
     async def test_board_crud_and_membership_endpoints(self, client):
         with patch(
             "src.routers.boards.boards.create_board",
