@@ -7,19 +7,19 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.42.85",
-    "botocore==1.42.85",
+    "boto3==1.42.87",
+    "botocore==1.42.87",
     "faker==40.13.0",
     "fastapi==0.135.3",
     "httpx==0.28.1",
-    "google-genai==1.71.0",
+    "google-genai==1.72.0",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.11",
     "pydantic[email]==2.12.5",
     "pytest==9.0.3",
     "pytest-cov==7.1.0",
     "python-dotenv==1.2.2",
-    "python-multipart==0.0.24",
+    "python-multipart==0.0.26",
     "pyyaml==6.0.3",
     "redis==7.4.0",
     "requests==2.33.1",
@@ -43,7 +43,7 @@ dependencies = [
     "defusedxml==0.7.1",
     "llama-index-core==0.14.20",
     "pgvector==0.4.2",
-    "pypdf==6.9.2",
+    "pypdf==6.10.0",
 ]
 
 [tool.ruff]
