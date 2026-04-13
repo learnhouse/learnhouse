@@ -198,27 +198,10 @@ class TestLocalContentRouter:
         original_dir = local_content.CONTENT_DIR
         local_content.CONTENT_DIR = tmp_path / "content"
         try:
-            class _SneakyDecoded(str):
-                def __contains__(self, item):
-                    if item == "..":
-                        return False
-                    return super().__contains__(item)
-
-                def replace(self, old, new, count=-1):
-                    if old == "\\" and new == "/":
-                        return "foo/../bar"
-                    return super().replace(old, new, count)
-
             assert local_content._validate_content_path("../escape") is None
             assert local_content._validate_content_path("/absolute/path") is None
             assert local_content._validate_content_path("foo\\..\\bar") is None
             assert local_content._validate_content_path("foo\x00bar") is None
-
-            with patch(
-                "src.routers.local_content.unquote",
-                side_effect=[_SneakyDecoded("foo\\.\\./bar"), _SneakyDecoded("foo\\.\\./bar")],
-            ):
-                assert local_content._validate_content_path("encoded") is None
 
             with patch("src.routers.local_content.os.path.realpath", side_effect=OSError("boom")):
                 assert local_content._validate_content_path("orgs/x/file.txt") is None

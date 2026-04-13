@@ -118,12 +118,18 @@ class TestWebhookDispatchHelpers:
     @pytest.mark.asyncio
     async def test_dispatch_webhooks_schedules_background_task(self):
         task = MagicMock()
+        scheduled = {}
+
+        def fake_create_task(coro):
+            scheduled["coro"] = coro
+            coro.close()
+            return task
 
         with patch(
             "src.services.webhooks.dispatch.validate_event_data",
         ) as mock_validate, patch(
             "src.services.webhooks.dispatch.asyncio.create_task",
-            return_value=task,
+            side_effect=fake_create_task,
         ) as mock_create:
             await dispatch.dispatch_webhooks(
                 "course_created",
@@ -137,6 +143,7 @@ class TestWebhookDispatchHelpers:
             {"course_uuid": "course_123"},
         )
         mock_create.assert_called_once()
+        assert "coro" in scheduled
         task.add_done_callback.assert_called_once()
         assert task in dispatch._background_tasks
 
