@@ -12,6 +12,7 @@ class WebhookEndpoint(SQLModel, table=True):
         Index("ix_webhook_endpoint_webhook_uuid", "webhook_uuid"),
         Index("ix_webhook_endpoint_org_id", "org_id"),
         Index("ix_webhook_endpoint_org_active", "org_id", "is_active"),
+        Index("ix_webhook_endpoint_source", "org_id", "source"),
         {"extend_existing": True},
     )
 
@@ -29,6 +30,13 @@ class WebhookEndpoint(SQLModel, table=True):
     description: Optional[str] = Field(default=None, max_length=500)
     events: List[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     is_active: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default="true"))
+    # "manual" for UI-created webhooks, "zapier" for REST Hooks managed by the Zapier Platform.
+    source: str = Field(
+        default="manual",
+        sa_column=Column(String(20), nullable=False, server_default="manual"),
+    )
+    zap_name: Optional[str] = Field(default=None, max_length=200)
+    zap_id: Optional[str] = Field(default=None, max_length=100)
     created_by_user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user.id"), nullable=False)
     )
@@ -92,6 +100,9 @@ class WebhookEndpointRead(BaseModel):
     events: List[str]
     is_active: bool
     has_secret: bool = True
+    source: str = "manual"
+    zap_name: Optional[str] = None
+    zap_id: Optional[str] = None
     created_by_user_id: int
     creation_date: str
     update_date: str

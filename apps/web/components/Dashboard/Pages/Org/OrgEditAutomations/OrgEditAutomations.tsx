@@ -45,7 +45,32 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  ExternalLink,
 } from 'lucide-react'
+
+// Zapier brand mark — the 8-point orange blossom from Zapier's brand system.
+// Rendered inline so we don't need to ship an image asset, and scales cleanly
+// at any size. Brand color #FF4A00.
+const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
+  size = 20,
+  className,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+  >
+    <g fill="#FF4A00">
+      <ellipse cx="50" cy="50" rx="9" ry="42" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(45 50 50)" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(90 50 50)" />
+      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(135 50 50)" />
+    </g>
+  </svg>
+)
 import {
   WebhookEndpoint,
   WebhookEndpointCreated,
@@ -137,6 +162,10 @@ const OrgEditAutomations: React.FC = () => {
     webhooksUrl,
     (url: string) => swrFetcher(url, access_token)
   )
+
+  // Split webhooks by source so the Zapier and manual lists render separately.
+  const zapierWebhooks = (webhooks || []).filter((w) => w.source === 'zapier')
+  const manualWebhooks = (webhooks || []).filter((w) => w.source !== 'zapier')
 
   const resetCreateForm = () => {
     setCreateUrl('')
@@ -325,12 +354,78 @@ const OrgEditAutomations: React.FC = () => {
       descriptionKey="common.plans.feature_restricted.webhooks.description"
     >
       <>
+        {/* ── Zapier hero card (subtle variant) ────────────────────── */}
+        <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
+          <div className="px-5 py-4 flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#FFF5F0] flex items-center justify-center nice-shadow">
+              <ZapierLogo size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-gray-800 text-[15px]">Zapier</h2>
+                {zapierWebhooks.length > 0 && (
+                  <Badge className="bg-[#FFF5F0] text-[#FF4A00] border border-[#FFE5D6] text-[10px] font-semibold uppercase tracking-wider hover:bg-[#FFF5F0]">
+                    {zapierWebhooks.length} active {zapierWebhooks.length === 1 ? 'Zap' : 'Zaps'}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-gray-500 text-xs mt-0.5">
+                Connect LearnHouse to thousands of apps without writing code.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <a
+                href="https://zapier.com/app/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-700 text-xs"
+              >
+                Manage Zaps
+              </a>
+              <a
+                href="https://zapier.com/apps/learnhouse/integrations"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Connect
+                  <ExternalLink size={12} className="ml-1.5" />
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {zapierWebhooks.length > 0 && (
+            <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/60">
+              <div className="space-y-1.5">
+                {zapierWebhooks.map((zap) => (
+                  <ZapierRow
+                    key={zap.webhook_uuid}
+                    zap={zap}
+                    onToggleActive={() => handleToggleActive(zap)}
+                    onDelete={() => {
+                      setSelectedWebhook(zap)
+                      setIsDeleteDialogOpen(true)
+                    }}
+                    onViewLogs={() => handleViewLogs(zap)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Manual webhooks ──────────────────────────────────────── */}
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
           <div className="flex flex-col gap-0">
             <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
               <h1 className="font-bold text-xl text-gray-800">Webhooks</h1>
               <h2 className="text-gray-500 text-md">
-                Send real-time event notifications to external services like Zapier, Make.com, or your own API
+                Send real-time event notifications to external services like Make.com, n8n, or your own API
               </h2>
             </div>
 
@@ -356,9 +451,9 @@ const OrgEditAutomations: React.FC = () => {
                 <div className="flex justify-center py-8">
                   <RefreshCw className="animate-spin text-gray-400" size={24} />
                 </div>
-              ) : webhooks && webhooks.length > 0 ? (
+              ) : manualWebhooks.length > 0 ? (
                 <div className="space-y-3">
-                  {webhooks.map((webhook) => (
+                  {manualWebhooks.map((webhook) => (
                     <WebhookCard
                       key={webhook.webhook_uuid}
                       webhook={webhook}
@@ -923,6 +1018,54 @@ const EventSelector: React.FC<{
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// Compact row used inside the Zapier hero card.
+// Zapier-managed webhooks are read-only from LearnHouse's side — the Zap itself
+// must be edited inside Zapier. We only expose enable/disable, view logs, and
+// a delete escape hatch for admins who want to force-disconnect a Zap.
+const ZapierRow: React.FC<{
+  zap: WebhookEndpoint
+  onToggleActive: () => void
+  onDelete: () => void
+  onViewLogs: () => void
+}> = ({ zap, onToggleActive, onDelete, onViewLogs }) => {
+  const title = zap.zap_name || zap.description || 'Zapier integration'
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-gray-200 transition-colors">
+      <Switch checked={zap.is_active} onCheckedChange={onToggleActive} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm text-gray-800 truncate">{title}</p>
+          {zap.events[0] && (
+            <code className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono flex-shrink-0">
+              {zap.events[0]}
+            </code>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onViewLogs}
+          className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 h-8 w-8 p-0"
+          title="View delivery logs"
+        >
+          <Clock size={14} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+          className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+          title="Disconnect this Zap"
+        >
+          <Trash2 size={14} />
+        </Button>
+      </div>
     </div>
   )
 }

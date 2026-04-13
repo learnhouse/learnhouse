@@ -13,6 +13,9 @@ export interface WebhookEndpoint {
   events: string[]
   is_active: boolean
   has_secret: boolean
+  source: 'manual' | 'zapier'
+  zap_name: string | null
+  zap_id: string | null
   created_by_user_id: number
   creation_date: string
   update_date: string
