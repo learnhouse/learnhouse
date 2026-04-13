@@ -25,6 +25,7 @@ from src.services.podcasts.episodes import (
     get_episode,
     get_episodes_by_podcast,
     reorder_episodes,
+    _user_can_view_unpublished_episode,
     update_episode,
     upload_episode_audio_file,
     upload_episode_thumbnail_file,
@@ -845,3 +846,265 @@ class TestEpisodesService:
                     db,
                 )
         assert audio_exc.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_episode_helper_and_missing_branch_paths(
+        self, db, org, admin_user, regular_user, anonymous_user, mock_request
+    ):
+        podcast = _make_podcast(
+            db,
+            org,
+            public=False,
+            published=False,
+            podcast_uuid="podcast_episode_helper",
+        )
+        episode = _make_episode(
+            db,
+            podcast,
+            org,
+            published=False,
+            episode_uuid="episode_episode_helper",
+        )
+
+        assert (
+            await _user_can_view_unpublished_episode(
+                mock_request, episode, podcast, anonymous_user, db
+            )
+            is False
+        )
+
+        with patch("src.services.podcasts.episodes.is_user_superadmin", return_value=True):
+            assert (
+                await _user_can_view_unpublished_episode(
+                    mock_request, episode, podcast, regular_user, db
+                )
+                is True
+            )
+
+        with patch("src.services.podcasts.episodes.is_user_superadmin", return_value=False):
+            assert (
+                await _user_can_view_unpublished_episode(
+                    mock_request, episode, podcast, regular_user, db
+                )
+                is False
+            )
+            _make_author(db, podcast.podcast_uuid, regular_user.id)
+            assert (
+                await _user_can_view_unpublished_episode(
+                    mock_request, episode, podcast, regular_user, db
+                )
+                is True
+            )
+            assert (
+                await _user_can_view_unpublished_episode(
+                    mock_request, episode, podcast, admin_user, db
+                )
+                is True
+            )
+
+        with patch("src.services.podcasts.episodes.check_resource_access", new_callable=AsyncMock):
+            filtered = await get_episodes_by_podcast(
+                mock_request,
+                podcast.id,
+                db,
+                anonymous_user,
+            )
+            assert filtered == []
+
+            with pytest.raises(HTTPException) as missing_podcast_exc:
+                await get_episodes_by_podcast(
+                    mock_request,
+                    9999,
+                    db,
+                    admin_user,
+                )
+        assert missing_podcast_exc.value.status_code == 404
+
+        orphan_episode = PodcastEpisode(
+            id=999,
+            podcast_id=9999,
+            org_id=org.id,
+            title="Orphan Episode",
+            description="Orphan",
+            audio_file="",
+            duration_seconds=0,
+            episode_number=1,
+            thumbnail_image="",
+            published=False,
+            order=0,
+            episode_uuid="episode_orphan",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(orphan_episode)
+        db.commit()
+
+        with patch("src.services.podcasts.episodes.check_resource_access", new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as missing_episode_exc:
+                await get_episode(mock_request, "missing-episode", admin_user, db)
+            with pytest.raises(HTTPException) as missing_podcast_for_episode_exc:
+                await get_episode(mock_request, orphan_episode.episode_uuid, admin_user, db)
+        assert missing_episode_exc.value.status_code == 404
+        assert missing_podcast_for_episode_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_episode_mutation_missing_and_validation_paths(
+        self, db, org, admin_user, mock_request
+    ):
+        podcast = _make_podcast(
+            db,
+            org,
+            public=False,
+            published=False,
+            podcast_uuid="podcast_episode_mutation",
+        )
+        episode = _make_episode(
+            db,
+            podcast,
+            org,
+            published=False,
+            episode_uuid="episode_episode_mutation",
+        )
+        orphan_episode = PodcastEpisode(
+            id=1000,
+            podcast_id=9999,
+            org_id=org.id,
+            title="Orphan Episode",
+            description="Orphan",
+            audio_file="",
+            duration_seconds=0,
+            episode_number=1,
+            thumbnail_image="",
+            published=False,
+            order=0,
+            episode_uuid="episode_orphan_mutation",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(orphan_episode)
+        db.commit()
+
+        with pytest.raises(HTTPException) as missing_podcast_create_exc:
+            await create_episode(
+                mock_request,
+                "missing-podcast",
+                PodcastEpisodeCreate(title="Missing", description="Missing"),
+                admin_user,
+                db,
+            )
+        assert missing_podcast_create_exc.value.status_code == 404
+
+        with patch("src.services.podcasts.episodes.check_resource_access", new_callable=AsyncMock):
+            with pytest.raises(HTTPException) as missing_episode_update_exc:
+                await update_episode(
+                    mock_request,
+                    "missing-episode",
+                    PodcastEpisodeUpdate(title="Updated"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_podcast_update_exc:
+                await update_episode(
+                    mock_request,
+                    orphan_episode.episode_uuid,
+                    PodcastEpisodeUpdate(title="Updated"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_episode_delete_exc:
+                await delete_episode(
+                    mock_request,
+                    "missing-episode",
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_podcast_delete_exc:
+                await delete_episode(
+                    mock_request,
+                    orphan_episode.episode_uuid,
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_episode_audio_exc:
+                await upload_episode_audio_file(
+                    mock_request,
+                    "missing-episode",
+                    _upload_file("audio.mp3"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_podcast_audio_exc:
+                await upload_episode_audio_file(
+                    mock_request,
+                    orphan_episode.episode_uuid,
+                    _upload_file("audio.mp3"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_episode_thumb_exc:
+                await upload_episode_thumbnail_file(
+                    mock_request,
+                    "missing-episode",
+                    _upload_file("thumb.png"),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as missing_podcast_thumb_exc:
+                await upload_episode_thumbnail_file(
+                    mock_request,
+                    orphan_episode.episode_uuid,
+                    _upload_file("thumb.png"),
+                    admin_user,
+                    db,
+                )
+
+            with pytest.raises(HTTPException) as audio_missing_file_exc:
+                await upload_episode_audio_file(
+                    mock_request,
+                    episode.episode_uuid,
+                    UploadFile(filename="", file=BytesIO(b"")),
+                    admin_user,
+                    db,
+                )
+            with pytest.raises(HTTPException) as thumb_missing_file_exc:
+                await upload_episode_thumbnail_file(
+                    mock_request,
+                    episode.episode_uuid,
+                    UploadFile(filename="", file=BytesIO(b"")),
+                    admin_user,
+                    db,
+                )
+
+            reordered = await reorder_episodes(
+                mock_request,
+                podcast.podcast_uuid,
+                [
+                    {"episode_uuid": episode.episode_uuid},
+                    {"order": 5},
+                    {"episode_uuid": episode.episode_uuid, "order": 3},
+                ],
+                admin_user,
+                db,
+            )
+
+            with pytest.raises(HTTPException) as missing_podcast_reorder_exc:
+                await reorder_episodes(
+                    mock_request,
+                    "missing-podcast",
+                    [{"episode_uuid": episode.episode_uuid, "order": 1}],
+                    admin_user,
+                    db,
+                )
+
+        assert missing_episode_update_exc.value.status_code == 404
+        assert missing_podcast_update_exc.value.status_code == 404
+        assert missing_episode_delete_exc.value.status_code == 404
+        assert missing_podcast_delete_exc.value.status_code == 404
+        assert missing_episode_audio_exc.value.status_code == 404
+        assert missing_podcast_audio_exc.value.status_code == 404
+        assert missing_episode_thumb_exc.value.status_code == 404
+        assert missing_podcast_thumb_exc.value.status_code == 404
+        assert audio_missing_file_exc.value.status_code == 400
+        assert thumb_missing_file_exc.value.status_code == 400
+        assert [item.episode_uuid for item in reordered][-1] == episode.episode_uuid
+        assert missing_podcast_reorder_exc.value.status_code == 404
