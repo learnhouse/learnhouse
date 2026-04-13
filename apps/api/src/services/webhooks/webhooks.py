@@ -90,6 +90,9 @@ def _to_read(endpoint: WebhookEndpoint) -> WebhookEndpointRead:
         events=endpoint.events,
         is_active=endpoint.is_active,
         has_secret=bool(endpoint.secret_encrypted),
+        source=endpoint.source or "manual",
+        zap_name=endpoint.zap_name,
+        zap_id=endpoint.zap_id,
         created_by_user_id=endpoint.created_by_user_id,
         creation_date=endpoint.creation_date,
         update_date=endpoint.update_date,
@@ -191,10 +194,22 @@ async def update_webhook_endpoint(
 
     endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
+    is_zapier_managed = endpoint.source == "zapier"
+
     if webhook_object.events is not None:
+        if is_zapier_managed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Zapier-managed webhooks cannot have their events edited. Edit the Zap in Zapier.",
+            )
         _validate_events(webhook_object.events)
         endpoint.events = webhook_object.events
     if webhook_object.url is not None:
+        if is_zapier_managed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Zapier-managed webhooks cannot have their URL edited. Edit the Zap in Zapier.",
+            )
         _validate_webhook_url(webhook_object.url)
         endpoint.url = webhook_object.url
     if webhook_object.description is not None:
