@@ -24,7 +24,7 @@ from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailRead
 from src.db.api_tokens import APIToken
-from src.db.roles import Role, RoleTypeEnum
+from src.db.roles import Role
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
