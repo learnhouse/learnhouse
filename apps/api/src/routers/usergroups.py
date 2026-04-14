@@ -23,7 +23,19 @@ from src.core.events.database import get_db_session
 router = APIRouter()
 
 
-@router.post("/", response_model=UserGroupRead, tags=["usergroups"])
+@router.post(
+    "/",
+    response_model=UserGroupRead,
+    tags=["usergroups"],
+    summary="Create a usergroup",
+    description="Create a new usergroup within an organization. Requires admin/maintainer permissions on the organization.",
+    responses={
+        200: {"description": "Usergroup created successfully.", "model": UserGroupRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create usergroups"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_create_usergroup(
     *,
     request: Request,
@@ -37,7 +49,19 @@ async def api_create_usergroup(
     return await create_usergroup(request, db_session, current_user, usergroup_object)
 
 
-@router.get("/{usergroup_id}", response_model=UserGroupRead, tags=["usergroups"])
+@router.get(
+    "/{usergroup_id}",
+    response_model=UserGroupRead,
+    tags=["usergroups"],
+    summary="Get a usergroup",
+    description="Retrieve a usergroup by its numeric identifier.",
+    responses={
+        200: {"description": "Usergroup retrieved.", "model": UserGroupRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this usergroup"},
+        404: {"description": "Usergroup not found"},
+    },
+)
 async def api_get_usergroup(
     *,
     request: Request,
@@ -51,7 +75,19 @@ async def api_get_usergroup(
     return await read_usergroup_by_id(request, db_session, current_user, usergroup_id)
 
 
-@router.get("/{usergroup_id}/users", response_model=list[UserRead], tags=["usergroups"])
+@router.get(
+    "/{usergroup_id}/users",
+    response_model=list[UserRead],
+    tags=["usergroups"],
+    summary="List users in a usergroup",
+    description="Retrieve the list of users that belong to a specific usergroup.",
+    responses={
+        200: {"description": "Users linked to the usergroup.", "model": list[UserRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view usergroup members"},
+        404: {"description": "Usergroup not found"},
+    },
+)
 async def api_get_users_linked_to_usergroup(
     *,
     request: Request,
@@ -67,7 +103,19 @@ async def api_get_users_linked_to_usergroup(
     )
 
 
-@router.get("/org/{org_id}", response_model=list[UserGroupRead], tags=["usergroups"])
+@router.get(
+    "/org/{org_id}",
+    response_model=list[UserGroupRead],
+    tags=["usergroups"],
+    summary="List usergroups for an organization",
+    description="Retrieve every usergroup that belongs to a given organization.",
+    responses={
+        200: {"description": "Usergroups for the organization.", "model": list[UserGroupRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view usergroups for this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_usergroups(
     *,
     request: Request,
@@ -81,7 +129,19 @@ async def api_get_usergroups(
     return await read_usergroups_by_org_id(request, db_session, current_user, org_id)
 
 
-@router.get("/{usergroup_id}/resources", response_model=list[str], tags=["usergroups"])
+@router.get(
+    "/{usergroup_id}/resources",
+    response_model=list[str],
+    tags=["usergroups"],
+    summary="List resources linked to a usergroup",
+    description="Return the UUIDs of resources (courses, collections, etc.) that are linked to a usergroup.",
+    responses={
+        200: {"description": "Resource UUIDs linked to the usergroup.", "model": list[str]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this usergroup"},
+        404: {"description": "Usergroup not found"},
+    },
+)
 async def api_get_resources_linked_to_usergroup(
     *,
     request: Request,
@@ -98,7 +158,17 @@ async def api_get_resources_linked_to_usergroup(
 
 
 @router.get(
-    "/resource/{resource_uuid}", response_model=list[UserGroupRead], tags=["usergroups"]
+    "/resource/{resource_uuid}",
+    response_model=list[UserGroupRead],
+    tags=["usergroups"],
+    summary="List usergroups linked to a resource",
+    description="Retrieve every usergroup that is linked to a given resource UUID.",
+    responses={
+        200: {"description": "Usergroups linked to the resource.", "model": list[UserGroupRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view usergroups for this resource"},
+        404: {"description": "Resource not found"},
+    },
 )
 async def api_get_usergroupsby_resource(
     *,
@@ -115,7 +185,19 @@ async def api_get_usergroupsby_resource(
     )
 
 
-@router.put("/{usergroup_id}", response_model=UserGroupRead, tags=["usergroups"])
+@router.put(
+    "/{usergroup_id}",
+    response_model=UserGroupRead,
+    tags=["usergroups"],
+    summary="Update a usergroup",
+    description="Update the name, description, or other attributes of a usergroup.",
+    responses={
+        200: {"description": "Usergroup updated successfully.", "model": UserGroupRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this usergroup"},
+        404: {"description": "Usergroup not found"},
+    },
+)
 async def api_update_usergroup(
     *,
     request: Request,
@@ -132,7 +214,18 @@ async def api_update_usergroup(
     )
 
 
-@router.delete("/{usergroup_id}", tags=["usergroups"])
+@router.delete(
+    "/{usergroup_id}",
+    tags=["usergroups"],
+    summary="Delete a usergroup",
+    description="Permanently delete a usergroup along with its user and resource links.",
+    responses={
+        200: {"description": "Usergroup deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to delete this usergroup"},
+        404: {"description": "Usergroup not found"},
+    },
+)
 async def api_delete_usergroup(
     *,
     request: Request,
@@ -146,7 +239,18 @@ async def api_delete_usergroup(
     return await delete_usergroup_by_id(request, db_session, current_user, usergroup_id)
 
 
-@router.post("/{usergroup_id}/add_users", tags=["usergroups"])
+@router.post(
+    "/{usergroup_id}/add_users",
+    tags=["usergroups"],
+    summary="Add users to a usergroup",
+    description="Add one or more users to a usergroup. User IDs should be provided as a comma-separated string.",
+    responses={
+        200: {"description": "Users added to the usergroup."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to modify this usergroup"},
+        404: {"description": "Usergroup or user not found"},
+    },
+)
 async def api_add_users_to_usergroup(
     *,
     request: Request,
@@ -163,7 +267,18 @@ async def api_add_users_to_usergroup(
     )
 
 
-@router.delete("/{usergroup_id}/remove_users", tags=["usergroups"])
+@router.delete(
+    "/{usergroup_id}/remove_users",
+    tags=["usergroups"],
+    summary="Remove users from a usergroup",
+    description="Remove one or more users from a usergroup. User IDs should be provided as a comma-separated string.",
+    responses={
+        200: {"description": "Users removed from the usergroup."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to modify this usergroup"},
+        404: {"description": "Usergroup or user not found"},
+    },
+)
 async def api_delete_users_from_usergroup(
     *,
     request: Request,
@@ -180,7 +295,18 @@ async def api_delete_users_from_usergroup(
     )
 
 
-@router.post("/{usergroup_id}/add_resources", tags=["usergroups"])
+@router.post(
+    "/{usergroup_id}/add_resources",
+    tags=["usergroups"],
+    summary="Add resources to a usergroup",
+    description="Link one or more resources (courses, collections, etc.) to a usergroup. Resource UUIDs should be provided as a comma-separated string.",
+    responses={
+        200: {"description": "Resources linked to the usergroup."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to modify this usergroup"},
+        404: {"description": "Usergroup or resource not found"},
+    },
+)
 async def api_add_resources_to_usergroup(
     *,
     request: Request,
@@ -197,7 +323,18 @@ async def api_add_resources_to_usergroup(
     )
 
 
-@router.delete("/{usergroup_id}/remove_resources", tags=["usergroups"])
+@router.delete(
+    "/{usergroup_id}/remove_resources",
+    tags=["usergroups"],
+    summary="Remove resources from a usergroup",
+    description="Unlink one or more resources from a usergroup. Resource UUIDs should be provided as a comma-separated string.",
+    responses={
+        200: {"description": "Resources unlinked from the usergroup."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to modify this usergroup"},
+        404: {"description": "Usergroup or resource not found"},
+    },
+)
 async def api_delete_resources_from_usergroup(
     *,
     request: Request,

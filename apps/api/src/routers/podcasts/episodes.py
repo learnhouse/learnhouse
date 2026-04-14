@@ -17,7 +17,18 @@ from src.security.auth import get_current_user
 router = APIRouter()
 
 
-@router.get("/episodes/{episode_uuid}", response_model=PodcastEpisodeRead)
+@router.get(
+    "/episodes/{episode_uuid}",
+    response_model=PodcastEpisodeRead,
+    summary="Get a podcast episode",
+    description="Fetch a podcast episode by its UUID.",
+    responses={
+        200: {"description": "Episode details.", "model": PodcastEpisodeRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to read this episode"},
+        404: {"description": "Episode not found"},
+    },
+)
 async def api_get_episode(
     request: Request,
     episode_uuid: str,
@@ -29,7 +40,18 @@ async def api_get_episode(
     return episode
 
 
-@router.put("/episodes/{episode_uuid}", response_model=PodcastEpisodeRead)
+@router.put(
+    "/episodes/{episode_uuid}",
+    response_model=PodcastEpisodeRead,
+    summary="Update a podcast episode",
+    description="Update an episode's metadata. The caller must have write access to the parent podcast.",
+    responses={
+        200: {"description": "Episode updated successfully.", "model": PodcastEpisodeRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this episode"},
+        404: {"description": "Episode not found"},
+    },
+)
 async def api_update_episode(
     request: Request,
     episode_uuid: str,
@@ -44,7 +66,17 @@ async def api_update_episode(
     return episode
 
 
-@router.delete("/episodes/{episode_uuid}")
+@router.delete(
+    "/episodes/{episode_uuid}",
+    summary="Delete a podcast episode",
+    description="Delete a podcast episode and its associated files. This operation cannot be undone.",
+    responses={
+        200: {"description": "Episode deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to delete this episode"},
+        404: {"description": "Episode not found"},
+    },
+)
 async def api_delete_episode(
     request: Request,
     episode_uuid: str,
@@ -56,7 +88,18 @@ async def api_delete_episode(
     return result
 
 
-@router.put("/episodes/{episode_uuid}/audio", response_model=PodcastEpisodeRead)
+@router.put(
+    "/episodes/{episode_uuid}/audio",
+    response_model=PodcastEpisodeRead,
+    summary="Upload episode audio",
+    description="Upload or replace the audio file for a podcast episode.",
+    responses={
+        200: {"description": "Audio uploaded and episode updated.", "model": PodcastEpisodeRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this episode"},
+        404: {"description": "Episode not found"},
+    },
+)
 async def api_upload_episode_audio(
     request: Request,
     episode_uuid: str,
@@ -71,7 +114,18 @@ async def api_upload_episode_audio(
     return episode
 
 
-@router.put("/episodes/{episode_uuid}/thumbnail", response_model=PodcastEpisodeRead)
+@router.put(
+    "/episodes/{episode_uuid}/thumbnail",
+    response_model=PodcastEpisodeRead,
+    summary="Upload episode thumbnail",
+    description="Upload or replace the thumbnail image for a podcast episode.",
+    responses={
+        200: {"description": "Thumbnail uploaded and episode updated.", "model": PodcastEpisodeRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this episode"},
+        404: {"description": "Episode not found"},
+    },
+)
 async def api_upload_episode_thumbnail(
     request: Request,
     episode_uuid: str,

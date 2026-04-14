@@ -104,7 +104,21 @@ router = APIRouter(dependencies=[Depends(require_courses_feature)])
 
 
 # Static routes must come before dynamic /{course_uuid} routes
-@router.post("/export/batch")
+@router.post(
+    "/export/batch",
+    summary="Export multiple courses as ZIP",
+    description=(
+        "Export multiple courses (up to 20 per request) as a single ZIP archive. "
+        "All specified courses must belong to the same organization and the caller "
+        "must have read access to each course."
+    ),
+    responses={
+        200: {"description": "ZIP archive containing the exported courses", "content": {"application/zip": {}}},
+        403: {"description": "User lacks read permission on one of the courses"},
+        404: {"description": "One or more of the requested courses was not found"},
+        422: {"description": "Validation error (empty list or more than 20 courses requested)"},
+    },
+)
 async def api_export_courses_batch(
     request: Request,
     batch_request: BatchExportRequest,
@@ -145,7 +159,22 @@ async def api_export_courses_batch(
     )
 
 
-@router.post("/import/analyze")
+@router.post(
+    "/import/analyze",
+    response_model=ImportAnalysisResponse,
+    summary="Analyze a course import package",
+    description=(
+        "Upload and analyze a LearnHouse course export ZIP. Validates the package, "
+        "extracts its contents, and returns a list of courses available for import "
+        "along with a temp_id to use with the subsequent import endpoint."
+    ),
+    responses={
+        200: {"description": "Package analyzed successfully", "model": ImportAnalysisResponse},
+        400: {"description": "Invalid or malformed export package"},
+        403: {"description": "User lacks permission to create courses in the organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_analyze_import_package(
     request: Request,
     org_id: int,
@@ -173,7 +202,23 @@ async def api_analyze_import_package(
     )
 
 
-@router.post("/import")
+@router.post(
+    "/import",
+    response_model=ImportResult,
+    summary="Import courses from an analyzed package",
+    description=(
+        "Import previously analyzed courses into an organization. Uses the temp_id "
+        "returned by the analyze step along with the list of course UUIDs to import. "
+        "Up to 20 courses can be imported per request."
+    ),
+    responses={
+        200: {"description": "Courses imported successfully", "model": ImportResult},
+        400: {"description": "Invalid temp_id or course_uuids not present in the package"},
+        403: {"description": "User lacks permission to create courses in the organization"},
+        404: {"description": "Organization or temporary package not found"},
+        422: {"description": "Validation error (empty list or more than 20 courses)"},
+    },
+)
 async def api_import_courses(
     request: Request,
     org_id: int,
@@ -216,7 +261,21 @@ async def api_import_courses(
     )
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=CourseRead,
+    summary="Create course",
+    description=(
+        "Create a new course in the specified organization. Accepts multipart form "
+        "data with course metadata and an optional thumbnail image or video."
+    ),
+    responses={
+        200: {"description": "Course created successfully", "model": CourseRead},
+        403: {"description": "User lacks permission to create courses in the organization"},
+        404: {"description": "Organization not found"},
+        422: {"description": "Invalid form data"},
+    },
+)
 async def api_create_course(
     request: Request,
     org_id: int,
@@ -252,7 +311,18 @@ async def api_create_course(
     )
 
 
-@router.put("/{course_uuid}/thumbnail")
+@router.put(
+    "/{course_uuid}/thumbnail",
+    response_model=CourseRead,
+    summary="Update course thumbnail",
+    description="Replace the thumbnail image or video for an existing course.",
+    responses={
+        200: {"description": "Thumbnail updated successfully", "model": CourseRead},
+        403: {"description": "User lacks permission to update the course"},
+        404: {"description": "Course not found"},
+        422: {"description": "Invalid thumbnail file"},
+    },
+)
 async def api_create_course_thumbnail(
     request: Request,
     course_uuid: str,
@@ -269,7 +339,17 @@ async def api_create_course_thumbnail(
     )
 
 
-@router.get("/{course_uuid}")
+@router.get(
+    "/{course_uuid}",
+    response_model=CourseRead,
+    summary="Get course by UUID",
+    description="Retrieve a single course by its UUID.",
+    responses={
+        200: {"description": "Course retrieved successfully", "model": CourseRead},
+        403: {"description": "User lacks read access to this course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course(
     request: Request,
     course_uuid: str,
@@ -284,7 +364,17 @@ async def api_get_course(
     )
 
 
-@router.get("/id/{course_id}")
+@router.get(
+    "/id/{course_id}",
+    response_model=CourseRead,
+    summary="Get course by ID",
+    description="Retrieve a single course by its numeric database ID.",
+    responses={
+        200: {"description": "Course retrieved successfully", "model": CourseRead},
+        403: {"description": "User lacks read access to this course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course_by_id(
     request: Request,
     course_id: str,
@@ -299,7 +389,21 @@ async def api_get_course_by_id(
     )
 
 
-@router.get("/{course_uuid}/meta")
+@router.get(
+    "/{course_uuid}/meta",
+    response_model=FullCourseRead,
+    summary="Get course metadata",
+    description=(
+        "Retrieve full course metadata including chapters and activities. "
+        "Use slim=true to exclude heavy activity content/details, useful for "
+        "navigation menus."
+    ),
+    responses={
+        200: {"description": "Course metadata retrieved successfully", "model": FullCourseRead},
+        403: {"description": "User lacks read access to this course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course_meta(
     request: Request,
     course_uuid: str,
@@ -317,7 +421,21 @@ async def api_get_course_meta(
     )
 
 
-@router.get("/org_slug/{org_slug}/page/{page}/limit/{limit}")
+@router.get(
+    "/org_slug/{org_slug}/page/{page}/limit/{limit}",
+    response_model=List[CourseRead],
+    summary="List courses for an organization",
+    description=(
+        "Paginated list of courses for an organization identified by slug. "
+        "Set include_unpublished=true to include unpublished courses (requires "
+        "update permission on the organization)."
+    ),
+    responses={
+        200: {"description": "Paginated list of courses", "model": List[CourseRead]},
+        403: {"description": "User lacks permission to list unpublished courses"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_course_by_orgslug(
     request: Request,
     page: int,
@@ -335,7 +453,15 @@ async def api_get_course_by_orgslug(
     )
 
 
-@router.get("/org_slug/{org_slug}/count")
+@router.get(
+    "/org_slug/{org_slug}/count",
+    summary="Count courses in an organization",
+    description="Return the total number of courses for the organization identified by slug.",
+    responses={
+        200: {"description": "Total course count"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_courses_count(
     request: Request,
     org_slug: str,
@@ -350,7 +476,21 @@ async def api_get_courses_count(
     )
 
 
-@router.get("/org_slug/{org_slug}/search")
+@router.get(
+    "/org_slug/{org_slug}/search",
+    response_model=List[CourseRead],
+    summary="Search courses",
+    description=(
+        "Full-text search courses by title and description within an organization. "
+        "Query length is capped at 200 characters and results are paginated with a "
+        "maximum page size of 50 to prevent data dumping."
+    ),
+    responses={
+        200: {"description": "Paginated list of matching courses", "model": List[CourseRead]},
+        404: {"description": "Organization not found"},
+        422: {"description": "Invalid query or pagination parameters"},
+    },
+)
 async def api_search_courses(
     request: Request,
     org_slug: str,
@@ -373,7 +513,18 @@ async def api_search_courses(
     )
 
 
-@router.put("/{course_uuid}")
+@router.put(
+    "/{course_uuid}",
+    response_model=CourseRead,
+    summary="Update course",
+    description="Update course metadata (name, description, about, tags, visibility, etc.) by UUID.",
+    responses={
+        200: {"description": "Course updated successfully", "model": CourseRead},
+        403: {"description": "User lacks permission to update the course"},
+        404: {"description": "Course not found"},
+        422: {"description": "Invalid update payload"},
+    },
+)
 async def api_update_course(
     request: Request,
     course_object: CourseUpdate,
@@ -389,7 +540,16 @@ async def api_update_course(
     )
 
 
-@router.delete("/{course_uuid}")
+@router.delete(
+    "/{course_uuid}",
+    summary="Delete course",
+    description="Permanently delete a course and all of its content by UUID.",
+    responses={
+        200: {"description": "Course deleted successfully"},
+        403: {"description": "User lacks permission to delete the course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_delete_course(
     request: Request,
     course_uuid: str,
@@ -403,7 +563,21 @@ async def api_delete_course(
     return await delete_course(request, course_uuid, current_user, db_session)
 
 
-@router.post("/{course_uuid}/clone")
+@router.post(
+    "/{course_uuid}/clone",
+    response_model=CourseRead,
+    summary="Clone course",
+    description=(
+        "Create a complete copy of a course including chapters, activities, blocks "
+        "and all associated files. The cloned course gets a new UUID, is set to "
+        "private by default, and has the current user as the creator."
+    ),
+    responses={
+        200: {"description": "Cloned course", "model": CourseRead},
+        403: {"description": "User lacks read access to the source course or cannot create courses"},
+        404: {"description": "Source course not found"},
+    },
+)
 async def api_clone_course(
     request: Request,
     course_uuid: str,
@@ -433,7 +607,19 @@ async def api_clone_course(
     return await clone_course(request, course_uuid, current_user, db_session)
 
 
-@router.get("/{course_uuid}/export")
+@router.get(
+    "/{course_uuid}/export",
+    summary="Export course as ZIP",
+    description=(
+        "Export a single course and all its content (chapters, activities, blocks, "
+        "and files) as a ZIP archive following the LearnHouse export format."
+    ),
+    responses={
+        200: {"description": "ZIP archive containing the exported course", "content": {"application/zip": {}}},
+        403: {"description": "User lacks read access to the course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_export_course(
     request: Request,
     course_uuid: str,
@@ -474,7 +660,16 @@ async def api_export_course(
     )
 
 
-@router.post("/{course_uuid}/apply-contributor")
+@router.post(
+    "/{course_uuid}/apply-contributor",
+    summary="Apply as course contributor",
+    description="Submit an application for the current user to become a contributor on the given course.",
+    responses={
+        200: {"description": "Application submitted"},
+        403: {"description": "Course is not open to contributors"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_apply_course_contributor(
     request: Request,
     course_uuid: str,
@@ -487,7 +682,17 @@ async def api_apply_course_contributor(
     return await apply_course_contributor(request, course_uuid, current_user, db_session)
 
 
-@router.get("/{course_uuid}/updates")
+@router.get(
+    "/{course_uuid}/updates",
+    response_model=List[CourseUpdateRead],
+    summary="List course updates",
+    description="Return all course update posts for a given course.",
+    responses={
+        200: {"description": "List of course update posts", "model": List[CourseUpdateRead]},
+        403: {"description": "User lacks read access to the course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course_updates(
     request: Request,
     course_uuid: str,
@@ -503,7 +708,18 @@ async def api_get_course_updates(
     )
 
 
-@router.post("/{course_uuid}/updates")
+@router.post(
+    "/{course_uuid}/updates",
+    response_model=CourseUpdateRead,
+    summary="Create course update",
+    description="Create a new course update post associated with the given course.",
+    responses={
+        200: {"description": "Course update created", "model": CourseUpdateRead},
+        403: {"description": "User lacks permission to create updates for this course"},
+        404: {"description": "Course not found"},
+        422: {"description": "Invalid update payload"},
+    },
+)
 async def api_create_course_update(
     request: Request,
     course_uuid: str,
@@ -520,7 +736,18 @@ async def api_create_course_update(
     )
 
 
-@router.put("/{course_uuid}/update/{courseupdate_uuid}")
+@router.put(
+    "/{course_uuid}/update/{courseupdate_uuid}",
+    response_model=CourseUpdateRead,
+    summary="Update course update",
+    description="Edit an existing course update post identified by its UUID.",
+    responses={
+        200: {"description": "Course update modified", "model": CourseUpdateRead},
+        403: {"description": "User lacks permission to modify updates on this course"},
+        404: {"description": "Course or course update not found"},
+        422: {"description": "Invalid update payload"},
+    },
+)
 async def api_update_course_update(
     request: Request,
     course_uuid: str,
@@ -538,7 +765,16 @@ async def api_update_course_update(
     )
 
 
-@router.delete("/{course_uuid}/update/{courseupdate_uuid}")
+@router.delete(
+    "/{course_uuid}/update/{courseupdate_uuid}",
+    summary="Delete course update",
+    description="Delete a course update post by its UUID.",
+    responses={
+        200: {"description": "Course update deleted"},
+        403: {"description": "User lacks permission to delete updates on this course"},
+        404: {"description": "Course or course update not found"},
+    },
+)
 async def api_delete_course_update(
     request: Request,
     course_uuid: str,
@@ -553,7 +789,16 @@ async def api_delete_course_update(
     return await delete_update(request, courseupdate_uuid, current_user, db_session)
 
 
-@router.get("/{course_uuid}/contributors")
+@router.get(
+    "/{course_uuid}/contributors",
+    summary="List course contributors",
+    description="Return all contributors attached to a given course along with their authorship role and status.",
+    responses={
+        200: {"description": "List of course contributors"},
+        403: {"description": "User lacks permission to view contributors"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course_contributors(
     request: Request,
     course_uuid: str,
@@ -566,7 +811,20 @@ async def api_get_course_contributors(
     return await get_course_contributors(request, course_uuid, current_user, db_session)
 
 
-@router.put("/{course_uuid}/contributors/{contributor_user_id}")
+@router.put(
+    "/{course_uuid}/contributors/{contributor_user_id}",
+    summary="Update course contributor",
+    description=(
+        "Update a course contributor's authorship role and status. Only course "
+        "administrators or maintainers can perform this action."
+    ),
+    responses={
+        200: {"description": "Contributor updated"},
+        403: {"description": "User lacks permission to manage contributors"},
+        404: {"description": "Course or contributor not found"},
+        422: {"description": "Invalid authorship or status value"},
+    },
+)
 async def api_update_course_contributor(
     request: Request,
     course_uuid: str,
@@ -591,7 +849,19 @@ async def api_update_course_contributor(
     )
 
 
-@router.post("/{course_uuid}/bulk-add-contributors")
+@router.post(
+    "/{course_uuid}/bulk-add-contributors",
+    summary="Bulk add course contributors",
+    description=(
+        "Add multiple contributors to a course by their usernames in a single call. "
+        "Only course administrators can perform this action."
+    ),
+    responses={
+        200: {"description": "Contributors added"},
+        403: {"description": "User lacks permission to manage contributors"},
+        404: {"description": "Course or one of the specified users not found"},
+    },
+)
 async def api_add_bulk_course_contributors(
     request: Request,
     course_uuid: str,
@@ -612,7 +882,16 @@ async def api_add_bulk_course_contributors(
     )
 
 
-@router.put("/{course_uuid}/bulk-remove-contributors")
+@router.put(
+    "/{course_uuid}/bulk-remove-contributors",
+    summary="Bulk remove course contributors",
+    description="Remove multiple contributors from a course by their usernames in a single call.",
+    responses={
+        200: {"description": "Contributors removed"},
+        403: {"description": "User lacks permission to manage contributors"},
+        404: {"description": "Course or one of the specified users not found"},
+    },
+)
 async def api_remove_bulk_course_contributors(
     request: Request,
     course_uuid: str,
@@ -628,7 +907,19 @@ async def api_remove_bulk_course_contributors(
     )
 
 
-@router.get("/{course_uuid}/rights")
+@router.get(
+    "/{course_uuid}/rights",
+    summary="Get course user rights",
+    description=(
+        "Return the current user's detailed rights on a course (permissions, "
+        "ownership, roles). Intended for UI-level feature gating; anonymous "
+        "users only see rights for public courses."
+    ),
+    responses={
+        200: {"description": "Rights object describing permissions, ownership and roles"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_course_user_rights(
     request: Request,
     course_uuid: str,

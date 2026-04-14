@@ -82,7 +82,17 @@ def _get_course_context(
         return None, course.id
 
 
-@router.post("/generate/start")
+@router.post(
+    "/generate/start",
+    summary="Start a playground generation session",
+    description="Start a new Playground AI generation session with a server-sent events stream. Deducts AI credits and requires update permission on the target playground.",
+    responses={
+        200: {"description": "Server-sent events stream of generated playground content.", "content": {"text/event-stream": {}}},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to generate content"},
+        404: {"description": "Playground or organization not found"},
+    },
+)
 async def start_playground_session(
     request: Request,
     session_request: StartPlaygroundSession,
@@ -150,7 +160,18 @@ async def start_playground_session(
     )
 
 
-@router.post("/generate/iterate")
+@router.post(
+    "/generate/iterate",
+    summary="Iterate on a playground generation session",
+    description="Continue an existing Playground session with a new message, streaming the updated output. Deducts AI credits and enforces the session's iteration limit.",
+    responses={
+        200: {"description": "Server-sent events stream of generated playground content.", "content": {"text/event-stream": {}}},
+        400: {"description": "Maximum iterations reached or playground UUID mismatch"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions"},
+        404: {"description": "Session, playground, or organization not found"},
+    },
+)
 async def iterate_playground_session(
     request: Request,
     message_request: SendPlaygroundMessage,
@@ -228,7 +249,17 @@ async def iterate_playground_session(
     )
 
 
-@router.get("/generate/session/{session_uuid}")
+@router.get(
+    "/generate/session/{session_uuid}",
+    response_model=PlaygroundSessionResponse,
+    summary="Get playground generation session state",
+    description="Retrieve the current state of a Playground generation session, including iteration count, current HTML, and message history.",
+    responses={
+        200: {"description": "Current state of the playground generation session.", "model": PlaygroundSessionResponse},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),

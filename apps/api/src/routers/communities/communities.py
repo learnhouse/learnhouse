@@ -33,7 +33,18 @@ class CommunityCreateRequest(BaseModel):
     course_id: int | None = None
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=CommunityRead,
+    summary="Create a community",
+    description="Create a new community inside an organization. Optionally link it to a course on creation. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Community created successfully.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for the organization"},
+        404: {"description": "Organization or course not found"},
+    },
+)
 async def api_create_community(
     request: Request,
     org_id: int,
@@ -61,7 +72,18 @@ async def api_create_community(
     )
 
 
-@router.get("/{community_uuid}")
+@router.get(
+    "/{community_uuid}",
+    response_model=CommunityRead,
+    summary="Get a community",
+    description="Retrieve a community by its UUID. The caller must be able to read the community.",
+    responses={
+        200: {"description": "Community retrieved.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User does not have read access to this community"},
+        404: {"description": "Community not found"},
+    },
+)
 async def api_get_community(
     request: Request,
     community_uuid: str,
@@ -74,7 +96,18 @@ async def api_get_community(
     return await get_community(request, community_uuid, current_user, db_session)
 
 
-@router.get("/org/{org_id}/page/{page}/limit/{limit}")
+@router.get(
+    "/org/{org_id}/page/{page}/limit/{limit}",
+    response_model=List[CommunityRead],
+    summary="List communities for an organization",
+    description="Retrieve a paginated list of communities belonging to an organization.",
+    responses={
+        200: {"description": "Paginated list of communities.", "model": List[CommunityRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks access to this organization's communities"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_communities_by_org(
     request: Request,
     org_id: int,
@@ -91,7 +124,17 @@ async def api_get_communities_by_org(
     )
 
 
-@router.get("/course/{course_uuid}")
+@router.get(
+    "/course/{course_uuid}",
+    summary="Get community for a course",
+    description="Retrieve the community that is linked to a specific course, if one exists.",
+    responses={
+        200: {"description": "Community linked to the course, or null if no community is linked."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User does not have access to this course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_community_by_course(
     request: Request,
     course_uuid: str,
@@ -104,7 +147,18 @@ async def api_get_community_by_course(
     return await get_community_by_course(request, course_uuid, current_user, db_session)
 
 
-@router.put("/{community_uuid}")
+@router.put(
+    "/{community_uuid}",
+    response_model=CommunityRead,
+    summary="Update a community",
+    description="Update an existing community's attributes. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Community updated successfully.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for this community"},
+        404: {"description": "Community not found"},
+    },
+)
 async def api_update_community(
     request: Request,
     community_uuid: str,
@@ -122,7 +176,17 @@ async def api_update_community(
     )
 
 
-@router.delete("/{community_uuid}")
+@router.delete(
+    "/{community_uuid}",
+    summary="Delete a community",
+    description="Permanently delete a community. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Community deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for this community"},
+        404: {"description": "Community not found"},
+    },
+)
 async def api_delete_community(
     request: Request,
     community_uuid: str,
@@ -137,7 +201,18 @@ async def api_delete_community(
     return await delete_community(request, community_uuid, current_user, db_session)
 
 
-@router.put("/{community_uuid}/link-course/{course_uuid}")
+@router.put(
+    "/{community_uuid}/link-course/{course_uuid}",
+    response_model=CommunityRead,
+    summary="Link community to a course",
+    description="Associate a community with a course so that course members can participate. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Community linked to course.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for this community"},
+        404: {"description": "Community or course not found"},
+    },
+)
 async def api_link_community_to_course(
     request: Request,
     community_uuid: str,
@@ -155,7 +230,18 @@ async def api_link_community_to_course(
     )
 
 
-@router.delete("/{community_uuid}/unlink-course")
+@router.delete(
+    "/{community_uuid}/unlink-course",
+    response_model=CommunityRead,
+    summary="Unlink community from its course",
+    description="Remove the association between a community and its currently linked course. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Community unlinked from course.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for this community"},
+        404: {"description": "Community not found"},
+    },
+)
 async def api_unlink_community_from_course(
     request: Request,
     community_uuid: str,
@@ -172,7 +258,16 @@ async def api_unlink_community_from_course(
     )
 
 
-@router.get("/{community_uuid}/rights")
+@router.get(
+    "/{community_uuid}/rights",
+    summary="Get current user rights for a community",
+    description="Return a detailed breakdown of the rights the current user has on a community (read, write, moderate, admin).",
+    responses={
+        200: {"description": "User rights for the community."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Community not found"},
+    },
+)
 async def api_get_community_rights(
     request: Request,
     community_uuid: str,
@@ -187,7 +282,18 @@ async def api_get_community_rights(
     )
 
 
-@router.put("/{community_uuid}/thumbnail")
+@router.put(
+    "/{community_uuid}/thumbnail",
+    response_model=CommunityRead,
+    summary="Upload a community thumbnail",
+    description="Upload or replace the thumbnail image for a community. Requires admin/maintainer role.",
+    responses={
+        200: {"description": "Thumbnail uploaded and community updated.", "model": CommunityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role for this community"},
+        404: {"description": "Community or organization not found"},
+    },
+)
 async def api_update_community_thumbnail(
     request: Request,
     community_uuid: str,

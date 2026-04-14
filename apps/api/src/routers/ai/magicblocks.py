@@ -66,7 +66,20 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
         return "gemini-2.5-flash-lite"
 
 
-@router.post("/magicblocks/start")
+@router.post(
+    "/magicblocks/start",
+    summary="Start MagicBlock session (streaming)",
+    description="Start a new MagicBlock AI generation session for an activity block. Streams generated HTML as Server-Sent Events (SSE). Consumes AI credits from the owning organization.",
+    responses={
+        200: {
+            "description": "SSE stream of generation events (chunk, done, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "AI feature disabled or insufficient credits"},
+        404: {"description": "Activity, course, or organization not found"},
+    },
+)
 async def start_magicblock_session(
     request: Request,
     session_request: StartMagicBlockSession,
@@ -136,7 +149,21 @@ async def start_magicblock_session(
     )
 
 
-@router.post("/magicblocks/iterate")
+@router.post(
+    "/magicblocks/iterate",
+    summary="Iterate MagicBlock session (streaming)",
+    description="Continue an existing MagicBlock session with a new user message. Streams the updated HTML as Server-Sent Events (SSE). Consumes AI credits and is bounded by the session's max iterations.",
+    responses={
+        200: {
+            "description": "SSE stream of generation events (chunk, done, error).",
+            "content": {"text/event-stream": {}},
+        },
+        400: {"description": "Maximum iterations reached or activity/block UUID mismatch"},
+        401: {"description": "Authentication required"},
+        403: {"description": "AI feature disabled or insufficient credits"},
+        404: {"description": "Session, course, or organization not found"},
+    },
+)
 async def iterate_magicblock_session(
     request: Request,
     message_request: SendMagicBlockMessage,
@@ -215,7 +242,17 @@ async def iterate_magicblock_session(
     )
 
 
-@router.get("/magicblocks/session/{session_uuid}")
+@router.get(
+    "/magicblocks/session/{session_uuid}",
+    response_model=MagicBlockSessionResponse,
+    summary="Get MagicBlock session state",
+    description="Return the current state of a MagicBlock session, including iteration count, generated HTML, and full message history.",
+    responses={
+        200: {"description": "MagicBlock session state.", "model": MagicBlockSessionResponse},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),

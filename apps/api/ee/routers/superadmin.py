@@ -178,7 +178,17 @@ def _get_admin_users(db_session: Session, org_ids: list[int]) -> dict[int, list[
 # Status
 # ---------------------------------------------------------------------------
 
-@router.get("/status")
+@router.get(
+    "/status",
+    response_model=SuperadminStatusResponse,
+    summary="Check superadmin status",
+    description="Return whether the current user has superadmin privileges. Used by the dashboard to gate superadmin UI.",
+    responses={
+        200: {"description": "Caller is a superadmin.", "model": SuperadminStatusResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+    },
+)
 async def get_superadmin_status(
     current_user: PublicUser = Depends(require_superadmin),
 ) -> SuperadminStatusResponse:
@@ -189,7 +199,16 @@ async def get_superadmin_status(
 # Global users list
 # ---------------------------------------------------------------------------
 
-@router.get("/users")
+@router.get(
+    "/users",
+    summary="List all platform users",
+    description="List every user across every organization on the platform, with paging, sort, search, and superadmin/min/max-org filters.",
+    responses={
+        200: {"description": "Paginated list of users with org counts and memberships."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+    },
+)
 async def list_all_users(
     page: int = 1,
     limit: int = 20,
@@ -310,7 +329,19 @@ async def list_all_users(
 # Organization list
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations")
+@router.get(
+    "/organizations",
+    summary="List all organizations",
+    description=(
+        "List every organization on the platform with user/course counts, plan, custom domains, "
+        "and admin users. Supports paging, search, plan filter, and several sort modes (including Tinybird-backed `most_visits`)."
+    ),
+    responses={
+        200: {"description": "Paginated list of organizations with enrichment (plan, domains, admins, counts)."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+    },
+)
 async def list_all_organizations(
     page: int = 1,
     limit: int = 20,
@@ -566,7 +597,16 @@ async def _list_orgs_by_visits(
 # Organization visits (must be before {org_id} routes)
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/visits")
+@router.get(
+    "/organizations/visits",
+    summary="Get weekly visits per org",
+    description="Return daily `page_view` counts per organization for the last 7 days, used for sparklines in the superadmin dashboard. Falls back to an empty response if Tinybird is unavailable.",
+    responses={
+        200: {"description": "Daily page-view counts per org for the last 7 days."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+    },
+)
 async def get_org_weekly_visits(
     current_user: PublicUser = Depends(require_superadmin),
     db_session: Session = Depends(get_db_session),
@@ -603,7 +643,18 @@ async def get_org_weekly_visits(
 # Organization detail
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/{org_id}")
+@router.get(
+    "/organizations/{org_id}",
+    response_model=OrgDetailResponse,
+    summary="Get organization detail",
+    description="Get a single organization's full detail including config, plan, custom domains, admin users, and user/course counts.",
+    responses={
+        200: {"description": "Organization detail with enrichment.", "model": OrgDetailResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_organization_detail(
     org_id: int,
     current_user: PublicUser = Depends(require_superadmin),
@@ -663,7 +714,18 @@ async def get_organization_detail(
 # Organization courses
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/{org_id}/courses")
+@router.get(
+    "/organizations/{org_id}/courses",
+    response_model=PaginatedResponse,
+    summary="List courses for organization",
+    description="Paginated list of courses for a specific organization.",
+    responses={
+        200: {"description": "Paginated list of courses in the organization.", "model": PaginatedResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def list_org_courses(
     org_id: int,
     page: int = 1,
@@ -710,7 +772,18 @@ async def list_org_courses(
 # Organization users
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/{org_id}/users")
+@router.get(
+    "/organizations/{org_id}/users",
+    response_model=PaginatedResponse,
+    summary="List users for organization",
+    description="Paginated list of users that belong to a specific organization, with optional search.",
+    responses={
+        200: {"description": "Paginated list of users in the organization.", "model": PaginatedResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def list_org_users(
     org_id: int,
     page: int = 1,
@@ -778,7 +851,18 @@ async def list_org_users(
 # Update plan
 # ---------------------------------------------------------------------------
 
-@router.put("/organizations/{org_id}/plan")
+@router.put(
+    "/organizations/{org_id}/plan",
+    summary="Update organization plan",
+    description="Update an organization's plan (free, standard, pro, enterprise). Writes to both v1 and v2 config layouts.",
+    responses={
+        200: {"description": "Plan updated."},
+        400: {"description": "Invalid plan value"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization or organization config not found"},
+    },
+)
 async def update_org_plan(
     org_id: int,
     body: PlanUpdateRequest,
@@ -824,7 +908,18 @@ async def update_org_plan(
 # Update settings
 # ---------------------------------------------------------------------------
 
-@router.put("/organizations/{org_id}/settings")
+@router.put(
+    "/organizations/{org_id}/settings",
+    summary="Update organization settings",
+    description="Update an organization's top-level settings (name, slug, email, description). Enforces slug uniqueness.",
+    responses={
+        200: {"description": "Organization settings updated."},
+        400: {"description": "Slug already in use"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def update_org_settings(
     org_id: int,
     body: OrgSettingsUpdateRequest,
@@ -861,7 +956,17 @@ async def update_org_settings(
 # Update full config (features, limits, etc.)
 # ---------------------------------------------------------------------------
 
-@router.put("/organizations/{org_id}/config")
+@router.put(
+    "/organizations/{org_id}/config",
+    summary="Update organization config",
+    description="Replace an organization's full config blob (features, limits, plan metadata, etc.). Superadmin only.",
+    responses={
+        200: {"description": "Organization config updated."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization or organization config not found"},
+    },
+)
 async def update_org_config(
     org_id: int,
     body: OrgConfigUpdateRequest,
@@ -891,7 +996,17 @@ async def update_org_config(
 # Organization usage
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/{org_id}/usage")
+@router.get(
+    "/organizations/{org_id}/usage",
+    summary="Get organization usage",
+    description="Get usage and plan limits for an organization (courses, members, admin seats), including whether each limit is reached. Returns `unlimited` for zero-limit features.",
+    responses={
+        200: {"description": "Usage and limits for the organization."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_org_usage(
     org_id: int,
     current_user: PublicUser = Depends(require_superadmin),
@@ -965,7 +1080,17 @@ async def get_org_usage(
 # Analytics (FIXED: ALL_QUERIES values are tuples, not callables)
 # ---------------------------------------------------------------------------
 
-@router.get("/organizations/{org_id}/analytics")
+@router.get(
+    "/organizations/{org_id}/analytics",
+    summary="Get organization analytics",
+    description="Run the core Tinybird analytics queries for a single organization over the last N days (default 30). Individual query failures are swallowed and returned as empty results.",
+    responses={
+        200: {"description": "Per-query analytics results for the organization."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_org_analytics(
     org_id: int,
     days: int = 30,
@@ -999,7 +1124,16 @@ async def get_org_analytics(
     return results
 
 
-@router.get("/analytics/global")
+@router.get(
+    "/analytics/global",
+    summary="Get global analytics",
+    description="Run the core Tinybird analytics queries globally (org_id=0) over the last N days (default 30). Individual query failures are swallowed and returned as empty results.",
+    responses={
+        200: {"description": "Per-query cross-org analytics results."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller is not a superadmin"},
+    },
+)
 async def get_global_analytics(
     days: int = 30,
     current_user: PublicUser = Depends(require_superadmin),

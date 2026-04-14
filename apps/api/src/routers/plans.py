@@ -7,7 +7,14 @@ from src.security.features_utils.plans import (
 router = APIRouter()
 
 
-@router.get("")
+@router.get(
+    "",
+    summary="Get plan feature limits",
+    description="Public endpoint that returns the feature limits (courses, members, admin seats, AI credits) for every available plan. Used by the frontend to render pricing pages and plan comparison tables.",
+    responses={
+        200: {"description": "Mapping of plan id to feature limits"},
+    },
+)
 async def api_get_plan_limits():
     """
     Public endpoint — returns plan limits for all plans.
