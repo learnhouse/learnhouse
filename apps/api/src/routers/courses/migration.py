@@ -23,7 +23,19 @@ from src.services.courses.migration.migration_service import (
 router = APIRouter()
 
 
-@router.post("/migrate/upload", response_model=MigrationUploadResponse)
+@router.post(
+    "/migrate/upload",
+    response_model=MigrationUploadResponse,
+    summary="Upload migration files",
+    description=(
+        "Upload files for content migration from another LMS. "
+        "Pass an existing `temp_id` to append additional files to a prior upload."
+    ),
+    responses={
+        200: {"description": "Files uploaded; returns the temporary upload id.", "model": MigrationUploadResponse},
+        400: {"description": "Uploaded files are invalid or unsupported"},
+    },
+)
 async def api_upload_migration_files(
     request: Request,
     org_id: int,
@@ -35,7 +47,16 @@ async def api_upload_migration_files(
     return await upload_migration_files(files, existing_temp_id=temp_id)
 
 
-@router.post("/migrate/suggest", response_model=MigrationTreeStructure)
+@router.post(
+    "/migrate/suggest",
+    response_model=MigrationTreeStructure,
+    summary="Suggest migration structure",
+    description="Use AI to suggest a course structure from previously uploaded migration files.",
+    responses={
+        200: {"description": "Suggested course tree structure based on the uploaded files.", "model": MigrationTreeStructure},
+        404: {"description": "Temporary upload id not found"},
+    },
+)
 async def api_suggest_structure(
     request: Request,
     org_id: int,
@@ -50,7 +71,18 @@ async def api_suggest_structure(
     )
 
 
-@router.post("/migrate/create", response_model=MigrationCreateResult)
+@router.post(
+    "/migrate/create",
+    response_model=MigrationCreateResult,
+    summary="Create course from migration",
+    description="Create a course from the finalized migration tree structure returned by the suggest endpoint.",
+    responses={
+        200: {"description": "Course created from the migration payload; returns ids of created resources.", "model": MigrationCreateResult},
+        400: {"description": "Invalid structure payload"},
+        403: {"description": "Caller lacks permission to create courses in this org"},
+        404: {"description": "Temporary upload id or referenced resources not found"},
+    },
+)
 async def api_create_from_migration(
     request: Request,
     org_id: int,

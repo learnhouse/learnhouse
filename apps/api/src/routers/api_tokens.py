@@ -24,7 +24,21 @@ from src.services.security.rate_limiting import check_api_token_rate_limit
 router = APIRouter()
 
 
-@router.post("/{org_id}/api-tokens", response_model=APITokenCreatedResponse)
+@router.post(
+    "/{org_id}/api-tokens",
+    response_model=APITokenCreatedResponse,
+    summary="Create API token",
+    description=(
+        "Create a new API token for an organization. The full token value is only "
+        "returned once upon creation — store it securely, as it cannot be retrieved later. "
+        "Requires the user to have `roles.action_create` permission in the organization."
+    ),
+    responses={
+        200: {"description": "Token created; the full secret is included in the response (only time it is returned).", "model": APITokenCreatedResponse},
+        401: {"description": "Authentication required"},
+        429: {"description": "Rate limit exceeded for token creation"},
+    },
+)
 async def api_create_api_token(
     request: Request,
     org_id: int,
@@ -52,7 +66,19 @@ async def api_create_api_token(
     )
 
 
-@router.get("/{org_id}/api-tokens", response_model=List[APITokenRead])
+@router.get(
+    "/{org_id}/api-tokens",
+    response_model=List[APITokenRead],
+    summary="List API tokens",
+    description=(
+        "List all API tokens for an organization. Returns token metadata including the "
+        "prefix, but never the full token secret. Requires `roles.action_read` permission."
+    ),
+    responses={
+        200: {"description": "List of API tokens for the organization (metadata only)."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_list_api_tokens(
     request: Request,
     org_id: int,
@@ -68,7 +94,19 @@ async def api_list_api_tokens(
     return await list_api_tokens(request, db_session, org_id, current_user)
 
 
-@router.get("/{org_id}/api-tokens/{token_uuid}", response_model=APITokenRead)
+@router.get(
+    "/{org_id}/api-tokens/{token_uuid}",
+    response_model=APITokenRead,
+    summary="Get API token",
+    description=(
+        "Get details of a specific API token. Returns token metadata, but never "
+        "the full token secret."
+    ),
+    responses={
+        200: {"description": "API token metadata.", "model": APITokenRead},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_api_token(
     request: Request,
     org_id: int,
@@ -84,7 +122,20 @@ async def api_get_api_token(
     return await get_api_token(request, db_session, org_id, token_uuid, current_user)
 
 
-@router.put("/{org_id}/api-tokens/{token_uuid}", response_model=APITokenRead)
+@router.put(
+    "/{org_id}/api-tokens/{token_uuid}",
+    response_model=APITokenRead,
+    summary="Update API token",
+    description=(
+        "Update an API token's name, description, rights, or expiration. The token "
+        "secret cannot be changed here — use the regenerate endpoint for that. "
+        "Requires `roles.action_update` permission."
+    ),
+    responses={
+        200: {"description": "Token metadata updated.", "model": APITokenRead},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_update_api_token(
     request: Request,
     org_id: int,
@@ -104,7 +155,18 @@ async def api_update_api_token(
     )
 
 
-@router.delete("/{org_id}/api-tokens/{token_uuid}")
+@router.delete(
+    "/{org_id}/api-tokens/{token_uuid}",
+    summary="Revoke API token",
+    description=(
+        "Revoke an API token. The token will immediately stop working and this action "
+        "cannot be undone. Requires `roles.action_delete` permission."
+    ),
+    responses={
+        200: {"description": "Token revoked successfully."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_revoke_api_token(
     request: Request,
     org_id: int,
@@ -121,7 +183,21 @@ async def api_revoke_api_token(
     return await revoke_api_token(request, db_session, org_id, token_uuid, current_user)
 
 
-@router.post("/{org_id}/api-tokens/{token_uuid}/regenerate", response_model=APITokenCreatedResponse)
+@router.post(
+    "/{org_id}/api-tokens/{token_uuid}/regenerate",
+    response_model=APITokenCreatedResponse,
+    summary="Regenerate API token secret",
+    description=(
+        "Regenerate the secret for an API token. The old token will immediately stop "
+        "working. The new full token value is only returned once — store it securely. "
+        "Requires `roles.action_update` permission."
+    ),
+    responses={
+        200: {"description": "Token secret regenerated; new full secret is returned.", "model": APITokenCreatedResponse},
+        401: {"description": "Authentication required"},
+        429: {"description": "Rate limit exceeded for token regeneration"},
+    },
+)
 async def api_regenerate_api_token(
     request: Request,
     org_id: int,

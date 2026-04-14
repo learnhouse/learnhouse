@@ -158,7 +158,19 @@ def unset_auth_cookies(response: Response, request: Request = None):
     response.delete_cookie(key=JWT_REFRESH_COOKIE_NAME, domain=cookie_domain)
 
 
-@router.get("/refresh")
+@router.get(
+    "/refresh",
+    summary="Refresh access token",
+    description=(
+        "Validate the refresh token (read from the `refresh_token` httpOnly cookie) "
+        "and issue a new access token. Subject to IP-based rate limiting."
+    ),
+    responses={
+        200: {"description": "New access token issued and set as cookie; body contains the token and its expiry."},
+        401: {"description": "Refresh token is missing or invalid"},
+        429: {"description": "Too many refresh attempts from this IP"},
+    },
+)
 def refresh(request: Request, response: Response):
     """
     Validates the refresh token and issues a new access token.
@@ -212,7 +224,23 @@ def refresh(request: Request, response: Response):
     return {"access_token": new_access_token, "expiry": get_token_expiry_ms()}
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    summary="Log in with email and password",
+    description=(
+        "Authenticate a user with username (email) and password. On success, sets "
+        "httpOnly access and refresh cookies and returns the user profile and tokens. "
+        "Subject to IP-based rate limiting and account lockout after repeated failures. "
+        "In SaaS mode, the account's email must be verified."
+    ),
+    responses={
+        200: {"description": "Login successful; cookies set and body contains user + tokens."},
+        401: {"description": "Incorrect email or password"},
+        403: {"description": "Email not verified (SaaS mode)"},
+        423: {"description": "Account is locked due to too many failed attempts"},
+        429: {"description": "Too many login attempts from this IP"},
+    },
+)
 async def login(
     request: Request,
     response: Response,
@@ -321,7 +349,19 @@ class ThirdPartyLogin(BaseModel):
     access_token: str
 
 
-@router.post("/oauth")
+@router.post(
+    "/oauth",
+    summary="Log in via third-party provider",
+    description=(
+        "Sign in or sign up using a third-party OAuth provider (currently Google). "
+        "On success, sets httpOnly access and refresh cookies and returns the user "
+        "profile and tokens."
+    ),
+    responses={
+        200: {"description": "OAuth login successful; cookies set and body contains user + tokens."},
+        401: {"description": "Third-party authentication failed"},
+    },
+)
 async def third_party_login(
     request: Request,
     response: Response,
@@ -365,7 +405,19 @@ async def third_party_login(
     return result
 
 
-@router.delete("/logout")
+@router.delete(
+    "/logout",
+    summary="Log out the current user",
+    description=(
+        "Log out the current user by clearing the access and refresh cookies. "
+        "Because JWTs are stored in httpOnly cookies, the frontend cannot clear "
+        "them directly — the backend must respond with cookie-clearing headers."
+    ),
+    responses={
+        200: {"description": "Logout successful; auth cookies cleared."},
+        401: {"description": "No authenticated session was found"},
+    },
+)
 def logout(request: Request, response: Response):
     """
     Because the JWT are stored in an httponly cookie now, we cannot
@@ -390,7 +442,18 @@ class VerifyEmailRequest(BaseModel):
     org_uuid: str
 
 
-@router.post("/verify-email")
+@router.post(
+    "/verify-email",
+    summary="Verify user email",
+    description=(
+        "Verify a user's email address using the token delivered via verification email. "
+        "Rate limited to 5 attempts per 5 minutes per user_uuid."
+    ),
+    responses={
+        200: {"description": "Email verified successfully."},
+        429: {"description": "Too many verification attempts for this user"},
+    },
+)
 async def api_verify_email(
     request: Request,
     body: VerifyEmailRequest,
@@ -422,7 +485,18 @@ class ResendVerificationRequest(BaseModel):
     org_id: Optional[int] = None
 
 
-@router.post("/resend-verification")
+@router.post(
+    "/resend-verification",
+    summary="Resend verification email",
+    description=(
+        "Resend the email-verification email for a user. The underlying service "
+        "enforces its own rate limiting and will return a generic response whether "
+        "or not an account exists."
+    ),
+    responses={
+        200: {"description": "Verification email dispatch requested."},
+    },
+)
 async def api_resend_verification_email(
     request: Request,
     body: ResendVerificationRequest,

@@ -8,7 +8,18 @@ from src.services.search.search import search_across_org, SearchResult
 
 router = APIRouter()
 
-@router.get("/org_slug/{org_slug}", response_model=SearchResult)
+@router.get(
+    "/org_slug/{org_slug}",
+    response_model=SearchResult,
+    summary="Search within an organization",
+    description="Performs a paginated search across courses, collections, and users within the given organization. Query length and page size are capped to prevent data dumping. Requires authentication.",
+    responses={
+        200: {"description": "Search results grouped by resource type", "model": SearchResult},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not permitted to search this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_search_across_org(
     request: Request,
     org_slug: str,

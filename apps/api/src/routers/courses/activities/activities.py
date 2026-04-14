@@ -29,7 +29,18 @@ from src.services.courses.activities.video import (
 router = APIRouter()
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=ActivityRead,
+    summary="Create activity",
+    description="Create a new activity inside a chapter. The authenticated user must have permission to edit the parent course.",
+    responses={
+        200: {"description": "Activity created and returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create activities in this chapter"},
+        404: {"description": "Parent chapter or course not found"},
+    },
+)
 async def api_create_activity(
     request: Request,
     activity_object: ActivityCreate,
@@ -45,7 +56,18 @@ async def api_create_activity(
 # Versioning endpoints - MUST be before /{activity_uuid} catch-all routes
 
 
-@router.get("/{activity_uuid}/versions")
+@router.get(
+    "/{activity_uuid}/versions",
+    response_model=List[ActivityVersionRead],
+    summary="List activity versions",
+    description="Get the version history for an activity, ordered newest first. Supports pagination via limit and offset.",
+    responses={
+        200: {"description": "List of activity versions.", "model": List[ActivityVersionRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this activity's versions"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_get_activity_versions(
     request: Request,
     activity_uuid: str,
@@ -63,7 +85,18 @@ async def api_get_activity_versions(
     )
 
 
-@router.get("/{activity_uuid}/versions/{version_number}")
+@router.get(
+    "/{activity_uuid}/versions/{version_number}",
+    response_model=ActivityVersionRead,
+    summary="Get activity version",
+    description="Get a specific historical version of an activity by its version number.",
+    responses={
+        200: {"description": "Activity version returned.", "model": ActivityVersionRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this activity version"},
+        404: {"description": "Activity or version not found"},
+    },
+)
 async def api_get_activity_version(
     request: Request,
     activity_uuid: str,
@@ -79,7 +112,18 @@ async def api_get_activity_version(
     )
 
 
-@router.get("/{activity_uuid}/state")
+@router.get(
+    "/{activity_uuid}/state",
+    response_model=ActivityStateRead,
+    summary="Get activity state",
+    description="Get the current state of an activity for conflict detection. Returns lightweight info (update_date, current_version, last_modified_by) used by the frontend to detect remote changes.",
+    responses={
+        200: {"description": "Current activity state.", "model": ActivityStateRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this activity"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_get_activity_state(
     request: Request,
     activity_uuid: str,
@@ -96,7 +140,18 @@ async def api_get_activity_state(
     )
 
 
-@router.post("/{activity_uuid}/versions/{version_number}/restore")
+@router.post(
+    "/{activity_uuid}/versions/{version_number}/restore",
+    response_model=ActivityRead,
+    summary="Restore activity version",
+    description="Restore an activity to a previous version. Creates a new version with the restored content rather than rewriting history.",
+    responses={
+        200: {"description": "Activity restored; returns the updated activity.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to restore this activity"},
+        404: {"description": "Activity or version not found"},
+    },
+)
 async def api_restore_activity_version(
     request: Request,
     activity_uuid: str,
@@ -116,7 +171,18 @@ async def api_restore_activity_version(
 # Activity CRUD endpoints
 
 
-@router.get("/{activity_uuid}")
+@router.get(
+    "/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Get activity by UUID",
+    description="Get a single activity by its UUID.",
+    responses={
+        200: {"description": "Activity returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this activity"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_get_activity(
     request: Request,
     activity_uuid: str,
@@ -130,7 +196,18 @@ async def api_get_activity(
         request, activity_uuid, current_user=current_user, db_session=db_session
     )
 
-@router.get("/id/{activity_id}")
+@router.get(
+    "/id/{activity_id}",
+    response_model=ActivityRead,
+    summary="Get activity by ID",
+    description="Get a single activity by its numeric database ID.",
+    responses={
+        200: {"description": "Activity returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this activity"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_get_activityby_id(
     request: Request,
     activity_id: str,
@@ -143,8 +220,19 @@ async def api_get_activityby_id(
     return await get_activityby_id(
         request, activity_id, current_user=current_user, db_session=db_session
     )
-            
-@router.get("/chapter/{chapter_id}")
+
+@router.get(
+    "/chapter/{chapter_id}",
+    response_model=List[ActivityRead],
+    summary="List chapter activities",
+    description="Get all activities that belong to the given chapter, in their configured order.",
+    responses={
+        200: {"description": "List of activities for the chapter.", "model": List[ActivityRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to view this chapter"},
+        404: {"description": "Chapter not found"},
+    },
+)
 async def api_get_chapter_activities(
     request: Request,
     chapter_id: int,
@@ -157,7 +245,18 @@ async def api_get_chapter_activities(
     return await get_activities(request, chapter_id, current_user, db_session)
 
 
-@router.put("/{activity_uuid}")
+@router.put(
+    "/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Update activity",
+    description="Update an activity's fields by its UUID. Creates a new version when content changes.",
+    responses={
+        200: {"description": "Activity updated and returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this activity"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_update_activity(
     request: Request,
     activity_object: ActivityUpdate,
@@ -173,7 +272,17 @@ async def api_update_activity(
     )
 
 
-@router.delete("/{activity_uuid}")
+@router.delete(
+    "/{activity_uuid}",
+    summary="Delete activity",
+    description="Delete an activity by its UUID. The authenticated user must have permission to edit the parent course.",
+    responses={
+        200: {"description": "Activity deleted."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to delete this activity"},
+        404: {"description": "Activity not found"},
+    },
+)
 async def api_delete_activity(
     request: Request,
     activity_uuid: str,
@@ -189,7 +298,18 @@ async def api_delete_activity(
 # Video activity
 
 
-@router.post("/video")
+@router.post(
+    "/video",
+    response_model=ActivityRead,
+    summary="Create video activity",
+    description="Create a new video activity by uploading a video file. The video is stored and attached to the given chapter.",
+    responses={
+        200: {"description": "Video activity created and returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create activities in this chapter"},
+        404: {"description": "Chapter not found"},
+    },
+)
 async def api_create_video_activity(
     request: Request,
     name: str = Form(),
@@ -213,7 +333,18 @@ async def api_create_video_activity(
     )
 
 
-@router.post("/external_video")
+@router.post(
+    "/external_video",
+    response_model=ActivityRead,
+    summary="Create external video activity",
+    description="Create a new activity that embeds an externally hosted video (e.g. YouTube, Vimeo) instead of uploading a file.",
+    responses={
+        200: {"description": "External video activity created and returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create activities in this chapter"},
+        404: {"description": "Chapter not found"},
+    },
+)
 async def api_create_external_video_activity(
     request: Request,
     external_video: ExternalVideo,
@@ -228,7 +359,18 @@ async def api_create_external_video_activity(
     )
 
 
-@router.post("/documentpdf")
+@router.post(
+    "/documentpdf",
+    response_model=ActivityRead,
+    summary="Create PDF document activity",
+    description="Create a new activity by uploading a PDF document. The file is stored and attached to the given chapter.",
+    responses={
+        200: {"description": "PDF activity created and returned.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create activities in this chapter"},
+        404: {"description": "Chapter not found"},
+    },
+)
 async def api_create_documentpdf_activity(
     request: Request,
     name: str = Form(),

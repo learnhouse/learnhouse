@@ -29,7 +29,18 @@ from src.security.auth import get_current_user
 router = APIRouter()
 
 
-@router.post("/", response_model=PodcastRead)
+@router.post(
+    "/",
+    response_model=PodcastRead,
+    summary="Create a podcast",
+    description="Create a new podcast within an organization. Accepts multipart form data with optional thumbnail upload.",
+    responses={
+        200: {"description": "Podcast created successfully.", "model": PodcastRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create podcasts in this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_create_podcast(
     request: Request,
     org_id: int,
@@ -61,7 +72,18 @@ async def api_create_podcast(
     return podcast
 
 
-@router.get("/{podcast_uuid}", response_model=PodcastRead)
+@router.get(
+    "/{podcast_uuid}",
+    response_model=PodcastRead,
+    summary="Get a podcast",
+    description="Fetch a podcast by its UUID. The caller must have read access to the podcast.",
+    responses={
+        200: {"description": "Podcast details.", "model": PodcastRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to read this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_get_podcast(
     request: Request,
     podcast_uuid: str,
@@ -73,7 +95,17 @@ async def api_get_podcast(
     return podcast
 
 
-@router.get("/{podcast_uuid}/meta")
+@router.get(
+    "/{podcast_uuid}/meta",
+    summary="Get podcast metadata",
+    description="Fetch a podcast along with its episodes and related metadata.",
+    responses={
+        200: {"description": "Podcast metadata with episodes."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to read this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_get_podcast_meta(
     request: Request,
     podcast_uuid: str,
@@ -85,7 +117,18 @@ async def api_get_podcast_meta(
     return result
 
 
-@router.get("/org_slug/{org_slug}/page/{page}/limit/{limit}", response_model=List[PodcastReadWithEpisodeCount])
+@router.get(
+    "/org_slug/{org_slug}/page/{page}/limit/{limit}",
+    response_model=List[PodcastReadWithEpisodeCount],
+    summary="List podcasts for an organization",
+    description="Return a paginated list of podcasts belonging to an organization, with episode counts. Set `include_unpublished=true` to include unpublished podcasts (requires appropriate permissions).",
+    responses={
+        200: {"description": "Paginated list of podcasts with episode counts.", "model": List[PodcastReadWithEpisodeCount]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to list podcasts in this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_podcasts_orgslug(
     request: Request,
     org_slug: str,
@@ -102,7 +145,17 @@ async def api_get_podcasts_orgslug(
     return podcasts
 
 
-@router.get("/org_slug/{org_slug}/count")
+@router.get(
+    "/org_slug/{org_slug}/count",
+    summary="Count podcasts for an organization",
+    description="Return the total number of podcasts belonging to an organization.",
+    responses={
+        200: {"description": "Object with the total podcast count."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to list podcasts in this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_get_podcasts_count_orgslug(
     request: Request,
     org_slug: str,
@@ -114,7 +167,18 @@ async def api_get_podcasts_count_orgslug(
     return {"count": count}
 
 
-@router.put("/{podcast_uuid}", response_model=PodcastRead)
+@router.put(
+    "/{podcast_uuid}",
+    response_model=PodcastRead,
+    summary="Update a podcast",
+    description="Update a podcast's metadata. The caller must have write access to the podcast.",
+    responses={
+        200: {"description": "Podcast updated successfully.", "model": PodcastRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_update_podcast(
     request: Request,
     podcast_uuid: str,
@@ -129,7 +193,18 @@ async def api_update_podcast(
     return podcast
 
 
-@router.put("/{podcast_uuid}/thumbnail", response_model=PodcastRead)
+@router.put(
+    "/{podcast_uuid}/thumbnail",
+    response_model=PodcastRead,
+    summary="Update podcast thumbnail",
+    description="Upload or replace the thumbnail image for a podcast.",
+    responses={
+        200: {"description": "Thumbnail uploaded and podcast updated.", "model": PodcastRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_update_podcast_thumbnail(
     request: Request,
     podcast_uuid: str,
@@ -144,7 +219,17 @@ async def api_update_podcast_thumbnail(
     return podcast
 
 
-@router.delete("/{podcast_uuid}")
+@router.delete(
+    "/{podcast_uuid}",
+    summary="Delete a podcast",
+    description="Delete a podcast and its associated episodes. This operation cannot be undone.",
+    responses={
+        200: {"description": "Podcast deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to delete this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_delete_podcast(
     request: Request,
     podcast_uuid: str,
@@ -156,7 +241,16 @@ async def api_delete_podcast(
     return result
 
 
-@router.get("/{podcast_uuid}/rights")
+@router.get(
+    "/{podcast_uuid}/rights",
+    summary="Get podcast user rights",
+    description="Return the current user's rights (read, update, delete) on a given podcast.",
+    responses={
+        200: {"description": "User rights for the podcast."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_get_podcast_rights(
     request: Request,
     podcast_uuid: str,
@@ -171,7 +265,18 @@ async def api_get_podcast_rights(
 
 
 # Episode endpoints nested under podcast
-@router.get("/{podcast_uuid}/episodes", response_model=List[PodcastEpisodeRead])
+@router.get(
+    "/{podcast_uuid}/episodes",
+    response_model=List[PodcastEpisodeRead],
+    summary="List podcast episodes",
+    description="Return all episodes for a podcast. Set `include_unpublished=true` to include unpublished episodes (requires appropriate permissions).",
+    responses={
+        200: {"description": "List of episodes for the podcast.", "model": List[PodcastEpisodeRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to read this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_get_podcast_episodes(
     request: Request,
     podcast_uuid: str,
@@ -197,7 +302,18 @@ async def api_get_podcast_episodes(
     return episodes
 
 
-@router.post("/{podcast_uuid}/episodes", response_model=PodcastEpisodeRead)
+@router.post(
+    "/{podcast_uuid}/episodes",
+    response_model=PodcastEpisodeRead,
+    summary="Create a podcast episode",
+    description="Create a new episode for a podcast. Accepts multipart form data with optional audio file and thumbnail upload.",
+    responses={
+        200: {"description": "Episode created successfully.", "model": PodcastEpisodeRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to create episodes in this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_create_episode(
     request: Request,
     podcast_uuid: str,
@@ -231,7 +347,17 @@ async def api_create_episode(
     return episode
 
 
-@router.put("/{podcast_uuid}/episodes/reorder")
+@router.put(
+    "/{podcast_uuid}/episodes/reorder",
+    summary="Reorder podcast episodes",
+    description="Reorder the episodes of a podcast by providing a list of episode ordering objects.",
+    responses={
+        200: {"description": "Episodes reordered successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to reorder episodes in this podcast"},
+        404: {"description": "Podcast not found"},
+    },
+)
 async def api_reorder_episodes(
     request: Request,
     podcast_uuid: str,

@@ -47,7 +47,24 @@ async def verify_org_admin_and_plan(
     # RBAC check for admin status (using 'update' as a proxy for admin actions)
     await rbac_check(request, org.org_uuid, current_user, "update", session)
 
-@router.get("/export")
+@router.get(
+    "/export",
+    summary="Export audit logs as CSV",
+    description=(
+        "Export audit logs for an organization as a CSV file. Supports the same "
+        "filter set as the paginated listing endpoint and streams the result as "
+        "an attachment. Requires Enterprise plan and admin RBAC."
+    ),
+    responses={
+        200: {
+            "description": "CSV file containing the filtered audit log rows.",
+            "content": {"text/csv": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def export_audit_logs(
     *,
     request: Request,
@@ -130,7 +147,22 @@ async def export_audit_logs(
         headers={"Content-Disposition": f"attachment; filename=audit_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
     )
 
-@router.get("/", response_model=AuditLogPaginated)
+@router.get(
+    "/",
+    response_model=AuditLogPaginated,
+    summary="List audit logs",
+    description=(
+        "Retrieve audit logs for an organization with filtering and pagination. "
+        "Supports filtering by user, action, resource, status code, IP, and date range. "
+        "Requires Enterprise plan and admin RBAC."
+    ),
+    responses={
+        200: {"description": "Paginated audit log entries with total count.", "model": AuditLogPaginated},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_audit_logs(
     *,
     request: Request,

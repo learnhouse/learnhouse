@@ -100,7 +100,14 @@ def _invalidate_session_cache(user_id: int) -> None:
         logger.debug("Session cache invalidation failed for user %s", user_id, exc_info=True)
 
 
-@router.get("/profile")
+@router.get(
+    "/profile",
+    summary="Get current user profile",
+    description="Return the currently authenticated user, or an anonymous user object if no session is present.",
+    responses={
+        200: {"description": "Current user profile (public or anonymous)."},
+    },
+)
 async def api_get_current_user(
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user)
 ):
@@ -110,7 +117,15 @@ async def api_get_current_user(
     return current_user.model_dump()
 
 
-@router.get("/session")
+@router.get(
+    "/session",
+    response_model=UserSession,
+    summary="Get current user session",
+    description="Return the full session for the current user, including org memberships and roles. Cached in Redis for up to 10 minutes per user.",
+    responses={
+        200: {"description": "Full session info for the current user.", "model": UserSession},
+    },
+)
 async def api_get_current_user_session(
     request: Request,
     db_session: Session = Depends(get_db_session),
@@ -132,7 +147,14 @@ async def api_get_current_user_session(
     return session
 
 
-@router.get("/authorize/ressource/{ressource_uuid}/action/{action}")
+@router.get(
+    "/authorize/ressource/{ressource_uuid}/action/{action}",
+    summary="Check authorization for resource action",
+    description="Check whether the current user is authorized to perform the given action (create/read/update/delete) on a specific resource.",
+    responses={
+        200: {"description": "Authorization decision for the requested resource and action."},
+    },
+)
 async def api_get_authorization_status(
     request: Request,
     ressource_uuid: str,
@@ -148,7 +170,17 @@ async def api_get_authorization_status(
     )
 
 
-@router.post("/{org_id}", response_model=UserRead, tags=["users"])
+@router.post(
+    "/{org_id}",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Create user in organization",
+    description="Create a user and attach them to the given organization. Rejected if the organization is invite-only — use the invite-code endpoint instead.",
+    responses={
+        200: {"description": "User created and attached to the organization.", "model": UserRead},
+        403: {"description": "Organization is invite-only; an invite code is required"},
+    },
+)
 async def api_create_user_with_orgid(
     *,
     request: Request,
@@ -174,7 +206,17 @@ async def api_create_user_with_orgid(
         return await create_user(request, db_session, current_user, user_object, org_id)
 
 
-@router.post("/{org_id}/invite/{invite_code}", response_model=UserRead, tags=["users"])
+@router.post(
+    "/{org_id}/invite/{invite_code}",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Create user with invite code",
+    description="Create a user and attach them to the given organization using an invite code. Only valid when the organization is configured as invite-only.",
+    responses={
+        200: {"description": "User created and attached via invite code.", "model": UserRead},
+        403: {"description": "Organization does not require an invite code"},
+    },
+)
 async def api_create_user_with_orgid_and_invite(
     *,
     request: Request,
@@ -203,7 +245,16 @@ async def api_create_user_with_orgid_and_invite(
         )
 
 
-@router.post("/", response_model=UserRead, tags=["users"])
+@router.post(
+    "/",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Create user without organization",
+    description="Create a user account that is not attached to any organization at creation time.",
+    responses={
+        200: {"description": "User account created.", "model": UserRead},
+    },
+)
 async def api_create_user_without_org(
     *,
     request: Request,
@@ -217,7 +268,17 @@ async def api_create_user_without_org(
     return await create_user_without_org(request, db_session, current_user, user_object)
 
 
-@router.get("/id/{user_id}", response_model=UserReadPublic, tags=["users"])
+@router.get(
+    "/id/{user_id}",
+    response_model=UserReadPublic,
+    tags=["users"],
+    summary="Get user by ID",
+    description="Get a user by numeric ID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    responses={
+        200: {"description": "Public view of the user.", "model": UserReadPublic},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_user_by_id(
     *,
     request: Request,
@@ -235,7 +296,17 @@ async def api_get_user_by_id(
     return await read_user_by_id(request, db_session, current_user, user_id)
 
 
-@router.get("/uuid/{user_uuid}", response_model=UserReadPublic, tags=["users"])
+@router.get(
+    "/uuid/{user_uuid}",
+    response_model=UserReadPublic,
+    tags=["users"],
+    summary="Get user by UUID",
+    description="Get a user by UUID. Requires authentication to prevent user enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    responses={
+        200: {"description": "Public view of the user.", "model": UserReadPublic},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_user_by_uuid(
     *,
     request: Request,
@@ -252,7 +323,17 @@ async def api_get_user_by_uuid(
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
 
-@router.get("/username/{username}", response_model=UserReadPublic, tags=["users"])
+@router.get(
+    "/username/{username}",
+    response_model=UserReadPublic,
+    tags=["users"],
+    summary="Get user by username",
+    description="Get a user by username. Requires authentication to prevent username enumeration attacks. Sensitive fields (`is_superadmin`, `signup_method`) are excluded.",
+    responses={
+        200: {"description": "Public view of the user.", "model": UserReadPublic},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_user_by_username(
     *,
     request: Request,
@@ -269,7 +350,16 @@ async def api_get_user_by_username(
     return await read_user_by_username(request, db_session, current_user, username)
 
 
-@router.put("/{user_id}", response_model=UserRead, tags=["users"])
+@router.put(
+    "/{user_id}",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Update user",
+    description="Update a user's profile fields. Invalidates the user's cached session so subsequent session reads reflect the change.",
+    responses={
+        200: {"description": "User updated successfully.", "model": UserRead},
+    },
+)
 async def api_update_user(
     *,
     request: Request,
@@ -286,7 +376,17 @@ async def api_update_user(
     return result
 
 
-@router.put("/update_avatar/{user_id}", response_model=UserRead, tags=["users"])
+@router.put(
+    "/update_avatar/{user_id}",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Update user avatar",
+    description="Upload a new avatar image for a user. Users can only update their own avatar (the `user_id` in the URL must match the authenticated user's ID).",
+    responses={
+        200: {"description": "Avatar updated; cached session is invalidated so subsequent reads return the new image.", "model": UserRead},
+        403: {"description": "Attempted to update another user's avatar"},
+    },
+)
 async def api_update_avatar_user(
     *,
     request: Request,
@@ -313,7 +413,16 @@ async def api_update_avatar_user(
     return result
 
 
-@router.put("/change_password/{user_id}", response_model=UserRead, tags=["users"])
+@router.put(
+    "/change_password/{user_id}",
+    response_model=UserRead,
+    tags=["users"],
+    summary="Change user password",
+    description="Update a user's password. The authenticated user must either be the target user or otherwise authorized by the service layer.",
+    responses={
+        200: {"description": "Password changed successfully.", "model": UserRead},
+    },
+)
 async def api_update_user_password(
     *,
     request: Request,
@@ -334,7 +443,16 @@ class ResetPasswordRequest(BaseModel):
     reset_code: str
 
 
-@router.post("/reset_password/change_password/{email}", tags=["users"])
+@router.post(
+    "/reset_password/change_password/{email}",
+    tags=["users"],
+    summary="Change password with reset code",
+    description="Change a user's password using a reset code delivered via email. The new password and reset code are sent in the request body (not query params) to keep them out of logs and browser history.",
+    responses={
+        200: {"description": "Password updated successfully using the reset code."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
 async def api_change_password_with_reset_code(
     *,
     request: Request,
@@ -362,7 +480,15 @@ async def api_change_password_with_reset_code(
     )
 
 
-@router.post("/reset_password/send_reset_code/{email}", tags=["users"])
+@router.post(
+    "/reset_password/send_reset_code/{email}",
+    tags=["users"],
+    summary="Send password reset code",
+    description="Dispatch an org-scoped password reset code to the given email address.",
+    responses={
+        200: {"description": "Reset code email dispatch requested."},
+    },
+)
 async def api_send_password_reset_email(
     *,
     request: Request,
@@ -384,7 +510,16 @@ class PlatformResetPasswordRequest(BaseModel):
     reset_code: str
 
 
-@router.post("/reset_password/platform/send_reset_code/{email}", tags=["users"])
+@router.post(
+    "/reset_password/platform/send_reset_code/{email}",
+    tags=["users"],
+    summary="Send platform password reset code",
+    description="Dispatch a platform-level password reset code (no org required). Subject to rate limiting per email.",
+    responses={
+        200: {"description": "Reset code email dispatch requested."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
 async def api_send_password_reset_email_platform(
     *,
     request: Request,
@@ -407,7 +542,16 @@ async def api_send_password_reset_email_platform(
     )
 
 
-@router.post("/reset_password/platform/change_password/{email}", tags=["users"])
+@router.post(
+    "/reset_password/platform/change_password/{email}",
+    tags=["users"],
+    summary="Change platform password with reset code",
+    description="Change a user's password at the platform level (no org required) using a reset code. Subject to rate limiting per email.",
+    responses={
+        200: {"description": "Password updated successfully using the reset code."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
 async def api_change_password_with_reset_code_platform(
     *,
     request: Request,
@@ -431,7 +575,15 @@ async def api_change_password_with_reset_code_platform(
     )
 
 
-@router.delete("/user_id/{user_id}", tags=["users"])
+@router.delete(
+    "/user_id/{user_id}",
+    tags=["users"],
+    summary="Delete user",
+    description="Delete a user by ID. Invalidates the user's cached session so stale session data is not served.",
+    responses={
+        200: {"description": "User deleted successfully."},
+    },
+)
 async def api_delete_user(
     *,
     request: Request,
@@ -447,7 +599,16 @@ async def api_delete_user(
     return result
 
 
-@router.get("/{user_id}/courses", response_model=List[CourseRead], tags=["users"])
+@router.get(
+    "/{user_id}/courses",
+    response_model=List[CourseRead],
+    tags=["users"],
+    summary="List courses for user",
+    description="List courses authored or contributed to by a user. Paginated; the maximum page size is 50 to prevent bulk data extraction.",
+    responses={
+        200: {"description": "Paginated list of the user's courses (max 50 per page)."},
+    },
+)
 async def api_get_user_courses(
     *,
     request: Request,

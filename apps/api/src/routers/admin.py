@@ -378,6 +378,36 @@ async def api_admin_check_course_access(
 # ── Enrollment endpoints ─────────────────────────────────────────────────────
 
 
+# NOTE: /enrollments/bulk/unenroll must be declared BEFORE the generic
+# /enrollments/{user_id}/{course_uuid} route below. FastAPI matches routes in
+# declaration order, and "bulk" would fail int coercion on user_id → 422.
+@router.post(
+    "/{org_slug}/enrollments/bulk/unenroll",
+    response_model=BulkUnenrollResponse,
+    summary="Bulk unenroll users from a course",
+    description="Mirror of bulk enroll. Users not currently enrolled are reported in `not_enrolled`.",
+    responses={
+        200: {"description": "Per-user unenroll summary: unenrolled, not_enrolled.", "model": BulkUnenrollResponse},
+        404: {"description": "Course not found"},
+    },
+)
+async def api_admin_bulk_unenroll(
+    org_slug: str,
+    body: BulkUnenrollRequest,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> BulkUnenrollResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await bulk_unenroll_users(
+        token_user=token_user,
+        course_uuid=body.course_uuid,
+        user_ids=body.user_ids,
+        db_session=db_session,
+    )
+    return BulkUnenrollResponse(**result)
+
+
 @router.post(
     "/{org_slug}/enrollments/{user_id}/{course_uuid}",
     response_model=TrailRead,
@@ -1249,36 +1279,6 @@ async def api_admin_remove_course_from_usergroup(
         token_user, usergroup_uuid, course_uuid, db_session
     )
     return UserGroupCourseResponse(**result)
-
-
-# ── Bulk unenroll ────────────────────────────────────────────────────────────
-
-
-@router.post(
-    "/{org_slug}/enrollments/bulk/unenroll",
-    response_model=BulkUnenrollResponse,
-    summary="Bulk unenroll users from a course",
-    description="Mirror of bulk enroll. Users not currently enrolled are reported in `not_enrolled`.",
-    responses={
-        200: {"description": "Per-user unenroll summary: unenrolled, not_enrolled.", "model": BulkUnenrollResponse},
-        404: {"description": "Course not found"},
-    },
-)
-async def api_admin_bulk_unenroll(
-    org_slug: str,
-    body: BulkUnenrollRequest,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> BulkUnenrollResponse:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    result = await bulk_unenroll_users(
-        token_user=token_user,
-        course_uuid=body.course_uuid,
-        user_ids=body.user_ids,
-        db_session=db_session,
-    )
-    return BulkUnenrollResponse(**result)
 
 
 # ── GDPR export / anonymize ──────────────────────────────────────────────────

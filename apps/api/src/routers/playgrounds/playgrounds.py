@@ -28,7 +28,18 @@ from src.services.playgrounds.playground_reactions import (
 router = APIRouter(dependencies=[Depends(require_playgrounds_feature)])
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=PlaygroundRead,
+    summary="Create a playground",
+    description="Create a new playground within an organization. The authenticated user must have permission to create playgrounds in the target org.",
+    responses={
+        200: {"description": "Playground created successfully.", "model": PlaygroundRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to create playgrounds"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_create_playground(
     request: Request,
     org_id: int,
@@ -39,7 +50,17 @@ async def api_create_playground(
     return await create_playground(request, org_id, playground_object, current_user, db_session)
 
 
-@router.get("/org/{org_id}")
+@router.get(
+    "/org/{org_id}",
+    response_model=List[PlaygroundRead],
+    summary="List playgrounds for an organization",
+    description="List all playgrounds in the given organization that the current user is allowed to see.",
+    responses={
+        200: {"description": "List of playgrounds accessible to the current user.", "model": List[PlaygroundRead]},
+        401: {"description": "Authentication required"},
+        403: {"description": "Access denied to this organization"},
+    },
+)
 async def api_list_org_playgrounds(
     request: Request,
     org_id: int,
@@ -49,7 +70,18 @@ async def api_list_org_playgrounds(
     return await list_org_playgrounds(request, org_id, current_user, db_session)
 
 
-@router.get("/{playground_uuid}")
+@router.get(
+    "/{playground_uuid}",
+    response_model=PlaygroundRead,
+    summary="Get a playground by UUID",
+    description="Retrieve a single playground by its UUID. The current user must have access to the playground.",
+    responses={
+        200: {"description": "The requested playground.", "model": PlaygroundRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Access denied to this playground"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_get_playground(
     request: Request,
     playground_uuid: str,
@@ -59,7 +91,18 @@ async def api_get_playground(
     return await get_playground(request, playground_uuid, current_user, db_session)
 
 
-@router.put("/{playground_uuid}")
+@router.put(
+    "/{playground_uuid}",
+    response_model=PlaygroundRead,
+    summary="Update a playground",
+    description="Update a playground's fields. The current user must have update permission on the playground.",
+    responses={
+        200: {"description": "Playground updated successfully.", "model": PlaygroundRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to update playground"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_update_playground(
     request: Request,
     playground_uuid: str,
@@ -70,7 +113,17 @@ async def api_update_playground(
     return await update_playground(request, playground_uuid, playground_object, current_user, db_session)
 
 
-@router.delete("/{playground_uuid}")
+@router.delete(
+    "/{playground_uuid}",
+    summary="Delete a playground",
+    description="Delete a playground by UUID. The current user must have delete permission on the playground.",
+    responses={
+        200: {"description": "Playground deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to delete playground"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_delete_playground(
     request: Request,
     playground_uuid: str,
@@ -80,7 +133,18 @@ async def api_delete_playground(
     return await delete_playground(request, playground_uuid, current_user, db_session)
 
 
-@router.post("/{playground_uuid}/duplicate")
+@router.post(
+    "/{playground_uuid}/duplicate",
+    response_model=PlaygroundRead,
+    summary="Duplicate a playground",
+    description="Create a copy of an existing playground. The current user must have permission to create playgrounds in the source org.",
+    responses={
+        200: {"description": "Playground duplicated successfully.", "model": PlaygroundRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to create playgrounds"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_duplicate_playground(
     request: Request,
     playground_uuid: str,
@@ -90,7 +154,19 @@ async def api_duplicate_playground(
     return await duplicate_playground(request, playground_uuid, current_user, db_session)
 
 
-@router.post("/{playground_uuid}/thumbnail")
+@router.post(
+    "/{playground_uuid}/thumbnail",
+    response_model=PlaygroundRead,
+    summary="Upload a playground thumbnail",
+    description="Upload or replace the thumbnail image for a playground. The current user must have update permission on the playground.",
+    responses={
+        200: {"description": "Thumbnail uploaded and playground updated.", "model": PlaygroundRead},
+        400: {"description": "No thumbnail file provided"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions to update playground"},
+        404: {"description": "Playground or organization not found"},
+    },
+)
 async def api_update_playground_thumbnail(
     request: Request,
     playground_uuid: str,
@@ -101,7 +177,17 @@ async def api_update_playground_thumbnail(
     return await update_playground_thumbnail(request, playground_uuid, current_user, db_session, thumbnail)
 
 
-@router.post("/{playground_uuid}/usergroups/{usergroup_uuid}")
+@router.post(
+    "/{playground_uuid}/usergroups/{usergroup_uuid}",
+    summary="Grant a usergroup access to a playground",
+    description="Associate a usergroup with a playground so its members can access it. The current user must have update permission on the playground.",
+    responses={
+        200: {"description": "Usergroup granted access to playground."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions"},
+        404: {"description": "Playground or user group not found"},
+    },
+)
 async def api_add_usergroup_to_playground(
     request: Request,
     playground_uuid: str,
@@ -114,7 +200,17 @@ async def api_add_usergroup_to_playground(
     )
 
 
-@router.delete("/{playground_uuid}/usergroups/{usergroup_uuid}")
+@router.delete(
+    "/{playground_uuid}/usergroups/{usergroup_uuid}",
+    summary="Revoke a usergroup from a playground",
+    description="Remove a usergroup's access to a playground. The current user must have update permission on the playground.",
+    responses={
+        200: {"description": "Usergroup removed from playground."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Insufficient permissions"},
+        404: {"description": "Playground, user group, or association not found"},
+    },
+)
 async def api_remove_usergroup_from_playground(
     request: Request,
     playground_uuid: str,
@@ -127,7 +223,18 @@ async def api_remove_usergroup_from_playground(
     )
 
 
-@router.get("/{playground_uuid}/usergroups")
+@router.get(
+    "/{playground_uuid}/usergroups",
+    response_model=List[dict],
+    summary="List usergroups attached to a playground",
+    description="Return the list of usergroups that have access to a given playground.",
+    responses={
+        200: {"description": "List of usergroups associated with the playground."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Access denied to this playground"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_get_playground_usergroups(
     request: Request,
     playground_uuid: str,
@@ -137,7 +244,16 @@ async def api_get_playground_usergroups(
     return await get_playground_usergroups(request, playground_uuid, current_user, db_session)
 
 
-@router.get("/{playground_uuid}/reactions")
+@router.get(
+    "/{playground_uuid}/reactions",
+    response_model=List[PlaygroundReactionSummary],
+    summary="List reactions on a playground",
+    description="Return reaction counts and the current user's reactions for a playground. Supports anonymous viewers.",
+    responses={
+        200: {"description": "Aggregated reaction summary for the playground.", "model": List[PlaygroundReactionSummary]},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_get_playground_reactions(
     request: Request,
     playground_uuid: str,
@@ -147,7 +263,16 @@ async def api_get_playground_reactions(
     return await get_playground_reactions(request, playground_uuid, current_user, db_session)
 
 
-@router.post("/{playground_uuid}/reactions")
+@router.post(
+    "/{playground_uuid}/reactions",
+    summary="Toggle a reaction on a playground",
+    description="Toggle the current user's reaction (emoji) on a playground. Adds the reaction if missing or removes it if already present.",
+    responses={
+        200: {"description": "Reaction toggled successfully."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Playground not found"},
+    },
+)
 async def api_toggle_playground_reaction(
     request: Request,
     playground_uuid: str,

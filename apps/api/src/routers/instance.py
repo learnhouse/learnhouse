@@ -15,7 +15,17 @@ def _strip_port(domain: str) -> str:
     return domain.split(":")[0] if ":" in domain else domain
 
 
-@router.get("/info")
+@router.get(
+    "/info",
+    summary="Get instance info",
+    description=(
+        "Public endpoint returning instance configuration (deployment mode, default org slug, "
+        "frontend domain, and multi-org flag). Result is cached for performance."
+    ),
+    responses={
+        200: {"description": "Instance configuration for the current deployment."},
+    },
+)
 async def get_instance_info(db_session: Session = Depends(get_db_session)):
     """Public endpoint returning instance configuration."""
     cached = get_cached_instance_info()
