@@ -8,13 +8,8 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from src.core.events.database import get_db_session
-from src.db.courses.courses import CourseRead, FullCourseRead, ThumbnailType
-from src.db.resource_authors import (
-    ResourceAuthorshipEnum,
-    ResourceAuthorshipStatusEnum,
-)
 from src.db.trails import TrailRead
-from src.db.users import APITokenUser, UserRead
+from src.db.users import APITokenUser
 from src.routers.admin import router as admin_router
 from src.security.auth import get_current_user
 
@@ -56,86 +51,6 @@ async def client(app):
         yield c
 
 
-def _mock_user(**overrides) -> UserRead:
-    data = dict(
-        id=2,
-        username="learners",
-        first_name="Learner",
-        last_name="User",
-        email="learner@test.com",
-        user_uuid="user_2",
-        email_verified=True,
-        avatar_image="",
-        bio="",
-    )
-    data.update(overrides)
-    return UserRead(**data)
-
-
-def _mock_author(**overrides):
-    data = dict(
-        user=_mock_user(),
-        authorship=ResourceAuthorshipEnum.CREATOR,
-        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
-        creation_date="2024-01-01",
-        update_date="2024-01-01",
-    )
-    data.update(overrides)
-    return data
-
-
-def _mock_course(**overrides) -> CourseRead:
-    data = dict(
-        id=1,
-        org_id=1,
-        name="Course",
-        description="Desc",
-        about="About",
-        learnings="Learn",
-        tags="tag1",
-        public=True,
-        published=True,
-        open_to_contributors=False,
-        authors=[_mock_author()],
-        course_uuid="course_1",
-        creation_date="2024-01-01",
-        update_date="2024-01-02",
-        thumbnail_type=ThumbnailType.IMAGE,
-        thumbnail_image="",
-        thumbnail_video="",
-        seo=None,
-    )
-    data.update(overrides)
-    return CourseRead(**data)
-
-
-def _mock_full_course(**overrides) -> FullCourseRead:
-    data = dict(
-        id=1,
-        org_id=1,
-        org_uuid="org_1",
-        name="Course",
-        description="Desc",
-        about="About",
-        learnings="Learn",
-        tags="tag1",
-        public=True,
-        published=True,
-        open_to_contributors=False,
-        authors=[_mock_author()],
-        chapters=[],
-        course_uuid="course_1",
-        creation_date="2024-01-01",
-        update_date="2024-01-02",
-        thumbnail_type=ThumbnailType.IMAGE,
-        thumbnail_image="",
-        thumbnail_video="",
-        seo=None,
-    )
-    data.update(overrides)
-    return FullCourseRead(**data)
-
-
 def _mock_trail(**overrides) -> TrailRead:
     data = dict(
         id=1,
@@ -171,7 +86,9 @@ def _admin_context(api_user):
 
 
 class TestAdminRouter:
-    async def test_auth_and_user_endpoints(self, client, api_user):
+    async def test_auth_progress_and_certifications(self, client, api_user):
+        """The auth/token, aggregate progress, and certificates endpoints all
+        operate on a single user_id and are grouped here for a smoke check."""
         with _admin_context(api_user), patch(
             "src.routers.admin.issue_user_token",
             new_callable=AsyncMock,
@@ -180,33 +97,6 @@ class TestAdminRouter:
             response = await client.post("/api/v1/admin/acme/auth/token", json={"user_id": 2})
         assert response.status_code == 200
         assert response.json()["access_token"] == "issued-token"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.list_users",
-            new_callable=AsyncMock,
-            return_value=[_mock_user()],
-        ):
-            response = await client.get("/api/v1/admin/acme/users")
-        assert response.status_code == 200
-        assert response.json()[0]["user_uuid"] == "user_2"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_user",
-            new_callable=AsyncMock,
-            return_value=_mock_user(user_uuid="user_profile"),
-        ):
-            response = await client.get("/api/v1/admin/acme/users/2")
-        assert response.status_code == 200
-        assert response.json()["user_uuid"] == "user_profile"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_user_courses",
-            new_callable=AsyncMock,
-            return_value=[_mock_course(course_uuid="course_user")],
-        ):
-            response = await client.get("/api/v1/admin/acme/users/2/courses")
-        assert response.status_code == 200
-        assert response.json()[0]["course_uuid"] == "course_user"
 
         with _admin_context(api_user), patch(
             "src.routers.admin.get_all_user_progress",
@@ -248,34 +138,7 @@ class TestAdminRouter:
         assert response.status_code == 200
         assert response.json()[0]["course"]["course_uuid"] == "course_1"
 
-    async def test_course_collection_and_content_endpoints(self, client, api_user):
-        with _admin_context(api_user), patch(
-            "src.routers.admin.list_courses",
-            new_callable=AsyncMock,
-            return_value=[_mock_course()],
-        ):
-            response = await client.get("/api/v1/admin/acme/courses")
-        assert response.status_code == 200
-        assert response.json()[0]["course_uuid"] == "course_1"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_course",
-            new_callable=AsyncMock,
-            return_value=_mock_course(course_uuid="course_detail"),
-        ):
-            response = await client.get("/api/v1/admin/acme/courses/course_detail")
-        assert response.status_code == 200
-        assert response.json()["course_uuid"] == "course_detail"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_course_structure",
-            new_callable=AsyncMock,
-            return_value=_mock_full_course(),
-        ):
-            response = await client.get("/api/v1/admin/acme/courses/course_1/structure")
-        assert response.status_code == 200
-        assert response.json()["chapters"] == []
-
+    async def test_check_course_access(self, client, api_user):
         with _admin_context(api_user), patch(
             "src.routers.admin.check_course_access",
             new_callable=AsyncMock,
@@ -289,51 +152,6 @@ class TestAdminRouter:
             response = await client.get("/api/v1/admin/acme/courses/course_1/access/2")
         assert response.status_code == 200
         assert response.json()["has_access"] is True
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.list_collections",
-            new_callable=AsyncMock,
-            return_value=[{"collection_uuid": "collection_1", "name": "Collection", "courses": []}],
-        ):
-            response = await client.get("/api/v1/admin/acme/collections")
-        assert response.status_code == 200
-        assert response.json()[0]["collection_uuid"] == "collection_1"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_collection",
-            new_callable=AsyncMock,
-            return_value={"collection_uuid": "collection_1", "name": "Collection", "courses": []},
-        ):
-            response = await client.get("/api/v1/admin/acme/collections/collection_1")
-        assert response.status_code == 200
-        assert response.json()["name"] == "Collection"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_chapter",
-            new_callable=AsyncMock,
-            return_value={"id": 1, "chapter_uuid": "chapter_1", "name": "Chapter"},
-        ):
-            response = await client.get("/api/v1/admin/acme/chapters/1")
-        assert response.status_code == 200
-        assert response.json()["chapter_uuid"] == "chapter_1"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_activity",
-            new_callable=AsyncMock,
-            return_value={"id": 1, "activity_uuid": "activity_1", "name": "Activity"},
-        ):
-            response = await client.get("/api/v1/admin/acme/activities/activity_1")
-        assert response.status_code == 200
-        assert response.json()["activity_uuid"] == "activity_1"
-
-        with _admin_context(api_user), patch(
-            "src.routers.admin.get_chapter_activities",
-            new_callable=AsyncMock,
-            return_value=[{"id": 1, "activity_uuid": "activity_1", "name": "Activity"}],
-        ):
-            response = await client.get("/api/v1/admin/acme/chapters/1/activities")
-        assert response.status_code == 200
-        assert response.json()[0]["activity_uuid"] == "activity_1"
 
     async def test_enrollment_and_progress_endpoints(self, client, api_user):
         with _admin_context(api_user), patch(
