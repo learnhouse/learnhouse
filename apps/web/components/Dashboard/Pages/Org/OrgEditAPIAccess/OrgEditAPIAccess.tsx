@@ -4,7 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getPlatformUrl } from '@services/config/config'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
@@ -42,6 +42,7 @@ import {
   BookOpen,
   Clock,
   Shield,
+  LifeBuoy,
 } from 'lucide-react'
 import {
   APIToken,
@@ -223,16 +224,28 @@ const OrgEditAPIAccess: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-5">
-        <TabsList className="mb-6">
-          <TabsTrigger value="tokens" className="flex items-center gap-2">
-            <Key size={16} />
-            API Tokens
-          </TabsTrigger>
-          <TabsTrigger value="documentation" className="flex items-center gap-2">
-            <BookOpen size={16} />
-            Documentation & Playground
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between mb-6">
+          <TabsList>
+            <TabsTrigger value="tokens" className="flex items-center gap-2">
+              <Key size={16} />
+              API Tokens
+            </TabsTrigger>
+            <TabsTrigger value="documentation" className="flex items-center gap-2">
+              <BookOpen size={16} />
+              Documentation & Playground
+            </TabsTrigger>
+          </TabsList>
+          <a
+            href={getPlatformUrl('/dashboard/support') ?? 'https://www.learnhouse.app/dashboard/support'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors border border-gray-200"
+            title="Contact LearnHouse support"
+          >
+            <LifeBuoy size={14} />
+            Something not working as expected?
+          </a>
+        </div>
 
         <TabsContent value="tokens">
           <div className="pb-4">

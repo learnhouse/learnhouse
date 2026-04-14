@@ -239,6 +239,13 @@ async def get_current_user(
     if token:
         payload = decode_jwt(token)
         if payload:
+            # Reject tokens minted for a single-purpose flow (e.g. magic-link
+            # one-time sign-in). Those tokens are only valid at their specific
+            # consume endpoint — allowing them as session tokens would let an
+            # intercepted magic link act as a full session for its entire TTL.
+            token_purpose = payload.get("purpose")
+            if token_purpose and token_purpose != "session":
+                raise credentials_exception
             username = payload.get("sub")
 
     token_data = TokenData(username=username)
