@@ -23,8 +23,11 @@ from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailRead
+from src.db.api_tokens import APIToken
+from src.db.roles import Role, RoleTypeEnum
+from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
-from src.db.usergroups import UserGroup
+from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser, User, UserRead
 from src.services.trail.trail import _build_trail_read
@@ -32,6 +35,7 @@ from src.services.courses.certifications import (
     check_course_completion_and_create_certificate,
     create_certificate_user,
 )
+from src.services.email.utils import get_base_url_from_request
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
@@ -882,6 +886,36 @@ async def get_user_by_email(
 # -- Magic link ---------------------------------------------------------------
 
 
+def _validate_magic_link_redirect(redirect_to: Optional[str]) -> Optional[str]:
+    """Validate that a magic-link redirect_to is a same-origin path.
+
+    Rejects anything that contains a scheme or looks like a protocol-relative
+    URL — only allows paths like "/course/foo" that resolve on the same host
+    the consume endpoint was hit on. Prevents open-redirect phishing.
+    """
+    if redirect_to is None or redirect_to == "":
+        return None
+
+    value = redirect_to.strip()
+    if not value:
+        return None
+
+    lowered = value.lower()
+    if "://" in lowered or lowered.startswith("//") or lowered.startswith("\\\\"):
+        raise HTTPException(
+            status_code=400,
+            detail="redirect_to must be a same-origin path starting with '/'",
+        )
+
+    if not value.startswith("/"):
+        raise HTTPException(
+            status_code=400,
+            detail="redirect_to must be a same-origin path starting with '/'",
+        )
+
+    return value
+
+
 async def issue_magic_link(
     token_user: APITokenUser,
     user_id: int,
@@ -891,9 +925,16 @@ async def issue_magic_link(
     request: Request,
     db_session: Session,
 ) -> dict:
-    """Issue a short-lived JWT wrapped in a browser-clickable consume URL."""
+    """Issue a short-lived JWT wrapped in a browser-clickable consume URL.
+
+    The URL is built on the same frontend base URL the email system uses
+    (``get_base_url_from_request``), so it respects custom domains and the
+    deployment's allowed-origin config.
+    """
 
     user = _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    safe_redirect = _validate_magic_link_redirect(redirect_to)
 
     ttl = max(60, min(ttl_seconds, 900))
     expires_delta = timedelta(seconds=ttl)
@@ -901,12 +942,12 @@ async def issue_magic_link(
         "sub": user.email,
         "purpose": "magic_link",
         "org_id": token_user.org_id,
-        "redirect_to": redirect_to or "",
+        "redirect_to": safe_redirect or "",
     }
     token = create_access_token(data=payload, expires_delta=expires_delta)
 
-    base = str(request.base_url).rstrip("/")
-    url = f"{base}/admin/{org_slug}/auth/magic-consume?token={token}"
+    base = get_base_url_from_request(request).rstrip("/")
+    url = f"{base}/api/v1/admin/{org_slug}/auth/magic-consume?token={token}"
 
     expires_at = (datetime.now() + expires_delta).isoformat()
 
@@ -924,7 +965,9 @@ async def consume_magic_link_token(
     """Validate a magic-link JWT. Returns (user, access_token, refresh_token, redirect_to).
 
     Raises HTTPException on expired/invalid token or if the user is no longer
-    a member of the org encoded in the token.
+    a member of the org encoded in the token. Re-validates ``redirect_to``
+    defense-in-depth even though it was validated at issue time, so an older
+    unvalidated token can't slip through.
     """
 
     from src.security.auth import decode_jwt
@@ -939,10 +982,15 @@ async def consume_magic_link_token(
 
     email = payload.get("sub")
     org_id = payload.get("org_id")
-    redirect_to = payload.get("redirect_to") or None
+    raw_redirect = payload.get("redirect_to") or None
 
     if not email or not org_id:
         raise HTTPException(status_code=410, detail="Magic link payload incomplete")
+
+    try:
+        redirect_to = _validate_magic_link_redirect(raw_redirect)
+    except HTTPException:
+        redirect_to = None  # fall through to default "/" on bad redirect
 
     user = db_session.exec(select(User).where(User.email == email)).first()
     if not user:
@@ -957,8 +1005,10 @@ async def consume_magic_link_token(
     if not membership:
         raise HTTPException(status_code=410, detail="User is no longer a member of this organization")
 
-    access_token = create_access_token(data={"sub": email})
-    refresh_token = create_refresh_token(data={"sub": email})
+    # Explicitly mark session tokens so get_current_user can reject purpose-bearing
+    # tokens that should only be valid at the consume endpoint.
+    access_token = create_access_token(data={"sub": email, "purpose": "session"})
+    refresh_token = create_refresh_token(data={"sub": email, "purpose": "session"})
 
     return user, access_token, refresh_token, redirect_to
 
@@ -1411,3 +1461,615 @@ async def get_user_certificates(
         })
 
     return result
+
+
+# -- User profile & role updates ----------------------------------------------
+
+
+_USER_UPDATABLE_FIELDS = {
+    "username", "first_name", "last_name", "email",
+    "avatar_image", "bio", "details", "profile",
+}
+
+
+async def update_user_profile(
+    token_user: APITokenUser,
+    user_id: int,
+    updates: dict,
+    db_session: Session,
+) -> UserRead:
+    """Update a user's profile fields. Org-scoped — user must be a member."""
+
+    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    if "email" in updates and updates["email"] != user.email:
+        existing = db_session.exec(
+            select(User).where(User.email == updates["email"], User.id != user_id)
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+
+    if "username" in updates and updates["username"] != user.username:
+        existing = db_session.exec(
+            select(User).where(User.username == updates["username"], User.id != user_id)
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already in use")
+
+    for field, value in updates.items():
+        if field in _USER_UPDATABLE_FIELDS and value is not None:
+            setattr(user, field, value)
+
+    user.update_date = str(datetime.now())
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    try:
+        from src.routers.users import _invalidate_session_cache
+        _invalidate_session_cache(user_id)
+    except Exception:
+        pass
+
+    return UserRead.model_validate(user)
+
+
+async def change_user_role(
+    token_user: APITokenUser,
+    user_id: int,
+    new_role_id: int,
+    db_session: Session,
+) -> dict:
+    """Change a user's org role. Blocks demoting the last admin."""
+
+    _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    role = db_session.exec(select(Role).where(Role.id == new_role_id)).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    if role.org_id is not None and role.org_id != token_user.org_id:
+        raise HTTPException(status_code=403, detail="Role does not belong to this organization")
+
+    membership = db_session.exec(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == token_user.org_id,
+        )
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=404, detail="User not in org")
+
+    if membership.role_id == ADMIN_ROLE_ID and new_role_id != ADMIN_ROLE_ID:
+        admin_count = len(db_session.exec(
+            select(UserOrganization).where(
+                UserOrganization.org_id == token_user.org_id,
+                UserOrganization.role_id == ADMIN_ROLE_ID,
+            )
+        ).all())
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot demote the last admin of the organization",
+            )
+
+    membership.role_id = new_role_id
+    membership.update_date = str(datetime.now())
+    db_session.add(membership)
+    db_session.commit()
+
+    try:
+        from src.routers.users import _invalidate_session_cache
+        _invalidate_session_cache(user_id)
+    except Exception:
+        pass
+
+    return {
+        "user_id": user_id,
+        "role_id": new_role_id,
+    }
+
+
+# -- User group CRUD ---------------------------------------------------------
+
+
+async def create_usergroup(
+    token_user: APITokenUser,
+    name: str,
+    description: str,
+    db_session: Session,
+) -> UserGroupRead:
+    """Create a user group / cohort in the token's org."""
+
+    now = datetime.now()
+    group = UserGroup(
+        name=name,
+        description=description,
+        org_id=token_user.org_id,
+        usergroup_uuid=f"usergroup_{uuid4()}",
+        creation_date=str(now),
+        update_date=str(now),
+    )
+    db_session.add(group)
+    db_session.commit()
+    db_session.refresh(group)
+
+    await dispatch_webhooks(
+        event_name="usergroup_created",
+        org_id=token_user.org_id,
+        data={
+            "usergroup_uuid": group.usergroup_uuid,
+            "name": group.name,
+        },
+    )
+
+    return UserGroupRead.model_validate(group)
+
+
+async def delete_usergroup(
+    token_user: APITokenUser,
+    usergroup_uuid: str,
+    db_session: Session,
+) -> dict:
+    """Delete a user group and all its memberships + resource links."""
+
+    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+
+    members = db_session.exec(
+        select(UserGroupUser).where(UserGroupUser.usergroup_id == group.id)
+    ).all()
+    for m in members:
+        db_session.delete(m)
+
+    resources = db_session.exec(
+        select(UserGroupResource).where(UserGroupResource.usergroup_id == group.id)
+    ).all()
+    for r in resources:
+        db_session.delete(r)
+
+    db_session.delete(group)
+    db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_deleted",
+        org_id=token_user.org_id,
+        data={"usergroup_uuid": usergroup_uuid},
+    )
+
+    return {"detail": "UserGroup deleted", "usergroup_uuid": usergroup_uuid}
+
+
+async def list_usergroup_members(
+    token_user: APITokenUser,
+    usergroup_uuid: str,
+    db_session: Session,
+    page: int = 1,
+    limit: int = 25,
+) -> List[dict]:
+    """List users in a cohort, with pagination."""
+
+    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+
+    offset = (page - 1) * limit
+    rows = db_session.exec(
+        select(User, UserGroupUser)
+        .join(UserGroupUser, UserGroupUser.user_id == User.id)  # type: ignore
+        .where(UserGroupUser.usergroup_id == group.id)
+        .order_by(UserGroupUser.creation_date.asc())  # type: ignore
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    return [
+        {
+            "user": UserRead.model_validate(user).model_dump(),
+            "added_at": membership.creation_date,
+        }
+        for user, membership in rows
+    ]
+
+
+async def get_user_groups(
+    token_user: APITokenUser,
+    user_id: int,
+    db_session: Session,
+) -> List[dict]:
+    """List user groups a user belongs to within the token's org."""
+
+    _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    rows = db_session.exec(
+        select(UserGroup, UserGroupUser)
+        .join(UserGroupUser, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
+        .where(
+            UserGroupUser.user_id == user_id,
+            UserGroup.org_id == token_user.org_id,
+        )
+        .order_by(UserGroupUser.creation_date.asc())  # type: ignore
+    ).all()
+
+    return [
+        {
+            "usergroup": UserGroupRead.model_validate(group).model_dump(),
+            "added_at": membership.creation_date,
+        }
+        for group, membership in rows
+    ]
+
+
+# -- Cohort → course access ---------------------------------------------------
+
+
+async def add_course_to_usergroup(
+    token_user: APITokenUser,
+    usergroup_uuid: str,
+    course_uuid: str,
+    db_session: Session,
+) -> dict:
+    """Grant a cohort access to a course."""
+
+    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+
+    course = db_session.exec(
+        select(Course).where(
+            Course.course_uuid == course_uuid,
+            Course.org_id == token_user.org_id,
+        )
+    ).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    existing = db_session.exec(
+        select(UserGroupResource).where(
+            UserGroupResource.usergroup_id == group.id,
+            UserGroupResource.resource_uuid == course.course_uuid,
+        )
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Course is already linked to this group")
+
+    now = datetime.now()
+    link = UserGroupResource(
+        usergroup_id=group.id if group.id is not None else 0,
+        resource_uuid=course.course_uuid,
+        org_id=token_user.org_id,
+        creation_date=str(now),
+        update_date=str(now),
+    )
+    db_session.add(link)
+    db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_resources_added",
+        org_id=token_user.org_id,
+        data={
+            "usergroup_uuid": group.usergroup_uuid,
+            "resource_uuids": [course.course_uuid],
+        },
+    )
+
+    return {
+        "detail": "Course linked to group",
+        "usergroup_uuid": usergroup_uuid,
+        "course_uuid": course_uuid,
+    }
+
+
+async def remove_course_from_usergroup(
+    token_user: APITokenUser,
+    usergroup_uuid: str,
+    course_uuid: str,
+    db_session: Session,
+) -> dict:
+    """Revoke a cohort's access to a course."""
+
+    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+
+    link = db_session.exec(
+        select(UserGroupResource).where(
+            UserGroupResource.usergroup_id == group.id,
+            UserGroupResource.resource_uuid == course_uuid,
+        )
+    ).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Course not linked to this group")
+
+    db_session.delete(link)
+    db_session.commit()
+
+    await dispatch_webhooks(
+        event_name="usergroup_resources_removed",
+        org_id=token_user.org_id,
+        data={
+            "usergroup_uuid": group.usergroup_uuid,
+            "resource_uuids": [course_uuid],
+        },
+    )
+
+    return {
+        "detail": "Course unlinked from group",
+        "usergroup_uuid": usergroup_uuid,
+        "course_uuid": course_uuid,
+    }
+
+
+# -- Bulk unenroll ------------------------------------------------------------
+
+
+async def bulk_unenroll_users(
+    token_user: APITokenUser,
+    course_uuid: str,
+    user_ids: List[int],
+    db_session: Session,
+) -> dict:
+    """Unenroll a batch of users from a course. Returns summary."""
+
+    course = db_session.exec(
+        select(Course).where(
+            Course.course_uuid == course_uuid,
+            Course.org_id == token_user.org_id,
+        )
+    ).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    unenrolled: List[int] = []
+    not_enrolled: List[int] = []
+
+    for user_id in user_ids:
+        trail_run = db_session.exec(
+            select(TrailRun).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id == user_id,
+                TrailRun.org_id == token_user.org_id,
+            )
+        ).first()
+        if not trail_run:
+            not_enrolled.append(user_id)
+            continue
+
+        steps = db_session.exec(
+            select(TrailStep).where(
+                TrailStep.course_id == course.id,
+                TrailStep.user_id == user_id,
+                TrailStep.org_id == token_user.org_id,
+            )
+        ).all()
+        for step in steps:
+            db_session.delete(step)
+
+        db_session.delete(trail_run)
+        unenrolled.append(user_id)
+
+    db_session.commit()
+
+    return {
+        "unenrolled": unenrolled,
+        "not_enrolled": not_enrolled,
+    }
+
+
+# -- GDPR export / anonymize --------------------------------------------------
+
+
+async def export_user_data(
+    token_user: APITokenUser,
+    user_id: int,
+    db_session: Session,
+) -> dict:
+    """Full GDPR data export scoped to the token's org.
+
+    Only returns data that belongs to the token's organization — other-org
+    memberships and certificates are intentionally excluded so a token for
+    org A cannot read a user's history in org B.
+    """
+
+    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    memberships = db_session.exec(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == token_user.org_id,
+        )
+    ).all()
+
+    trails = db_session.exec(
+        select(Trail).where(
+            Trail.user_id == user_id,
+            Trail.org_id == token_user.org_id,
+        )
+    ).all()
+    trail_runs = db_session.exec(
+        select(TrailRun).where(
+            TrailRun.user_id == user_id,
+            TrailRun.org_id == token_user.org_id,
+        )
+    ).all()
+    trail_steps = db_session.exec(
+        select(TrailStep).where(
+            TrailStep.user_id == user_id,
+            TrailStep.org_id == token_user.org_id,
+        )
+    ).all()
+
+    # Certificates scoped to this org via Certifications -> Course -> org_id
+    cert_rows = db_session.exec(
+        select(CertificateUser, Certifications, Course)
+        .join(Certifications, Certifications.id == CertificateUser.certification_id)  # type: ignore
+        .join(Course, Course.id == Certifications.course_id)  # type: ignore
+        .where(
+            CertificateUser.user_id == user_id,
+            Course.org_id == token_user.org_id,
+        )
+    ).all()
+    cert_users = [cu for cu, _cert, _course in cert_rows]
+
+    group_rows = db_session.exec(
+        select(UserGroup, UserGroupUser)
+        .join(UserGroupUser, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
+        .where(
+            UserGroupUser.user_id == user_id,
+            UserGroup.org_id == token_user.org_id,
+        )
+    ).all()
+
+    return {
+        "profile": UserRead.model_validate(user).model_dump(),
+        "memberships": [m.model_dump() for m in memberships],
+        "trails": [t.model_dump() for t in trails],
+        "trail_runs": [tr.model_dump() for tr in trail_runs],
+        "trail_steps": [ts.model_dump() for ts in trail_steps],
+        "certificates": [
+            CertificateUserRead(**cu.model_dump()).model_dump() for cu in cert_users
+        ],
+        "user_groups": [
+            UserGroupRead.model_validate(g).model_dump() for g, _ in group_rows
+        ],
+        "exported_at": datetime.now().isoformat(),
+    }
+
+
+async def anonymize_user(
+    token_user: APITokenUser,
+    user_id: int,
+    db_session: Session,
+) -> dict:
+    """GDPR right-to-be-forgotten. Scrub PII, delete API tokens, invalidate session.
+
+    Cross-org note: the ``User`` row is global (shared across all orgs the
+    user belongs to), so scrubbing PII fields (email, name, avatar, bio,
+    details, profile) affects every org. API token cleanup is scoped to the
+    *caller's* org — tokens the user created in other orgs are NOT touched.
+    If the user also belongs to other orgs, the caller should coordinate a
+    purge in each org, or use a dedicated "global anonymize" flow (not
+    exposed here) that has platform-wide authority.
+    """
+
+    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    placeholder_email = f"deleted-user-{user_id}@anonymized.local"
+    placeholder_username = f"deleted_user_{user_id}"
+
+    existing_tokens = db_session.exec(
+        select(APIToken).where(
+            APIToken.created_by_user_id == user_id,
+            APIToken.org_id == token_user.org_id,
+        )
+    ).all()
+    for token in existing_tokens:
+        db_session.delete(token)
+
+    user.email = placeholder_email
+    user.username = placeholder_username
+    user.first_name = "Deleted"
+    user.last_name = "User"
+    user.avatar_image = ""
+    user.bio = ""
+    user.details = {}
+    user.profile = {}
+    user.password = ""
+    user.email_verified = False
+    user.email_verified_at = None
+    user.last_login_ip = None
+    user.signup_method = "anonymized"
+    user.update_date = str(datetime.now())
+    db_session.add(user)
+    db_session.commit()
+
+    try:
+        from src.routers.users import _invalidate_session_cache
+        _invalidate_session_cache(user_id)
+    except Exception:
+        pass
+
+    await dispatch_webhooks(
+        event_name="user_anonymized",
+        org_id=token_user.org_id,
+        data={
+            "user_id": user_id,
+            "anonymized_email": placeholder_email,
+            "api_tokens_revoked": len(existing_tokens),
+        },
+    )
+
+    return {
+        "detail": "User anonymized",
+        "user_id": user_id,
+        "anonymized_email": placeholder_email,
+        "api_tokens_revoked": len(existing_tokens),
+    }
+
+
+# -- Course analytics ---------------------------------------------------------
+
+
+async def get_course_analytics(
+    token_user: APITokenUser,
+    course_uuid: str,
+    db_session: Session,
+) -> dict:
+    """Aggregate course stats: enrollment, completion, in-progress, cert count."""
+
+    from src.db.trail_runs import StatusEnum
+
+    course = db_session.exec(
+        select(Course).where(
+            Course.course_uuid == course_uuid,
+            Course.org_id == token_user.org_id,
+        )
+    ).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    total_activities = db_session.exec(
+        select(func.count(ChapterActivity.id)).where(  # type: ignore
+            ChapterActivity.course_id == course.id
+        )
+    ).one()
+
+    trail_runs = db_session.exec(
+        select(TrailRun).where(
+            TrailRun.course_id == course.id,
+            TrailRun.org_id == token_user.org_id,
+        )
+    ).all()
+
+    enrollment_count = len(trail_runs)
+    completed_count = sum(1 for tr in trail_runs if tr.status == StatusEnum.STATUS_COMPLETED)
+    in_progress_count = sum(1 for tr in trail_runs if tr.status == StatusEnum.STATUS_IN_PROGRESS)
+
+    average_completion_percentage = 0.0
+    if trail_runs and total_activities:
+        percentages = []
+        for tr in trail_runs:
+            completed_steps = db_session.exec(
+                select(func.count(TrailStep.id)).where(  # type: ignore
+                    TrailStep.user_id == tr.user_id,
+                    TrailStep.course_id == course.id,
+                    TrailStep.complete == True,
+                )
+            ).one()
+            percentages.append(completed_steps / total_activities * 100)
+        if percentages:
+            average_completion_percentage = round(sum(percentages) / len(percentages), 1)
+
+    certificate_count = 0
+    certification = db_session.exec(
+        select(Certifications).where(Certifications.course_id == course.id)
+    ).first()
+    if certification:
+        certificate_count = db_session.exec(
+            select(func.count(CertificateUser.id)).where(  # type: ignore
+                CertificateUser.certification_id == certification.id
+            )
+        ).one()
+
+    return {
+        "course_uuid": course_uuid,
+        "enrollment_count": enrollment_count,
+        "completed_count": completed_count,
+        "in_progress_count": in_progress_count,
+        "total_activities": total_activities,
+        "average_completion_percentage": average_completion_percentage,
+        "certificate_count": certificate_count,
+    }
+
