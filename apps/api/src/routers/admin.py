@@ -5,38 +5,40 @@ All endpoints are scoped by org_slug and require API token authentication
 (Bearer lh_...). The token's organization must match the org_slug in the URL.
 """
 
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, EmailStr, Field
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.courses.courses import CourseRead, FullCourseRead
 from src.db.trails import TrailRead
 from src.db.users import UserRead
+from src.routers.auth import set_auth_cookies
 from src.security.auth import get_current_user
 from src.services.admin.admin import (
     _require_api_token,
     _resolve_org_slug,
+    add_usergroup_member,
+    award_certificate,
+    bulk_enroll_users,
     check_course_access,
     complete_activity,
     complete_course,
+    consume_magic_link_token,
     enroll_user,
-    get_activity,
     get_all_user_progress,
-    get_chapter,
-    get_chapter_activities,
-    get_collection,
-    get_course,
-    get_course_structure,
-    get_user,
+    get_user_by_email,
     get_user_certificates,
-    get_user_courses,
     get_user_enrollments,
     get_user_progress,
+    issue_magic_link,
     issue_user_token,
-    list_collections,
-    list_courses,
-    list_users,
+    list_course_enrollments,
+    provision_user,
+    remove_usergroup_member,
+    remove_user_from_org_admin,
+    reset_user_progress,
+    revoke_certificate,
     uncomplete_activity,
     unenroll_user,
 )
@@ -136,6 +138,75 @@ class IssueTokenRequest(BaseModel):
     user_id: int = Field(description="ID of the user to issue a token for")
 
 
+class ProvisionUserRequest(BaseModel):
+    """Request body for provisioning a new user."""
+    email: EmailStr
+    username: str = Field(min_length=1)
+    first_name: str = ""
+    last_name: str = ""
+    password: Optional[str] = Field(default=None, description="Optional — if omitted, treated as SSO user with empty password")
+    role_id: int = Field(default=4, description="Role id for the org membership (default 4 = student)")
+
+
+class RemoveUserResponse(BaseModel):
+    detail: str
+
+
+class MagicLinkRequest(BaseModel):
+    """Request body for issuing a magic sign-in link."""
+    user_id: int
+    redirect_to: Optional[str] = Field(default=None, description="Path to redirect to after the user lands on the consume endpoint")
+    ttl_seconds: int = Field(default=300, ge=60, le=900, description="Token lifetime in seconds (60–900)")
+
+
+class MagicLinkResponse(BaseModel):
+    url: str = Field(description="Clickable URL to deliver to the user")
+    token: str = Field(description="Raw JWT (for integrations that prefer to build their own URL)")
+    expires_at: str = Field(description="ISO8601 timestamp when the token expires")
+
+
+class BulkEnrollRequest(BaseModel):
+    """Request body for bulk enrolling users into a course."""
+    course_uuid: str
+    user_ids: List[int] = Field(max_length=500, description="List of user ids to enroll (max 500)")
+
+
+class BulkEnrollResponse(BaseModel):
+    enrolled: List[int] = Field(description="User ids that were newly enrolled")
+    already_enrolled: List[int] = Field(description="User ids that already had an enrollment")
+    skipped: List[int] = Field(description="User ids that were not members of the org")
+
+
+class CourseEnrollmentItem(BaseModel):
+    """A single row in a course enrollment listing."""
+    user: Dict[str, Any]
+    enrolled_at: str
+    status: str
+
+
+class ResetProgressResponse(BaseModel):
+    course_uuid: str
+    user_id: int
+    steps_deleted: int
+
+
+class AwardCertificateResponse(BaseModel):
+    user_certification_uuid: str
+    user_id: int
+    course_uuid: str
+
+
+class RevokeCertificateResponse(BaseModel):
+    detail: str
+    user_certification_uuid: str
+
+
+class UserGroupMemberResponse(BaseModel):
+    detail: str
+    usergroup_uuid: str
+    user_id: int
+
+
 # ── Auth endpoints ───────────────────────────────────────────────────────────
 
 
@@ -164,142 +235,7 @@ async def api_admin_issue_token(
     return TokenResponse(**result)
 
 
-# ── User endpoints ───────────────────────────────────────────────────────────
-
-
-@router.get(
-    "/{org_slug}/users",
-    response_model=List[UserRead],
-    summary="List organization users",
-    description=(
-        "List all users in the organization with pagination. "
-        "Requires `users.action_read` permission."
-    ),
-)
-async def api_admin_list_users(
-    org_slug: str,
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(25, ge=1, le=100, description="Items per page"),
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> List[UserRead]:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await list_users(token_user, db_session, page=page, limit=limit)
-
-
-@router.get(
-    "/{org_slug}/users/{user_id}",
-    response_model=UserRead,
-    summary="Get user profile",
-    description=(
-        "Get a user's profile by ID. The user must belong to the organization. "
-        "Requires `users.action_read` permission."
-    ),
-    responses={404: {"description": "User not found"}},
-)
-async def api_admin_get_user(
-    org_slug: str,
-    user_id: int,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> UserRead:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_user(token_user, user_id, db_session)
-
-
-@router.get(
-    "/{org_slug}/users/{user_id}/courses",
-    response_model=List[CourseRead],
-    summary="Get user's enrolled courses",
-    description=(
-        "List all courses a user is enrolled in within the organization. "
-        "Requires `courses.action_read` permission."
-    ),
-)
-async def api_admin_get_user_courses(
-    org_slug: str,
-    user_id: int,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> List[CourseRead]:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_user_courses(token_user, user_id, db_session)
-
-
-# ── Course endpoints (read-only) ─────────────────────────────────────────────
-
-
-@router.get(
-    "/{org_slug}/courses",
-    response_model=List[CourseRead],
-    summary="List courses",
-    description=(
-        "List courses in the organization. "
-        "By default only published courses are returned. "
-        "Requires `courses.action_read` permission."
-    ),
-)
-async def api_admin_list_courses(
-    request: Request,
-    org_slug: str,
-    page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(25, ge=1, le=100, description="Items per page"),
-    published_only: bool = Query(True, description="Only return published courses"),
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> List[CourseRead]:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await list_courses(request, token_user, db_session, page=page, limit=limit, published_only=published_only)
-
-
-@router.get(
-    "/{org_slug}/courses/{course_uuid}",
-    response_model=CourseRead,
-    summary="Get course details",
-    description=(
-        "Get a single course by UUID. Returns course metadata, authors, and settings. "
-        "Requires `courses.action_read` permission."
-    ),
-    responses={404: {"description": "Course not found or not in this organization"}},
-)
-async def api_admin_get_course(
-    request: Request,
-    org_slug: str,
-    course_uuid: str,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> CourseRead:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_course(request, token_user, course_uuid, db_session)
-
-
-@router.get(
-    "/{org_slug}/courses/{course_uuid}/structure",
-    response_model=FullCourseRead,
-    summary="Get course structure",
-    description=(
-        "Get a course with its full chapter and activity tree. "
-        "Use `slim=true` to exclude heavy activity content (useful for navigation). "
-        "Requires `courses.action_read` permission."
-    ),
-    responses={404: {"description": "Course not found"}},
-)
-async def api_admin_get_course_structure(
-    request: Request,
-    org_slug: str,
-    course_uuid: str,
-    slim: bool = Query(False, description="Exclude heavy activity content for lighter responses"),
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> FullCourseRead:
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_course_structure(request, token_user, course_uuid, db_session, slim=slim)
+# ── Course access ────────────────────────────────────────────────────────────
 
 
 @router.get(
@@ -323,112 +259,6 @@ async def api_admin_check_course_access(
     _resolve_org_slug(org_slug, token_user, db_session)
     result = await check_course_access(token_user, course_uuid, user_id, db_session)
     return CourseAccessResponse(**result)
-
-
-# ── Collection endpoints (read-only) ─────────────────────────────────────────
-
-
-@router.get(
-    "/{org_slug}/collections",
-    summary="List collections",
-    description=(
-        "List all course collections in the organization. "
-        "Requires `collections.action_read` permission."
-    ),
-)
-async def api_admin_list_collections(
-    org_slug: str,
-    page: int = Query(1, ge=1),
-    limit: int = Query(25, ge=1, le=100),
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await list_collections(token_user, db_session, page=page, limit=limit)
-
-
-@router.get(
-    "/{org_slug}/collections/{collection_uuid}",
-    summary="Get collection",
-    description=(
-        "Get a single collection with its courses. "
-        "Requires `collections.action_read` permission."
-    ),
-    responses={404: {"description": "Collection not found"}},
-)
-async def api_admin_get_collection(
-    org_slug: str,
-    collection_uuid: str,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_collection(token_user, collection_uuid, db_session)
-
-
-# ── Content endpoints (read-only) ────────────────────────────────────────────
-
-
-@router.get(
-    "/{org_slug}/chapters/{chapter_id}",
-    summary="Get chapter",
-    description=(
-        "Get a chapter by ID with its activities. "
-        "Requires `coursechapters.action_read` permission."
-    ),
-    responses={404: {"description": "Chapter not found"}},
-)
-async def api_admin_get_chapter(
-    org_slug: str,
-    chapter_id: int,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_chapter(token_user, chapter_id, db_session)
-
-
-@router.get(
-    "/{org_slug}/activities/{activity_uuid}",
-    summary="Get activity",
-    description=(
-        "Get a single activity by UUID with its full content. "
-        "Requires `activities.action_read` permission."
-    ),
-    responses={404: {"description": "Activity not found"}},
-)
-async def api_admin_get_activity(
-    org_slug: str,
-    activity_uuid: str,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_activity(token_user, activity_uuid, db_session)
-
-
-@router.get(
-    "/{org_slug}/chapters/{chapter_id}/activities",
-    summary="List chapter activities",
-    description=(
-        "Get all published activities in a chapter, ordered by position. "
-        "Requires `activities.action_read` permission."
-    ),
-    responses={404: {"description": "Chapter not found"}},
-)
-async def api_admin_get_chapter_activities(
-    org_slug: str,
-    chapter_id: int,
-    current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    token_user = _require_api_token(current_user)
-    _resolve_org_slug(org_slug, token_user, db_session)
-    return await get_chapter_activities(token_user, chapter_id, db_session)
 
 
 # ── Enrollment endpoints ─────────────────────────────────────────────────────
@@ -648,3 +478,345 @@ async def api_admin_get_user_certificates(
     _resolve_org_slug(org_slug, token_user, db_session)
     results = await get_user_certificates(token_user, user_id, db_session)
     return [CertificateItem(**r) for r in results]
+
+
+# ── User provisioning ────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/users",
+    response_model=UserRead,
+    summary="Provision a user",
+    description=(
+        "Create a user and attach them to the organization in one call. Designed "
+        "for SSO/JIT provisioning — the user's email is auto-verified and the "
+        "normal email-verification flow is skipped."
+    ),
+    responses={
+        400: {"description": "Duplicate email/username or weak password"},
+        403: {"description": "Member limit reached or feature disabled"},
+    },
+)
+async def api_admin_provision_user(
+    request: Request,
+    org_slug: str,
+    body: ProvisionUserRequest,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserRead:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    return await provision_user(
+        token_user=token_user,
+        email=body.email,
+        username=body.username,
+        first_name=body.first_name,
+        last_name=body.last_name,
+        password=body.password,
+        role_id=body.role_id,
+        request=request,
+        db_session=db_session,
+    )
+
+
+@router.delete(
+    "/{org_slug}/users/{user_id}",
+    response_model=RemoveUserResponse,
+    summary="Remove a user from the organization",
+    description=(
+        "Remove a user's organization membership. The user account itself is "
+        "preserved (it may belong to other orgs). Blocks removing the last admin."
+    ),
+    responses={
+        400: {"description": "User is the last admin"},
+        404: {"description": "User not in org"},
+    },
+)
+async def api_admin_remove_user(
+    org_slug: str,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> RemoveUserResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await remove_user_from_org_admin(token_user, user_id, db_session)
+    return RemoveUserResponse(**result)
+
+
+@router.get(
+    "/{org_slug}/users/by-email/{email}",
+    response_model=UserRead,
+    summary="Look up a user by email",
+    description=(
+        "Find a user by email within the organization. Returns 404 if the user "
+        "does not exist or is not a member of this org."
+    ),
+    responses={404: {"description": "User not found in this organization"}},
+)
+async def api_admin_get_user_by_email(
+    org_slug: str,
+    email: str = Path(description="URL-encoded email address"),
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserRead:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    return await get_user_by_email(token_user, email, db_session)
+
+
+# ── Magic link ───────────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/auth/magic-link",
+    response_model=MagicLinkResponse,
+    summary="Issue a magic sign-in link",
+    description=(
+        "Generate a short-lived URL that, when opened in a browser, will log "
+        "the target user in and optionally redirect them to a specific path. "
+        "Token lifetime is clamped to 60–900 seconds."
+    ),
+    responses={
+        403: {"description": "User not in this org"},
+        404: {"description": "User not found"},
+    },
+)
+async def api_admin_issue_magic_link(
+    request: Request,
+    org_slug: str,
+    body: MagicLinkRequest,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> MagicLinkResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await issue_magic_link(
+        token_user=token_user,
+        user_id=body.user_id,
+        redirect_to=body.redirect_to,
+        ttl_seconds=body.ttl_seconds,
+        org_slug=org_slug,
+        request=request,
+        db_session=db_session,
+    )
+    return MagicLinkResponse(**result)
+
+
+@router.get(
+    "/{org_slug}/auth/magic-consume",
+    summary="Consume a magic sign-in link (browser-facing)",
+    description=(
+        "Public endpoint — no API token required. Validates the magic-link "
+        "JWT from the query string, sets authentication cookies, and redirects "
+        "to the target path. This is the URL the end user clicks."
+    ),
+    responses={
+        401: {"description": "Token missing, invalid, or expired"},
+        410: {"description": "Token is not a magic link or user is no longer a member"},
+    },
+)
+async def api_admin_magic_consume(
+    request: Request,
+    response: Response,
+    org_slug: str,
+    token: str = Query(..., description="Magic-link JWT"),
+    db_session: Session = Depends(get_db_session),
+):
+    _user, access_token, refresh_token, redirect_to = await consume_magic_link_token(
+        token=token,
+        db_session=db_session,
+    )
+    target = redirect_to or "/"
+    redirect = RedirectResponse(url=target, status_code=302)
+    set_auth_cookies(redirect, access_token, refresh_token, request)
+    return redirect
+
+
+# ── Bulk enrollment ──────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/enrollments/bulk",
+    response_model=BulkEnrollResponse,
+    summary="Bulk enroll users in a course",
+    description=(
+        "Enroll a batch of users into a single course. Users who are already "
+        "enrolled are reported in `already_enrolled`. Users who are not members "
+        "of the org are reported in `skipped`."
+    ),
+    responses={404: {"description": "Course not found"}},
+)
+async def api_admin_bulk_enroll(
+    request: Request,
+    org_slug: str,
+    body: BulkEnrollRequest,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> BulkEnrollResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await bulk_enroll_users(
+        token_user=token_user,
+        course_uuid=body.course_uuid,
+        user_ids=body.user_ids,
+        request=request,
+        db_session=db_session,
+    )
+    return BulkEnrollResponse(**result)
+
+
+@router.get(
+    "/{org_slug}/courses/{course_uuid}/enrollments",
+    response_model=List[CourseEnrollmentItem],
+    summary="List users enrolled in a course",
+    description=(
+        "Reverse lookup: get all users currently enrolled in a course, with "
+        "pagination. Returns enrollment status and enrolled_at per user."
+    ),
+    responses={404: {"description": "Course not found"}},
+)
+async def api_admin_list_course_enrollments(
+    org_slug: str,
+    course_uuid: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> List[CourseEnrollmentItem]:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    results = await list_course_enrollments(
+        token_user, course_uuid, db_session, page=page, limit=limit
+    )
+    return [CourseEnrollmentItem(**r) for r in results]
+
+
+# ── Progress reset ───────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/progress/{user_id}/{course_uuid}/reset",
+    response_model=ResetProgressResponse,
+    summary="Reset a user's progress in a course",
+    description=(
+        "Delete all of a user's trail steps for a course, keeping the "
+        "enrollment intact. The user can retake the course from scratch."
+    ),
+    responses={404: {"description": "User or course not found"}},
+)
+async def api_admin_reset_user_progress(
+    org_slug: str,
+    user_id: int,
+    course_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> ResetProgressResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await reset_user_progress(token_user, user_id, course_uuid, db_session)
+    return ResetProgressResponse(**result)
+
+
+# ── Certificate award / revoke ───────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/certifications/{user_id}/{course_uuid}/award",
+    response_model=AwardCertificateResponse,
+    summary="Manually award a certificate",
+    description=(
+        "Award a certificate to a user bypassing the normal completion gate. "
+        "Useful for migrations and manual overrides. The course must have a "
+        "certification configured."
+    ),
+    responses={
+        400: {"description": "User already has a certificate for this course"},
+        404: {"description": "Course or certification not found"},
+    },
+)
+async def api_admin_award_certificate(
+    request: Request,
+    org_slug: str,
+    user_id: int,
+    course_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> AwardCertificateResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await award_certificate(
+        token_user, user_id, course_uuid, request, db_session
+    )
+    return AwardCertificateResponse(**result)
+
+
+@router.delete(
+    "/{org_slug}/certifications/{user_id}/{user_certification_uuid}",
+    response_model=RevokeCertificateResponse,
+    summary="Revoke a user's certificate",
+    description="Delete a certificate row. Does not affect course enrollment or progress.",
+    responses={404: {"description": "Certificate not found"}},
+)
+async def api_admin_revoke_certificate(
+    org_slug: str,
+    user_id: int,
+    user_certification_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> RevokeCertificateResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await revoke_certificate(
+        token_user, user_id, user_certification_uuid, db_session
+    )
+    return RevokeCertificateResponse(**result)
+
+
+# ── User group membership ────────────────────────────────────────────────────
+
+
+@router.post(
+    "/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}",
+    response_model=UserGroupMemberResponse,
+    summary="Add a user to a user group",
+    description="Add a user to a cohort/group. Both must belong to the token's org.",
+    responses={
+        400: {"description": "User is already in this group"},
+        404: {"description": "User or group not found"},
+    },
+)
+async def api_admin_add_usergroup_member(
+    org_slug: str,
+    usergroup_uuid: str,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserGroupMemberResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await add_usergroup_member(
+        token_user, usergroup_uuid, user_id, db_session
+    )
+    return UserGroupMemberResponse(**result)
+
+
+@router.delete(
+    "/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}",
+    response_model=UserGroupMemberResponse,
+    summary="Remove a user from a user group",
+    responses={404: {"description": "User, group, or membership not found"}},
+)
+async def api_admin_remove_usergroup_member(
+    org_slug: str,
+    usergroup_uuid: str,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserGroupMemberResponse:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await remove_usergroup_member(
+        token_user, usergroup_uuid, user_id, db_session
+    )
+    return UserGroupMemberResponse(**result)
