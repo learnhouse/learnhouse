@@ -153,6 +153,7 @@ async def api_get_current_user_session(
     description="Check whether the current user is authorized to perform the given action (create/read/update/delete) on a specific resource.",
     responses={
         200: {"description": "Authorization decision for the requested resource and action."},
+        404: {"description": "Resource not found"},
     },
 )
 async def api_get_authorization_status(
@@ -253,6 +254,7 @@ async def api_create_user_with_orgid_and_invite(
     description="Create a user account that is not attached to any organization at creation time.",
     responses={
         200: {"description": "User account created.", "model": UserRead},
+        400: {"description": "Password fails validation, email already registered, or username taken"},
     },
 )
 async def api_create_user_without_org(
@@ -358,6 +360,9 @@ async def api_get_user_by_username(
     description="Update a user's profile fields. Invalidates the user's cached session so subsequent session reads reflect the change.",
     responses={
         200: {"description": "User updated successfully.", "model": UserRead},
+        400: {"description": "Validation failed (duplicate email/username, invalid fields)"},
+        403: {"description": "Caller lacks permission to update this user"},
+        404: {"description": "User not found"},
     },
 )
 async def api_update_user(
@@ -421,6 +426,10 @@ async def api_update_avatar_user(
     description="Update a user's password. The authenticated user must either be the target user or otherwise authorized by the service layer.",
     responses={
         200: {"description": "Password changed successfully.", "model": UserRead},
+        400: {"description": "New password fails validation"},
+        401: {"description": "Wrong current password"},
+        403: {"description": "Caller cannot change this user's password"},
+        404: {"description": "User not found"},
     },
 )
 async def api_update_user_password(
@@ -484,9 +493,10 @@ async def api_change_password_with_reset_code(
     "/reset_password/send_reset_code/{email}",
     tags=["users"],
     summary="Send password reset code",
-    description="Dispatch an org-scoped password reset code to the given email address.",
+    description="Dispatch an org-scoped password reset code to the given email address. Returns a generic response regardless of whether the email exists to avoid user enumeration.",
     responses={
         200: {"description": "Reset code email dispatch requested."},
+        400: {"description": "Organization not found"},
     },
 )
 async def api_send_password_reset_email(
@@ -582,6 +592,8 @@ async def api_change_password_with_reset_code_platform(
     description="Delete a user by ID. Invalidates the user's cached session so stale session data is not served.",
     responses={
         200: {"description": "User deleted successfully."},
+        403: {"description": "Caller cannot delete this user"},
+        404: {"description": "User not found"},
     },
 )
 async def api_delete_user(
@@ -607,6 +619,7 @@ async def api_delete_user(
     description="List courses authored or contributed to by a user. Paginated; the maximum page size is 50 to prevent bulk data extraction.",
     responses={
         200: {"description": "Paginated list of the user's courses (max 50 per page)."},
+        404: {"description": "User not found"},
     },
 )
 async def api_get_user_courses(

@@ -472,6 +472,7 @@ async def api_admin_unenroll_user(
     ),
     responses={
         200: {"description": "The user's trail with every course enrollment and step.", "model": TrailRead},
+        404: {"description": "User not found or not a member of this organization"},
     },
 )
 async def api_admin_get_user_enrollments(
@@ -607,6 +608,7 @@ async def api_admin_complete_course(
     ),
     responses={
         200: {"description": "One row per course enrollment with completion percentage and status."},
+        404: {"description": "User not found or not a member of this organization"},
     },
 )
 async def api_admin_get_all_user_progress(
@@ -635,6 +637,7 @@ async def api_admin_get_all_user_progress(
     ),
     responses={
         200: {"description": "All certificates awarded to the user in this org."},
+        404: {"description": "User not found or not a member of this organization"},
     },
 )
 async def api_admin_get_user_certificates(
@@ -1049,6 +1052,7 @@ async def api_admin_add_usergroup_member(
     "/{org_slug}/usergroups/{usergroup_uuid}/members/{user_id}",
     response_model=UserGroupMemberResponse,
     summary="Remove a user from a user group",
+    description="Remove a user's membership from a cohort/group. The user account itself is preserved.",
     responses={
         200: {"description": "User removed from the cohort.", "model": UserGroupMemberResponse},
         404: {"description": "User, group, or membership not found"},
@@ -1261,6 +1265,7 @@ async def api_admin_add_course_to_usergroup(
     "/{org_slug}/usergroups/{usergroup_uuid}/courses/{course_uuid}",
     response_model=UserGroupCourseResponse,
     summary="Revoke a cohort's access to a course",
+    description="Unlink a course from a user group. Members of the cohort lose access unless granted through another path.",
     responses={
         200: {"description": "Course unlinked from the cohort.", "model": UserGroupCourseResponse},
         404: {"description": "Group or link not found"},

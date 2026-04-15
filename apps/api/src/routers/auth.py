@@ -495,6 +495,7 @@ class ResendVerificationRequest(BaseModel):
     ),
     responses={
         200: {"description": "Verification email dispatch requested."},
+        429: {"description": "Too many verification email requests — rate limited"},
     },
 )
 async def api_resend_verification_email(
