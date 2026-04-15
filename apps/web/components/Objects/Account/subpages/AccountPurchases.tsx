@@ -115,7 +115,7 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
     ([, token]) => getUserEnrollments(orgId, token)
   )
 
-  const enrollments: any[] = enrollmentsResult?.data ?? enrollmentsResult ?? []
+  const enrollments: any[] = Array.isArray(enrollmentsResult?.data) ? enrollmentsResult.data : []
 
   const handleManageBilling = async () => {
     if (!access_token) return
