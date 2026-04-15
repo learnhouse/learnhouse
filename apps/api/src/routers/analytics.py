@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, User
 from src.db.user_organizations import UserOrganization
@@ -19,8 +18,11 @@ from src.security.auth import get_current_user
 from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
-import httpx
 from src.services.analytics.analytics import track
+from src.services.analytics.backend import (
+    BackendQueryError,
+    get_analytics_backend,
+)
 from src.services.analytics.cache import get_cached_result, set_cached_result
 from src.services.analytics.events import ALLOWED_FRONTEND_EVENTS
 from src.services.analytics.queries import (
@@ -55,32 +57,10 @@ class AnalyticsStatusResponse(BaseModel):
     configured: bool
 
 
-# Lazy singleton httpx client for Tinybird Query API
-_read_client: httpx.AsyncClient | None = None
-
-
-def _get_read_client() -> httpx.AsyncClient | None:
-    global _read_client
-    if _read_client is not None:
-        return _read_client
-
-    config = get_learnhouse_config()
-    tb = config.tinybird_config
-    if tb is None:
-        return None
-
-    _read_client = httpx.AsyncClient(
-        base_url=tb.api_url,
-        headers={"Authorization": f"Bearer {tb.read_token}"},
-        timeout=30.0,
-    )
-    return _read_client
-
-
 # -------------------------------------------------------------------
-# Shared Tinybird query execution with Redis caching
+# Shared analytics query execution with Redis caching
 # -------------------------------------------------------------------
-async def _execute_tinybird_query(
+async def _execute_analytics_query(
     query_name: str,
     sql: str,
     org_id: int,
@@ -89,45 +69,34 @@ async def _execute_tinybird_query(
     empty_response: dict | None = None,
 ) -> dict:
     """
-    Execute a SQL query via Tinybird Query API with Redis caching.
+    Execute a SQL query via the configured analytics backend with Redis caching.
 
     1. Check Redis cache for a previous result.
-    2. On miss, POST SQL to Tinybird /v0/sql.
+    2. On miss, delegate to the backend (Tinybird or ClickHouse).
     3. Cache the response on success.
     4. Return the JSON result dict.
+
+    `empty_response` is accepted for historical call-site compatibility but is
+    unused — callers read `.get("data", [])` from the result and the backend
+    already returns an empty {data, rows, meta} shape for missing tables.
     """
-    if empty_response is None:
-        empty_response = {"data": [], "rows": 0, "meta": []}
+    del empty_response  # kept for signature stability with prior call sites
 
     # --- cache check ---
     cached = get_cached_result(query_name, org_id, days, course_id)
     if cached is not None:
         return cached
 
-    # --- Tinybird SQL API call ---
-    client = _get_read_client()
-    if client is None:
+    backend = get_analytics_backend()
+    if backend is None:
         raise HTTPException(status_code=503, detail="Analytics not configured")
 
     try:
-        resp = await client.post("/v0/sql", content=sql + " FORMAT JSON")
-        resp.raise_for_status()
-        result = resp.json()
-    except httpx.HTTPStatusError as exc:
-        error_msg = exc.response.text[:500]
-        logger.warning(
-            "Tinybird query '%s' failed (%s): %s",
-            query_name, exc.response.status_code, error_msg,
-        )
-        if any(s in error_msg for s in ("UNKNOWN_TABLE", "doesn't exist", "not found")):
-            return empty_response
-        raise HTTPException(status_code=502, detail="Analytics query failed")
-    except Exception as exc:
-        logger.warning("Tinybird query '%s' failed: %s", query_name, str(exc)[:500])
+        result = await backend.execute_sql(sql)
+    except BackendQueryError:
         raise HTTPException(status_code=502, detail="Analytics query failed")
 
-    # Tinybird returns {"data": [...], "rows": N, "meta": [...]} — same shape as frontend expects.
-    # Safety net: sanitize NaN/Inf values in the response
+    # Safety net: sanitize NaN/Inf values
     rows = result.get("data", [])
     for row in rows:
         for key, val in row.items():
@@ -145,6 +114,10 @@ async def _execute_tinybird_query(
     set_cached_result(query_name, org_id, days, response, course_id)
 
     return response
+
+
+# Backwards-compatible alias — superadmin.py imports this name via lazy imports.
+_execute_tinybird_query = _execute_analytics_query
 
 
 def _verify_org_membership(user_id: int, org_id: int, db_session: Session) -> None:
@@ -311,8 +284,7 @@ async def analytics_status(
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    config = get_learnhouse_config()
-    return AnalyticsStatusResponse(configured=config.tinybird_config is not None)
+    return AnalyticsStatusResponse(configured=get_analytics_backend() is not None)
 
 
 # -------------------------------------------------------------------

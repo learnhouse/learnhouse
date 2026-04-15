@@ -3,32 +3,9 @@ import json
 import logging
 from datetime import datetime, timezone
 
-import httpx
-
-from config.config import get_learnhouse_config
+from src.services.analytics.backend import get_analytics_backend
 
 logger = logging.getLogger(__name__)
-
-# Lazy singleton httpx client for Tinybird ingestion
-_ingest_client: httpx.AsyncClient | None = None
-
-
-def _get_ingest_client() -> httpx.AsyncClient | None:
-    global _ingest_client
-    if _ingest_client is not None:
-        return _ingest_client
-
-    config = get_learnhouse_config()
-    tb = config.tinybird_config
-    if tb is None:
-        return None
-
-    _ingest_client = httpx.AsyncClient(
-        base_url=tb.api_url,
-        headers={"Authorization": f"Bearer {tb.ingest_token}"},
-        timeout=10.0,
-    )
-    return _ingest_client
 
 
 async def track(
@@ -41,11 +18,11 @@ async def track(
     ip: str = "",
 ) -> None:
     """
-    Fire-and-forget analytics event to Tinybird.
+    Fire-and-forget analytics event to the configured backend (Tinybird or ClickHouse).
     All errors are swallowed and logged — analytics never breaks the app.
     """
-    config = get_learnhouse_config()
-    if config.tinybird_config is None:
+    backend = get_analytics_backend()
+    if backend is None:
         return
 
     asyncio.create_task(
@@ -71,8 +48,8 @@ async def _send_event(
     ip: str,
 ) -> None:
     try:
-        client = _get_ingest_client()
-        if client is None:
+        backend = get_analytics_backend()
+        if backend is None:
             return
 
         payload = {
@@ -85,15 +62,6 @@ async def _send_event(
             "source": source,
             "ip": ip,
         }
-        resp = await client.post(
-            "/v0/events?name=events",
-            json=payload,
-        )
-        if resp.status_code >= 400:
-            logger.warning(
-                "Tinybird ingest failed (%s): %s",
-                resp.status_code,
-                resp.text[:200],
-            )
+        await backend.ingest_event(payload)
     except Exception:
         logger.warning("Failed to send analytics event %s", event_name, exc_info=True)
