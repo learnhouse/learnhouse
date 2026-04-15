@@ -107,7 +107,17 @@ async def _verify_podcast_episode_access(
         raise HTTPException(status_code=403, detail=decision.reason)
 
 
-@router.get("/video/{org_uuid}/{course_uuid}/{activity_uuid}/{filename:path}")
+@router.get(
+    "/video/{org_uuid}/{course_uuid}/{activity_uuid}/{filename:path}",
+    summary="Stream an activity video",
+    description="Streams a video file for a course activity with HTTP Range request support. Validates user read access via RBAC before serving the file.",
+    responses={
+        200: {"description": "Full video streamed successfully"},
+        206: {"description": "Partial video content returned for a Range request"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or video file not found"},
+    },
+)
 async def stream_activity_video(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -191,7 +201,17 @@ async def stream_activity_video(
         )
 
 
-@router.get("/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+@router.get(
+    "/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}",
+    summary="Stream an audio block file",
+    description="Streams an audio file attached to an audio block within an activity, with HTTP Range request support. Validates user read access to the parent course via RBAC.",
+    responses={
+        200: {"description": "Full audio streamed successfully"},
+        206: {"description": "Partial audio content returned for a Range request"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or audio file not found"},
+    },
+)
 async def stream_block_audio(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -271,7 +291,16 @@ async def stream_block_audio(
         )
 
 
-@router.head("/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+@router.head(
+    "/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}",
+    summary="Get audio block file metadata",
+    description="Returns metadata for an audio block file without the body. Used by audio players to probe file size and Range support before playback.",
+    responses={
+        200: {"description": "Audio metadata returned via response headers"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or audio file not found"},
+    },
+)
 async def head_block_audio(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -323,7 +352,17 @@ async def head_block_audio(
     )
 
 
-@router.get("/block/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+@router.get(
+    "/block/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}",
+    summary="Stream a video block file",
+    description="Streams a video file attached to a video block within an activity, with HTTP Range request support. Validates user read access to the parent course via RBAC.",
+    responses={
+        200: {"description": "Full video streamed successfully"},
+        206: {"description": "Partial video content returned for a Range request"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or video file not found"},
+    },
+)
 async def stream_block_video(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -411,7 +450,16 @@ async def stream_block_video(
         )
 
 
-@router.head("/video/{org_uuid}/{course_uuid}/{activity_uuid}/{filename:path}")
+@router.head(
+    "/video/{org_uuid}/{course_uuid}/{activity_uuid}/{filename:path}",
+    summary="Get activity video metadata",
+    description="Returns metadata for an activity video without the body. Used by video players to probe file size and Range support before playback.",
+    responses={
+        200: {"description": "Video metadata returned via response headers"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or video file not found"},
+    },
+)
 async def head_activity_video(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -463,7 +511,16 @@ async def head_activity_video(
     )
 
 
-@router.head("/block/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}")
+@router.head(
+    "/block/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}",
+    summary="Get video block file metadata",
+    description="Returns metadata for a video block file without the body. Used by video players to probe file size and Range support before playback.",
+    responses={
+        200: {"description": "Video metadata returned via response headers"},
+        403: {"description": "User is not permitted to read this course"},
+        404: {"description": "Activity, course, or video file not found"},
+    },
+)
 async def head_block_video(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -519,7 +576,17 @@ async def head_block_video(
     )
 
 
-@router.get("/audio/{org_uuid}/{podcast_uuid}/{episode_uuid}/{filename:path}")
+@router.get(
+    "/audio/{org_uuid}/{podcast_uuid}/{episode_uuid}/{filename:path}",
+    summary="Stream a podcast episode audio",
+    description="Streams a podcast episode audio file with HTTP Range request support. Validates user read access to the podcast via RBAC before serving the file.",
+    responses={
+        200: {"description": "Full audio streamed successfully"},
+        206: {"description": "Partial audio content returned for a Range request"},
+        403: {"description": "User is not permitted to read this podcast"},
+        404: {"description": "Podcast, episode, or audio file not found"},
+    },
+)
 async def stream_podcast_audio(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),
@@ -603,7 +670,16 @@ async def stream_podcast_audio(
         )
 
 
-@router.head("/audio/{org_uuid}/{podcast_uuid}/{episode_uuid}/{filename:path}")
+@router.head(
+    "/audio/{org_uuid}/{podcast_uuid}/{episode_uuid}/{filename:path}",
+    summary="Get podcast audio metadata",
+    description="Returns metadata for a podcast episode audio file without the body. Used by audio players to probe file size and Range support before playback.",
+    responses={
+        200: {"description": "Audio metadata returned via response headers"},
+        403: {"description": "User is not permitted to read this podcast"},
+        404: {"description": "Podcast, episode, or audio file not found"},
+    },
+)
 async def head_podcast_audio(
     request: Request,
     org_uuid: str = Path(..., description="Organization UUID"),

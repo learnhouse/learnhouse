@@ -16,7 +16,16 @@ from src.services.courses.collections import (
 router = APIRouter()
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=CollectionRead,
+    summary="Create collection",
+    description="Create a new collection of courses within an organization.",
+    responses={
+        200: {"description": "Collection created.", "model": CollectionRead},
+        403: {"description": "Caller lacks permission to create collections in this org"},
+    },
+)
 async def api_create_collection(
     request: Request,
     collection_object: CollectionCreate,
@@ -29,7 +38,16 @@ async def api_create_collection(
     return await create_collection(request, collection_object, current_user, db_session)
 
 
-@router.get("/{collection_uuid}")
+@router.get(
+    "/{collection_uuid}",
+    response_model=CollectionRead,
+    summary="Get collection",
+    description="Get a single collection by its UUID.",
+    responses={
+        200: {"description": "Collection details.", "model": CollectionRead},
+        404: {"description": "Collection not found"},
+    },
+)
 async def api_get_collection(
     request: Request,
     collection_uuid: str,
@@ -42,7 +60,15 @@ async def api_get_collection(
     return await get_collection(request, collection_uuid, current_user, db_session)
 
 
-@router.get("/org/{org_id}/page/{page}/limit/{limit}")
+@router.get(
+    "/org/{org_id}/page/{page}/limit/{limit}",
+    response_model=List[CollectionRead],
+    summary="List collections for org",
+    description="Get collections for an organization, paginated by `page` and `limit`.",
+    responses={
+        200: {"description": "Paginated list of collections for the organization."},
+    },
+)
 async def api_get_collections_by(
     request: Request,
     page: int,
@@ -57,7 +83,17 @@ async def api_get_collections_by(
     return await get_collections(request, org_id, current_user, db_session, page, limit)
 
 
-@router.put("/{collection_uuid}")
+@router.put(
+    "/{collection_uuid}",
+    response_model=CollectionRead,
+    summary="Update collection",
+    description="Update a collection by its UUID.",
+    responses={
+        200: {"description": "Collection updated.", "model": CollectionRead},
+        403: {"description": "Caller lacks permission to update this collection"},
+        404: {"description": "Collection not found"},
+    },
+)
 async def api_update_collection(
     request: Request,
     collection_object: CollectionUpdate,
@@ -73,7 +109,16 @@ async def api_update_collection(
     )
 
 
-@router.delete("/{collection_uuid}")
+@router.delete(
+    "/{collection_uuid}",
+    summary="Delete collection",
+    description="Delete a collection by its UUID. The collection is permanently removed.",
+    responses={
+        200: {"description": "Collection deleted."},
+        403: {"description": "Caller lacks permission to delete this collection"},
+        404: {"description": "Collection not found"},
+    },
+)
 async def api_delete_collection(
     request: Request,
     collection_uuid: str,

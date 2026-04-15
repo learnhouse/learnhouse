@@ -34,7 +34,22 @@ public_router = APIRouter()
 internal_router = APIRouter()
 
 
-@router.post("/{org_id}/domains", response_model=CustomDomainRead)
+@router.post(
+    "/{org_id}/domains",
+    response_model=CustomDomainRead,
+    summary="Add a custom domain",
+    description=(
+        "Add a new custom domain to an organization. This generates a "
+        "verification token and returns DNS instructions. Only organization "
+        "administrators can add custom domains."
+    ),
+    responses={
+        200: {"description": "Custom domain registered with DNS verification instructions.", "model": CustomDomainRead},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_add_custom_domain(
     request: Request,
     org_id: int,
@@ -53,7 +68,21 @@ async def api_add_custom_domain(
     )
 
 
-@router.get("/{org_id}/domains", response_model=List[CustomDomainRead])
+@router.get(
+    "/{org_id}/domains",
+    response_model=List[CustomDomainRead],
+    summary="List custom domains",
+    description=(
+        "List all custom domains for an organization, including their "
+        "verification status."
+    ),
+    responses={
+        200: {"description": "List of custom domains for the organization.", "model": List[CustomDomainRead]},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of the organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def api_list_custom_domains(
     request: Request,
     org_id: int,
@@ -68,7 +97,18 @@ async def api_list_custom_domains(
     return await list_custom_domains(request, db_session, org_id, current_user)
 
 
-@router.get("/{org_id}/domains/{domain_uuid}", response_model=CustomDomainRead)
+@router.get(
+    "/{org_id}/domains/{domain_uuid}",
+    response_model=CustomDomainRead,
+    summary="Get a custom domain",
+    description="Get details of a single custom domain by its UUID, including verification status.",
+    responses={
+        200: {"description": "Custom domain details.", "model": CustomDomainRead},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of the organization"},
+        404: {"description": "Organization or custom domain not found"},
+    },
+)
 async def api_get_custom_domain(
     request: Request,
     org_id: int,
@@ -82,7 +122,21 @@ async def api_get_custom_domain(
     return await get_custom_domain(request, db_session, org_id, domain_uuid, current_user)
 
 
-@router.get("/{org_id}/domains/{domain_uuid}/verification-info", response_model=CustomDomainVerificationInfo)
+@router.get(
+    "/{org_id}/domains/{domain_uuid}/verification-info",
+    response_model=CustomDomainVerificationInfo,
+    summary="Get DNS verification info",
+    description=(
+        "Return the DNS records (TXT and CNAME) that must be configured at "
+        "the domain provider in order to verify the custom domain."
+    ),
+    responses={
+        200: {"description": "DNS verification instructions for the custom domain.", "model": CustomDomainVerificationInfo},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of the organization"},
+        404: {"description": "Organization or custom domain not found"},
+    },
+)
 async def api_get_domain_verification_info(
     request: Request,
     org_id: int,
@@ -101,7 +155,21 @@ async def api_get_domain_verification_info(
     )
 
 
-@router.post("/{org_id}/domains/{domain_uuid}/verify")
+@router.post(
+    "/{org_id}/domains/{domain_uuid}/verify",
+    summary="Verify custom domain DNS",
+    description=(
+        "Verify the DNS configuration for a custom domain by checking that "
+        "the expected TXT verification record is in place. Only organization "
+        "administrators can verify domains."
+    ),
+    responses={
+        200: {"description": "DNS verification result for the custom domain."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization or custom domain not found"},
+    },
+)
 async def api_verify_custom_domain(
     request: Request,
     org_id: int,
@@ -120,7 +188,20 @@ async def api_verify_custom_domain(
     )
 
 
-@router.get("/{org_id}/domains/{domain_uuid}/ssl-status")
+@router.get(
+    "/{org_id}/domains/{domain_uuid}/ssl-status",
+    summary="Check custom domain SSL status",
+    description=(
+        "Check the SSL certificate status for a custom domain by performing "
+        "a TLS handshake to determine whether a certificate has been provisioned."
+    ),
+    responses={
+        200: {"description": "SSL certificate status for the custom domain."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not a member of the organization"},
+        404: {"description": "Organization or custom domain not found"},
+    },
+)
 async def api_check_domain_ssl_status(
     request: Request,
     org_id: int,
@@ -138,7 +219,20 @@ async def api_check_domain_ssl_status(
     )
 
 
-@router.delete("/{org_id}/domains/{domain_uuid}")
+@router.delete(
+    "/{org_id}/domains/{domain_uuid}",
+    summary="Delete a custom domain",
+    description=(
+        "Delete a custom domain. This action cannot be undone. Only "
+        "organization administrators can delete custom domains."
+    ),
+    responses={
+        200: {"description": "Custom domain deleted."},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization or custom domain not found"},
+    },
+)
 async def api_delete_custom_domain(
     request: Request,
     org_id: int,
@@ -157,7 +251,20 @@ async def api_delete_custom_domain(
     )
 
 
-@public_router.get("/resolve/domain/{domain}", response_model=CustomDomainResolveResponse)
+@public_router.get(
+    "/resolve/domain/{domain}",
+    response_model=CustomDomainResolveResponse,
+    summary="Resolve custom domain to organization",
+    description=(
+        "Public endpoint used by the frontend proxy to route custom domain "
+        "requests to the correct organization. Returns 404 if the domain is "
+        "not registered or not verified."
+    ),
+    responses={
+        200: {"description": "Organization that owns the requested custom domain.", "model": CustomDomainResolveResponse},
+        404: {"description": "Domain not found or not verified"},
+    },
+)
 async def api_resolve_domain(
     request: Request,
     domain: str,
@@ -179,7 +286,18 @@ async def api_resolve_domain(
     return result
 
 
-@internal_router.get("/domains/verified")
+@internal_router.get(
+    "/domains/verified",
+    summary="List all verified custom domains",
+    description=(
+        "Return every verified custom domain across all organizations. "
+        "Protected by an internal API key and used by the domain sync CronJob."
+    ),
+    responses={
+        200: {"description": "List of every verified custom domain across organizations."},
+        403: {"description": "Invalid internal API key"},
+    },
+)
 async def api_list_all_verified_domains(
     request: Request,
     x_internal_key: str = Header(...),

@@ -142,7 +142,21 @@ def _validate_event(event: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-@router.get("/me", response_model=ZapierMeResponse)
+@router.get(
+    "/me",
+    response_model=ZapierMeResponse,
+    summary="Identify Zapier caller",
+    description=(
+        "Return the organization and token identity for the current Zapier API token. "
+        "Used by Zapier as the auth test endpoint."
+    ),
+    responses={
+        200: {"description": "Organization and token identity for the current Zapier caller.", "model": ZapierMeResponse},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+        404: {"description": "Organization not found for this token"},
+    },
+)
 async def zapier_me(ctx=Depends(_zapier_context)) -> ZapierMeResponse:
     api_user, db_session = ctx
     org_query = select(Organization).where(Organization.id == api_user.org_id)
@@ -161,12 +175,31 @@ async def zapier_me(ctx=Depends(_zapier_context)) -> ZapierMeResponse:
     )
 
 
-@router.get("/events")
+@router.get(
+    "/events",
+    summary="List webhook events",
+    description="List every webhook event name a Zap can subscribe to.",
+    responses={
+        200: {"description": "Dictionary with `events`: the full list of supported event names."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_list_events(ctx=Depends(_zapier_context)) -> dict:
     return {"events": WEBHOOK_EVENTS}
 
 
-@router.get("/courses", response_model=List[ZapierCourseItem])
+@router.get(
+    "/courses",
+    response_model=List[ZapierCourseItem],
+    summary="List courses for Zapier",
+    description="List courses in the caller's organization for use as Zapier trigger samples. Maximum 500 rows.",
+    responses={
+        200: {"description": "List of courses in the caller's organization."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_list_courses(
     limit: int = 100,
     ctx=Depends(_zapier_context),
@@ -185,7 +218,17 @@ async def zapier_list_courses(
     ]
 
 
-@router.get("/users", response_model=List[ZapierUserItem])
+@router.get(
+    "/users",
+    response_model=List[ZapierUserItem],
+    summary="List users for Zapier",
+    description="List users that belong to the caller's organization for use as Zapier trigger samples. Maximum 500 rows.",
+    responses={
+        200: {"description": "List of users in the caller's organization."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_list_users(
     limit: int = 100,
     ctx=Depends(_zapier_context),
@@ -211,7 +254,17 @@ async def zapier_list_users(
     ]
 
 
-@router.get("/usergroups", response_model=List[ZapierUserGroupItem])
+@router.get(
+    "/usergroups",
+    response_model=List[ZapierUserGroupItem],
+    summary="List user groups for Zapier",
+    description="List cohorts / user groups in the caller's organization. Maximum 500 rows.",
+    responses={
+        200: {"description": "List of user groups in the caller's organization."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_list_usergroups(
     limit: int = 100,
     ctx=Depends(_zapier_context),
@@ -234,7 +287,22 @@ async def zapier_list_usergroups(
     ]
 
 
-@router.post("/subscriptions", response_model=ZapierSubscriptionResponse, status_code=201)
+@router.post(
+    "/subscriptions",
+    response_model=ZapierSubscriptionResponse,
+    status_code=201,
+    summary="Create Zap subscription",
+    description=(
+        "Register a Zapier REST Hook subscription. Called by Zapier when a Zap is enabled. "
+        "Creates a webhook endpoint tagged `source=\"zapier\"` that the dispatcher will deliver events to."
+    ),
+    responses={
+        201: {"description": "Subscription created — webhook endpoint registered for the given event.", "model": ZapierSubscriptionResponse},
+        400: {"description": "Unknown event name or invalid target URL (SSRF guard)"},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_create_subscription(
     request: Request,
     payload: ZapierSubscriptionCreate,
@@ -287,7 +355,17 @@ async def zapier_create_subscription(
     )
 
 
-@router.get("/subscriptions", response_model=List[ZapierSubscriptionResponse])
+@router.get(
+    "/subscriptions",
+    response_model=List[ZapierSubscriptionResponse],
+    summary="List Zap subscriptions",
+    description="List every active Zapier REST Hook subscription for the caller's organization.",
+    responses={
+        200: {"description": "List of Zapier subscriptions for the caller's organization."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+    },
+)
 async def zapier_list_subscriptions(
     ctx=Depends(_zapier_context),
 ) -> List[ZapierSubscriptionResponse]:
@@ -311,7 +389,17 @@ async def zapier_list_subscriptions(
     ]
 
 
-@router.delete("/subscriptions/{subscription_id}")
+@router.delete(
+    "/subscriptions/{subscription_id}",
+    summary="Delete Zap subscription",
+    description="Delete a Zapier REST Hook subscription. Called by Zapier when a Zap is disabled or deleted.",
+    responses={
+        200: {"description": "Subscription deleted."},
+        401: {"description": "Missing or invalid API token"},
+        403: {"description": "Organization plan does not include Zapier integration (Pro+ required)"},
+        404: {"description": "Subscription not found"},
+    },
+)
 async def zapier_delete_subscription(
     subscription_id: int,
     ctx=Depends(_zapier_context),

@@ -173,7 +173,21 @@ def _get_idp_error_message(error_code: str) -> str:
 # Admin endpoints (require enterprise plan + admin role)
 # ============================================================================
 
-@router.get("/providers", response_model=list[SSOProviderInfo])
+@router.get(
+    "/providers",
+    response_model=list[SSOProviderInfo],
+    summary="List available SSO providers",
+    description=(
+        "List all supported SSO providers with their configuration details. "
+        "Requires the caller to be an org admin on an Enterprise-plan organization."
+    ),
+    responses={
+        200: {"description": "List of supported SSO providers with their metadata."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def list_sso_providers(
     *,
     request: Request,
@@ -190,7 +204,21 @@ async def list_sso_providers(
     return get_available_providers()
 
 
-@router.get("/{org_id}/config", response_model=Optional[SSOConnectionRead])
+@router.get(
+    "/{org_id}/config",
+    response_model=Optional[SSOConnectionRead],
+    summary="Get SSO configuration",
+    description=(
+        "Return the current SSO configuration for an organization or null if it "
+        "has not been configured yet. Requires org admin on an Enterprise-plan org."
+    ),
+    responses={
+        200: {"description": "SSO connection if configured, otherwise null."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_sso_config(
     *,
     request: Request,
@@ -212,7 +240,21 @@ async def get_sso_config(
     return SSOConnectionRead.model_validate(connection)
 
 
-@router.post("/{org_id}/config", response_model=SSOConnectionRead)
+@router.post(
+    "/{org_id}/config",
+    response_model=SSOConnectionRead,
+    summary="Create SSO configuration",
+    description=(
+        "Create SSO configuration for an organization, wiring up the chosen "
+        "provider and its settings. Requires org admin on an Enterprise-plan org."
+    ),
+    responses={
+        200: {"description": "Newly created SSO connection.", "model": SSOConnectionRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def create_sso_config(
     *,
     request: Request,
@@ -232,7 +274,21 @@ async def create_sso_config(
     return SSOConnectionRead.model_validate(connection)
 
 
-@router.put("/{org_id}/config", response_model=SSOConnectionRead)
+@router.put(
+    "/{org_id}/config",
+    response_model=SSOConnectionRead,
+    summary="Update SSO configuration",
+    description=(
+        "Modify existing SSO settings for an organization. Requires org admin "
+        "on an Enterprise-plan org."
+    ),
+    responses={
+        200: {"description": "Updated SSO connection.", "model": SSOConnectionRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization or SSO connection not found"},
+    },
+)
 async def update_sso_config(
     *,
     request: Request,
@@ -252,7 +308,20 @@ async def update_sso_config(
     return SSOConnectionRead.model_validate(connection)
 
 
-@router.delete("/{org_id}/config")
+@router.delete(
+    "/{org_id}/config",
+    summary="Delete SSO configuration",
+    description=(
+        "Disable SSO for an organization by removing its SSO connection. "
+        "Requires org admin on an Enterprise-plan org."
+    ),
+    responses={
+        200: {"description": "SSO configuration deleted successfully."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization or SSO configuration not found"},
+    },
+)
 async def delete_sso_config(
     *,
     request: Request,
@@ -277,7 +346,22 @@ async def delete_sso_config(
     return {"message": "SSO configuration deleted successfully"}
 
 
-@router.get("/{org_id}/setup-url")
+@router.get(
+    "/{org_id}/setup-url",
+    summary="Get provider setup URL",
+    description=(
+        "Return the admin portal URL for configuring the identity provider. "
+        "Only available for providers that expose a setup portal (for example WorkOS). "
+        "Requires org admin on an Enterprise-plan org."
+    ),
+    responses={
+        200: {"description": "Setup URL payload for the admin portal."},
+        400: {"description": "Setup URL is not available or provider does not support setup portal"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Organization not on Enterprise plan or caller lacks admin rights"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def get_setup_url(
     *,
     request: Request,
@@ -308,7 +392,18 @@ async def get_setup_url(
 # Public authentication endpoints
 # ============================================================================
 
-@router.get("/check", response_model=SSOLoginCheckResponse)
+@router.get(
+    "/check",
+    response_model=SSOLoginCheckResponse,
+    summary="Check if SSO is enabled",
+    description=(
+        "Public endpoint used by the login page to determine whether the SSO "
+        "button should be shown for a given organization slug."
+    ),
+    responses={
+        200: {"description": "Whether SSO is enabled for the organization.", "model": SSOLoginCheckResponse},
+    },
+)
 async def check_sso(
     *,
     org_slug: str = Query(..., description="Organization slug"),
@@ -323,7 +418,20 @@ async def check_sso(
     return SSOLoginCheckResponse(**result)
 
 
-@router.get("/authorize", response_model=SSOAuthorizationResponse)
+@router.get(
+    "/authorize",
+    response_model=SSOAuthorizationResponse,
+    summary="Initiate SSO login flow",
+    description=(
+        "Start an SSO login flow by returning the authorization URL the user "
+        "should be redirected to at the identity provider."
+    ),
+    responses={
+        200: {"description": "Authorization URL and state for the IdP redirect.", "model": SSOAuthorizationResponse},
+        400: {"description": "SSO is not enabled or configured for this organization"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def authorize_sso(
     *,
     org_slug: str = Query(..., description="Organization slug"),
@@ -353,7 +461,20 @@ class SSOErrorResponse(BaseModel):
     details: Optional[dict] = None
 
 
-@router.get("/callback")
+@router.get(
+    "/callback",
+    summary="Handle SSO callback",
+    description=(
+        "Handle the SSO callback from the identity provider. Exchanges the "
+        "authorization code for a user profile, creates or finds the user, sets "
+        "authentication cookies, and returns the resolved user along with tokens "
+        "and a frontend redirect URL. Also surfaces IdP error responses."
+    ),
+    responses={
+        200: {"description": "Authenticated user, tokens, and frontend redirect URL."},
+        400: {"description": "IdP returned an error or required parameters are missing"},
+    },
+)
 async def sso_callback(
     *,
     response: Response,

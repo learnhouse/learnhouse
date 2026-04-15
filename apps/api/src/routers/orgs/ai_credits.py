@@ -73,7 +73,21 @@ async def verify_user_is_org_member(
     return is_org_member(user_id, org_id, db_session)
 
 
-@router.get("/{org_id}/ai-credits", response_model=AICreditsSummary)
+@router.get(
+    "/{org_id}/ai-credits",
+    response_model=AICreditsSummary,
+    summary="Get AI credits summary",
+    description=(
+        "Return the AI credits summary for an organization, including base, "
+        "purchased, used, and remaining credits. The caller must be a member "
+        "of the organization."
+    ),
+    responses={
+        200: {"description": "AI credits summary for the organization.", "model": AICreditsSummary},
+        403: {"description": "User is not a member of this organization"},
+        404: {"description": "Organization not found or credits summary unavailable"},
+    },
+)
 async def get_org_ai_credits(
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
@@ -107,7 +121,21 @@ async def get_org_ai_credits(
     return AICreditsSummary(**summary)
 
 
-@router.post("/{org_id}/ai-credits/add", response_model=AddCreditsResponse)
+@router.post(
+    "/{org_id}/ai-credits/add",
+    response_model=AddCreditsResponse,
+    summary="Add purchased AI credits",
+    description=(
+        "Add purchased AI credits to an organization. Only organization admins "
+        "can add credits and the amount must be a positive integer."
+    ),
+    responses={
+        200: {"description": "Credits added and new purchased total returned.", "model": AddCreditsResponse},
+        400: {"description": "Credit amount must be a positive number"},
+        403: {"description": "Only organization admins can add AI credits"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def add_org_ai_credits(
     org_id: int,
     request: AddCreditsRequest,
@@ -157,7 +185,20 @@ async def add_org_ai_credits(
     )
 
 
-@router.post("/{org_id}/ai-credits/reset", response_model=ResetCreditsResponse)
+@router.post(
+    "/{org_id}/ai-credits/reset",
+    response_model=ResetCreditsResponse,
+    summary="Reset AI credits usage",
+    description=(
+        "Reset AI credits usage for an organization. Typically used at the "
+        "start of a new billing period. Only organization admins can reset credits."
+    ),
+    responses={
+        200: {"description": "AI credits usage reset to zero.", "model": ResetCreditsResponse},
+        403: {"description": "Only organization admins can reset AI credits"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def reset_org_ai_credits(
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),

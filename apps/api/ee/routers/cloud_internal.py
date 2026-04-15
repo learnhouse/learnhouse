@@ -39,7 +39,20 @@ class OrgConfigUpdateBody(BaseModel):
     config: dict
 
 
-@router.put("/update_org_config")
+@router.put(
+    "/update_org_config",
+    summary="Update an organization config (no-auth internal)",
+    description=(
+        "Internal endpoint used by the control plane to overwrite an organization's "
+        "configuration. This bypasses user auth and is protected by the internal "
+        "cloud key header at the dependency level."
+    ),
+    responses={
+        200: {"description": "Updated organization config payload returned by the service."},
+        403: {"description": "Missing or invalid CloudInternalKey header"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def update_org_Config(
     request: Request,
     org_id: int,
@@ -58,7 +71,21 @@ class UpdateOrgPlanRequest(BaseModel):
     plan: str
 
 
-@router.put("/update_org_plan")
+@router.put(
+    "/update_org_plan",
+    summary="Update an organization plan",
+    description=(
+        "Update an organization's plan. Only changes the plan string; all feature "
+        "limits and enabled flags are resolved at runtime from the plan name via "
+        "plans.py. Requires the internal cloud key header."
+    ),
+    responses={
+        200: {"description": "Plan updated successfully."},
+        400: {"description": "Unknown plan name"},
+        403: {"description": "Missing or invalid CloudInternalKey header"},
+        404: {"description": "Organization or organization config not found"},
+    },
+)
 async def update_org_plan(
     request: Request,
     body: UpdateOrgPlanRequest,
@@ -122,7 +149,18 @@ async def update_org_plan(
     return {"detail": f"Organization plan updated to '{body.plan}'"}
 
 
-@router.get("/plans")
+@router.get(
+    "/plans",
+    summary="List available plans and hierarchy",
+    description=(
+        "Return all available plan configs and the plan hierarchy. The platform app "
+        "uses this instead of maintaining its own copy. Requires the internal cloud key."
+    ),
+    responses={
+        200: {"description": "Plan feature configs and plan hierarchy."},
+        403: {"description": "Missing or invalid CloudInternalKey header"},
+    },
+)
 async def get_available_plans(request: Request):
     """
     Return all available plan configs. The platform app uses this
@@ -186,7 +224,20 @@ def _batch_get_admin_emails(
     return admins_by_org
 
 
-@router.get("/email_automation_data")
+@router.get(
+    "/email_automation_data",
+    summary="Get email automation data",
+    description=(
+        "Returns aggregated data for the platform cron jobs to decide which "
+        "transactional emails to send. Includes recent signups, new orgs, new "
+        "members, recently published courses, milestone orgs, inactive orgs, and "
+        "digest orgs. Requires the internal cloud key."
+    ),
+    responses={
+        200: {"description": "Aggregated email automation dataset."},
+        403: {"description": "Missing or invalid CloudInternalKey header"},
+    },
+)
 async def get_email_automation_data(
     request: Request,
     db_session: Session = Depends(get_db_session),

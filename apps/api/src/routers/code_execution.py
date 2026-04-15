@@ -237,7 +237,19 @@ async def _submit_single(
         return resp.json()
 
 
-@router.post("/execute")
+@router.post(
+    "/execute",
+    summary="Execute a code snippet",
+    description="Submit a single code snippet to the Judge0 sandbox and return its result. Supports SQL execution via a bundled SQLite database; API tokens are not permitted for this endpoint.",
+    responses={
+        200: {"description": "Judge0 submission result for the executed code."},
+        400: {"description": "Invalid sqlite_db_path or file path"},
+        401: {"description": "Authentication required"},
+        403: {"description": "API tokens not permitted, or no access to the referenced course"},
+        404: {"description": "SQLite database file not found"},
+        503: {"description": "Code execution is not configured on this instance"},
+    },
+)
 async def execute_code(
     request: Request,
     body: ExecuteRequest,
@@ -272,7 +284,19 @@ async def execute_code(
     return result
 
 
-@router.post("/execute-batch")
+@router.post(
+    "/execute-batch",
+    summary="Execute code against a batch of test cases",
+    description="Run a code snippet against multiple test cases in parallel and return per-test pass/fail results. Supports SQL execution via a bundled SQLite database; API tokens are not permitted.",
+    responses={
+        200: {"description": "Per-test execution results for the submitted code."},
+        400: {"description": "Invalid sqlite_db_path or file path"},
+        401: {"description": "Authentication required"},
+        403: {"description": "API tokens not permitted, or no access to the referenced course"},
+        404: {"description": "SQLite database file not found"},
+        503: {"description": "Code execution is not configured on this instance"},
+    },
+)
 async def execute_batch(
     request: Request,
     body: ExecuteBatchRequest,
@@ -344,7 +368,17 @@ async def execute_batch(
     return {"results": list(results)}
 
 
-@router.post("/upload-sqlite")
+@router.post(
+    "/upload-sqlite",
+    summary="Upload a SQLite database for a code playground block",
+    description="Upload a SQLite database file for a code playground block. Requires an authenticated user with update permission on the target course; API tokens are not permitted.",
+    responses={
+        200: {"description": "Uploaded file path and original filename."},
+        400: {"description": "Invalid course_uuid or file path"},
+        401: {"description": "Authentication required"},
+        403: {"description": "API tokens not permitted, or no update access to the course"},
+    },
+)
 async def upload_sqlite_db(
     request: Request,
     file_object: UploadFile,

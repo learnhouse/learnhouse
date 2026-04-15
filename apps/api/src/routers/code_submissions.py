@@ -24,7 +24,15 @@ class SaveSubmissionRequest(BaseModel):
     execution_time_ms: int | None = None
 
 
-@router.get("/history")
+@router.get(
+    "/history",
+    summary="List a user's code submission history",
+    description="Return the authenticated user's previous code submissions for a given activity block, paginated by page and limit.",
+    responses={
+        200: {"description": "Paginated list of code submissions for the current user on the given block."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def get_submission_history(
     activity_uuid: str,
     block_id: str,
@@ -70,7 +78,16 @@ async def get_submission_history(
     }
 
 
-@router.post("/save")
+@router.post(
+    "/save",
+    response_model=CodeSubmissionRead,
+    summary="Save a code submission",
+    description="Persist a code submission (source, results, pass/fail counts) for the authenticated user on an activity block.",
+    responses={
+        200: {"description": "Code submission saved successfully.", "model": CodeSubmissionRead},
+        401: {"description": "Authentication required"},
+    },
+)
 async def save_submission(
     body: SaveSubmissionRequest,
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
