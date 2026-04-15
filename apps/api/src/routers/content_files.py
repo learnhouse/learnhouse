@@ -190,7 +190,20 @@ def _check_content_access(
         raise HTTPException(status_code=401, detail="Authentication required")
 
 
-@router.get("/content/{file_path:path}")
+@router.get(
+    "/content/{file_path:path}",
+    summary="Serve a content file",
+    description="Streams a content file (videos, PDFs, images, etc.) from S3 storage. Supports HTTP Range requests for video/audio seeking. Access is enforced based on the path prefix: activity and podcast episode content require authentication and org membership for non-public resources, while course metadata and org branding are public.",
+    responses={
+        200: {"description": "File streamed successfully"},
+        206: {"description": "Partial content returned for a Range request"},
+        400: {"description": "Invalid or unsafe file path"},
+        401: {"description": "Authentication required to access this file"},
+        403: {"description": "User is not permitted to access this file"},
+        404: {"description": "File not found in storage"},
+        500: {"description": "Storage backend is not configured"},
+    },
+)
 async def serve_content_file(
     request: Request,
     file_path: str,
@@ -307,7 +320,19 @@ async def serve_content_file(
         )
 
 
-@router.head("/content/{file_path:path}")
+@router.head(
+    "/content/{file_path:path}",
+    summary="Get content file metadata",
+    description="Returns metadata for a content file without the body. Used by clients to probe file size, MIME type, and Range support before issuing a GET.",
+    responses={
+        200: {"description": "File metadata returned via response headers"},
+        400: {"description": "Invalid or unsafe file path"},
+        401: {"description": "Authentication required to access this file"},
+        403: {"description": "User is not permitted to access this file"},
+        404: {"description": "File not found in storage"},
+        500: {"description": "Storage backend is not configured"},
+    },
+)
 async def head_content_file(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),

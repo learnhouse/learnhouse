@@ -125,7 +125,20 @@ async def rag_chat_event_generator(
 # ============================================================================
 
 
-@router.post("/rag/chat")
+@router.post(
+    "/rag/chat",
+    summary="RAG chat (streaming)",
+    description="Streaming RAG chatbot grounded in course content. If `course_uuid` is provided, searches within that course only. Otherwise searches across all courses for the user's organization. Responses are delivered as Server-Sent Events (SSE).",
+    responses={
+        200: {
+            "description": "SSE stream of chat events (start, chunk, sources, done, follow_ups, session_title, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "AI features disabled, copilot disabled, or user has no organization"},
+        404: {"description": "Course or organization not found"},
+    },
+)
 async def api_rag_chat(
     request: Request,
     chat_request: RAGChatRequest,
@@ -230,7 +243,18 @@ async def api_rag_chat(
     )
 
 
-@router.post("/rag/index", response_model=RAGIndexResponse)
+@router.post(
+    "/rag/index",
+    response_model=RAGIndexResponse,
+    summary="Reindex course content for RAG",
+    description="Manually trigger re-indexing (embedding) of a course's content for the RAG chatbot. Requires admin/maintainer role on the course's organization.",
+    responses={
+        200: {"description": "Course re-indexed successfully.", "model": RAGIndexResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks admin/maintainer role on the organization"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_rag_index(
     request: Request,
     index_request: RAGIndexRequest,
@@ -269,7 +293,15 @@ async def api_rag_index(
 # ============================================================================
 
 
-@router.get("/rag/sessions")
+@router.get(
+    "/rag/sessions",
+    summary="List RAG chat sessions",
+    description="List all RAG chat sessions owned by the current user, optionally filtered by organization via `org_slug`.",
+    responses={
+        200: {"description": "Object containing the list of chat sessions for the current user."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_rag_sessions(
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -287,7 +319,16 @@ async def api_rag_sessions(
     return {"sessions": sessions}
 
 
-@router.get("/rag/sessions/{aichat_uuid}/messages")
+@router.get(
+    "/rag/sessions/{aichat_uuid}/messages",
+    summary="Get RAG chat session messages",
+    description="Load the full message history for a specific RAG chat session owned by the current user.",
+    responses={
+        200: {"description": "Object containing the session's messages."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def api_rag_session_messages(
     aichat_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
@@ -299,7 +340,16 @@ async def api_rag_session_messages(
     return {"messages": messages}
 
 
-@router.delete("/rag/sessions/{aichat_uuid}")
+@router.delete(
+    "/rag/sessions/{aichat_uuid}",
+    summary="Delete a RAG chat session",
+    description="Delete a RAG chat session and all its messages. The session must belong to the current user.",
+    responses={
+        200: {"description": "Session deleted successfully."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def api_rag_session_delete(
     aichat_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
@@ -316,7 +366,16 @@ class RAGSessionUpdateRequest(BaseModel):
     favorite: Optional[bool] = None
 
 
-@router.patch("/rag/sessions/{aichat_uuid}")
+@router.patch(
+    "/rag/sessions/{aichat_uuid}",
+    summary="Update a RAG chat session",
+    description="Update a RAG chat session's title and/or favorite status. The session must belong to the current user.",
+    responses={
+        200: {"description": "Session updated successfully."},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def api_rag_session_update(
     aichat_uuid: str,
     body: RAGSessionUpdateRequest,

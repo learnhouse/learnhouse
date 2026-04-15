@@ -176,7 +176,18 @@ _MIME_TYPES = {
 }
 
 
-@router.get("/content/{file_path:path}")
+@router.get(
+    "/content/{file_path:path}",
+    summary="Serve a local content file",
+    description="Streams a content file from the local filesystem with access control. Public course and podcast content is accessible anonymously; private content requires authentication and org membership.",
+    responses={
+        200: {"description": "File served successfully"},
+        400: {"description": "Invalid or unsafe file path"},
+        401: {"description": "Authentication required to access this file"},
+        403: {"description": "User is not permitted to access this file"},
+        404: {"description": "File not found on disk"},
+    },
+)
 async def serve_local_content(
     request: Request,
     file_path: str,
@@ -212,7 +223,18 @@ async def serve_local_content(
     )
 
 
-@router.head("/content/{file_path:path}")
+@router.head(
+    "/content/{file_path:path}",
+    summary="Get local content file metadata",
+    description="Returns metadata for a local content file without the body. Used by clients to probe file size and MIME type before issuing a GET.",
+    responses={
+        200: {"description": "File metadata returned via response headers"},
+        400: {"description": "Invalid or unsafe file path"},
+        401: {"description": "Authentication required to access this file"},
+        403: {"description": "User is not permitted to access this file"},
+        404: {"description": "File not found on disk"},
+    },
+)
 async def head_local_content(
     request: Request,
     file_path: str,

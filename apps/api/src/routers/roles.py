@@ -12,7 +12,18 @@ from typing import List
 router = APIRouter()
 
 
-@router.post("/org/{org_id}", dependencies=[Depends(require_plan("pro", "Create Role"))])
+@router.post(
+    "/org/{org_id}",
+    dependencies=[Depends(require_plan("pro", "Create Role"))],
+    response_model=RoleRead,
+    summary="Create role",
+    description="Create a new role for a specific organization. Requires the Pro plan feature flag.",
+    responses={
+        200: {"description": "Role created successfully.", "model": RoleRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "Plan does not permit creating roles, or caller lacks permission"},
+    },
+)
 async def api_create_role(
     request: Request,
     org_id: int,
@@ -28,7 +39,16 @@ async def api_create_role(
     return await create_role(request, db_session, role_object, current_user)
 
 
-@router.get("/org/{org_id}")
+@router.get(
+    "/org/{org_id}",
+    response_model=List[RoleRead],
+    summary="List roles for organization",
+    description="Get all roles for a specific organization, including global roles available to every org.",
+    responses={
+        200: {"description": "List of roles (custom + global) available to the organization."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_roles_by_organization(
     request: Request,
     org_id: int,
@@ -41,7 +61,16 @@ async def api_get_roles_by_organization(
     return await get_roles_by_organization(request, db_session, org_id, current_user)
 
 
-@router.get("/{role_id}")
+@router.get(
+    "/{role_id}",
+    response_model=RoleRead,
+    summary="Get role",
+    description="Get a single role by its role_id.",
+    responses={
+        200: {"description": "Role details.", "model": RoleRead},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_role(
     request: Request,
     role_id: str,
@@ -54,7 +83,17 @@ async def api_get_role(
     return await read_role(request, db_session, role_id, current_user)
 
 
-@router.put("/{role_id}")
+@router.put(
+    "/{role_id}",
+    response_model=RoleRead,
+    summary="Update role",
+    description="Update a role by its role_id. The role_id path parameter must be numeric.",
+    responses={
+        200: {"description": "Role updated successfully.", "model": RoleRead},
+        400: {"description": "Invalid role ID format (must be numeric)"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_update_role(
     request: Request,
     role_id: str,
@@ -78,7 +117,15 @@ async def api_update_role(
     return await update_role(request, db_session, role_object, current_user)
 
 
-@router.delete("/{role_id}")
+@router.delete(
+    "/{role_id}",
+    summary="Delete role",
+    description="Delete a role by its role_id. Deletion is permanent.",
+    responses={
+        200: {"description": "Role deleted successfully."},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_delete_role(
     request: Request,
     role_id: str,

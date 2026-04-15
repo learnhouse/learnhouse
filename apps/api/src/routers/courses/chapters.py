@@ -23,7 +23,18 @@ from src.security.auth import get_current_user
 router = APIRouter()
 
 
-@router.post("/")
+@router.post(
+    "/",
+    response_model=ChapterRead,
+    summary="Create chapter",
+    description="Create a new chapter inside an existing course.",
+    responses={
+        200: {"description": "Chapter created successfully", "model": ChapterRead},
+        403: {"description": "User lacks permission to create chapters on this course"},
+        404: {"description": "Course not found"},
+        422: {"description": "Invalid chapter payload"},
+    },
+)
 async def api_create_coursechapter(
     request: Request,
     coursechapter_object: ChapterCreate,
@@ -36,7 +47,18 @@ async def api_create_coursechapter(
     return await create_chapter(request, coursechapter_object, current_user, db_session)
 
 
-@router.get("/{chapter_id}")
+@router.get(
+    "/{chapter_id}",
+    response_model=ChapterRead,
+    summary="Get chapter by ID",
+    description="Retrieve a single chapter by its numeric ID.",
+    responses={
+        200: {"description": "Chapter retrieved successfully", "model": ChapterRead},
+        403: {"description": "User lacks read access to this chapter"},
+        404: {"description": "Chapter not found"},
+        409: {"description": "Chapter does not exist"},
+    },
+)
 async def api_get_coursechapter(
     request: Request,
     chapter_id: int,
@@ -49,7 +71,17 @@ async def api_get_coursechapter(
     return await get_chapter(request, chapter_id, current_user, db_session)
 
 
-@router.get("/course/{course_uuid}/meta", deprecated=True)
+@router.get(
+    "/course/{course_uuid}/meta",
+    deprecated=True,
+    summary="Get chapters metadata (deprecated)",
+    description="Deprecated endpoint returning chapter metadata for a course. Use /course/{course_uuid}/meta on the courses router instead.",
+    responses={
+        200: {"description": "Chapter metadata"},
+        403: {"description": "User lacks read access to the course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_chapter_meta(
     request: Request,
     course_uuid: str,
@@ -64,7 +96,18 @@ async def api_get_chapter_meta(
     )
 
 
-@router.put("/course/{course_uuid}/order")
+@router.put(
+    "/course/{course_uuid}/order",
+    summary="Reorder chapters and activities",
+    description="Update the ordering of chapters and the activities nested inside them for a given course.",
+    responses={
+        200: {"description": "Order updated successfully"},
+        403: {"description": "User lacks permission to modify this course"},
+        404: {"description": "Course not found"},
+        409: {"description": "Course does not exist"},
+        422: {"description": "Invalid order payload"},
+    },
+)
 async def api_update_chapter_meta(
     request: Request,
     course_uuid: str,
@@ -80,7 +123,17 @@ async def api_update_chapter_meta(
     )
 
 
-@router.get("/course/{course_id}/page/{page}/limit/{limit}")
+@router.get(
+    "/course/{course_id}/page/{page}/limit/{limit}",
+    response_model=List[ChapterRead],
+    summary="List course chapters",
+    description="Paginated list of chapters for the specified course.",
+    responses={
+        200: {"description": "Paginated list of chapters", "model": List[ChapterRead]},
+        403: {"description": "User lacks read access to the course"},
+        404: {"description": "Course not found"},
+    },
+)
 async def api_get_chapter_by(
     request: Request,
     course_id: int,
@@ -97,7 +150,19 @@ async def api_get_chapter_by(
     )
 
 
-@router.put("/{chapter_id}")
+@router.put(
+    "/{chapter_id}",
+    response_model=ChapterRead,
+    summary="Update chapter",
+    description="Update the name or other metadata of a chapter by its ID.",
+    responses={
+        200: {"description": "Chapter updated successfully", "model": ChapterRead},
+        403: {"description": "User lacks permission to modify this chapter"},
+        404: {"description": "Chapter not found"},
+        409: {"description": "Chapter does not exist"},
+        422: {"description": "Invalid chapter payload"},
+    },
+)
 async def api_update_coursechapter(
     request: Request,
     coursechapter_object: ChapterUpdate,
@@ -113,7 +178,17 @@ async def api_update_coursechapter(
     )
 
 
-@router.delete("/{chapter_id}")
+@router.delete(
+    "/{chapter_id}",
+    summary="Delete chapter",
+    description="Delete a chapter and detach its activities from the course.",
+    responses={
+        200: {"description": "Chapter deleted successfully"},
+        403: {"description": "User lacks permission to delete this chapter"},
+        404: {"description": "Chapter not found"},
+        409: {"description": "Chapter does not exist"},
+    },
+)
 async def api_delete_coursechapter(
     request: Request,
     chapter_id: str,

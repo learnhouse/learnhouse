@@ -53,7 +53,16 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
         return "gemini-2.5-flash-lite"
 
 
-@router.post("/playground/start")
+@router.post(
+    "/playground/start",
+    summary="Start a boards playground AI session",
+    description="Start a new Boards Playground AI generation session with a server-sent events stream. Deducts AI credits and requires a valid board and organization.",
+    responses={
+        200: {"description": "Server-sent events stream of generated playground content.", "content": {"text/event-stream": {}}},
+        401: {"description": "Authentication required"},
+        404: {"description": "Board or organization not found"},
+    },
+)
 async def start_boards_playground_session(
     request: Request,
     session_request: StartBoardsPlaygroundSession,
@@ -107,7 +116,17 @@ async def start_boards_playground_session(
     )
 
 
-@router.post("/playground/iterate")
+@router.post(
+    "/playground/iterate",
+    summary="Iterate on a boards playground AI session",
+    description="Continue an existing Boards Playground session with a new message, streaming the updated output. Deducts AI credits and enforces the session's iteration limit.",
+    responses={
+        200: {"description": "Server-sent events stream of generated playground content.", "content": {"text/event-stream": {}}},
+        400: {"description": "Maximum iterations reached, or board/block UUID mismatch"},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session, board, or organization not found"},
+    },
+)
 async def iterate_boards_playground_session(
     request: Request,
     message_request: SendBoardsPlaygroundMessage,
@@ -168,7 +187,17 @@ async def iterate_boards_playground_session(
     )
 
 
-@router.get("/playground/session/{session_uuid}")
+@router.get(
+    "/playground/session/{session_uuid}",
+    response_model=BoardsPlaygroundSessionResponse,
+    summary="Get boards playground session state",
+    description="Retrieve the current state of a Boards Playground generation session, including iteration count, current HTML, and message history.",
+    responses={
+        200: {"description": "Current state of the boards playground session.", "model": BoardsPlaygroundSessionResponse},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),

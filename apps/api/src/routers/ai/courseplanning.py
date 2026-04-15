@@ -93,7 +93,20 @@ async def verify_user_org_membership(user_id: int, org_id: int, db_session: Sess
     return is_org_member(user_id, org_id, db_session)
 
 
-@router.post("/courseplanning/start")
+@router.post(
+    "/courseplanning/start",
+    summary="Start course planning session (streaming)",
+    description="Start a new AI course planning session for an organization and stream the generated course plan as Server-Sent Events (SSE). Consumes AI credits based on the organization's plan tier.",
+    responses={
+        200: {
+            "description": "SSE stream of course planning events (chunk, done, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of this organization or insufficient credits"},
+        404: {"description": "Organization not found"},
+    },
+)
 async def start_course_planning_session(
     request: Request,
     session_request: StartCoursePlanningSession,
@@ -145,7 +158,21 @@ async def start_course_planning_session(
     )
 
 
-@router.post("/courseplanning/iterate")
+@router.post(
+    "/courseplanning/iterate",
+    summary="Iterate course planning session (streaming)",
+    description="Continue an existing course planning session with a new user message and stream the updated plan as Server-Sent Events (SSE). Bounded by the session's max planning iterations.",
+    responses={
+        200: {
+            "description": "SSE stream of course planning events (chunk, done, error).",
+            "content": {"text/event-stream": {}},
+        },
+        400: {"description": "Maximum planning iterations reached"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of this organization or insufficient credits"},
+        404: {"description": "Session or organization not found"},
+    },
+)
 async def iterate_course_planning_session(
     request: Request,
     message_request: SendCoursePlanningMessage,
@@ -211,7 +238,19 @@ async def iterate_course_planning_session(
     )
 
 
-@router.post("/courseplanning/finalize")
+@router.post(
+    "/courseplanning/finalize",
+    response_model=FinalizeCoursePlanResponse,
+    summary="Finalize course plan",
+    description="Finalize an AI-generated course plan and persist the course, chapters, and activities in the database. The calling user becomes the creator of the resulting course.",
+    responses={
+        200: {"description": "Course, chapters, and activities created from the plan.", "model": FinalizeCoursePlanResponse},
+        400: {"description": "Course already created from this session"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of this organization"},
+        404: {"description": "Session or organization not found"},
+    },
+)
 async def finalize_course_plan(
     request: Request,
     finalize_request: FinalizeCoursePlanRequest,
@@ -371,7 +410,21 @@ async def finalize_course_plan(
     )
 
 
-@router.post("/courseplanning/generate-activity")
+@router.post(
+    "/courseplanning/generate-activity",
+    summary="Generate activity content (streaming)",
+    description="Generate AI content for a specific activity within a course planning session and stream it as Server-Sent Events (SSE). Bounded by the session's max activity iterations. Content must subsequently be persisted via the save-activity-content endpoint.",
+    responses={
+        200: {
+            "description": "SSE stream of activity content generation events (chunk, done, error).",
+            "content": {"text/event-stream": {}},
+        },
+        400: {"description": "Maximum activity iterations reached"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Activity content generation disabled, user not a member of the organization, or insufficient credits"},
+        404: {"description": "Session, activity, or organization not found"},
+    },
+)
 async def generate_activity_content(
     request: Request,
     content_request: GenerateActivityContentRequest,
@@ -516,7 +569,19 @@ def validate_prosemirror_content(content: dict) -> tuple[bool, str]:
     return True, ""
 
 
-@router.post("/courseplanning/save-activity-content")
+@router.post(
+    "/courseplanning/save-activity-content",
+    summary="Save AI-generated activity content",
+    description="Persist AI-generated ProseMirror content to an activity. The content is validated for correct document structure before being saved.",
+    responses={
+        200: {"description": "Activity content saved successfully."},
+        400: {"description": "Invalid content structure"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of this organization"},
+        404: {"description": "Activity or organization not found"},
+        500: {"description": "Failed to save content due to an internal error"},
+    },
+)
 async def save_activity_content(
     request: Request,
     save_request: SaveActivityContentRequest,
@@ -613,7 +678,17 @@ async def save_activity_content(
         raise HTTPException(status_code=500, detail=f"Failed to save content: {str(e)}")
 
 
-@router.get("/courseplanning/session/{session_uuid}")
+@router.get(
+    "/courseplanning/session/{session_uuid}",
+    response_model=CoursePlanningSessionResponse,
+    summary="Get course planning session state",
+    description="Return the current state of a course planning session, including the current plan, iteration counts, message history, and any linked course.",
+    responses={
+        200: {"description": "Course planning session state.", "model": CoursePlanningSessionResponse},
+        401: {"description": "Authentication required"},
+        404: {"description": "Session not found"},
+    },
+)
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),

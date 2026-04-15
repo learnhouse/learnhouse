@@ -296,7 +296,15 @@ def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
 # -------------------------------------------------------------------
 # GET /status — Whether analytics (Tinybird) is configured
 # -------------------------------------------------------------------
-@router.get("/status")
+@router.get(
+    "/status",
+    summary="Check analytics configuration",
+    description="Returns whether the analytics backend (Tinybird) is configured on the server.",
+    responses={
+        200: {"description": "Analytics configuration status"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def analytics_status(
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),
 ):
@@ -310,7 +318,17 @@ async def analytics_status(
 # -------------------------------------------------------------------
 # POST /events — Frontend event proxy
 # -------------------------------------------------------------------
-@router.post("/events")
+@router.post(
+    "/events",
+    summary="Ingest a frontend analytics event",
+    description="Proxies a whitelisted analytics event from the frontend to the analytics backend. The authenticated user must belong to the target organization, and the event name must be in the allowed list.",
+    responses={
+        200: {"description": "Event ingested successfully"},
+        400: {"description": "Invalid event name"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of the target organization"},
+    },
+)
 async def ingest_frontend_event(
     body: FrontendEvent,
     request: Request,
@@ -363,7 +381,20 @@ async def ingest_frontend_event(
 # -------------------------------------------------------------------
 # GET /dashboard/detail/{query_name} — Tinybird + PostgreSQL enrichment
 # -------------------------------------------------------------------
-@router.get("/dashboard/detail/{query_name}")
+@router.get(
+    "/dashboard/detail/{query_name}",
+    summary="Run a detail dashboard query",
+    description="Executes a predefined analytics detail query against Tinybird and enriches the result rows with course, activity, and user metadata from PostgreSQL. Requires org admin privileges.",
+    responses={
+        200: {"description": "Detail query results with enriched metadata"},
+        400: {"description": "Invalid query parameter"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member or admin of the organization"},
+        404: {"description": "Unknown detail query name"},
+        502: {"description": "Upstream analytics query failed"},
+        503: {"description": "Analytics backend is not configured"},
+    },
+)
 async def query_dashboard_detail(
     query_name: str,
     org_id: int,
@@ -419,7 +450,20 @@ async def query_dashboard_detail(
 # -------------------------------------------------------------------
 # GET /dashboard/{query_name} — Run analytics query via Tinybird
 # -------------------------------------------------------------------
-@router.get("/dashboard/{query_name}")
+@router.get(
+    "/dashboard/{query_name}",
+    summary="Run a dashboard analytics query",
+    description="Executes a predefined analytics query via Tinybird and returns the aggregated results. Advanced queries require an Enterprise plan. Requires org admin privileges.",
+    responses={
+        200: {"description": "Query results with enriched metadata"},
+        400: {"description": "Invalid query parameter"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member/admin, or plan does not permit advanced queries"},
+        404: {"description": "Unknown query name"},
+        502: {"description": "Upstream analytics query failed"},
+        503: {"description": "Analytics backend is not configured"},
+    },
+)
 async def query_dashboard(
     query_name: str,
     org_id: int,
@@ -463,7 +507,17 @@ async def query_dashboard(
 # -------------------------------------------------------------------
 # GET /dashboard/db/{query_name} — PostgreSQL-based queries
 # -------------------------------------------------------------------
-@router.get("/dashboard/db/{query_name}")
+@router.get(
+    "/dashboard/db/{query_name}",
+    summary="Run a PostgreSQL-backed dashboard query",
+    description="Executes a predefined PostgreSQL analytics query (e.g. grade distribution histogram). Requires org admin privileges and a Pro plan or higher.",
+    responses={
+        200: {"description": "Query results from PostgreSQL"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not admin or the organization lacks a Pro plan"},
+        404: {"description": "Unknown query name"},
+    },
+)
 async def query_dashboard_db(
     query_name: str,
     org_id: int,
@@ -567,7 +621,20 @@ def _build_sql(
 # -------------------------------------------------------------------
 # GET /dashboard/course/detail/{query_name} — Course-level detail with enrichment
 # -------------------------------------------------------------------
-@router.get("/dashboard/course/detail/{query_name}")
+@router.get(
+    "/dashboard/course/detail/{query_name}",
+    summary="Run a course-level detail analytics query",
+    description="Executes a predefined course-level detail query via Tinybird with fallback to PostgreSQL TrailRun data, and enriches results with course, activity, and user metadata. Requires org admin privileges and a Pro plan or higher.",
+    responses={
+        200: {"description": "Course detail query results with enriched metadata"},
+        400: {"description": "Invalid query parameter or course_uuid"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not admin or the organization lacks a Pro plan"},
+        404: {"description": "Unknown course detail query name"},
+        502: {"description": "Upstream analytics query failed"},
+        503: {"description": "Analytics backend is not configured"},
+    },
+)
 async def query_course_dashboard_detail(
     query_name: str,
     org_id: int,
@@ -658,7 +725,20 @@ async def query_course_dashboard_detail(
 # -------------------------------------------------------------------
 # GET /dashboard/course/{query_name} — Course-level analytics (Pro only)
 # -------------------------------------------------------------------
-@router.get("/dashboard/course/{query_name}")
+@router.get(
+    "/dashboard/course/{query_name}",
+    summary="Run a course-level analytics query",
+    description="Executes a predefined course-level analytics query via Tinybird and returns enriched aggregated results. Requires org admin privileges and a Pro plan or higher.",
+    responses={
+        200: {"description": "Course query results with enriched metadata"},
+        400: {"description": "Invalid query parameter or course_uuid"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not admin or the organization lacks a Pro plan"},
+        404: {"description": "Unknown course query name"},
+        502: {"description": "Upstream analytics query failed"},
+        503: {"description": "Analytics backend is not configured"},
+    },
+)
 async def query_course_dashboard(
     query_name: str,
     org_id: int,
@@ -703,7 +783,19 @@ async def query_course_dashboard(
 # -------------------------------------------------------------------
 # GET /export — Export analytics data as JSON or CSV
 # -------------------------------------------------------------------
-@router.get("/export")
+@router.get(
+    "/export",
+    summary="Export analytics data",
+    description="Exports results for a comma-separated list of analytics queries in either JSON or CSV format. Requires org admin privileges.",
+    responses={
+        200: {"description": "Analytics data exported as JSON or streaming CSV"},
+        400: {"description": "Invalid format, queries, or parameters"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not admin of the organization"},
+        502: {"description": "Upstream analytics query failed"},
+        503: {"description": "Analytics backend is not configured"},
+    },
+)
 async def export_analytics(
     org_id: int,
     request: Request,
@@ -780,7 +872,16 @@ async def export_analytics(
 # -------------------------------------------------------------------
 # GET /plan-info — Returns analytics tier for the org
 # -------------------------------------------------------------------
-@router.get("/plan-info")
+@router.get(
+    "/plan-info",
+    summary="Get analytics plan tier for an organization",
+    description="Returns the analytics tier (core or advanced) available to the organization based on its current plan.",
+    responses={
+        200: {"description": "Analytics plan tier information"},
+        401: {"description": "Authentication required"},
+        403: {"description": "User is not a member of the target organization"},
+    },
+)
 async def get_plan_info(
     org_id: int,
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),

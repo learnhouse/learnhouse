@@ -111,7 +111,23 @@ def validate_activity_uuid(activity_uuid: str) -> None:
 
 # ==================== Package Analysis & Import ====================
 
-@router.post("/analyze/{course_uuid}", response_model=ScormAnalysisResponse)
+@router.post(
+    "/analyze/{course_uuid}",
+    response_model=ScormAnalysisResponse,
+    summary="Analyze a SCORM package",
+    description=(
+        "Upload and analyze a SCORM package without importing it. Returns the list "
+        "of detected SCOs with their details. The package is stored temporarily for "
+        "a subsequent import call. Requires Enterprise plan."
+    ),
+    responses={
+        200: {"description": "Detected SCO listing and temporary package id.", "model": ScormAnalysisResponse},
+        400: {"description": "Invalid course_uuid format"},
+        401: {"description": "Authentication required"},
+        403: {"description": "SCORM not available outside Enterprise plan"},
+        404: {"description": "Course or organization config not found"},
+    },
+)
 async def api_analyze_scorm_package(
     request: Request,
     course_uuid: str,
@@ -138,7 +154,22 @@ async def api_analyze_scorm_package(
     )
 
 
-@router.post("/import/{course_uuid}", response_model=List[ActivityRead])
+@router.post(
+    "/import/{course_uuid}",
+    response_model=List[ActivityRead],
+    summary="Import an analyzed SCORM package",
+    description=(
+        "Import a previously analyzed SCORM package with chapter assignments, "
+        "creating one activity per SCO assignment. Requires Enterprise plan."
+    ),
+    responses={
+        200: {"description": "List of activities created from the SCORM package."},
+        400: {"description": "Invalid course_uuid format"},
+        401: {"description": "Authentication required"},
+        403: {"description": "SCORM not available outside Enterprise plan"},
+        404: {"description": "Course or organization config not found"},
+    },
+)
 async def api_import_scorm_package(
     request: Request,
     course_uuid: str,
@@ -167,7 +198,22 @@ async def api_import_scorm_package(
 
 # ==================== Course Import ====================
 
-@router.post("/analyze-for-import/{org_id}", response_model=ScormAnalysisResponse)
+@router.post(
+    "/analyze-for-import/{org_id}",
+    response_model=ScormAnalysisResponse,
+    summary="Analyze a SCORM package for new-course import",
+    description=(
+        "Upload and analyze a SCORM package to prepare it for importing as a new "
+        "course. Returns the detected SCOs; the package is stored temporarily for "
+        "a subsequent course-import call. Requires Enterprise plan."
+    ),
+    responses={
+        200: {"description": "Detected SCO listing and temporary package id.", "model": ScormAnalysisResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "SCORM not available outside Enterprise plan"},
+        404: {"description": "Organization config not found"},
+    },
+)
 async def api_analyze_scorm_for_course_import(
     request: Request,
     org_id: int,
@@ -192,7 +238,21 @@ async def api_analyze_scorm_for_course_import(
     )
 
 
-@router.post("/import-as-course", response_model=ScormCourseImportResponse)
+@router.post(
+    "/import-as-course",
+    response_model=ScormCourseImportResponse,
+    summary="Import a SCORM package as a new course",
+    description=(
+        "Create a new course, its chapters, and its activities from a previously "
+        "analyzed SCORM package. Requires Enterprise plan."
+    ),
+    responses={
+        200: {"description": "Newly created course and activity metadata.", "model": ScormCourseImportResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "SCORM not available outside Enterprise plan"},
+        404: {"description": "Organization config not found"},
+    },
+)
 async def api_import_scorm_as_course(
     request: Request,
     import_request: ScormCourseImportRequest,
@@ -229,7 +289,26 @@ async def api_import_scorm_as_course(
 
 # ==================== Content Serving ====================
 
-@router.get("/{activity_uuid}/content/{file_path:path}")
+@router.get(
+    "/{activity_uuid}/content/{file_path:path}",
+    summary="Serve a SCORM content file",
+    description=(
+        "Serve SCORM content files. The file_path parameter captures the full "
+        "path within the SCORM package. Requires authentication for non-public "
+        "courses; public + published courses allow anonymous access so SCORM "
+        "sub-resources (JS, CSS, images) can load without per-request tokens."
+    ),
+    responses={
+        200: {
+            "description": "Binary or text content of the requested SCORM asset.",
+            "content": {"application/octet-stream": {}},
+        },
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required for non-public course"},
+        403: {"description": "Resolved path escapes the activity content directory"},
+        404: {"description": "Activity, organization, course, or file not found"},
+    },
+)
 async def api_get_scorm_content(
     request: Request,
     activity_uuid: str,
@@ -340,7 +419,19 @@ async def api_get_scorm_content(
 
 # ==================== Runtime API ====================
 
-@router.post("/{activity_uuid}/runtime/initialize")
+@router.post(
+    "/{activity_uuid}/runtime/initialize",
+    summary="Initialize a SCORM session",
+    description=(
+        "Initialize a SCORM runtime session. Returns initial CMI data based on the "
+        "SCORM version and any stored data for the current user."
+    ),
+    responses={
+        200: {"description": "Initial CMI data for the session."},
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_initialize_scorm_session(
     request: Request,
     activity_uuid: str,
@@ -360,7 +451,19 @@ async def api_initialize_scorm_session(
     )
 
 
-@router.post("/{activity_uuid}/runtime/commit")
+@router.post(
+    "/{activity_uuid}/runtime/commit",
+    summary="Commit SCORM runtime data",
+    description=(
+        "Commit (save) SCORM runtime data for the current session. Called when the "
+        "SCORM content invokes LMSCommit() or Commit()."
+    ),
+    responses={
+        200: {"description": "Acknowledgement that the CMI data was stored."},
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_commit_scorm_data(
     request: Request,
     activity_uuid: str,
@@ -382,7 +485,19 @@ async def api_commit_scorm_data(
     )
 
 
-@router.post("/{activity_uuid}/runtime/terminate")
+@router.post(
+    "/{activity_uuid}/runtime/terminate",
+    summary="Terminate a SCORM session",
+    description=(
+        "Terminate a SCORM runtime session. Called when the SCORM content invokes "
+        "LMSFinish() or Terminate(). Optionally accepts final CMI data to commit."
+    ),
+    responses={
+        200: {"description": "Session terminated and any final CMI data committed."},
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_terminate_scorm_session(
     request: Request,
     activity_uuid: str,
@@ -405,7 +520,17 @@ async def api_terminate_scorm_session(
     )
 
 
-@router.get("/{activity_uuid}/runtime/data", response_model=ScormRuntimeDataRead)
+@router.get(
+    "/{activity_uuid}/runtime/data",
+    response_model=ScormRuntimeDataRead,
+    summary="Get SCORM runtime data",
+    description="Return SCORM runtime data for the current user and activity.",
+    responses={
+        200: {"description": "Stored SCORM runtime data for the user.", "model": ScormRuntimeDataRead},
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_get_runtime_data(
     request: Request,
     activity_uuid: str,
@@ -424,7 +549,17 @@ async def api_get_runtime_data(
     )
 
 
-@router.put("/{activity_uuid}/runtime/data", response_model=ScormRuntimeDataRead)
+@router.put(
+    "/{activity_uuid}/runtime/data",
+    response_model=ScormRuntimeDataRead,
+    summary="Update SCORM runtime data",
+    description="Update SCORM runtime data directly for the current user and activity.",
+    responses={
+        200: {"description": "Updated SCORM runtime data.", "model": ScormRuntimeDataRead},
+        400: {"description": "Invalid activity_uuid format"},
+        401: {"description": "Authentication required"},
+    },
+)
 async def api_update_runtime_data(
     request: Request,
     activity_uuid: str,

@@ -34,7 +34,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/start/activity_chat_session")
+@router.post(
+    "/start/activity_chat_session",
+    response_model=ActivityAIChatSessionResponse,
+    summary="Start activity AI chat session",
+    description="Start a new AI chat session anchored to a course activity. Returns the new session's state and initial message.",
+    responses={
+        200: {"description": "New AI chat session created.", "model": ActivityAIChatSessionResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Activity or organization not found"},
+    },
+)
 async def api_ai_start_activity_chat_session(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
@@ -48,7 +59,18 @@ async def api_ai_start_activity_chat_session(
         request, chat_session_object, current_user, db_session
     )
 
-@router.post("/send/activity_chat_message")
+@router.post(
+    "/send/activity_chat_message",
+    response_model=ActivityAIChatSessionResponse,
+    summary="Send activity AI chat message",
+    description="Send a message to an existing AI chat session anchored to a course activity and receive the updated session state.",
+    responses={
+        200: {"description": "Message sent and AI response recorded.", "model": ActivityAIChatSessionResponse},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Session or activity not found"},
+    },
+)
 async def api_ai_send_activity_chat_message(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
@@ -103,7 +125,20 @@ async def activity_chat_event_generator(
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
 
 
-@router.post("/stream/start/activity_chat_session")
+@router.post(
+    "/stream/start/activity_chat_session",
+    summary="Start activity AI chat session (streaming)",
+    description="Start a new AI chat session for a course activity and stream the response as Server-Sent Events (SSE).",
+    responses={
+        200: {
+            "description": "SSE stream of chat events (start, chunk, done, follow_ups, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Activity or organization not found"},
+    },
+)
 async def api_ai_start_activity_chat_session_stream(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
@@ -145,7 +180,20 @@ async def api_ai_start_activity_chat_session_stream(
     )
 
 
-@router.post("/stream/send/activity_chat_message")
+@router.post(
+    "/stream/send/activity_chat_message",
+    summary="Send activity AI chat message (streaming)",
+    description="Send a message to an existing activity AI chat session and stream the response as Server-Sent Events (SSE).",
+    responses={
+        200: {
+            "description": "SSE stream of chat events (start, chunk, done, follow_ups, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Session or activity not found"},
+    },
+)
 async def api_ai_send_activity_chat_message_stream(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
@@ -326,7 +374,20 @@ async def editor_chat_event_generator(
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
 
 
-@router.post("/stream/editor/start")
+@router.post(
+    "/stream/editor/start",
+    summary="Start editor AI chat session (streaming)",
+    description="Start a new AI editor chat session that is aware of the current editor content. Streams the response as Server-Sent Events (SSE) and can emit content modification blocks to be inserted into the editor.",
+    responses={
+        200: {
+            "description": "SSE stream of editor chat events (start, chat_chunk, content_start, content_chunk, content_end, done, follow_ups, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Activity or organization not found"},
+    },
+)
 async def api_editor_ai_start_chat_session_stream(
     request: Request,
     chat_session_object: StartEditorAIChatSession,
@@ -368,7 +429,20 @@ async def api_editor_ai_start_chat_session_stream(
     )
 
 
-@router.post("/stream/editor/message")
+@router.post(
+    "/stream/editor/message",
+    summary="Send editor AI chat message (streaming)",
+    description="Send a message to an existing AI editor chat session and stream the response as Server-Sent Events (SSE). The endpoint is aware of the current editor content and can emit content modification blocks.",
+    responses={
+        200: {
+            "description": "SSE stream of editor chat events (start, chat_chunk, content_start, content_chunk, content_end, done, follow_ups, error).",
+            "content": {"text/event-stream": {}},
+        },
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission or AI feature disabled for this organization"},
+        404: {"description": "Session or activity not found"},
+    },
+)
 async def api_editor_ai_send_message_stream(
     request: Request,
     chat_session_object: SendEditorAIChatMessage,
