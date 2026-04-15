@@ -428,6 +428,8 @@ async def check_sso(
     ),
     responses={
         200: {"description": "Authorization URL and state for the IdP redirect.", "model": SSOAuthorizationResponse},
+        400: {"description": "SSO is not enabled or configured for this organization"},
+        404: {"description": "Organization not found"},
     },
 )
 async def authorize_sso(
