@@ -66,6 +66,12 @@ async def create_activity(
     db_session.commit()
     db_session.refresh(activity)
 
+    if activity.id is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Activity creation failed: could not retrieve activity ID",
+        )
+
     # Find the last activity in the Chapter and add it to the list
     statement = (
         select(ChapterActivity)
@@ -80,7 +86,7 @@ async def create_activity(
     # Add activity to chapter
     activity_chapter = ChapterActivity(
         chapter_id=activity_object.chapter_id,
-        activity_id=activity.id if activity.id else 0,
+        activity_id=activity.id,
         course_id=chapter.course_id,
         org_id=chapter.org_id,
         creation_date=str(datetime.now()),
@@ -125,7 +131,7 @@ async def get_activity(
     # Paid access check (via EE hook with fallback to True if EE not available)
     has_paid_access = await check_ee_activity_paid_access(
         request=request,
-        activity_id=activity.id if activity.id else 0,
+        activity_id=activity.id,
         user=current_user,
         db_session=db_session
     )

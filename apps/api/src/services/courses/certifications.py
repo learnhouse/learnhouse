@@ -1,7 +1,10 @@
+import logging
 from typing import List
 from uuid import uuid4
 from datetime import datetime
 from sqlmodel import Session, select
+
+logger = logging.getLogger(__name__)
 from fastapi import HTTPException, Request
 from src.db.courses.certifications import (
     Certifications,
@@ -348,8 +351,8 @@ async def create_certificate_user(
                     },
                 },
             )
-    except Exception:
-        pass  # Don't fail certificate creation if tracking fails
+    except Exception as e:
+        logger.warning("Certificate tracking failed (non-critical): %s", e)
 
     return CertificateUserRead(**certificate_user.model_dump())
 

@@ -245,6 +245,9 @@ async def get_courses_orgslug(
     limit: int = 10,
     include_unpublished: bool = False,
 ) -> List[CourseRead]:
+    # Cap limit to prevent excessive DB reads
+    limit = min(limit, 100)
+
     # For anonymous users viewing public courses, try Redis cache first
     is_anon = isinstance(current_user, AnonymousUser)
     if is_anon and not include_unpublished:

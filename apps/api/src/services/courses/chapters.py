@@ -34,7 +34,13 @@ async def create_chapter(
     # Get COurse
     statement = select(Course).where(Course.id == chapter_object.course_id)
 
-    course = db_session.exec(statement).one()
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
 
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
@@ -152,8 +158,16 @@ async def update_chapter(
             status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, chapter.chapter_uuid, AccessAction.UPDATE)
+    # RBAC check — use course_uuid (not chapter_uuid) to be consistent with create/get
+    statement = select(Course).where(Course.id == chapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
+
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(chapter_object).items():

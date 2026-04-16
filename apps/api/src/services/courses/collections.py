@@ -181,11 +181,6 @@ async def update_collection(
 
     collection.update_date = str(datetime.now())
 
-    # Update only the fields that were passed in
-    for var, value in vars(collection_object).items():
-        if value is not None:
-            setattr(collection, var, value)
-
     statement = select(CollectionCourse).where(
         CollectionCourse.collection_id == collection.id
     )
