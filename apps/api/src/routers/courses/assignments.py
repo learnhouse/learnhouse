@@ -685,7 +685,7 @@ async def api_update_user_assignment_submissions(
     Update submissions for an assignment from a user
     """
     return await update_assignment_submission(
-        request, user_id, assignment_submission, current_user, db_session
+        request, user_id, assignment_uuid, assignment_submission, current_user, db_session
     )
 
 
