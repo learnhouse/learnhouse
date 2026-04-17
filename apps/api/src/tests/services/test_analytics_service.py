@@ -109,7 +109,7 @@ class TestAnalyticsSendEvent:
             "ip": "10.0.0.1",
         }
         mock_warning.assert_called_once_with(
-            "Tinybird ingest failed (%s): %s",
+            "Tinybird ingest server error (%s): %s",
             500,
             "failure-body",
         )

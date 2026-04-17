@@ -387,7 +387,9 @@ class TestAddBulkCourseContributors:
         ), patch(
             "src.services.courses.contributors.check_resource_access",
             new_callable=AsyncMock,
-        ), patch.object(db, "add", side_effect=RuntimeError("boom")), patch(
+        ), patch.object(db, "commit", side_effect=RuntimeError("boom")), patch.object(
+            db, "rollback"
+        ), patch(
             "src.services.courses.contributors.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_webhook:
@@ -401,7 +403,9 @@ class TestAddBulkCourseContributors:
 
         mock_webhook.assert_not_awaited()
         assert result["successful"] == []
-        assert result["failed"] == [{"username": "boom", "reason": "boom"}]
+        assert len(result["failed"]) == 1
+        assert result["failed"][0]["username"] == "boom"
+        assert "boom" in result["failed"][0]["reason"]
 
 
 class TestRemoveBulkCourseContributors:
@@ -464,7 +468,9 @@ class TestRemoveBulkCourseContributors:
         ), patch(
             "src.services.courses.contributors.check_resource_access",
             new_callable=AsyncMock,
-        ), patch.object(db, "delete", side_effect=RuntimeError("boom")), patch(
+        ), patch.object(db, "commit", side_effect=RuntimeError("boom")), patch.object(
+            db, "rollback"
+        ), patch(
             "src.services.courses.contributors.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_webhook:
@@ -478,4 +484,6 @@ class TestRemoveBulkCourseContributors:
 
         mock_webhook.assert_not_awaited()
         assert result["successful"] == []
-        assert result["failed"] == [{"username": "boom", "reason": "boom"}]
+        assert len(result["failed"]) == 1
+        assert result["failed"][0]["username"] == "boom"
+        assert "boom" in result["failed"][0]["reason"]

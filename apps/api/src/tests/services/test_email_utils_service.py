@@ -273,7 +273,7 @@ class TestEmailUtilsService:
             result = send_email("to@test.com", "Hello", "<p>Body</p>")
 
         assert result == {"id": None, "to": "to@test.com"}
-        mock_smtp.assert_called_once_with("smtp.learnhouse.test", 2525)
+        mock_smtp.assert_called_once_with("smtp.learnhouse.test", 2525, timeout=15)
         smtp_client.starttls.assert_called_once()
         smtp_client.login.assert_called_once_with("smtp-user", "smtp-pass")
         smtp_client.sendmail.assert_called_once()

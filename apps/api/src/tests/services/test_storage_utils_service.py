@@ -123,10 +123,11 @@ class TestStorageClientHelpers:
             assert storage_utils.get_storage_client() is mock_client
             assert storage_utils.get_storage_client() is mock_client
 
-        boto_client.assert_called_once_with(
-            "s3",
-            endpoint_url="https://s3.test",
-        )
+        boto_client.assert_called_once()
+        call_kwargs = boto_client.call_args.kwargs
+        assert boto_client.call_args.args == ("s3",)
+        assert call_kwargs["endpoint_url"] == "https://s3.test"
+        assert "config" in call_kwargs
 
 
 class TestFileReadAndExistenceHelpers:

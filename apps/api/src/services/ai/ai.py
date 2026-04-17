@@ -1,8 +1,6 @@
 import logging
 from typing import Tuple, Dict, Any
 from fastapi import Depends, HTTPException, Request
-
-logger = logging.getLogger(__name__)
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
@@ -30,6 +28,8 @@ from src.services.courses.activities.utils import (
     serialize_activity_text_to_ai_comprehensible_text,
     structure_activity_content_by_type,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def ai_start_activity_chat_session(
