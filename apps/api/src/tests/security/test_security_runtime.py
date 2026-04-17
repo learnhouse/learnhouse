@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from src.db.users import AnonymousUser, PublicUser, User
+from src.db.users import AnonymousUser, PublicUser
 from src.security.security import (
     Pbkdf2Sha256Hasher,
     security_verify_and_update_password,

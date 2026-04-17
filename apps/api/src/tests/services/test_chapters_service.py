@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy.exc import NoResultFound
 from sqlmodel import select
 
 from src.db.courses.activities import Activity, ActivitySubTypeEnum, ActivityTypeEnum
@@ -57,7 +56,7 @@ class TestCreateChapter:
             "src.services.courses.chapters.check_resource_access",
             new_callable=AsyncMock,
         ):
-            with pytest.raises(NoResultFound):
+            with pytest.raises(HTTPException) as exc_info:
                 await create_chapter(
                     mock_request,
                     ChapterCreate(
@@ -70,6 +69,9 @@ class TestCreateChapter:
                     admin_user,
                     db,
                 )
+
+        assert exc_info.value.status_code == 404
+        assert "Course not found" in exc_info.value.detail
 
 
 class TestGetChapter:
@@ -130,7 +132,7 @@ class TestUpdateChapter:
                 db,
             )
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Chapter does not exist" in exc_info.value.detail
 
 
@@ -161,7 +163,7 @@ class TestDeleteChapter:
         with pytest.raises(HTTPException) as exc_info:
             await delete_chapter(mock_request, "9999", admin_user, db)
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Chapter does not exist" in exc_info.value.detail
 
 
@@ -215,18 +217,9 @@ class TestCourseChapters:
         db.commit()
         db.refresh(second_activity)
 
-        # Duplicate links exercise the deduplication branches in both query modes.
-        db.add(
-            ChapterActivity(
-                chapter_id=chapter.id,
-                activity_id=activity.id,
-                course_id=course.id,
-                org_id=course.org_id,
-                order=0,
-                creation_date="2024-01-01",
-                update_date="2024-01-01",
-            )
-        )
+        # Link second_activity to second_chapter (chapter+activity link is set
+        # up by the `activity` fixture). The unique constraint on
+        # (chapter_id, activity_id) prevents truly-duplicate inserts.
         db.add(
             ChapterActivity(
                 chapter_id=second_chapter.id,
@@ -305,7 +298,7 @@ class TestCourseChapters:
                 mock_request, "missing-course", admin_user, db
             )
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Course does not exist" in exc_info.value.detail
 
 
@@ -465,5 +458,5 @@ class TestReorderChaptersAndActivities:
                 mock_request, "missing-course", payload, admin_user, db
             )
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Course does not exist" in exc_info.value.detail

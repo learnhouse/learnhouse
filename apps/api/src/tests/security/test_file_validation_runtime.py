@@ -1,3 +1,4 @@
+import zipfile
 from io import BytesIO
 from types import SimpleNamespace
 
@@ -20,6 +21,18 @@ def _upload(filename: str, content: bytes, content_type: str = "application/octe
         content_type=content_type,
         file=BytesIO(content),
     )
+
+
+def _make_zip_bytes(name: str = "test.txt", payload: bytes = b"hello") -> bytes:
+    buf = BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(name, payload)
+    return buf.getvalue()
+
+
+_VALID_ZIP_BYTES = _make_zip_bytes()
+# Empty-archive EOCD-only record (zip spec, parseable by zipfile)
+_EMPTY_ZIP_BYTES = b"PK\x05\x06" + b"\x00" * 18
 
 
 class TestMagicByteValidators:
@@ -82,7 +95,7 @@ class TestMagicByteValidators:
         assert validate_zip_content(b"abc") is False
         assert validate_zip_content(b"NOPE") is False
 
-    @pytest.mark.parametrize("content", [b"PK\x03\x04payload", b"PK\x05\x06"])
+    @pytest.mark.parametrize("content", [_VALID_ZIP_BYTES, _EMPTY_ZIP_BYTES])
     def test_validate_zip_content_accepts_zip_headers(self, content):
         assert validate_zip_content(content) is True
 
@@ -134,11 +147,11 @@ class TestValidateUpload:
             ("clip.mp4", b"0000ftypmp4x", "video/mp4", ["video"]),
             ("lesson.pdf", b"%PDF-1.7\nrest", "application/pdf", ["document"]),
             ("song.mp3", b"ID3" + b"\x00" * 9, "audio/mpeg", ["audio"]),
-            ("package.zip", b"PK\x03\x04payload", "application/zip", ["scorm"]),
+            ("package.zip", _VALID_ZIP_BYTES, "application/zip", ["scorm"]),
             ("db.sqlite", b"SQLite format 3\x00rest", "application/vnd.sqlite3", ["database"]),
             (
                 "deck.docx",
-                b"PK\x03\x04payload",
+                _VALID_ZIP_BYTES,
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 ["office"],
             ),

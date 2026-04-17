@@ -144,7 +144,9 @@ class TestWebhookDispatchHelpers:
         )
         mock_create.assert_called_once()
         assert "coro" in scheduled
-        task.add_done_callback.assert_called_once()
+        # Two callbacks: one to discard the task from the tracking set,
+        # one to log unexpected exceptions.
+        assert task.add_done_callback.call_count == 2
         assert task in dispatch._background_tasks
 
     @pytest.mark.asyncio

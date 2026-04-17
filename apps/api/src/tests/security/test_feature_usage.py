@@ -51,7 +51,11 @@ class TestFeatureUsage:
             result = usage._get_redis_client()
 
         assert result is redis_client
-        from_url.assert_called_once_with("redis://localhost:6379")
+        from_url.assert_called_once_with(
+            "redis://localhost:6379",
+            socket_connect_timeout=5,
+            socket_timeout=5,
+        )
 
         config.redis_config.redis_connection_string = None
         with patch("src.security.features_utils.usage.get_learnhouse_config", return_value=config):
@@ -410,9 +414,9 @@ class TestFeatureUsage:
         assert limit_exc.value.status_code == 403
 
         with patch("src.security.features_utils.usage._get_redis_client") as redis_client:
-            redis_client.return_value.get.return_value = b"4"
+            redis_client.return_value.incrby.return_value = 6
             assert usage.deduct_ai_credit(org.id, db, amount=2) == 6
-            redis_client.return_value.set.assert_called_once_with("ai_credits_used:1", 6)
+            redis_client.return_value.incrby.assert_called_once_with("ai_credits_used:1", 2)
 
         with patch("src.security.features_utils.usage._get_redis_client") as redis_client:
             redis_client.return_value.incrby.return_value = 12

@@ -4,8 +4,6 @@ from typing import List
 from uuid import uuid4
 from datetime import datetime
 from sqlmodel import Session, select
-
-logger = logging.getLogger(__name__)
 from fastapi import HTTPException, Request
 from src.db.courses.certifications import (
     Certifications,
@@ -23,6 +21,8 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+logger = logging.getLogger(__name__)
 
 
 ####################################################

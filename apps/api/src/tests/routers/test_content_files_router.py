@@ -41,6 +41,9 @@ class _Body:
     def read(self):
         return self._data
 
+    def close(self):
+        pass
+
 
 class _S3Client:
     def __init__(self, payload: bytes = b"abcdef"):
@@ -59,6 +62,9 @@ class _S3Client:
 class _EmptyBody:
     def read(self):
         return b""
+
+    def close(self):
+        pass
 
 
 class _EmptyS3Client:
@@ -367,7 +373,7 @@ class TestContentFilesRouter:
         assert bad_head_response.status_code == 400
         assert no_storage_head_response.status_code == 500
 
-    async def test_storage_head_errors_return_404(self, client):
+    async def test_storage_head_errors_return_502(self, client):
         class _BrokenS3Client:
             def head_object(self, Bucket, Key):
                 raise Exception("boom")
@@ -378,8 +384,10 @@ class TestContentFilesRouter:
             get_response = await client.get("/content/users/u/avatar.png")
             head_response = await client.head("/content/users/u/avatar.png")
 
-        assert get_response.status_code == 404
-        assert head_response.status_code == 404
+        # Generic storage failures are surfaced as 502 (Bad Gateway). 404 is
+        # reserved for cases where the storage layer reported NoSuchKey.
+        assert get_response.status_code == 502
+        assert head_response.status_code == 502
 
     async def test_private_course_requires_auth_and_storage_configuration(
         self, client, db, org, app

@@ -12,7 +12,6 @@ run against a DB that already has some of the objects.
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 revision: str = 'l3m4n5o6p7q8'
 down_revision: Union[str, None] = 'y4z5a6b7c8d9'

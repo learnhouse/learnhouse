@@ -137,7 +137,15 @@ async def test_events_startup_shutdown_and_reconcile(monkeypatch):
     reconcile_packs = Mock()
     cleanup_temp_migrations = Mock()
 
-    fake_task = SimpleNamespace(cancel=Mock())
+    class _AwaitableFakeTask:
+        def __init__(self):
+            self.cancel = Mock()
+
+        def __await__(self):
+            raise asyncio.CancelledError
+            yield  # pragma: no cover
+
+    fake_task = _AwaitableFakeTask()
 
     def fake_create_task(coro):
         coro.close()
