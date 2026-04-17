@@ -52,9 +52,10 @@ function MagicBlockModal({
   const [htmlContent, setHtmlContent] = React.useState<string | null>(initialHtmlContent)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Reset state when modal opens with new props
+  // Reset all state only when the modal transitions from closed → open
+  const wasOpenRef = React.useRef(false)
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
       setSessionUuid(initialSessionUuid)
       setMessages(initialMessages)
       setIterationCount(initialIterationCount)
@@ -62,7 +63,15 @@ function MagicBlockModal({
       setStreamingContent('')
       setError(null)
     }
-  }, [isOpen, initialSessionUuid, initialHtmlContent, initialIterationCount, initialMessages])
+    wasOpenRef.current = isOpen
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When async messages load from the server, update them without touching other state
+  React.useEffect(() => {
+    if (isOpen && initialMessages.length > 0) {
+      setMessages((current) => (current.length === 0 ? initialMessages : current))
+    }
+  }, [isOpen, initialMessages])
 
   const handleSendMessage = async (message: string) => {
     if (isLoading || iterationCount >= MAX_ITERATIONS) return

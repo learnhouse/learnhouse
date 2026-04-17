@@ -163,7 +163,7 @@ export async function updateActivity(
 
 export async function getUrlPreview(url: string) {
   const result = await fetch(
-    `${getAPIUrl()}utils/link-preview?url=${url}`,
+    `${getAPIUrl()}utils/link-preview?url=${encodeURIComponent(url)}`,
     RequestBodyWithAuthHeader('GET', null, null, undefined)
   )
   const res = await result.json()
