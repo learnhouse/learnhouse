@@ -262,11 +262,22 @@ function ActivityElement(props: ActivitiyElementProps) {
           {/* Status badge + quick actions */}
           {!props.selectionMode && (
             <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium w-[90px] justify-center ${
-                props.activity.published
-                  ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-gray-100 text-gray-500 border border-gray-200'
-              }`}>
+              <button
+                onClick={changePublicStatus}
+                disabled={isPublishing}
+                title={props.activity.published
+                  ? t('dashboard.courses.structure.actions.unpublish')
+                  : t('dashboard.courses.structure.actions.publish')}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium w-[90px] justify-center transition-colors ${
+                  isPublishing
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'
+                } ${
+                  props.activity.published
+                    ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300'
+                    : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200 hover:border-gray-300 hover:text-gray-700'
+                }`}
+              >
                 {isPublishing ? (
                   <Loader2 size={10} className="animate-spin" />
                 ) : props.activity.published ? (
@@ -277,7 +288,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                 {props.activity.published
                   ? t('dashboard.courses.structure.activity.status.published')
                   : t('dashboard.courses.structure.activity.status.draft')}
-              </span>
+              </button>
               <div className="flex items-center gap-1">
               {editHref ? (
                 <Link
