@@ -957,11 +957,26 @@ export function MarkStatus(props: {
     return completedActivities >= totalActivities - 1;
   };
 
+  const findNextActivity = () => {
+    const flat: any[] = [];
+    let currentIndex = -1;
+    props.course.chapters.forEach((chapter: any) => {
+      chapter.activities.forEach((activity: any) => {
+        flat.push(activity);
+        if (activity.id === props.activity.id) {
+          currentIndex = flat.length - 1;
+        }
+      });
+    });
+    return currentIndex >= 0 && currentIndex < flat.length - 1 ? flat[currentIndex + 1] : null;
+  };
+
   async function markActivityAsCompleteFront() {
     try {
       const willCompleteAll = areAllActivitiesCompleted();
+      const nextActivity = findNextActivity();
       setIsLoading(true);
-      
+
       await markActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
@@ -970,10 +985,13 @@ export function MarkStatus(props: {
       );
 
       await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
-      
-      if (willCompleteAll) {
-        const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+
+      const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+      if (willCompleteAll || !nextActivity) {
         router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
+      } else {
+        const nextUuid = nextActivity.activity_uuid?.replace('activity_', '');
+        router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${nextUuid}`);
       }
     } catch (error) {
       console.error('Error marking activity as complete:', error);

@@ -93,7 +93,6 @@ function EditCourseAccess(props: EditCourseAccessProps) {
 
     const {
         syncChanges,
-        cancelPendingSync,
         courseStructure,
         isLoading,
         isSaving,
@@ -128,9 +127,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
         previousPublicRef.current = isClientPublic;
     }, [isClientPublic, isLoading, isSaving, syncChanges]);
 
-    useEffect(() => {
-        return () => { cancelPendingSync(); };
-    }, [cancelPendingSync]);
+    // useCourseFieldSync flushes pending edits on unmount.
 
     const handleSetPublic = useCallback((value: boolean) => {
         setIsClientPublic(value);

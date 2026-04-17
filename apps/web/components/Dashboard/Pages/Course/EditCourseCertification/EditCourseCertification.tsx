@@ -63,7 +63,6 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   // Use the new field sync hook
   const {
     syncChanges,
-    cancelPendingSync,
     courseStructure,
     isLoading,
     isSaving,
@@ -276,12 +275,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
     }
   }, [formik.values, isLoading, isSaving, hasExistingCertification, existingCertification, syncChanges]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cancelPendingSync();
-    };
-  }, [cancelPendingSync]);
+  // useCourseFieldSync flushes pending edits on unmount, so no local cleanup.
 
   if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && certifications === undefined)) {
     return <div>{t('dashboard.courses.settings.loading')}</div>;

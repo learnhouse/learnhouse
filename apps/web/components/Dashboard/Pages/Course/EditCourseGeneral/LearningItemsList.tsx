@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, memo, useCallback, lazy, Suspense } from 'react';
-import { Plus, X, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useRef, memo, useCallback, useMemo, lazy, Suspense } from 'react';
+import { Plus, X, Link as LinkIcon, ExternalLink, GripVertical } from 'lucide-react';
 const Picker = lazy(() => import('@emoji-mart/react'));
 
 interface LearningItem {
@@ -15,243 +15,258 @@ interface LearningItemsListProps {
   error?: string;
 }
 
+const parseItems = (value: string): LearningItem[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((it): it is LearningItem => it && typeof it === 'object' && typeof it.id === 'string');
+    }
+  } catch {
+    // fall through
+  }
+  return [];
+};
+
+const newId = () => `l_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+
 const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) => {
-  const [items, setItems] = useState<LearningItem[]>([]);
+  // Fully controlled: items are always derived from `value`.
+  // Tab switches and remounts stay in sync without a local shadow copy.
+  const items = useMemo(() => parseItems(value), [value]);
+
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
-  const [showLinkInput, setShowLinkInput] = useState<string | null>(null);
+  const [expandedLink, setExpandedLink] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+
   const pickerRef = useRef<HTMLDivElement>(null);
-  const linkInputRef = useRef<HTMLDivElement>(null);
-  const initializedRef = useRef(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const linkInputFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const previousValueRef = useRef<string>(value);
-  const isInternalUpdateRef = useRef(false);
+  const linkInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const addItem = () => {
-    const newItem: LearningItem = { id: Date.now().toString(), text: '', emoji: '📝' };
-    const newItems = [...items, newItem];
-    setItems(newItems);
-    const newValue = JSON.stringify(newItems);
-    isInternalUpdateRef.current = true;
-    previousValueRef.current = newValue;
-    onChange(newValue);
-    setTimeout(() => inputRefs.current[newItem.id]?.focus(), 0);
-  };
+  const commit = useCallback((next: LearningItem[]) => {
+    onChange(JSON.stringify(next));
+  }, [onChange]);
 
+  const addItem = useCallback(() => {
+    const id = newId();
+    commit([...items, { id, text: '', emoji: '📝' }]);
+    setTimeout(() => inputRefs.current[id]?.focus(), 0);
+  }, [items, commit]);
+
+  const removeItem = useCallback((id: string) => {
+    commit(items.filter(it => it.id !== id));
+  }, [items, commit]);
+
+  const updateText = useCallback((id: string, text: string) => {
+    commit(items.map(it => it.id === id ? { ...it, text } : it));
+  }, [items, commit]);
+
+  const updateEmoji = useCallback((id: string, emoji: string) => {
+    commit(items.map(it => it.id === id ? { ...it, emoji } : it));
+    setShowEmojiPicker(null);
+    setTimeout(() => inputRefs.current[id]?.focus(), 0);
+  }, [items, commit]);
+
+  const updateLink = useCallback((id: string, link: string) => {
+    commit(items.map(it => it.id === id ? { ...it, link } : it));
+  }, [items, commit]);
+
+  const clearLink = useCallback((id: string) => {
+    commit(items.map(it => it.id === id ? { ...it, link: '' } : it));
+    setExpandedLink(null);
+  }, [items, commit]);
+
+  // Close emoji picker when clicking outside
   useEffect(() => {
-    if (isInternalUpdateRef.current) {
-      isInternalUpdateRef.current = false;
-      previousValueRef.current = value;
-      return;
-    }
-    if (previousValueRef.current === value) return;
-    previousValueRef.current = value;
-    try {
-      if (value) {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          setItems(parsed);
-          initializedRef.current = true;
-        } else if (!initializedRef.current) {
-          initDefault();
-        }
-      } else if (!initializedRef.current) {
-        initDefault();
-      }
-    } catch {
-      if (!initializedRef.current) initDefault();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  const initDefault = () => {
-    const newItem: LearningItem = { id: 'default-1', text: '', emoji: '📝' };
-    setItems([newItem]);
-    isInternalUpdateRef.current = true;
-    onChange(JSON.stringify([newItem]));
-    initializedRef.current = true;
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    if (!showEmojiPicker) return;
+    const handler = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setShowEmojiPicker(null);
       }
-      if (linkInputRef.current && !linkInputRef.current.contains(e.target as Node)) {
-        setShowLinkInput(null);
-      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showEmojiPicker]);
 
-  const updateItems = useCallback((newItems: LearningItem[]) => {
-    setItems(newItems);
-    const newValue = JSON.stringify(newItems);
-    isInternalUpdateRef.current = true;
-    previousValueRef.current = newValue;
-    onChange(newValue);
-  }, [onChange]);
+  // Drag and drop reordering
+  const onDragStart = (id: string) => (e: React.DragEvent) => {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const onDrop = (targetId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) { setDragId(null); return; }
+    const from = items.findIndex(it => it.id === dragId);
+    const to = items.findIndex(it => it.id === targetId);
+    if (from === -1 || to === -1) { setDragId(null); return; }
+    const next = [...items];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    commit(next);
+    setDragId(null);
+  };
 
-  const removeItem = useCallback((id: string) => {
-    updateItems(items.filter(item => item.id !== id));
-  }, [items, updateItems]);
-
-  const updateItemText = useCallback((id: string, text: string) => {
-    updateItems(items.map(item => item.id === id ? { ...item, text } : item));
-  }, [items, updateItems]);
-
-  const updateItemEmoji = useCallback((id: string, emoji: string) => {
-    updateItems(items.map(item => item.id === id ? { ...item, emoji } : item));
-    setShowEmojiPicker(null);
-    setTimeout(() => inputRefs.current[id]?.focus(), 0);
-  }, [items, updateItems]);
-
-  const updateItemLink = useCallback((id: string, link: string) => {
-    updateItems(items.map(item => item.id === id ? { ...item, link } : item));
-  }, [items, updateItems]);
+  const isEmpty = items.length === 0;
 
   return (
-    <div className="space-y-1">
-      {/* No overflow-hidden so emoji picker and emoji itself aren't clipped */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-
-        {items.length === 0 && (
-          <div className="px-4 py-6 text-center text-sm text-gray-400 border-b border-gray-100">
-            No learning objectives yet
+    <div className="space-y-1.5">
+      <div className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+        {isEmpty && (
+          <div className="px-4 py-8 text-center">
+            <div className="text-sm text-gray-400 mb-1">No learning objectives yet</div>
+            <div className="text-xs text-gray-300">Click “Add” below to create the first one.</div>
           </div>
         )}
 
-        {items.map((item) => (
-          <div key={item.id} className="group border-b border-gray-100 last:border-b-0">
-
-            {/* Main row — emoji sits OUTSIDE the shadowed input box */}
-            <div className="flex items-center gap-2.5 px-3 py-2">
-
-              {/* Emoji — outside the shadow box, not clipped */}
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id);
-                    setShowLinkInput(null);
-                  }}
-                  className="text-xl leading-none hover:scale-110 transition-transform select-none"
-                  title="Change emoji"
+        {items.map((item) => {
+          const isDragging = dragId === item.id;
+          return (
+            <div
+              key={item.id}
+              className={`group relative ${isDragging ? 'opacity-40' : ''}`}
+              onDragOver={onDragOver}
+              onDrop={onDrop(item.id)}
+            >
+              <div className="flex items-center gap-2 px-2.5 py-2">
+                {/* Drag handle */}
+                <div
+                  draggable
+                  onDragStart={onDragStart(item.id)}
+                  onDragEnd={() => setDragId(null)}
+                  className="shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-0.5"
+                  title="Drag to reorder"
                 >
-                  {item.emoji}
-                </button>
-                {showEmojiPicker === item.id && (
-                  <div ref={pickerRef} className="absolute z-50 top-9 left-0">
-                    <Suspense fallback={
-                      <div className="p-3 text-xs text-gray-400 bg-white border border-gray-200 rounded-lg shadow-lg w-[280px]">
-                        Loading…
-                      </div>
-                    }>
-                      <Picker
-                        onEmojiSelect={(e: any) => updateItemEmoji(item.id, e.native)}
-                        theme="light"
-                        previewPosition="none"
-                        searchPosition="top"
-                        maxFrequentRows={0}
-                        autoFocus={false}
-                      />
-                    </Suspense>
-                  </div>
-                )}
-              </div>
+                  <GripVertical size={14} />
+                </div>
 
-              {/* Shadowed input box — text + actions */}
-              <div className="flex-1 flex items-center gap-2 bg-gray-50 shadow-inner rounded-lg px-3 py-1.5 border border-gray-100 min-w-0">
+                {/* Emoji button */}
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id)}
+                    className="w-8 h-8 flex items-center justify-center text-xl leading-none rounded-md hover:bg-gray-50 transition-colors select-none"
+                    title="Change emoji"
+                  >
+                    {item.emoji}
+                  </button>
+                  {showEmojiPicker === item.id && (
+                    <div ref={pickerRef} className="absolute z-50 top-9 left-0">
+                      <Suspense fallback={
+                        <div className="p-3 text-xs text-gray-400 bg-white border border-gray-200 rounded-lg shadow-lg w-[280px]">
+                          Loading…
+                        </div>
+                      }>
+                        <Picker
+                          onEmojiSelect={(e: any) => updateEmoji(item.id, e.native)}
+                          theme="light"
+                          previewPosition="none"
+                          searchPosition="top"
+                          maxFrequentRows={0}
+                          autoFocus={false}
+                        />
+                      </Suspense>
+                    </div>
+                  )}
+                </div>
+
+                {/* Text input */}
                 <input
                   ref={(el) => { inputRefs.current[item.id] = el; }}
                   type="text"
                   value={item.text}
-                  onChange={(e) => updateItemText(item.id, e.target.value)}
+                  onChange={(e) => updateText(item.id, e.target.value)}
                   placeholder="What will learners achieve?"
-                  className="flex-1 text-sm text-gray-700 bg-transparent border-none outline-none placeholder:text-gray-300 min-w-0"
+                  className="flex-1 min-w-0 text-sm text-gray-700 bg-transparent border-none outline-none placeholder:text-gray-300 py-1"
                 />
 
-                {/* Link chip when link is set */}
-                {item.link && (
+                {/* Link chip (when link is set) */}
+                {item.link && expandedLink !== item.id && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowLinkInput(showLinkInput === item.id ? null : item.id);
-                      setShowEmojiPicker(null);
-                    }}
-                    className="flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full shrink-0 transition-colors"
+                    onClick={() => setExpandedLink(item.id)}
+                    className="flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-full shrink-0 transition-colors"
                     title={item.link}
                   >
                     <ExternalLink size={10} />
-                    <span className="max-w-[72px] truncate">{item.link.replace(/^https?:\/\//, '')}</span>
+                    <span className="max-w-[96px] truncate">{item.link.replace(/^https?:\/\//, '')}</span>
                   </button>
                 )}
 
-                {/* Hover actions */}
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                {/* Action buttons — always visible but muted */}
+                <div className="flex items-center gap-0.5 shrink-0">
                   {!item.link && (
                     <button
                       type="button"
                       onClick={() => {
-                        setShowLinkInput(showLinkInput === item.id ? null : item.id);
-                        setShowEmojiPicker(null);
-                        setTimeout(() => linkInputFieldRefs.current[item.id]?.focus(), 0);
+                        setExpandedLink(expandedLink === item.id ? null : item.id);
+                        setTimeout(() => linkInputRefs.current[item.id]?.focus(), 0);
                       }}
-                      className="p-1 text-gray-400 hover:text-blue-500 transition-colors rounded"
+                      className="p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                       title="Add link"
                     >
-                      <LinkIcon size={12} />
+                      <LinkIcon size={13} />
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="p-1 text-gray-300 hover:text-red-400 transition-colors rounded"
+                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                     title="Remove"
                   >
-                    <X size={12} />
+                    <X size={13} />
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Link input row */}
-            {showLinkInput === item.id && (
-              <div ref={linkInputRef} className="flex items-center gap-2 pl-12 pr-3 pb-2">
-                <div className="flex-1 flex items-center gap-2 bg-gray-50 shadow-inner rounded-lg px-3 py-1.5 border border-gray-100">
-                  <LinkIcon size={11} className="text-gray-400 shrink-0" />
-                  <input
-                    ref={(el) => { linkInputFieldRefs.current[item.id] = el; }}
-                    type="url"
-                    value={item.link || ''}
-                    onChange={(e) => updateItemLink(item.id, e.target.value)}
-                    placeholder="https://..."
-                    className="flex-1 text-xs text-gray-600 bg-transparent border-none outline-none placeholder:text-gray-300"
-                    autoFocus
-                  />
-                  {item.link && (
-                    <button
-                      type="button"
-                      onClick={() => { updateItemLink(item.id, ''); setShowLinkInput(null); }}
-                      className="text-[10px] text-gray-400 hover:text-red-400 transition-colors shrink-0"
-                    >
-                      Remove
-                    </button>
-                  )}
+              {/* Inline link editor */}
+              {expandedLink === item.id && (
+                <div className="px-12 pb-2.5 -mt-0.5">
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-md px-2.5 py-1.5 border border-gray-100">
+                    <LinkIcon size={12} className="text-gray-400 shrink-0" />
+                    <input
+                      ref={(el) => { linkInputRefs.current[item.id] = el; }}
+                      type="url"
+                      value={item.link || ''}
+                      onChange={(e) => updateLink(item.id, e.target.value)}
+                      onBlur={() => { if (!item.link) setExpandedLink(null); }}
+                      placeholder="https://..."
+                      className="flex-1 text-xs text-gray-700 bg-transparent border-none outline-none placeholder:text-gray-300"
+                      autoFocus
+                    />
+                    {item.link ? (
+                      <button
+                        type="button"
+                        onClick={() => clearLink(item.id)}
+                        className="text-[10px] text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedLink(null)}
+                        className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+                      >
+                        Close
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
 
-        {/* Add button */}
         <button
           type="button"
           onClick={addItem}
-          className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors rounded-b-xl border-t border-gray-100"
+          className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors rounded-b-xl"
         >
-          <Plus size={13} className="text-blue-400 shrink-0" />
+          <Plus size={13} className="text-blue-500 shrink-0" />
           Add learning objective
         </button>
       </div>

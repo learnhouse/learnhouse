@@ -13,7 +13,7 @@ export const getCourseMetaCacheKey = (courseUuid: string, withUnpublishedActivit
 
 // Debounce manager for coordinating saves across components
 class DebounceManager {
-  private debounces: Map<string, NodeJS.Timeout> = new Map()
+  private debounces: Map<string, { timer: NodeJS.Timeout; fn: () => void }> = new Map()
   private listeners: Set<() => void> = new Set()
 
   register(key: string, fn: () => void, delay: number) {
@@ -22,19 +22,31 @@ class DebounceManager {
       this.debounces.delete(key)
       fn()
     }, delay)
-    this.debounces.set(key, timer)
+    this.debounces.set(key, { timer, fn })
   }
 
   cancel(key: string) {
-    const timer = this.debounces.get(key)
-    if (timer) {
-      clearTimeout(timer)
+    const entry = this.debounces.get(key)
+    if (entry) {
+      clearTimeout(entry.timer)
       this.debounces.delete(key)
     }
   }
 
+  // Run the pending function immediately instead of waiting for the timer.
+  // Used on unmount so in-flight edits are not discarded when a parent tab
+  // switches away before the debounce fires.
+  flush(key: string) {
+    const entry = this.debounces.get(key)
+    if (entry) {
+      clearTimeout(entry.timer)
+      this.debounces.delete(key)
+      entry.fn()
+    }
+  }
+
   cancelAll() {
-    this.debounces.forEach(timer => clearTimeout(timer))
+    this.debounces.forEach(entry => clearTimeout(entry.timer))
     this.debounces.clear()
   }
 
@@ -218,10 +230,12 @@ export function useCourseFieldSync(componentId: string) {
     debounce.cancel(componentId)
   }, [componentId, debounce])
 
-  // Cleanup on unmount
+  // Cleanup on unmount — flush (not cancel) so tab-switches don't drop edits
+  // made during the 500ms debounce window. CourseProvider typically stays
+  // mounted across tabs, so the dispatch still lands safely.
   useEffect(() => {
     return () => {
-      debounce.cancel(componentId)
+      debounce.flush(componentId)
     }
   }, [componentId, debounce])
 
