@@ -1,5 +1,6 @@
 'use client'
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
+import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import {
   useAssignmentsTask,
   useAssignmentsTaskDispatch,
@@ -68,6 +69,16 @@ function TaskShortAnswerObject({
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
+  // Student-only reveal: after the submission is GRADED and the teacher
+  // opted into showing correct answers, inline the accepted answer list
+  // next to the student's input.
+  const assignmentSubmission = useAssignmentSubmission() as any
+  const submissionIsGraded = Array.isArray(assignmentSubmission)
+    && assignmentSubmission.length > 0
+    && assignmentSubmission[0].submission_status === 'GRADED'
+  const showCorrectAnswers = view === 'student'
+    && submissionIsGraded
+    && !!assignment?.assignment_object?.show_correct_answers
 
   const [contents, setContents] = useState<ShortAnswerContents>(DEFAULT_CONTENTS)
   const [studentAnswer, setStudentAnswer] = useState<string>('')
@@ -370,12 +381,34 @@ function TaskShortAnswerObject({
             )}
             <input
               value={studentAnswer}
-              onChange={(e) => setStudentAnswer(e.target.value)}
+              onChange={(e) => !submissionIsGraded && setStudentAnswer(e.target.value)}
+              readOnly={submissionIsGraded}
               placeholder={t(
                 'dashboard.assignments.editor.task_editor.short_answer.your_answer_placeholder'
               )}
               className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-md bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none"
             />
+            {showCorrectAnswers && contents.correct_answers.length > 0 && (
+              <div className="flex flex-col space-y-1.5 p-3 rounded-md bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 size={13} />
+                  <span>{t('dashboard.assignments.editor.task_editor.short_answer.accepted_answers_label')}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {contents.correct_answers.map((answer, i) => (
+                    <span
+                      key={i}
+                      className="px-2 py-0.5 text-xs font-medium bg-white text-emerald-700 rounded-md"
+                    >
+                      {answer}
+                    </span>
+                  ))}
+                </div>
+                {contents.explanation && (
+                  <p className="text-xs text-emerald-800/80 mt-1 whitespace-pre-wrap">{contents.explanation}</p>
+                )}
+              </div>
+            )}
           </>
         )}
 

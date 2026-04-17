@@ -429,11 +429,24 @@ function SubmissionRow({
                 </div>
             </div>
 
-            {/* Grade */}
+            {/* Grade — show the computed display_grade (e.g. "B", "85/100",
+                "Pass") so the list matches the evaluate modal and the
+                student's own view instead of showing a naked raw sum. */}
             {submission.submission_status === 'GRADED' && (
                 <div className="flex items-center space-x-1.5 mr-5">
                     <span className="bg-gray-100 text-gray-500 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full">{t('dashboard.assignments.submissions.grade_label')}</span>
-                    <span className="text-sm font-bold text-gray-900">{submission.grade}</span>
+                    <span className={`text-sm font-bold ${
+                        submission.grade_display
+                            ? (submission.grade_display.passed ? 'text-emerald-700' : 'text-rose-700')
+                            : 'text-gray-900'
+                    }`}>
+                        {submission.grade_display?.display_grade ?? submission.grade}
+                    </span>
+                    {submission.grade_display?.points_summary && (
+                        <span className="text-[10px] text-gray-400 font-medium">
+                            {submission.grade_display.points_summary}
+                        </span>
+                    )}
                 </div>
             )}
 

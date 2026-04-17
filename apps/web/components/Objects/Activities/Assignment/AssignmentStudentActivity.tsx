@@ -29,6 +29,15 @@ function AssignmentStudentActivity() {
   // task.grade is the placeholder 0 from save-progress.
   const isGraded = Array.isArray(submission) && submission.length > 0 && submission[0].submission_status === 'GRADED';
 
+  // Keep per-task pass/fail aligned with the overall grade threshold on the
+  // server (50% for NUMERIC / PERCENTAGE / PASS_FAIL, 60% for ALPHABET /
+  // GPA_SCALE). Otherwise a student with 55% on a numeric-graded task sees
+  // "Not Passed" inline while the same score is "Pass" at the assignment
+  // level — exactly the mismatch the teacher tried to avoid.
+  const gradingType = assignments?.assignment_object?.grading_type;
+  const passingThreshold =
+    gradingType === 'ALPHABET' || gradingType === 'GPA_SCALE' ? 60 : 50;
+
   useEffect(() => {
   }, [assignments, org])
 
@@ -79,7 +88,7 @@ function AssignmentStudentActivity() {
         const taskMax = task.max_grade_value || 0;
         const taskFeedback = (taskSubmission?.task_submission_grade_feedback || '').trim();
         const taskPercentage = taskMax > 0 ? Math.round((taskGrade / taskMax) * 100) : 0;
-        const taskPassed = taskPercentage >= 60;
+        const taskPassed = taskPercentage >= passingThreshold;
 
         return (
           <div className='flex flex-col space-y-2' key={task.assignment_task_uuid}>

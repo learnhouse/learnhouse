@@ -1220,7 +1220,14 @@
     "current_points": "Current points: {{points}}",
     "grade": "Grade",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Due Date"
+    "due_date": "Due Date",
+    "quiz": {
+      "correct_answer": "Correct",
+      "incorrect_answer": "Wrong"
+    },
+    "form": {
+      "expected_answer": "Expected"
+    }
   },
   "certificate": {
     "certificate": "Certificate",
@@ -3662,6 +3669,8 @@
             "auto_grading_disabled_file": "Automatic grading is unavailable because this assignment has a file submission task that needs human review.",
             "anti_copy_paste_label": "Block copy & paste",
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent — tech-savvy students can bypass it.",
+            "show_correct_answers_label": "Reveal correct answers after grading",
+            "show_correct_answers_description": "Once the submission is graded, show students the right answers alongside their own — which quiz options were correct, the expected short or number answer, and the correct form blanks.",
             "cancel": "Cancel",
             "save": "Save Changes",
             "saving": "Saving..."
@@ -3704,6 +3713,8 @@
             "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human.",
             "anti_copy_paste_label": "Block copy & paste",
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent — it can be bypassed.",
+            "show_correct_answers_label": "Reveal correct answers after grading",
+            "show_correct_answers_description": "Once graded, students see the right answers next to their own.",
             "submit": "Create activity"
           },
           "toasts": {
