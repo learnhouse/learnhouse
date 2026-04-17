@@ -59,6 +59,7 @@ export interface CourseState {
   courseStructure: any
   courseOrder: any
   pendingChanges: Partial<any> // Track pending changes separately
+  unsyncedChanges: Partial<any> // Immediate changes not yet debounce-merged into courseStructure
   isSaved: boolean
   isLoading: boolean
   isSaving: boolean // New: track saving state
@@ -72,6 +73,8 @@ export type CourseAction =
   | { type: 'setCourseOrder'; payload: any }
   | { type: 'updateField'; payload: { field: string; value: any } } // New: granular field update
   | { type: 'mergePendingChanges'; payload: Partial<any> } // New: merge pending changes
+  | { type: 'setUnsyncedChanges'; payload: Partial<any> } // Immediate changes buffer
+  | { type: 'clearUnsyncedChanges' }
   | { type: 'setIsSaved' }
   | { type: 'setIsNotSaved' }
   | { type: 'setIsLoaded' }
@@ -112,6 +115,7 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
     courseStructure: effectiveData || { course_uuid: courseuuid },
     courseOrder: {},
     pendingChanges: {},
+    unsyncedChanges: {},
     isSaved: true,
     isLoading: !effectiveData,
     isSaving: false,
@@ -193,9 +197,13 @@ export function useCourseFieldSync(componentId: string) {
   const debounce = useDebounceManager()
 
   const syncChanges = useCallback((changes: Partial<any>, immediate: boolean = false) => {
+    // Immediately mark unsaved and store changes so Save works even before debounce fires
+    dispatch({ type: 'setIsNotSaved' })
+    dispatch({ type: 'setUnsyncedChanges', payload: changes })
+
     const doSync = () => {
-      dispatch({ type: 'setIsNotSaved' })
       dispatch({ type: 'mergePendingChanges', payload: changes })
+      dispatch({ type: 'clearUnsyncedChanges' })
     }
 
     if (immediate) {
@@ -222,6 +230,7 @@ export function useCourseFieldSync(componentId: string) {
     cancelPendingSync,
     courseStructure: course.courseStructure,
     pendingChanges: course.pendingChanges,
+    unsyncedChanges: course.unsyncedChanges,
     isLoading: course.isLoading,
     isSaved: course.isSaved,
     isSaving: course.isSaving,
@@ -266,6 +275,15 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
         },
       }
 
+    case 'setUnsyncedChanges':
+      return {
+        ...state,
+        unsyncedChanges: { ...state.unsyncedChanges, ...action.payload },
+      }
+
+    case 'clearUnsyncedChanges':
+      return { ...state, unsyncedChanges: {} }
+
     case 'commitChanges':
       // Commit pending changes to courseStructure
       return {
@@ -275,6 +293,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
           ...state.pendingChanges,
         },
         pendingChanges: {},
+        unsyncedChanges: {},
         isSaved: true,
       }
 
@@ -283,6 +302,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
       return {
         ...state,
         pendingChanges: {},
+        unsyncedChanges: {},
         isSaved: true,
       }
 
@@ -306,7 +326,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
       }
 
     case 'setIsSaved':
-      return { ...state, isSaved: true, pendingChanges: {} }
+      return { ...state, isSaved: true, pendingChanges: {}, unsyncedChanges: {} }
 
     case 'setIsNotSaved':
       return { ...state, isSaved: false }

@@ -20,6 +20,7 @@ function EmbedCourseProvider({ children, course }: { children: React.ReactNode; 
     courseStructure: course,
     courseOrder: null,
     pendingChanges: {},
+    unsyncedChanges: {},
     isSaved: true,
     isLoading: false,
     isSaving: false,

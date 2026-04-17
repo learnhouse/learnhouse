@@ -1475,15 +1475,16 @@
   padding: 12px;
   display: flex;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: var(--z-editor-toolbar);
-  width: -webkit-fill-available;
-  width: -moz-available;
+  left: 0;
+  right: 0;
+  width: auto;
   gap: 10px;
 }
 
