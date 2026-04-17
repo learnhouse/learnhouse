@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     style={{ zIndex: 'var(--z-modal-backdrop)' }}
@@ -39,7 +39,7 @@ const DialogContent = React.forwardRef<
       <DialogOverlay style={{ pointerEvents: 'auto' }} />
       <DialogPrimitive.Content
         ref={ref}
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: 'auto', willChange: 'transform, opacity' }}
         onKeyDown={(e) => {
           // Prevent Radix from swallowing keystrokes (e.g. "D") inside form inputs
           const target = e.target as HTMLElement
@@ -49,8 +49,8 @@ const DialogContent = React.forwardRef<
           }
         }}
         className={cn(
-          "fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 duration-200 sm:rounded-2xl",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "fixed left-[50%] top-[50%] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 duration-150 sm:rounded-2xl",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           className
         )}
         {...props}

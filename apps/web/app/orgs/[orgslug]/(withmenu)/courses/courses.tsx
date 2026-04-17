@@ -31,7 +31,7 @@ function Courses(props: CourseProps) {
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
-  const isUserAdmin = useAdminStatus() as any
+  const { isAdmin: isUserAdmin } = useAdminStatus()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token

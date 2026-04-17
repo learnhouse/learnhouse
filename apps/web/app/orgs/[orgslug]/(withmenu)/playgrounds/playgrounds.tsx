@@ -27,7 +27,7 @@ export default function PlaygroundsClient({
   const router = useRouter()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const isUserAdmin = useAdminStatus() as any
+  const { isAdmin: isUserAdmin } = useAdminStatus()
 
   const [playgrounds, setPlaygrounds] = useState<Playground[]>(initialPlaygrounds)
   const [searchQuery, setSearchQuery] = useState('')

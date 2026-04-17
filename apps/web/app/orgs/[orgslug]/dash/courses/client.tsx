@@ -48,7 +48,7 @@ function CoursesHome(params: CourseProps) {
   const [creationType, setCreationType] = React.useState<'select' | 'scratch' | 'ai'>('select')
   const [aiCourseModalOpen, setAiCourseModalOpen] = React.useState(false)
   const orgslug = params.orgslug
-  const isUserAdmin = useAdminStatus() as any
+  const { isAdmin: isUserAdmin } = useAdminStatus()
   const org = useOrg() as any
   const currentPlan = usePlan()
   const session = useLHSession() as any
