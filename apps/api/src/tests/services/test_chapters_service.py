@@ -84,7 +84,7 @@ class TestGetChapter:
         with pytest.raises(HTTPException) as exc_info:
             await get_chapter(mock_request, chapter.id, admin_user, db)
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Course does not exist" in exc_info.value.detail
 
     @pytest.mark.asyncio
@@ -94,7 +94,7 @@ class TestGetChapter:
         with pytest.raises(HTTPException) as exc_info:
             await get_chapter(mock_request, 9999, admin_user, db)
 
-        assert exc_info.value.status_code == 409
+        assert exc_info.value.status_code == 404
         assert "Chapter does not exist" in exc_info.value.detail
 
 

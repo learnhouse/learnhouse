@@ -348,16 +348,14 @@ async def get_user_progress(
         )
     ).one()
 
-    # Completed activities
-    completed_steps = db_session.exec(
-        select(TrailStep).where(
+    # Completed activities - select only activity_id to avoid loading full rows
+    completed_activity_ids = db_session.exec(
+        select(TrailStep.activity_id).where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course.id,
             TrailStep.complete == True,
         )
     ).all()
-
-    completed_activity_ids = [s.activity_id for s in completed_steps]
 
     return {
         "course_uuid": course.course_uuid,

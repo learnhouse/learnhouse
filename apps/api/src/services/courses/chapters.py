@@ -91,17 +91,20 @@ async def get_chapter(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
-    statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    # Fetch Chapter and Course in one query to avoid two sequential round-trips
+    statement = (
+        select(Chapter, Course)
+        .outerjoin(Course, Course.id == Chapter.course_id)
+        .where(Chapter.id == chapter_id)
+    )
+    result = db_session.exec(statement).first()
 
-    if not chapter:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
-    # get COurse
-    statement = select(Course).where(Course.id == chapter.course_id)
-    course = db_session.exec(statement).first()
+    chapter, course = result
 
     if not course:
         raise HTTPException(
