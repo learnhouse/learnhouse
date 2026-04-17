@@ -52,7 +52,7 @@ def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional
     """
     Record a failed login attempt and lock account if threshold is reached.
 
-    SECURITY: Uses atomic database operations to prevent race conditions.
+    SECURITY: Uses a single atomic SQL UPDATE to prevent race conditions.
     Without atomic updates, concurrent login attempts could bypass the lockout
     by both reading the same count before either increments it.
 
@@ -63,51 +63,46 @@ def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional
     Returns:
         Tuple of (is_now_locked, lockout_duration_seconds)
     """
-    from sqlmodel import select
-    from sqlalchemy import update
+    from sqlalchemy import update, case, func
 
-    # SECURITY FIX: Use atomic increment to prevent race conditions
-    # This ensures that even concurrent requests will correctly increment the counter
-    lockout_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
-
-    # Atomic update: increment failed_login_attempts and set lockout if threshold reached
-    # We use COALESCE to handle NULL values (treating NULL as 0)
-    statement = (
+    # Single atomic statement: increment the counter AND conditionally set
+    # locked_until when the threshold is reached — no separate read or second
+    # UPDATE required.
+    stmt = (
         update(User)
         .where(User.id == user.id)
         .values(
-            failed_login_attempts=(
-                db_session.execute(
-                    select(User.failed_login_attempts).where(User.id == user.id)
-                ).scalar() or 0
-            ) + 1
+            failed_login_attempts=User.failed_login_attempts + 1,
+            locked_until=case(
+                (
+                    User.failed_login_attempts + 1 >= MAX_FAILED_ATTEMPTS,
+                    func.now() + timedelta(minutes=LOCKOUT_DURATION_MINUTES),
+                ),
+                else_=User.locked_until,
+            ),
         )
-        .returning(User.failed_login_attempts)
+        .execution_options(synchronize_session="fetch")
     )
-
-    # Execute atomic increment and get new count
-    result = db_session.execute(statement)
-    new_count = result.scalar()
-
-    if new_count is None:
-        # User not found
-        db_session.rollback()
-        return False, None
-
-    # Check if we need to lock the account
-    if new_count >= MAX_FAILED_ATTEMPTS:
-        # Update the lockout timestamp in a separate atomic operation
-        lock_statement = (
-            update(User)
-            .where(User.id == user.id)
-            .values(locked_until=lockout_until.isoformat())
-        )
-        db_session.execute(lock_statement)
-        db_session.commit()
-        return True, LOCKOUT_DURATION_MINUTES * 60
-
+    db_session.execute(stmt)
     db_session.commit()
-    return False, None
+
+    # Refresh the user object so callers see the updated values
+    db_session.refresh(user)
+
+    # Check whether the updated locked_until is actually in the future.
+    # user.locked_until may hold an expired timestamp from a previous lockout
+    # if reset_failed_attempts was never called (e.g. the user never logged in
+    # successfully after the last lockout expired).
+    is_locked = False
+    if user.locked_until:
+        try:
+            lu = datetime.fromisoformat(str(user.locked_until))
+            if lu.tzinfo is None:
+                lu = lu.replace(tzinfo=timezone.utc)
+            is_locked = datetime.now(timezone.utc) < lu
+        except (ValueError, TypeError):
+            is_locked = False
+    return is_locked, LOCKOUT_DURATION_MINUTES * 60 if is_locked else None
 
 
 def reset_failed_attempts(user: User, db_session: Session) -> None:
@@ -175,16 +170,15 @@ def format_lockout_message(remaining_seconds: int) -> str:
     Format a human-readable lockout message.
 
     Args:
-        remaining_seconds: Seconds until lockout expires
+        remaining_seconds: Seconds until lockout expires (used for internal
+            logging only; not exposed in the returned message to avoid leaking
+            exact timing information to clients)
 
     Returns:
-        Formatted message string
+        Generic message string that does not reveal the remaining lock duration
     """
-    if remaining_seconds >= 60:
-        minutes = remaining_seconds // 60
-        if minutes == 1:
-            return "Account is locked. Please try again in 1 minute."
-        else:
-            return f"Account is locked. Please try again in {minutes} minutes."
-    else:
-        return f"Account is locked. Please try again in {remaining_seconds} seconds."
+    # SECURITY: Do not include the exact remaining duration in the user-facing
+    # message — it leaks information that could help an attacker time requests
+    # to avoid triggering the lockout check.  The remaining_seconds argument is
+    # retained so callers can still log the actual value for operations purposes.
+    return "Account is temporarily locked due to too many failed login attempts. Please try again later."

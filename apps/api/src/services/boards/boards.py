@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, col
 from fastapi import HTTPException, Request, UploadFile
 from src.db.boards import (
     Board,
@@ -42,7 +42,7 @@ async def create_board(
     )
 
     db_session.add(board)
-    db_session.commit()
+    db_session.flush()
     db_session.refresh(board)
 
     # Add creator as owner
@@ -106,7 +106,21 @@ async def get_boards_by_org(
         .order_by(Board.creation_date.desc())
     )
     boards = db_session.exec(statement).all()
-    return [_board_to_read(b, db_session) for b in boards]
+    if not boards:
+        return []
+
+    board_ids = [b.id for b in boards]
+    count_rows = db_session.exec(
+        select(BoardMember.board_id, func.count(BoardMember.id))
+        .where(col(BoardMember.board_id).in_(board_ids))
+        .group_by(BoardMember.board_id)
+    ).all()
+    counts = {row[0]: row[1] for row in count_rows}
+
+    return [
+        BoardRead(**b.model_dump(exclude={"ydoc_state"}), member_count=counts.get(b.id, 0))
+        for b in boards
+    ]
 
 
 async def update_board(
@@ -155,7 +169,7 @@ async def duplicate_board(
     )
 
     db_session.add(board)
-    db_session.commit()
+    db_session.flush()
     db_session.refresh(board)
 
     # Add current user as owner
@@ -367,9 +381,31 @@ async def get_board_members(
     board = _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
 
-    statement = select(BoardMember).where(BoardMember.board_id == board.id)
-    members = db_session.exec(statement).all()
-    return [_member_to_read(m, db_session) for m in members]
+    members = db_session.exec(
+        select(BoardMember).where(BoardMember.board_id == board.id)
+    ).all()
+    if not members:
+        return []
+
+    user_ids = [m.user_id for m in members]
+    users = {
+        u.id: u
+        for u in db_session.exec(select(User).where(col(User.id).in_(user_ids))).all()
+    }
+    return [
+        BoardMemberRead(
+            id=m.id,
+            board_id=m.board_id,
+            user_id=m.user_id,
+            role=m.role,
+            creation_date=m.creation_date,
+            username=users[m.user_id].username if m.user_id in users else None,
+            email=users[m.user_id].email if m.user_id in users else None,
+            avatar_image=users[m.user_id].avatar_image if m.user_id in users else None,
+            user_uuid=users[m.user_id].user_uuid if m.user_id in users else None,
+        )
+        for m in members
+    ]
 
 
 async def update_board_thumbnail(

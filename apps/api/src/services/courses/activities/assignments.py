@@ -1525,6 +1525,8 @@ async def read_assignment_task_submissions(
     assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
+    limit: int = 50,
+    offset: int = 0,
 ):
     _block_api_tokens(current_user)
     # Check if assignment task exists
@@ -1562,10 +1564,9 @@ async def read_assignment_task_submissions(
     # Only instructors may list all submissions for a task
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
-    # Return all submissions for this task
     statement = select(AssignmentTaskSubmission).where(
         AssignmentTaskSubmission.assignment_task_id == assignment_task.id
-    )
+    ).limit(limit).offset(offset)
     submissions = db_session.exec(statement).all()
     return [AssignmentTaskSubmissionRead.model_validate(s) for s in submissions]
 
@@ -1911,6 +1912,8 @@ async def read_assignment_submissions(
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
+    limit: int = 50,
+    offset: int = 0,
 ):
     _block_api_tokens(current_user)
     # Find assignment
@@ -1950,7 +1953,8 @@ async def read_assignment_submissions(
             AssignmentUserSubmission.user_id == current_user.id
         )
 
-    # return assignment tasks read
+    statement = statement.limit(limit).offset(offset)
+
     return [
         AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
         for assignment_user_submission in db_session.exec(statement).all()

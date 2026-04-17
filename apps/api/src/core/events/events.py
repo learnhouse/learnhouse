@@ -84,8 +84,14 @@ def shutdown_app(app: FastAPI) -> Callable:
     async def close_app() -> None:
         if _cleanup_task:
             _cleanup_task.cancel()
-        # Close the webhook httpx client cleanly
-        from src.services.webhooks.dispatch import close_webhook_client
+            try:
+                await _cleanup_task
+            except asyncio.CancelledError:
+                pass
+        # Wait for in-flight webhook deliveries before closing the HTTP client
+        from src.services.webhooks.dispatch import close_webhook_client, _background_tasks as _webhook_tasks
+        if _webhook_tasks:
+            await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
         await close_database(app)
 

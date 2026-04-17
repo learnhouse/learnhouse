@@ -20,6 +20,40 @@ from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
 
+_redis_pool: Optional[redis.ConnectionPool] = None
+
+def _get_redis(redis_conn_string: str) -> redis.Redis:
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool = redis.ConnectionPool.from_url(redis_conn_string, max_connections=10)
+    return redis.Redis(connection_pool=_redis_pool)
+
+
+# Lua script: atomically count existing org invite codes and add a new one if
+# the per-org limit has not been reached.  Runs as a single atomic unit on the
+# Redis server, eliminating the check-then-set race condition.
+#
+# KEYS[1] = glob pattern for existing codes   (e.g. "org_invite_code_*:org:<uuid>:code:*")
+# KEYS[2] = the new key to write
+# ARGV[1] = JSON value to store
+# ARGV[2] = TTL in seconds
+# ARGV[3] = maximum number of codes allowed
+#
+# Returns 1 on success, 0 when the limit is already reached.
+_LUA_ATOMIC_INVITE = (
+    "local pattern = KEYS[1]\n"
+    "local new_key = KEYS[2]\n"
+    "local new_value = ARGV[1]\n"
+    "local ttl = tonumber(ARGV[2])\n"
+    "local max_codes = tonumber(ARGV[3])\n"
+    "local existing = redis.call('KEYS', pattern)\n"
+    "if #existing >= max_codes then\n"
+    "    return 0\n"
+    "end\n"
+    "redis.call('SET', new_key, new_value, 'EX', ttl)\n"
+    "return 1\n"
+)
+
 
 async def create_invite_code(
     request: Request,
@@ -53,21 +87,12 @@ async def create_invite_code(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+    r = _get_redis(redis_conn_string)
 
     if not r:
         raise HTTPException(
             status_code=500,
             detail="Could not connect to Redis",
-        )
-
-    # Check if this org has more than 6 invite codes (use scan_iter to avoid blocking Redis)
-    invite_codes = list(r.scan_iter(match=f"org_invite_code_*:org:{org.org_uuid}:code:*", count=100))
-
-    if len(invite_codes) >= 6:
-        raise HTTPException(
-            status_code=400,
-            detail="Organization has reached the maximum number of invite codes",
         )
 
     # Validate usergroup exists if provided
@@ -106,11 +131,26 @@ async def create_invite_code(
     if usergroup_id is not None:
         inviteCodeObject["usergroup_id"] = usergroup_id
 
-    r.set(
-        f"{invite_code_uuid}:org:{org.org_uuid}:code:{generated_invite_code}",
-        json.dumps(inviteCodeObject),
-        ex=ttl,
+    new_invite_key = f"{invite_code_uuid}:org:{org.org_uuid}:code:{generated_invite_code}"
+    invite_value = json.dumps(inviteCodeObject)
+
+    # Atomically check the per-org code limit and write the new key.
+    # _LUA_ATOMIC_INVITE returns 0 when the limit is reached, 1 on success.
+    result = r.eval(  # type: ignore[attr-defined]
+        _LUA_ATOMIC_INVITE,
+        2,
+        f"org_invite_code_*:org:{org.org_uuid}:code:*",
+        new_invite_key,
+        invite_value,
+        str(ttl),
+        "6",
     )
+
+    if result == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum number of invite codes reached",
+        )
 
     return inviteCodeObject
 
@@ -146,7 +186,7 @@ async def get_invite_codes(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+    r = _get_redis(redis_conn_string)
 
     if not r:
         raise HTTPException(
@@ -208,7 +248,7 @@ async def get_invite_code(
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+    r = _get_redis(redis_conn_string)
 
     if not r:
         raise HTTPException(
@@ -273,7 +313,7 @@ async def delete_invite_code(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Connect to Redis
-    r = redis.Redis.from_url(redis_conn_string)
+    r = _get_redis(redis_conn_string)
 
     if not r:
         raise HTTPException(
@@ -310,7 +350,7 @@ def send_invite_email(
         redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
 
         if redis_conn_string:
-            r = redis.Redis.from_url(redis_conn_string)
+            r = _get_redis(redis_conn_string)
             matched = list(r.scan_iter(match=f"{invite_code_uuid}:org:{org.org_uuid}:code:*", count=10))  # type: ignore
             if matched:
                 data = r.get(matched[0])

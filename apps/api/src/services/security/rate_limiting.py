@@ -51,6 +51,13 @@ def get_client_ip(request: Request) -> str:
     Only trusts X-Forwarded-For/X-Real-IP when the direct connection
     comes from a private/loopback address (i.e., a local reverse proxy).
     """
+    # SECURITY: This trusts X-Forwarded-For only when the direct connection comes
+    # from a private IP (assumed to be a trusted reverse proxy).
+    # REQUIREMENT: The reverse proxy MUST strip and rewrite X-Forwarded-For headers
+    # from untrusted clients. If the proxy passes through client-supplied headers,
+    # IP spoofing can bypass rate limits.
+    # For self-hosted deployments without a reverse proxy, set
+    # LEARNHOUSE_SECURITY__TRUST_PROXY_HEADERS=false in config to disable this.
     direct_ip = request.client.host if request.client else None
 
     # Only trust proxy headers if request comes from a local reverse proxy

@@ -79,13 +79,18 @@ def _judge0_headers(judge0_cfg) -> dict:
 
 
 def _wrap_sql_in_python(sql: str) -> str:
-    """Wrap raw SQL in a Python script that executes it against db.sqlite3."""
-    escaped = sql.replace("\\", "\\\\").replace("'", "\\'")
-    return f"""import sqlite3, sys
+    """Wrap raw SQL in a Python script that executes it against db.sqlite3.
 
+    The SQL is base64-encoded so no user input is interpolated into the
+    generated source code, eliminating the triple-quote injection vector.
+    """
+    import base64
+    encoded = base64.b64encode(sql.encode()).decode()
+    return f"""import sqlite3, base64
+
+sql = base64.b64decode('{encoded}').decode()
 conn = sqlite3.connect('db.sqlite3')
 cursor = conn.cursor()
-sql = '''{escaped}'''
 
 for statement in sql.strip().split(';'):
     statement = statement.strip()

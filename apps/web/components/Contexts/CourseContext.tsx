@@ -90,7 +90,9 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   const { mutate } = useSWRConfig()
   const lastServerDataRef = useRef<any>(null)
 
-  const swrKey = getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
+  const swrKey = session?.status !== 'loading'
+    ? getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
+    : null
 
   const { data: courseStructureData, error, isValidating } = useSWR(
     swrKey,
@@ -123,19 +125,26 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   // Track server data changes
   useEffect(() => {
     if (courseStructureData && !state.isSaving) {
-      const serverDataStr = JSON.stringify(courseStructureData)
-      const lastServerDataStr = JSON.stringify(lastServerDataRef.current)
+      // Skip expensive JSON comparison if reference hasn't changed
+      if (lastServerDataRef.current === courseStructureData) return
 
-      if (serverDataStr !== lastServerDataStr) {
-        lastServerDataRef.current = courseStructureData
+      try {
+        const serverDataStr = JSON.stringify(courseStructureData)
+        const lastServerDataStr = JSON.stringify(lastServerDataRef.current)
 
-        // Only auto-sync from server if we don't have unsaved local changes (e.g. drag-drop reorder)
-        if (state.isSaved) {
-          dispatch({
-            type: 'syncFromServer',
-            payload: { data: courseStructureData, timestamp: Date.now() }
-          })
+        if (serverDataStr !== lastServerDataStr) {
+          lastServerDataRef.current = courseStructureData
+
+          // Only auto-sync from server if we don't have unsaved local changes (e.g. drag-drop reorder)
+          if (state.isSaved) {
+            dispatch({
+              type: 'syncFromServer',
+              payload: { data: courseStructureData, timestamp: Date.now() }
+            })
+          }
         }
+      } catch (e) {
+        console.error('Failed to compare course data:', e)
       }
     }
   }, [courseStructureData, state.isSaving, state.isSaved])
@@ -149,8 +158,8 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
     }
   }, [effectiveData, state.isLoading])
 
-  if (error) return <div>Failed to load course structure</div>
-  if (!effectiveData) return ''
+  if (error) return <div className="p-4 text-center text-red-600">Failed to load course. Please refresh the page.</div>
+  if (!effectiveData) return null
 
   return (
     <CourseContext.Provider value={state}>

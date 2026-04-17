@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlmodel import Session, select
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
@@ -16,6 +17,10 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.activities.versioning import create_activity_version
 
 logger = logging.getLogger(__name__)
+
+# Module-level set to hold strong references to background embedding tasks,
+# preventing them from being garbage-collected before they complete.
+_embedding_tasks: set = set()
 
 
 ####################################################
@@ -61,10 +66,9 @@ async def create_activity(
     activity.org_id = chapter.org_id
     activity.course_id = chapter.course_id
 
-    # Insert Activity in DB
+    # Flush to get the DB-assigned ID without committing yet
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    db_session.flush()
 
     if activity.id is None:
         raise HTTPException(
@@ -72,16 +76,13 @@ async def create_activity(
             detail="Activity creation failed: could not retrieve activity ID",
         )
 
-    # Find the last activity in the Chapter and add it to the list
-    statement = (
-        select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == activity_object.chapter_id)
-        .order_by(ChapterActivity.order) # type: ignore
-    )
-    chapter_activities = db_session.exec(statement).all()
-
-    last_order = chapter_activities[-1].order if chapter_activities else 0
-    to_be_used_order = last_order + 1
+    # Determine insertion order using MAX to avoid loading all rows
+    max_order = db_session.exec(
+        select(func.max(ChapterActivity.order)).where(
+            ChapterActivity.chapter_id == activity_object.chapter_id
+        )
+    ).first()
+    to_be_used_order = (max_order or 0) + 1
 
     # Add activity to chapter
     activity_chapter = ChapterActivity(
@@ -94,10 +95,10 @@ async def create_activity(
         order=to_be_used_order,
     )
 
-    # Insert ChapterActivity link in DB
+    # Single atomic commit for both Activity and ChapterActivity
     db_session.add(activity_chapter)
     db_session.commit()
-    db_session.refresh(activity_chapter)
+    db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)
 
@@ -178,10 +179,6 @@ async def update_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    import logging
-    import json
-    logger = logging.getLogger(__name__)
-
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
@@ -217,27 +214,8 @@ async def update_activity(
         # Track who made the change
         activity.last_modified_by_id = user_id
 
-    # Debug logging for content updates
-    if 'content' in update_data:
-        content = update_data['content']
-        logger.info(f"[Activity Update] Activity UUID: {activity_uuid}")
-        logger.info(f"[Activity Update] Content type: {type(content)}")
-        if isinstance(content, dict):
-            logger.info(f"[Activity Update] Content has 'type' key: {'type' in content}")
-            logger.info(f"[Activity Update] Content 'type' value: {content.get('type')}")
-            try:
-                # Test serialization with ensure_ascii=False to preserve Unicode
-                content_json = json.dumps(content, ensure_ascii=False)
-                logger.info(f"[Activity Update] Content JSON size: {len(content_json)} bytes")
-                logger.info(f"[Activity Update] Content JSON valid: {content_json.startswith('{') and content_json.endswith('}')}")
-                # Try to parse it back to verify round-trip
-                json.loads(content_json)
-                logger.info("[Activity Update] Content JSON round-trip: SUCCESS")
-            except Exception as e:
-                logger.error(f"[Activity Update] Content JSON serialization error: {e}")
-        elif isinstance(content, str):
-            logger.warning(f"[Activity Update] Content is STRING not dict! Length: {len(content)}")
-            logger.warning(f"[Activity Update] Content preview: {content[:200]}")
+    if 'content' in update_data and isinstance(update_data['content'], str):
+        logger.warning("[Activity Update] Content is STRING not dict for %s", activity_uuid)
 
     for field, value in update_data.items():
         setattr(activity, field, value)
@@ -254,16 +232,13 @@ async def update_activity(
     db_session.commit()
     db_session.refresh(activity)
 
-    # Verify the save worked
-    if 'content' in update_data:
-        logger.info(f"[Activity Update] Post-save content type: {type(activity.content)}")
-        if isinstance(activity.content, dict):
-            logger.info(f"[Activity Update] Post-save content 'type': {activity.content.get('type')}")
-
     # Trigger background re-indexing for RAG when content changes
     if 'content' in update_data:
-        asyncio.create_task(
-            _trigger_course_embedding(activity.course_id, activity.org_id)
+        task = asyncio.create_task(_trigger_course_embedding(activity.course_id, activity.org_id))
+        _embedding_tasks.add(task)
+        task.add_done_callback(_embedding_tasks.discard)
+        task.add_done_callback(
+            lambda t: logger.error("Embedding task failed: %s", t.exception()) if t.exception() else None
         )
 
     activity = ActivityRead.model_validate(activity)
@@ -277,9 +252,12 @@ async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
         from src.core.events.database import get_db_session
         from src.services.ai.rag.embedding_service import embed_course_content
 
-        # Create a new DB session for the background task
         for session in get_db_session():
-            embed_course_content(course_id, org_id, session)
+            course = session.exec(select(Course).where(Course.id == course_id)).first()
+            if not course:
+                logger.warning("Skipping embedding for deleted course %d", course_id)
+                return
+            await embed_course_content(course_id, org_id, session)
     except Exception as e:
         logger.warning("Background embedding update failed (non-critical): %s", e)
 

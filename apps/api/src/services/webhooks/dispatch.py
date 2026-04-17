@@ -92,6 +92,10 @@ async def dispatch_webhooks(
     )
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
+    task.add_done_callback(
+        lambda t: logger.error("Webhook delivery batch failed: %s", t.exception())
+        if not t.cancelled() and t.exception() else None
+    )
 
 
 async def _deliver_webhooks(
@@ -127,7 +131,16 @@ async def _deliver_webhooks(
 
         # All HTTP work happens outside the DB session.
         for ep_info in endpoints:
-            await _deliver_to_endpoint(ep_info, event_name, org_id, data)
+            try:
+                await _deliver_to_endpoint(ep_info, event_name, org_id, data)
+            except Exception:
+                logger.error(
+                    "Webhook delivery failed for endpoint %s event %s org %s",
+                    ep_info.webhook_uuid,
+                    event_name,
+                    org_id,
+                    exc_info=True,
+                )
 
     except Exception:
         logger.warning(
@@ -223,8 +236,9 @@ async def _deliver_to_endpoint(
             delay = BACKOFF_DELAYS[attempt - 1] if attempt - 1 < len(BACKOFF_DELAYS) else BACKOFF_DELAYS[-1]
             await asyncio.sleep(delay)
 
-    # Prune old logs for this endpoint
-    _prune_delivery_logs(ep.id)
+    # Prune old logs for this endpoint (offloaded to a thread to avoid
+    # blocking the event loop with synchronous DB I/O).
+    await asyncio.to_thread(_prune_delivery_logs, ep.id)
 
 
 def _prune_delivery_logs(webhook_id: int) -> None:

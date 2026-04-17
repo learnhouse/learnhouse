@@ -108,7 +108,6 @@ class CourseRead(CourseBase):
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
     seo: Optional[dict] = None
-    pass
 
 
 class FullCourseRead(CourseBase):

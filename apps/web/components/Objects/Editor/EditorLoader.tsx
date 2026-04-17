@@ -24,26 +24,40 @@ export default function EditorLoader({ courseid, activityuuid }: EditorLoaderPro
   const access_token = session?.data?.tokens?.access_token
   const [editorReady, setEditorReady] = React.useState(false)
 
-  const { data: courseInfo } = useSWR(
+  const { data: courseInfo, error: courseError } = useSWR(
     access_token ? `${getAPIUrl()}courses/course_${courseid}/meta?slim=true` : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
   )
 
-  const { data: activity } = useSWR(
+  const { data: activity, error: activityError } = useSWR(
     access_token ? `${getAPIUrl()}activities/activity_${activityuuid}` : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
   )
 
   const orgUuid = courseInfo?.org_uuid
-  const { data: org } = useSWR(
+  const { data: org, error: orgError } = useSWR(
     orgUuid && access_token ? `${getAPIUrl()}orgs/uuid/${orgUuid}` : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
   )
 
   const dataReady = courseInfo && activity && org
+
+  if (courseError || activityError || orgError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
+        <p className="text-sm">Failed to load editor. Please refresh the page.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-sm text-indigo-600 hover:underline"
+        >
+          Refresh
+        </button>
+      </div>
+    )
+  }
   const isMarkdownActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_MARKDOWN'
   const isEmbedActivity = activity?.activity_sub_type === 'SUBTYPE_DYNAMIC_EMBED'
 

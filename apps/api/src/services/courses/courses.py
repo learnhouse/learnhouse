@@ -641,11 +641,6 @@ async def create_course(
         course.thumbnail_video = ""
         course.thumbnail_type = ThumbnailType.IMAGE
 
-    # Insert course
-    db_session.add(course)
-    db_session.commit()
-    db_session.refresh(course)
-
     # SECURITY: Make the user the creator of the course
     # For API tokens, use the user who created the token as the author
     if isinstance(current_user, APITokenUser):
@@ -662,10 +657,17 @@ async def create_course(
         update_date=str(datetime.now()),
     )
 
-    # Insert course author
-    db_session.add(resource_author)
-    db_session.commit()
-    db_session.refresh(resource_author)
+    # Insert course and author atomically in a single transaction
+    try:
+        db_session.add(course)
+        db_session.flush()  # Get the ID without committing
+        db_session.refresh(course)
+        db_session.add(resource_author)
+        db_session.commit()  # Single commit for both
+        db_session.refresh(resource_author)
+    except Exception:
+        db_session.rollback()
+        raise
 
     # Get course authors with their roles
     authors_statement = (
@@ -967,26 +969,17 @@ async def get_user_courses(
     # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
     
-    # Get all resource authors for the user
-    statement = select(ResourceAuthor).where(
-        and_(
+    # Fetch courses the user has authored using a single JOIN query with pagination
+    statement = (
+        select(Course)
+        .join(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+        .where(
             ResourceAuthor.user_id == user_id,
-            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
         )
+        .offset((page - 1) * limit)
+        .limit(limit)
     )
-    resource_authors = db_session.exec(statement).all()
-    
-    # Extract course UUIDs from resource authors
-    course_uuids = [author.resource_uuid for author in resource_authors]
-    
-    if not course_uuids:
-        return []
-    
-    # Get courses with the extracted UUIDs
-    statement = select(Course).where(Course.course_uuid.in_(course_uuids)) # type: ignore
-    
-    # Apply pagination
-    statement = statement.offset((page - 1) * limit).limit(limit)
     
     courses = db_session.exec(statement).all()
     
@@ -1061,6 +1054,17 @@ def _delete_storage_file(file_path: str) -> None:
     """Delete a file from S3 or local filesystem."""
     from src.services.courses.transfer.storage_utils import delete_storage_file
     delete_storage_file(file_path)
+
+
+def _replace_uuids_in_content(content, uuid_map):
+    """Recursively replace UUID values in a nested dict/list structure."""
+    if isinstance(content, dict):
+        return {k: _replace_uuids_in_content(v, uuid_map) for k, v in content.items()}
+    elif isinstance(content, list):
+        return [_replace_uuids_in_content(item, uuid_map) for item in content]
+    elif isinstance(content, str) and content in uuid_map:
+        return uuid_map[content]
+    return content
 
 
 def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
@@ -1281,6 +1285,7 @@ async def clone_course(
             .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
             .where(ChapterActivity.chapter_id == original_chapter.id)
             .order_by(ChapterActivity.order)
+            .limit(200)
         )
         activity_results = db_session.exec(statement).all()
 
@@ -1330,7 +1335,7 @@ async def clone_course(
 
             # Clone blocks for dynamic activities
             if original_activity.activity_type.value == "TYPE_DYNAMIC":
-                statement = select(Block).where(Block.activity_id == original_activity.id)
+                statement = select(Block).where(Block.activity_id == original_activity.id).limit(200)
                 original_blocks = db_session.exec(statement).all()
 
                 # Map old block UUIDs to new block UUIDs (for updating activity content references)
@@ -1397,16 +1402,8 @@ async def clone_course(
 
                 # Update activity content to reference new block UUIDs
                 if new_content and block_uuid_map:
-                    content_str = str(new_content)
-                    for old_uuid, new_uuid in block_uuid_map.items():
-                        content_str = content_str.replace(old_uuid, new_uuid)
-                    # Try to parse back if it was modified
-                    try:
-                        import ast
-                        new_activity.content = ast.literal_eval(content_str)
-                        db_session.add(new_activity)
-                    except Exception:
-                        pass  # Keep original content if parsing fails
+                    new_activity.content = _replace_uuids_in_content(new_content, block_uuid_map)
+                    db_session.add(new_activity)
 
     # Single commit for all chapters, activities, blocks, and links
     db_session.commit()
