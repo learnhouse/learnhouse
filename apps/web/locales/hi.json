@@ -4541,5 +4541,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "लॉक",
+    "locked_title": "यह गतिविधि लॉक है",
+    "locked_auth_required": "इस गतिविधि तक पहुँचने के लिए साइन इन करें।",
+    "locked_restricted": "पहुँच पाने के लिए आपको सही उपयोगकर्ता समूह का सदस्य होना चाहिए। कोर्स एडमिन से आपको जोड़ने का अनुरोध करें।",
+    "activity_locked_hint": "इसे अनलॉक करने के लिए साइन इन करें या सही समूह में शामिल हों।",
+    "back_to_course": "कोर्स पर वापस जाएँ",
+    "lock": {
+      "header_access": "पहुँच",
+      "title_chapter": "इस अध्याय को लॉक करें",
+      "title_activity": "इस गतिविधि को लॉक करें",
+      "option_public_label": "सार्वजनिक",
+      "option_public_description": "कोई भी इसे खोल सकता है, बिना साइन इन किए भी।",
+      "option_authenticated_label": "केवल साइन इन वाले",
+      "option_authenticated_description": "केवल साइन इन किए उपयोगकर्ता ही खोल सकते हैं।",
+      "option_restricted_label": "केवल उपयोगकर्ता समूह",
+      "option_restricted_description": "केवल नीचे चुने गए समूहों के सदस्य।",
+      "trigger_public_title": "पहुँच: सभी के लिए खुली",
+      "trigger_authenticated_title": "पहुँच: केवल साइन इन उपयोगकर्ता",
+      "trigger_restricted_title": "पहुँच: विशिष्ट उपयोगकर्ता समूह",
+      "usergroups_header": "उपयोगकर्ता समूह",
+      "usergroups_none_assigned": "कोई समूह नहीं जोड़ा गया — केवल एडमिन खोल सकते हैं।",
+      "usergroups_remove_title": "हटाएँ",
+      "usergroups_loading": "समूह लोड हो रहे हैं…",
+      "usergroups_none_in_org": "इस संगठन में अभी तक कोई उपयोगकर्ता समूह नहीं है।",
+      "usergroups_all_assigned": "सभी समूह पहले से जोड़े गए हैं।",
+      "usergroups_add_a_group": "समूह जोड़ें",
+      "toast_add_error": "समूह जोड़ा नहीं जा सका",
+      "toast_remove_error": "समूह हटाया नहीं जा सका"
+    }
   }
 }

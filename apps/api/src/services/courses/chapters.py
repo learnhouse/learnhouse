@@ -17,6 +17,11 @@ from src.db.courses.chapters import (
 from src.db.courses.courses import Course
 from fastapi import HTTPException, status, Request
 from src.security.rbac import check_resource_access, AccessAction
+from src.services.courses.locks import (
+    batch_accessible_restricted_uuids,
+    is_locked_for_user,
+    is_org_admin,
+)
 
 
 ####################################################
@@ -128,6 +133,8 @@ async def get_chapter(
         **chapter.model_dump(),
         activities=[ActivityRead(**activity.model_dump()) for activity in activities],
     )
+
+    _apply_locks_to_chapters([chapter], course, current_user, db_session)
 
     return chapter
 
@@ -269,6 +276,7 @@ async def get_course_chapters(
                     Activity.update_date,
                     Activity.current_version,
                     Activity.last_modified_by_id,
+                    Activity.lock_type,
                     ChapterActivity.order,
                 )
                 .join(Activity, Activity.id == ChapterActivity.activity_id)  # type: ignore
@@ -297,6 +305,7 @@ async def get_course_chapters(
                     a_update,
                     a_version,
                     a_last_modified_by,
+                    a_lock_type,
                     _order,
                 ) = row
                 key = (chapter_id_val, a_id)
@@ -319,6 +328,7 @@ async def get_course_chapters(
                         update_date=a_update,
                         current_version=a_version,
                         last_modified_by_id=a_last_modified_by,
+                        lock_type=a_lock_type,
                     )
                 )
         else:
@@ -347,7 +357,89 @@ async def get_course_chapters(
         for chapter in chapters:
             chapter.activities = chapter_activities_map.get(chapter.id, [])
 
+    _apply_locks_to_chapters(chapters, course, current_user, db_session)
+
     return chapters
+
+
+def _apply_locks_to_chapters(
+    chapters: List[ChapterRead],
+    course: "Course | None",
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> None:
+    """Compute is_locked for each chapter + activity and strip content for locked items.
+
+    Admins/maintainers bypass all locks (still see the lock_type so they can edit
+    it in the dashboard). A locked chapter cascades — all its activities become
+    locked regardless of their own lock_type. A usergroup attached at the COURSE
+    level also grants access to all restricted chapters/activities inside that
+    course (same table, keyed on ``course_uuid``), so admins don't have to
+    re-assign the same group on every chapter.
+    """
+    if not chapters or course is None:
+        return
+
+    is_anon = isinstance(current_user, AnonymousUser)
+    admin = False if is_anon else is_org_admin(current_user.id, course.org_id, db_session)
+
+    # Admins see everything — no stripping.
+    if admin:
+        return
+
+    # Collect the uuids we need to check access on, in a single batch query:
+    # course_uuid (parent grant) + every restricted chapter_uuid + activity_uuid.
+    check_uuids: list[str] = [course.course_uuid]
+    for chapter in chapters:
+        if (chapter.lock_type or "public") == "restricted":
+            check_uuids.append(chapter.chapter_uuid)
+        for activity in chapter.activities:
+            if (activity.lock_type or "public") == "restricted":
+                check_uuids.append(activity.activity_uuid)
+
+    accessible: set[str] = set()
+    if not is_anon:
+        accessible = batch_accessible_restricted_uuids(
+            current_user.id, check_uuids, db_session
+        )
+
+    # Course-level usergroup membership unlocks everything below it.
+    course_grants_access = course.course_uuid in accessible
+
+    for chapter in chapters:
+        chapter_locked = False if course_grants_access else is_locked_for_user(
+            chapter.lock_type,
+            chapter.chapter_uuid,
+            course.org_id,
+            current_user,
+            db_session,
+            accessible_restricted_uuids=accessible,
+            is_admin=admin,
+        )
+        chapter.is_locked = chapter_locked
+        if chapter_locked:
+            chapter.description = ""
+            chapter.thumbnail_image = ""
+
+        for activity in chapter.activities:
+            if chapter_locked:
+                activity_locked = True
+            elif course_grants_access:
+                activity_locked = False
+            else:
+                activity_locked = is_locked_for_user(
+                    activity.lock_type,
+                    activity.activity_uuid,
+                    course.org_id,
+                    current_user,
+                    db_session,
+                    accessible_restricted_uuids=accessible,
+                    is_admin=admin,
+                )
+            activity.is_locked = activity_locked
+            if activity_locked:
+                activity.content = {}
+                activity.details = None
 
 
 # Important Note : this is legacy code that has been used because

@@ -33,6 +33,12 @@ class ActivitySubTypeEnum(str, Enum):
     SUBTYPE_SCORM_2004 = "SUBTYPE_SCORM_2004"
 
 
+class ActivityLockType(str, Enum):
+    PUBLIC = "public"                # anyone, including anonymous, can view
+    AUTHENTICATED = "authenticated"  # must be signed in
+    RESTRICTED = "restricted"        # only members of assigned usergroups
+
+
 class ActivityBase(SQLModel):
     name: str
     activity_type: ActivityTypeEnum
@@ -40,6 +46,7 @@ class ActivityBase(SQLModel):
     content: dict = Field(default_factory=dict, sa_column=Column(JSON))
     details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     published: bool = False
+    lock_type: ActivityLockType = ActivityLockType.PUBLIC
 
 
 class Activity(ActivityBase, table=True):
@@ -79,6 +86,7 @@ class ActivityUpdate(SQLModel):
     published: Optional[bool] = None
     published_version: Optional[int] = None
     version: Optional[int] = None
+    lock_type: Optional[ActivityLockType] = None
 
 
 class ActivityRead(ActivityBase):
@@ -93,3 +101,5 @@ class ActivityRead(ActivityBase):
     current_version: int = 1
     last_modified_by_id: Optional[int] = None
     last_modified_by_username: Optional[str] = None
+    # Computed per-request: true if current user cannot access this activity.
+    is_locked: bool = False

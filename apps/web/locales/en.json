@@ -4571,5 +4571,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Locked",
+    "locked_title": "This activity is locked",
+    "locked_auth_required": "You need to sign in to access this activity.",
+    "locked_restricted": "You need to be a member of the right user group to access this. Ask a course admin to add you.",
+    "activity_locked_hint": "Sign in or join the right user group to unlock this.",
+    "back_to_course": "Back to course",
+    "lock": {
+      "header_access": "Access",
+      "title_chapter": "Lock this chapter",
+      "title_activity": "Lock this activity",
+      "option_public_label": "Public",
+      "option_public_description": "Anyone can open this, even without signing in.",
+      "option_authenticated_label": "Signed-in only",
+      "option_authenticated_description": "Only logged-in users can open this.",
+      "option_restricted_label": "User groups only",
+      "option_restricted_description": "Only members of the user groups you pick below.",
+      "trigger_public_title": "Access: open to everyone",
+      "trigger_authenticated_title": "Access: signed-in users only",
+      "trigger_restricted_title": "Access: specific user groups only",
+      "usergroups_header": "User groups",
+      "usergroups_none_assigned": "No groups assigned — nobody but admins can open this.",
+      "usergroups_remove_title": "Remove",
+      "usergroups_loading": "Loading groups…",
+      "usergroups_none_in_org": "No user groups exist yet in this org.",
+      "usergroups_all_assigned": "All groups are already assigned.",
+      "usergroups_add_a_group": "Add a group",
+      "toast_add_error": "Could not add user group",
+      "toast_remove_error": "Could not remove user group"
+    }
   }
 }

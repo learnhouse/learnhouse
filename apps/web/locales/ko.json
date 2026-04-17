@@ -4530,5 +4530,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "잠김",
+    "locked_title": "이 활동은 잠겨 있습니다",
+    "locked_auth_required": "이 활동에 접근하려면 로그인해야 합니다.",
+    "locked_restricted": "접근하려면 해당 사용자 그룹의 멤버여야 합니다. 코스 관리자에게 추가를 요청하세요.",
+    "activity_locked_hint": "로그인하거나 해당 사용자 그룹에 참여하여 잠금을 해제하세요.",
+    "back_to_course": "코스로 돌아가기",
+    "lock": {
+      "header_access": "접근",
+      "title_chapter": "이 챕터 잠그기",
+      "title_activity": "이 활동 잠그기",
+      "option_public_label": "공개",
+      "option_public_description": "로그인하지 않아도 누구나 열 수 있습니다.",
+      "option_authenticated_label": "로그인한 사용자만",
+      "option_authenticated_description": "로그인한 사용자만 열 수 있습니다.",
+      "option_restricted_label": "사용자 그룹 전용",
+      "option_restricted_description": "아래에서 선택한 그룹의 멤버만.",
+      "trigger_public_title": "접근: 모두에게 공개",
+      "trigger_authenticated_title": "접근: 로그인한 사용자만",
+      "trigger_restricted_title": "접근: 특정 사용자 그룹만",
+      "usergroups_header": "사용자 그룹",
+      "usergroups_none_assigned": "지정된 그룹 없음 — 관리자만 열 수 있습니다.",
+      "usergroups_remove_title": "제거",
+      "usergroups_loading": "그룹 로드 중…",
+      "usergroups_none_in_org": "이 조직에는 아직 사용자 그룹이 없습니다.",
+      "usergroups_all_assigned": "모든 그룹이 이미 지정되었습니다.",
+      "usergroups_add_a_group": "그룹 추가",
+      "toast_add_error": "그룹을 추가할 수 없습니다",
+      "toast_remove_error": "그룹을 제거할 수 없습니다"
+    }
   }
 }

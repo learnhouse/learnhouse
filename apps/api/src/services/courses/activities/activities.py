@@ -15,6 +15,11 @@ import logging
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.activities.versioning import create_activity_version
+from src.services.courses.locks import (
+    batch_accessible_restricted_uuids,
+    is_locked_for_user,
+    is_org_admin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +147,79 @@ async def get_activity(
     # Include last modified user info
     activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
 
+    _apply_activity_lock(activity_read, activity, course, current_user, db_session)
+
     return activity_read
+
+
+def _apply_activity_lock(
+    activity_read: ActivityRead,
+    activity: Activity,
+    course: Course,
+    current_user,
+    db_session: Session,
+) -> None:
+    """Enforce chapter/activity lock_type on a single-activity read.
+
+    Admins/maintainers bypass. A usergroup attached at the course level also
+    unlocks every restricted chapter/activity inside that course (same
+    inheritance rule as the TOC read). For everyone else, if either the
+    activity or its parent chapter is locked, we scrub content/details and set
+    ``is_locked=True`` so the client renders a gate instead of an empty page.
+    """
+    is_anon = isinstance(current_user, AnonymousUser)
+    admin = False if is_anon else is_org_admin(current_user.id, course.org_id, db_session)
+    if admin:
+        return
+
+    parent_chapter_row = db_session.exec(
+        select(Chapter)
+        .join(ChapterActivity, ChapterActivity.chapter_id == Chapter.id)  # type: ignore
+        .where(ChapterActivity.activity_id == activity.id)
+    ).first()
+
+    check_uuids: list[str] = [course.course_uuid]
+    if (activity.lock_type or "public") == "restricted":
+        check_uuids.append(activity.activity_uuid)
+    if parent_chapter_row and (parent_chapter_row.lock_type or "public") == "restricted":
+        check_uuids.append(parent_chapter_row.chapter_uuid)
+
+    accessible: set[str] = set()
+    if not is_anon:
+        accessible = batch_accessible_restricted_uuids(
+            current_user.id, check_uuids, db_session
+        )
+
+    # Course-level usergroup membership unlocks everything below it.
+    if course.course_uuid in accessible:
+        return
+
+    chapter_locked = False
+    if parent_chapter_row:
+        chapter_locked = is_locked_for_user(
+            parent_chapter_row.lock_type,
+            parent_chapter_row.chapter_uuid,
+            course.org_id,
+            current_user,
+            db_session,
+            accessible_restricted_uuids=accessible,
+            is_admin=admin,
+        )
+
+    activity_locked = chapter_locked or is_locked_for_user(
+        activity.lock_type,
+        activity.activity_uuid,
+        course.org_id,
+        current_user,
+        db_session,
+        accessible_restricted_uuids=accessible,
+        is_admin=admin,
+    )
+
+    if activity_locked:
+        activity_read.content = {}
+        activity_read.details = None
+        activity_read.is_locked = True
 
 async def get_activityby_id(
     request: Request,

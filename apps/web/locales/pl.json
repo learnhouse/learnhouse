@@ -4543,5 +4543,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Zablokowane",
+    "locked_title": "Ta aktywność jest zablokowana",
+    "locked_auth_required": "Musisz się zalogować, aby uzyskać dostęp do tej aktywności.",
+    "locked_restricted": "Musisz być członkiem odpowiedniej grupy użytkowników, aby uzyskać dostęp. Poproś administratora kursu o dodanie.",
+    "activity_locked_hint": "Zaloguj się lub dołącz do odpowiedniej grupy użytkowników, aby odblokować.",
+    "back_to_course": "Powrót do kursu",
+    "lock": {
+      "header_access": "Dostęp",
+      "title_chapter": "Zablokuj ten rozdział",
+      "title_activity": "Zablokuj tę aktywność",
+      "option_public_label": "Publiczny",
+      "option_public_description": "Każdy może otworzyć, nawet bez logowania.",
+      "option_authenticated_label": "Tylko zalogowani",
+      "option_authenticated_description": "Tylko zalogowani użytkownicy mogą otworzyć.",
+      "option_restricted_label": "Tylko grupy użytkowników",
+      "option_restricted_description": "Tylko członkowie wybranych grup.",
+      "trigger_public_title": "Dostęp: otwarty dla wszystkich",
+      "trigger_authenticated_title": "Dostęp: tylko zalogowani użytkownicy",
+      "trigger_restricted_title": "Dostęp: wybrane grupy użytkowników",
+      "usergroups_header": "Grupy użytkowników",
+      "usergroups_none_assigned": "Brak przypisanych grup — tylko administratorzy mogą otworzyć.",
+      "usergroups_remove_title": "Usuń",
+      "usergroups_loading": "Ładowanie grup…",
+      "usergroups_none_in_org": "W tej organizacji nie ma jeszcze grup użytkowników.",
+      "usergroups_all_assigned": "Wszystkie grupy są już przypisane.",
+      "usergroups_add_a_group": "Dodaj grupę",
+      "toast_add_error": "Nie udało się dodać grupy",
+      "toast_remove_error": "Nie udało się usunąć grupy"
+    }
   }
 }

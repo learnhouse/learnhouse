@@ -4543,5 +4543,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "ล็อกอยู่",
+    "locked_title": "กิจกรรมนี้ถูกล็อก",
+    "locked_auth_required": "คุณต้องเข้าสู่ระบบเพื่อเข้าถึงกิจกรรมนี้",
+    "locked_restricted": "คุณต้องเป็นสมาชิกของกลุ่มผู้ใช้ที่ถูกต้อง โปรดขอให้ผู้ดูแลหลักสูตรเพิ่มคุณ",
+    "activity_locked_hint": "เข้าสู่ระบบหรือเข้าร่วมกลุ่มผู้ใช้ที่ถูกต้องเพื่อปลดล็อก",
+    "back_to_course": "กลับไปที่หลักสูตร",
+    "lock": {
+      "header_access": "การเข้าถึง",
+      "title_chapter": "ล็อกบทนี้",
+      "title_activity": "ล็อกกิจกรรมนี้",
+      "option_public_label": "สาธารณะ",
+      "option_public_description": "ใครก็เปิดได้ แม้ไม่ได้เข้าสู่ระบบ",
+      "option_authenticated_label": "เฉพาะผู้เข้าสู่ระบบ",
+      "option_authenticated_description": "เฉพาะผู้ใช้ที่เข้าสู่ระบบเท่านั้นที่เปิดได้",
+      "option_restricted_label": "เฉพาะกลุ่มผู้ใช้",
+      "option_restricted_description": "เฉพาะสมาชิกของกลุ่มที่เลือกด้านล่างเท่านั้น",
+      "trigger_public_title": "การเข้าถึง: เปิดสำหรับทุกคน",
+      "trigger_authenticated_title": "การเข้าถึง: เฉพาะผู้เข้าสู่ระบบ",
+      "trigger_restricted_title": "การเข้าถึง: กลุ่มผู้ใช้ที่กำหนด",
+      "usergroups_header": "กลุ่มผู้ใช้",
+      "usergroups_none_assigned": "ยังไม่ได้กำหนดกลุ่ม — เฉพาะผู้ดูแลเท่านั้นที่เปิดได้",
+      "usergroups_remove_title": "ลบ",
+      "usergroups_loading": "กำลังโหลดกลุ่ม…",
+      "usergroups_none_in_org": "ยังไม่มีกลุ่มผู้ใช้ในองค์กรนี้",
+      "usergroups_all_assigned": "กำหนดทุกกลุ่มแล้ว",
+      "usergroups_add_a_group": "เพิ่มกลุ่ม",
+      "toast_add_error": "ไม่สามารถเพิ่มกลุ่มได้",
+      "toast_remove_error": "ไม่สามารถลบกลุ่มได้"
+    }
   }
 }

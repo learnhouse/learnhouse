@@ -4543,5 +4543,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Kilitli",
+    "locked_title": "Bu etkinlik kilitli",
+    "locked_auth_required": "Bu etkinliğe erişmek için giriş yapmanız gerekiyor.",
+    "locked_restricted": "Erişmek için doğru kullanıcı grubunun üyesi olmalısınız. Sizi eklemesi için bir kurs yöneticisine danışın.",
+    "activity_locked_hint": "Bunu açmak için giriş yapın veya doğru kullanıcı grubuna katılın.",
+    "back_to_course": "Kursa dön",
+    "lock": {
+      "header_access": "Erişim",
+      "title_chapter": "Bu bölümü kilitle",
+      "title_activity": "Bu etkinliği kilitle",
+      "option_public_label": "Herkese açık",
+      "option_public_description": "Giriş yapmadan da herkes açabilir.",
+      "option_authenticated_label": "Yalnızca üyeler",
+      "option_authenticated_description": "Yalnızca giriş yapmış kullanıcılar açabilir.",
+      "option_restricted_label": "Yalnızca kullanıcı grupları",
+      "option_restricted_description": "Yalnızca aşağıda seçtiğiniz grupların üyeleri.",
+      "trigger_public_title": "Erişim: herkese açık",
+      "trigger_authenticated_title": "Erişim: yalnızca giriş yapanlar",
+      "trigger_restricted_title": "Erişim: belirli kullanıcı grupları",
+      "usergroups_header": "Kullanıcı grupları",
+      "usergroups_none_assigned": "Atanmış grup yok — yalnızca yöneticiler açabilir.",
+      "usergroups_remove_title": "Kaldır",
+      "usergroups_loading": "Gruplar yükleniyor…",
+      "usergroups_none_in_org": "Bu kuruluşta henüz kullanıcı grubu yok.",
+      "usergroups_all_assigned": "Tüm gruplar zaten atanmış.",
+      "usergroups_add_a_group": "Grup ekle",
+      "toast_add_error": "Grup eklenemedi",
+      "toast_remove_error": "Grup kaldırılamadı"
+    }
   }
 }

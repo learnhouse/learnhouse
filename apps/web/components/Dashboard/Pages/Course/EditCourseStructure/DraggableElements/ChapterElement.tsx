@@ -15,8 +15,15 @@ import React from 'react'
 import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
 import NewActivityButton from '../Buttons/NewActivityButton'
-import { deleteChapter, updateChapter } from '@services/courses/chapters'
+import {
+  addUserGroupToChapter,
+  deleteChapter,
+  getChapterUserGroups,
+  removeUserGroupFromChapter,
+  updateChapter,
+} from '@services/courses/chapters'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
+import LockPopover, { LockType } from './LockPopover'
 import { deleteAssignmentUsingActivityUUID } from '@services/courses/assignments'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
@@ -173,6 +180,37 @@ function ChapterElement(props: ChapterElementProps) {
     setSelectedChapter(undefined)
   }
 
+  async function changeChapterLockType(next: LockType) {
+    try {
+      await updateChapter(props.chapter.id, { lock_type: next }, access_token)
+      const updatedStructure = {
+        ...course.courseStructure,
+        chapters: course.courseStructure.chapters.map((ch: any) =>
+          ch.chapter_uuid === props.chapter.chapter_uuid ? { ...ch, lock_type: next } : ch
+        ),
+      }
+      dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
+      dispatchCourse({ type: 'setIsSaved' })
+      toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+      revalidateTags(['courses'], props.orgslug)
+    } catch {
+      toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
+    }
+  }
+
+  async function fetchChapterUserGroups() {
+    const groups = await getChapterUserGroups(props.chapter.chapter_uuid, access_token)
+    return Array.isArray(groups) ? groups : []
+  }
+
+  async function addChapterUserGroup(usergroup_uuid: string) {
+    await addUserGroupToChapter(props.chapter.chapter_uuid, usergroup_uuid, access_token)
+  }
+
+  async function removeChapterUserGroup(usergroup_uuid: string) {
+    await removeUserGroupFromChapter(props.chapter.chapter_uuid, usergroup_uuid, access_token)
+  }
+
   return (
     <Draggable
       key={props.chapter.chapter_uuid}
@@ -237,6 +275,14 @@ function ChapterElement(props: ChapterElementProps) {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <LockPopover
+                lockType={(props.chapter.lock_type as LockType) || 'public'}
+                onChangeLockType={changeChapterLockType}
+                fetchAssignedUserGroups={fetchChapterUserGroups}
+                addUserGroup={addChapterUserGroup}
+                removeUserGroup={removeChapterUserGroup}
+                resourceNoun="chapter"
+              />
               <MoreVertical size={15} className="text-gray-300" />
               <ConfirmationModal
                 confirmationButtonText={t('dashboard.courses.structure.modals.delete_chapter.button')}

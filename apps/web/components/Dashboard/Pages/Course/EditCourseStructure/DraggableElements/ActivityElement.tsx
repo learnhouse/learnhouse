@@ -1,17 +1,24 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
-import { deleteActivity, updateActivity } from '@services/courses/activities'
+import {
+  addUserGroupToActivity,
+  deleteActivity,
+  getActivityUserGroups,
+  removeUserGroupFromActivity,
+  updateActivity,
+} from '@services/courses/activities'
 import { revalidateTags } from '@services/utils/ts/requests'
+import LockPopover, { LockType } from './LockPopover'
 import {
   Backpack,
   Check,
   Eye,
+  EyeOff,
   File,
   FilePenLine,
   Globe,
   GripVertical,
   Loader2,
-  Lock,
   MoreVertical,
   Package,
   Pencil,
@@ -109,6 +116,44 @@ function ActivityElement(props: ActivitiyElementProps) {
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
     revalidateTags(['courses'], props.orgslug)
+  }
+
+  async function changeLockType(next: LockType) {
+    try {
+      const result = await updateActivity({ lock_type: next }, activityUUID, access_token)
+      if (result.success === false) {
+        toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
+        return
+      }
+      const updatedStructure = {
+        ...course.courseStructure,
+        chapters: course.courseStructure.chapters.map((ch: any) => ({
+          ...ch,
+          activities: ch.activities.map((a: any) =>
+            a.activity_uuid === activityUUID ? { ...a, lock_type: next } : a
+          ),
+        })),
+      }
+      dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
+      dispatchCourse({ type: 'setIsSaved' })
+      toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+      revalidateTags(['courses'], props.orgslug)
+    } catch {
+      toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
+    }
+  }
+
+  async function fetchActivityUserGroups() {
+    const groups = await getActivityUserGroups(activityUUID, access_token)
+    return Array.isArray(groups) ? groups : []
+  }
+
+  async function addActivityUserGroup(usergroup_uuid: string) {
+    await addUserGroupToActivity(activityUUID, usergroup_uuid, access_token)
+  }
+
+  async function removeActivityUserGroup(usergroup_uuid: string) {
+    await removeUserGroupFromActivity(activityUUID, usergroup_uuid, access_token)
   }
 
   async function changePublicStatus() {
@@ -283,12 +328,13 @@ function ActivityElement(props: ActivitiyElementProps) {
                 ) : props.activity.published ? (
                   <Globe size={10} />
                 ) : (
-                  <Lock size={10} />
+                  <EyeOff size={10} />
                 )}
                 {props.activity.published
                   ? t('dashboard.courses.structure.activity.status.published')
                   : t('dashboard.courses.structure.activity.status.draft')}
               </button>
+              <div className="w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
               {editHref ? (
                 <Link
@@ -311,6 +357,14 @@ function ActivityElement(props: ActivitiyElementProps) {
               >
                 <Eye size={15} />
               </Link>
+              <LockPopover
+                lockType={(props.activity.lock_type as LockType) || 'public'}
+                onChangeLockType={changeLockType}
+                fetchAssignedUserGroups={fetchActivityUserGroups}
+                addUserGroup={addActivityUserGroup}
+                removeUserGroup={removeActivityUserGroup}
+                resourceNoun="activity"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
@@ -324,7 +378,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={changePublicStatus} disabled={isPublishing}>
-                    {props.activity.published ? <Lock size={14} /> : <Globe size={14} />}
+                    {props.activity.published ? <EyeOff size={14} /> : <Globe size={14} />}
                     {props.activity.published
                       ? t('dashboard.courses.structure.actions.unpublish')
                       : t('dashboard.courses.structure.actions.publish')}

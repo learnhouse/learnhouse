@@ -4543,5 +4543,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Đã khóa",
+    "locked_title": "Hoạt động này đã bị khóa",
+    "locked_auth_required": "Bạn cần đăng nhập để truy cập hoạt động này.",
+    "locked_restricted": "Bạn cần là thành viên của nhóm người dùng phù hợp. Hãy nhờ quản trị khóa học thêm bạn vào.",
+    "activity_locked_hint": "Đăng nhập hoặc tham gia nhóm người dùng phù hợp để mở khóa.",
+    "back_to_course": "Quay lại khóa học",
+    "lock": {
+      "header_access": "Truy cập",
+      "title_chapter": "Khóa chương này",
+      "title_activity": "Khóa hoạt động này",
+      "option_public_label": "Công khai",
+      "option_public_description": "Ai cũng có thể mở, kể cả khi chưa đăng nhập.",
+      "option_authenticated_label": "Chỉ người đã đăng nhập",
+      "option_authenticated_description": "Chỉ người dùng đã đăng nhập mới mở được.",
+      "option_restricted_label": "Chỉ nhóm người dùng",
+      "option_restricted_description": "Chỉ thành viên của các nhóm bạn chọn bên dưới.",
+      "trigger_public_title": "Truy cập: mở cho tất cả",
+      "trigger_authenticated_title": "Truy cập: chỉ người đã đăng nhập",
+      "trigger_restricted_title": "Truy cập: các nhóm người dùng cụ thể",
+      "usergroups_header": "Nhóm người dùng",
+      "usergroups_none_assigned": "Chưa có nhóm nào — chỉ quản trị viên mới mở được.",
+      "usergroups_remove_title": "Xóa",
+      "usergroups_loading": "Đang tải các nhóm…",
+      "usergroups_none_in_org": "Tổ chức này chưa có nhóm người dùng nào.",
+      "usergroups_all_assigned": "Tất cả các nhóm đã được gán.",
+      "usergroups_add_a_group": "Thêm nhóm",
+      "toast_add_error": "Không thể thêm nhóm",
+      "toast_remove_error": "Không thể xóa nhóm"
+    }
   }
 }
