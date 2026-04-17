@@ -81,31 +81,11 @@ class TestSecurityRuntime:
 class TestSuperadminRuntime:
     def test_is_user_superadmin_true_and_false(self):
         db_session = Mock(spec=Session)
-        superadmin_user = User(
-            id=1,
-            username="admin",
-            first_name="Admin",
-            last_name="User",
-            email="admin@example.com",
-            password="",
-            user_uuid="user_1",
-            is_superadmin=True,
-        )
-        regular_user = User(
-            id=2,
-            username="user",
-            first_name="Regular",
-            last_name="User",
-            email="user@example.com",
-            password="",
-            user_uuid="user_2",
-            is_superadmin=False,
-        )
 
-        db_session.exec.return_value.first.return_value = superadmin_user
+        db_session.exec.return_value.first.return_value = True
         assert is_user_superadmin(1, db_session) is True
 
-        db_session.exec.return_value.first.return_value = regular_user
+        db_session.exec.return_value.first.return_value = False
         assert is_user_superadmin(2, db_session) is False
 
         db_session.exec.return_value.first.return_value = None

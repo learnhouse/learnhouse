@@ -29,7 +29,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-quiz', mergeAttributes(HTMLAttributes), 0]
+    return ['block-quiz', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

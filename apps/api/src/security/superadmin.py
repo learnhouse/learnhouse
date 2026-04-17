@@ -9,11 +9,8 @@ logger = logging.getLogger(__name__)
 
 def is_user_superadmin(user_id: int, db_session: Session) -> bool:
     """Check if a user is a superadmin by querying the database directly."""
-    statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
-    if user and user.is_superadmin:
-        return True
-    return False
+    result = db_session.exec(select(User.is_superadmin).where(User.id == user_id)).first()
+    return bool(result)
 
 
 async def _get_current_user_lazy(request: Request, db_session: Session = Depends(get_db_session)):

@@ -193,7 +193,6 @@ class TestRBACRuntime:
         session = _session_with_results(
             _result(all=[SimpleNamespace(usergroup_id=1)]),
             _result(first=None),
-            _result(all=[SimpleNamespace(usergroup_id=8)]),
             _result(first=None),
         )
 
@@ -204,7 +203,6 @@ class TestRBACRuntime:
         session = _session_with_results(
             _result(all=[SimpleNamespace(usergroup_id=1)]),
             _result(first=None),
-            _result(all=[SimpleNamespace(usergroup_id=8)]),
             _result(first=SimpleNamespace(id=77, name="VIP", amount=49.0, currency="EUR")),
         )
 

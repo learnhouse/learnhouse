@@ -1130,6 +1130,7 @@ async def clone_course(
         file_exists,
         list_directory,
     )
+    from collections import defaultdict
     from src.db.courses.chapters import Chapter
     from src.db.courses.activities import Activity
     from src.db.courses.blocks import Block
@@ -1246,6 +1247,33 @@ async def clone_course(
     )
     chapter_results = db_session.exec(statement).all()
 
+    # Pre-fetch all activities for every chapter in one query to avoid N+1
+    _original_chapter_ids = [ch.id for ch, _ in chapter_results]
+    _all_act_results = db_session.exec(
+        select(Activity, ChapterActivity)
+        .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+        .where(ChapterActivity.chapter_id.in_(_original_chapter_ids))
+        .order_by(ChapterActivity.order)
+    ).all()
+    _activities_by_chapter: dict = defaultdict(list)
+    for _act, _ca in _all_act_results:
+        _activities_by_chapter[_ca.chapter_id].append((_act, _ca))
+
+    # Pre-fetch all blocks for TYPE_DYNAMIC activities in one query to avoid N+1
+    _dynamic_activity_ids = [
+        _act.id for _act, _ in _all_act_results
+        if _act.activity_type.value == "TYPE_DYNAMIC"
+    ]
+    if _dynamic_activity_ids:
+        _all_blocks = db_session.exec(
+            select(Block).where(Block.activity_id.in_(_dynamic_activity_ids))
+        ).all()
+        _blocks_by_activity: dict = defaultdict(list)
+        for _blk in _all_blocks:
+            _blocks_by_activity[_blk.activity_id].append(_blk)
+    else:
+        _blocks_by_activity = {}
+
     # Map old chapter IDs to new chapters
     chapter_id_map = {}
 
@@ -1279,15 +1307,8 @@ async def clone_course(
         )
         db_session.add(new_course_chapter)
 
-        # Get activities for this chapter with order
-        statement = (
-            select(Activity, ChapterActivity)
-            .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
-            .where(ChapterActivity.chapter_id == original_chapter.id)
-            .order_by(ChapterActivity.order)
-            .limit(200)
-        )
-        activity_results = db_session.exec(statement).all()
+        # Use pre-fetched activities (already ordered by ChapterActivity.order)
+        activity_results = _activities_by_chapter.get(original_chapter.id, [])
 
         for original_activity, chapter_activity in activity_results:
             new_activity_uuid = f"activity_{uuid4()}"
@@ -1333,10 +1354,9 @@ async def clone_course(
             # This handles all activity types: videos, documents, SCORM, assignments, etc.
             _copy_storage_directory(original_activity_path, new_activity_path)
 
-            # Clone blocks for dynamic activities
+            # Clone blocks for dynamic activities (use pre-fetched data)
             if original_activity.activity_type.value == "TYPE_DYNAMIC":
-                statement = select(Block).where(Block.activity_id == original_activity.id).limit(200)
-                original_blocks = db_session.exec(statement).all()
+                original_blocks = _blocks_by_activity.get(original_activity.id, [])
 
                 # Map old block UUIDs to new block UUIDs (for updating activity content references)
                 block_uuid_map = {}

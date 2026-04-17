@@ -328,44 +328,26 @@ async def get_activities(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> list[ActivityRead]:
-    # Get activities that are published and belong to the chapter
+    # Single query joining Activity, Chapter, and Course to avoid 3 sequential queries
     statement = (
-        select(Activity)
-        .join(ChapterActivity)
+        select(Activity, Chapter, Course)
+        .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+        .join(Chapter, ChapterActivity.chapter_id == Chapter.id)
+        .join(Course, Chapter.course_id == Course.id)
         .where(
             ChapterActivity.chapter_id == coursechapter_id,
-            Activity.published == True
+            Activity.published == True,
         )
     )
-    activities = db_session.exec(statement).all()
+    results = db_session.exec(statement).all()
 
-    if not activities:
+    if not results:
         raise HTTPException(
             status_code=404,
             detail="No published activities found",
         )
 
-    # RBAC check
-    statement = select(Chapter).where(Chapter.id == coursechapter_id)
-    chapter = db_session.exec(statement).first()
-    
-    if not chapter:
-        raise HTTPException(
-            status_code=404,
-            detail="Chapter not found",
-        )
-
-    statement = select(Course).where(Course.id == chapter.course_id)
-    course = db_session.exec(statement).first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
-
+    _, chapter, course = results[0]
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    activities = [ActivityRead.model_validate(activity) for activity in activities]
-
-    return activities
+    return [ActivityRead.model_validate(activity) for activity, _, _ in results]

@@ -17,7 +17,7 @@ async def apply_course_contributor(
 ):
     """
     Apply to become a course contributor
-    
+
     SECURITY NOTES:
     - Any authenticated user can apply to become a contributor
     - Applications are created with PENDING status
@@ -82,7 +82,7 @@ async def update_course_contributor(
 ):
     """
     Update a course contributor's role and status
-    
+
     SECURITY NOTES:
     - Only course owners (CREATOR, MAINTAINER) or admins can update contributors
     - Cannot modify the role of the course creator
@@ -149,7 +149,7 @@ async def get_course_contributors(
 ) -> List[dict]:
     """
     Get all contributors for a course with their user information
-    
+
     SECURITY NOTES:
     - Requires read access to the course
     - Contributors are visible to anyone with course read access
@@ -196,7 +196,7 @@ async def add_bulk_course_contributors(
 ):
     """
     Add multiple contributors to a course by their usernames
-    
+
     SECURITY NOTES:
     - Only course owners (CREATOR, MAINTAINER) or admins can add contributors
     - Requires strict course ownership checks
@@ -226,29 +226,37 @@ async def add_bulk_course_contributors(
 
     current_time = str(datetime.now())
 
-    for username in usernames:
-        # Find user by username
-        user_statement = select(User).where(User.username == username)
-        user = db_session.exec(user_statement).first()
+    # Batch fetch all users and existing authorships to avoid N+1 queries
+    found_users = db_session.exec(
+        select(User).where(User.username.in_(usernames))
+    ).all()
+    user_map = {u.username: u for u in found_users if u.id is not None}
 
-        if not user or user.id is None:
+    found_user_ids = [u.id for u in user_map.values()]
+    if found_user_ids:
+        existing_authorships = db_session.exec(
+            select(ResourceAuthor).where(
+                and_(
+                    ResourceAuthor.resource_uuid == course_uuid,
+                    ResourceAuthor.user_id.in_(found_user_ids),
+                )
+            )
+        ).all()
+        authorship_map = {ra.user_id: ra for ra in existing_authorships}
+    else:
+        authorship_map = {}
+
+    for username in usernames:
+        user = user_map.get(username)
+
+        if not user:
             results["failed"].append({
                 "username": username,
                 "reason": "User not found or invalid"
             })
             continue
 
-        # Check if user already has any authorship role for this course
-        existing_authorship = db_session.exec(
-            select(ResourceAuthor).where(
-                and_(
-                    ResourceAuthor.resource_uuid == course_uuid,
-                    ResourceAuthor.user_id == user.id
-                )
-            )
-        ).first()
-
-        if existing_authorship:
+        if user.id in authorship_map:
             results["failed"].append({
                 "username": username,
                 "reason": "User already has an authorship role for this course"
@@ -303,7 +311,7 @@ async def remove_bulk_course_contributors(
 ):
     """
     Remove multiple contributors from a course by their usernames
-    
+
     SECURITY NOTES:
     - Only course owners (CREATOR, MAINTAINER) or admins can remove contributors
     - Requires strict course ownership checks
@@ -332,27 +340,37 @@ async def remove_bulk_course_contributors(
         "failed": []
     }
 
-    for username in usernames:
-        # Find user by username
-        user_statement = select(User).where(User.username == username)
-        user = db_session.exec(user_statement).first()
+    # Batch fetch all users and existing authorships to avoid N+1 queries
+    found_users = db_session.exec(
+        select(User).where(User.username.in_(usernames))
+    ).all()
+    user_map = {u.username: u for u in found_users if u.id is not None}
 
-        if not user or user.id is None:
+    found_user_ids = [u.id for u in user_map.values()]
+    if found_user_ids:
+        existing_authorships = db_session.exec(
+            select(ResourceAuthor).where(
+                and_(
+                    ResourceAuthor.resource_uuid == course_uuid,
+                    ResourceAuthor.user_id.in_(found_user_ids),
+                )
+            )
+        ).all()
+        authorship_map = {ra.user_id: ra for ra in existing_authorships}
+    else:
+        authorship_map = {}
+
+    for username in usernames:
+        user = user_map.get(username)
+
+        if not user:
             results["failed"].append({
                 "username": username,
                 "reason": "User not found or invalid"
             })
             continue
 
-        # Check if user has any authorship role for this course
-        existing_authorship = db_session.exec(
-            select(ResourceAuthor).where(
-                and_(
-                    ResourceAuthor.resource_uuid == course_uuid,
-                    ResourceAuthor.user_id == user.id
-                )
-            )
-        ).first()
+        existing_authorship = authorship_map.get(user.id)
 
         if not existing_authorship:
             results["failed"].append({

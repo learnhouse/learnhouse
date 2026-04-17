@@ -68,7 +68,7 @@ async def check_usergroup_access(
     Returns:
         bool: True if user has access (either no UserGroup restrictions or user is a member)
     """
-    logger.info(f"[USERGROUP_ACCESS] Checking access for resource_uuid={resource_uuid}, user_id={user_id}")
+    logger.info("[USERGROUP_ACCESS] Checking access for resource_uuid=%s, user_id=%s", resource_uuid, user_id)
 
     # Check if resource has any UserGroups linked
     usergroup_stmt = select(UserGroupResource).where(
@@ -76,7 +76,7 @@ async def check_usergroup_access(
     )
     usergroup_resources = db_session.exec(usergroup_stmt).all()
 
-    logger.info(f"[USERGROUP_ACCESS] Found {len(usergroup_resources)} UserGroupResource entries for resource")
+    logger.info("[USERGROUP_ACCESS] Found %d UserGroupResource entries for resource", len(usergroup_resources))
 
     # If no UserGroups linked, resource is accessible to all authenticated users
     if not usergroup_resources:
@@ -85,7 +85,7 @@ async def check_usergroup_access(
 
     # Check if user is a member of any linked UserGroup
     usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
-    logger.info(f"[USERGROUP_ACCESS] UserGroup IDs linked to resource: {usergroup_ids}")
+    logger.info("[USERGROUP_ACCESS] UserGroup IDs linked to resource: %s", usergroup_ids)
 
     membership_stmt = select(UserGroupUser).where(
         UserGroupUser.usergroup_id.in_(usergroup_ids),
@@ -94,22 +94,16 @@ async def check_usergroup_access(
     membership = db_session.exec(membership_stmt).first()
 
     if membership:
-        logger.info(f"[USERGROUP_ACCESS] User {user_id} IS a member of UserGroup {membership.usergroup_id}, granting access")
+        logger.info("[USERGROUP_ACCESS] User %s IS a member of UserGroup %s, granting access", user_id, membership.usergroup_id)
     else:
-        logger.info(f"[USERGROUP_ACCESS] User {user_id} is NOT a member of any linked UserGroups {usergroup_ids}, denying access")
-
-        # Debug: List all UserGroupUser entries for this user
-        all_user_memberships = db_session.exec(
-            select(UserGroupUser).where(UserGroupUser.user_id == user_id)
-        ).all()
-        logger.info(f"[USERGROUP_ACCESS] User {user_id} is member of UserGroups: {[m.usergroup_id for m in all_user_memberships]}")
+        logger.info("[USERGROUP_ACCESS] User %s is NOT a member of any linked UserGroups %s, denying access", user_id, usergroup_ids)
 
         # Check if any of the blocking UserGroups is tied to a paid offer
         # If so, return HTTP 402 Payment Required (semantically distinct from 403 Forbidden)
         for ugid in usergroup_ids:
             offer_meta = await _get_offer_for_usergroup(ugid, db_session)
             if offer_meta:
-                logger.info(f"[USERGROUP_ACCESS] Resource is behind paid offer {offer_meta['offer_id']}, returning 402")
+                logger.info("[USERGROUP_ACCESS] Resource is behind paid offer %s, returning 402", offer_meta["offer_id"])
                 raise HTTPException(
                     status_code=status.HTTP_402_PAYMENT_REQUIRED,
                     detail={
@@ -334,22 +328,22 @@ async def authorization_verify_based_on_roles_and_authorship(
     element_uuid: str,
     db_session: Session,
 ):
-    logger.info(f"[RBAC] authorization_verify_based_on_roles_and_authorship: user_id={user_id}, action={action}, element_uuid={element_uuid}")
+    logger.info("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
     # Superadmin bypass - full access to all resources
     if is_user_superadmin(user_id, db_session):
-        logger.info(f"[RBAC] Superadmin bypass for user_id={user_id}")
+        logger.info("[RBAC] Superadmin bypass for user_id=%s", user_id)
         return True
 
     isAuthor = await authorization_verify_if_user_is_author(
         request, user_id, action, element_uuid, db_session
     )
-    logger.info(f"[RBAC] isAuthor={isAuthor}")
+    logger.info("[RBAC] isAuthor=%s", isAuthor)
 
     isRole = await authorization_verify_based_on_roles(
         request, user_id, action, element_uuid, db_session
     )
-    logger.info(f"[RBAC] isRole={isRole}")
+    logger.info("[RBAC] isRole=%s", isRole)
 
     # For read actions, also check UserGroup membership
     # UserGroups allow access to resources that are not public but restricted to group members
@@ -358,7 +352,7 @@ async def authorization_verify_based_on_roles_and_authorship(
         hasUserGroupAccess = await check_usergroup_access(
             element_uuid, user_id, db_session
         )
-    logger.info(f"[RBAC] hasUserGroupAccess={hasUserGroupAccess}")
+    logger.info("[RBAC] hasUserGroupAccess=%s", hasUserGroupAccess)
 
     # Enrollment-based access: users who have paid for this resource always get access,
     # regardless of UserGroup membership state (e.g. if an admin removes them from the group).
@@ -369,13 +363,13 @@ async def authorization_verify_based_on_roles_and_authorship(
             hasPaidEnrollmentAccess = await check_enrollment_access(element_uuid, user_id, db_session)
         except Exception:
             pass  # payments module not available (community edition) — skip silently
-    logger.info(f"[RBAC] hasPaidEnrollmentAccess={hasPaidEnrollmentAccess}")
+    logger.info("[RBAC] hasPaidEnrollmentAccess=%s", hasPaidEnrollmentAccess)
 
     if isAuthor or isRole or hasUserGroupAccess or hasPaidEnrollmentAccess:
-        logger.info(f"[RBAC] Access GRANTED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess}, hasPaidEnrollmentAccess={hasPaidEnrollmentAccess})")
+        logger.info("[RBAC] Access GRANTED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
         return True
     else:
-        logger.info(f"[RBAC] Access DENIED (isAuthor={isAuthor}, isRole={isRole}, hasUserGroupAccess={hasUserGroupAccess}, hasPaidEnrollmentAccess={hasPaidEnrollmentAccess})")
+        logger.info("[RBAC] Access DENIED (isAuthor=%s, isRole=%s, hasUserGroupAccess=%s, hasPaidEnrollmentAccess=%s)", isAuthor, isRole, hasUserGroupAccess, hasPaidEnrollmentAccess)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User rights (roles & authorship) : You don't have the right to perform this action",
