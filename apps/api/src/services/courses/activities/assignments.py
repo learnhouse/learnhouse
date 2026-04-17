@@ -892,9 +892,11 @@ async def read_assignment_tasks(
             detail="Course not found",
         )
 
-    # Find assignments tasks for an assignment
-    statement = select(AssignmentTask).where(
-        AssignmentTask.assignment_id == assignment.id
+    # Find assignments tasks for an assignment, most recently created first
+    statement = (
+        select(AssignmentTask)
+        .where(AssignmentTask.assignment_id == assignment.id)
+        .order_by(AssignmentTask.creation_date.desc(), AssignmentTask.id.desc())
     )
 
     # RBAC check

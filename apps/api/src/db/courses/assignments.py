@@ -141,6 +141,8 @@ class AssignmentTaskRead(AssignmentTaskBase):
 
     id: int
     assignment_task_uuid: str
+    creation_date: str
+    update_date: str
 
 
 class AssignmentTaskUpdate(SQLModel):
