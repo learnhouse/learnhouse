@@ -94,5 +94,7 @@ export async function getUserEnrollments(orgId: number, access_token: string) {
     `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/enrollments/mine`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
-  return getResponseMetadata(result);
+  const metadata = await getResponseMetadata(result);
+  if (!metadata.success) throw new Error(metadata.HTTPmessage || 'Failed to fetch enrollments')
+  return metadata;
 }

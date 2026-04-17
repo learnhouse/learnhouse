@@ -47,15 +47,15 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     return false
   }, [session?.data?.roles, session?.data?.user?.is_superadmin, org?.id, session.status])
 
-  if (orgError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!org || !session) return <div></div>
-  if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
-
-  const contextValue: OrgContextValue = {
+  const contextValue = useMemo<OrgContextValue>(() => ({
     org,
     isUserPartOfTheOrg,
     orgslug,
-  }
+  }), [org, isUserPartOfTheOrg, orgslug])
+
+  if (orgError) return <ErrorUI message='An error occurred while fetching data' />
+  if (!org || !session) return <div></div>
+  if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
 }
