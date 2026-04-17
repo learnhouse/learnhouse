@@ -5,7 +5,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, SquareUserRound, Users, X } from 'lucide-react'
+import { Check, Globe, SquareUserRound, Users, X } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
@@ -18,13 +18,79 @@ type EditCourseAccessProps = {
     course_uuid?: string
 }
 
+// forwardRef so Radix Dialog.Trigger asChild can pass onClick/ref through
+type AccessCardProps = {
+    icon: React.ElementType
+    title: string
+    description: string
+    selected: boolean
+} & React.HTMLAttributes<HTMLDivElement>
+
+const AccessCard = React.forwardRef<HTMLDivElement, AccessCardProps>(
+    function AccessCard({ icon: Icon, title, description, selected, className, ...rest }, ref) {
+        return (
+            <div
+                ref={ref}
+                {...rest}
+                className={`
+                    relative w-full rounded-xl p-6 cursor-pointer select-none
+                    flex flex-col items-center justify-center text-center
+                    transition-all duration-150
+                    ${selected
+                        ? 'bg-white border border-indigo-200 ring-1 ring-indigo-100 shadow-xs'
+                        : 'bg-gray-50/80 border border-gray-100 hover:bg-gray-50 hover:border-gray-200'
+                    }
+                    ${className || ''}
+                `}
+                style={{ minHeight: 180 }}
+            >
+                {selected && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full pl-1 pr-2 py-0.5">
+                        <span className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center">
+                            <Check size={10} strokeWidth={3.5} className="text-white" />
+                        </span>
+                        <span>Active</span>
+                    </div>
+                )}
+
+                <div
+                    className={`
+                        w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-150
+                        ${selected ? 'bg-indigo-50 text-indigo-600' : 'bg-white border border-gray-100 text-gray-400'}
+                    `}
+                >
+                    <Icon size={24} strokeWidth={1.75} />
+                </div>
+                <div className={`mt-4 text-base sm:text-lg font-bold tracking-tight ${selected ? 'text-gray-900' : 'text-gray-600'}`}>
+                    {title}
+                </div>
+                <div className="mt-1 text-xs sm:text-sm text-gray-400 leading-snug max-w-[420px]">
+                    {description}
+                </div>
+            </div>
+        )
+    }
+)
+
+function SkeletonCard() {
+    return (
+        <div
+            className="w-full rounded-xl bg-gray-50/80 border border-gray-100 animate-pulse flex flex-col items-center justify-center p-6"
+            style={{ minHeight: 180 }}
+        >
+            <div className="w-12 h-12 rounded-xl bg-gray-100" />
+            <div className="mt-4 h-4 w-28 rounded bg-gray-100" />
+            <div className="mt-2 h-3 w-48 rounded bg-gray-100" />
+        </div>
+    )
+}
+
 function EditCourseAccess(props: EditCourseAccessProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const org = useOrg() as any;
 
-    // Use the new field sync hook
     const {
         syncChanges,
         cancelPendingSync,
@@ -34,17 +100,17 @@ function EditCourseAccess(props: EditCourseAccessProps) {
     } = useCourseFieldSync('editCourseAccess');
 
     const { data: usergroups } = useSWR(
-        courseStructure?.course_uuid && org?.id ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}` : null,
+        courseStructure?.course_uuid && org?.id
+            ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}`
+            : null,
         (url) => swrFetcher(url, access_token),
         { revalidateOnFocus: false }
     );
 
-    // Track local public state
     const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined);
     const hasInitializedRef = useRef(false);
     const previousPublicRef = useRef<boolean | undefined>(undefined);
 
-    // Initialize local state from courseStructure
     useEffect(() => {
         if (!isLoading && courseStructure?.public !== undefined && !hasInitializedRef.current) {
             setIsClientPublic(courseStructure.public);
@@ -53,97 +119,111 @@ function EditCourseAccess(props: EditCourseAccessProps) {
         }
     }, [isLoading, courseStructure?.public]);
 
-    // Sync public state changes to context
     useEffect(() => {
-        // Skip if not initialized or values haven't changed
         if (!hasInitializedRef.current || isLoading || isSaving) return;
         if (isClientPublic === undefined) return;
         if (isClientPublic === previousPublicRef.current) return;
 
-        // Sync the change immediately (no debounce for toggle actions)
         syncChanges({ public: isClientPublic }, true);
         previousPublicRef.current = isClientPublic;
     }, [isClientPublic, isLoading, isSaving, syncChanges]);
 
-    // Cleanup on unmount
     useEffect(() => {
-        return () => {
-            cancelPendingSync();
-        };
+        return () => { cancelPendingSync(); };
     }, [cancelPendingSync]);
 
     const handleSetPublic = useCallback((value: boolean) => {
         setIsClientPublic(value);
     }, []);
 
+    if (!courseStructure) return null;
+
+    const isReady = isClientPublic !== undefined;
+
     return (
         <div>
-            {courseStructure && (
-                <div>
-                    <div className="h-6"></div>
-                    <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-                        <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                            <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.access.title')}</h1>
-                            <h2 className="text-gray-500 text-xs sm:text-sm">
-                                {t('dashboard.courses.access.subtitle')}
-                            </h2>
-                        </div>
-                        <div className={`flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
-                            <ConfirmationModal
-                                confirmationButtonText={t('dashboard.courses.access.public.confirmation_button')}
-                                confirmationMessage={t('dashboard.courses.access.public.confirmation_message')}
-                                dialogTitle={t('dashboard.courses.access.public.confirmation_title')}
-                                dialogTrigger={
-                                    <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                                        {isClientPublic && (
-                                            <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                {t('dashboard.courses.access.public.active')}
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                                            <Globe className="text-slate-400" size={32} />
-                                            <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                {t('dashboard.courses.access.public.title')}
-                                            </div>
-                                            <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                {t('dashboard.courses.access.public.description')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                functionToExecute={() => handleSetPublic(true)}
-                                status="info"
-                            />
-                            <ConfirmationModal
-                                confirmationButtonText={t('dashboard.courses.access.users_only.confirmation_button')}
-                                confirmationMessage={t('dashboard.courses.access.users_only.confirmation_message')}
-                                dialogTitle={t('dashboard.courses.access.users_only.confirmation_title')}
-                                dialogTrigger={
-                                    <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
-                                        {!isClientPublic && (
-                                            <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                {t('dashboard.courses.access.users_only.active')}
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
-                                            <Users className="text-slate-400" size={32} />
-                                            <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                {t('dashboard.courses.access.users_only.title')}
-                                            </div>
-                                            <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                {t('dashboard.courses.access.users_only.description')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                functionToExecute={() => handleSetPublic(false)}
-                                status="info"
-                            />
-                        </div>
-                        {!isClientPublic && <UserGroupsSection usergroups={usergroups} />}
+            <div className="h-6" />
+            <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+
+                {/* Header — matches OrgUsers header */}
+                <div className="px-6 py-5 border-b border-gray-100">
+                    <h1 className="font-bold text-xl text-gray-800">
+                        {t('dashboard.courses.access.title')}
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {t('dashboard.courses.access.subtitle')}
+                    </p>
+                </div>
+
+                {/* Access type cards */}
+                <div className="px-6 py-5 border-b border-gray-100">
+                    <div className={`flex flex-col sm:flex-row gap-3 transition-opacity duration-200 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
+                        {!isReady ? (
+                            <>
+                                <SkeletonCard />
+                                <SkeletonCard />
+                            </>
+                        ) : (
+                            <>
+                                {/* Public */}
+                                {isClientPublic === true ? (
+                                    <AccessCard
+                                        icon={Globe}
+                                        title={t('dashboard.courses.access.public.title')}
+                                        description={t('dashboard.courses.access.public.description')}
+                                        selected
+                                    />
+                                ) : (
+                                    <ConfirmationModal
+                                        confirmationButtonText={t('dashboard.courses.access.public.confirmation_button')}
+                                        confirmationMessage={t('dashboard.courses.access.public.confirmation_message')}
+                                        dialogTitle={t('dashboard.courses.access.public.confirmation_title')}
+                                        dialogTrigger={
+                                            <AccessCard
+                                                icon={Globe}
+                                                title={t('dashboard.courses.access.public.title')}
+                                                description={t('dashboard.courses.access.public.description')}
+                                                selected={false}
+                                            />
+                                        }
+                                        functionToExecute={() => handleSetPublic(true)}
+                                        status="info"
+                                    />
+                                )}
+
+                                {/* UsersOnly */}
+                                {isClientPublic === false ? (
+                                    <AccessCard
+                                        icon={Users}
+                                        title={t('dashboard.courses.access.users_only.title')}
+                                        description={t('dashboard.courses.access.users_only.description')}
+                                        selected
+                                    />
+                                ) : (
+                                    <ConfirmationModal
+                                        confirmationButtonText={t('dashboard.courses.access.users_only.confirmation_button')}
+                                        confirmationMessage={t('dashboard.courses.access.users_only.confirmation_message')}
+                                        dialogTitle={t('dashboard.courses.access.users_only.confirmation_title')}
+                                        dialogTrigger={
+                                            <AccessCard
+                                                icon={Users}
+                                                title={t('dashboard.courses.access.users_only.title')}
+                                                description={t('dashboard.courses.access.users_only.description')}
+                                                selected={false}
+                                            />
+                                        }
+                                        functionToExecute={() => handleSetPublic(false)}
+                                        status="info"
+                                    />
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
-            )}
+
+                {/* User groups (Users-table styled) */}
+                {isClientPublic === false && <UserGroupsSection usergroups={usergroups} />}
+            </div>
         </div>
     );
 }
@@ -158,74 +238,132 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
 
     const removeUserGroupLink = async (usergroup_id: number) => {
         try {
-            const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, org.id, access_token);
+            const res = await unLinkResourcesToUserGroup(
+                usergroup_id,
+                course.courseStructure.course_uuid,
+                org.id,
+                access_token
+            );
             if (res.status === 200) {
                 toast.success(t('dashboard.courses.access.usergroups.toasts.unlink_success'));
                 mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}?org_id=${org.id}`);
             } else {
                 toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }));
             }
-        } catch (error) {
+        } catch {
             toast.error(t('dashboard.courses.access.usergroups.toasts.unlink_error'));
         }
     };
 
+    const hasGroups = usergroups && usergroups.length > 0;
+
     return (
         <>
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.access.usergroups.title')}</h1>
-                <h2 className="text-gray-500 text-xs sm:text-sm">
-                    {t('dashboard.courses.access.usergroups.subtitle')}
-                </h2>
+            {/* Section header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <div className="flex-1">
+                    <h2 className="font-bold text-xl text-gray-800">
+                        {t('dashboard.courses.access.usergroups.title')}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {t('dashboard.courses.access.usergroups.subtitle')}
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    {hasGroups && (
+                        <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
+                            {usergroups.length} {usergroups.length === 1 ? 'group' : 'groups'}
+                        </div>
+                    )}
+                    <Modal
+                        isDialogOpen={userGroupModal}
+                        onOpenChange={() => setUserGroupModal(!userGroupModal)}
+                        minHeight="no-min"
+                        minWidth="md"
+                        dialogContent={<LinkToUserGroup setUserGroupModal={setUserGroupModal} />}
+                        dialogTitle={t('dashboard.courses.access.usergroups.modals.link_title')}
+                        dialogDescription={t('dashboard.courses.access.usergroups.modals.link_description')}
+                        dialogTrigger={
+                            <button className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 transition-all">
+                                <SquareUserRound className="w-4 h-4" />
+                                <span>{t('dashboard.courses.access.usergroups.actions.link_to_usergroup')}</span>
+                            </button>
+                        }
+                    />
+                </div>
             </div>
-            <div className="overflow-x-auto">
-                <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-                    <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-                        <tr className="font-bolder text-sm">
-                            <th className="py-3 px-4">{t('dashboard.courses.access.usergroups.table.name')}</th>
-                            <th className="py-3 px-4">{t('dashboard.courses.access.usergroups.table.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="mt-5 bg-white rounded-md">
-                        {usergroups?.map((usergroup: any) => (
-                            <tr key={usergroup.invite_code_uuid} className="border-b border-gray-100 text-sm">
-                                <td className="py-3 px-4">{usergroup.name}</td>
-                                <td className="py-3 px-4">
-                                    <ConfirmationModal
-                                        confirmationButtonText={t('dashboard.courses.access.usergroups.modals.unlink_button')}
-                                        confirmationMessage={t('dashboard.courses.access.usergroups.modals.unlink_message')}
-                                        dialogTitle={t('dashboard.courses.access.usergroups.modals.unlink_title')}
-                                        dialogTrigger={
-                                            <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
-                                                <X className="w-4 h-4" />
-                                                <span>{t('dashboard.courses.access.usergroups.actions.delete_link')}</span>
-                                            </button>
-                                        }
-                                        functionToExecute={() => removeUserGroupLink(usergroup.id)}
-                                        status="warning"
-                                    />
-                                </td>
+
+            {/* Table / Empty state */}
+            <div className="relative">
+                {hasGroups ? (
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                                    {t('dashboard.courses.access.usergroups.table.name')}
+                                </th>
+                                <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                                    {t('dashboard.courses.access.usergroups.table.actions')}
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className="flex flex-row-reverse mt-3 mr-2">
-                <Modal
-                    isDialogOpen={userGroupModal}
-                    onOpenChange={() => setUserGroupModal(!userGroupModal)}
-                    minHeight="no-min"
-                    minWidth="md"
-                    dialogContent={<LinkToUserGroup setUserGroupModal={setUserGroupModal} />}
-                    dialogTitle={t('dashboard.courses.access.usergroups.modals.link_title')}
-                    dialogDescription={t('dashboard.courses.access.usergroups.modals.link_description')}
-                    dialogTrigger={
-                        <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-xs sm:text-sm text-green-100">
-                            <SquareUserRound className="w-3 h-3 sm:w-4 sm:h-4" />
-                            <span>{t('dashboard.courses.access.usergroups.actions.link_to_usergroup')}</span>
-                        </button>
-                    }
-                />
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {usergroups.map((usergroup: any) => (
+                                <tr
+                                    key={usergroup.invite_code_uuid}
+                                    className="hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                                                <Users className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="font-semibold text-gray-800 text-sm truncate">
+                                                    {usergroup.name}
+                                                </span>
+                                                {usergroup.description && (
+                                                    <span className="text-xs text-gray-400 truncate">
+                                                        {usergroup.description}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <ConfirmationModal
+                                            confirmationButtonText={t('dashboard.courses.access.usergroups.modals.unlink_button')}
+                                            confirmationMessage={t('dashboard.courses.access.usergroups.modals.unlink_message')}
+                                            dialogTitle={t('dashboard.courses.access.usergroups.modals.unlink_title')}
+                                            dialogTrigger={
+                                                <button
+                                                    className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-rose-50 hover:text-rose-600 rounded-md text-xs font-medium nice-shadow transition-all"
+                                                    title={t('dashboard.courses.access.usergroups.actions.delete_link')}
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                    <span>{t('dashboard.courses.access.usergroups.actions.delete_link')}</span>
+                                                </button>
+                                            }
+                                            functionToExecute={() => removeUserGroupLink(usergroup.id)}
+                                            status="warning"
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div className="py-16 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="bg-gray-100 p-4 rounded-full">
+                                <Users className="w-8 h-8 text-gray-400" />
+                            </div>
+                            <p className="text-gray-400 text-sm font-medium max-w-sm">
+                                {t('dashboard.courses.access.usergroups.subtitle')}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
