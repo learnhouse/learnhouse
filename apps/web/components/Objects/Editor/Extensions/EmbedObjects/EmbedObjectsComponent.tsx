@@ -179,7 +179,10 @@ function EmbedObjectsComponent(props: any) {
     if (embedType === 'code' && embedCode) {
       const sanitized = DOMPurify.sanitize(embedCode, {
         ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['*']
+        ALLOWED_ATTR: [
+          'src', 'frameborder', 'allowfullscreen', 'allow', 'width', 'height',
+          'style', 'class', 'title', 'loading', 'referrerpolicy', 'scrolling', 'name',
+        ],
       })
       setSanitizedEmbedCode(sanitized)
     }

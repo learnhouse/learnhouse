@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List
 from uuid import uuid4
+from sqlalchemy import func
 from sqlmodel import Session, select
 from src.db.users import AnonymousUser, PublicUser
 from src.db.courses.course_chapters import CourseChapter
@@ -52,51 +53,36 @@ async def create_chapter(
     chapter.update_date = str(datetime.now())
     chapter.org_id = course.org_id
 
-    # Find the last chapter in the course and add it to the list
-    statement = (
-        select(CourseChapter)
-        .where(CourseChapter.course_id == chapter.course_id)
-        .order_by(CourseChapter.order) # type: ignore
-    )
-    course_chapters = db_session.exec(statement).all()
-
-    # get last chapter order
-    last_order = course_chapters[-1].order if course_chapters else 0
-    to_be_used_order = last_order + 1
-
-    # Add chapter to database
-    db_session.add(chapter)
-    db_session.commit()
-    db_session.refresh(chapter)
-
-    chapter = ChapterRead(**chapter.model_dump(), activities=[])
-
-    # Check if COurseChapter link exists
-
-    statement = (
-        select(CourseChapter)
-        .where(CourseChapter.chapter_id == chapter.id)
-        .where(CourseChapter.course_id == chapter.course_id)
-        .where(CourseChapter.order == to_be_used_order)
-    )
-    course_chapter = db_session.exec(statement).first()
-
-    if not course_chapter:
-        # Add CourseChapter link
-        course_chapter = CourseChapter(
-            course_id=chapter.course_id,
-            chapter_id=chapter.id,
-            org_id=chapter.org_id,
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-            order=to_be_used_order,
+    # Determine insertion order atomically to prevent duplicate order values
+    # under concurrent chapter creation for the same course
+    max_order = db_session.exec(
+        select(func.max(CourseChapter.order)).where(
+            CourseChapter.course_id == chapter.course_id
         )
+    ).first()
+    to_be_used_order = (max_order or 0) + 1
 
-        # Insert CourseChapter link in DB
-        db_session.add(course_chapter)
-        db_session.commit()
+    # Flush to get the DB-assigned ID without committing yet
+    db_session.add(chapter)
+    db_session.flush()
 
-    return chapter
+    chapter_read = ChapterRead(**chapter.model_dump(), activities=[])
+
+    # Create CourseChapter link atomically with the chapter insert
+    course_chapter = CourseChapter(
+        course_id=chapter.course_id,
+        chapter_id=chapter.id,
+        org_id=chapter.org_id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+        order=to_be_used_order,
+    )
+
+    # Single atomic commit for both Chapter and CourseChapter
+    db_session.add(course_chapter)
+    db_session.commit()
+
+    return chapter_read
 
 
 async def get_chapter(
@@ -110,7 +96,7 @@ async def get_chapter(
 
     if not chapter:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
     # get COurse
@@ -119,7 +105,7 @@ async def get_chapter(
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course does not exist"
         )
 
     # RBAC check
@@ -155,7 +141,7 @@ async def update_chapter(
 
     if not chapter:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
     # RBAC check — use course_uuid (not chapter_uuid) to be consistent with create/get
@@ -164,7 +150,7 @@ async def update_chapter(
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course does not exist"
         )
 
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
@@ -198,11 +184,18 @@ async def delete_chapter(
 
     if not chapter:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Chapter does not exist"
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, chapter.chapter_uuid, AccessAction.DELETE)
+    # RBAC check — permissions are held at the course level, not the chapter level
+    statement = select(Course).where(Course.id == chapter.course_id)
+    course = db_session.exec(statement).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+        )
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
+
 
     # Remove all linked chapter activities
     statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
@@ -368,7 +361,7 @@ async def DEPRECEATED_get_course_chapters(
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course does not exist"
         )
 
     # RBAC check
@@ -449,7 +442,7 @@ async def reorder_chapters_and_activities(
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course does not exist"
         )
 
     # RBAC check

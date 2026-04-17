@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, Query, Request, UploadFile, HTTPException
 from pydantic import BaseModel
 from src.db.courses.assignments import (
     AssignmentCreate,
@@ -524,12 +524,14 @@ async def api_read_assignment_task_submissions(
     assignment_task_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
 ):
     """
     Read task submissions for an assignment from a user
     """
     return await read_assignment_task_submissions(
-        request, assignment_task_uuid, current_user, db_session
+        request, assignment_task_uuid, current_user, db_session, limit, offset
     )
 
 
@@ -602,12 +604,14 @@ async def api_read_assignment_submissions(
     assignment_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
 ):
     """
     Read submissions for an assignment
     """
     return await read_assignment_submissions(
-        request, assignment_uuid, current_user, db_session
+        request, assignment_uuid, current_user, db_session, limit, offset
     )
 
 

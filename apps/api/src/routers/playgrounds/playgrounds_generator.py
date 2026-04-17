@@ -52,7 +52,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
         return "gemini-2.5-flash-lite"
 
 
-def _get_course_context(
+async def _get_course_context(
     course_uuid: Optional[str],
     org_id: int,
     db_session: Session,
@@ -70,7 +70,7 @@ def _get_course_context(
 
     try:
         from src.services.ai.rag.query_service import query_course_rag
-        rag_result = query_course_rag(
+        rag_result = await query_course_rag(
             question=prompt,
             org_id=org_id,
             db_session=db_session,
@@ -129,7 +129,7 @@ async def start_playground_session(
     ai_model = get_org_ai_model(org.id, db_session)
 
     # Fetch RAG context if course linked
-    course_context, _ = _get_course_context(
+    course_context, _ = await _get_course_context(
         session_request.context.course_uuid,
         org.id,
         db_session,
@@ -221,7 +221,7 @@ async def iterate_playground_session(
     ai_model = get_org_ai_model(org.id, db_session)
 
     # Fetch RAG context if course linked
-    course_context, _ = _get_course_context(
+    course_context, _ = await _get_course_context(
         session.context.course_uuid,
         org.id,
         db_session,

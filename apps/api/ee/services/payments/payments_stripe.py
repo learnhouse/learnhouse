@@ -346,6 +346,20 @@ class StripePaymentProvider(IPaymentProvider):
         except stripe.SignatureVerificationError:
             raise HTTPException(status_code=400, detail="Invalid signature")
 
+        # Idempotency guard: skip events already processed (e.g. Stripe retries)
+        # Redis is best-effort — if unavailable we process the event anyway.
+        _r = None
+        _redis_key = f"stripe_evt:{event.id}"
+        try:
+            from src.security.features_utils.usage import _get_redis_client
+            _r = _get_redis_client()
+            if _r.exists(_redis_key):
+                logger.info("Stripe event %s already processed, skipping", event.id)
+                return {"status": "success", "message": "Already processed"}
+        except Exception as _redis_err:
+            logger.warning("Redis unavailable for Stripe idempotency check, processing event anyway: %s", _redis_err)
+            _r = None
+
         try:
             event_type = event.type
             event_data = event.data.object.to_dict()
@@ -469,6 +483,12 @@ class StripePaymentProvider(IPaymentProvider):
                 logger.warning(f"Unhandled Stripe event type: {event_type}")
                 return {"status": "ignored", "message": f"Unhandled event type: {event_type}"}
 
+            # Mark event as processed; 72-hour TTL covers Stripe's retry window
+            if _r is not None:
+                try:
+                    _r.setex(_redis_key, 72 * 3600, "1")
+                except Exception as _redis_err:
+                    logger.warning("Redis unavailable when marking Stripe event %s as processed: %s", event.id, _redis_err)
             return {"status": "success"}
 
         except Exception as e:

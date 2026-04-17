@@ -246,19 +246,43 @@ Please modify the HTML code above according to the user's request. Output ONLY t
             # First generation - just use the prompt
             contents.append({"role": "user", "parts": [{"text": prompt}]})
 
-        # Generate response with streaming
-        response = client.models.generate_content_stream(
-            model=gemini_model_name,
-            contents=contents
-        )
+        # Stream Gemini response: run the blocking SDK iterator in a thread and
+        # forward each chunk to the async generator via a Queue so callers see
+        # incremental output instead of waiting for the full response.
+        import threading
+        loop = asyncio.get_running_loop()
+        _sentinel = object()
+        queue: asyncio.Queue = asyncio.Queue()
+        _stream_error: list = []
+
+        def _run_stream():
+            try:
+                resp = client.models.generate_content_stream(
+                    model=gemini_model_name,
+                    contents=contents,
+                )
+                for chunk in resp:
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except Exception as exc:
+                _stream_error.append(exc)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, _sentinel)
+
+        t = threading.Thread(target=_run_stream, daemon=True)
+        t.start()
 
         full_response = ""
-        for chunk in response:
-            if chunk.text:
-                full_response += chunk.text
-                yield chunk.text
-                # Small delay to allow for smooth streaming
-                await asyncio.sleep(0.01)
+        while True:
+            item = await queue.get()
+            if item is _sentinel:
+                break
+            if item.text:
+                full_response += item.text
+                yield item.text
+                await asyncio.sleep(0)
+
+        if _stream_error:
+            raise _stream_error[0]
 
         # Update session after generation completes
         session.message_history.append(MagicBlockMessage(role="user", content=prompt))

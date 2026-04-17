@@ -81,7 +81,7 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
                 setShowMessage(true)
                 setIsSubmitting(false)
             } else {
-                setError(res.data.detail)
+                setError(res.data?.detail ?? t('auth.error_generic'))
                 setShowMessage(true)
                 setIsSubmitting(false)
             }

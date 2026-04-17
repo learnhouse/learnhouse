@@ -223,63 +223,64 @@ async def add_bulk_course_contributors(
         "successful": [],
         "failed": []
     }
-    
+
     current_time = str(datetime.now())
 
     for username in usernames:
-        try:
-            # Find user by username
-            user_statement = select(User).where(User.username == username)
-            user = db_session.exec(user_statement).first()
+        # Find user by username
+        user_statement = select(User).where(User.username == username)
+        user = db_session.exec(user_statement).first()
 
-            if not user or user.id is None:
-                results["failed"].append({
-                    "username": username,
-                    "reason": "User not found or invalid"
-                })
-                continue
-
-            # Check if user already has any authorship role for this course
-            existing_authorship = db_session.exec(
-                select(ResourceAuthor).where(
-                    and_(
-                        ResourceAuthor.resource_uuid == course_uuid,
-                        ResourceAuthor.user_id == user.id
-                    )
-                )
-            ).first()
-
-            if existing_authorship:
-                results["failed"].append({
-                    "username": username,
-                    "reason": "User already has an authorship role for this course"
-                })
-                continue
-
-            # Create contributor
-            resource_author = ResourceAuthor(
-                resource_uuid=course_uuid,
-                user_id=user.id,
-                authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
-                authorship_status=ResourceAuthorshipStatusEnum.PENDING,
-                creation_date=current_time,
-                update_date=current_time,
-            )
-
-            db_session.add(resource_author)
-            db_session.commit()
-            db_session.refresh(resource_author)
-
-            results["successful"].append({
-                "username": username,
-                "user_id": user.id
-            })
-
-        except Exception as e:
+        if not user or user.id is None:
             results["failed"].append({
                 "username": username,
-                "reason": str(e)
+                "reason": "User not found or invalid"
             })
+            continue
+
+        # Check if user already has any authorship role for this course
+        existing_authorship = db_session.exec(
+            select(ResourceAuthor).where(
+                and_(
+                    ResourceAuthor.resource_uuid == course_uuid,
+                    ResourceAuthor.user_id == user.id
+                )
+            )
+        ).first()
+
+        if existing_authorship:
+            results["failed"].append({
+                "username": username,
+                "reason": "User already has an authorship role for this course"
+            })
+            continue
+
+        # Create contributor (add to session, commit after the loop)
+        resource_author = ResourceAuthor(
+            resource_uuid=course_uuid,
+            user_id=user.id,
+            authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
+            authorship_status=ResourceAuthorshipStatusEnum.PENDING,
+            creation_date=current_time,
+            update_date=current_time,
+        )
+
+        db_session.add(resource_author)
+
+        results["successful"].append({
+            "username": username,
+            "user_id": user.id
+        })
+
+    # Single commit for all staged additions; surface DB errors via failed list
+    if results["successful"]:
+        try:
+            db_session.commit()
+        except Exception as db_err:
+            db_session.rollback()
+            for item in list(results["successful"]):
+                results["failed"].append({"username": item["username"], "reason": f"Database error: {db_err}"})
+            results["successful"] = []
 
     if results["successful"]:
         await dispatch_webhooks(
@@ -332,57 +333,59 @@ async def remove_bulk_course_contributors(
     }
 
     for username in usernames:
-        try:
-            # Find user by username
-            user_statement = select(User).where(User.username == username)
-            user = db_session.exec(user_statement).first()
+        # Find user by username
+        user_statement = select(User).where(User.username == username)
+        user = db_session.exec(user_statement).first()
 
-            if not user or user.id is None:
-                results["failed"].append({
-                    "username": username,
-                    "reason": "User not found or invalid"
-                })
-                continue
-
-            # Check if user has any authorship role for this course
-            existing_authorship = db_session.exec(
-                select(ResourceAuthor).where(
-                    and_(
-                        ResourceAuthor.resource_uuid == course_uuid,
-                        ResourceAuthor.user_id == user.id
-                    )
-                )
-            ).first()
-
-            if not existing_authorship:
-                results["failed"].append({
-                    "username": username,
-                    "reason": "User is not a contributor for this course"
-                })
-                continue
-
-            # SECURITY: Don't allow removing the creator
-            if existing_authorship.authorship == ResourceAuthorshipEnum.CREATOR:
-                results["failed"].append({
-                    "username": username,
-                    "reason": "Cannot remove the course creator"
-                })
-                continue
-
-            # Remove the contributor
-            db_session.delete(existing_authorship)
-            db_session.commit()
-
-            results["successful"].append({
-                "username": username,
-                "user_id": user.id
-            })
-
-        except Exception as e:
+        if not user or user.id is None:
             results["failed"].append({
                 "username": username,
-                "reason": str(e)
+                "reason": "User not found or invalid"
             })
+            continue
+
+        # Check if user has any authorship role for this course
+        existing_authorship = db_session.exec(
+            select(ResourceAuthor).where(
+                and_(
+                    ResourceAuthor.resource_uuid == course_uuid,
+                    ResourceAuthor.user_id == user.id
+                )
+            )
+        ).first()
+
+        if not existing_authorship:
+            results["failed"].append({
+                "username": username,
+                "reason": "User is not a contributor for this course"
+            })
+            continue
+
+        # SECURITY: Don't allow removing the creator
+        if existing_authorship.authorship == ResourceAuthorshipEnum.CREATOR:
+            results["failed"].append({
+                "username": username,
+                "reason": "Cannot remove the course creator"
+            })
+            continue
+
+        # Mark for removal (commit after the loop)
+        db_session.delete(existing_authorship)
+
+        results["successful"].append({
+            "username": username,
+            "user_id": user.id
+        })
+
+    # Single commit for all staged removals; surface DB errors via failed list
+    if results["successful"]:
+        try:
+            db_session.commit()
+        except Exception as db_err:
+            db_session.rollback()
+            for item in list(results["successful"]):
+                results["failed"].append({"username": item["username"], "reason": f"Database error: {db_err}"})
+            results["successful"] = []
 
     if results["successful"]:
         await dispatch_webhooks(

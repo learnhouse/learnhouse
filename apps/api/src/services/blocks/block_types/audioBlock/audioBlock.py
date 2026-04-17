@@ -6,13 +6,14 @@ from sqlmodel import Session, select
 from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses.courses import Course
+from src.db.users import AnonymousUser, PublicUser
+from src.security.rbac import check_resource_access, AccessAction
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
-
-from src.services.users.users import PublicUser
 
 
 async def create_audio_block(
-    request: Request, audio_file: UploadFile, activity_uuid: str, db_session: Session
+    request: Request, audio_file: UploadFile, activity_uuid: str, db_session: Session,
+    current_user: PublicUser | AnonymousUser = None,
 ):
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
@@ -36,6 +37,9 @@ async def create_audio_block(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
+
+    if current_user:
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # get block id
     block_uuid = str(f"block_{uuid4()}")

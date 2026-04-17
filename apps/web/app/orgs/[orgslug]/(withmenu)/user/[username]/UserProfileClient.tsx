@@ -77,25 +77,32 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
   const [selectedImage, setSelectedImage] = React.useState<{ url: string; caption?: string } | null>(null);
   const [userCourses, setUserCourses] = React.useState<any[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = React.useState(false);
+  const [coursesError, setCoursesError] = React.useState(false);
 
   React.useEffect(() => {
+    let mounted = true
+
     const fetchUserCourses = async () => {
       if (userData.id && access_token) {
         try {
           setIsLoadingCourses(true);
           const coursesData = await getCoursesByUser(userData.id, access_token);
-          if (coursesData.data) {
+          if (mounted && coursesData.data) {
             setUserCourses(coursesData.data);
           }
         } catch (error) {
-          console.error('Error fetching user courses:', error);
+          if (mounted) {
+            console.error('Error fetching user courses:', error);
+            setCoursesError(true);
+          }
         } finally {
-          setIsLoadingCourses(false);
+          if (mounted) setIsLoadingCourses(false);
         }
       }
     };
 
     fetchUserCourses();
+    return () => { mounted = false }
   }, [userData.id, access_token]);
 
   const IconComponent = ({ iconName }: { iconName: string }) => {
@@ -308,6 +315,10 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                           {isLoadingCourses ? (
                             <div className="flex items-center justify-center py-8">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                            </div>
+                          ) : coursesError ? (
+                            <div className="text-center py-8 text-red-500">
+                              {t('courses.courses_load_error')}
                             </div>
                           ) : userCourses.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">

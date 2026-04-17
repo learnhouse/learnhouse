@@ -1,10 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import secrets
 import logging
 import redis
 import string
-import uuid
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
 from sqlmodel import Session, select
@@ -77,6 +76,21 @@ async def send_reset_password_code(
     - Returns generic message to prevent user enumeration
     - Logs attempts for security audit
     """
+    # Rate limit by IP before any email lookup (prevents enumeration timing attacks)
+    _ip = request.client.host if request.client else "unknown"
+    ip_rate_key = f"pwd_reset_ip:{_ip}"
+    try:
+        _r_ip = _get_redis_connection()
+        _attempts = _r_ip.incr(ip_rate_key)
+        if _attempts == 1:
+            _r_ip.expire(ip_rate_key, 1800)  # 30-minute window
+        if _attempts > 10:
+            raise HTTPException(status_code=429, detail="Too many requests")
+    except HTTPException:
+        raise
+    except Exception:
+        logging.warning("Could not check IP rate limit for password reset")
+
     # Get org first (public info, safe to fail explicitly)
     statement = select(Organization).where(Organization.id == org_id)
     org = db_session.exec(statement).first()
@@ -120,13 +134,11 @@ async def send_reset_password_code(
     # SECURITY FIX: Use cryptographically secure code generation
     # Increased from 5 to 8 characters for better entropy
     generated_reset_code = generate_secure_reset_code(length=8)
-    reset_email_invite_uuid = f"reset_email_invite_code_{uuid.uuid4()}"
 
     ttl = 60 * 60 * 1  # 1 hour in seconds
 
     resetCodeObject = {
         "reset_code": generated_reset_code,
-        "reset_email_invite_uuid": reset_email_invite_uuid,
         "reset_code_expires": int(datetime.now().timestamp()) + ttl,
         "reset_code_type": "password_reset",
         "created_at": datetime.now().isoformat(),
@@ -134,8 +146,9 @@ async def send_reset_password_code(
         "org_uuid": org.org_uuid,
     }
 
+    # Use a deterministic key so the lookup can be done with r.get() instead of scan_iter
     r.set(
-        f"{reset_email_invite_uuid}:user:{user.user_uuid}:org:{org.org_uuid}:code:{generated_reset_code}",
+        f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{generated_reset_code}",
         json.dumps(resetCodeObject),
         ex=ttl,
     )
@@ -236,7 +249,7 @@ async def change_password_with_reset_code(
         )
 
     # SECURITY: Validate reset_code is strictly alphanumeric to prevent
-    # Redis wildcard injection (e.g., "*" matching any code)
+    # Redis key injection
     if not reset_code.isalnum():
         logging.warning(f"Invalid reset code format for user: {user.user_uuid}")
         raise HTTPException(
@@ -244,35 +257,23 @@ async def change_password_with_reset_code(
             detail="Invalid or expired reset code",
         )
 
-    # SECURITY: Use scan_iter instead of keys() to avoid blocking Redis
-    reset_code_pattern = f"*:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
-    matched_key = None
-    for key in r.scan_iter(match=reset_code_pattern, count=10):
-        matched_key = key
-        break
+    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    reset_key = f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
+    reset_code_value = r.get(reset_key)
 
-    if not matched_key:
+    if reset_code_value is None:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired reset code",
         )
 
-    # Get reset code object
-    reset_code_value = r.get(matched_key)
-
-    if reset_code_value is None:
-        logging.warning(f"Reset code value missing for user: {user.user_uuid}")
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid or expired reset code",
-        )
     reset_code_object = json.loads(reset_code_value)
 
     # Check if reset code is expired
     if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
         # Delete expired code
-        r.delete(matched_key)
+        r.delete(reset_key)
         logging.info(f"Expired reset code used for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
@@ -281,13 +282,14 @@ async def change_password_with_reset_code(
 
     # Change password
     user.password = security_hash_password(new_password)
+    user.password_changed_at = datetime.now(timezone.utc)
     db_session.add(user)
 
     db_session.commit()
     db_session.refresh(user)
 
     # Delete reset code (one-time use)
-    r.delete(matched_key)
+    r.delete(reset_key)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     return "Password changed"
@@ -317,21 +319,20 @@ async def send_reset_password_code_platform(
     r = _get_redis_connection()
 
     generated_reset_code = generate_secure_reset_code(length=8)
-    reset_email_invite_uuid = f"reset_email_invite_code_{uuid.uuid4()}"
 
     ttl = 60 * 60 * 1  # 1 hour in seconds
 
     resetCodeObject = {
         "reset_code": generated_reset_code,
-        "reset_email_invite_uuid": reset_email_invite_uuid,
         "reset_code_expires": int(datetime.now().timestamp()) + ttl,
         "reset_code_type": "password_reset",
         "created_at": datetime.now().isoformat(),
         "created_by": user.user_uuid,
     }
 
+    # Use a deterministic key so the lookup can be done with r.get() instead of scan_iter
     r.set(
-        f"{reset_email_invite_uuid}:user:{user.user_uuid}:platform:code:{generated_reset_code}",
+        f"pwd_reset:user:{user.user_uuid}:platform:code:{generated_reset_code}",
         json.dumps(resetCodeObject),
         ex=ttl,
     )
@@ -404,31 +405,21 @@ async def change_password_with_reset_code_platform(
             detail="Invalid or expired reset code",
         )
 
-    reset_code_pattern = f"*:user:{user.user_uuid}:platform:code:{reset_code}"
-    matched_key = None
-    for key in r.scan_iter(match=reset_code_pattern, count=10):
-        matched_key = key
-        break
+    # Direct deterministic key lookup — no wildcards or scan_iter needed
+    reset_key = f"pwd_reset:user:{user.user_uuid}:platform:code:{reset_code}"
+    reset_code_value = r.get(reset_key)
 
-    if not matched_key:
+    if reset_code_value is None:
         logging.warning(f"Invalid reset code attempt for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
             detail="Invalid or expired reset code",
         )
 
-    reset_code_value = r.get(matched_key)
-
-    if reset_code_value is None:
-        logging.warning(f"Reset code value missing for user: {user.user_uuid}")
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid or expired reset code",
-        )
     reset_code_object = json.loads(reset_code_value)
 
     if reset_code_object["reset_code_expires"] < int(datetime.now().timestamp()):
-        r.delete(matched_key)
+        r.delete(reset_key)
         logging.info(f"Expired reset code used for user: {user.user_uuid}")
         raise HTTPException(
             status_code=400,
@@ -436,12 +427,13 @@ async def change_password_with_reset_code_platform(
         )
 
     user.password = security_hash_password(new_password)
+    user.password_changed_at = datetime.now(timezone.utc)
     db_session.add(user)
 
     db_session.commit()
     db_session.refresh(user)
 
-    r.delete(matched_key)
+    r.delete(reset_key)
 
     logging.info(f"Password successfully changed for user: {user.user_uuid}")
     return "Password changed"

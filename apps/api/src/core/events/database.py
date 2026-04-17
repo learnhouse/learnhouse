@@ -142,7 +142,7 @@ def _register_cache_invalidation_hooks():
             for old_slug in (history.deleted or []):
                 _ensure_set(session).add(old_slug)
         except Exception:
-            pass
+            logging.debug("Could not inspect slug history for org %s", target.id, exc_info=True)
 
     @sa_event.listens_for(Organization, "after_delete")
     def _org_after_delete(mapper, connection, target):
@@ -176,7 +176,7 @@ def _register_cache_invalidation_hooks():
                 if row and row[0]:
                     _ensure_set(session).add(row[0])
             except Exception:
-                pass
+                logging.debug("Could not look up org slug for config org_id=%s", target.org_id, exc_info=True)
 
     sa_event.listen(OrganizationConfig, "after_insert", _orgconfig_changed)
     sa_event.listen(OrganizationConfig, "after_update", _orgconfig_changed)
@@ -216,7 +216,7 @@ def _register_cache_invalidation_hooks():
                 if row and row[0]:
                     _ensure_set(session).add(row[0])
             except Exception:
-                pass
+                logging.debug("Could not look up org slug for course org_id=%s", target.org_id, exc_info=True)
 
     sa_event.listen(Course, "after_insert", _course_changed)
     sa_event.listen(Course, "after_update", _course_changed)
@@ -242,7 +242,7 @@ def _register_cache_invalidation_hooks():
                 _ensure_course_uuids(session).add(course.course_uuid)
                 return
         except Exception:
-            pass
+            logging.debug("Could not look up course UUID from identity map for course_id=%s", target.course_id, exc_info=True)
         # Fallback: query the course UUID directly via connection
         try:
             from sqlalchemy import text as sa_text
@@ -253,7 +253,7 @@ def _register_cache_invalidation_hooks():
             if row and row[0]:
                 _ensure_course_uuids(session).add(row[0])
         except Exception:
-            pass
+            logging.debug("Could not query course UUID for course_id=%s", target.course_id, exc_info=True)
 
     for model in (Activity, Chapter, ChapterActivity):
         sa_event.listen(model, "after_insert", _course_child_changed)

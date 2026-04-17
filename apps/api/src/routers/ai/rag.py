@@ -276,7 +276,7 @@ async def api_rag_index(
     require_org_admin(current_user.id, course.org_id, db_session)
 
     # Run indexing
-    chunks_indexed = embed_course_content(
+    chunks_indexed = await embed_course_content(
         course_id=course.id,
         org_id=course.org_id,
         db_session=db_session,

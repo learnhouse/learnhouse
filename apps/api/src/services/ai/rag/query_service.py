@@ -20,7 +20,7 @@ TOP_K = 5
 GEMINI_MODEL = "gemini-2.5-flash"
 
 
-def query_course_rag(
+async def query_course_rag(
     question: str,
     org_id: int,
     db_session: Session,
@@ -41,7 +41,7 @@ def query_course_rag(
         {context: str, sources: list[dict]}
     """
     # Embed the question
-    query_embedding = embed_single_text(question)
+    query_embedding = await embed_single_text(question)
 
     # Build the similarity search query
     embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
@@ -136,7 +136,7 @@ async def query_course_rag_stream(
         Tuple of (stream_generator, sources)
     """
     # Retrieve relevant context
-    rag_result = query_course_rag(
+    rag_result = await query_course_rag(
         question=question,
         org_id=org_id,
         db_session=db_session,

@@ -66,9 +66,9 @@ const CourseClient = (props: any) => {
     }
   }, [courseId, courseUuidForTracking, track])
 
-  // Add SWR for trail data
+  // Add SWR for trail data — only fetch once session and org are ready
   const { data: trailData } = useSWR(
-    `${getAPIUrl()}trail/org/${org?.id}/trail`,
+    access_token && org?.id ? `${getAPIUrl()}trail/org/${org.id}/trail` : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
@@ -178,25 +178,22 @@ const CourseClient = (props: any) => {
   }
 
   const isActivityDone = (activity: any) => {
-    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
-    const run = trailData?.runs?.find(
-      (run: any) => {
-        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
-        return cleanRunCourseUuid === cleanCourseUuid;
-      }
-    );
-    if (run) {
-      return run.steps.find((step: any) => step.activity_id == activity.id)
+    if (!course?.course_uuid || !trailData?.runs || !Array.isArray(trailData.runs)) {
+      return false
     }
-    return false
+    const cleanCourseUuid = course.course_uuid.replace('course_', '')
+    const run = trailData.runs.find((run: any) => {
+      const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '')
+      return cleanRunCourseUuid === cleanCourseUuid
+    })
+    if (!run || !Array.isArray(run.steps)) return false
+    return !!run.steps.find((step: any) => step.activity_id == activity.id)
   }
 
   const isActivityCurrent = (activity: any) => {
+    if (!activity?.activity_uuid) return false
     const activity_uuid = activity.activity_uuid.replace('activity_', '')
-    if (props.current_activity && props.current_activity == activity_uuid) {
-      return true
-    }
-    return false
+    return props.current_activity === activity_uuid
   }
 
   // Generate JSON-LD structured data for SEO

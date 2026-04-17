@@ -1,5 +1,8 @@
+import logging
 from typing import Tuple, Dict, Any
 from fastapi import Depends, HTTPException, Request
+
+logger = logging.getLogger(__name__)
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
@@ -98,9 +101,8 @@ def ai_start_activity_chat_session(
             detail="Organization not found",
         )
 
-    # Check limits and usage
+    # Check limits and usage (read-only check stays before the AI call)
     check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -147,13 +149,20 @@ def ai_start_activity_chat_session(
     message += "."
     message += "Use your knowledge to help the student if the context is not enough."
 
-    response = ask_ai(
-        chat_session_object.message,
-        chat_session["message_history"],
-        ai_friendly_text,
-        message,
-        ai_model,
-    )
+    try:
+        response = ask_ai(
+            chat_session_object.message,
+            chat_session["message_history"],
+            ai_friendly_text,
+            message,
+            ai_model,
+        )
+    except Exception as e:
+        logger.error("AI service error in ai_start_activity_chat_session: %s", e)
+        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
+
+    # Deduct credit only after Gemini call succeeds
+    deduct_ai_credit(org.id, db_session)
 
     # Save the message exchange to history
     save_message_to_history(
@@ -231,9 +240,8 @@ def ai_send_activity_chat_message(
     statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(statement).first()
 
-    # Check AI credits and deduct
+    # Check AI credits (read-only check stays before the AI call)
     check_ai_credits(course.org_id, db_session)
-    deduct_ai_credit(course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -277,13 +285,20 @@ def ai_send_activity_chat_message(
     message += "."
     message += "Use your knowledge to help the student if the context is not enough."
 
-    response = ask_ai(
-        chat_session_object.message,
-        chat_session["message_history"],
-        ai_friendly_text,
-        message,
-        ai_model,
-    )
+    try:
+        response = ask_ai(
+            chat_session_object.message,
+            chat_session["message_history"],
+            ai_friendly_text,
+            message,
+            ai_model,
+        )
+    except Exception as e:
+        logger.error("AI service error in ai_send_activity_chat_message: %s", e)
+        raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
+
+    # Deduct credit only after Gemini call succeeds
+    deduct_ai_credit(course.org_id, db_session)
 
     # Save the message exchange to history
     save_message_to_history(
