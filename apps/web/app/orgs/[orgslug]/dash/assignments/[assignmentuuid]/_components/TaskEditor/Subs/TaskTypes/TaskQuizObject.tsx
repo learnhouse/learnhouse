@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
+import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
@@ -54,6 +54,18 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
+    // Reveal correct answers to the student only after the submission is
+    // GRADED AND the teacher opted into it on the assignment. Before grading
+    // we still hide the answer key (the assignment hasn't been evaluated yet)
+    // and on opt-out we never reveal, so the student sees only their own
+    // choices + score.
+    const assignmentSubmission = useAssignmentSubmission() as any;
+    const submissionIsGraded = Array.isArray(assignmentSubmission)
+        && assignmentSubmission.length > 0
+        && assignmentSubmission[0].submission_status === 'GRADED';
+    const showCorrectAnswers = view === 'student'
+        && submissionIsGraded
+        && !!assignment?.assignment_object?.show_correct_answers;
 
 
     /* TEACHER VIEW CODE */
@@ -384,8 +396,8 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                 {question.options.map((option, oIndex) => (
                                     <div className="flex" key={oIndex}>
                                         <div
-                                            onClick={() => view === 'student' && chooseOption(qIndex, oIndex)}
-                                            className={"answer outline outline-3 outline-white pr-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
+                                            onClick={() => view === 'student' && !submissionIsGraded && chooseOption(qIndex, oIndex)}
+                                            className={"answer outline outline-3 outline-white pr-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' && !submissionIsGraded ? 'cursor-pointer active:scale-110' : '')}
                                         >
                                             <div className="font-bold text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
                                                 <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
@@ -441,8 +453,22 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
                                                 </>
                                             )}
+                                            {view === 'student' && showCorrectAnswers && (
+                                                <div className={`w-fit flex-none flex text-[10px] px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${
+                                                    option.assigned_right_answer
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-rose-50 text-rose-600'
+                                                }`}>
+                                                    {option.assigned_right_answer ? <Check size={10} /> : <X size={10} />}
+                                                    <p className='font-bold'>
+                                                        {option.assigned_right_answer
+                                                            ? t('assignments.quiz.correct_answer')
+                                                            : t('assignments.quiz.incorrect_answer')}
+                                                    </p>
+                                                </div>
+                                            )}
                                             {view === 'student' && (
-                                                <div 
+                                                <div
                                                     className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
                                                         userSubmissions.submissions.find(
                                                             (submission) =>
@@ -452,8 +478,8 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                                         )
                                                             ? "bg-green-200/60 text-green-500 hover:bg-green-300"
                                                             : "bg-slate-200/60 text-slate-500 hover:bg-slate-300"
-                                                    } text-sm transition-all ease-linear cursor-pointer`}
-                                                    onClick={() => chooseOption(qIndex, oIndex)}
+                                                    } text-sm transition-all ease-linear ${submissionIsGraded ? '' : 'cursor-pointer'}`}
+                                                    onClick={() => !submissionIsGraded && chooseOption(qIndex, oIndex)}
                                                 >
                                                     {userSubmissions.submissions.find(
                                                         (submission) =>

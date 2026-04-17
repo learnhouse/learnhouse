@@ -2,6 +2,9 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
+import { mutate } from 'swr';
+import { getAPIUrl } from '@services/config/config';
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
 import TaskQuizObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskQuizObject';
 import TaskFileObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskFileObject';
@@ -78,8 +81,26 @@ function EvaluateAssignment({ user_id }: any) {
 
     async function rejectAssignment() {
         const res = await deleteUserSubmission(user_id, assignmentUuid, access_token)
+        if (!res.success) {
+            toast.error(res.data?.detail || t('dashboard.assignments.submissions.toasts.reject_success'))
+            return
+        }
         toast.success(t('dashboard.assignments.submissions.toasts.reject_success'))
-        window.location.reload()
+        // Revalidate the submissions list + this user's submission + grade
+        // caches instead of a hard reload, so the modal can close cleanly and
+        // the list below reflects the rollback (status gone, activity marked
+        // incomplete, certificate revoked) without a page refresh.
+        mutate(
+            (key: any) =>
+                typeof key === 'string' &&
+                (
+                    key.includes(`assignments/${assignmentUuid}/submissions`) ||
+                    key.includes(`assignments/${assignmentUuid}/tasks/submissions`)
+                ),
+            undefined,
+            { revalidate: true }
+        )
+        setGradePreview(null)
     }
 
     const sortedTasks = assignments?.assignment_tasks?.slice().sort((a: any, b: any) => a.id - b.id) || [];
@@ -124,7 +145,10 @@ function EvaluateAssignment({ user_id }: any) {
             <div className='flex flex-col space-y-5 px-1 py-2'>
                 {sortedTasks.map((task: any, index: number) => {
                     const tb = taskBreakdownByUuid[task.assignment_task_uuid];
-                    const taskPassed = tb && tb.submitted && tb.percentage >= 60;
+                    // Use the server's passed flag so the per-task chip uses
+                    // the same grading-type-aware threshold as the overall
+                    // grade (50% for numeric/pass-fail, 60% for alphabet/GPA).
+                    const taskPassed = tb && tb.submitted && tb.passed;
                     const taskSubmitted = tb && tb.submitted;
                     return (
                     <div key={task.assignment_task_uuid} className='flex flex-col'>
@@ -218,13 +242,21 @@ function EvaluateAssignment({ user_id }: any) {
             {/* Action bar */}
             <div className='flex items-center justify-between pt-4 mt-3 border-t border-gray-100'>
                 <div className='flex items-center space-x-1.5'>
-                    <button
-                        onClick={rejectAssignment}
-                        className='flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 rounded-lg nice-shadow hover:bg-rose-100/80 transition-colors cursor-pointer'
-                    >
-                        <X size={14} />
-                        <span>{t('dashboard.assignments.submissions.actions.reject')}</span>
-                    </button>
+                    <ConfirmationModal
+                        confirmationButtonText={t('dashboard.assignments.submissions.actions.reject')}
+                        confirmationMessage={t('dashboard.assignments.submissions.actions.reject_description')}
+                        dialogTitle={t('dashboard.assignments.submissions.actions.reject')}
+                        functionToExecute={rejectAssignment}
+                        status='warning'
+                        dialogTrigger={
+                            <button
+                                className='flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 rounded-lg nice-shadow hover:bg-rose-100/80 transition-colors cursor-pointer'
+                            >
+                                <X size={14} />
+                                <span>{t('dashboard.assignments.submissions.actions.reject')}</span>
+                            </button>
+                        }
+                    />
                     <ToolTip side='top' slateBlack sideOffset={6} content={t('dashboard.assignments.submissions.actions.reject_description')}>
                         <div className='text-rose-300 hover:text-rose-500 transition-colors cursor-help'>
                             <CircleHelp size={14} />
