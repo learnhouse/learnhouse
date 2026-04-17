@@ -4528,5 +4528,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "مقفل",
+    "locked_title": "هذا النشاط مقفل",
+    "locked_auth_required": "تحتاج إلى تسجيل الدخول للوصول إلى هذا النشاط.",
+    "locked_restricted": "يجب أن تكون عضواً في مجموعة المستخدمين المناسبة. اطلب من مسؤول الدورة إضافتك.",
+    "activity_locked_hint": "سجّل الدخول أو انضم إلى مجموعة المستخدمين المناسبة لفتحه.",
+    "back_to_course": "العودة إلى الدورة",
+    "lock": {
+      "header_access": "الوصول",
+      "title_chapter": "قفل هذا الفصل",
+      "title_activity": "قفل هذا النشاط",
+      "option_public_label": "عام",
+      "option_public_description": "يمكن لأي شخص فتحه، حتى دون تسجيل الدخول.",
+      "option_authenticated_label": "للمسجّلين فقط",
+      "option_authenticated_description": "فقط المستخدمون المسجّلون يمكنهم فتحه.",
+      "option_restricted_label": "مجموعات المستخدمين فقط",
+      "option_restricted_description": "فقط أعضاء المجموعات التي تختارها أدناه.",
+      "trigger_public_title": "الوصول: مفتوح للجميع",
+      "trigger_authenticated_title": "الوصول: للمستخدمين المسجّلين فقط",
+      "trigger_restricted_title": "الوصول: مجموعات مستخدمين محدّدة",
+      "usergroups_header": "مجموعات المستخدمين",
+      "usergroups_none_assigned": "لا توجد مجموعات مُعيّنة — فقط المسؤولون يمكنهم الفتح.",
+      "usergroups_remove_title": "إزالة",
+      "usergroups_loading": "جارٍ تحميل المجموعات…",
+      "usergroups_none_in_org": "لا توجد مجموعات مستخدمين في هذه المؤسسة بعد.",
+      "usergroups_all_assigned": "كل المجموعات معيّنة بالفعل.",
+      "usergroups_add_a_group": "إضافة مجموعة",
+      "toast_add_error": "تعذّر إضافة المجموعة",
+      "toast_remove_error": "تعذّر إزالة المجموعة"
+    }
   }
 }

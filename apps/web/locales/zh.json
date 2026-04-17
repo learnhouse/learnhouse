@@ -4530,5 +4530,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "已锁定",
+    "locked_title": "此活动已锁定",
+    "locked_auth_required": "您需要登录才能访问此活动。",
+    "locked_restricted": "您需要是相应用户组的成员才能访问。请让课程管理员将您添加进来。",
+    "activity_locked_hint": "登录或加入相应的用户组以解锁。",
+    "back_to_course": "返回课程",
+    "lock": {
+      "header_access": "访问权限",
+      "title_chapter": "锁定此章节",
+      "title_activity": "锁定此活动",
+      "option_public_label": "公开",
+      "option_public_description": "任何人都可以打开,无需登录。",
+      "option_authenticated_label": "仅限登录用户",
+      "option_authenticated_description": "只有登录用户可以打开。",
+      "option_restricted_label": "仅限用户组",
+      "option_restricted_description": "只有下面选择的用户组成员可以打开。",
+      "trigger_public_title": "访问权限:对所有人开放",
+      "trigger_authenticated_title": "访问权限:仅限登录用户",
+      "trigger_restricted_title": "访问权限:特定用户组",
+      "usergroups_header": "用户组",
+      "usergroups_none_assigned": "没有分配的组 — 只有管理员可以打开。",
+      "usergroups_remove_title": "移除",
+      "usergroups_loading": "正在加载用户组…",
+      "usergroups_none_in_org": "此组织尚未创建用户组。",
+      "usergroups_all_assigned": "所有用户组都已分配。",
+      "usergroups_add_a_group": "添加用户组",
+      "toast_add_error": "无法添加用户组",
+      "toast_remove_error": "无法移除用户组"
+    }
   }
 }

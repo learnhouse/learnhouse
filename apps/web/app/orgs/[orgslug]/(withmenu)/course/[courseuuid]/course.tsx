@@ -10,7 +10,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy, Lock } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useMediaQuery } from 'usehooks-ts'
@@ -482,6 +482,12 @@ const CourseClient = (props: any) => {
                               {idx + 1}
                             </span>
                             <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
+                            {chapter.is_locked && (
+                              <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
+                                <Lock size={10} />
+                                {t('course.locked', 'Locked')}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center space-x-1 text-sm text-neutral-400 font-normal">
                             <Layers size={16} className="mr-1" />
@@ -492,6 +498,74 @@ const CourseClient = (props: any) => {
                       <div className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden'}`}>
                         <div className="">
                           {chapter.activities.map((activity: any) => {
+                            const locked = !!activity.is_locked
+                            const RowInner = (
+                              <div className="flex space-x-3 items-center">
+                                <div className="flex items-center">
+                                  {locked ? (
+                                    <div className="text-rose-400">
+                                      <Lock size={14} className="stroke-[2]" />
+                                    </div>
+                                  ) : isActivityDone(activity) ? (
+                                    <div className="relative cursor-pointer">
+                                      <Square size={16} className="stroke-[2] text-teal-600" />
+                                      <Check size={16} className="stroke-[2.5] text-teal-600 absolute top-0 left-0" />
+                                    </div>
+                                  ) : (
+                                    <div className="text-neutral-300 cursor-pointer">
+                                      <Square size={16} className="stroke-[2]" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col grow">
+                                  <div className="flex items-center space-x-2 w-full">
+                                    <p className={`font-semibold transition-colors ${locked ? 'text-neutral-400' : 'text-neutral-600 group-hover:text-neutral-800'}`}>{activity.name}</p>
+                                    {locked && (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-semibold">
+                                        <Lock size={10} />
+                                        {t('course.locked', 'Locked')}
+                                      </span>
+                                    )}
+                                    {!locked && isActivityCurrent(activity) && (
+                                      <div className="flex items-center space-x-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs font-semibold animate-pulse">
+                                        <span>{t('activities.current')}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-1.5 mt-0.5 text-neutral-400">
+                                    {activity.activity_type === 'TYPE_DYNAMIC' && (
+                                      <StickyNote size={10} />
+                                    )}
+                                    {activity.activity_type === 'TYPE_VIDEO' && (
+                                      <Video size={10} />
+                                    )}
+                                    {activity.activity_type === 'TYPE_DOCUMENT' && (
+                                      <File size={10} />
+                                    )}
+                                    {activity.activity_type === 'TYPE_ASSIGNMENT' && (
+                                      <Backpack size={10} />
+                                    )}
+                                    <span className="text-xs font-medium">{getActivityTypeLabel(activity.activity_type)}</span>
+                                  </div>
+                                </div>
+                                <div className={`transition-colors ${locked ? 'text-neutral-200' : 'text-neutral-300 group-hover:text-neutral-400 cursor-pointer'}`}>
+                                  <ArrowRight size={14} />
+                                </div>
+                              </div>
+                            )
+
+                            if (locked) {
+                              return (
+                                <div
+                                  key={activity.activity_uuid}
+                                  className="block activity-container px-4 py-4 cursor-not-allowed select-none"
+                                  title={t('course.activity_locked_hint', 'Sign in or join the right user group to unlock this.')}
+                                >
+                                  {RowInner}
+                                </div>
+                              )
+                            }
+
                             return (
                               <Link
                                 key={activity.activity_uuid}
@@ -503,48 +577,7 @@ const CourseClient = (props: any) => {
                                 prefetch={false}
                                 className="block group activity-container transition-all duration-200 px-4 py-4"
                               >
-                                <div className="flex space-x-3 items-center">
-                                  <div className="flex items-center">
-                                    {isActivityDone(activity) ? (
-                                      <div className="relative cursor-pointer">
-                                        <Square size={16} className="stroke-[2] text-teal-600" />
-                                        <Check size={16} className="stroke-[2.5] text-teal-600 absolute top-0 left-0" />
-                                      </div>
-                                    ) : (
-                                      <div className="text-neutral-300 cursor-pointer">
-                                        <Square size={16} className="stroke-[2]" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-col grow">
-                                    <div className="flex items-center space-x-2 w-full">
-                                      <p className="font-semibold text-neutral-600 group-hover:text-neutral-800 transition-colors">{activity.name}</p>
-                                      {isActivityCurrent(activity) && (
-                                        <div className="flex items-center space-x-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs font-semibold animate-pulse">
-                                          <span>{t('activities.current')}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center space-x-1.5 mt-0.5 text-neutral-400">
-                                      {activity.activity_type === 'TYPE_DYNAMIC' && (
-                                        <StickyNote size={10} />
-                                      )}
-                                      {activity.activity_type === 'TYPE_VIDEO' && (
-                                        <Video size={10} />
-                                      )}
-                                      {activity.activity_type === 'TYPE_DOCUMENT' && (
-                                        <File size={10} />
-                                      )}
-                                      {activity.activity_type === 'TYPE_ASSIGNMENT' && (
-                                        <Backpack size={10} />
-                                      )}
-                                      <span className="text-xs font-medium">{getActivityTypeLabel(activity.activity_type)}</span>
-                                    </div>
-                                  </div>
-                                  <div className="text-neutral-300 group-hover:text-neutral-400 transition-colors cursor-pointer">
-                                    <ArrowRight size={14} />
-                                  </div>
-                                </div>
+                                {RowInner}
                               </Link>
                             )
                           })}

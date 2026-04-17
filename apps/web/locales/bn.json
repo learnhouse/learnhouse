@@ -4541,5 +4541,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "লক করা",
+    "locked_title": "এই কার্যক্রমটি লক করা আছে",
+    "locked_auth_required": "এই কার্যক্রমে প্রবেশ করতে আপনাকে সাইন ইন করতে হবে।",
+    "locked_restricted": "প্রবেশের জন্য আপনাকে সঠিক ব্যবহারকারী গ্রুপের সদস্য হতে হবে। কোর্স অ্যাডমিনকে আপনাকে যুক্ত করতে বলুন।",
+    "activity_locked_hint": "আনলক করতে সাইন ইন করুন বা সঠিক গ্রুপে যোগ দিন।",
+    "back_to_course": "কোর্সে ফিরে যান",
+    "lock": {
+      "header_access": "প্রবেশাধিকার",
+      "title_chapter": "এই অধ্যায়টি লক করুন",
+      "title_activity": "এই কার্যক্রমটি লক করুন",
+      "option_public_label": "পাবলিক",
+      "option_public_description": "যে কেউ খুলতে পারে, সাইন ইন না করেও।",
+      "option_authenticated_label": "শুধু সাইন ইন করা ব্যবহারকারী",
+      "option_authenticated_description": "শুধু সাইন ইন করা ব্যবহারকারী খুলতে পারে।",
+      "option_restricted_label": "শুধু ব্যবহারকারী গ্রুপ",
+      "option_restricted_description": "নিচে বেছে নেওয়া গ্রুপের সদস্যরাই কেবল।",
+      "trigger_public_title": "প্রবেশাধিকার: সবার জন্য উন্মুক্ত",
+      "trigger_authenticated_title": "প্রবেশাধিকার: শুধু সাইন ইন করা ব্যবহারকারী",
+      "trigger_restricted_title": "প্রবেশাধিকার: নির্দিষ্ট ব্যবহারকারী গ্রুপ",
+      "usergroups_header": "ব্যবহারকারী গ্রুপ",
+      "usergroups_none_assigned": "কোনো গ্রুপ বরাদ্দ নেই — শুধু অ্যাডমিনরাই খুলতে পারে।",
+      "usergroups_remove_title": "সরান",
+      "usergroups_loading": "গ্রুপ লোড হচ্ছে…",
+      "usergroups_none_in_org": "এই সংগঠনে এখনও কোনো ব্যবহারকারী গ্রুপ নেই।",
+      "usergroups_all_assigned": "সব গ্রুপ ইতিমধ্যে বরাদ্দ করা হয়েছে।",
+      "usergroups_add_a_group": "একটি গ্রুপ যোগ করুন",
+      "toast_add_error": "গ্রুপ যোগ করা যায়নি",
+      "toast_remove_error": "গ্রুপ সরানো যায়নি"
+    }
   }
 }

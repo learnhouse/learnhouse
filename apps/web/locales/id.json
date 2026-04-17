@@ -4541,5 +4541,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Terkunci",
+    "locked_title": "Aktivitas ini terkunci",
+    "locked_auth_required": "Anda perlu masuk untuk mengakses aktivitas ini.",
+    "locked_restricted": "Anda harus menjadi anggota grup pengguna yang tepat. Minta admin kursus untuk menambahkan Anda.",
+    "activity_locked_hint": "Masuk atau bergabunglah dengan grup pengguna yang tepat untuk membukanya.",
+    "back_to_course": "Kembali ke kursus",
+    "lock": {
+      "header_access": "Akses",
+      "title_chapter": "Kunci bab ini",
+      "title_activity": "Kunci aktivitas ini",
+      "option_public_label": "Publik",
+      "option_public_description": "Siapa pun dapat membukanya, bahkan tanpa masuk.",
+      "option_authenticated_label": "Hanya pengguna masuk",
+      "option_authenticated_description": "Hanya pengguna yang masuk yang dapat membukanya.",
+      "option_restricted_label": "Hanya grup pengguna",
+      "option_restricted_description": "Hanya anggota grup yang Anda pilih di bawah.",
+      "trigger_public_title": "Akses: terbuka untuk semua",
+      "trigger_authenticated_title": "Akses: hanya pengguna masuk",
+      "trigger_restricted_title": "Akses: grup pengguna tertentu",
+      "usergroups_header": "Grup pengguna",
+      "usergroups_none_assigned": "Tidak ada grup yang ditetapkan — hanya admin yang dapat membukanya.",
+      "usergroups_remove_title": "Hapus",
+      "usergroups_loading": "Memuat grup…",
+      "usergroups_none_in_org": "Belum ada grup pengguna di organisasi ini.",
+      "usergroups_all_assigned": "Semua grup sudah ditetapkan.",
+      "usergroups_add_a_group": "Tambahkan grup",
+      "toast_add_error": "Tidak dapat menambahkan grup",
+      "toast_remove_error": "Tidak dapat menghapus grup"
+    }
   }
 }

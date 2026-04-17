@@ -4520,5 +4520,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Bloqueado",
+    "locked_title": "Esta atividade está bloqueada",
+    "locked_auth_required": "Você precisa entrar para acessar esta atividade.",
+    "locked_restricted": "Você precisa fazer parte do grupo de usuários correto para acessar. Peça a um administrador do curso para adicioná-lo.",
+    "activity_locked_hint": "Entre ou junte-se ao grupo de usuários correto para desbloquear.",
+    "back_to_course": "Voltar ao curso",
+    "lock": {
+      "header_access": "Acesso",
+      "title_chapter": "Bloquear este capítulo",
+      "title_activity": "Bloquear esta atividade",
+      "option_public_label": "Público",
+      "option_public_description": "Qualquer pessoa pode abrir, mesmo sem entrar.",
+      "option_authenticated_label": "Somente autenticados",
+      "option_authenticated_description": "Apenas usuários autenticados podem abrir.",
+      "option_restricted_label": "Somente grupos",
+      "option_restricted_description": "Apenas membros dos grupos escolhidos abaixo.",
+      "trigger_public_title": "Acesso: aberto a todos",
+      "trigger_authenticated_title": "Acesso: apenas usuários autenticados",
+      "trigger_restricted_title": "Acesso: grupos de usuários específicos",
+      "usergroups_header": "Grupos de usuários",
+      "usergroups_none_assigned": "Nenhum grupo atribuído — só administradores podem abrir.",
+      "usergroups_remove_title": "Remover",
+      "usergroups_loading": "Carregando grupos…",
+      "usergroups_none_in_org": "Ainda não existem grupos de usuários nesta organização.",
+      "usergroups_all_assigned": "Todos os grupos já foram atribuídos.",
+      "usergroups_add_a_group": "Adicionar um grupo",
+      "toast_add_error": "Não foi possível adicionar o grupo",
+      "toast_remove_error": "Não foi possível remover o grupo"
+    }
   }
 }

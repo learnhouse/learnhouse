@@ -4528,5 +4528,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "ロック済み",
+    "locked_title": "このアクティビティはロックされています",
+    "locked_auth_required": "このアクティビティにアクセスするにはサインインが必要です。",
+    "locked_restricted": "アクセスするには該当するユーザーグループのメンバーである必要があります。コース管理者に追加を依頼してください。",
+    "activity_locked_hint": "サインインするか、該当するユーザーグループに参加して解除してください。",
+    "back_to_course": "コースに戻る",
+    "lock": {
+      "header_access": "アクセス",
+      "title_chapter": "このチャプターをロックする",
+      "title_activity": "このアクティビティをロックする",
+      "option_public_label": "公開",
+      "option_public_description": "サインインしなくても誰でも開くことができます。",
+      "option_authenticated_label": "サインイン者のみ",
+      "option_authenticated_description": "サインインしたユーザーのみ開けます。",
+      "option_restricted_label": "ユーザーグループのみ",
+      "option_restricted_description": "下で選択したグループのメンバーのみ。",
+      "trigger_public_title": "アクセス:全員に公開",
+      "trigger_authenticated_title": "アクセス:サインイン済みユーザーのみ",
+      "trigger_restricted_title": "アクセス:特定のユーザーグループのみ",
+      "usergroups_header": "ユーザーグループ",
+      "usergroups_none_assigned": "割り当てられたグループはありません — 管理者のみ開けます。",
+      "usergroups_remove_title": "削除",
+      "usergroups_loading": "グループを読み込み中…",
+      "usergroups_none_in_org": "この組織にはまだユーザーグループがありません。",
+      "usergroups_all_assigned": "すべてのグループが既に割り当てられています。",
+      "usergroups_add_a_group": "グループを追加",
+      "toast_add_error": "グループを追加できませんでした",
+      "toast_remove_error": "グループを削除できませんでした"
+    }
   }
 }

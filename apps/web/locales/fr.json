@@ -4518,5 +4518,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Verrouillé",
+    "locked_title": "Cette activité est verrouillée",
+    "locked_auth_required": "Vous devez vous connecter pour accéder à cette activité.",
+    "locked_restricted": "Vous devez faire partie du bon groupe d'utilisateurs pour y accéder. Demandez à un administrateur du cours de vous ajouter.",
+    "activity_locked_hint": "Connectez-vous ou rejoignez le bon groupe d'utilisateurs pour déverrouiller ceci.",
+    "back_to_course": "Retour au cours",
+    "lock": {
+      "header_access": "Accès",
+      "title_chapter": "Verrouiller ce chapitre",
+      "title_activity": "Verrouiller cette activité",
+      "option_public_label": "Public",
+      "option_public_description": "Tout le monde peut y accéder, même sans connexion.",
+      "option_authenticated_label": "Connectés uniquement",
+      "option_authenticated_description": "Seuls les utilisateurs connectés peuvent y accéder.",
+      "option_restricted_label": "Groupes d'utilisateurs uniquement",
+      "option_restricted_description": "Seuls les membres des groupes sélectionnés ci-dessous.",
+      "trigger_public_title": "Accès : ouvert à tous",
+      "trigger_authenticated_title": "Accès : utilisateurs connectés uniquement",
+      "trigger_restricted_title": "Accès : groupes d'utilisateurs spécifiques",
+      "usergroups_header": "Groupes d'utilisateurs",
+      "usergroups_none_assigned": "Aucun groupe assigné — seuls les administrateurs peuvent y accéder.",
+      "usergroups_remove_title": "Retirer",
+      "usergroups_loading": "Chargement des groupes…",
+      "usergroups_none_in_org": "Aucun groupe d'utilisateurs n'existe encore dans cette organisation.",
+      "usergroups_all_assigned": "Tous les groupes sont déjà assignés.",
+      "usergroups_add_a_group": "Ajouter un groupe",
+      "toast_add_error": "Impossible d'ajouter le groupe",
+      "toast_remove_error": "Impossible de retirer le groupe"
+    }
   }
 }

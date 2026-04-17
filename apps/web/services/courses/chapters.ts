@@ -81,3 +81,38 @@ export async function deleteChapter(coursechapter_id: any, access_token: any) {
   const res = await errorHandling(result)
   return res
 }
+
+export async function getChapterUserGroups(
+  chapter_uuid: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}chapters/${chapter_uuid}/usergroups`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  return errorHandling(result)
+}
+
+export async function addUserGroupToChapter(
+  chapter_uuid: string,
+  usergroup_uuid: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}chapters/${chapter_uuid}/usergroups/${usergroup_uuid}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  return errorHandling(result)
+}
+
+export async function removeUserGroupFromChapter(
+  chapter_uuid: string,
+  usergroup_uuid: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}chapters/${chapter_uuid}/usergroups/${usergroup_uuid}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return errorHandling(result)
+}

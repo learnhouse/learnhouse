@@ -4520,5 +4520,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Vergrendeld",
+    "locked_title": "Deze activiteit is vergrendeld",
+    "locked_auth_required": "Je moet inloggen om deze activiteit te openen.",
+    "locked_restricted": "Je moet lid zijn van de juiste gebruikersgroep om dit te openen. Vraag een cursusbeheerder om je toe te voegen.",
+    "activity_locked_hint": "Log in of word lid van de juiste gebruikersgroep om dit te ontgrendelen.",
+    "back_to_course": "Terug naar cursus",
+    "lock": {
+      "header_access": "Toegang",
+      "title_chapter": "Dit hoofdstuk vergrendelen",
+      "title_activity": "Deze activiteit vergrendelen",
+      "option_public_label": "Openbaar",
+      "option_public_description": "Iedereen kan dit openen, ook zonder in te loggen.",
+      "option_authenticated_label": "Alleen ingelogd",
+      "option_authenticated_description": "Alleen ingelogde gebruikers kunnen dit openen.",
+      "option_restricted_label": "Alleen gebruikersgroepen",
+      "option_restricted_description": "Alleen leden van de groepen die je hieronder kiest.",
+      "trigger_public_title": "Toegang: voor iedereen",
+      "trigger_authenticated_title": "Toegang: alleen ingelogde gebruikers",
+      "trigger_restricted_title": "Toegang: specifieke gebruikersgroepen",
+      "usergroups_header": "Gebruikersgroepen",
+      "usergroups_none_assigned": "Geen groepen toegewezen — alleen beheerders kunnen dit openen.",
+      "usergroups_remove_title": "Verwijderen",
+      "usergroups_loading": "Groepen laden…",
+      "usergroups_none_in_org": "Er bestaan nog geen gebruikersgroepen in deze organisatie.",
+      "usergroups_all_assigned": "Alle groepen zijn al toegewezen.",
+      "usergroups_add_a_group": "Groep toevoegen",
+      "toast_add_error": "Groep kon niet worden toegevoegd",
+      "toast_remove_error": "Groep kon niet worden verwijderd"
+    }
   }
 }

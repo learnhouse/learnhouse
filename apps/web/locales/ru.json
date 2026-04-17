@@ -4543,5 +4543,36 @@
         }
       }
     }
+  },
+  "course": {
+    "locked": "Заблокировано",
+    "locked_title": "Эта активность заблокирована",
+    "locked_auth_required": "Войдите в систему, чтобы получить доступ к этой активности.",
+    "locked_restricted": "Вы должны быть участником нужной группы пользователей. Попросите администратора курса добавить вас.",
+    "activity_locked_hint": "Войдите или присоединитесь к нужной группе пользователей, чтобы разблокировать.",
+    "back_to_course": "Вернуться к курсу",
+    "lock": {
+      "header_access": "Доступ",
+      "title_chapter": "Заблокировать эту главу",
+      "title_activity": "Заблокировать эту активность",
+      "option_public_label": "Публичный",
+      "option_public_description": "Любой может открыть, даже без входа в систему.",
+      "option_authenticated_label": "Только авторизованные",
+      "option_authenticated_description": "Открыть могут только авторизованные пользователи.",
+      "option_restricted_label": "Только группы",
+      "option_restricted_description": "Только участники выбранных ниже групп.",
+      "trigger_public_title": "Доступ: открыт для всех",
+      "trigger_authenticated_title": "Доступ: только авторизованные пользователи",
+      "trigger_restricted_title": "Доступ: определённые группы пользователей",
+      "usergroups_header": "Группы пользователей",
+      "usergroups_none_assigned": "Группы не назначены — открыть могут только администраторы.",
+      "usergroups_remove_title": "Удалить",
+      "usergroups_loading": "Загрузка групп…",
+      "usergroups_none_in_org": "В этой организации ещё нет групп пользователей.",
+      "usergroups_all_assigned": "Все группы уже назначены.",
+      "usergroups_add_a_group": "Добавить группу",
+      "toast_add_error": "Не удалось добавить группу",
+      "toast_remove_error": "Не удалось удалить группу"
+    }
   }
 }

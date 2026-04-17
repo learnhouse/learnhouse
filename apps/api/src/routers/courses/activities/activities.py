@@ -25,6 +25,11 @@ from src.services.courses.activities.video import (
     create_external_video_activity,
     create_video_activity,
 )
+from src.services.courses.lock_usergroups import (
+    add_usergroup_to_activity,
+    get_activity_usergroups,
+    remove_usergroup_from_activity,
+)
 
 router = APIRouter()
 
@@ -384,4 +389,52 @@ async def api_create_documentpdf_activity(
     """
     return await create_documentpdf_activity(
         request, name, chapter_id, current_user, db_session, pdf_file
+    )
+
+
+@router.get(
+    "/{activity_uuid}/usergroups",
+    summary="List user groups assigned to a locked activity",
+    description="Return the user groups that can access this activity when lock_type is 'restricted'.",
+)
+async def api_list_activity_usergroups(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await get_activity_usergroups(request, activity_uuid, current_user, db_session)
+
+
+@router.post(
+    "/{activity_uuid}/usergroups/{usergroup_uuid}",
+    summary="Grant a user group access to a locked activity",
+    description="Associate a user group with this activity so its members can access it when lock_type is 'restricted'.",
+)
+async def api_add_activity_usergroup(
+    request: Request,
+    activity_uuid: str,
+    usergroup_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await add_usergroup_to_activity(
+        request, activity_uuid, usergroup_uuid, current_user, db_session
+    )
+
+
+@router.delete(
+    "/{activity_uuid}/usergroups/{usergroup_uuid}",
+    summary="Revoke a user group's access to a locked activity",
+    description="Remove the association between a user group and this activity.",
+)
+async def api_remove_activity_usergroup(
+    request: Request,
+    activity_uuid: str,
+    usergroup_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await remove_usergroup_from_activity(
+        request, activity_uuid, usergroup_uuid, current_user, db_session
     )
