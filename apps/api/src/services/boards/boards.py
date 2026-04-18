@@ -337,6 +337,7 @@ async def remove_board_member(
 
 
 async def check_board_membership(
+    request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
@@ -349,22 +350,35 @@ async def check_board_membership(
         .where(Board.board_uuid == board_uuid, BoardMember.user_id == current_user.id)
     ).first()
 
-    if not result:
-        # Check if board exists to give the right error
-        board_exists = db_session.exec(
-            select(Board.id).where(Board.board_uuid == board_uuid)
-        ).first()
-        if not board_exists:
-            raise HTTPException(status_code=404, detail="Board not found")
-        raise HTTPException(status_code=403, detail="Not a member of this board")
+    if result:
+        member, user = result
+        return BoardMemberRead(
+            id=member.id,
+            board_id=member.board_id,
+            user_id=member.user_id,
+            role=member.role,
+            creation_date=member.creation_date,
+            username=user.username if user else None,
+            email=user.email if user else None,
+            avatar_image=user.avatar_image if user else None,
+            user_uuid=user.user_uuid if user else None,
+        )
 
-    member, user = result
+    board = db_session.exec(select(Board).where(Board.board_uuid == board_uuid)).first()
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+
+    # Not a direct member — fall back to RBAC so public boards, linked usergroups,
+    # resource authors, and org admins can still join the collab session as viewers.
+    await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
+
+    user = db_session.exec(select(User).where(User.id == current_user.id)).first()
     return BoardMemberRead(
-        id=member.id,
-        board_id=member.board_id,
-        user_id=member.user_id,
-        role=member.role,
-        creation_date=member.creation_date,
+        id=0,
+        board_id=board.id,
+        user_id=current_user.id,
+        role=BoardMemberRole.VIEWER,
+        creation_date="",
         username=user.username if user else None,
         email=user.email if user else None,
         avatar_image=user.avatar_image if user else None,
