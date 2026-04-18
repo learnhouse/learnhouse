@@ -989,7 +989,24 @@
     "quick_results": "Résultats rapides",
     "view_all_results": "Tout voir",
     "course": "Cours",
-    "user": "Membre"
+    "user": "Membre",
+    "start_heading": "Que cherchez-vous ?",
+    "start_subtitle": "Cherchez dans tous les espaces de cette organisation en un seul endroit.",
+    "all_results": "Tous les résultats",
+    "filter_heading": "Filtrer par type",
+    "empty_section": "Rien ici pour l'instant",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "types": {
+      "all": "Tout",
+      "courses": "Cours",
+      "collections": "Collections",
+      "users": "Membres",
+      "communities": "Communautés",
+      "discussions": "Discussions",
+      "playgrounds": "Playgrounds",
+      "podcasts": "Podcasts"
+    }
   },
   "ai": {
     "ask_ai": "Demander à l'IA",

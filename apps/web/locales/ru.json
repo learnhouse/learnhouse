@@ -1012,7 +1012,24 @@
     "quick_results": "Быстрые результаты",
     "view_all_results": "Посмотреть все результаты",
     "course": "Курс",
-    "user": "Пользователь"
+    "user": "Пользователь",
+    "start_heading": "Что вы ищете?",
+    "start_subtitle": "Ищите по всем пространствам этой организации в одном месте.",
+    "all_results": "Все результаты",
+    "filter_heading": "Фильтр по типу",
+    "empty_section": "Здесь пока ничего нет",
+    "previous": "Назад",
+    "next": "Далее",
+    "types": {
+      "all": "Все",
+      "courses": "Курсы",
+      "collections": "Коллекции",
+      "users": "Участники",
+      "communities": "Сообщества",
+      "discussions": "Обсуждения",
+      "playgrounds": "Плейграунды",
+      "podcasts": "Подкасты"
+    }
   },
   "ai": {
     "ask_ai": "Спросить ИИ",

@@ -989,7 +989,24 @@
     "quick_results": "Snelle resultaten",
     "view_all_results": "Bekijk alle resultaten",
     "course": "Cursus",
-    "user": "Gebruiker"
+    "user": "Gebruiker",
+    "start_heading": "Waar ben je naar op zoek?",
+    "start_subtitle": "Zoek in elke ruimte van deze organisatie op één plek.",
+    "all_results": "Alle resultaten",
+    "filter_heading": "Filter op type",
+    "empty_section": "Hier staat nog niets",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "types": {
+      "all": "Alles",
+      "courses": "Cursussen",
+      "collections": "Collecties",
+      "users": "Leden",
+      "communities": "Communities",
+      "discussions": "Discussies",
+      "playgrounds": "Playgrounds",
+      "podcasts": "Podcasts"
+    }
   },
   "ai": {
     "ask_ai": "Vraag AI",

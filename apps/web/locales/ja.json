@@ -999,7 +999,24 @@
     "quick_results": "クイック結果",
     "view_all_results": "すべての結果を表示",
     "course": "コース",
-    "user": "ユーザー"
+    "user": "ユーザー",
+    "start_heading": "何をお探しですか？",
+    "start_subtitle": "このオーガニゼーションのあらゆるスペースをひとつの場所から検索できます。",
+    "all_results": "すべての結果",
+    "filter_heading": "タイプで絞り込み",
+    "empty_section": "ここにはまだ何もありません",
+    "previous": "前へ",
+    "next": "次へ",
+    "types": {
+      "all": "すべて",
+      "courses": "コース",
+      "collections": "コレクション",
+      "users": "メンバー",
+      "communities": "コミュニティ",
+      "discussions": "ディスカッション",
+      "playgrounds": "プレイグラウンド",
+      "podcasts": "ポッドキャスト"
+    }
   },
   "ai": {
     "ask_ai": "AI に質問",

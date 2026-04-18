@@ -999,7 +999,24 @@
     "quick_results": "快捷结果",
     "view_all_results": "查看所有结果",
     "course": "课程",
-    "user": "用户"
+    "user": "用户",
+    "start_heading": "您在找什么？",
+    "start_subtitle": "在一个地方搜索此组织的所有空间。",
+    "all_results": "所有结果",
+    "filter_heading": "按类型筛选",
+    "empty_section": "这里还什么都没有",
+    "previous": "上一页",
+    "next": "下一页",
+    "types": {
+      "all": "全部",
+      "courses": "课程",
+      "collections": "合集",
+      "users": "成员",
+      "communities": "社区",
+      "discussions": "讨论",
+      "playgrounds": "实验台",
+      "podcasts": "播客"
+    }
   },
   "ai": {
     "ask_ai": "咨询 AI",

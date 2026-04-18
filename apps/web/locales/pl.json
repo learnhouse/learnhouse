@@ -1012,7 +1012,24 @@
     "quick_results": "Szybkie wyniki",
     "view_all_results": "Zobacz wszystkie wyniki",
     "course": "Kurs",
-    "user": "Użytkownik"
+    "user": "Użytkownik",
+    "start_heading": "Czego szukasz?",
+    "start_subtitle": "Przeszukaj wszystkie przestrzenie tej organizacji w jednym miejscu.",
+    "all_results": "Wszystkie wyniki",
+    "filter_heading": "Filtruj według typu",
+    "empty_section": "Jeszcze nic tu nie ma",
+    "previous": "Poprzednie",
+    "next": "Następne",
+    "types": {
+      "all": "Wszystko",
+      "courses": "Kursy",
+      "collections": "Kolekcje",
+      "users": "Członkowie",
+      "communities": "Społeczności",
+      "discussions": "Dyskusje",
+      "playgrounds": "Playgroundy",
+      "podcasts": "Podcasty"
+    }
   },
   "ai": {
     "ask_ai": "Zapytaj AI",
