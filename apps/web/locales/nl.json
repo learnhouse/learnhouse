@@ -3157,7 +3157,8 @@
         "title": "Opdracht Tooling",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Inzendingen"
+          "submissions": "Inzendingen",
+          "analytics": "Analyses"
         },
         "mobile": {
           "title": "Alleen voor Desktop",
@@ -3366,6 +3367,58 @@
           "optional": "optioneel",
           "placeholder": "Schrijf een commentaar over de hele inzending. De student ziet dit naast zijn cijfer.",
           "hint": "Laat leeg om eerdere feedback ongewijzigd te houden."
+        }
+      },
+      "analytics": {
+        "loading": "Analyses worden geladen...",
+        "empty": {
+          "title": "Nog geen inzendingen",
+          "description": "De analyses verschijnen zodra studenten hun werk inleveren."
+        },
+        "kpis": {
+          "average": "Klasgemiddelde",
+          "median": "Mediaan",
+          "pass_rate": "Slagingspercentage",
+          "pass_rate_sub": "{{passed}} van {{total}} geslaagd",
+          "on_time": "Op-tijd-percentage",
+          "on_time_sub": "{{late}} te laat van {{total}}"
+        },
+        "mini": {
+          "highest": "Hoogste",
+          "lowest": "Laagste",
+          "spread": "Spreiding",
+          "feedback": "Feedbackdekking"
+        },
+        "distribution": {
+          "title": "Cijferverdeling",
+          "subtitle": "Hoe de klas verdeeld is over cijferbanden",
+          "empty": "Cijfers verschijnen hier zodra inzendingen zijn beoordeeld",
+          "students": "Studenten"
+        },
+        "timeline": {
+          "title": "Inzendingsactiviteit",
+          "subtitle": "Wanneer studenten inleverden vs. wanneer u beoordeelde",
+          "empty": "Nog geen activiteit om te tonen",
+          "submitted": "Ingeleverd",
+          "graded": "Beoordeeld",
+          "due": "Deadline"
+        },
+        "tasks": {
+          "title": "Prestaties per taak",
+          "subtitle": "Gemiddelde score per taak — lage balken tonen waar studenten het moeilijk hebben",
+          "empty": "Prestaties per taak verschijnen na de eerste beoordelingen",
+          "avg_grade": "Gemiddeld cijfer",
+          "attempts": "pogingen"
+        },
+        "top": {
+          "title": "Topprestaties",
+          "subtitle": "Uw studenten met de hoogste scores voor deze opdracht",
+          "empty": "Nog geen beoordeelde inzendingen"
+        },
+        "attention": {
+          "title": "Mogelijk extra steun nodig",
+          "subtitle": "Studenten die niet geslaagd zijn — overweeg contact op te nemen",
+          "empty": "Iedereen die beoordeeld is, is geslaagd. Goed gedaan!"
         }
       },
       "modals": {

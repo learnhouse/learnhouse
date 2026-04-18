@@ -3178,7 +3178,8 @@
         "title": "Alat Tugas",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Pengiriman"
+          "submissions": "Pengiriman",
+          "analytics": "Analitik"
         },
         "mobile": {
           "title": "Hanya Desktop",
@@ -3387,6 +3388,58 @@
           "optional": "opsional",
           "placeholder": "Tulis komentar tentang keseluruhan pengumpulan. Siswa akan melihatnya di samping nilai mereka.",
           "hint": "Biarkan kosong untuk mempertahankan umpan balik sebelumnya tanpa perubahan."
+        }
+      },
+      "analytics": {
+        "loading": "Memuat analitik...",
+        "empty": {
+          "title": "Belum ada pengumpulan",
+          "description": "Analitik akan muncul segera setelah siswa mulai mengumpulkan tugas."
+        },
+        "kpis": {
+          "average": "Rata-rata kelas",
+          "median": "Median",
+          "pass_rate": "Tingkat kelulusan",
+          "pass_rate_sub": "{{passed}} dari {{total}} lulus",
+          "on_time": "Tingkat ketepatan waktu",
+          "on_time_sub": "{{late}} terlambat dari {{total}}"
+        },
+        "mini": {
+          "highest": "Tertinggi",
+          "lowest": "Terendah",
+          "spread": "Rentang",
+          "feedback": "Cakupan umpan balik"
+        },
+        "distribution": {
+          "title": "Distribusi nilai",
+          "subtitle": "Bagaimana kelas tersebar di antara rentang nilai",
+          "empty": "Nilai akan muncul di sini setelah pengumpulan dinilai",
+          "students": "Siswa"
+        },
+        "timeline": {
+          "title": "Aktivitas pengumpulan",
+          "subtitle": "Kapan siswa mengumpulkan vs. kapan Anda menilai",
+          "empty": "Belum ada aktivitas untuk ditampilkan",
+          "submitted": "Dikumpulkan",
+          "graded": "Dinilai",
+          "due": "Batas waktu"
+        },
+        "tasks": {
+          "title": "Performa tugas",
+          "subtitle": "Skor rata-rata per tugas — batang rendah menunjukkan area yang sulit bagi siswa",
+          "empty": "Performa per tugas akan muncul setelah penilaian pertama",
+          "avg_grade": "Nilai rata-rata",
+          "attempts": "percobaan"
+        },
+        "top": {
+          "title": "Performa terbaik",
+          "subtitle": "Siswa dengan nilai tertinggi pada tugas ini",
+          "empty": "Belum ada pengumpulan yang dinilai"
+        },
+        "attention": {
+          "title": "Mungkin perlu bantuan",
+          "subtitle": "Siswa yang tidak lulus — pertimbangkan untuk menghubungi mereka",
+          "empty": "Semua yang dinilai lulus. Kerja bagus!"
         }
       },
       "modals": {

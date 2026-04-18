@@ -3157,7 +3157,8 @@
         "title": "Ferramentas de Tarefa",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Envios"
+          "submissions": "Envios",
+          "analytics": "Análises"
         },
         "mobile": {
           "title": "Apenas Desktop",
@@ -3366,6 +3367,58 @@
           "optional": "opcional",
           "placeholder": "Escreva um comentário sobre a submissão como um todo. O aluno verá isso ao lado da sua nota.",
           "hint": "Deixe em branco para manter qualquer comentário anterior inalterado."
+        }
+      },
+      "analytics": {
+        "loading": "A carregar análises...",
+        "empty": {
+          "title": "Ainda não há entregas",
+          "description": "As análises aparecerão assim que os alunos começarem a enviar os seus trabalhos."
+        },
+        "kpis": {
+          "average": "Média da turma",
+          "median": "Mediana",
+          "pass_rate": "Taxa de aprovação",
+          "pass_rate_sub": "{{passed}} de {{total}} aprovados",
+          "on_time": "Taxa de pontualidade",
+          "on_time_sub": "{{late}} em atraso de {{total}}"
+        },
+        "mini": {
+          "highest": "Maior",
+          "lowest": "Menor",
+          "spread": "Amplitude",
+          "feedback": "Cobertura de feedback"
+        },
+        "distribution": {
+          "title": "Distribuição de notas",
+          "subtitle": "Como a turma se distribui pelas faixas de nota",
+          "empty": "As notas aparecerão aqui depois das correções",
+          "students": "Alunos"
+        },
+        "timeline": {
+          "title": "Atividade de entregas",
+          "subtitle": "Quando os alunos entregaram vs. quando classificou",
+          "empty": "Sem atividade para mostrar ainda",
+          "submitted": "Entregues",
+          "graded": "Classificadas",
+          "due": "Data limite"
+        },
+        "tasks": {
+          "title": "Desempenho por tarefa",
+          "subtitle": "Nota média por tarefa — barras baixas indicam onde os alunos têm dificuldades",
+          "empty": "O desempenho por tarefa aparecerá após as primeiras classificações",
+          "avg_grade": "Nota média",
+          "attempts": "tentativas"
+        },
+        "top": {
+          "title": "Melhores desempenhos",
+          "subtitle": "Os seus alunos com melhores notas neste trabalho",
+          "empty": "Ainda não há entregas classificadas"
+        },
+        "attention": {
+          "title": "Podem precisar de apoio",
+          "subtitle": "Alunos que não foram aprovados — considere falar com eles",
+          "empty": "Todos os classificados foram aprovados. Bom trabalho!"
         }
       },
       "modals": {

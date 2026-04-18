@@ -3180,7 +3180,8 @@
         "title": "Ödev Aracı",
         "tabs": {
           "editor": "Editör",
-          "submissions": "Gönderimler"
+          "submissions": "Gönderimler",
+          "analytics": "Analizler"
         },
         "mobile": {
           "title": "Sadece Masaüstü",
@@ -3389,6 +3390,58 @@
           "optional": "isteğe bağlı",
           "placeholder": "Teslimat hakkında genel bir yorum yazın. Öğrenci bunu notunun yanında görecek.",
           "hint": "Önceki geri bildirimi değiştirmek istemiyorsanız boş bırakın."
+        }
+      },
+      "analytics": {
+        "loading": "Analizler yükleniyor...",
+        "empty": {
+          "title": "Henüz teslim yok",
+          "description": "Öğrenciler çalışmalarını teslim etmeye başladığında analizler burada görünecek."
+        },
+        "kpis": {
+          "average": "Sınıf ortalaması",
+          "median": "Medyan",
+          "pass_rate": "Geçme oranı",
+          "pass_rate_sub": "{{total}} öğrenciden {{passed}} geçti",
+          "on_time": "Zamanında teslim oranı",
+          "on_time_sub": "{{total}} teslimin {{late}} gecikti"
+        },
+        "mini": {
+          "highest": "En yüksek",
+          "lowest": "En düşük",
+          "spread": "Dağılım",
+          "feedback": "Geri bildirim kapsamı"
+        },
+        "distribution": {
+          "title": "Not dağılımı",
+          "subtitle": "Sınıfın not aralıklarına dağılımı",
+          "empty": "Teslimler notlandıkça notlar burada görünecek",
+          "students": "Öğrenciler"
+        },
+        "timeline": {
+          "title": "Teslim etkinliği",
+          "subtitle": "Öğrencilerin ne zaman teslim ettiği ile ne zaman notladığınız",
+          "empty": "Gösterilecek etkinlik yok",
+          "submitted": "Teslim edildi",
+          "graded": "Notlandı",
+          "due": "Son tarih"
+        },
+        "tasks": {
+          "title": "Görev performansı",
+          "subtitle": "Görev başına ortalama puan — düşük çubuklar öğrencilerin zorlandığı yerleri gösterir",
+          "empty": "Görev performansı ilk notlardan sonra görünecek",
+          "avg_grade": "Ortalama not",
+          "attempts": "deneme"
+        },
+        "top": {
+          "title": "En iyi performans",
+          "subtitle": "Bu ödevde en yüksek puan alan öğrencileriniz",
+          "empty": "Henüz notlanmış teslim yok"
+        },
+        "attention": {
+          "title": "Destek gerekebilir",
+          "subtitle": "Geçemeyen öğrenciler — iletişime geçmeyi düşünün",
+          "empty": "Notlanan herkes geçti. Harika iş!"
         }
       },
       "modals": {

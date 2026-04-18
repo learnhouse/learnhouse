@@ -3155,7 +3155,8 @@
         "title": "Herramientas de tarea",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Envíos"
+          "submissions": "Envíos",
+          "analytics": "Analíticas"
         },
         "mobile": {
           "title": "Solo escritorio",
@@ -3364,6 +3365,58 @@
           "optional": "opcional",
           "placeholder": "Escribe un comentario sobre la entrega. El estudiante lo verá junto a su nota.",
           "hint": "Déjalo vacío para mantener cualquier comentario anterior sin cambios."
+        }
+      },
+      "analytics": {
+        "loading": "Cargando analíticas...",
+        "empty": {
+          "title": "Aún no hay entregas",
+          "description": "Las analíticas aparecerán en cuanto los estudiantes empiecen a entregar sus trabajos."
+        },
+        "kpis": {
+          "average": "Promedio de clase",
+          "median": "Mediana",
+          "pass_rate": "Tasa de aprobación",
+          "pass_rate_sub": "{{passed}} de {{total}} aprobados",
+          "on_time": "Entregas puntuales",
+          "on_time_sub": "{{late}} tardías de {{total}}"
+        },
+        "mini": {
+          "highest": "Más alta",
+          "lowest": "Más baja",
+          "spread": "Rango",
+          "feedback": "Cobertura de feedback"
+        },
+        "distribution": {
+          "title": "Distribución de notas",
+          "subtitle": "Cómo se reparte la clase por bandas de notas",
+          "empty": "Las notas aparecerán aquí cuando se califiquen las entregas",
+          "students": "Estudiantes"
+        },
+        "timeline": {
+          "title": "Actividad de entregas",
+          "subtitle": "Cuándo entregan los estudiantes vs. cuándo las calificas",
+          "empty": "Aún no hay actividad para mostrar",
+          "submitted": "Entregadas",
+          "graded": "Calificadas",
+          "due": "Fecha límite"
+        },
+        "tasks": {
+          "title": "Rendimiento por tarea",
+          "subtitle": "Puntuación media por tarea — las barras bajas destacan dónde les cuesta más",
+          "empty": "El rendimiento por tarea aparecerá tras calificar entregas",
+          "avg_grade": "Nota media",
+          "attempts": "intentos"
+        },
+        "top": {
+          "title": "Mejores resultados",
+          "subtitle": "Tus estudiantes con mejor puntuación en esta tarea",
+          "empty": "Aún no hay entregas calificadas"
+        },
+        "attention": {
+          "title": "Posible apoyo necesario",
+          "subtitle": "Estudiantes que no aprobaron — considera contactarlos",
+          "empty": "Todos los calificados aprobaron. ¡Buen trabajo!"
         }
       },
       "modals": {

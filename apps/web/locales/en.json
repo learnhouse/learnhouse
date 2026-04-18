@@ -3465,7 +3465,8 @@
         },
         "tabs": {
           "editor": "Editor",
-          "submissions": "Submissions"
+          "submissions": "Submissions",
+          "analytics": "Analytics"
         },
         "mobile": {
           "title": "Desktop Only",
@@ -3669,6 +3670,58 @@
         "toasts": {
           "reject_success": "Assignment rejected successfully",
           "finalize_success": "Assignment graded and activity marked as complete"
+        }
+      },
+      "analytics": {
+        "loading": "Loading analytics...",
+        "empty": {
+          "title": "No submissions yet",
+          "description": "Analytics will appear as soon as students start submitting their work."
+        },
+        "kpis": {
+          "average": "Class Average",
+          "median": "Median",
+          "pass_rate": "Pass Rate",
+          "pass_rate_sub": "{{passed}} of {{total}} passed",
+          "on_time": "On-Time Rate",
+          "on_time_sub": "{{late}} late of {{total}}"
+        },
+        "mini": {
+          "highest": "Highest",
+          "lowest": "Lowest",
+          "spread": "Spread",
+          "feedback": "Feedback coverage"
+        },
+        "distribution": {
+          "title": "Grade distribution",
+          "subtitle": "How the class is spread across grade bands",
+          "empty": "Grades will appear here once submissions are graded",
+          "students": "Students"
+        },
+        "timeline": {
+          "title": "Submission activity",
+          "subtitle": "When students submitted vs. when you graded them",
+          "empty": "No activity to plot yet",
+          "submitted": "Submitted",
+          "graded": "Graded",
+          "due": "Due date"
+        },
+        "tasks": {
+          "title": "Task performance",
+          "subtitle": "Average score per task — low bars highlight where students struggle",
+          "empty": "Per-task performance will appear after graded submissions come in",
+          "avg_grade": "Average grade",
+          "attempts": "attempts"
+        },
+        "top": {
+          "title": "Top performers",
+          "subtitle": "Your highest-scoring students on this assignment",
+          "empty": "No graded submissions yet"
+        },
+        "attention": {
+          "title": "May need support",
+          "subtitle": "Students who did not pass — consider reaching out",
+          "empty": "Everyone who was graded passed. Nice work!"
         }
       },
       "modals": {

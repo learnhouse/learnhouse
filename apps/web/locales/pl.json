@@ -3180,7 +3180,8 @@
         "title": "Narzędzia zadań",
         "tabs": {
           "editor": "Edytor",
-          "submissions": "Przesłane prace"
+          "submissions": "Przesłane prace",
+          "analytics": "Analityka"
         },
         "mobile": {
           "title": "Tylko dla komputerów",
@@ -3389,6 +3390,58 @@
           "optional": "opcjonalne",
           "placeholder": "Napisz komentarz o całym zgłoszeniu. Uczeń zobaczy go obok swojej oceny.",
           "hint": "Zostaw puste, aby zachować poprzednią opinię bez zmian."
+        }
+      },
+      "analytics": {
+        "loading": "Ładowanie analityki...",
+        "empty": {
+          "title": "Brak przesłanych prac",
+          "description": "Analityka pojawi się, gdy tylko uczniowie zaczną oddawać prace."
+        },
+        "kpis": {
+          "average": "Średnia klasy",
+          "median": "Mediana",
+          "pass_rate": "Wskaźnik zaliczeń",
+          "pass_rate_sub": "{{passed}} z {{total}} zaliczyło",
+          "on_time": "Wskaźnik punktualności",
+          "on_time_sub": "{{late}} spóźnionych z {{total}}"
+        },
+        "mini": {
+          "highest": "Najwyższa",
+          "lowest": "Najniższa",
+          "spread": "Rozrzut",
+          "feedback": "Pokrycie opinii"
+        },
+        "distribution": {
+          "title": "Rozkład ocen",
+          "subtitle": "Jak klasa rozkłada się między przedziałami ocen",
+          "empty": "Oceny pojawią się tutaj po sprawdzeniu prac",
+          "students": "Uczniowie"
+        },
+        "timeline": {
+          "title": "Aktywność oddawania prac",
+          "subtitle": "Kiedy uczniowie oddali prace, a kiedy je sprawdziłeś/aś",
+          "empty": "Brak aktywności do pokazania",
+          "submitted": "Oddane",
+          "graded": "Ocenione",
+          "due": "Termin"
+        },
+        "tasks": {
+          "title": "Wyniki zadań",
+          "subtitle": "Średni wynik na zadanie — niskie słupki wskazują, gdzie uczniowie mają trudności",
+          "empty": "Wyniki zadań pojawią się po pierwszych ocenach",
+          "avg_grade": "Średnia ocena",
+          "attempts": "prób"
+        },
+        "top": {
+          "title": "Najlepsze wyniki",
+          "subtitle": "Twoi uczniowie z najwyższymi ocenami za to zadanie",
+          "empty": "Brak ocenionych prac"
+        },
+        "attention": {
+          "title": "Może potrzebować wsparcia",
+          "subtitle": "Uczniowie, którzy nie zaliczyli — warto się z nimi skontaktować",
+          "empty": "Wszyscy ocenieni zaliczyli. Świetna robota!"
         }
       },
       "modals": {

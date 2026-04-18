@@ -3155,7 +3155,8 @@
         "title": "Outils de devoir",
         "tabs": {
           "editor": "Éditeur",
-          "submissions": "Soumissions"
+          "submissions": "Soumissions",
+          "analytics": "Analyses"
         },
         "mobile": {
           "title": "Bureau uniquement",
@@ -3364,6 +3365,58 @@
           "optional": "facultatif",
           "placeholder": "Écrivez un commentaire sur l’ensemble de la soumission. L’étudiant le verra à côté de sa note.",
           "hint": "Laissez vide pour conserver tout commentaire précédent."
+        }
+      },
+      "analytics": {
+        "loading": "Chargement des analyses...",
+        "empty": {
+          "title": "Aucune soumission pour le moment",
+          "description": "Les analyses apparaîtront dès que les étudiants commenceront à rendre leurs travaux."
+        },
+        "kpis": {
+          "average": "Moyenne de la classe",
+          "median": "Médiane",
+          "pass_rate": "Taux de réussite",
+          "pass_rate_sub": "{{passed}} sur {{total}} ont réussi",
+          "on_time": "Taux de ponctualité",
+          "on_time_sub": "{{late}} en retard sur {{total}}"
+        },
+        "mini": {
+          "highest": "La plus haute",
+          "lowest": "La plus basse",
+          "spread": "Écart",
+          "feedback": "Couverture des retours"
+        },
+        "distribution": {
+          "title": "Répartition des notes",
+          "subtitle": "Comment la classe se répartit par tranches de notes",
+          "empty": "Les notes apparaîtront ici une fois les soumissions corrigées",
+          "students": "Étudiants"
+        },
+        "timeline": {
+          "title": "Activité de soumission",
+          "subtitle": "Quand les étudiants ont soumis vs. quand vous avez noté",
+          "empty": "Aucune activité à afficher pour l'instant",
+          "submitted": "Soumises",
+          "graded": "Notées",
+          "due": "Date limite"
+        },
+        "tasks": {
+          "title": "Performance par tâche",
+          "subtitle": "Score moyen par tâche — les barres courtes montrent où ça coince",
+          "empty": "La performance par tâche apparaîtra après les premières corrections",
+          "avg_grade": "Note moyenne",
+          "attempts": "tentatives"
+        },
+        "top": {
+          "title": "Meilleurs élèves",
+          "subtitle": "Vos étudiants avec les meilleurs scores sur ce devoir",
+          "empty": "Aucune soumission notée pour le moment"
+        },
+        "attention": {
+          "title": "Peuvent avoir besoin d'aide",
+          "subtitle": "Étudiants qui n'ont pas réussi — envisagez de les contacter",
+          "empty": "Tous les étudiants notés ont réussi. Bravo !"
         }
       },
       "modals": {
