@@ -99,7 +99,9 @@ function BoardEditorInner({
   provider: HocuspocusProvider
 }) {
   const [toolMode, setToolMode] = useState<'select' | 'pan' | 'draw' | 'card' | 'youtube' | 'playground' | 'activity' | 'embed' | 'webpage' | 'sticker' | 'frame' | 'note' | 'todo' | 'podcast'>('select')
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 768 ? 0.6 : 1
+  )
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [drawColor, setDrawColor] = useState('#000000')
   const [drawWidth, setDrawWidth] = useState(2)
@@ -190,6 +192,7 @@ function BoardEditorInner({
       PodcastBlockExtension,
     ],
     immediatelyRender: false,
+    autofocus: false,
     editorProps: {
       attributes: {
         class: 'board-editor outline-none min-h-[2000px] min-w-[3000px] relative',
@@ -313,6 +316,7 @@ function BoardEditorInner({
     // insert a duplicate block before React commits setToolMode.
     const mode = toolModeRef.current
     if (mode === 'pan' || e.button === 1 || (e.button === 0 && e.shiftKey && mode !== 'select')) {
+      editor?.commands.blur()
       setIsPanning(true)
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
@@ -321,6 +325,9 @@ function BoardEditorInner({
       const target = e.target as HTMLElement
       const isOnBlock = target.closest('[data-node-view-wrapper]')
       if (!isOnBlock) {
+        // Clicked empty canvas — blur editor so it stops capturing keystrokes
+        editor?.commands.blur()
+
         // Start marquee or just clear selection
         const rect = canvasRef.current?.getBoundingClientRect()
         if (rect) {
@@ -335,6 +342,7 @@ function BoardEditorInner({
         }
       }
     } else if (mode === 'draw') {
+      editor?.commands.blur()
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
       e.preventDefault()
@@ -649,6 +657,73 @@ function BoardEditorInner({
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.25))
   const handleZoomReset = () => { setZoom(1); setPan({ x: 0, y: 0 }) }
 
+  // Touch: pan (1 finger) and pinch-to-zoom (2 fingers)
+  const touchRef = useRef<{
+    startTouches: { x: number; y: number }[]
+    startPan: { x: number; y: number }
+    startZoom: number
+    startDist: number
+  } | null>(null)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Ignore touches on blocks — let them handle their own
+    const target = e.target as HTMLElement
+    if (target.closest('[data-node-view-wrapper]')) return
+
+    editor?.commands.blur()
+    const touches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }))
+
+    if (touches.length === 2) {
+      const dist = Math.hypot(touches[1].x - touches[0].x, touches[1].y - touches[0].y)
+      touchRef.current = { startTouches: touches, startPan: { ...pan }, startZoom: zoom, startDist: dist }
+      e.preventDefault()
+    } else if (touches.length === 1) {
+      touchRef.current = { startTouches: touches, startPan: { ...pan }, startZoom: zoom, startDist: 0 }
+    }
+  }, [pan, zoom, editor])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current) return
+    const touches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }))
+
+    if (touches.length === 2 && touchRef.current.startTouches.length === 2) {
+      // Pinch-to-zoom + pan
+      e.preventDefault()
+      const dist = Math.hypot(touches[1].x - touches[0].x, touches[1].y - touches[0].y)
+      const scale = dist / touchRef.current.startDist
+      const newZoom = Math.min(Math.max(touchRef.current.startZoom * scale, 0.25), 3)
+
+      const midX = (touches[0].x + touches[1].x) / 2
+      const midY = (touches[0].y + touches[1].y) / 2
+      const startMidX = (touchRef.current.startTouches[0].x + touchRef.current.startTouches[1].x) / 2
+      const startMidY = (touchRef.current.startTouches[0].y + touchRef.current.startTouches[1].y) / 2
+
+      cancelAnimationFrame(panRafRef.current)
+      panRafRef.current = requestAnimationFrame(() => {
+        setZoom(newZoom)
+        setPan({
+          x: touchRef.current!.startPan.x + (midX - startMidX),
+          y: touchRef.current!.startPan.y + (midY - startMidY),
+        })
+      })
+    } else if (touches.length === 1 && touchRef.current.startTouches.length === 1) {
+      // Single finger pan
+      const dx = touches[0].x - touchRef.current.startTouches[0].x
+      const dy = touches[0].y - touchRef.current.startTouches[0].y
+      cancelAnimationFrame(panRafRef.current)
+      panRafRef.current = requestAnimationFrame(() => {
+        setPan({
+          x: touchRef.current!.startPan.x + dx,
+          y: touchRef.current!.startPan.y + dy,
+        })
+      })
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback(() => {
+    touchRef.current = null
+  }, [])
+
   if (!editor) return null
 
   return (
@@ -659,7 +734,8 @@ function BoardEditorInner({
       style={{
         backgroundColor: '#f8f8f8',
         backgroundImage: 'radial-gradient(circle, #d1d1d1 1px, transparent 1px)',
-        backgroundSize: '24px 24px',
+        backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
+        backgroundPosition: `${pan.x}px ${pan.y}px`,
       }}
     >
       {/* Canvas viewport */}
@@ -670,6 +746,10 @@ function BoardEditorInner({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         style={{
           cursor: toolMode === 'pan' || isPanning ? 'grab' : toolMode === 'draw' || activePlacement ? 'crosshair' : 'default',
         }}
@@ -774,7 +854,7 @@ function BoardEditorInner({
       />
 
       {/* Bottom right stack: effects → chat → zoom */}
-      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed">
+      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed board-social">
         {/* Ephemeral Chat */}
         <EphemeralChat ydoc={ydoc} provider={provider} />
 
@@ -793,7 +873,7 @@ function BoardEditorInner({
       {/* Feedback button — bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
-        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed"
+        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed board-feedback"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(12px)',
@@ -807,6 +887,7 @@ function BoardEditorInner({
         onOpenChange={setFeedbackOpen}
         userName={username}
       />
+
     </div>
     </BoardSelectionProvider>
     </BoardYjsProvider>
