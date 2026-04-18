@@ -14,6 +14,11 @@ if [ -n "$LEARNHOUSE_SQL_CONNECTION_STRING" ]; then
     fi
 fi
 
+# Idempotent first-boot bootstrap: seeds default roles + org + admin user
+# from LEARNHOUSE_INITIAL_ADMIN_{EMAIL,PASSWORD} when the user table is empty.
+# No-op on subsequent boots.
+(cd /app/api && uv run python cli.py bootstrap) || echo "bootstrap: skipped/failed — continuing"
+
 # Start the services
 # Use server-wrapper.js for runtime environment variable injection
 pm2 start server-wrapper.js --cwd /app/web --name learnhouse-web > /dev/null 2>&1

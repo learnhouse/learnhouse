@@ -7,6 +7,7 @@ from config.config import get_learnhouse_config
 from src.db.organizations import OrganizationCreate
 from src.db.users import UserCreate
 from src.services.setup.setup import (
+    bootstrap_from_env,
     install_create_organization,
     install_create_organization_user,
     install_default_elements,
@@ -117,6 +118,23 @@ def install(
         print("password: The password you entered")
 
 
+
+
+@cli.command()
+def bootstrap():
+    """Idempotent first-boot bootstrap. Reads LEARNHOUSE_INITIAL_ADMIN_{EMAIL,PASSWORD}
+    from env. No-op when users already exist. Intended to run on every container start."""
+    learnhouse_config = get_learnhouse_config()
+    engine = create_engine(
+        learnhouse_config.database_config.sql_connection_string,  # type: ignore
+        echo=False,
+        pool_pre_ping=True,
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as db_session:
+        created = bootstrap_from_env(db_session)
+        if not created:
+            print("Bootstrap: no-op (users already exist or password not set)")
 
 
 @cli.command()

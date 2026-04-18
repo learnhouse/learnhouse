@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 import json
 from uuid import uuid4
@@ -594,4 +595,52 @@ def install_create_organization_user(
     user = UserRead.model_validate(user)
 
     return user
+
+
+def bootstrap_from_env(db_session: Session) -> bool:
+    """Idempotent first-boot bootstrap driven by env vars.
+
+    When the user table is empty and LEARNHOUSE_INITIAL_ADMIN_PASSWORD is set,
+    seed default roles, the default org, and an admin user. On any subsequent
+    boot (users already exist, or no password set) this is a no-op.
+
+    Safe to run on every container start — hence wired into docker/start.sh.
+    Returns True if an admin user was created, False if the call was a no-op.
+    """
+    password = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_PASSWORD")
+    if not password:
+        return False
+
+    if db_session.exec(select(User).limit(1)).first() is not None:
+        return False
+
+    email = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_EMAIL", "admin@school.dev")
+
+    install_default_elements(db_session)
+
+    existing_org = db_session.exec(
+        select(Organization).where(Organization.slug == "default")
+    ).first()
+    if existing_org is None:
+        install_create_organization(
+            OrganizationCreate(
+                name="Default Organization",
+                description="Default Organization",
+                slug="default",
+                email="",
+                logo_image="",
+                thumbnail_image="",
+                about="",
+                label="",
+            ),
+            db_session,
+        )
+
+    install_create_organization_user(
+        UserCreate(username="admin", email=email, password=password),
+        "default",
+        db_session,
+    )
+    print(f"Bootstrap: created admin user {email} on default org")
+    return True
 
