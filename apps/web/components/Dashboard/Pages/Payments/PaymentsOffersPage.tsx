@@ -70,7 +70,7 @@ function PaymentsOffersPage() {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10 mx-auto">
+      <div className="ps-10 pe-10 mx-auto">
         <Modal
           isDialogOpen={isCreateModalOpen}
           onOpenChange={setIsCreateModalOpen}

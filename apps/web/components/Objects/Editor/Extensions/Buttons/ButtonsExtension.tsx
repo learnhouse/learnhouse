@@ -64,10 +64,10 @@ const ButtonsExtension: React.FC = (props: any) => {
 
   const getAlignmentClass = () => {
     switch (alignment) {
-      case 'left': return 'text-left';
+      case 'left': return 'text-start';
       case 'center': return 'text-center';
-      case 'right': return 'text-right';
-      default: return 'text-left';
+      case 'right': return 'text-end';
+      default: return 'text-start';
     }
   }
 

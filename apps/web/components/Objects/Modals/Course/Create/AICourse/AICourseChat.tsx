@@ -201,8 +201,8 @@ function AICourseChat({
               className={cn(
                 "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
                 message.role === 'user'
-                  ? "bg-purple-600/80 text-white rounded-br-md"
-                  : "bg-white/5 text-white/80 rounded-bl-md ring-1 ring-inset ring-white/10"
+                  ? "bg-purple-600/80 text-white rounded-ee-md"
+                  : "bg-white/5 text-white/80 rounded-es-md ring-1 ring-inset ring-white/10"
               )}
             >
               {message.role === 'user' ? (
@@ -224,7 +224,7 @@ function AICourseChat({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-3 ring-1 ring-inset ring-white/10 max-w-[85%]">
+            <div className="bg-white/5 rounded-2xl rounded-es-md px-4 py-3 ring-1 ring-inset ring-white/10 max-w-[85%]">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
                 <div className="flex flex-col gap-1">
@@ -307,7 +307,7 @@ function AICourseChat({
                     <button
                       type="button"
                       onClick={() => removeAttachment(attachment.id)}
-                      className="p-1 rounded-full bg-white/10 hover:bg-red-500/30 text-white/60 hover:text-red-300 transition-colors ml-1"
+                      className="p-1 rounded-full bg-white/10 hover:bg-red-500/30 text-white/60 hover:text-red-300 transition-colors ms-1"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -345,7 +345,7 @@ function AICourseChat({
               />
 
               {/* Bottom toolbar */}
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-3 border-t border-white/5">
+              <div className="absolute bottom-0 start-0 end-0 flex items-center justify-between p-3 border-t border-white/5">
                 {/* Attachment button with menu */}
                 <div className="relative" ref={attachMenuRef}>
                   <button
@@ -365,7 +365,7 @@ function AICourseChat({
 
                   {/* Attachment menu */}
                   {showAttachMenu && (
-                    <div className="absolute bottom-full left-0 mb-2 w-52 bg-gray-900 rounded-xl ring-1 ring-white/10 shadow-2xl overflow-hidden z-50">
+                    <div className="absolute bottom-full start-0 mb-2 w-52 bg-gray-900 rounded-xl ring-1 ring-white/10 shadow-2xl overflow-hidden z-50">
                       {showYoutubeInput ? (
                         <div className="p-3 space-y-2">
                           <input
@@ -411,7 +411,7 @@ function AICourseChat({
                             <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                               <ImageIcon className="w-4 h-4 text-blue-400" />
                             </div>
-                            <div className="text-left">
+                            <div className="text-start">
                               <span className="block font-medium">{t('courses.create.ai.attach_image') || 'Photo'}</span>
                               <span className="block text-xs text-white/40">PNG, JPG, GIF</span>
                             </div>
@@ -424,7 +424,7 @@ function AICourseChat({
                             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
                               <Video className="w-4 h-4 text-red-400" />
                             </div>
-                            <div className="text-left">
+                            <div className="text-start">
                               <span className="block font-medium">{t('courses.create.ai.attach_youtube') || 'YouTube Video'}</span>
                               <span className="block text-xs text-white/40">AI will analyze the video</span>
                             </div>
@@ -442,7 +442,7 @@ function AICourseChat({
                             <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                               <FileText className="w-4 h-4 text-yellow-400" />
                             </div>
-                            <div className="text-left">
+                            <div className="text-start">
                               <span className="block font-medium">{t('courses.create.ai.attach_file') || 'Document'}</span>
                               <span className="block text-xs text-white/40">PDF, DOC, TXT</span>
                             </div>

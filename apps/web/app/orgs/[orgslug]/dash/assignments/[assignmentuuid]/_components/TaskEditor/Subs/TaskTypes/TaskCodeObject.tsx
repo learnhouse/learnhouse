@@ -737,7 +737,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
                     </div>
                     <button
                       onClick={() => removeTestCase(index)}
-                      className="w-6 h-6 flex items-center justify-center rounded-md bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 ml-2"
+                      className="w-6 h-6 flex items-center justify-center rounded-md bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500 ms-2"
                     >
                       <Minus size={12} />
                     </button>
@@ -1065,11 +1065,11 @@ function TestResultsPanel({
                 )}
                 <span className="font-medium text-slate-700">{result.label}</span>
                 {result.time && (
-                  <span className="text-[10px] text-slate-400 ml-auto">{result.time}s</span>
+                  <span className="text-[10px] text-slate-400 ms-auto">{result.time}s</span>
                 )}
               </div>
               {!result.passed && !isHidden && !detailsSuppressed && (
-                <div className="mt-1.5 pl-6 text-xs space-y-0.5">
+                <div className="mt-1.5 ps-6 text-xs space-y-0.5">
                   {result.expected_stdout !== null && (
                     <div>
                       <span className="text-slate-400">Expected: </span>
@@ -1097,7 +1097,7 @@ function TestResultsPanel({
                 </div>
               )}
               {isHidden && !result.passed && (
-                <div className="mt-1 pl-6 text-xs text-slate-400 italic">
+                <div className="mt-1 ps-6 text-xs text-slate-400 italic">
                   Details hidden — this is a hidden test case
                 </div>
               )}

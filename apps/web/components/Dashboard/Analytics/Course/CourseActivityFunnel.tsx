@@ -60,7 +60,7 @@ function FunnelStep({
           <div className="relative mb-2" style={{ width: `${viewsWidth}%` }}>
             <div className="h-8 rounded-lg bg-indigo-100 relative overflow-hidden">
               <div
-                className={`absolute inset-y-0 left-0 rounded-lg ${colors.bar} transition-all duration-500`}
+                className={`absolute inset-y-0 start-0 rounded-lg ${colors.bar} transition-all duration-500`}
                 style={{ width: `${completionFill}%` }}
               />
               <div className="absolute inset-0 flex items-center justify-between px-3">
@@ -106,12 +106,12 @@ function CompactFunnelRow({ row, maxViews }: { row: any; maxViews: number }) {
       <div className="flex-1 relative" style={{ width: `${barWidth}%` }}>
         <div className="h-5 rounded-md bg-indigo-100 relative overflow-hidden">
           <div
-            className={`absolute inset-y-0 left-0 rounded-md ${colors.bar} transition-all`}
+            className={`absolute inset-y-0 start-0 rounded-md ${colors.bar} transition-all`}
             style={{ width: `${completionFill}%` }}
           />
         </div>
       </div>
-      <span className={`text-xs font-bold ${colors.text} w-10 text-right`}>
+      <span className={`text-xs font-bold ${colors.text} w-10 text-end`}>
         {rate}%
       </span>
     </div>

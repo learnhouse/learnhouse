@@ -30,7 +30,7 @@ export default function CohortRetention({ days = '90' }: { days?: string }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                <th className="pb-2 text-left">Cohort</th>
+                <th className="pb-2 text-start">Cohort</th>
                 <th className="pb-2">Size</th>
                 <th className="pb-2">W1</th>
                 <th className="pb-2">W2</th>
@@ -41,7 +41,7 @@ export default function CohortRetention({ days = '90' }: { days?: string }) {
             <tbody>
               {rows.map((r: any, i: number) => (
                 <tr key={i} className="border-b border-gray-50 text-center">
-                  <td className="py-1.5 text-left text-gray-600">{r.cohort_week?.slice(0, 10)}</td>
+                  <td className="py-1.5 text-start text-gray-600">{r.cohort_week?.slice(0, 10)}</td>
                   <td className="py-1.5 font-medium">{r.cohort_size}</td>
                   <td className={`py-1.5 ${cellColor(r.week_1, r.cohort_size)}`}>{pct(r.week_1, r.cohort_size)}</td>
                   <td className={`py-1.5 ${cellColor(r.week_2, r.cohort_size)}`}>{pct(r.week_2, r.cohort_size)}</td>

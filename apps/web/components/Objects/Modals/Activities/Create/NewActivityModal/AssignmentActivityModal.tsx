@@ -279,7 +279,7 @@ function GradingTypeSelector({ value, onChange, translationPrefix }: { value: st
             }`}
           >
             {isSelected && (
-              <div className={`absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
+              <div className={`absolute top-1.5 end-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ${gt.color} bg-white nice-shadow`}>
                 <Check size={8} strokeWidth={3} />
               </div>
             )}

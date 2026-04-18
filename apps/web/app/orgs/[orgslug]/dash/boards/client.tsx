@@ -250,7 +250,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
       descriptionKey="Create collaborative boards for real-time brainstorming and planning."
     >
     <FeatureDisabledView featureName="boards" orgslug={orgslug} context="dashboard">
-      <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+      <div className="h-full w-full bg-[#f8f8f8] ps-10 pe-10">
         <div className="mb-6 pt-6">
           <Breadcrumbs items={[
             { label: t('boards.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> }
@@ -292,18 +292,18 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
         {allBoards.length > 0 && (
           <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('boards.search_placeholder')}
-                className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
+                className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute end-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -318,7 +318,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
                 ressourceType="boards"
                 orgId={org_id}
               >
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-2 ms-auto">
                   <span className="text-sm font-medium text-gray-500 px-2">
                     {t('boards.selected_count', { count: selectedBoards.size })}
                   </span>
@@ -504,7 +504,7 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
       <button
         onClick={handleSelectClick}
         aria-label={isSelected ? 'Deselect board' : 'Select board'}
-        className={`absolute top-2 left-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
+        className={`absolute top-2 start-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
           isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}
       >
@@ -533,7 +533,7 @@ function BoardCard({ board, orgslug, orgUuid, orgId, isSelected, onToggleSelect,
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-        <div className="absolute bottom-2 left-2">
+        <div className="absolute bottom-2 start-2">
           {board.public ? (
             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
               <Globe size={10} />
@@ -597,7 +597,7 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
       checkMethod="roles"
       orgId={orgId}
     >
-      <div className={`absolute top-2 right-2 z-20 transition-opacity ${
+      <div className={`absolute top-2 end-2 z-20 transition-opacity ${
         !isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -609,12 +609,12 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
               <Link href={`/board/${board.board_uuid.replace('board_', '')}`} className="flex items-center cursor-pointer">
-                <Eye className="mr-2 h-4 w-4" /> {t('boards.open_board')}
+                <Eye className="me-2 h-4 w-4" /> {t('boards.open_board')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={getUriWithOrg(orgslug, `/dash/boards/${board.board_uuid.replace('board_', '')}/general`)} className="flex items-center cursor-pointer">
-                <Settings2 className="mr-2 h-4 w-4" /> {t('boards.settings')}
+                <Settings2 className="me-2 h-4 w-4" /> {t('boards.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -623,8 +623,8 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
                 confirmationMessage={t('boards.duplicate_board_confirm')}
                 dialogTitle={t('boards.duplicate_board_title', { name: board.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
-                    <Copy className="mr-2 h-4 w-4" /> {t('boards.duplicate_board')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                    <Copy className="me-2 h-4 w-4" /> {t('boards.duplicate_board')}
                   </button>
                 }
                 functionToExecute={() => onDuplicate(board.board_uuid)}
@@ -637,8 +637,8 @@ function BoardCardOptions({ board, orgslug, orgId, onDuplicate, onDelete }: {
                 confirmationMessage={t('boards.delete_board_confirm')}
                 dialogTitle={t('boards.delete_board_title', { name: board.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <Trash2 className="mr-2 h-4 w-4" /> {t('boards.delete_board')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <Trash2 className="me-2 h-4 w-4" /> {t('boards.delete_board')}
                   </button>
                 }
                 functionToExecute={() => onDelete(board.board_uuid)}

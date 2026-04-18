@@ -339,7 +339,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
   return (
     <>
       {/* Top right bar */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 pointer-events-none">
+      <div className="absolute top-4 end-4 z-20 flex items-center gap-2 pointer-events-none">
         {/* Main bar: avatars + clock + timer btn + share */}
         <div
           className="flex items-center gap-2 rounded-xl px-2 py-1.5 nice-shadow pointer-events-auto"
@@ -361,7 +361,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
 
             {showTimerPicker && (
               <div
-                className="absolute top-full right-0 mt-2 rounded-xl p-3 nice-shadow animate-fade-in"
+                className="absolute top-full end-0 mt-2 rounded-xl p-3 nice-shadow animate-fade-in"
                 style={{
                   ...frostedStyle,
                   background: 'rgba(255, 255, 255, 0.98)',
@@ -406,7 +406,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
 
             {showShare && (
               <div
-                className="absolute top-full right-0 mt-2 w-64 rounded-xl p-3 nice-shadow animate-fade-in"
+                className="absolute top-full end-0 mt-2 w-64 rounded-xl p-3 nice-shadow animate-fade-in"
                 style={{
                   background: 'rgba(255, 255, 255, 0.98)',
                   backdropFilter: 'blur(12px)',
@@ -457,7 +457,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
       {/* Active timer banner */}
       {isTimerActive && !isTimerExpired && (
         <div
-          className="absolute top-0 left-1/2 z-30 pointer-events-auto"
+          className="absolute top-0 start-1/2 z-30 pointer-events-auto"
           style={{
             animation: 'timer-slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}
@@ -598,7 +598,7 @@ export default function BoardTopRight({ provider, ydoc }: BoardTopRightProps) {
       {/* Time's up — bar phase: small banner at top, stays permanently (non-pomodoro only) */}
       {timesUpPhase === 'bar' && !timerState.isPomodoro && (
         <div
-          className="absolute top-0 left-1/2 z-30 pointer-events-auto"
+          className="absolute top-0 start-1/2 z-30 pointer-events-auto"
           style={{
             animation: 'timesup-shrink-to-bar 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}

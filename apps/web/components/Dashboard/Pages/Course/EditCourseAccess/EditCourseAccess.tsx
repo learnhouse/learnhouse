@@ -179,7 +179,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                 </h2>
             </div>
             <div className="overflow-x-auto">
-                <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
                     <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                         <tr className="font-bolder text-sm">
                             <th className="py-3 px-4">{t('dashboard.courses.access.usergroups.table.name')}</th>
@@ -196,7 +196,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                                         confirmationMessage={t('dashboard.courses.access.usergroups.modals.unlink_message')}
                                         dialogTitle={t('dashboard.courses.access.usergroups.modals.unlink_title')}
                                         dialogTrigger={
-                                            <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
+                                            <button className="me-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
                                                 <X className="w-4 h-4" />
                                                 <span>{t('dashboard.courses.access.usergroups.actions.delete_link')}</span>
                                             </button>
@@ -210,7 +210,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                     </tbody>
                 </table>
             </div>
-            <div className="flex flex-row-reverse mt-3 mr-2">
+            <div className="flex flex-row-reverse mt-3 me-2">
                 <Modal
                     isDialogOpen={userGroupModal}
                     onOpenChange={() => setUserGroupModal(!userGroupModal)}

@@ -149,7 +149,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         className="flex w-44 h-10 items-center justify-center py-2 my-3 rounded-xl text-white bg-black hover:cursor-pointer"
       >
         <Layers size={17} />
-        <div className="text-sm font-bold ml-2">
+        <div className="text-sm font-bold ms-2">
           {t('dashboard.courses.structure.actions.add_activity')}
         </div>
       </div>

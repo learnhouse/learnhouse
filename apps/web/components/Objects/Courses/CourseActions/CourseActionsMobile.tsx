@@ -11,6 +11,7 @@ import UserAvatar from '../../UserAvatar'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import useSWR from 'swr'
 import Link from 'next/link'
+import { formatMoney, useLocale } from '@/lib/format'
 
 interface Author {
   user: {
@@ -131,6 +132,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   const { isUserPartOfTheOrg } = useOrgMembership()
   const org = useOrg() as any
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const locale = useLocale()
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
   const resourceUuid = cleanCourseUuid ? `course_${cleanCourseUuid}` : null;
@@ -245,7 +247,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
         {linkedOffers.length > 0 ? (() => {
           const offer = linkedOffers[0];
           const formattedPrice = offer?.amount != null
-            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: offer.currency ?? 'USD' }).format(offer.amount)
+            ? formatMoney(offer.amount, offer.currency ?? 'USD', locale)
             : null;
           const storeHref = org?.slug ? getUriWithOrg(org.slug, `/store/offers/${offer.offer_id}`) : '#';
 

@@ -11,6 +11,7 @@ import {
   ExternalLink, Loader2, CalendarDays, BadgeCheck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { formatMoney, formatDate, useLocale } from '@/lib/format'
 
 interface AccountPurchasesProps {
   orgId: number
@@ -25,18 +26,14 @@ function EnrollmentCard({ enrollment, orgslug, onManageBilling, billingLoading }
 }) {
   const isSubscription = enrollment.offer_type === 'subscription'
   const isActive = enrollment.status === 'active'
+  const locale = useLocale()
 
   const formattedPrice = enrollment.amount != null
-    ? new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: enrollment.currency ?? 'USD',
-      }).format(enrollment.amount)
+    ? formatMoney(enrollment.amount, enrollment.currency ?? 'USD', locale)
     : null
 
   const formattedDate = enrollment.creation_date
-    ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(
-        new Date(enrollment.creation_date)
-      )
+    ? formatDate(enrollment.creation_date, locale, { year: 'numeric', month: 'short', day: 'numeric' })
     : null
 
   return (
@@ -60,7 +57,7 @@ function EnrollmentCard({ enrollment, orgslug, onManageBilling, billingLoading }
         <div className="flex items-start justify-between gap-3">
           <p className="font-bold text-gray-900 leading-snug">{enrollment.offer_name}</p>
           {formattedPrice && (
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 text-end">
               <p className={`font-black text-lg ${isSubscription ? 'text-indigo-700' : 'text-gray-900'}`}>
                 {formattedPrice}
               </p>

@@ -387,7 +387,7 @@ function EmbedObjectsComponent(props: any) {
 
               {/* Toolbar for existing embeds */}
               {isEditable && (
-                <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 end-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-70 hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setActiveInput(embedType)}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
@@ -496,7 +496,7 @@ function EmbedObjectsComponent(props: any) {
                 {activeInput === 'url' ? (
                   <>
                     <div className="relative mb-2">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">
+                      <div className="absolute start-3 top-1/2 transform -translate-y-1/2 text-neutral-500">
                         <LinkIcon size={16} />
                       </div>
                       <input
@@ -504,7 +504,7 @@ function EmbedObjectsComponent(props: any) {
                         type="text"
                         value={embedUrl}
                         onChange={handleUrlChange}
-                        className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
+                        className="w-full ps-10 pe-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
                         placeholder={selectedProduct ? t('editor.blocks.embed_block.paste_url', { name: selectedProduct.name }) : t('editor.blocks.embed_block.paste_any_url')}
                         autoFocus
                       />
@@ -566,13 +566,13 @@ function EmbedObjectsComponent(props: any) {
           {isEditable && (embedUrl || sanitizedEmbedCode) && (
             <>
               <div
-                className="absolute right-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
+                className="absolute end-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
                 onMouseDown={(e) => handleResizeStart(e, 'horizontal')}
               >
                 <GripVertical size={16} className="text-neutral-500" />
               </div>
               <div
-                className="absolute left-0 right-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
+                className="absolute start-0 end-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white/70 hover:bg-white/90 transition-opacity"
                 onMouseDown={(e) => handleResizeStart(e, 'vertical')}
               >
                 <GripHorizontal size={16} className="text-neutral-500" />

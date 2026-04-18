@@ -21,7 +21,7 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const showStore = isEnabled('payments')
 
   return (
-    <div className='pl-1'>
+    <div className='ps-1'>
       <ul className="flex space-x-5">
         {isCoursesEnabled && (
           <LinkItem

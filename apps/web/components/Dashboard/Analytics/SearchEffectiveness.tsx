@@ -18,18 +18,18 @@ export default function SearchEffectiveness({ days = '30' }: { days?: string }) 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+              <tr className="text-start text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
                 <th className="pb-2">Query</th>
-                <th className="pb-2 text-right">Searches</th>
-                <th className="pb-2 text-right">Zero Results %</th>
+                <th className="pb-2 text-end">Searches</th>
+                <th className="pb-2 text-end">Zero Results %</th>
               </tr>
             </thead>
             <tbody>
               {rows.slice(0, 15).map((r: any, i: number) => (
                 <tr key={i} className="border-b border-gray-50">
                   <td className="py-1.5 text-gray-700 truncate max-w-[200px]">{r.query}</td>
-                  <td className="py-1.5 text-right text-gray-500">{r.search_count}</td>
-                  <td className="py-1.5 text-right text-gray-500">{r.zero_result_rate}%</td>
+                  <td className="py-1.5 text-end text-gray-500">{r.search_count}</td>
+                  <td className="py-1.5 text-end text-gray-500">{r.zero_result_rate}%</td>
                 </tr>
               ))}
             </tbody>

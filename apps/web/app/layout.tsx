@@ -1,29 +1,31 @@
-'use client'
 import '../styles/globals.css'
 import { SessionProvider } from '@components/Contexts/AuthContext'
 import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, getLEARNHOUSE_TELEMETRY_DISABLED_VAL } from '@services/config/config'
-
-const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() === 'localhost'
-const isTelemetryDisabled = getLEARNHOUSE_TELEMETRY_DISABLED_VAL() === 'true'
 import Script from 'next/script'
-import '../lib/i18n'
 import I18nProvider from '@components/Contexts/I18nContext'
-import { Wix_Madefor_Text } from 'next/font/google'
+import { Rubik } from 'next/font/google'
+import { getServerLocale, getDir } from '../lib/serverLocale'
 
-const wixMadeforText = Wix_Madefor_Text({
-  subsets: ['latin'],
+const rubik = Rubik({
+  subsets: ['latin', 'hebrew'],
   display: 'swap',
   variable: '--font-default',
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const lang = await getServerLocale()
+  const dir = getDir(lang)
+
+  const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() === 'localhost'
+  const isTelemetryDisabled = getLEARNHOUSE_TELEMETRY_DISABLED_VAL() === 'true'
+
   return (
-    <html className={wixMadeforText.variable} lang="en">
+    <html className={rubik.variable} lang={lang} dir={dir}>
       <head>
         {/* Synchronous script — blocks parsing to guarantee window.__RUNTIME_CONFIG__ exists before any JS runs.
             Next.js <Script strategy="beforeInteractive"> is not truly blocking in all browsers (Safari). */}

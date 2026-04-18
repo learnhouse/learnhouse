@@ -63,8 +63,8 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
 
               {/* Content */}
               <div className={`flex-1 flex items-center ${
-                section.contentAlign === 'left' ? 'justify-start text-left' :
-                section.contentAlign === 'right' ? 'justify-end text-right' :
+                section.contentAlign === 'left' ? 'justify-start text-start' :
+                section.contentAlign === 'right' ? 'justify-end text-end' :
                 'justify-center text-center'
               } p-6`}>
                 <div className="max-w-2xl">
@@ -157,7 +157,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             {section.title && (
-              <h2 className="text-2xl md:text-3xl font-bold text-left mb-16 text-gray-900">{section.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-start mb-16 text-gray-900">{section.title}</h2>
             )}
             <div className="flex justify-center w-full">
               <div className="flex flex-wrap justify-center gap-16 max-w-7xl">
@@ -180,7 +180,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             key={`people-${section.title}`}
             className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-left mb-10 text-gray-900">{section.title}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-start mb-10 text-gray-900">{section.title}</h2>
             <div className="flex flex-wrap justify-center gap-x-20 gap-y-8">
               {section.people.map((person, index) => (
                 <div key={index} className="w-[140px] flex flex-col items-center">
@@ -215,7 +215,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               key={`featured-courses-${section.title}`}
               className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
             >
-              <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-start mb-6 text-gray-900">{section.title}</h2>
               <div className="text-center py-6 text-gray-500">{t('courses.loading_courses')}</div>
             </div>
           )
@@ -230,7 +230,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             key={`featured-courses-${section.title}`}
             className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-start mb-6 text-gray-900">{section.title}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
               {featuredCourses.map((course: any) => (
                 <div key={course.course_uuid} className="w-full flex justify-center">

@@ -135,7 +135,7 @@ const CollectionAdminEditsArea = (props: any) => {
       orgId={props.org_id}
       checkMethod="roles"
     >
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 end-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button aria-label="Collection actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
@@ -149,8 +149,8 @@ const CollectionAdminEditsArea = (props: any) => {
           confirmationButtonText={t('collections.delete_collection')}
           dialogTitle={t('collections.delete_collection_title', { name: props.collection.name })}
           dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <Trash2 className="mr-2 h-4 w-4" /> {t('collections.delete_collection')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <Trash2 className="me-2 h-4 w-4" /> {t('collections.delete_collection')}
             </button>
           }
                 functionToExecute={deleteCollectionUI}

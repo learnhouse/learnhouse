@@ -342,7 +342,7 @@ function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; acc
                     )}
                     <div>
                       <span className="text-sm text-white/80">{u.username}</span>
-                      <span className="text-xs text-white/30 ml-2">{u.email}</span>
+                      <span className="text-xs text-white/30 ms-2">{u.email}</span>
                     </div>
                   </div>
                 ))}
@@ -416,7 +416,7 @@ function CoursesTab({
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-white/40">{total} course{total !== 1 ? 's' : ''}</span>
       </div>
-      <table className="w-full text-left">
+      <table className="w-full text-start">
         <thead>
           <tr className="border-b border-white/[0.08]">
             <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Course</th>
@@ -457,7 +457,7 @@ function CoursesTab({
                         <p className="text-xs text-white/30 truncate max-w-xs">{course.description}</p>
                       )}
                     </div>
-                    <ArrowSquareOut size={14} weight="bold" className="text-white/20 ml-auto shrink-0" />
+                    <ArrowSquareOut size={14} weight="bold" className="text-white/20 ms-auto shrink-0" />
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -537,14 +537,14 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
           <div className="relative">
             <MagnifyingGlass
               size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30"
+              className="absolute start-2.5 top-1/2 -translate-y-1/2 text-white/30"
             />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search users..."
-              className="bg-white/[0.05] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-48"
+              className="bg-white/[0.05] border border-white/[0.08] rounded-lg ps-8 pe-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-48"
             />
           </div>
         </form>
@@ -557,7 +557,7 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
         </div>
       ) : (
         <>
-          <table className="w-full text-left">
+          <table className="w-full text-start">
             <thead>
               <tr className="border-b border-white/[0.08]">
                 <th className="px-4 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">User</th>
@@ -947,7 +947,7 @@ function PlanTab({
             <button
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
-              className={`text-left p-4 rounded-xl border transition-all ${
+              className={`text-start p-4 rounded-xl border transition-all ${
                 selectedPlan === plan.id
                   ? 'border-white/30 bg-white/[0.06]'
                   : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]'

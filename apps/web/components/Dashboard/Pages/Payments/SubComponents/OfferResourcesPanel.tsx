@@ -99,7 +99,7 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
               </div>
               <button
                 onClick={() => handleRemove(uuid)}
-                className="text-red-400 hover:text-red-600 ml-2"
+                className="text-red-400 hover:text-red-600 ms-2"
               >
                 <X size={14} />
               </button>
@@ -139,7 +139,7 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
                   <button
                     disabled={isLinking}
                     onClick={() => handleLinkCourse(course)}
-                    className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-white flex items-center gap-2 disabled:opacity-50"
+                    className="w-full text-start px-2 py-1.5 rounded text-xs hover:bg-white flex items-center gap-2 disabled:opacity-50"
                   >
                     <BookOpen size={12} className="text-indigo-500 shrink-0" />
                     <span className="truncate">{course.name}</span>

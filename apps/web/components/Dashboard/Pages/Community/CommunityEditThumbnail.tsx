@@ -180,7 +180,7 @@ const CommunityEditThumbnail: React.FC = () => {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
-                  <ArrowBigUpDash size={16} className="mr-2 animate-bounce" />
+                  <ArrowBigUpDash size={16} className="me-2 animate-bounce" />
                   {t('common.loading')}
                 </div>
               </div>

@@ -150,7 +150,7 @@ function AssignmentsHome() {
 
   return (
     <div className='flex w-full'>
-      <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
+      <div className='ps-4 sm:ps-10 me-4 sm:me-10 tracking-tighter flex flex-col space-y-5 w-full'>
         <div className='flex flex-col space-y-2 pt-6'>
           <Breadcrumbs items={[
             { label: t('common.assignments'), href: '/dash/assignments', icon: <Backpack size={14} /> }
@@ -186,18 +186,18 @@ function AssignmentsHome() {
         <div className='flex flex-col sm:flex-row gap-3 items-stretch sm:items-center'>
           {/* Search input */}
           <div className='relative flex-1 max-w-md'>
-            <Search size={14} className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' />
+            <Search size={14} className='absolute start-3 top-1/2 -translate-y-1/2 text-gray-400' />
             <input
               type='text'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('dashboard.assignments.home.search_placeholder')}
-              className='w-full pl-9 pr-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400'
+              className='w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400'
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className='absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                className='absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
                 aria-label='Clear search'
               >
                 <X size={14} />

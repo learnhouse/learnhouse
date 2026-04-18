@@ -138,7 +138,7 @@ const CommunityAdminEditsArea = (props: any) => {
       orgId={props.org_id}
       checkMethod="roles"
     >
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 end-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button aria-label="Community actions" className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
@@ -151,16 +151,16 @@ const CommunityAdminEditsArea = (props: any) => {
                 href={getUriWithOrg(props.orgslug, `/dash/communities/${removeCommunityPrefix(props.community_uuid)}/general`)}
                 className="flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
               >
-                <ExternalLink className="mr-2 h-4 w-4" /> {t('dashboard.courses.communities.card.open_settings')}
+                <ExternalLink className="me-2 h-4 w-4" /> {t('dashboard.courses.communities.card.open_settings')}
               </Link>
             </DropdownMenuItem>
             {props.onEdit && (
               <DropdownMenuItem asChild>
                 <button
                   onClick={props.onEdit}
-                  className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                  className="w-full text-start flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
                 >
-                  <Edit className="mr-2 h-4 w-4" /> {t('dashboard.courses.communities.card.quick_edit')}
+                  <Edit className="me-2 h-4 w-4" /> {t('dashboard.courses.communities.card.quick_edit')}
                 </button>
               </DropdownMenuItem>
             )}
@@ -170,8 +170,8 @@ const CommunityAdminEditsArea = (props: any) => {
                 confirmationButtonText={t('dashboard.courses.communities.modals.delete.button')}
                 dialogTitle={t('dashboard.courses.communities.modals.delete.title', { name: props.community.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <Trash2 className="mr-2 h-4 w-4" /> {t('dashboard.courses.communities.modals.delete.button')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <Trash2 className="me-2 h-4 w-4" /> {t('dashboard.courses.communities.modals.delete.button')}
                   </button>
                 }
                 functionToExecute={deleteCommunityUI}

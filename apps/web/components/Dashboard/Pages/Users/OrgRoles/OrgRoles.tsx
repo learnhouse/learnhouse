@@ -185,7 +185,7 @@ function OrgRoles() {
                                         <span className="font-medium text-sm">{role.name}</span>
                                         {isSystem && (
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                <Globe className="w-3 h-3 mr-1" />
+                                                <Globe className="w-3 h-3 me-1" />
                                                 {t('dashboard.users.roles.system_wide')}
                                             </span>
                                         )}
@@ -271,7 +271,7 @@ function OrgRoles() {
 
                 {/* Desktop view - Table */}
                 <div className="hidden sm:block overflow-x-auto">
-                    <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                    <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
                         <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                             <tr className="font-bolder text-sm">
                                 <th className="py-3 px-4">{t('dashboard.users.roles.table.role_name')}</th>
@@ -292,7 +292,7 @@ function OrgRoles() {
                                                     <span className="font-medium">{role.name}</span>
                                                     {isSystem && (
                                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                            <Globe className="w-3 h-3 mr-1" />
+                                                            <Globe className="w-3 h-3 me-1" />
                                                             {t('dashboard.users.roles.system_wide')}
                                                         </span>
                                                     )}
@@ -383,7 +383,7 @@ function OrgRoles() {
                     </table>
                 </div>
                 
-                <div className='flex justify-end mt-3 mr-2'>
+                <div className='flex justify-end mt-3 me-2'>
                     {canCreateRoles ? (
                         <Modal
                             isDialogOpen={createRoleModal}

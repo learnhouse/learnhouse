@@ -44,7 +44,7 @@ const NavigationButtons = memo(({
         <ChevronLeft size={16} className="shrink-0 sm:w-5 sm:h-5" />
         <div className="flex flex-col items-start hidden sm:flex">
           <span className="text-xs text-gray-500">{t('common.previous')}</span>
-          <span className="text-sm font-medium text-left truncate max-w-[100px] sm:max-w-[150px]">
+          <span className="text-sm font-medium text-start truncate max-w-[100px] sm:max-w-[150px]">
             {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
           </span>
         </div>
@@ -62,7 +62,7 @@ const NavigationButtons = memo(({
       >
         <div className="flex flex-col items-end hidden sm:flex">
           <span className={`text-xs ${nextActivity ? 'text-gray-500' : 'text-gray-500'}`}>{t('common.next')}</span>
-          <span className="text-sm font-medium text-right truncate max-w-[100px] sm:max-w-[150px]">
+          <span className="text-sm font-medium text-end truncate max-w-[100px] sm:max-w-[150px]">
             {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
           </span>
         </div>
@@ -175,7 +175,7 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
 
   return (
     <div
-      className={`fixed top-[60px] left-0 right-0 bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
+      className={`fixed top-[60px] start-0 end-0 bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
         isScrolled ? 'nice-shadow' : ''
       }`}
       style={{ zIndex: 'var(--z-drag-overlay)' }}

@@ -171,7 +171,7 @@ const CommunityEditModeration: React.FC = () => {
                     disabled={!newWord.trim()}
                     className="bg-gray-900 hover:bg-gray-800"
                   >
-                    <Plus size={16} className="mr-2" />
+                    <Plus size={16} className="me-2" />
                     {t('dashboard.courses.communities.moderation.add_button')}
                   </Button>
                 </div>
@@ -201,7 +201,7 @@ const CommunityEditModeration: React.FC = () => {
                   disabled={!batchWords.trim()}
                   className="mt-2 bg-gray-900 hover:bg-gray-800"
                 >
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={16} className="me-2" />
                   {t('dashboard.courses.communities.moderation.add_all_button')}
                 </Button>
               </div>
@@ -253,7 +253,7 @@ const CommunityEditModeration: React.FC = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={16} className="animate-spin mr-2" />
+                  <Loader2 size={16} className="animate-spin me-2" />
                   {t('common.saving')}
                 </>
               ) : (

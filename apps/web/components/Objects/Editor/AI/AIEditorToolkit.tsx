@@ -89,7 +89,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                     className="rounded-2xl max-w-(--breakpoint-2xl) w-fit shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
                   >
                     <div className="flex space-x-2">
-                      <div className="pr-1">
+                      <div className="pe-1">
                         <div className="flex w-full space-x-2 font-bold text-white/80 items-center">
                           <Image
                             className="outline outline-1 outline-neutral-200/20 rounded-lg"
@@ -99,7 +99,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                           />
                           <div className="flex items-center">
                             AI Editor{' '}
-                            <span className="text-[10px] px-2 py-1 rounded-3xl ml-3 bg-white/10 uppercase">
+                            <span className="text-[10px] px-2 py-1 rounded-3xl ms-3 bg-white/10 uppercase">
                               PRE-ALPHA
                             </span>
                           </div>
@@ -438,7 +438,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
         mass: 0.2,
         velocity: 2,
       }}
-      className="backdrop-blur-md	fixed top-0 left-0 w-full h-full z-overlay flex justify-center items-center "
+      className="backdrop-blur-md	fixed top-0 start-0 w-full h-full z-overlay flex justify-center items-center "
       style={{ pointerEvents: 'none' }}
     >
       <div
@@ -447,7 +447,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
           background:
             'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 95%)',
         }}
-        className="backdrop-blur-md	z-modal rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse"
+        className="backdrop-blur-md	z-modal rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 start-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse"
       >
         <div className="flex space-x-2 justify-center">
           <Image

@@ -106,7 +106,7 @@ const CommunityEditGeneral: React.FC = () => {
                       <div>
                         <Label htmlFor="name">
                           {t('dashboard.courses.communities.general.form.name_label')} *
-                          <span className="text-gray-500 text-sm ml-2">
+                          <span className="text-gray-500 text-sm ms-2">
                             ({t('dashboard.courses.communities.general.form.characters_left', { count: 100 - (values.name?.length || 0) })})
                           </span>
                         </Label>
@@ -126,7 +126,7 @@ const CommunityEditGeneral: React.FC = () => {
                       <div>
                         <Label htmlFor="description">
                           {t('dashboard.courses.communities.general.form.description_label')}
-                          <span className="text-gray-500 text-sm ml-2">
+                          <span className="text-gray-500 text-sm ms-2">
                             ({t('dashboard.courses.communities.general.form.characters_left', { count: 500 - (values.description?.length || 0) })})
                           </span>
                         </Label>
@@ -169,7 +169,7 @@ const CommunityEditGeneral: React.FC = () => {
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 size={16} className="animate-spin mr-2" />
+                        <Loader2 size={16} className="animate-spin me-2" />
                         {t('common.saving')}
                       </>
                     ) : (

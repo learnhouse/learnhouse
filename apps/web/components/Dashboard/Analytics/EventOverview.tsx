@@ -200,7 +200,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
           className="px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors group relative"
           onClick={() => setActiveModal('live')}
         >
-          <ArrowsOutSimple size={14} className="absolute top-3 right-3 text-gray-300 transition-opacity" />
+          <ArrowsOutSimple size={14} className="absolute top-3 end-3 text-gray-300 transition-opacity" />
           <div className="flex items-center gap-1.5 mb-1">
             <Broadcast size={14} weight="fill" className="text-green-500" />
             <span className="text-xs font-medium text-gray-400">{t('analytics.overview.live_now')}</span>
@@ -217,7 +217,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
               className={`px-5 py-4 ${card.modalKey ? 'cursor-pointer hover:bg-gray-50 transition-colors group relative' : ''}`}
               onClick={card.modalKey ? () => setActiveModal(card.modalKey!) : undefined}
             >
-              {card.modalKey && <ArrowsOutSimple size={14} className="absolute top-3 right-3 text-gray-300 transition-opacity" />}
+              {card.modalKey && <ArrowsOutSimple size={14} className="absolute top-3 end-3 text-gray-300 transition-opacity" />}
               <div className="flex items-center gap-1.5 mb-1">
                 {card.icon}
                 <span className="text-xs font-medium text-gray-400">
@@ -316,7 +316,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
                         {row.country_code}
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-400 tabular-nums w-10 text-right">
+                    <span className="text-[11px] text-gray-400 tabular-nums w-10 text-end">
                       {row.visits.toLocaleString()}
                     </span>
                   </div>
@@ -378,7 +378,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
                       <span className="text-xs font-medium text-gray-900 tabular-nums">
                         {pct}%
                       </span>
-                      <span className="text-[11px] text-gray-400 tabular-nums w-10 text-right">
+                      <span className="text-[11px] text-gray-400 tabular-nums w-10 text-end">
                         {row.unique_users.toLocaleString()}
                       </span>
                     </div>
@@ -414,7 +414,7 @@ export default function EventOverview({ days = '30' }: { days?: string }) {
                         {row.referrer_domain}
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-400 tabular-nums w-10 text-right">
+                    <span className="text-[11px] text-gray-400 tabular-nums w-10 text-end">
                       {row.visits.toLocaleString()}
                     </span>
                   </div>

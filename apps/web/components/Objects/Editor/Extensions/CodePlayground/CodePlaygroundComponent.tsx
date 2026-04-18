@@ -374,10 +374,10 @@ const markdownComponents = {
     <em className="italic text-neutral-600">{children}</em>
   ),
   ul: ({ children }: any) => (
-    <ul className="list-disc list-inside text-neutral-600 text-[13px] mb-2 space-y-1 ml-2">{children}</ul>
+    <ul className="list-disc list-inside text-neutral-600 text-[13px] mb-2 space-y-1 ms-2">{children}</ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="list-decimal list-inside text-neutral-600 text-[13px] mb-2 space-y-1 ml-2">{children}</ol>
+    <ol className="list-decimal list-inside text-neutral-600 text-[13px] mb-2 space-y-1 ms-2">{children}</ol>
   ),
   li: ({ children }: any) => (
     <li className="text-neutral-600">{children}</li>
@@ -401,7 +401,7 @@ const markdownComponents = {
     <pre className="bg-neutral-50 rounded-lg overflow-x-auto my-2 border border-neutral-200/60">{children}</pre>
   ),
   blockquote: ({ children }: any) => (
-    <blockquote className="border-l-2 border-neutral-300 pl-3 my-2 text-neutral-500 italic">{children}</blockquote>
+    <blockquote className="border-s-2 border-neutral-300 ps-3 my-2 text-neutral-500 italic">{children}</blockquote>
   ),
   a: ({ href, children }: any) => (
     <a href={href} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-500 underline">
@@ -416,7 +416,7 @@ const markdownComponents = {
   ),
   thead: ({ children }: any) => <thead className="bg-neutral-50">{children}</thead>,
   th: ({ children }: any) => (
-    <th className="border border-neutral-200 px-2 py-1 text-left text-neutral-700 font-semibold">{children}</th>
+    <th className="border border-neutral-200 px-2 py-1 text-start text-neutral-700 font-semibold">{children}</th>
   ),
   td: ({ children }: any) => (
     <td className="border border-neutral-200 px-2 py-1 text-neutral-600">{children}</td>
@@ -1122,7 +1122,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             >
               <Settings2 size={12} />
               Advanced
-              <ChevronRight size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+              <ChevronRight size={12} className={`ms-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
             </button>
             {showAdvanced && (
               <div className="mt-3 space-y-3">
@@ -1145,8 +1145,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <div className="flex-1">
                     <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1 block">Time Limit</label>
                     <div className="relative">
-                      <input type="number" min={1000} step={1000} value={timeLimitMs} onChange={(e) => updateAttributes({ timeLimitMs: parseInt(e.target.value) || 10000 })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 pr-10 outline-none focus:border-neutral-300 transition-colors nice-shadow" />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400">ms</span>
+                      <input type="number" min={1000} step={1000} value={timeLimitMs} onChange={(e) => updateAttributes({ timeLimitMs: parseInt(e.target.value) || 10000 })} className="w-full text-[12px] text-neutral-700 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 pe-10 outline-none focus:border-neutral-300 transition-colors nice-shadow" />
+                      <span className="absolute end-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400">ms</span>
                     </div>
                   </div>
                 </div>
@@ -1324,14 +1324,14 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 <Lightbulb size={12} className="text-amber-400" /> Hints
               </span>
               {hints.map((hint, i) => (
-                <button key={i} onClick={() => toggleHint(i)} className="w-full text-left">
+                <button key={i} onClick={() => toggleHint(i)} className="w-full text-start">
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/60 border border-amber-100 hover:bg-amber-50 transition-colors nice-shadow">
                     <Lightbulb size={12} className="text-amber-400 flex-shrink-0" />
                     <span className="text-[12px] font-medium text-amber-700 flex-1">Hint {i + 1}</span>
                     <ChevronRight size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} />
                   </div>
                   {expandedHints.has(i) && (
-                    <div className="mt-1.5 ml-8 mr-3 text-[12px] text-neutral-600 leading-relaxed pb-1">{hint}</div>
+                    <div className="mt-1.5 ms-8 me-3 text-[12px] text-neutral-600 leading-relaxed pb-1">{hint}</div>
                   )}
                 </button>
               ))}
@@ -1487,7 +1487,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           <thead>
             <tr className="bg-white/[0.06]">
               {headers.map((h, i) => (
-                <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-neutral-300 uppercase tracking-wider border-b border-white/10">
+                <th key={i} className="px-3 py-2 text-start text-[11px] font-bold text-neutral-300 uppercase tracking-wider border-b border-white/10">
                   {h}
                 </th>
               ))}
@@ -1518,8 +1518,8 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <span className="w-2 h-2 rounded-full bg-[#febc2e]" />
             <span className="w-2 h-2 rounded-full bg-[#28c840]" />
           </div>
-          <span className="text-[10px] font-mono text-neutral-500 ml-1">{label}</span>
-          <div className="ml-auto">{copyText && <CopyButton text={copyText} />}</div>
+          <span className="text-[10px] font-mono text-neutral-500 ms-1">{label}</span>
+          <div className="ms-auto">{copyText && <CopyButton text={copyText} />}</div>
         </div>
         <div className="p-3.5">
           {stdout && isSqlLanguage && stdout.includes('|') ? (
@@ -1579,7 +1579,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${r.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                     {r.status?.description || (r.passed ? 'Accepted' : 'Failed')}
                   </span>
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ms-auto flex items-center gap-2">
                     {r.time && <span className="text-[10px] text-neutral-400 font-mono">{r.time}s</span>}
                     {r.memory && <span className="text-[10px] text-neutral-400 font-mono">{Math.round(r.memory)}KB</span>}
                   </div>
@@ -1596,7 +1596,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                           <thead>
                             <tr className="bg-neutral-50">
                               {r.actual_stdout.trim().split('\n')[0].split('|').map((h, i) => (
-                                <th key={i} className="px-2.5 py-1.5 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
+                                <th key={i} className="px-2.5 py-1.5 text-start text-[10px] font-bold text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
                                   {h}
                                 </th>
                               ))}
@@ -1697,7 +1697,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             }}
             className="flex flex-col min-w-0 bg-[#1a1b26] relative"
           >
-            <div className="absolute right-0 top-0 bottom-0 w-[3px] z-10 hover:bg-blue-500/40 transition-colors bg-white/[0.06]" />
+            <div className="absolute end-0 top-0 bottom-0 w-[3px] z-10 hover:bg-blue-500/40 transition-colors bg-white/[0.06]" />
             {/* Header bar — dark */}
             <div className="flex items-center justify-between px-4 border-b border-white/[0.06] shrink-0">
               <div className="flex items-center gap-2.5 py-3">
@@ -1721,12 +1721,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       <ChevronDown size={11} className="text-neutral-500" />
                     </button>
                     {showLangDropdown && (
-                      <div className="absolute right-0 top-full mt-1 bg-[#24283b] rounded-lg py-1 z-50 max-h-60 overflow-y-auto w-44 border border-white/[0.08] shadow-xl">
+                      <div className="absolute end-0 top-full mt-1 bg-[#24283b] rounded-lg py-1 z-50 max-h-60 overflow-y-auto w-44 border border-white/[0.08] shadow-xl">
                         {PLAYGROUND_LANGUAGES.map((lang) => (
                           <button
                             key={lang.id}
                             onClick={() => handleLanguageChange(lang.id)}
-                            className={`w-full text-left px-3.5 py-2 text-[12px] transition-colors ${
+                            className={`w-full text-start px-3.5 py-2 text-[12px] transition-colors ${
                               lang.id === languageId
                                 ? 'bg-white/[0.08] text-neutral-200 font-semibold'
                                 : 'text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-300'
@@ -1759,7 +1759,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               <div className="flex items-center bg-[#16161e] border-b border-white/[0.06] overflow-x-auto shrink-0">
                 <button
                   onClick={() => setActiveFileTab('main')}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-e border-white/[0.06] whitespace-nowrap transition-colors ${
                     activeFileTab === 'main'
                       ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
                       : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
@@ -1772,7 +1772,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <button
                     key={i}
                     onClick={() => setActiveFileTab(i)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-r border-white/[0.06] whitespace-nowrap transition-colors ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-medium border-e border-white/[0.06] whitespace-nowrap transition-colors ${
                       activeFileTab === i
                         ? 'bg-[#1a1b26] text-neutral-200 border-b-2 border-b-blue-500'
                         : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
@@ -1875,7 +1875,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
 
           {/* ── Right: Tabbed Panel ──────────────────────────── */}
           <div
-            className="flex-1 min-w-[240px] border-l border-neutral-200/60 bg-white flex flex-col"
+            className="flex-1 min-w-[240px] border-s border-neutral-200/60 bg-white flex flex-col"
           >
             {/* Tab bar */}
             <div className="flex items-center border-b border-neutral-200/60 bg-white px-1 shrink-0">
@@ -1891,9 +1891,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 >
                   {tab.icon}
                   {tab.label}
-                  {tab.badge && <span className="ml-1">{tab.badge}</span>}
+                  {tab.badge && <span className="ms-1">{tab.badge}</span>}
                   {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-3 right-3 h-[2px] bg-neutral-800 rounded-full" />
+                    <div className="absolute bottom-0 start-3 end-3 h-[2px] bg-neutral-800 rounded-full" />
                   )}
                 </button>
               ))}

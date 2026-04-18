@@ -280,7 +280,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
               mass: 0.2,
               velocity: 2,
             }}
-            className="fixed top-0 left-0 w-full h-full z-[9999] flex justify-center items-center "
+            className="fixed top-0 start-0 w-full h-full z-[9999] flex justify-center items-center "
             style={{ pointerEvents: 'none' }}
           >
             <div
@@ -289,7 +289,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 background:
                   'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
               }}
-              className={`bg-black z-[10000] shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md transition-all duration-300 flex flex-col rounded-2xl max-w-(--breakpoint-2xl) w-10/12 mx-auto fixed bottom-4 left-1/2 transform -translate-x-1/2 ${
+              className={`bg-black z-[10000] shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 backdrop-blur-md transition-all duration-300 flex flex-col rounded-2xl max-w-(--breakpoint-2xl) w-10/12 mx-auto fixed bottom-4 start-1/2 transform -translate-x-1/2 ${
                 aiChatBotState.isFullscreen
                   ? 'h-[80vh]'
                   : 'h-[350px]'
@@ -325,7 +325,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                   />
                 </div>
                 <div
-                  className={`flex space-x-2 items-center -ml-[100px] ${isInputDisabled ? 'animate-pulse' : ''
+                  className={`flex space-x-2 items-center -ms-[100px] ${isInputDisabled ? 'animate-pulse' : ''
                     }`}
                 >
                   <Image
@@ -355,7 +355,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 !aiChatBotState.error.isError ? (
                 <div
                   ref={messagesContainerRef}
-                  className={`flex flex-col w-full space-y-3 overflow-y-auto scroll-smooth pr-2 ${
+                  className={`flex flex-col w-full space-y-3 overflow-y-auto scroll-smooth pe-2 ${
                     aiChatBotState.isFullscreen ? 'flex-1' : 'h-[237px]'
                   }`}
                   style={{
@@ -587,7 +587,7 @@ function AIMessageComponent({ message, isAI, isStreaming = false }: AIMessageCom
             />
           </div>
         ) : (
-          <div className="inline-block bg-white/5 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+          <div className="inline-block bg-white/5 rounded-xl rounded-ss-sm px-3 py-2 max-w-[85%]">
             <p className="text-white/90 text-sm leading-relaxed">
               {message.message}
             </p>
@@ -953,7 +953,7 @@ function AISidePanelInline(props: AISidePanelProps) {
           {aiChatBotState.messages.length > 0 && !aiChatBotState.error.isError ? (
             <div
               ref={messagesContainerRef}
-              className="flex flex-col flex-1 w-full space-y-3 overflow-y-auto scroll-smooth pr-2"
+              className="flex flex-col flex-1 w-full space-y-3 overflow-y-auto scroll-smooth pe-2"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(255,255,255,0.1) transparent'

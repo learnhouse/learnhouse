@@ -370,7 +370,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
           className="fixed inset-0 bg-black/30 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
-        <div className="fixed inset-y-0 left-0 z-50 w-[280px] p-3 md:relative md:inset-auto md:z-auto md:flex-shrink-0 md:my-5 md:mr-3 md:p-0">
+        <div className="fixed inset-y-0 start-0 z-50 w-[280px] p-3 md:relative md:inset-auto md:z-auto md:flex-shrink-0 md:my-5 md:me-3 md:p-0">
           <div className="flex flex-col h-full w-full bg-white dark:bg-neutral-900 rounded-2xl nice-shadow overflow-hidden md:mt-0 mt-[72px]">
             {/* Sidebar header */}
             <div className="flex items-center justify-between h-12 px-4 border-b border-neutral-100 dark:border-neutral-800/60">
@@ -424,7 +424,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="hidden md:flex flex-shrink-0 self-start mt-5 mr-2 p-2 rounded-xl bg-white dark:bg-neutral-900 nice-shadow text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
+          className="hidden md:flex flex-shrink-0 self-start mt-5 me-2 p-2 rounded-xl bg-white dark:bg-neutral-900 nice-shadow text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
         >
           <List size={16} />
         </button>
@@ -531,7 +531,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
             if (msg.role === 'user') {
               return (
                 <div key={i} className="flex justify-end">
-                  <div className="max-w-[85%] md:max-w-[75%] rounded-2xl rounded-tr-sm px-4 py-2.5 bg-violet-600 text-white nice-shadow">
+                  <div className="max-w-[85%] md:max-w-[75%] rounded-2xl rounded-se-sm px-4 py-2.5 bg-violet-600 text-white nice-shadow">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </div>
@@ -563,7 +563,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                     <button
                       key={i}
                       onClick={() => sendMessage(s)}
-                      className="group flex items-center gap-2.5 w-fit max-w-full text-left px-3.5 py-2.5 text-[13px] rounded-xl text-neutral-600 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300 nice-shadow transition-all"
+                      className="group flex items-center gap-2.5 w-fit max-w-full text-start px-3.5 py-2.5 text-[13px] rounded-xl text-neutral-600 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300 nice-shadow transition-all"
                     >
                       <ArrowRight size={13} weight="bold" className="flex-shrink-0 text-neutral-400 group-hover:text-violet-500 transition-colors" />
                       <span className="truncate">{s}</span>
@@ -744,7 +744,7 @@ export function SessionItem({ session, isActive, onSelect, onDelete }: {
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`group w-full text-left px-3 py-2 rounded-xl text-sm transition-all flex items-center gap-2 ${
+      className={`group w-full text-start px-3 py-2 rounded-xl text-sm transition-all flex items-center gap-2 ${
         isActive
           ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 font-medium'
           : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
@@ -928,7 +928,7 @@ export function CopilotMarkdown({ content, sources = [], orgslug, isStreaming = 
     <div className="relative z-10 prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-headings:text-neutral-900 dark:prose-headings:text-white prose-a:text-violet-600 dark:prose-a:text-violet-400 prose-strong:text-neutral-900 dark:prose-strong:text-white prose-code:text-violet-700 dark:prose-code:text-violet-300 prose-code:bg-violet-50 dark:prose-code:bg-violet-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{content}</ReactMarkdown>
       {isStreaming && (
-        <span className="inline-block w-0.5 h-4 bg-violet-500 ml-0.5 align-middle rounded-full animate-pulse" />
+        <span className="inline-block w-0.5 h-4 bg-violet-500 ms-0.5 align-middle rounded-full animate-pulse" />
       )}
     </div>
   )
@@ -942,10 +942,10 @@ export function CourseDropdown({ courses, selectedCourse, onSelect, position = '
 }) {
   const positionClass = position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
   return (
-    <div className={`absolute left-0 ${positionClass} w-72 max-h-72 overflow-y-auto rounded-xl bg-white dark:bg-neutral-900 nice-shadow z-50 py-1`}>
+    <div className={`absolute start-0 ${positionClass} w-72 max-h-72 overflow-y-auto rounded-xl bg-white dark:bg-neutral-900 nice-shadow z-50 py-1`}>
       <button
         onClick={() => onSelect(null)}
-        className={`w-full text-left px-3.5 py-2.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2.5 ${
+        className={`w-full text-start px-3.5 py-2.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2.5 ${
           !selectedCourse ? 'text-violet-600 dark:text-violet-400 font-medium bg-violet-50/60 dark:bg-violet-500/10' : 'text-neutral-700 dark:text-neutral-300'
         }`}
       >
@@ -957,7 +957,7 @@ export function CourseDropdown({ courses, selectedCourse, onSelect, position = '
         <button
           key={course.course_uuid}
           onClick={() => onSelect(course.course_uuid)}
-          className={`w-full text-left px-3.5 py-2.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2.5 ${
+          className={`w-full text-start px-3.5 py-2.5 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2.5 ${
             selectedCourse === course.course_uuid
               ? 'text-violet-600 dark:text-violet-400 font-medium bg-violet-50/60 dark:bg-violet-500/10'
               : 'text-neutral-700 dark:text-neutral-300'

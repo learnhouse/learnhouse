@@ -101,7 +101,7 @@ function ResetPasswordClient({ org }: ResetPasswordClientProps) {
                             <div className="flex-1 min-w-0">
                                 <span className="text-sm font-medium">{error || message}</span>
                                 {message && (
-                                    <span className="text-sm ml-2">
+                                    <span className="text-sm ms-2">
                                         · <Link href="/login" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
                                     </span>
                                 )}

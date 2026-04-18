@@ -107,7 +107,7 @@ function OrgAccess() {
       {!isLoading ? (
         <>
           <div className="h-6"></div>
-          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4 anit ">
+          <div className="ms-10 me-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4 anit ">
             <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
               <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.signups.title')}</h1>
               <h2 className="text-gray-500  text-md">
@@ -186,7 +186,7 @@ function OrgAccess() {
                   {t('dashboard.users.signups.invite_codes.subtitle')}{' '}
                 </h2>
               </div>
-              <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+              <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
                 <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                   <tr className="font-bolder text-sm">
                     <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.code')}</th>
@@ -247,7 +247,7 @@ function OrgAccess() {
                             confirmationMessage={t('dashboard.users.signups.invite_codes.actions.delete_confirmation_message')}
                             dialogTitle={t('dashboard.users.signups.invite_codes.actions.delete_confirmation_title')}
                             dialogTrigger={
-                              <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
+                              <button className="me-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
                                 <X className="w-4 h-4" />
                                 <span> {t('dashboard.users.signups.invite_codes.actions.delete_code')}</span>
                               </button>
@@ -263,8 +263,8 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <div className='flex items-center justify-between mt-3 mr-2'>
-                <span className='text-xs text-gray-400 ml-2'>
+              <div className='flex items-center justify-between mt-3 me-2'>
+                <span className='text-xs text-gray-400 ms-2'>
                   {inviteCount} / 6 invite codes used
                 </span>
                 <Modal

@@ -53,7 +53,7 @@ const ImageModal: React.FC<{
       <div className="relative max-w-4xl w-full">
         <button
           onClick={onClose}
-          className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+          className="absolute -top-10 end-0 text-white hover:text-gray-300 transition-colors"
         >
           <X className="w-6 h-6" />
         </button>
@@ -114,7 +114,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
       {/* Profile Content */}
       <div className="bg-white rounded-b-xl nice-shadow p-8 relative">
         {/* Avatar Positioned on the banner */}
-        <div className="absolute -top-24 left-8">
+        <div className="absolute -top-24 start-8">
           <div className="rounded-xl overflow-hidden shadow-lg border-4 border-white">
             <UserAvatar
               width={150}
@@ -128,7 +128,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
         </div>
 
         {/* Affiliation Logos */}
-        <div className="absolute -top-12 right-8 flex items-center gap-4">
+        <div className="absolute -top-12 end-8 flex items-center gap-4">
           {profile.sections?.map((section: any) => (
             section.type === 'affiliation' && section.affiliations?.map((affiliation: any, index: number) => (
               affiliation.logoUrl && (
@@ -149,7 +149,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
         <div className="mt-20 md:mt-14">
           <div className="flex flex-col md:flex-row gap-12">
             {/* Left column with details - aligned with avatar */}
-            <div className="w-full md:w-1/6 pl-2">
+            <div className="w-full md:w-1/6 ps-2">
               {/* Name */}
               <h1 className="text-[32px] font-bold mb-8">
                 {userData.first_name} {userData.last_name}
@@ -248,7 +248,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                       {section.type === 'experience' && (
                         <div className="space-y-4">
                           {section.experiences.map((exp: any, expIndex: number) => (
-                            <div key={expIndex} className="border-l-2 border-gray-200 pl-4">
+                            <div key={expIndex} className="border-s-2 border-gray-200 ps-4">
                               <h3 className="font-medium">{exp.title}</h3>
                               <p className="text-gray-600">{exp.organization}</p>
                               <p className="text-sm text-gray-500">
@@ -265,7 +265,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                       {section.type === 'education' && (
                         <div className="space-y-4">
                           {section.education.map((edu: any, eduIndex: number) => (
-                            <div key={eduIndex} className="border-l-2 border-gray-200 pl-4">
+                            <div key={eduIndex} className="border-s-2 border-gray-200 ps-4">
                               <h3 className="font-medium">{edu.institution}</h3>
                               <p className="text-gray-600">{edu.degree} in {edu.field}</p>
                               <p className="text-sm text-gray-500">
@@ -282,7 +282,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                       {section.type === 'affiliation' && (
                         <div className="space-y-4">
                           {section.affiliations.map((affiliation: any, affIndex: number) => (
-                            <div key={affIndex} className="border-l-2 border-gray-200 pl-4">
+                            <div key={affIndex} className="border-s-2 border-gray-200 ps-4">
                               <div className="flex items-start gap-4">
                                 {affiliation.logoUrl && (
                                   <img 

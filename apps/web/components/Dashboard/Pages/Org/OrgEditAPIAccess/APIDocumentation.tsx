@@ -510,7 +510,7 @@ const APIDocumentation: React.FC = () => {
     return (
       <div className="pb-4">
         <div className="flex justify-center items-center py-12">
-          <RefreshCw className="animate-spin text-gray-400 mr-2" size={24} />
+          <RefreshCw className="animate-spin text-gray-400 me-2" size={24} />
           <span className="text-gray-500">Loading API documentation...</span>
         </div>
       </div>
@@ -523,7 +523,7 @@ const APIDocumentation: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={loadSpec} variant="outline">
-            <RefreshCw size={16} className="mr-2" />
+            <RefreshCw size={16} className="me-2" />
             Retry
           </Button>
         </div>
@@ -561,12 +561,12 @@ const APIDocumentation: React.FC = () => {
           <div className="border rounded-lg">
             <div className="p-4 border-b">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <Input
                   placeholder="Search endpoints..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
             </div>
@@ -582,7 +582,7 @@ const APIDocumentation: React.FC = () => {
                       <span className="font-medium capitalize">{group.tag}</span>
                       {TAG_LABELS[group.tag.toLowerCase()] && (
                         <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                          <Monitor size={10} className="mr-1" />
+                          <Monitor size={10} className="me-1" />
                           {TAG_LABELS[group.tag.toLowerCase()]}
                         </Badge>
                       )}
@@ -609,10 +609,10 @@ const APIDocumentation: React.FC = () => {
                               spec.paths[endpoint.path][endpoint.method.toLowerCase()]
                             )
                           }
-                          className={`w-full px-4 py-2 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors ${
+                          className={`w-full px-4 py-2 flex items-center gap-3 text-start hover:bg-gray-100 transition-colors ${
                             selectedEndpoint?.path === endpoint.path &&
                             selectedEndpoint?.method === endpoint.method
-                              ? 'bg-blue-50 border-l-2 border-blue-500'
+                              ? 'bg-blue-50 border-s-2 border-blue-500'
                               : ''
                           }`}
                         >
@@ -760,12 +760,12 @@ const APIDocumentation: React.FC = () => {
                   >
                     {isExecuting ? (
                       <>
-                        <RefreshCw size={16} className="mr-2 animate-spin" />
+                        <RefreshCw size={16} className="me-2 animate-spin" />
                         Executing...
                       </>
                     ) : (
                       <>
-                        <Play size={16} className="mr-2" />
+                        <Play size={16} className="me-2" />
                         Send Request
                       </>
                     )}
@@ -837,9 +837,9 @@ const APIDocumentation: React.FC = () => {
                           </Badge>
                         ))}
                         {showExpectedResponses ? (
-                          <ChevronDown size={14} className="text-gray-400 ml-1" />
+                          <ChevronDown size={14} className="text-gray-400 ms-1" />
                         ) : (
-                          <ChevronRight size={14} className="text-gray-400 ml-1" />
+                          <ChevronRight size={14} className="text-gray-400 ms-1" />
                         )}
                       </div>
                     </button>
@@ -867,7 +867,7 @@ const APIDocumentation: React.FC = () => {
                                 </Badge>
                                 <span className="text-xs text-gray-600">{res.description || ''}</span>
                                 {responseSchema && (
-                                  <span className="text-xs text-gray-400 font-mono ml-auto">
+                                  <span className="text-xs text-gray-400 font-mono ms-auto">
                                     {getSchemaTypeLabel(responseSchema)}
                                   </span>
                                 )}

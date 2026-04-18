@@ -146,7 +146,7 @@ const OrgEditAI: React.FC = () => {
 
         {/* Sub-features (only when AI is enabled) */}
         {aiEnabled && (
-          <div className="space-y-3 pl-4 border-l-2 border-gray-100 ml-2">
+          <div className="space-y-3 ps-4 border-s-2 border-gray-100 ms-2">
             <SettingRow
               icon={<MessageCircle className="w-4 h-4" />}
               title="AI Copilot"

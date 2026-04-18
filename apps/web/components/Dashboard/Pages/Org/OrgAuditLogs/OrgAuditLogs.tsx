@@ -177,7 +177,7 @@ const OrgAuditLogs = () => {
       descriptionKey="common.plans.feature_restricted.audit_logs.description"
     >
       <>
-        <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
+        <div className="ms-10 me-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
           <div className="flex justify-between items-center">
             <div>
@@ -225,10 +225,10 @@ const OrgAuditLogs = () => {
                   </SelectContent>
                 </Select>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <Input
                     placeholder={t('dashboard.organization.audit_logs.placeholders.search')}
-                    className="pl-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
+                    className="ps-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
                     value={filters.searchValue}
                     onChange={(e) => {
                       setFilters({ ...filters, searchValue: e.target.value })
@@ -326,7 +326,7 @@ const OrgAuditLogs = () => {
           </div>
         </div>
 
-        <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+        <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
           <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
             <tr className="font-bolder text-[10px] tracking-wider">
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.timestamp')}</th>
@@ -334,8 +334,8 @@ const OrgAuditLogs = () => {
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.resource')}</th>
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.path_method')}</th>
               <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.ip_address')}</th>
-              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.status')}</th>
-              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.payload')}</th>
+              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.status')}</th>
+              <th className="py-3 px-4 text-end">{t('dashboard.organization.audit_logs.table.payload')}</th>
             </tr>
           </thead>
           <tbody className="bg-white relative">
@@ -414,12 +414,12 @@ const OrgAuditLogs = () => {
                       {log.ip_address || '—'}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(log.status_code)}`}>
                       {log.status_code}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                       {log.payload && Object.keys(log.payload).length > 0 ? (
                       <Modal
                         dialogTitle={t('dashboard.organization.audit_logs.modals.payload.title')}

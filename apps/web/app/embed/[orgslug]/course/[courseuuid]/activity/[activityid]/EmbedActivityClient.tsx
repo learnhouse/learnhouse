@@ -233,7 +233,7 @@ function PoweredByBadge({ activityUrl }: { activityUrl: string }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 end-4 z-50">
       <button
         onClick={handleClick}
         className="bg-white/80 backdrop-blur-lg rounded-2xl p-2 light-shadow block cursor-pointer"

@@ -676,7 +676,7 @@ function BoardEditorInner({
                 top: mousePos.y + 16,
               }}
             >
-              <div className="flex items-center gap-1.5 rounded-full bg-neutral-800 pl-1.5 pr-2.5 py-1 shadow-lg">
+              <div className="flex items-center gap-1.5 rounded-full bg-neutral-800 ps-1.5 pe-2.5 py-1 shadow-lg">
                 <div className="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center">
                   <Icon size={11} weight="bold" className="text-white" />
                 </div>
@@ -736,7 +736,7 @@ function BoardEditorInner({
       />
 
       {/* Bottom right stack: effects → chat → zoom */}
-      <div className="absolute bottom-5 right-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed">
+      <div className="absolute bottom-5 end-5 z-20 flex flex-col items-end gap-1.5 pointer-events-none board-enter-delayed">
         {/* Ephemeral Chat */}
         <EphemeralChat ydoc={ydoc} provider={provider} />
 
@@ -755,7 +755,7 @@ function BoardEditorInner({
       {/* Feedback button — bottom left */}
       <button
         onClick={() => setFeedbackOpen(true)}
-        className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed"
+        className="absolute bottom-5 start-5 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-neutral-500 hover:text-neutral-700 nice-shadow transition-colors board-enter-delayed"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(12px)',
@@ -843,7 +843,7 @@ export default function BoardCanvas({ board, accessToken, orgslug, username, org
       />
       {/* Connection status indicator */}
       {connStatus === 'disconnected' && (
-        <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-2 shadow-lg">
+        <div className="fixed bottom-20 start-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-2 shadow-lg">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />

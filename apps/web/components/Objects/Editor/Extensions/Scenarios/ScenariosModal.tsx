@@ -254,7 +254,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   <button
                     key={option.id}
                     onClick={() => handleOptionClick(option.nextScenarioId)}
-                    className="w-full bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-left shadow-sm hover:shadow-md"
+                    className="w-full bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg p-3 transition-all group text-start shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-slate-100 group-hover:bg-blue-100 rounded flex items-center justify-center flex-shrink-0 transition-colors">
@@ -330,7 +330,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
       {/* Scenarios List */}
       <div className="flex-1 overflow-hidden min-h-0">
-        <div className="h-full overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
+        <div className="h-full overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
           <div className="space-y-4 pb-4">
             {scenarios.map((scenario, scenarioIndex) => (
               <div key={scenario.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">

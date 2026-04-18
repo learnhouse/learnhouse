@@ -36,7 +36,7 @@ const CollectionClient = ({ orgslug, collectionid }: { orgslug: string; collecti
       <br />
       <div className="home_courses flex flex-wrap">
         {col.courses.map((course: any) => (
-          <div className="pr-8" key={course.course_uuid}>
+          <div className="pe-8" key={course.course_uuid}>
             <Link
               href={getUriWithOrg(
                 orgslug,

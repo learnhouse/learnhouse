@@ -87,7 +87,7 @@ export default function NodeActions({ selected, deleteNode, editor, getPos, mult
 
   return (
     <div
-      className={`absolute -top-9 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 transition-opacity ${
+      className={`absolute -top-9 start-1/2 -translate-x-1/2 z-30 flex items-center gap-1 transition-opacity ${
         selected && !multiCount ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >

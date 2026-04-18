@@ -385,9 +385,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                     <div className="flex" key={oIndex}>
                                         <div
                                             onClick={() => view === 'student' && chooseOption(qIndex, oIndex)}
-                                            className={"answer outline outline-3 outline-white pr-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
+                                            className={"answer outline outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
                                         >
-                                            <div className="font-bold text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
+                                            <div className="font-bold text-base flex items-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
                                             </div>
                                             {view === 'teacher' ? (
@@ -396,10 +396,10 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                                     value={option.text}
                                                     onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
                                                     placeholder="Option"
-                                                    className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
+                                                    className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                                 />
                                             ) : (
-                                                <p className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] text-sm font-bold">
+                                                <p className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] text-sm font-bold">
                                                     {option.text}
                                                 </p>
                                             )}

@@ -1301,7 +1301,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                   </span>
                   <button
                     onClick={clearSelectionHighlight}
-                    className="ml-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
+                    className="ms-auto p-1 rounded hover:bg-purple-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
                     <X size={12} className="text-purple-400/60 hover:text-purple-400" />
@@ -1331,7 +1331,7 @@ function AIEditorSidePanel(props: AIEditorSidePanelProps) {
                   </div>
                   <button
                     onClick={clearSelectionHighlight}
-                    className="ml-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
+                    className="ms-auto p-1 rounded hover:bg-violet-500/20 transition-colors"
                     title={t('editor.ai_panel.clear_selection')}
                   >
                     <X size={12} className="text-violet-400/60 hover:text-violet-400" />
@@ -1427,7 +1427,7 @@ function AIEditorMessageComponent({
             />
           </div>
         ) : (
-          <div className="inline-block bg-white/5 rounded-xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+          <div className="inline-block bg-white/5 rounded-xl rounded-ss-sm px-3 py-2 max-w-[85%]">
             <p className="text-white/90 text-sm leading-relaxed">
               {message.message}
             </p>

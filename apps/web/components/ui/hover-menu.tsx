@@ -32,7 +32,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
 
         setPosition({
           top,
-          left: rect.right + 8, // 8px gap (ml-2)
+          left: rect.right + 8, // 8px gap (ms-2)
         })
       }
     }, [align])
@@ -97,7 +97,7 @@ const HoverMenu = React.forwardRef<HTMLDivElement, HoverMenuProps>(
               )}
             >
               {/* Invisible bridge to prevent gap issues */}
-              <div className="absolute -left-2 top-0 bottom-0 w-2" />
+              <div className="absolute -start-2 top-0 bottom-0 w-2" />
               {content}
             </div>
           </Portal.Root>

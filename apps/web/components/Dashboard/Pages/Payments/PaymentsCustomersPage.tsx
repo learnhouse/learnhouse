@@ -368,10 +368,10 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
       {/* Pagination */}
       <div className="flex items-center justify-end space-x-2">
         <Button variant="outline" size="sm" onClick={goPrev} disabled={cursorStack.length === 0}>
-          <ChevronLeft size={14} className="mr-1" /> Previous
+          <ChevronLeft size={14} className="me-1" /> Previous
         </Button>
         <Button variant="outline" size="sm" onClick={goNext} disabled={!data?.has_more}>
-          Next <ChevronRight size={14} className="ml-1" />
+          Next <ChevronRight size={14} className="ms-1" />
         </Button>
       </div>
     </div>
@@ -501,7 +501,7 @@ function PaymentsCustomersPage() {
   if (isLoading) return <PageLoading />
 
   return (
-    <div className="ml-10 mr-10 mx-auto space-y-4">
+    <div className="ms-10 me-10 mx-auto space-y-4">
       {/* Inner tab bar */}
       <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-xl w-fit">
         {TABS.map(({ id, label, icon: Icon }) => (

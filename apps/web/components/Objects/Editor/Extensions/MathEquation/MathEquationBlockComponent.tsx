@@ -204,7 +204,7 @@ function MathEquationBlockComponent(props: any) {
                 </button>
 
                 {showTemplates && (
-                  <div className="absolute left-0 mt-1 z-10 w-64 max-h-80 overflow-y-auto bg-white rounded-lg border border-neutral-200 nice-shadow">
+                  <div className="absolute start-0 mt-1 z-10 w-64 max-h-80 overflow-y-auto bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs text-neutral-500 border-b border-neutral-100">
                       {t('editor.blocks.math_block.select_template')}
                     </div>
@@ -236,7 +236,7 @@ function MathEquationBlockComponent(props: any) {
                 </button>
 
                 {showSymbols && (
-                  <div className="absolute left-0 mt-1 z-10 w-64 bg-white rounded-lg border border-neutral-200 nice-shadow">
+                  <div className="absolute start-0 mt-1 z-10 w-64 bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs text-neutral-500 border-b border-neutral-100">
                       {t('editor.blocks.math_block.click_symbol')}
                     </div>
@@ -268,7 +268,7 @@ function MathEquationBlockComponent(props: any) {
                 </button>
 
                 {showHelp && (
-                  <div className="absolute left-0 mt-1 z-10 w-72 bg-white rounded-lg border border-neutral-200 nice-shadow">
+                  <div className="absolute start-0 mt-1 z-10 w-72 bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs font-medium text-neutral-700 border-b border-neutral-100">
                       {t('editor.blocks.math_block.quick_reference')}
                     </div>
@@ -298,7 +298,7 @@ function MathEquationBlockComponent(props: any) {
                           target="_blank"
                         >
                           {t('editor.blocks.math_block.view_reference')}
-                          <ExternalLink size={10} className="ml-1" />
+                          <ExternalLink size={10} className="ms-1" />
                         </Link>
                       </div>
                     </div>
@@ -334,7 +334,7 @@ function MathEquationBlockComponent(props: any) {
                 target="_blank"
               >
                 {t('editor.blocks.math_block.guide')}
-                <ExternalLink size={12} className="ml-1" />
+                <ExternalLink size={12} className="ms-1" />
               </Link>
               <span>{t('editor.blocks.math_block.for_functions')}</span>
             </div>

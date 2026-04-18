@@ -87,7 +87,7 @@ function PodcastOverviewHeader({
   const { podcast, isLoading } = usePodcast()
 
   return (
-    <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+    <div className="ps-10 pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
       <div className="pt-6 pb-4">
         <Breadcrumbs
           items={[

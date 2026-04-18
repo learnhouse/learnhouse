@@ -93,7 +93,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
               </div>
               <button
                 onClick={() => handleRemove(uuid)}
-                className="text-gray-300 hover:text-red-500 transition-colors ml-2 shrink-0"
+                className="text-gray-300 hover:text-red-500 transition-colors ms-2 shrink-0"
                 title="Remove"
               >
                 <X size={13} />
@@ -131,7 +131,7 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
                   <li key={uuid}>
                     <button
                       onClick={() => handleAdd(uuid)}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors"
+                      className="w-full text-start px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors"
                     >
                       <BookOpen size={13} className="text-indigo-400 shrink-0" />
                       <span className="truncate">{c.name}</span>
@@ -198,7 +198,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
               </div>
               <button
                 onClick={() => handleRemove(s.usergroup_id)}
-                className="text-gray-300 hover:text-red-500 transition-colors ml-2 shrink-0"
+                className="text-gray-300 hover:text-red-500 transition-colors ms-2 shrink-0"
                 title="Remove sync"
               >
                 <X size={13} />
@@ -211,7 +211,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
       {available.length > 0 ? (
         <div className="relative">
           <select
-            className="w-full appearance-none text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 cursor-pointer pr-7"
+            className="w-full appearance-none text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 cursor-pointer pe-7"
             value=""
             onChange={(e) => { if (e.target.value) handleAdd(Number(e.target.value)); }}
           >
@@ -220,7 +220,7 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
               <option key={ug.id} value={ug.id}>{ug.name}</option>
             ))}
           </select>
-          <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <ChevronDown size={12} className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
       ) : syncList.length === 0 ? (
         <p className="text-xs text-gray-400 italic">No UserGroups available to link.</p>
@@ -253,7 +253,7 @@ function GroupCard({ group, orgId, token, onEdit, onDelete }: {
             )}
           </div>
         </div>
-        <div className="flex gap-1 shrink-0 ml-2">
+        <div className="flex gap-1 shrink-0 ms-2">
           <button
             onClick={() => onEdit(group)}
             className="p-1.5 rounded-md text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
@@ -410,7 +410,7 @@ export default function PaymentsGroupsPage() {
   };
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
+    <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
       <Modal
         isDialogOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
@@ -443,7 +443,7 @@ export default function PaymentsGroupsPage() {
           <p className="text-gray-500 text-sm">Bundle courses together for subscriptions or multi-course offers.</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} size="sm">
-          <Plus size={14} className="mr-1.5" /> New Group
+          <Plus size={14} className="me-1.5" /> New Group
         </Button>
       </div>
 
@@ -457,7 +457,7 @@ export default function PaymentsGroupsPage() {
             Groups let you attach multiple courses to a single offer — perfect for subscriptions or bundles.
           </p>
           <Button onClick={() => setIsCreateOpen(true)} variant="outline" size="sm">
-            <Plus size={13} className="mr-1.5" /> Create your first group
+            <Plus size={13} className="me-1.5" /> Create your first group
           </Button>
         </div>
       ) : (

@@ -190,7 +190,7 @@ export default function MigrationDropZone({
                       e.stopPropagation()
                       removeFile(index)
                     }}
-                    className="text-gray-300 hover:text-red-500 flex-shrink-0 ml-2 transition-colors"
+                    className="text-gray-300 hover:text-red-500 flex-shrink-0 ms-2 transition-colors"
                   >
                     <X size={14} />
                   </button>

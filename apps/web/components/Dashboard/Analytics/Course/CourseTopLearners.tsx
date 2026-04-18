@@ -44,7 +44,7 @@ function LearnerRow({
       {index < 3 ? (
         <Medal size={compact ? 16 : 20} weight="fill" className={RANK_COLORS[index]} />
       ) : (
-        <span className={`${compact ? 'text-[10px] w-4' : 'text-xs w-5'} text-gray-400 text-right font-medium`}>
+        <span className={`${compact ? 'text-[10px] w-4' : 'text-xs w-5'} text-gray-400 text-end font-medium`}>
           {index + 1}
         </span>
       )}

@@ -536,7 +536,7 @@ export default function OrgEditImages() {
                                 <button
                                   onClick={() => removePreview(preview.id)}
                                   className={cn(
-                                    "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
+                                    "absolute -top-2 -end-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
                                     "opacity-0 group-hover:opacity-100 z-10 shadow-xs",
                                     "transition-opacity duration-200"
                                   )}
@@ -546,7 +546,7 @@ export default function OrgEditImages() {
                                 <div
                                   {...provided.dragHandleProps}
                                   className={cn(
-                                    "absolute -top-2 -left-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
+                                    "absolute -top-2 -start-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
                                     "opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing z-10 shadow-xs",
                                     "transition-opacity duration-200"
                                   )}

@@ -83,7 +83,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
   return (
     <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
       {/* Dropdown Menu */}
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 end-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
@@ -97,8 +97,8 @@ function TrailCourseCard(props: TrailCourseCardProps) {
                 confirmationButtonText={t('courses.quit_course')}
                 dialogTitle={t('courses.quit_course_title')}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <Trash2 className="mr-2 h-4 w-4" /> {t('courses.quit_course')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <Trash2 className="me-2 h-4 w-4" /> {t('courses.quit_course')}
                   </button>
                 }
                 functionToExecute={() => quitCourse(course.course_uuid)}
@@ -130,7 +130,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
           </div>
         )}
         {/* Progress overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
+        <div className="absolute bottom-0 start-0 end-0 h-1.5 bg-gray-200/80">
           <div
             className={`h-full ${course_progress === 100 ? 'bg-green-500' : 'bg-teal-500'}`}
             style={{ width: `${course_progress}%` }}

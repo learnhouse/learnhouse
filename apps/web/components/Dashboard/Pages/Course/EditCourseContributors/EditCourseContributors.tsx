@@ -255,7 +255,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                     disabled={contributor.authorship === 'CREATOR'}
                 >
                     {t(`dashboard.courses.contributors.roles.${contributor.authorship.toLowerCase()}`)}
-                    <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="ms-2 h-4 w-4 text-muted-foreground" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
@@ -266,7 +266,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                         className="justify-between"
                     >
                         {t(`dashboard.courses.contributors.roles.${role.toLowerCase()}`)}
-                        {contributor.authorship === role && <Check className="ml-2 h-4 w-4" />}
+                        {contributor.authorship === role && <Check className="ms-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>
@@ -282,7 +282,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                     disabled={contributor.authorship === 'CREATOR'}
                 >
                     {t(`dashboard.courses.contributors.statuses.${contributor.authorship_status.toLowerCase()}`)}
-                    <ChevronDown className="ml-2 h-4 w-4" />
+                    <ChevronDown className="ms-2 h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
@@ -293,7 +293,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                         className="justify-between"
                     >
                         {t(`dashboard.courses.contributors.statuses.${status.toLowerCase()}`)}
-                        {contributor.authorship_status === status && <Check className="ml-2 h-4 w-4" />}
+                        {contributor.authorship_status === status && <Check className="ms-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>
@@ -427,12 +427,12 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                         </div>
                         <div className="space-y-4">
                             <div className="relative">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Search className="absolute start-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder={t('dashboard.courses.contributors.search.placeholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-8"
+                                    className="ps-8"
                                 />
                             </div>
                             {searchQuery && (

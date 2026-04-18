@@ -34,7 +34,7 @@ function AdminTopMenu() {
       <div className="h-14" />
       {/* Fixed menu bar */}
       <div
-        className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-white/[0.08] flex items-center text-white px-4 gap-6"
+        className="fixed top-0 start-0 end-0 h-14 bg-black border-b border-white/[0.08] flex items-center text-white px-4 gap-6"
         style={{ zIndex: 'var(--z-overlay)' }}
       >
         {/* Logo */}

@@ -328,7 +328,7 @@ function QuizBlockComponent(props: any) {
                       {/* Answer Letter */}
                       <div
                         className={cn(
-                          "w-10 flex items-center justify-center rounded-l-md font-bold text-sm flex-shrink-0",
+                          "w-10 flex items-center justify-center rounded-s-md font-bold text-sm flex-shrink-0",
                           // Default
                           !isEditable && !submitted && !isSelected && "bg-neutral-100 text-neutral-600",
                           // Selected (not submitted)

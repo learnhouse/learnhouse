@@ -193,7 +193,7 @@ export default function PodcastPlayer() {
 
       {/* Player UI */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg transition-all duration-300 z-50 ${
+        className={`fixed bottom-0 start-0 end-0 bg-white border-t border-gray-200 shadow-lg transition-all duration-300 z-50 ${
           isMinimized ? 'h-16' : 'h-24'
         }`}
       >
@@ -269,7 +269,7 @@ export default function PodcastPlayer() {
             </div>
           ) : (
             <div className="flex-1 flex items-center gap-3">
-              <span className="text-xs text-gray-500 w-12 text-right tabular-nums">
+              <span className="text-xs text-gray-500 w-12 text-end tabular-nums">
                 {formatDuration(Math.floor(currentTime))}
               </span>
               <div ref={waveformRef} className="flex-1 cursor-pointer" />

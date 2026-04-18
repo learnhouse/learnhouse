@@ -49,7 +49,7 @@ function WarningCalloutComponent(props: any) {
         contentEditable={isEditable || undefined}
         suppressContentEditableWarning={true}
       >
-        <div className={`flex items-center justify-center shrink-0 mr-2 pl-2 pt-3 max-sm:mr-1 max-sm:pl-1.5 [&_svg]:w-5 [&_svg]:h-5 [&_svg]:min-w-5 ${options.size !== 'sm' ? 'max-sm:pt-2 max-sm:self-start' : 'max-sm:self-center'}`}>
+        <div className={`flex items-center justify-center shrink-0 me-2 ps-2 pt-3 max-sm:me-1 max-sm:ps-1.5 [&_svg]:w-5 [&_svg]:h-5 [&_svg]:min-w-5 ${options.size !== 'sm' ? 'max-sm:pt-2 max-sm:self-start' : 'max-sm:self-center'}`}>
           <AlertTriangle />
         </div>
         <div className="w-full break-words grow">
@@ -63,7 +63,7 @@ function WarningCalloutComponent(props: any) {
         {options.dismissible && !isEditable && (
           <button
             onClick={() => setDismissed(true)}
-            className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 ml-2 rounded-full hover:bg-black/10"
+            className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 ms-2 rounded-full hover:bg-black/10"
           >
             <X size={16} />
           </button>

@@ -139,7 +139,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
               onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors"
             >
-              <Plus size={16} className="mr-2" />
+              <Plus size={16} className="me-2" />
               {t('podcasts.dashboard.episodes.new_episode')}
             </button>
           </div>
@@ -157,7 +157,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
                 onClick={() => setIsCreateModalOpen(true)}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors"
               >
-                <Plus size={16} className="mr-2" />
+                <Plus size={16} className="me-2" />
                 {t('podcasts.dashboard.episodes.create_first')}
               </button>
             </div>
@@ -299,7 +299,7 @@ function EpisodeRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
-            <Pencil size={14} className="mr-2" />
+            <Pencil size={14} className="me-2" />
             {t('podcasts.dashboard.episodes.edit')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onTogglePublished} className="cursor-pointer">
@@ -311,8 +311,8 @@ function EpisodeRow({
               confirmationMessage={t('podcasts.dashboard.episodes.delete_confirm')}
               dialogTitle={t('podcasts.dashboard.episodes.delete_title')}
               dialogTrigger={
-                <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-sm">
-                  <Trash2 size={14} className="mr-2" />
+                <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-sm">
+                  <Trash2 size={14} className="me-2" />
                   {t('podcasts.dashboard.episodes.delete')}
                 </button>
               }
@@ -452,7 +452,7 @@ function CreateEpisodeModal({
                 <span className="text-sm text-gray-700">{audioFile.name}</span>
               ) : (
                 <span className="text-sm text-gray-500 flex items-center">
-                  <Upload size={16} className="mr-2" />
+                  <Upload size={16} className="me-2" />
                   {t('podcasts.dashboard.episodes.upload_audio')}
                 </span>
               )}
@@ -584,7 +584,7 @@ function EditEpisodeModal({
             {currentAudioUrl && !audioFile && (
               <div className="mb-2 p-3 bg-gray-50 rounded-lg flex items-center justify-between">
                 <span className="text-sm text-gray-600 flex items-center">
-                  <Music size={16} className="mr-2" />
+                  <Music size={16} className="me-2" />
                   {episode.audio_file}
                 </span>
                 <span className="text-xs text-gray-400">
@@ -607,7 +607,7 @@ function EditEpisodeModal({
                 <span className="text-sm text-gray-700">{audioFile.name}</span>
               ) : (
                 <span className="text-sm text-gray-500 flex items-center">
-                  <Upload size={16} className="mr-2" />
+                  <Upload size={16} className="me-2" />
                   {currentAudioUrl
                     ? t('podcasts.dashboard.episodes.replace_audio')
                     : t('podcasts.dashboard.episodes.upload_audio')}

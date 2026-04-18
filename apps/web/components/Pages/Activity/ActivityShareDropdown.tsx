@@ -141,7 +141,7 @@ function ActivityShareDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-10 z-50 bg-white rounded-lg nice-shadow py-1 min-w-[180px]">
+        <div className="absolute end-0 top-10 z-50 bg-white rounded-lg nice-shadow py-1 min-w-[180px]">
           {shareLinks.map((link) => {
             const Icon = link.icon
             return (

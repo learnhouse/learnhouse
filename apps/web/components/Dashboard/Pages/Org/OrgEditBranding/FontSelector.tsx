@@ -93,7 +93,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
     <div className="space-y-4">
       <div>
         <Label className="text-sm font-medium text-gray-700 mb-3 block">
-          <Type className="inline h-4 w-4 mr-1.5 -mt-0.5" />
+          <Type className="inline h-4 w-4 me-1.5 -mt-0.5" />
           Typography
         </Label>
 
@@ -112,7 +112,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
                 >
                   {displayValue}
                 </span>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72 p-0" align="start">
@@ -141,7 +141,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
                       key={font}
                       onClick={() => handleSelect(font)}
                       className={cn(
-                        'w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 text-left cursor-pointer',
+                        'w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-gray-100 text-start cursor-pointer',
                         value === font && 'bg-gray-100'
                       )}
                     >
@@ -155,7 +155,7 @@ export default function FontSelector({ value, onChange }: FontSelectorProps) {
                         {font}
                       </span>
                       {font === DEFAULT_FONT && (
-                        <span className="ml-auto text-[10px] text-gray-400">default</span>
+                        <span className="ms-auto text-[10px] text-gray-400">default</span>
                       )}
                     </button>
                   ))

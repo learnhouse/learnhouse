@@ -85,7 +85,7 @@ export default function AnalyticsDashboard() {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       {/* Sticky header box */}
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+      <div className="ps-10 pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('analytics.title'), href: '/dash/analytics', icon: <ChartBar size={14} /> }

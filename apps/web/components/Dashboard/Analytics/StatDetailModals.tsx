@@ -150,12 +150,12 @@ export function LiveUsersDetail({ days }: { days: string }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+        <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
           <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
           <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.current_page')}</th>
           <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.device')}</th>
           <th className="pb-2 font-medium">{t('analytics.modals.live_users_table.country')}</th>
-          <th className="pb-2 font-medium text-right">{t('analytics.modals.live_users_table.last_seen')}</th>
+          <th className="pb-2 font-medium text-end">{t('analytics.modals.live_users_table.last_seen')}</th>
         </tr>
       </thead>
       <tbody>
@@ -198,7 +198,7 @@ export function LiveUsersDetail({ days }: { days: string }) {
                   <span className="text-gray-300">—</span>
                 )}
               </td>
-              <td className="py-2.5 text-right text-gray-400 text-xs">
+              <td className="py-2.5 text-end text-gray-400 text-xs">
                 {relativeTime(row.last_seen)}
               </td>
             </tr>
@@ -225,11 +225,11 @@ export function SignupsDetail({ days }: { days: string }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+        <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
           <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
           <th className="pb-2 font-medium">{t('analytics.modals.signups_table.email')}</th>
           <th className="pb-2 font-medium">{t('analytics.modals.signups_table.method')}</th>
-          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
+          <th className="pb-2 font-medium text-end">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -260,7 +260,7 @@ export function SignupsDetail({ days }: { days: string }) {
                   <span className="text-gray-300">—</span>
                 )}
               </td>
-              <td className="py-2.5 text-right text-gray-400 text-xs">
+              <td className="py-2.5 text-end text-gray-400 text-xs">
                 {formatDate(row.timestamp)}
               </td>
             </tr>
@@ -287,10 +287,10 @@ export function EnrollmentsDetail({ days }: { days: string }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+        <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
           <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
           <th className="pb-2 font-medium">{t('analytics.common.course')}</th>
-          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
+          <th className="pb-2 font-medium text-end">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -321,7 +321,7 @@ export function EnrollmentsDetail({ days }: { days: string }) {
                   <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
                 )}
               </td>
-              <td className="py-2.5 text-right text-gray-400 text-xs">
+              <td className="py-2.5 text-end text-gray-400 text-xs">
                 {formatDate(row.enrolled_at)}
               </td>
             </tr>
@@ -348,10 +348,10 @@ export function CompletionsDetail({ days }: { days: string }) {
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+        <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
           <th className="pb-2 font-medium">{t('analytics.common.user')}</th>
           <th className="pb-2 font-medium">{t('analytics.common.course')}</th>
-          <th className="pb-2 font-medium text-right">{t('analytics.common.date')}</th>
+          <th className="pb-2 font-medium text-end">{t('analytics.common.date')}</th>
         </tr>
       </thead>
       <tbody>
@@ -382,7 +382,7 @@ export function CompletionsDetail({ days }: { days: string }) {
                   <span className="text-gray-500">{row.course_name || row.course_uuid || '—'}</span>
                 )}
               </td>
-              <td className="py-2.5 text-right text-gray-400 text-xs">
+              <td className="py-2.5 text-end text-gray-400 text-xs">
                 {formatDate(row.timestamp)}
               </td>
             </tr>

@@ -174,7 +174,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
         <div className="bg-white nice-shadow rounded-xl max-w-[420px] min-w-[260px] my-2 px-6 pt-6 pb-4 relative "> {/* PreviewCard */}
           {/* Floating edit and delete buttons (only if not editing and isEditable) */}
           {isEditable && !editing && (
-            <div className="flex flex-col gap-2 absolute -top-3 -right-3 z-20">
+            <div className="flex flex-col gap-2 absolute -top-3 -end-3 z-20">
               <button
                 className="flex items-center justify-center bg-yellow-50 text-yellow-700 border border-yellow-200 shadow-md rounded-md p-1.5 hover:bg-yellow-100"
                 onClick={handleEdit}
@@ -276,10 +276,10 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 {error && <div className="text-red-600 text-xs mt-2">{error}</div>}
                 <div className="flex justify-end gap-2 mt-2">
                   <Button type="button" variant="outline" onClick={handleCancelEdit}>
-                    <span className="flex items-center"><X size={16} className="mr-1" /> {t('editor.blocks.common.cancel')}</span>
+                    <span className="flex items-center"><X size={16} className="me-1" /> {t('editor.blocks.common.cancel')}</span>
                   </Button>
                   <Button type="submit" disabled={loading || !inputUrl}>
-                    <span className="flex items-center"><Save size={16} className="mr-1" /> {t('editor.blocks.common.save')}</span>
+                    <span className="flex items-center"><Save size={16} className="me-1" /> {t('editor.blocks.common.save')}</span>
                   </Button>
                 </div>
               </form>
@@ -332,7 +332,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   <img
                     src={previewData.favicon}
                     alt="favicon"
-                    className="w-[18px] h-[18px] mr-2 rounded bg-gray-100"
+                    className="w-[18px] h-[18px] me-2 rounded bg-gray-100"
                   />
                 )}
                 <span className="text-gray-500 text-xs truncate">{previewData.url}</span>
@@ -363,7 +363,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
               {isEditable && (
                 <div className="flex flex-col items-center mt-4">
                   <div className="flex items-center gap-1"> {/* AlignmentBar */}
-                    <span className="text-xs text-gray-500 mr-1">{t('editor.blocks.web_preview_block.align')}:</span>
+                    <span className="text-xs text-gray-500 me-1">{t('editor.blocks.web_preview_block.align')}:</span>
                     {ALIGNMENTS.map(opt => (
                       <button
                         key={opt.value}

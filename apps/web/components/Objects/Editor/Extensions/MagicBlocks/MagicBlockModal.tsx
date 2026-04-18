@@ -235,7 +235,7 @@ function MagicBlockModal({
             {/* Content - Two panel layout */}
             <div className="flex-1 flex min-h-0">
               {/* Left panel - Preview */}
-              <div className="flex-1 border-r border-white/5 relative">
+              <div className="flex-1 border-e border-white/5 relative">
                 <div className="absolute inset-0">
                   <MagicBlockPreview
                     htmlContent={htmlContent}

@@ -20,7 +20,7 @@ export default function BoardTopBar({
   const { t } = useTranslation()
 
   return (
-    <div className="absolute top-4 left-4 z-20 pointer-events-none">
+    <div className="absolute top-4 start-4 z-20 pointer-events-none">
       {/* Left group: back + logo + title */}
       <div
         className="flex items-center gap-2 rounded-xl px-2.5 py-2 nice-shadow pointer-events-auto"

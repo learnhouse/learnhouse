@@ -211,7 +211,7 @@ export default function PlaygroundViewClient({
             style={{ height: 'calc(100vh - 200px)', minHeight: 480 }}
           >
             {/* Toolbar — top right of preview */}
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+            <div className="absolute top-3 end-3 z-10 flex items-center gap-2">
               <button
                 onClick={handleDownload}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white/80 backdrop-blur-sm nice-shadow text-neutral-500 hover:text-neutral-800 transition-colors"

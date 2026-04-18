@@ -81,7 +81,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       {/* Top bar with breadcrumbs, board info, and tabs */}
-      <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+      <div className="ps-10 pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
         {/* Breadcrumbs */}
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
@@ -100,7 +100,7 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
                 alt=""
               />
             </Link>
-            <div className="flex flex-col justify-center pl-5">
+            <div className="flex flex-col justify-center ps-5">
               <div className="text-gray-400 font-semibold text-sm">Board Settings</div>
               <div className="text-black font-bold text-xl -mt-1 first-letter:uppercase">
                 {board.name}

@@ -89,7 +89,7 @@ const PlanBadge: React.FC<PlanBadgeProps> = ({
   const capitalizedPlan = requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)
   const planStyles = variant === 'dark' ? getDarkPlanStyles(requiredPlan) : getPlanStyles(requiredPlan)
   const sizeStyles = getSizeStyles(size)
-  const marginClass = noMargin ? '' : 'ml-1.5'
+  const marginClass = noMargin ? '' : 'ms-1.5'
 
   return (
     <span className={`${marginClass} ${sizeStyles} font-semibold rounded-md border ${planStyles}`}>

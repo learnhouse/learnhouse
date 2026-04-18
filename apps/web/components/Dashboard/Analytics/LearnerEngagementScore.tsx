@@ -63,13 +63,13 @@ export default function LearnerEngagementScore({ days = '30' }: { days?: string 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+              <tr className="text-start text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
                 <th className="pb-2">Learner</th>
-                <th className="pb-2 text-right">Score</th>
-                <th className="pb-2 text-right">Pages</th>
-                <th className="pb-2 text-right">Activities</th>
-                <th className="pb-2 text-right">Courses</th>
-                <th className="pb-2 text-right">Time</th>
+                <th className="pb-2 text-end">Score</th>
+                <th className="pb-2 text-end">Pages</th>
+                <th className="pb-2 text-end">Activities</th>
+                <th className="pb-2 text-end">Courses</th>
+                <th className="pb-2 text-end">Time</th>
               </tr>
             </thead>
             <tbody>
@@ -88,11 +88,11 @@ export default function LearnerEngagementScore({ days = '30' }: { days?: string 
                         </span>
                       </a>
                     </td>
-                    <td className="py-1.5 text-right font-semibold text-indigo-600">{Math.round(r.engagement_score)}</td>
-                    <td className="py-1.5 text-right text-gray-500">{r.page_views}</td>
-                    <td className="py-1.5 text-right text-gray-500">{r.activities_completed}</td>
-                    <td className="py-1.5 text-right text-gray-500">{r.courses_completed}</td>
-                    <td className="py-1.5 text-right text-gray-500">{formatTime(r.total_time_spent)}</td>
+                    <td className="py-1.5 text-end font-semibold text-indigo-600">{Math.round(r.engagement_score)}</td>
+                    <td className="py-1.5 text-end text-gray-500">{r.page_views}</td>
+                    <td className="py-1.5 text-end text-gray-500">{r.activities_completed}</td>
+                    <td className="py-1.5 text-end text-gray-500">{r.courses_completed}</td>
+                    <td className="py-1.5 text-end text-gray-500">{formatTime(r.total_time_spent)}</td>
                   </tr>
                 )
               })}

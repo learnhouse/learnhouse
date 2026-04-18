@@ -48,8 +48,8 @@ function EmbedCourseProvider({ children, courseUuid }: { children: React.ReactNo
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-32">
     <div className="relative w-5 h-5">
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
-      <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
+      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-100 rounded-full"></div>
+      <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent"></div>
     </div>
   </div>
 )
@@ -171,7 +171,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
                   <button
                     key={course.course_uuid}
                     onClick={() => setSelectedCourse(course)}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-50 transition-colors text-left group/item"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-50 transition-colors text-start group/item"
                   >
                     <span className="text-xs font-medium text-neutral-700 truncate">
                       {course.name}
@@ -214,7 +214,7 @@ export default function ActivityBlockComponent({ node, updateAttributes, selecte
                         <button
                           key={act.activity_uuid}
                           onClick={() => handleSelectActivity(act)}
-                          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg hover:bg-neutral-50 transition-colors text-left"
+                          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg hover:bg-neutral-50 transition-colors text-start"
                         >
                           <span className="text-xs text-neutral-700 truncate">{act.name}</span>
                           <span className="text-[10px] text-neutral-400 shrink-0">

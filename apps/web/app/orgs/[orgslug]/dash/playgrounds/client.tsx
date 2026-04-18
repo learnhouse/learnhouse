@@ -196,7 +196,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
       descriptionKey="Create interactive AI-generated experiences for your learners."
     >
       <FeatureDisabledView featureName="playgrounds" orgslug={orgslug} context="dashboard">
-        <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+        <div className="h-full w-full bg-[#f8f8f8] ps-10 pe-10">
 
           {/* Header */}
           <div className="mb-6 pt-6">
@@ -229,18 +229,18 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
               {/* Search — hidden while selection is active */}
               {!hasSelection && (
                 <div className="relative w-full sm:w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search playgrounds..."
-                    className="w-full pl-10 pr-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
+                    className="w-full ps-10 pe-10 py-2.5 bg-white nice-shadow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 border-0"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -251,7 +251,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
               {/* Selection action bar */}
               {hasSelection && (
                 <div className="flex items-center gap-2 bg-white nice-shadow rounded-lg px-3 py-2">
-                  <span className="text-xs font-semibold text-gray-700 pr-2 border-r border-gray-200">
+                  <span className="text-xs font-semibold text-gray-700 pe-2 border-e border-gray-200">
                     {selectedUuids.size} selected
                   </span>
                   <button
@@ -277,7 +277,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="ms-1 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -498,7 +498,7 @@ function PlaygroundCard({
     >
       {/* Checkbox */}
       <div
-        className={`absolute top-2 right-2 z-20 w-5 h-5 rounded flex items-center justify-center transition-all border ${
+        className={`absolute top-2 end-2 z-20 w-5 h-5 rounded flex items-center justify-center transition-all border ${
           selected
             ? 'bg-black border-black'
             : 'bg-white/80 border-gray-300 opacity-0 group-hover:opacity-100'
@@ -524,7 +524,7 @@ function PlaygroundCard({
           </div>
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-        <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+        <div className="absolute bottom-2 start-2 flex items-center gap-1.5">
           <span className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${accessBadge.className}`}>
             {accessBadge.icon}
             {accessBadge.label}

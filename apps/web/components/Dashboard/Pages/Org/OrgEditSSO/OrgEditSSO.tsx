@@ -478,7 +478,7 @@ const OrgEditSSO: React.FC = () => {
                   onClick={handleDelete}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4 me-2" />
                   {t('dashboard.organization.sso.delete')}
                 </Button>
               )}

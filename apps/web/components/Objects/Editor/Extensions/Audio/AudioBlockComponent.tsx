@@ -213,7 +213,7 @@ function InlineAudioPlayer({ src, title }: { src: string; title?: string }) {
         </button>
 
         {/* Time + Progress */}
-        <span className="text-xs text-gray-500 w-10 text-right tabular-nums flex-shrink-0">
+        <span className="text-xs text-gray-500 w-10 text-end tabular-nums flex-shrink-0">
           {formatTime(currentTime)}
         </span>
 
@@ -350,7 +350,7 @@ function PlaylistPlayer({
       <div className="px-4 pt-3 pb-2 border-b border-gray-100 flex items-center gap-2">
         <Radio size={14} className="text-gray-400 flex-shrink-0" />
         <span className="text-sm font-semibold text-gray-900">{podcastName}</span>
-        <span className="text-xs text-gray-400 ml-auto">{episodes.length} episodes</span>
+        <span className="text-xs text-gray-400 ms-auto">{episodes.length} episodes</span>
       </div>
 
       {/* Episode list */}
@@ -428,7 +428,7 @@ function PlaylistPlayer({
               <SkipForward size={14} className="text-gray-600" />
             </button>
 
-            <span className="text-xs text-gray-500 tabular-nums flex-shrink-0 w-8 text-right">
+            <span className="text-xs text-gray-500 tabular-nums flex-shrink-0 w-8 text-end">
               {formatTime(currentTime)}
             </span>
 

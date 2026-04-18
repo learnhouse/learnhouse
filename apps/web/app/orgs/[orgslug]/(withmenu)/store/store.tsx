@@ -111,7 +111,7 @@ function OfferCard({ offer, orgslug, orgUuid }: { offer: Offer; orgslug: string;
           )}
 
           {/* Type badge */}
-          <div className="absolute top-2.5 left-2.5">
+          <div className="absolute top-2.5 start-2.5">
             {isSubscription ? (
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-indigo-600/90 backdrop-blur-sm rounded-full px-2.5 py-0.5">
                 <RefreshCcw size={10} /> Subscription

@@ -227,7 +227,7 @@ export default function OnboardingBar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className={`${position} bottom-0 right-0 z-40 backdrop-blur-md pointer-events-none`}
+            className={`${position} bottom-0 end-0 z-40 backdrop-blur-md pointer-events-none`}
             style={{
               width: '50%',
               height: '200px',
@@ -238,7 +238,7 @@ export default function OnboardingBar() {
         )}
       </AnimatePresence>
 
-      <div className={`${position} bottom-0 left-0 right-0 z-50 flex justify-end pointer-events-none`}>
+      <div className={`${position} bottom-0 start-0 end-0 z-50 flex justify-end pointer-events-none`}>
         <AnimatePresence mode="wait">
           {minimized ? (
             <motion.button
@@ -248,7 +248,7 @@ export default function OnboardingBar() {
               exit={{ y: 20, opacity: 0 }}
               transition={{ duration: 0.15, ease }}
               onClick={toggleMinimized}
-              className="pointer-events-auto mb-6 mr-4 flex items-center gap-3 px-4 py-2.5 bg-white/85 backdrop-blur-lg text-gray-900 rounded-xl nice-shadow cursor-pointer hover:bg-white transition-colors"
+              className="pointer-events-auto mb-6 me-4 flex items-center gap-3 px-4 py-2.5 bg-white/85 backdrop-blur-lg text-gray-900 rounded-xl nice-shadow cursor-pointer hover:bg-white transition-colors"
             >
               <RocketLaunch size={18} weight="duotone" className="text-gray-700" />
               <div className="flex flex-col items-start">
@@ -675,7 +675,7 @@ export default function OnboardingBar() {
                                               {t('onboarding.steps.teach_the_world.university_desc')}
                                             </p>
                                           </div>
-                                          <span className="text-gray-300 shrink-0 ml-auto">→</span>
+                                          <span className="text-gray-300 shrink-0 ms-auto">→</span>
                                         </a>
                                         <a
                                           href="https://classroom.learnhouse.io"
@@ -697,7 +697,7 @@ export default function OnboardingBar() {
                                               {t('onboarding.steps.teach_the_world.classroom_desc')}
                                             </p>
                                           </div>
-                                          <span className="text-gray-300 shrink-0 ml-auto">→</span>
+                                          <span className="text-gray-300 shrink-0 ms-auto">→</span>
                                         </a>
                                         <button
                                           onClick={() => {

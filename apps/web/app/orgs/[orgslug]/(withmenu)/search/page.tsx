@@ -263,16 +263,16 @@ function SearchPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label={t('search.search_placeholder')}
                 placeholder={t('search.search_placeholder')}
-                className="w-full h-12 pl-12 pr-4 rounded-xl nice-shadow bg-white 
+                className="w-full h-12 ps-12 pe-4 rounded-xl nice-shadow bg-white 
                          focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 
                          text-sm placeholder:text-black/40 transition-all"
               />
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                 <Search className="text-black/40 group-focus-within:text-black/60 transition-colors" size={20} />
               </div>
               <button
                 type="submit"
-                className="absolute inset-y-0 right-0 px-4 flex items-center text-sm text-black/60 hover:text-black/80"
+                className="absolute inset-y-0 end-0 px-4 flex items-center text-sm text-black/60 hover:text-black/80"
               >
                 {t('common.search')}
               </button>

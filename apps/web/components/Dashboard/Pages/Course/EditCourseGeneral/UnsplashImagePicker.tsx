@@ -141,9 +141,9 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
             value={query}
             onChange={handleSearch}
             placeholder={t('dashboard.courses.general.form.image_search_placeholder')}
-            className="w-full p-2 pl-10 border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 ps-10 border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
         </div>
         <div className="flex flex-wrap gap-2">
           {predefinedLabels.map(label => (

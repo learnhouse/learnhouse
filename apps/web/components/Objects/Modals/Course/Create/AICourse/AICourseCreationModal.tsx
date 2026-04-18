@@ -279,7 +279,7 @@ function AICourseCreationModal({
             {/* Content - Two panel layout */}
             <div className="flex-1 flex min-h-0">
               {/* Left panel - Unified plan & content */}
-              <div className="flex-1 border-r border-white/5 relative overflow-hidden">
+              <div className="flex-1 border-e border-white/5 relative overflow-hidden">
                 <AICoursePreview
                   plan={currentPlan}
                   createdChapters={createdChapters}

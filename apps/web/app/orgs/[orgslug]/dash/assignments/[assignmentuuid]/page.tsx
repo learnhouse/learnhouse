@@ -62,8 +62,8 @@ function AssignmentEdit() {
         <div className='flex w-full flex-col h-screen'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
                 <div className='flex flex-col bg-white z-10 nice-shadow relative'>
-                    <div className='flex justify-between mr-10 h-full'>
-                        <div className="pl-10 mr-10 tracking-tighter">
+                    <div className='flex justify-between me-10 h-full'>
+                        <div className="ps-10 me-10 tracking-tighter">
                             <BrdCmpx />
                             <div className="w-100 flex justify-between">
                                 <div className="flex flex-col space-y-2">
@@ -76,7 +76,7 @@ function AssignmentEdit() {
                             <PublishingState />
                         </div>
                     </div>
-                    <div className='flex space-x-2 pt-2 text-sm tracking-tight font-semibold pl-10 mr-10'>
+                    <div className='flex space-x-2 pt-2 text-sm tracking-tight font-semibold ps-10 me-10'>
                         <div
                             onClick={() => setSelectedSubPage('editor')}
                             className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${selectedSubPage === 'editor'

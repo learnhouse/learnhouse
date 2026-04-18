@@ -65,7 +65,7 @@ function AssignmentStudentActivity() {
               <Info size={16} className="text-slate-500" />
               <h3 className='text-sm font-semibold'>{t('assignments.assignment_description')}</h3>
             </div>
-            <div className='pl-6'>
+            <div className='ps-6'>
               <p className='text-sm leading-relaxed text-slate-600'>{assignments.assignment_object.description}</p>
             </div>
           </div>
@@ -111,7 +111,7 @@ function AssignmentStudentActivity() {
                   <div className='flex items-center space-x-1 md:space-x-2'>
                     {task.reference_file && (
                       <span className='relative'>
-                        <span className='absolute right-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400'></span>
+                        <span className='absolute end-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400'></span>
                       </span>
                     )}
                     <p className='text-xs font-semibold'>{t('assignments.reference_document')}</p>
@@ -125,7 +125,7 @@ function AssignmentStudentActivity() {
                   ? 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-emerald-200/60'
                   : 'bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 border-rose-200/60'
               }`}>
-                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-40 ${
+                <div className={`absolute -top-10 -end-10 w-32 h-32 rounded-full blur-3xl opacity-40 ${
                   taskPassed ? 'bg-emerald-300' : 'bg-rose-300'
                 }`} />
                 <div className='relative p-4 flex flex-col gap-3'>

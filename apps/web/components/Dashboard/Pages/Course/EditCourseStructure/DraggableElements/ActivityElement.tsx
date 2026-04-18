@@ -261,7 +261,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 
           {/* Status badge + quick actions */}
           {!props.selectionMode && (
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
               <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium w-[90px] justify-center ${
                 props.activity.published
                   ? 'bg-green-50 text-green-700 border border-green-200'

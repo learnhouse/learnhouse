@@ -128,7 +128,7 @@ function PDFBlockComponent(props: any) {
               src={pdfUrl}
               title={t('editor.blocks.pdf_block.document_title')}
             />
-            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={handleExpand}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
@@ -242,7 +242,7 @@ function PDFBlockComponent(props: any) {
                 src={pdfUrl}
                 title={t('editor.blocks.pdf_block.document_title')}
               />
-              <div className="absolute top-2 right-2 flex gap-1">
+              <div className="absolute top-2 end-2 flex gap-1">
                 <button
                   onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"

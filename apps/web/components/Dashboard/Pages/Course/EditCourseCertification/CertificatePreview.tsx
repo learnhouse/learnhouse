@@ -145,12 +145,12 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-4 border-2 border-amber-300 rounded-md opacity-40"></div>
             
             {/* Crown-like decorations in corners */}
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
+            <div className="absolute top-1 start-1/2 transform -translate-x-1/2">
               <div className="w-8 h-4 bg-amber-200 opacity-50" style={{
                 clipPath: 'polygon(0% 100%, 20% 0%, 40% 100%, 60% 0%, 80% 100%, 100% 0%, 100% 100%)'
               }}></div>
             </div>
-            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 rotate-180">
+            <div className="absolute bottom-1 start-1/2 transform -translate-x-1/2 rotate-180">
               <div className="w-8 h-4 bg-amber-200 opacity-50" style={{
                 clipPath: 'polygon(0% 100%, 20% 0%, 40% 100%, 60% 0%, 80% 100%, 100% 0%, 100% 100%)'
               }}></div>
@@ -173,21 +173,21 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-3 border-2 border-cyan-200 opacity-50"></div>
             
             {/* Circuit-like corner elements */}
-            <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-cyan-300 opacity-60"></div>
-            <div className="absolute top-3 left-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
-            <div className="absolute top-5 left-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute top-3 start-3 w-6 h-6 border-s-2 border-t-2 border-cyan-300 opacity-60"></div>
+            <div className="absolute top-3 start-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute top-5 start-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
             
-            <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-cyan-300 opacity-60"></div>
-            <div className="absolute top-3 right-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
-            <div className="absolute top-5 right-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute top-3 end-3 w-6 h-6 border-e-2 border-t-2 border-cyan-300 opacity-60"></div>
+            <div className="absolute top-3 end-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute top-5 end-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
             
-            <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-cyan-300 opacity-60"></div>
-            <div className="absolute bottom-3 left-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
-            <div className="absolute bottom-5 left-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-3 start-3 w-6 h-6 border-s-2 border-b-2 border-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-3 start-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-5 start-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
             
-            <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-cyan-300 opacity-60"></div>
-            <div className="absolute bottom-3 right-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
-            <div className="absolute bottom-5 right-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-3 end-3 w-6 h-6 border-e-2 border-b-2 border-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-3 end-5 w-2 h-2 bg-cyan-300 opacity-60"></div>
+            <div className="absolute bottom-5 end-3 w-2 h-2 bg-cyan-300 opacity-60"></div>
             
             {/* Tech grid background */}
             <div className="absolute inset-0 opacity-4">
@@ -206,17 +206,17 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-3 border-2 border-green-200 rounded-2xl opacity-50"></div>
             
             {/* Leaf-like decorations */}
-            <div className="absolute top-2 left-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform rotate-45"></div>
-            <div className="absolute top-2 left-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform rotate-12"></div>
+            <div className="absolute top-2 start-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform rotate-45"></div>
+            <div className="absolute top-2 start-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform rotate-12"></div>
             
-            <div className="absolute top-2 right-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform -rotate-45"></div>
-            <div className="absolute top-2 right-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform -rotate-12"></div>
+            <div className="absolute top-2 end-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform -rotate-45"></div>
+            <div className="absolute top-2 end-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform -rotate-12"></div>
             
-            <div className="absolute bottom-2 left-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform -rotate-45"></div>
-            <div className="absolute bottom-2 left-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform -rotate-12"></div>
+            <div className="absolute bottom-2 start-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform -rotate-45"></div>
+            <div className="absolute bottom-2 start-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform -rotate-12"></div>
             
-            <div className="absolute bottom-2 right-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform rotate-45"></div>
-            <div className="absolute bottom-2 right-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform rotate-12"></div>
+            <div className="absolute bottom-2 end-2 w-4 h-6 bg-green-200 opacity-50 rounded-full transform rotate-45"></div>
+            <div className="absolute bottom-2 end-4 w-3 h-4 bg-green-300 opacity-40 rounded-full transform rotate-12"></div>
             
             {/* Organic background pattern */}
             <div className="absolute inset-0 opacity-3">
@@ -237,16 +237,16 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             }}></div>
             
             {/* Geometric corner elements */}
-            <div className="absolute top-1 left-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
-            <div className="absolute top-1 right-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
-            <div className="absolute bottom-1 left-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
-            <div className="absolute bottom-1 right-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
+            <div className="absolute top-1 start-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
+            <div className="absolute top-1 end-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
+            <div className="absolute bottom-1 start-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
+            <div className="absolute bottom-1 end-1 w-6 h-6 border-2 border-purple-300 opacity-60 transform rotate-45"></div>
             
             {/* Abstract geometric shapes */}
-            <div className="absolute top-1/4 left-1 w-2 h-8 bg-purple-200 opacity-30 transform rotate-12"></div>
-            <div className="absolute top-1/4 right-1 w-2 h-8 bg-purple-200 opacity-30 transform -rotate-12"></div>
-            <div className="absolute bottom-1/4 left-1 w-2 h-8 bg-purple-200 opacity-30 transform -rotate-12"></div>
-            <div className="absolute bottom-1/4 right-1 w-2 h-8 bg-purple-200 opacity-30 transform rotate-12"></div>
+            <div className="absolute top-1/4 start-1 w-2 h-8 bg-purple-200 opacity-30 transform rotate-12"></div>
+            <div className="absolute top-1/4 end-1 w-2 h-8 bg-purple-200 opacity-30 transform -rotate-12"></div>
+            <div className="absolute bottom-1/4 start-1 w-2 h-8 bg-purple-200 opacity-30 transform -rotate-12"></div>
+            <div className="absolute bottom-1/4 end-1 w-2 h-8 bg-purple-200 opacity-30 transform rotate-12"></div>
             
             {/* Geometric background */}
             <div className="absolute inset-0 opacity-4">
@@ -266,16 +266,16 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-3 border border-orange-300 opacity-40"></div>
             
             {/* Art deco corner decorations */}
-            <div className="absolute top-2 left-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
+            <div className="absolute top-2 start-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
               clipPath: 'polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 100%)'
             }}></div>
-            <div className="absolute top-2 right-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
+            <div className="absolute top-2 end-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
               clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 100%, 0 50%)'
             }}></div>
-            <div className="absolute bottom-2 left-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
+            <div className="absolute bottom-2 start-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
               clipPath: 'polygon(0 0, 50% 0, 100% 50%, 100% 100%, 0 100%)'
             }}></div>
-            <div className="absolute bottom-2 right-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
+            <div className="absolute bottom-2 end-2 w-8 h-8 border-2 border-orange-300 opacity-50" style={{
               clipPath: 'polygon(0 50%, 50% 0, 100% 0, 100% 100%, 0 100%)'
             }}></div>
             
@@ -296,21 +296,21 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-2 border-2 border-blue-200 rounded-3xl opacity-50"></div>
             
             {/* Wave decorations */}
-            <div className="absolute top-2 left-0 right-0 h-4 opacity-30" style={{
+            <div className="absolute top-2 start-0 end-0 h-4 opacity-30" style={{
               background: `radial-gradient(ellipse at center, #3b82f6 30%, transparent 30%)`,
               backgroundSize: '20px 8px'
             }}></div>
-            <div className="absolute bottom-2 left-0 right-0 h-4 opacity-30" style={{
+            <div className="absolute bottom-2 start-0 end-0 h-4 opacity-30" style={{
               background: `radial-gradient(ellipse at center, #3b82f6 30%, transparent 30%)`,
               backgroundSize: '20px 8px'
             }}></div>
             
             {/* Side wave patterns */}
-            <div className="absolute left-2 top-0 bottom-0 w-4 opacity-30" style={{
+            <div className="absolute start-2 top-0 bottom-0 w-4 opacity-30" style={{
               background: `radial-gradient(ellipse at center, #3b82f6 30%, transparent 30%)`,
               backgroundSize: '8px 20px'
             }}></div>
-            <div className="absolute right-2 top-0 bottom-0 w-4 opacity-30" style={{
+            <div className="absolute end-2 top-0 bottom-0 w-4 opacity-30" style={{
               background: `radial-gradient(ellipse at center, #3b82f6 30%, transparent 30%)`,
               backgroundSize: '8px 20px'
             }}></div>
@@ -332,10 +332,10 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-6 border border-gray-300 opacity-60"></div>
             
             {/* Subtle corner accents */}
-            <div className="absolute top-5 left-5 w-3 h-3 border-l border-t border-gray-400 opacity-40"></div>
-            <div className="absolute top-5 right-5 w-3 h-3 border-r border-t border-gray-400 opacity-40"></div>
-            <div className="absolute bottom-5 left-5 w-3 h-3 border-l border-b border-gray-400 opacity-40"></div>
-            <div className="absolute bottom-5 right-5 w-3 h-3 border-r border-b border-gray-400 opacity-40"></div>
+            <div className="absolute top-5 start-5 w-3 h-3 border-s border-t border-gray-400 opacity-40"></div>
+            <div className="absolute top-5 end-5 w-3 h-3 border-e border-t border-gray-400 opacity-40"></div>
+            <div className="absolute bottom-5 start-5 w-3 h-3 border-s border-b border-gray-400 opacity-40"></div>
+            <div className="absolute bottom-5 end-5 w-3 h-3 border-e border-b border-gray-400 opacity-40"></div>
           </>
         );
       
@@ -347,10 +347,10 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-3 border border-slate-400 opacity-40"></div>
             
             {/* Professional corner brackets */}
-            <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-slate-400 opacity-60"></div>
-            <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-slate-400 opacity-60"></div>
-            <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-slate-400 opacity-60"></div>
-            <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-slate-400 opacity-60"></div>
+            <div className="absolute top-2 start-2 w-6 h-6 border-s-2 border-t-2 border-slate-400 opacity-60"></div>
+            <div className="absolute top-2 end-2 w-6 h-6 border-e-2 border-t-2 border-slate-400 opacity-60"></div>
+            <div className="absolute bottom-2 start-2 w-6 h-6 border-s-2 border-b-2 border-slate-400 opacity-60"></div>
+            <div className="absolute bottom-2 end-2 w-6 h-6 border-e-2 border-b-2 border-slate-400 opacity-60"></div>
             
             {/* Subtle professional background */}
             <div className="absolute inset-0 opacity-2">
@@ -370,16 +370,16 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="absolute inset-3 border border-indigo-400 opacity-40"></div>
             
             {/* Academic shield-like corners */}
-            <div className="absolute top-2 left-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-tl-lg"></div>
-            <div className="absolute top-2 right-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-tr-lg"></div>
-            <div className="absolute bottom-2 left-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-bl-lg"></div>
-            <div className="absolute bottom-2 right-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-br-lg"></div>
+            <div className="absolute top-2 start-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-ss-lg"></div>
+            <div className="absolute top-2 end-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-se-lg"></div>
+            <div className="absolute bottom-2 start-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-es-lg"></div>
+            <div className="absolute bottom-2 end-2 w-8 h-8 border-2 border-indigo-400 opacity-50 rounded-ee-lg"></div>
             
             {/* Academic laurel-like decorations */}
-            <div className="absolute top-1/2 left-1 transform -translate-y-1/2">
+            <div className="absolute top-1/2 start-1 transform -translate-y-1/2">
               <div className="w-1 h-6 bg-indigo-300 opacity-40 rounded-full"></div>
             </div>
-            <div className="absolute top-1/2 right-1 transform -translate-y-1/2">
+            <div className="absolute top-1/2 end-1 transform -translate-y-1/2">
               <div className="w-1 h-6 bg-indigo-300 opacity-40 rounded-full"></div>
             </div>
             
@@ -402,15 +402,15 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             }}></div>
             
             {/* Modern accent lines */}
-            <div className="absolute top-2 left-2 w-8 h-0.5 bg-blue-400 opacity-60"></div>
-            <div className="absolute top-2 left-2 w-0.5 h-8 bg-blue-400 opacity-60"></div>
+            <div className="absolute top-2 start-2 w-8 h-0.5 bg-blue-400 opacity-60"></div>
+            <div className="absolute top-2 start-2 w-0.5 h-8 bg-blue-400 opacity-60"></div>
             
-            <div className="absolute bottom-2 right-2 w-8 h-0.5 bg-blue-400 opacity-60"></div>
-            <div className="absolute bottom-2 right-2 w-0.5 h-8 bg-blue-400 opacity-60"></div>
+            <div className="absolute bottom-2 end-2 w-8 h-0.5 bg-blue-400 opacity-60"></div>
+            <div className="absolute bottom-2 end-2 w-0.5 h-8 bg-blue-400 opacity-60"></div>
             
             {/* Modern dot accents */}
-            <div className="absolute top-4 right-4 w-2 h-2 bg-blue-400 opacity-50 rounded-full"></div>
-            <div className="absolute bottom-4 left-4 w-2 h-2 bg-blue-400 opacity-50 rounded-full"></div>
+            <div className="absolute top-4 end-4 w-2 h-2 bg-blue-400 opacity-50 rounded-full"></div>
+            <div className="absolute bottom-4 start-4 w-2 h-2 bg-blue-400 opacity-50 rounded-full"></div>
             
             {/* Modern subtle background */}
             <div className="absolute inset-0 opacity-2">
@@ -436,7 +436,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
         {renderCertificatePattern(certificatePattern)}
 
         {/* Certificate ID - Top Left */}
-        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+        <div className="absolute top-4 start-4 sm:top-6 sm:start-6 z-20">
           <div className="flex items-center space-x-1">
             <Hash className={`w-3 h-3 sm:w-4 sm:h-4 ${theme.icon}`} />
             <span className={`text-xs sm:text-sm ${theme.secondary} font-medium`}>ID: {certificateId || 'LH-2024-001'}</span>
@@ -444,7 +444,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
         </div>
 
         {/* QR Code Box - Top Right */}
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <div className="absolute top-4 end-4 sm:top-6 sm:end-6 z-20">
           <div className={`w-16 h-16 sm:w-24 sm:h-24 border-2 ${theme.secondary.replace('text-', 'border-')} rounded-md bg-white/90 backdrop-blur-sm p-1`}>
             {qrCodeUrl ? (
               <img
@@ -475,10 +475,10 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
               <Award className={`w-6 h-6 sm:w-8 sm:h-8 ${theme.icon}`} />
               {/* Decorative rays */}
               <div className="absolute inset-0 rounded-full">
-                <div className={`absolute top-0 left-1/2 w-px h-2 sm:h-3 ${theme.secondary.replace('text-', 'bg-')} transform -translate-x-1/2 -translate-y-1 opacity-60`}></div>
-                <div className={`absolute bottom-0 left-1/2 w-px h-2 sm:h-3 ${theme.secondary.replace('text-', 'bg-')} transform -translate-x-1/2 translate-y-1 opacity-60`}></div>
-                <div className={`absolute left-0 top-1/2 w-2 sm:w-3 h-px ${theme.secondary.replace('text-', 'bg-')} transform -translate-y-1/2 -translate-x-1 opacity-60`}></div>
-                <div className={`absolute right-0 top-1/2 w-2 sm:w-3 h-px ${theme.secondary.replace('text-', 'bg-')} transform -translate-y-1/2 translate-x-1 opacity-60`}></div>
+                <div className={`absolute top-0 start-1/2 w-px h-2 sm:h-3 ${theme.secondary.replace('text-', 'bg-')} transform -translate-x-1/2 -translate-y-1 opacity-60`}></div>
+                <div className={`absolute bottom-0 start-1/2 w-px h-2 sm:h-3 ${theme.secondary.replace('text-', 'bg-')} transform -translate-x-1/2 translate-y-1 opacity-60`}></div>
+                <div className={`absolute start-0 top-1/2 w-2 sm:w-3 h-px ${theme.secondary.replace('text-', 'bg-')} transform -translate-y-1/2 -translate-x-1 opacity-60`}></div>
+                <div className={`absolute end-0 top-1/2 w-2 sm:w-3 h-px ${theme.secondary.replace('text-', 'bg-')} transform -translate-y-1/2 translate-x-1 opacity-60`}></div>
               </div>
             </div>
           </div>

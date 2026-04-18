@@ -59,7 +59,7 @@ export default function DragHandle({
     <div
       data-drag-handle
       onMouseDown={onMouseDown}
-      className={`absolute top-1 left-1/2 -translate-x-1/2 z-10 cursor-grab active:cursor-grabbing transition-opacity ${
+      className={`absolute top-1 start-1/2 -translate-x-1/2 z-10 cursor-grab active:cursor-grabbing transition-opacity ${
         autoHide ? 'opacity-0 group-hover:opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}
     >

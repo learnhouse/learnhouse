@@ -35,7 +35,7 @@ const ConfirmationModal = (params: ModalParams) => {
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/70 z-[var(--z-modal-backdrop)] data-[state=open]:animate-[overlayShow_150ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[overlayClose_150ms_cubic-bezier(0.16,1,0.3,1)]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[var(--z-modal)] bg-white rounded-[18px] shadow-[hsl(206_22%_7%/35%)_0px_10px_38px_-10px,hsl(206_22%_7%/20%)_0px_10px_20px_-15px] w-auto min-w-[500px] max-w-[600px] max-h-[85vh] p-6 overflow-visible outline-none transition-[max-height] duration-300 ease-out data-[state=open]:animate-[contentShow_150ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[contentClose_150ms_cubic-bezier(0.16,1,0.3,1)]">
+        <Dialog.Content className="fixed top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 z-[var(--z-modal)] bg-white rounded-[18px] shadow-[hsl(206_22%_7%/35%)_0px_10px_38px_-10px,hsl(206_22%_7%/20%)_0px_10px_20px_-15px] w-auto min-w-[500px] max-w-[600px] max-h-[85vh] p-6 overflow-visible outline-none transition-[max-height] duration-300 ease-out data-[state=open]:animate-[contentShow_150ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[contentClose_150ms_cubic-bezier(0.16,1,0.3,1)]">
           <Dialog.Title className="sr-only">{params.dialogTitle}</Dialog.Title>
           <div className="flex space-x-4 tracking-tight">
             <div

@@ -20,7 +20,7 @@ export function CommunityActionsMobile({
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
 
   return (
-    <nav aria-label="Community mobile actions" className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav aria-label="Community mobile actions" className="fixed bottom-0 start-0 end-0 z-50 md:hidden">
       <div className="mx-3 mb-4 bg-white/95 backdrop-blur-sm rounded-xl nice-shadow p-3">
         <div className="flex items-center gap-3">
           {/* Community Icon */}

@@ -210,7 +210,7 @@ function UpdateTaskRef() {
                     </div>
                     {assignmentTaskState.assignmentTask.reference_file && !isLoading && (
                         <div className='flex flex-col rounded-lg bg-white text-gray-400 shadow-lg nice-shadow px-5 py-3 space-y-1 items-center relative'>
-                            <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center'>
+                            <div className='absolute top-0 end-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center'>
                                 <Cloud size={15} />
                             </div>
                             <File size={20} className='' />
@@ -239,7 +239,7 @@ function UpdateTaskRef() {
                                 onChange={handleFileChange}
                             />
                             <div className="font-bold  animate-pulse antialiased items-center bg-slate-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
-                                <Loader size={16} className="mr-2" />
+                                <Loader size={16} className="me-2" />
                                 <span>{t('dashboard.assignments.editor.task_editor.general.loading')}</span>
                             </div>
                         </div>
@@ -256,7 +256,7 @@ function UpdateTaskRef() {
                                 className="font-bold antialiased items-center  text-gray text-sm rounded-md px-4  mt-6 flex"
                                 onClick={() => document.getElementById('fileInput')?.click()}
                             >
-                                <UploadCloud size={16} className="mr-2" />
+                                <UploadCloud size={16} className="me-2" />
                                 <span>{t('dashboard.assignments.editor.task_editor.general.change_reference_file')}</span>
                             </button>
                         </div>

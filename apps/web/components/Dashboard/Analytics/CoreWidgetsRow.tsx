@@ -88,7 +88,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             <h3 className="text-sm font-semibold text-gray-700">
               {t('analytics.overview.enrollment_funnel')}
             </h3>
-            <div className="ml-auto">
+            <div className="ms-auto">
               <ExpandButton onClick={() => setFunnelOpen(true)} />
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={16} weight="duotone" className="text-amber-400" />
             <h3 className="text-sm font-semibold text-gray-700">{t('analytics.overview.top_courses')}</h3>
-            <div className="ml-auto">
+            <div className="ms-auto">
               <ExpandButton onClick={() => setCoursesOpen(true)} />
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             <h3 className="text-sm font-semibold text-gray-700">
               {t('analytics.overview.activity_engagement')}
             </h3>
-            <div className="ml-auto">
+            <div className="ms-auto">
               <ExpandButton onClick={() => setActivityOpen(true)} />
             </div>
           </div>
@@ -300,10 +300,10 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             {/* Header */}
             <div className="grid grid-cols-[1fr_80px_80px_80px_100px] gap-2 px-3 py-2 text-[11px] text-gray-400 font-medium uppercase tracking-wider">
               <span>{t('analytics.common.course')}</span>
-              <span className="text-right">{t('analytics.common.views')}</span>
-              <span className="text-right">{t('analytics.common.enrollments')}</span>
-              <span className="text-right">{t('analytics.common.completions')}</span>
-              <span className="text-right">{t('analytics.overview.conv_rate')}</span>
+              <span className="text-end">{t('analytics.common.views')}</span>
+              <span className="text-end">{t('analytics.common.enrollments')}</span>
+              <span className="text-end">{t('analytics.common.completions')}</span>
+              <span className="text-end">{t('analytics.overview.conv_rate')}</span>
             </div>
             {courseRows.map((row: any, i: number) => {
               const thumbnail =
@@ -352,16 +352,16 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       {row.course_name || `Course ${row.course_uuid}`}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {row.views.toLocaleString()}
                   </span>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {row.enrollments.toLocaleString()}
                   </span>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {row.completions.toLocaleString()}
                   </span>
-                  <span className="text-sm text-right tabular-nums">
+                  <span className="text-sm text-end tabular-nums">
                     <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md text-xs font-medium">
                       {rate}%
                     </span>
@@ -389,10 +389,10 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
             {/* Header */}
             <div className="grid grid-cols-[1fr_60px_70px_80px_90px] gap-2 px-3 py-2 text-[11px] text-gray-400 font-medium uppercase tracking-wider">
               <span>{t('analytics.overview.activity')}</span>
-              <span className="text-right">{t('analytics.common.type')}</span>
-              <span className="text-right">{t('analytics.common.views')}</span>
-              <span className="text-right">{t('analytics.common.completions')}</span>
-              <span className="text-right">{t('analytics.overview.avg_time')}</span>
+              <span className="text-end">{t('analytics.common.type')}</span>
+              <span className="text-end">{t('analytics.common.views')}</span>
+              <span className="text-end">{t('analytics.common.completions')}</span>
+              <span className="text-end">{t('analytics.overview.avg_time')}</span>
             </div>
             {activityRows.map((row: any, i: number) => {
               const typeIcon =
@@ -433,16 +433,16 @@ export default function CoreWidgetsRow({ days = '30' }: { days?: string }) {
                       {row.activity_name || row.activity_uuid}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-400 text-right capitalize">
+                  <span className="text-xs text-gray-400 text-end capitalize">
                     {row.activity_type}
                   </span>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {row.views.toLocaleString()}
                   </span>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {row.completions.toLocaleString()}
                   </span>
-                  <span className="text-sm text-gray-600 text-right tabular-nums">
+                  <span className="text-sm text-gray-600 text-end tabular-nums">
                     {avgTime}
                   </span>
                 </Wrapper>

@@ -49,12 +49,12 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
             size="sm"
             onClick={() => copyToClipboard(feedUrl)}
           >
-            <Copy size={14} className="mr-1" />
+            <Copy size={14} className="me-1" />
             Copy
           </Button>
           <a href={feedUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm">
-              <ExternalLink size={14} className="mr-1" />
+              <ExternalLink size={14} className="me-1" />
               Preview
             </Button>
           </a>
@@ -87,7 +87,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
                 <p className="text-xs text-gray-400">Also distributes to Apple Music</p>
               </div>
             </div>
-            <ol className="text-sm text-gray-600 space-y-2 ml-1">
+            <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
                 <span>Go to <a href="https://podcastsconnect.apple.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcastsconnect.apple.com</a> and sign in with your Apple ID</span>
@@ -118,7 +118,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
                 <p className="text-xs text-gray-400">Largest podcast listening platform</p>
               </div>
             </div>
-            <ol className="text-sm text-gray-600 space-y-2 ml-1">
+            <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
                 <span>Go to <a href="https://podcasters.spotify.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasters.spotify.com</a> and sign in or create an account</span>
@@ -149,7 +149,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
                 <p className="text-xs text-gray-400">Google Podcasts migrated to YouTube Music</p>
               </div>
             </div>
-            <ol className="text-sm text-gray-600 space-y-2 ml-1">
+            <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
                 <span>Go to <a href="https://podcasts.google.com/publish" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasts.google.com/publish</a></span>
@@ -180,7 +180,7 @@ function PodcastDistribution({ orgslug, podcastuuid }: PodcastDistributionProps)
                 <p className="text-xs text-gray-400">Also available on Alexa devices</p>
               </div>
             </div>
-            <ol className="text-sm text-gray-600 space-y-2 ml-1">
+            <ol className="text-sm text-gray-600 space-y-2 ms-1">
               <li className="flex items-start space-x-2">
                 <span className="font-semibold text-gray-800 shrink-0">1.</span>
                 <span>Go to <a href="https://podcasters.amazon.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">podcasters.amazon.com</a> and sign in with your Amazon account</span>

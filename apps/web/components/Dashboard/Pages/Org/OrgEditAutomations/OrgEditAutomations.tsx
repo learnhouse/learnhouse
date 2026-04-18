@@ -393,7 +393,7 @@ const OrgEditAutomations: React.FC = () => {
                   className="border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
                   Connect
-                  <ExternalLink size={12} className="ml-1.5" />
+                  <ExternalLink size={12} className="ms-1.5" />
                 </Button>
               </a>
             </div>
@@ -442,7 +442,7 @@ const OrgEditAutomations: React.FC = () => {
                   }}
                   className="bg-black text-white hover:bg-black/90"
                 >
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={16} className="me-2" />
                   Add Endpoint
                 </Button>
               </div>
@@ -894,11 +894,11 @@ const WebhookCard: React.FC<{
               <div className="flex gap-2 pt-1">
                 <Button size="sm" variant="outline" onClick={onStartEdit}>Edit</Button>
                 <Button size="sm" variant="outline" onClick={onRegenerate}>
-                  <RefreshCw size={12} className="mr-1" />
+                  <RefreshCw size={12} className="me-1" />
                   Rotate Secret
                 </Button>
                 <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={onDelete}>
-                  <Trash2 size={12} className="mr-1" />
+                  <Trash2 size={12} className="me-1" />
                   Delete
                 </Button>
               </div>
@@ -924,7 +924,7 @@ const EventPayloadRow: React.FC<{
       >
         <code className="bg-gray-100 px-1.5 py-0.5 rounded font-medium text-gray-700">{eventId}</code>
         {info && <span className="text-gray-400 truncate">{info.description}</span>}
-        <span className="ml-auto flex-shrink-0 text-gray-400">
+        <span className="ms-auto flex-shrink-0 text-gray-400">
           {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </span>
       </div>
@@ -1004,7 +1004,7 @@ const EventSelector: React.FC<{
                       title="View example payload"
                     >
                       <code className="text-[10px]">{event.id}</code>
-                      {previewEvent === event.id ? <ChevronUp size={10} className="inline ml-1" /> : <ChevronDown size={10} className="inline ml-1" />}
+                      {previewEvent === event.id ? <ChevronUp size={10} className="inline ms-1" /> : <ChevronDown size={10} className="inline ms-1" />}
                     </button>
                   </div>
                   {previewEvent === event.id && event.data_schema && (

@@ -119,7 +119,7 @@ const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: b
                 </span>
               ))}
               {authors.length > 2 && (
-                <span className="text-neutral-500 ml-1">
+                <span className="text-neutral-500 ms-1">
                   & {t('courses.and_x_more', { count: authors.length - 2 })}
                 </span>
               )}
@@ -195,7 +195,7 @@ const UpdatesSection = () => {
         transition={{ duration: 0.2 }}
         className="relative"
       >
-        <div className="max-h-[300px] overflow-y-auto pr-1 -mr-1">
+        <div className="max-h-[300px] overflow-y-auto pe-1 -me-1">
           {selectedView === 'list' ? (
             <UpdatesListView />
           ) : (
@@ -334,7 +334,7 @@ const UpdatesListView = () => {
               <p className="text-sm text-neutral-600 line-clamp-3">{update.content}</p>
             </div>
             {adminStatus.isAdmin && !adminStatus.loading && (
-              <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <DeleteUpdateButton update={update} />
               </div>
             )}

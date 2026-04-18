@@ -287,7 +287,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   className="w-full aspect-video object-contain rounded-lg"
                   src={videoUrl}
                 />
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={handleExpand}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
@@ -444,7 +444,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               ))}
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors ml-auto"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors ms-auto"
               >
                 <Download size={14} />
                 {t('editor.blocks.common.download')}
@@ -476,7 +476,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                     src={videoUrl}
                   />
-                  <div className="absolute top-2 right-2 flex gap-1">
+                  <div className="absolute top-2 end-2 flex gap-1">
                     <button
                       onClick={handleExpand}
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"

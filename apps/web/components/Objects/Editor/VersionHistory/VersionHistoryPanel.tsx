@@ -100,7 +100,7 @@ function VersionHistoryPanel({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl"
+          className="absolute end-0 top-0 h-full w-96 bg-white shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

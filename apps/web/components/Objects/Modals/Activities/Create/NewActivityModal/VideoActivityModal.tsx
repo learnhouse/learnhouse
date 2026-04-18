@@ -146,7 +146,7 @@ function VideoModal({
             <button
               type="button"
               onClick={() => setSelectedView('youtube')}
-              className={`flex items-center justify-center py-2.5 gap-2 text-sm font-medium border-l border-gray-200 transition-colors ${
+              className={`flex items-center justify-center py-2.5 gap-2 text-sm font-medium border-s border-gray-200 transition-colors ${
                 selectedView === 'youtube'
                   ? 'bg-gray-100 text-gray-900'
                   : 'bg-white text-gray-500 hover:bg-gray-50'
@@ -168,7 +168,7 @@ function VideoModal({
               accept={SUPPORTED_FILES}
               onChange={handleVideoChange}
               required
-              className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
+              className="w-full text-sm text-gray-500 file:me-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition-colors"
             />
           </div>
         )}

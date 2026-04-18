@@ -249,8 +249,8 @@ export default function WebpageBlockComponent({ node, updateAttributes, selected
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
             <div className="relative w-5 h-5">
-              <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-100 rounded-full" />
-              <div className="absolute top-0 left-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent" />
+              <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-100 rounded-full" />
+              <div className="absolute top-0 start-0 w-full h-full border-2 border-gray-400 rounded-full animate-spin border-t-transparent" />
             </div>
           </div>
         )}

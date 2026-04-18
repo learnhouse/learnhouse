@@ -81,12 +81,12 @@ export default function CourseActivityTypeBreakdown({
             {/* Detail table */}
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+                <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
                   <th className="pb-2 font-medium">{t('analytics.course_analytics.common.type')}</th>
-                  <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.views')}</th>
-                  <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.completions')}</th>
-                  <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.rate')}</th>
-                  <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.pct_of_total')}</th>
+                  <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.views')}</th>
+                  <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.completions')}</th>
+                  <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.rate')}</th>
+                  <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.pct_of_total')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -98,10 +98,10 @@ export default function CourseActivityTypeBreakdown({
                         <div className={`w-3 h-3 rounded-sm ${getColor(row.activity_type)}`} />
                         {getTypeLabel(row.activity_type)}
                       </td>
-                      <td className="py-2.5 text-right text-gray-600">{row.views}</td>
-                      <td className="py-2.5 text-right text-emerald-600 font-medium">{row.completions}</td>
-                      <td className="py-2.5 text-right text-gray-500">{row.completion_rate}%</td>
-                      <td className="py-2.5 text-right text-gray-400">{pct}%</td>
+                      <td className="py-2.5 text-end text-gray-600">{row.views}</td>
+                      <td className="py-2.5 text-end text-emerald-600 font-medium">{row.completions}</td>
+                      <td className="py-2.5 text-end text-gray-500">{row.completion_rate}%</td>
+                      <td className="py-2.5 text-end text-gray-400">{pct}%</td>
                     </tr>
                   )
                 })}

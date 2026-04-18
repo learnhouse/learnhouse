@@ -111,7 +111,7 @@ ${html}
   return (
     <div className="relative w-full h-full" style={{ minHeight: 0 }}>
       {isLoading && streamingContent && (
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
+        <div className="absolute top-4 end-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
           <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
           <span className="text-xs text-white/70">Generating...</span>
         </div>

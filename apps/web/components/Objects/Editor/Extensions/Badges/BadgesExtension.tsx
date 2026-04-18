@@ -159,7 +159,7 @@ const BadgesExtension: React.FC = (props: any) => {
                 <Palette size={14} />
               </button>
               {showColorPicker && (
-                <div ref={colorPickerRef} className="absolute left-full ml-2 p-2 bg-white rounded-full nice-shadow">
+                <div ref={colorPickerRef} className="absolute start-full ms-2 p-2 bg-white rounded-full nice-shadow">
                   <div className="flex space-x-2">
                     {colors.map((c) => (
                       <button
@@ -185,7 +185,7 @@ const BadgesExtension: React.FC = (props: any) => {
         )}
 
         {isEditable && showPredefinedCallouts && (
-          <div className='flex flex-wrap gap-2 absolute top-full mt-2 left-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10'>
+          <div className='flex flex-wrap gap-2 absolute top-full mt-2 start-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10'>
             {predefinedBadges.map((badge, index) => (
               <button
                 key={index}

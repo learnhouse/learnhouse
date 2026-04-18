@@ -92,7 +92,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
     >
     <FeatureDisabledView featureName="payments" orgslug={params.orgslug} context="dashboard">
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+      <div className="ps-10 pe-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }

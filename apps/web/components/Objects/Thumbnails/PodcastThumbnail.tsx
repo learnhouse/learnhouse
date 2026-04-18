@@ -105,7 +105,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
           </div>
         </div>
         {isDashboard && (
-          <div className="absolute bottom-2 left-2">
+          <div className="absolute bottom-2 start-2">
             {podcast.published ? (
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
                 {t('podcasts.published')}
@@ -118,7 +118,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
           </div>
         )}
         {podcast.episode_count !== undefined && (
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/70 text-white px-2 py-0.5 rounded-full text-[10px] font-medium">
+          <div className="absolute bottom-2 end-2 flex items-center gap-1 bg-black/70 text-white px-2 py-0.5 rounded-full text-[10px] font-medium">
             <Headphones size={12} />
             {podcast.episode_count} {podcast.episode_count === 1 ? 'episode' : 'episodes'}
           </div>
@@ -207,7 +207,7 @@ const AdminEditOptions = ({ podcast, orgSlug, deletePodcast, isDashboard = false
       checkMethod="roles"
       orgId={podcast.org_id}
     >
-      <div className={`absolute top-2 right-2 z-20 transition-opacity ${
+      <div className={`absolute top-2 end-2 z-20 transition-opacity ${
         isDashboard && !isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
       }`}>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -219,12 +219,12 @@ const AdminEditOptions = ({ podcast, orgSlug, deletePodcast, isDashboard = false
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgSlug, `/dash/podcasts/podcast/${removePodcastPrefix(podcast.podcast_uuid)}/content`)} className="flex items-center cursor-pointer">
-                <FilePenLine className="mr-2 h-4 w-4" /> {t('podcasts.edit_content')}
+                <FilePenLine className="me-2 h-4 w-4" /> {t('podcasts.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgSlug, `/dash/podcasts/podcast/${removePodcastPrefix(podcast.podcast_uuid)}/general`)} className="flex items-center cursor-pointer">
-                <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
+                <Settings2 className="me-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -233,8 +233,8 @@ const AdminEditOptions = ({ podcast, orgSlug, deletePodcast, isDashboard = false
                 confirmationMessage={t('podcasts.delete_podcast_confirm')}
                 dialogTitle={t('podcasts.delete_podcast_title', { name: podcast.name })}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                    <Trash2 className="mr-2 h-4 w-4" /> {t('podcasts.delete_podcast')}
+                  <button className="w-full text-start flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                    <Trash2 className="me-2 h-4 w-4" /> {t('podcasts.delete_podcast')}
                   </button>
                 }
                 functionToExecute={deletePodcast}

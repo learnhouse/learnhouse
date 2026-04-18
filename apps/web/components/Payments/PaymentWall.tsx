@@ -5,6 +5,7 @@ import { Button } from '@components/ui/button';
 import Link from 'next/link';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
+import { formatMoney, useLocale } from '@/lib/format';
 
 interface OfferMeta {
   offer_id: number;
@@ -33,11 +34,9 @@ interface PaymentWallProps {
 function PaymentWall({ offer, resourceName, resourceThumbnail, orgslug }: PaymentWallProps) {
   const org = useOrg() as any;
   const slug = orgslug ?? org?.slug;
+  const locale = useLocale();
 
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: offer.currency,
-  }).format(offer.amount);
+  const formattedPrice = formatMoney(offer.amount, offer.currency, locale);
 
   const storeHref = slug
     ? getUriWithOrg(slug, `/store/offers/${offer.offer_id}`)

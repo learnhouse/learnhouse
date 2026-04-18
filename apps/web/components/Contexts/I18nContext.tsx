@@ -24,9 +24,16 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
   }, [])
 
   // Listen for language changes to force re-render of the entire tree
+  // and keep <html lang/dir> in sync until the next SSR refresh.
   useEffect(() => {
+    const RTL_LANGS = new Set(['he', 'ar', 'fa', 'ur'])
     const handleLanguageChanged = (lng: string) => {
       setLang(lng)
+      if (typeof document !== 'undefined') {
+        const code = lng.split('-')[0].toLowerCase()
+        document.documentElement.lang = code
+        document.documentElement.dir = RTL_LANGS.has(code) ? 'rtl' : 'ltr'
+      }
     }
     i18n.on('languageChanged', handleLanguageChanged)
     return () => {

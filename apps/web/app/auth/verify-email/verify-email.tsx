@@ -67,7 +67,7 @@ function VerifyEmailClient({ org }: VerifyEmailClientProps) {
                                     {error ? t('auth.verification_failed') : t('auth.email_verified_success')}
                                 </span>
                                 {success && (
-                                    <span className="text-sm ml-2">
+                                    <span className="text-sm ms-2">
                                         · <Link href="/login" className="underline hover:no-underline">{t('auth.proceed_to_login')}</Link>
                                     </span>
                                 )}

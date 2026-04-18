@@ -168,7 +168,7 @@ function ImageBlockComponent(props: any) {
                 className="rounded-lg max-w-full h-auto"
                 style={{ width: imageSize.width, maxWidth: '100%' }}
               />
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
@@ -320,7 +320,7 @@ function ImageBlockComponent(props: any) {
                     className="rounded-lg nice-shadow max-w-full h-auto"
                     style={{ width: '100%' }}
                   />
-                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 end-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleAlignmentChange('left')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}

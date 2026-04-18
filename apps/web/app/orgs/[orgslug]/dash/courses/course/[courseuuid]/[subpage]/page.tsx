@@ -143,7 +143,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+        <div className="ps-10 pe-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
           <CourseOverviewTop params={params} />
           <div className="flex space-x-3 font-black text-sm">
             {tabs.map((tab) => {

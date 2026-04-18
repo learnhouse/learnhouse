@@ -283,7 +283,7 @@ const OrgEditLanding = () => {
         {/* Enable/Disable Landing Page */}
         <div className="flex items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')} <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> {t('dashboard.organization.landing.beta')} </div></h2>
+            <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')} <div className="text-xs ms-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> {t('dashboard.organization.landing.beta')} </div></h2>
             <p className="text-gray-600">{t('dashboard.organization.landing.subtitle')}</p>
           </div>
           <div className="flex items-center space-x-4">
@@ -294,7 +294,7 @@ const OrgEditLanding = () => {
                 onChange={() => setIsLandingEnabled(!isLandingEnabled)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
             <Button 
               variant="default" 
@@ -302,7 +302,7 @@ const OrgEditLanding = () => {
               disabled={isSaving}
               className="bg-black hover:bg-black/90"
             >
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="h-4 w-4 me-2" />
               {isSaving ? t('dashboard.organization.landing.saving') : t('dashboard.organization.landing.save_changes')}
             </Button>
           </div>
@@ -313,7 +313,7 @@ const OrgEditLanding = () => {
             {/* Section List */}
             <div className="grid grid-cols-4 gap-6">
               {/* Sections Panel */}
-              <div className="col-span-1 border-r pr-4">
+              <div className="col-span-1 border-e pe-4">
                 <h3 className="font-medium mb-4">{t('dashboard.organization.landing.sections')}</h3>
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="sections">
@@ -413,7 +413,7 @@ const OrgEditLanding = () => {
                     <SelectTrigger className="w-full p-0 border-0 bg-black ">
                       <div className="w-full">
                         <Button variant="default" className="w-full bg-black hover:bg-black/90 text-white">
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="h-4 w-4 me-2" />
                           {t('dashboard.organization.landing.add_section')}
                         </Button>
                       </div>
@@ -867,7 +867,7 @@ const HeroSectionEditor: React.FC<{
                       onClick={() => document.getElementById('imageUpload')?.click()}
                       className="w-full"
                     >
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4 me-2" />
                       {t('dashboard.organization.landing.hero_editor.upload_image')}
                     </Button>
                     <input
@@ -981,7 +981,7 @@ const HeroSectionEditor: React.FC<{
                   }}
                   className="w-full"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   {t('dashboard.organization.landing.hero_editor.add_button')}
                 </Button>
               )}
@@ -1108,7 +1108,7 @@ const HeroSectionEditor: React.FC<{
                   })}
                   className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 me-2" />
                   {t('dashboard.organization.landing.hero_editor.remove_illustration')}
                 </Button>
               )}
@@ -1175,7 +1175,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, classNam
         disabled={isUploading}
         className="w-full"
       >
-        <Upload className="h-4 w-4 mr-2" />
+        <Upload className="h-4 w-4 me-2" />
         {isUploading ? t('dashboard.organization.images.uploading') : buttonText}
       </Button>
       <input
@@ -1383,7 +1383,7 @@ const LogosSectionEditor: React.FC<{
             }}
             className="w-full"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 me-2" />
             {t('dashboard.organization.landing.logos_editor.add_logo')}
           </Button>
         </div>
@@ -1524,7 +1524,7 @@ const PeopleSectionEditor: React.FC<{
               }}
               className="w-full"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 me-2" />
               {t('dashboard.organization.landing.people_editor.add_person')}
             </Button>
           </div>

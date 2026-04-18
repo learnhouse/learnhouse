@@ -41,7 +41,7 @@ export default function PeakUsageHeatmap({ days = '30' }: { days?: string }) {
             ))}
             {DAYS.map((day, di) => (
               <React.Fragment key={day}>
-                <div className="text-xs text-gray-500 pr-2 flex items-center">{day}</div>
+                <div className="text-xs text-gray-500 pe-2 flex items-center">{day}</div>
                 {HOURS.map((h) => {
                   const count = lookup.get(`${di + 1}-${h}`) ?? 0
                   return (

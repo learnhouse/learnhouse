@@ -318,7 +318,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
       </div>
       
       {showEmojiPicker === item.id && (
-        <div ref={pickerRef} className="absolute z-10 mt-1 left-0">
+        <div ref={pickerRef} className="absolute z-10 mt-1 start-0">
           <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
             <Picker
               onEmojiSelect={(emoji: any) => handleEmojiSelect(item.id, emoji)}
@@ -359,7 +359,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
       
       <div 
         ref={scrollContainerRef}
-        className={`space-y-2 ${isScrollable ? 'max-h-[350px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent' : ''}`}
+        className={`space-y-2 ${isScrollable ? 'max-h-[350px] overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent' : ''}`}
       >
         {items.map(renderItem)}
       </div>

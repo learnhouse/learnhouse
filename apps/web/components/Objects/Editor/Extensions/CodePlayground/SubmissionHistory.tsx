@@ -95,7 +95,7 @@ export default function SubmissionHistory({
         {error}
         <button
           onClick={fetchHistory}
-          className="ml-2 underline text-neutral-500 hover:text-neutral-700"
+          className="ms-2 underline text-neutral-500 hover:text-neutral-700"
         >
           Retry
         </button>
@@ -134,7 +134,7 @@ export default function SubmissionHistory({
             {/* Header row */}
             <button
               onClick={() => setExpandedId(isExpanded ? null : sub.id)}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-neutral-100/60 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-start hover:bg-neutral-100/60 transition-colors"
             >
               {isExpanded ? (
                 <ChevronDown size={14} className="text-neutral-400 shrink-0" />
@@ -153,13 +153,13 @@ export default function SubmissionHistory({
               </span>
 
               {sub.execution_time_ms !== null && (
-                <span className="flex items-center gap-0.5 text-[10px] text-neutral-400 ml-auto">
+                <span className="flex items-center gap-0.5 text-[10px] text-neutral-400 ms-auto">
                   <Clock size={10} />
                   {sub.execution_time_ms}ms
                 </span>
               )}
 
-              <span className="text-[10px] text-neutral-400 ml-2 shrink-0">
+              <span className="text-[10px] text-neutral-400 ms-2 shrink-0">
                 {dateStr} {timeStr}
               </span>
             </button>

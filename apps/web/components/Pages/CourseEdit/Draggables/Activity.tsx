@@ -176,7 +176,7 @@ function Activity(props: any) {
               <Eye strokeWidth={2} size={15} className="text-gray-600" />
             </Link>
           </div>
-          <div className="flex flex-row pr-3 space-x-1 items-center">
+          <div className="flex flex-row pe-3 space-x-1 items-center">
             <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
               confirmationMessage="Are you sure you want to delete this activity ?"

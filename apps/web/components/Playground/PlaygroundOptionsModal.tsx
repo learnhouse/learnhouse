@@ -67,7 +67,7 @@ export default function PlaygroundOptionsModal({
       dialogContent={
         <div className="flex h-full min-h-[680px]">
           {/* Sidebar */}
-          <div className="w-44 flex-shrink-0 border-r border-gray-100 bg-gray-50/60 flex flex-col py-4 px-3 gap-1">
+          <div className="w-44 flex-shrink-0 border-e border-gray-100 bg-gray-50/60 flex flex-col py-4 px-3 gap-1">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">
               Playground
             </p>
@@ -75,7 +75,7 @@ export default function PlaygroundOptionsModal({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-start ${
                   activeTab === tab.id
                     ? 'bg-white nice-shadow text-gray-900'
                     : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
@@ -297,7 +297,7 @@ function AccessTab({
             <button
               key={opt.type}
               onClick={() => handleSetAccess(opt.type)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-start ${
                 active
                   ? 'border-sky-500 bg-sky-50/50'
                   : 'border-gray-100 bg-gray-50/60 hover:border-gray-200 hover:bg-white'
@@ -371,7 +371,7 @@ function AccessTab({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Group</th>
+                    <th className="text-start px-4 py-2.5 text-xs font-semibold text-gray-500">Group</th>
                     <th className="px-4 py-2.5" />
                   </tr>
                 </thead>
@@ -379,10 +379,10 @@ function AccessTab({
                   {usergroups.map((ug: any) => (
                     <tr key={ug.usergroup_uuid} className="border-b border-gray-50 last:border-0">
                       <td className="px-4 py-3 font-medium text-gray-800">{ug.name}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-end">
                         <button
                           onClick={() => removeUserGroup(ug.usergroup_uuid)}
-                          className="flex items-center gap-1 ml-auto h-7 px-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition-all"
+                          className="flex items-center gap-1 ms-auto h-7 px-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition-all"
                         >
                           <X size={11} weight="bold" />
                           Remove

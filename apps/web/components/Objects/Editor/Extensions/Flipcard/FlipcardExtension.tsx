@@ -185,7 +185,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                         e.stopPropagation()
                         handleQuestionEdit()
                       }}
-                      className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
+                      className="ms-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
                       <Edit size={14} />
                     </button>
@@ -227,7 +227,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                         e.stopPropagation()
                         handleAnswerEdit()
                       }}
-                      className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
+                      className="ms-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
                       <Edit size={14} />
                     </button>
@@ -356,7 +356,7 @@ const FlipcardExtension: React.FC = (props: any) => {
 
         {/* Color Picker */}
         {isEditable && showColorPicker && (
-          <div ref={colorPickerRef} className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 p-3 bg-white rounded-lg nice-shadow z-10 border border-neutral-200">
+          <div ref={colorPickerRef} className="absolute top-full mt-2 start-1/2 transform -translate-x-1/2 p-3 bg-white rounded-lg nice-shadow z-10 border border-neutral-200">
             <div className="flex flex-wrap gap-2 max-w-xs">
               {colors.map((c) => (
                 <button

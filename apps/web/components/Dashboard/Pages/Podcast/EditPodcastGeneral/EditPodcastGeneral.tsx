@@ -138,7 +138,7 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
                         <button
                           type="button"
                           onClick={removeThumbnail}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          className="absolute top-2 end-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -161,7 +161,7 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
                       htmlFor="thumbnail-upload"
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                     >
-                      <Upload size={16} className="mr-2" />
+                      <Upload size={16} className="me-2" />
                       {t('podcasts.dashboard.form.upload_thumbnail')}
                     </label>
                     <p className="mt-2 text-xs text-gray-500">
@@ -288,9 +288,9 @@ function EditPodcastGeneral({ orgslug }: EditPodcastGeneralProps) {
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-black hover:bg-black/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
-                    <Loader2 size={16} className="mr-2 animate-spin" />
+                    <Loader2 size={16} className="me-2 animate-spin" />
                   ) : (
-                    <Save size={16} className="mr-2" />
+                    <Save size={16} className="me-2" />
                   )}
                   {t('podcasts.dashboard.save_changes')}
                 </button>

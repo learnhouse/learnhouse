@@ -465,8 +465,8 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                             <div className="flex flex-col space-y-2">
                                 {question.blanks.map((blank, bIndex) => (
                                     <div key={bIndex} className="flex">
-                                        <div className={"blank-item outline-3 outline-white pr-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' ? 'active:scale-105' : '')}>
-                                            <div className="font-bold text-base flex items-center justify-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
+                                        <div className={"blank-item outline-3 outline-white pe-2 shadow-sm w-full flex items-center space-x-2 min-h-[40px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 ease-linear nice-shadow " + (view == 'student' ? 'active:scale-105' : '')}>
+                                            <div className="font-bold text-base flex items-center justify-center h-full w-[40px] rounded-s-md text-slate-800 bg-slate-100/80">
                                                 <Type size={14} />
                                             </div>
                                             {view === 'teacher' ? (
@@ -475,19 +475,19 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                         value={blank.placeholder}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'placeholder', e.target.value)}
                                                         placeholder="Placeholder text for the blank"
-                                                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
+                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
                                                     />
                                                     <input
                                                         value={blank.correctAnswer}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'correctAnswer', e.target.value)}
                                                         placeholder="Correct answer"
-                                                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-lime-50 border-2 border-lime-200 rounded-md border-dotted text-sm font-bold"
+                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-lime-50 border-2 border-lime-200 rounded-md border-dotted text-sm font-bold"
                                                     />
                                                     <input
                                                         value={blank.hint || ''}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'hint', e.target.value)}
                                                         placeholder={t('dashboard.assignments.editor.task_editor.general.hint_optional')}
-                                                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-blue-50 border-2 border-blue-200 rounded-md border-dotted text-xs"
+                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-blue-50 border-2 border-blue-200 rounded-md border-dotted text-xs"
                                                     />
                                                 </div>
                                             ) : view === 'grading' ? (
@@ -498,7 +498,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                                 (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
                                                             )?.answer || ''}
                                                             readOnly
-                                                            className="flex-1 px-3 pr-6 text-neutral-600 bg-gray-50 border-2 border-gray-200 rounded-md text-sm font-bold"
+                                                            className="flex-1 px-3 pe-6 text-neutral-600 bg-gray-50 border-2 border-gray-200 rounded-md text-sm font-bold"
                                                         />
                                                     </div>
                                                     <div className="mx-2 text-xs text-gray-600">
@@ -519,7 +519,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                         onPaste={handlePaste}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
-                                                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
+                                                        className="w-full mx-2 px-3 pe-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
                                                     {blank.hint && (
                                                         <div className="mx-2 text-xs text-blue-600 italic">💡 {blank.hint}</div>

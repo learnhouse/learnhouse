@@ -58,12 +58,12 @@ export default function CourseEngagementByType({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
+                  <tr className="text-start text-xs text-gray-400 border-b border-gray-100">
                     <th className="pb-2 font-medium">{t('analytics.course_analytics.common.type')}</th>
-                    <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.units.learners')}</th>
-                    <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.units.events')}</th>
-                    <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.completions')}</th>
-                    <th className="pb-2 font-medium text-right">{t('analytics.course_analytics.common.avg_time')}</th>
+                    <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.units.learners')}</th>
+                    <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.units.events')}</th>
+                    <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.completions')}</th>
+                    <th className="pb-2 font-medium text-end">{t('analytics.course_analytics.common.avg_time')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -72,10 +72,10 @@ export default function CourseEngagementByType({
                       <td className="py-2.5 font-medium text-gray-700">
                         {getTypeLabel(row.activity_type)}
                       </td>
-                      <td className="py-2.5 text-right text-gray-600">{row.unique_learners}</td>
-                      <td className="py-2.5 text-right text-gray-600">{row.total_events}</td>
-                      <td className="py-2.5 text-right text-emerald-600 font-medium">{row.completions}</td>
-                      <td className="py-2.5 text-right text-gray-500">{formatDuration(row.avg_seconds_spent)}</td>
+                      <td className="py-2.5 text-end text-gray-600">{row.unique_learners}</td>
+                      <td className="py-2.5 text-end text-gray-600">{row.total_events}</td>
+                      <td className="py-2.5 text-end text-emerald-600 font-medium">{row.completions}</td>
+                      <td className="py-2.5 text-end text-gray-500">{formatDuration(row.avg_seconds_spent)}</td>
                     </tr>
                   ))}
                 </tbody>

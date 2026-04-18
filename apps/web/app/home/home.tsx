@@ -209,7 +209,7 @@ function HomeClient() {
                       </div>
                     )}
 
-                    <div className="ml-3 flex-1 min-w-0">
+                    <div className="ms-3 flex-1 min-w-0">
                       <div className="font-semibold text-gray-900 tracking-tight truncate">
                         {org.name}
                       </div>
@@ -222,7 +222,7 @@ function HomeClient() {
 
                     <ChevronRight
                       size={18}
-                      className="ml-3 text-black/25 group-hover:text-black/60 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                      className="ms-3 text-black/25 group-hover:text-black/60 group-hover:translate-x-0.5 transition-all flex-shrink-0"
                     />
                   </Link>
                   )

@@ -192,7 +192,7 @@ export default function EphemeralChat({ ydoc, provider }: EphemeralChatProps) {
       `}</style>
 
       {/* Floating emoji bursts — positioned absolutely relative to the board */}
-      <div className="fixed bottom-36 right-5 z-30 pointer-events-none" style={{ width: 280, height: 250 }}>
+      <div className="fixed bottom-36 end-5 z-30 pointer-events-none" style={{ width: 280, height: 250 }}>
         {reactions.map((r) => (
           <div
             key={r.id}

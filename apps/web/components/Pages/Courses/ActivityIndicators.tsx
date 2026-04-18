@@ -82,7 +82,7 @@ const ActivityTooltipContent = memo(({
       <ActivityTypeIcon activityType={activity.activity_type} />
       <span className="text-sm text-gray-700">{activity.name}</span>
       {isDone && (
-        <span className="ml-auto text-gray-400">
+        <span className="ms-auto text-gray-400">
           <Check size={14} />
         </span>
       )}
@@ -231,7 +231,7 @@ const MobileChapterSelector = memo(({
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-2 bg-white rounded-lg nice-shadow py-1.5 min-w-[220px] max-h-[60vh] overflow-y-auto"
+          className="absolute top-full start-0 mt-2 bg-white rounded-lg nice-shadow py-1.5 min-w-[220px] max-h-[60vh] overflow-y-auto"
           style={{ zIndex: 'var(--z-dropdown)' }}
         >
           {chapters.map((chapter: any, chapterIdx: number) => {
@@ -265,7 +265,7 @@ const MobileChapterSelector = memo(({
                       }`} />
                       <ActivityTypeIcon activityType={activity.activity_type} />
                       <span className="truncate">{activity.name}</span>
-                      {isDone && <Check size={12} className="text-teal-500 ml-auto shrink-0" />}
+                      {isDone && <Check size={12} className="text-teal-500 ms-auto shrink-0" />}
                     </Link>
                   )
                 })}
@@ -518,7 +518,7 @@ function ActivityIndicators(props: Props) {
                 </ToolTip>
 
                 {/* Activity segments — glued to circle, flush together */}
-                <div className="flex-1 flex items-center min-w-0 -ml-[4px]">
+                <div className="flex-1 flex items-center min-w-0 -ms-[4px]">
                   {chapter.activities.map((activity: any, activityIndex: number) => {
                     const isDone = isActivityDone(activity)
                     const isCurrent = isActivityCurrent(activity)
@@ -545,10 +545,10 @@ function ActivityIndicators(props: Props) {
                               ''
                             )}`
                           }
-                          className={`${isCurrent ? 'flex-2' : 'flex-1'} min-w-[12px] ${!isLast ? 'border-r-[1.5px] border-white' : ''}`}
+                          className={`${isCurrent ? 'flex-2' : 'flex-1'} min-w-[12px] ${!isLast ? 'border-e-[1.5px] border-white' : ''}`}
                         >
                           <div
-                            className={`h-[7px] ${getActivityClass(activity)} ${isLast ? 'rounded-r-full' : ''} transition-all hover:brightness-110`}
+                            className={`h-[7px] ${getActivityClass(activity)} ${isLast ? 'rounded-e-full' : ''} transition-all hover:brightness-110`}
                           ></div>
                         </Link>
                       </ToolTip>

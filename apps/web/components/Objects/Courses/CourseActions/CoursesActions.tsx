@@ -344,7 +344,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                 <button
                   onClick={() => setIsProgressOpen(true)}
                   aria-label={t('courses.view_course_progress', { completed: completedActivities, total: totalActivities })}
-                  className="flex-1 text-left hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
+                  className="flex-1 text-start hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
                 >
                   <div className="text-sm font-medium text-gray-900">{t('courses.course_progress')}</div>
                   <div className="text-sm text-gray-500">

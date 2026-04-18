@@ -86,7 +86,7 @@ export default function PlaygroundPreview({
 
       {/* Streaming indicator — top left */}
       {isStreaming && (
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
+        <div className="absolute top-3 start-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/75 backdrop-blur-sm rounded-full nice-shadow">
           <CircleNotch size={11} weight="bold" className="animate-spin text-sky-400" />
           <span className="text-[11px] text-white font-bold">Generating…</span>
         </div>
@@ -97,7 +97,7 @@ export default function PlaygroundPreview({
         <button
           onClick={onToggleFullscreen}
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}
-          className="absolute top-3 right-3 z-10 flex items-center justify-center w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg nice-shadow transition-all"
+          className="absolute top-3 end-3 z-10 flex items-center justify-center w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg nice-shadow transition-all"
         >
           {isFullscreen
             ? <ArrowsInSimple size={14} weight="bold" className="text-white" />

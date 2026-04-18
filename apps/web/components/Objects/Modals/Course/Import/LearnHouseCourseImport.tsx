@@ -409,7 +409,7 @@ function LearnHouseCourseImport({
               </div>
             </div>
 
-            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[200px] overflow-y-auto pe-1">
               {courseSelections.map((course) => (
                 <div
                   key={course.course_uuid}
@@ -455,7 +455,7 @@ function LearnHouseCourseImport({
               ))}
             </div>
 
-            <div className="text-right text-xs text-gray-500">
+            <div className="text-end text-xs text-gray-500">
               {selectedCount} {t('common.of')} {totalCount} {t('courses.import.selected')}
             </div>
           </div>
@@ -599,7 +599,7 @@ function LearnHouseCourseImport({
           </div>
 
           {/* Course Results */}
-          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[200px] overflow-y-auto pe-1">
             {importResult.courses.map((course, index) => (
               <div
                 key={index}
@@ -629,7 +629,7 @@ function LearnHouseCourseImport({
                   )}
                 </div>
                 {course.error && (
-                  <p className="text-xs text-red-600 mt-1 pl-6">{course.error}</p>
+                  <p className="text-xs text-red-600 mt-1 ps-6">{course.error}</p>
                 )}
               </div>
             ))}

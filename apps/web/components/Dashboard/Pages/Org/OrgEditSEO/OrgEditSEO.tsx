@@ -131,7 +131,7 @@ const OrgEditSEO: React.FC = () => {
                       {sitemapUrl}
                     </a>
                   </div>
-                  <div className="flex items-center space-x-1 shrink-0 ml-2">
+                  <div className="flex items-center space-x-1 shrink-0 ms-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -159,7 +159,7 @@ const OrgEditSEO: React.FC = () => {
                       {robotsUrl}
                     </a>
                   </div>
-                  <div className="flex items-center space-x-1 shrink-0 ml-2">
+                  <div className="flex items-center space-x-1 shrink-0 ms-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -188,7 +188,7 @@ const OrgEditSEO: React.FC = () => {
                 <div>
                   <Label htmlFor="default_meta_title_suffix">
                     Title Suffix
-                    <span className="text-gray-500 text-sm ml-2">
+                    <span className="text-gray-500 text-sm ms-2">
                       ({30 - (values.default_meta_title_suffix?.length || 0)} characters left)
                     </span>
                   </Label>
@@ -207,7 +207,7 @@ const OrgEditSEO: React.FC = () => {
                 <div>
                   <Label htmlFor="default_meta_description">
                     Default Description
-                    <span className="text-gray-500 text-sm ml-2">
+                    <span className="text-gray-500 text-sm ms-2">
                       ({160 - (values.default_meta_description?.length || 0)} characters left)
                     </span>
                   </Label>
@@ -251,7 +251,7 @@ const OrgEditSEO: React.FC = () => {
                           <button
                             type="button"
                             onClick={clearOgImage}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5"
+                            className="absolute -top-2 -end-2 bg-red-500 text-white rounded-full p-0.5"
                           >
                             <X size={14} />
                           </button>
@@ -271,7 +271,7 @@ const OrgEditSEO: React.FC = () => {
                         variant="outline"
                         onClick={() => ogImageInputRef.current?.click()}
                       >
-                        <Upload size={14} className="mr-2" />
+                        <Upload size={14} className="me-2" />
                         {existingOgImageUrl || ogImagePreview ? 'Change Image' : 'Upload Image'}
                       </Button>
                     </div>

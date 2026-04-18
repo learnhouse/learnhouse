@@ -135,7 +135,7 @@ export default function SSOCallbackPage() {
           <div className="flex justify-center mb-4">
             <div className="relative">
               <Shield className="w-16 h-16 text-indigo-600" />
-              <Loader2 className="w-6 h-6 text-indigo-600 absolute -bottom-1 -right-1 animate-spin" />
+              <Loader2 className="w-6 h-6 text-indigo-600 absolute -bottom-1 -end-1 animate-spin" />
             </div>
           </div>
           <h1 className="text-xl font-semibold text-gray-800 mb-2">
@@ -199,10 +199,10 @@ export default function SSOCallbackPage() {
               </button>
 
               {showTechnicalDetails && (
-                <div className="mt-2 p-3 bg-gray-100 rounded-md text-left relative">
+                <div className="mt-2 p-3 bg-gray-100 rounded-md text-start relative">
                   <button
                     onClick={copyToClipboard}
-                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600"
+                    className="absolute top-2 end-2 p-1 text-gray-400 hover:text-gray-600"
                     title="Copy to clipboard"
                   >
                     {copied ? (
@@ -221,7 +221,7 @@ export default function SSOCallbackPage() {
 
           {/* Helpful tips based on error code */}
           {error?.errorCode === 'access_denied' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-left">
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
                 <strong>Tip:</strong> If you declined the login request by mistake, try again and accept the permissions.
               </p>
@@ -229,7 +229,7 @@ export default function SSOCallbackPage() {
           )}
 
           {error?.errorCode === 'invalid_state' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-left">
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
                 <strong>Tip:</strong> Your session may have expired. Please try logging in again.
               </p>
@@ -237,7 +237,7 @@ export default function SSOCallbackPage() {
           )}
 
           {error?.errorCode === 'domain_not_allowed' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-left">
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
                 <strong>Tip:</strong> Contact your organization administrator to verify your email domain is allowed.
               </p>
@@ -245,7 +245,7 @@ export default function SSOCallbackPage() {
           )}
 
           {(error?.errorCode === 'auto_provision_disabled' || error?.errorCode === 'user_not_found') && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-left">
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
                 <strong>Tip:</strong> Your organization requires an administrator to create your account first. Contact your organization admin to request access.
               </p>
@@ -253,7 +253,7 @@ export default function SSOCallbackPage() {
           )}
 
           {error?.errorCode === 'sso_misconfigured' && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-left">
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
                 <strong>Tip:</strong> There may be a configuration issue with SSO. Please contact your IT administrator.
               </p>

@@ -40,7 +40,7 @@ export const CURATED_FONTS = [
   'Work Sans',
 ]
 
-export const DEFAULT_FONT = 'Wix Madefor Text'
+export const DEFAULT_FONT = 'Rubik'
 
 export function getGoogleFontUrl(fontFamily: string): string {
   const encoded = fontFamily.replace(/ /g, '+')

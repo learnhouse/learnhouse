@@ -45,7 +45,7 @@ const CommunitiesDashClient = ({
       fullScreen
     >
     <FeatureDisabledView featureName="communities" orgslug={orgslug} context="dashboard">
-    <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+    <div className="h-full w-full bg-[#f8f8f8] ps-10 pe-10">
       <div className="mb-6 pt-6">
         <Breadcrumbs items={[
           { label: t('dashboard.courses.communities.title'), href: '/dash/communities', icon: <MessagesSquare size={14} /> }

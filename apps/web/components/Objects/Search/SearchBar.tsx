@@ -273,7 +273,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       <BookCopy size={20} className="text-black/40" />
                     </div>
                   )}
-                  <div className="absolute -bottom-1 -right-1 bg-white shadow-sm p-1 rounded-full">
+                  <div className="absolute -bottom-1 -end-1 bg-white shadow-sm p-1 rounded-full">
                     <BookCopy size={11} className="text-black/60" />
                   </div>
                 </div>
@@ -371,11 +371,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onFocus={() => setShowResults(true)}
           aria-label={t('search.search_placeholder')}
           placeholder={t('search.search_placeholder')}
-          className={`w-full h-9 pl-11 pr-4 rounded-xl
+          className={`w-full h-9 ps-11 pe-4 rounded-xl
                      focus:outline-none focus:ring-1 transition-all text-sm
                      ${colors.searchBg}`}
         />
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none">
           <Search className={`${colors.searchIcon} transition-colors`} size={18} />
         </div>
       </div>

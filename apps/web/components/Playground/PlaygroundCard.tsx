@@ -39,7 +39,7 @@ export default function PlaygroundCard({ playground, orgslug, canEdit }: Playgro
     <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
       {/* Edit button — top right, appears on hover */}
       {canEdit && (
-        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 end-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
           <Link
             href={editLink}
             className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md flex items-center justify-center"
@@ -64,7 +64,7 @@ export default function PlaygroundCard({ playground, orgslug, canEdit }: Playgro
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
 
         {/* Badges — bottom left */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+        <div className="absolute bottom-2 start-2 flex items-center gap-1.5">
           <span className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded-full ${access.className}`}>
             <AccessIcon className="w-2.5 h-2.5" />
             {access.label}

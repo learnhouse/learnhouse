@@ -309,12 +309,12 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
           >
             {/* Buffered */}
             <div
-              className="absolute inset-y-0 left-0 bg-white/50 rounded-full"
+              className="absolute inset-y-0 start-0 bg-white/50 rounded-full"
               style={{ width: `${buffered * 100}%` }}
             />
             {/* Progress */}
             <div
-              className="absolute inset-y-0 left-0 bg-white rounded-full"
+              className="absolute inset-y-0 start-0 bg-white rounded-full"
               style={{ width: `${played * 100}%` }}
             />
             {/* Thumb */}
@@ -357,7 +357,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
                 </button>
                 <div
                   className={`flex items-center transition-all duration-200 overflow-hidden ${
-                    showVolumeSlider ? 'w-20 ml-1' : 'w-0'
+                    showVolumeSlider ? 'w-20 ms-1' : 'w-0'
                   }`}
                 >
                   <input
@@ -373,7 +373,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
               </div>
 
               {/* Time */}
-              <div className="text-white/90 text-xs font-medium tabular-nums ml-2">
+              <div className="text-white/90 text-xs font-medium tabular-nums ms-2">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
@@ -388,7 +388,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
                   <Settings className="w-5 h-5 text-white" />
                 </button>
                 {showSettings && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-neutral-900/95 backdrop-blur-lg border border-white/10 rounded-lg overflow-hidden min-w-[140px] shadow-xl">
+                  <div className="absolute bottom-full end-0 mb-2 bg-neutral-900/95 backdrop-blur-lg border border-white/10 rounded-lg overflow-hidden min-w-[140px] shadow-xl">
                     <div className="px-3 py-2 text-xs text-white/60 font-medium border-b border-white/10">
                       Speed
                     </div>
@@ -396,7 +396,7 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
                       <button
                         key={rate}
                         onClick={() => handlePlaybackRateChange(rate)}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 transition-colors ${
+                        className={`w-full px-3 py-2 text-start text-sm hover:bg-white/10 transition-colors ${
                           playbackRate === rate ? 'text-white font-medium' : 'text-white/80'
                         }`}
                       >

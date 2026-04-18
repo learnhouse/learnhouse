@@ -270,7 +270,7 @@ const CourseClient = (props: any) => {
                     return (
                       <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]">
                         {course.thumbnail_type === 'both' && (
-                          <div className="absolute top-3 right-3 z-10">
+                          <div className="absolute top-3 end-3 z-10">
                             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
                               <button
                                 onClick={() => setActiveThumbnailType('image')}
@@ -280,7 +280,7 @@ const CourseClient = (props: any) => {
                                     : 'text-white/80 hover:text-white hover:bg-white/10'
                                 }`}
                               >
-                                <ImageIcon size={12} className="mr-1" />
+                                <ImageIcon size={12} className="me-1" />
                                 {t('courses.image')}
                               </button>
                               <button
@@ -291,7 +291,7 @@ const CourseClient = (props: any) => {
                                     : 'text-white/80 hover:text-white hover:bg-white/10'
                                 }`}
                               >
-                                <Video size={12} className="mr-1" />
+                                <Video size={12} className="me-1" />
                                 {t('activities.video')}
                               </button>
                             </div>
@@ -326,7 +326,7 @@ const CourseClient = (props: any) => {
                         }}
                       >
                         {course.thumbnail_type === 'both' && (
-                          <div className="absolute top-3 right-3 z-10">
+                          <div className="absolute top-3 end-3 z-10">
                             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
                               <button
                                 onClick={() => setActiveThumbnailType('image')}
@@ -336,7 +336,7 @@ const CourseClient = (props: any) => {
                                     : 'text-white/80 hover:text-white hover:bg-white/10'
                                 }`}
                               >
-                                <ImageIcon size={12} className="mr-1" />
+                                <ImageIcon size={12} className="me-1" />
                                 {t('courses.image')}
                               </button>
                               <button
@@ -347,7 +347,7 @@ const CourseClient = (props: any) => {
                                     : 'text-white/80 hover:text-white hover:bg-white/10'
                                 }`}
                               >
-                                <Video size={12} className="mr-1" />
+                                <Video size={12} className="me-1" />
                                 {t('activities.video')}
                               </button>
                             </div>
@@ -464,7 +464,7 @@ const CourseClient = (props: any) => {
                         }))}
                       >
                         {/* Chevron on the far left, vertically centered with the title */}
-                        <div className="flex flex-col justify-center mr-3 pt-1">
+                        <div className="flex flex-col justify-center me-3 pt-1">
                           <svg 
                             className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                             fill="none" 
@@ -478,13 +478,13 @@ const CourseClient = (props: any) => {
                         <div className="flex flex-col items-start w-full">
                           <div className="flex items-center flex-wrap mb-1 w-full min-w-0">
                             {/* Numbered badge */}
-                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-200 text-neutral-600 text-xs font-semibold mr-2 border border-neutral-300 flex-shrink-0">
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-200 text-neutral-600 text-xs font-semibold me-2 border border-neutral-300 flex-shrink-0">
                               {idx + 1}
                             </span>
                             <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
                           </div>
                           <div className="flex items-center space-x-1 text-sm text-neutral-400 font-normal">
-                            <Layers size={16} className="mr-1" />
+                            <Layers size={16} className="me-1" />
                             <span>{chapter.activities.length} {t('activities.activities')}</span>
                           </div>
                         </div>
@@ -508,7 +508,7 @@ const CourseClient = (props: any) => {
                                     {isActivityDone(activity) ? (
                                       <div className="relative cursor-pointer">
                                         <Square size={16} className="stroke-[2] text-teal-600" />
-                                        <Check size={16} className="stroke-[2.5] text-teal-600 absolute top-0 left-0" />
+                                        <Check size={16} className="stroke-[2.5] text-teal-600 absolute top-0 start-0" />
                                       </div>
                                     ) : (
                                       <div className="text-neutral-300 cursor-pointer">

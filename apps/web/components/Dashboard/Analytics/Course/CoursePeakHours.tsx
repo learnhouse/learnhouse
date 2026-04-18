@@ -34,7 +34,7 @@ function HeatmapGrid({
   return (
     <div className={compact ? '' : 'min-w-[600px]'}>
       {/* Hour labels */}
-      <div className={`flex ${compact ? 'ml-7' : 'ml-10'} mb-1`}>
+      <div className={`flex ${compact ? 'ms-7' : 'ms-10'} mb-1`}>
         {HOUR_LABELS.map((label, i) => (
           <div key={i} className="flex-1 text-center text-[9px] text-gray-400">
             {(compact ? i % 6 === 0 : i % 3 === 0) ? label : ''}
@@ -44,7 +44,7 @@ function HeatmapGrid({
       {/* Grid */}
       {grid.map((dayRow, dow) => (
         <div key={dow} className="flex items-center gap-1 mb-0.5">
-          <span className={`${compact ? 'w-6 text-[8px]' : 'w-9 text-[10px]'} text-gray-500 text-right pr-1`}>
+          <span className={`${compact ? 'w-6 text-[8px]' : 'w-9 text-[10px]'} text-gray-500 text-end pe-1`}>
             {dayLabels[dow]}
           </span>
           <div className="flex flex-1 gap-0.5">
@@ -60,7 +60,7 @@ function HeatmapGrid({
         </div>
       ))}
       {/* Legend */}
-      <div className={`flex items-center gap-2 mt-2 ${compact ? 'ml-7' : 'ml-10'}`}>
+      <div className={`flex items-center gap-2 mt-2 ${compact ? 'ms-7' : 'ms-10'}`}>
         <span className="text-[9px] text-gray-400">{lessLabel}</span>
         {[0.1, 0.3, 0.5, 0.7, 1].map((op, i) => (
           <div

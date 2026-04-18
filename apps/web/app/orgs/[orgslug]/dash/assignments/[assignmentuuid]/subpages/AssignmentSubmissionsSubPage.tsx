@@ -135,18 +135,18 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                 <div className="flex items-center gap-3">
                     {/* Search */}
                     <div className="relative flex-1 max-w-sm">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('dashboard.assignments.submissions.search_placeholder')}
-                            className="w-full pl-9 pr-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
+                            className="w-full ps-9 pe-8 py-2 text-sm bg-white nice-shadow rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 placeholder:text-gray-400"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
                                 <X size={14} />
                             </button>
@@ -187,7 +187,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                         {sortDropdownOpen && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setSortDropdownOpen(false)} />
-                                <div className="absolute right-0 top-full mt-2 z-20 bg-white nice-shadow rounded-xl py-1.5 min-w-[150px]">
+                                <div className="absolute end-0 top-full mt-2 z-20 bg-white nice-shadow rounded-xl py-1.5 min-w-[150px]">
                                     {sortOptions.map((option) => (
                                         <button
                                             key={option.field}
@@ -200,7 +200,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                                                 }
                                                 setSortDropdownOpen(false);
                                             }}
-                                            className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between hover:bg-gray-50 ${
+                                            className={`w-full px-3 py-1.5 text-xs text-start flex items-center justify-between hover:bg-gray-50 ${
                                                 sortField === option.field ? 'text-gray-900 font-bold' : 'text-gray-500 font-medium'
                                             }`}
                                         >
@@ -431,14 +431,14 @@ function SubmissionRow({
 
             {/* Grade */}
             {submission.submission_status === 'GRADED' && (
-                <div className="flex items-center space-x-1.5 mr-5">
+                <div className="flex items-center space-x-1.5 me-5">
                     <span className="bg-gray-100 text-gray-500 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full">{t('dashboard.assignments.submissions.grade_label')}</span>
                     <span className="text-sm font-bold text-gray-900">{submission.grade}</span>
                 </div>
             )}
 
             {/* Date */}
-            <div className="flex items-center space-x-1.5 mr-5 text-gray-400">
+            <div className="flex items-center space-x-1.5 me-5 text-gray-400">
                 <Calendar size={12} />
                 <span className="text-xs font-medium">{dateStr}</span>
                 <span className="text-[10px] text-gray-300">|</span>
@@ -446,7 +446,7 @@ function SubmissionRow({
             </div>
 
             {/* Status badge */}
-            <div className={`flex items-center space-x-1 px-2.5 py-1 rounded-full mr-4 text-xs font-semibold ${status.className}`}>
+            <div className={`flex items-center space-x-1 px-2.5 py-1 rounded-full me-4 text-xs font-semibold ${status.className}`}>
                 {status.icon}
                 <span>{status.label}</span>
             </div>

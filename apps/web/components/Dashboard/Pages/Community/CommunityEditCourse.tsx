@@ -134,9 +134,9 @@ const CommunityEditCourse: React.FC = () => {
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   {isSubmitting ? (
-                    <Loader2 size={14} className="animate-spin mr-2" />
+                    <Loader2 size={14} className="animate-spin me-2" />
                   ) : (
-                    <Unlink size={14} className="mr-2" />
+                    <Unlink size={14} className="me-2" />
                   )}
                   {t('dashboard.courses.communities.course.unlink')}
                 </Button>
@@ -160,9 +160,9 @@ const CommunityEditCourse: React.FC = () => {
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   {isSubmitting ? (
-                    <Loader2 size={14} className="animate-spin mr-2" />
+                    <Loader2 size={14} className="animate-spin me-2" />
                   ) : (
-                    <Unlink size={14} className="mr-2" />
+                    <Unlink size={14} className="me-2" />
                   )}
                   {t('dashboard.courses.communities.course.unlink')}
                 </Button>
@@ -177,14 +177,14 @@ const CommunityEditCourse: React.FC = () => {
               <div className="relative max-w-md">
                 <Search
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400"
                 />
                 <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('dashboard.courses.communities.course.search_placeholder')}
-                  className="pl-10"
+                  className="ps-10"
                 />
               </div>
 
@@ -205,9 +205,9 @@ const CommunityEditCourse: React.FC = () => {
                       <button
                         key={course.course_uuid}
                         onClick={() => setSelectedCourse(course.course_uuid)}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                        className={`w-full text-start px-4 py-3 hover:bg-gray-50 transition-colors ${
                           selectedCourse === course.course_uuid
-                            ? 'bg-gray-100 border-l-4 border-black'
+                            ? 'bg-gray-100 border-s-4 border-black'
                             : ''
                         }`}
                       >
@@ -231,9 +231,9 @@ const CommunityEditCourse: React.FC = () => {
                   className="bg-black text-white hover:bg-black/90"
                 >
                   {isSubmitting ? (
-                    <Loader2 size={16} className="animate-spin mr-2" />
+                    <Loader2 size={16} className="animate-spin me-2" />
                   ) : (
-                    <Link2 size={16} className="mr-2" />
+                    <Link2 size={16} className="me-2" />
                   )}
                   {t('dashboard.courses.communities.course.link_button')}
                 </Button>

@@ -94,7 +94,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
           }}
         ></div>
       </Link>
-      <div className="course_meta pl-5 grow space-y-1">
+      <div className="course_meta ps-5 grow space-y-1">
         <div className="course_top">
           <div className="course_info flex">
             <div className="course_basic flex flex-col flex-end -space-y-2">

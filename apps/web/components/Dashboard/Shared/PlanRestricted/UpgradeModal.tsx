@@ -83,7 +83,7 @@ export default function UpgradeModal({ open, onClose }: UpgradeModalProps) {
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                className="absolute top-4 end-4 z-10 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
               >
                 <X size={18} weight="bold" />
               </button>

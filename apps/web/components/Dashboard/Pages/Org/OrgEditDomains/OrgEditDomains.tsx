@@ -216,7 +216,7 @@ const OrgEditDomains: React.FC = () => {
     if (domain.status !== 'verified') {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
-          <Shield size={12} className="mr-1" />
+          <Shield size={12} className="me-1" />
           N/A
         </Badge>
       )
@@ -228,7 +228,7 @@ const OrgEditDomains: React.FC = () => {
     if (loading && !sslStatus) {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600">
-          <Loader2 size={12} className="mr-1 animate-spin" />
+          <Loader2 size={12} className="me-1 animate-spin" />
           Checking...
         </Badge>
       )
@@ -237,7 +237,7 @@ const OrgEditDomains: React.FC = () => {
     if (!sslStatus) {
       return (
         <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-500">
-          <Shield size={12} className="mr-1" />
+          <Shield size={12} className="me-1" />
           Checking...
         </Badge>
       )
@@ -247,28 +247,28 @@ const OrgEditDomains: React.FC = () => {
       case 'active':
         return (
           <Badge variant="outline" className="border-transparent bg-green-100 text-green-800" title={`Issuer: ${sslStatus.issuer || 'Unknown'}\nExpires: ${sslStatus.expires || 'Unknown'}`}>
-            <ShieldCheck size={12} className="mr-1" />
+            <ShieldCheck size={12} className="me-1" />
             SSL Active
           </Badge>
         )
       case 'provisioning':
         return (
           <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800" title={sslStatus.message}>
-            <Loader2 size={12} className="mr-1 animate-spin" />
+            <Loader2 size={12} className="me-1 animate-spin" />
             Provisioning
           </Badge>
         )
       case 'invalid':
         return (
           <Badge variant="outline" className="border-transparent bg-red-100 text-red-800" title={sslStatus.message}>
-            <ShieldAlert size={12} className="mr-1" />
+            <ShieldAlert size={12} className="me-1" />
             Invalid
           </Badge>
         )
       default:
         return (
           <Badge variant="outline" className="border-transparent bg-gray-100 text-gray-600" title={sslStatus.message}>
-            <ShieldAlert size={12} className="mr-1" />
+            <ShieldAlert size={12} className="me-1" />
             Unknown
           </Badge>
         )
@@ -280,21 +280,21 @@ const OrgEditDomains: React.FC = () => {
       case 'verified':
         return (
           <Badge variant="outline" className="border-transparent bg-green-100 text-green-800">
-            <CheckCircle2 size={12} className="mr-1" />
+            <CheckCircle2 size={12} className="me-1" />
             Verified
           </Badge>
         )
       case 'pending':
         return (
           <Badge variant="outline" className="border-transparent bg-yellow-100 text-yellow-800">
-            <Clock size={12} className="mr-1" />
+            <Clock size={12} className="me-1" />
             Pending
           </Badge>
         )
       case 'failed':
         return (
           <Badge variant="outline" className="border-transparent bg-red-100 text-red-800">
-            <XCircle size={12} className="mr-1" />
+            <XCircle size={12} className="me-1" />
             Failed
           </Badge>
         )
@@ -349,7 +349,7 @@ const OrgEditDomains: React.FC = () => {
                   onClick={() => setIsAddDialogOpen(true)}
                   className="bg-black text-white hover:bg-black/90"
                 >
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={16} className="me-2" />
                   Add Domain
                 </Button>
               </div>
@@ -409,7 +409,7 @@ const OrgEditDomains: React.FC = () => {
                                   setIsVerifyDialogOpen(true)
                                 }}
                               >
-                                <RefreshCw size={14} className="mr-1" />
+                                <RefreshCw size={14} className="me-1" />
                                 Verify
                               </Button>
                             )}
@@ -594,9 +594,9 @@ const OrgEditDomains: React.FC = () => {
                           disabled={sslLoading[selectedDomain.domain_uuid]}
                         >
                           {sslLoading[selectedDomain.domain_uuid] ? (
-                            <Loader2 size={14} className="mr-1 animate-spin" />
+                            <Loader2 size={14} className="me-1 animate-spin" />
                           ) : (
-                            <RefreshCw size={14} className="mr-1" />
+                            <RefreshCw size={14} className="me-1" />
                           )}
                           Check
                         </Button>
@@ -665,12 +665,12 @@ const OrgEditDomains: React.FC = () => {
                 <Button onClick={handleVerifyDomain} disabled={isVerifying}>
                   {isVerifying ? (
                     <>
-                      <RefreshCw size={16} className="mr-2 animate-spin" />
+                      <RefreshCw size={16} className="me-2 animate-spin" />
                       Verifying...
                     </>
                   ) : (
                     <>
-                      <Check size={16} className="mr-2" />
+                      <Check size={16} className="me-2" />
                       Verify DNS
                     </>
                   )}

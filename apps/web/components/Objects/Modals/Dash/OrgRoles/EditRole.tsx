@@ -446,7 +446,7 @@ function EditRole(props: EditRoleProps) {
                                         key={roleKey}
                                         type="button"
                                         onClick={() => handlePredefinedRole(roleKey)}
-                                        className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left bg-white shadow-sm hover:shadow-md"
+                                        className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-start bg-white shadow-sm hover:shadow-md"
                                     >
                                         <div className="font-medium text-gray-900 text-sm sm:text-base">{predefinedRoles[roleKey as keyof typeof predefinedRoles].name}</div>
                                         <div className="text-xs sm:text-sm text-gray-500 mt-1">{predefinedRoles[roleKey as keyof typeof predefinedRoles].description}</div>

@@ -207,7 +207,7 @@ export default function OrgEditSocials() {
                             setFieldValue('links', newLinks);
                           }}
                         >
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="h-4 w-4 me-2" />
                           {t('dashboard.organization.socials.add_link')}
                         </Button>
                       )}

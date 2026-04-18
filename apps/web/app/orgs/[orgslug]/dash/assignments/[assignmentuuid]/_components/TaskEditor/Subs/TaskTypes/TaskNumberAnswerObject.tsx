@@ -362,7 +362,7 @@ function TaskNumberAnswerObject({
                 {studentAnswer ? (
                   <>
                     {studentAnswer}
-                    {contents.unit && <span className="text-slate-500 ml-1.5 font-sans">{contents.unit}</span>}
+                    {contents.unit && <span className="text-slate-500 ms-1.5 font-sans">{contents.unit}</span>}
                   </>
                 ) : (
                   <span className="text-gray-400 italic font-sans">

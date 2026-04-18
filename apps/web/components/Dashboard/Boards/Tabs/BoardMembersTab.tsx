@@ -62,7 +62,7 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
           <h2 className="text-gray-500 text-xs sm:text-sm">{t('boards.members.description')}</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+          <table className="table-auto w-full text-start whitespace-nowrap rounded-md overflow-hidden">
             <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
               <tr className="font-bolder text-sm">
                 <th className="py-3 px-4">{t('boards.members.user')}</th>
@@ -134,7 +134,7 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
             </tbody>
           </table>
         </div>
-        <div className="flex flex-row-reverse mt-3 mr-2 items-center gap-3">
+        <div className="flex flex-row-reverse mt-3 me-2 items-center gap-3">
           {membersList.length >= 10 ? (
             <span className="text-xs text-red-500 font-medium">{t('boards.members.member_limit_reached')}</span>
           ) : (
@@ -295,13 +295,13 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
     <div className="space-y-3">
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('boards.members.search_placeholder')}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all"
+          className="w-full ps-10 pe-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all"
           autoFocus
         />
       </div>
@@ -362,7 +362,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   {section.groupName}
                 </span>
-                <span className="ml-auto text-xs text-gray-400">{section.entries.length}</span>
+                <span className="ms-auto text-xs text-gray-400">{section.entries.length}</span>
               </div>
             )}
             <div className="divide-y divide-gray-100">
@@ -373,7 +373,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
                   <button
                     key={u.id}
                     onClick={() => toggleUser(u.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-start transition-colors ${
                       isSelected ? 'bg-gray-900' : 'hover:bg-gray-50'
                     }`}
                   >
@@ -436,7 +436,7 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
           </span>
           <button
             onClick={() => setSelectedUserIds(new Set())}
-            className="ml-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="ms-auto text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
             Clear all
           </button>

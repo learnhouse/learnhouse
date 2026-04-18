@@ -83,7 +83,7 @@ const PaymentsConfigurationPage: React.FC = () => {
   const configs: any[] = Array.isArray(paymentConfigs) ? paymentConfigs : [];
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
+    <div className="ms-10 me-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
       <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-4">
         <h1 className="font-bold text-xl text-gray-800">Payments Configuration</h1>
         <h2 className="text-gray-500 text-sm">
@@ -220,9 +220,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
                 className="text-xs"
               >
                 {isConnecting ? (
-                  <Loader2 size={12} className="animate-spin mr-1" />
+                  <Loader2 size={12} className="animate-spin me-1" />
                 ) : (
-                  <UnplugIcon size={12} className="mr-1" />
+                  <UnplugIcon size={12} className="me-1" />
                 )}
                 Reconnect
               </Button>
@@ -232,7 +232,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
                 dialogTitle={`Remove ${provider.name} Connection`}
                 dialogTrigger={
                   <Button variant="destructive" size="sm" className="text-xs">
-                    <Trash2 size={12} className="mr-1" />
+                    <Trash2 size={12} className="me-1" />
                     Remove
                   </Button>
                 }
@@ -248,9 +248,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
               className="text-xs bg-gray-900 text-white hover:bg-gray-800"
             >
               {isConnecting ? (
-                <Loader2 size={12} className="animate-spin mr-1" />
+                <Loader2 size={12} className="animate-spin me-1" />
               ) : (
-                <UnplugIcon size={12} className="mr-1" />
+                <UnplugIcon size={12} className="me-1" />
               )}
               {config ? 'Complete Setup' : 'Connect'}
             </Button>
@@ -286,7 +286,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
             confirmationMessage={`This will delete the current ${provider.name} configuration so you can start fresh.`}
             dialogTitle="Start Over?"
             dialogTrigger={
-              <button className="ml-4 shrink-0 underline hover:text-amber-900 transition-colors cursor-pointer">
+              <button className="ms-4 shrink-0 underline hover:text-amber-900 transition-colors cursor-pointer">
                 Start over
               </button>
             }

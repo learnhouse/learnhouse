@@ -40,7 +40,7 @@ function TimeBar({
       </Link>
       <div className="flex-1 flex items-center gap-2">
         <div
-          className="h-6 bg-amber-400 rounded-r-md transition-all"
+          className="h-6 bg-amber-400 rounded-e-md transition-all"
           style={{ width: `${barWidth}%` }}
         />
         <span className="text-xs text-gray-500 whitespace-nowrap font-medium">

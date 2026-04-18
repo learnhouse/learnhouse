@@ -139,13 +139,13 @@ export function LinkCourseModal({
             <>
               {/* Search */}
               <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search courses..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all"
+                  className="w-full ps-10 pe-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/20 focus:border-transparent outline-none transition-all"
                 />
               </div>
 
@@ -165,9 +165,9 @@ export function LinkCourseModal({
                       <button
                         key={course.course_uuid}
                         onClick={() => setSelectedCourse(course.course_uuid)}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                        className={`w-full text-start px-4 py-3 hover:bg-gray-50 transition-colors ${
                           selectedCourse === course.course_uuid
-                            ? 'bg-gray-100 border-l-2 border-black'
+                            ? 'bg-gray-100 border-s-2 border-black'
                             : ''
                         }`}
                       >

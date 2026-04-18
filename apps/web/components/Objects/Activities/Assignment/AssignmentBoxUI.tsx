@@ -75,7 +75,7 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                 {/* Right side with buttons and actions */}
                 <div className='flex flex-wrap gap-2 items-center'>
                     {showSavingDisclaimer &&
-                        <div className='flex space-x-2 items-center font-semibold px-3 py-1 outline-dashed outline-red-200 text-red-400 sm:mr-5 rounded-full w-full sm:w-auto mb-2 sm:mb-0'>
+                        <div className='flex space-x-2 items-center font-semibold px-3 py-1 outline-dashed outline-red-200 text-red-400 sm:me-5 rounded-full w-full sm:w-auto mb-2 sm:mb-0'>
                             <InfoIcon size={14} />
                             <p className='text-xs'>{t('activities.dont_forget_to_save')}</p>
                         </div>

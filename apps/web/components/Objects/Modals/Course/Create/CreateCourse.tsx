@@ -208,7 +208,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                   className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
                   onClick={() => document.getElementById('fileInput')?.click()}
                 >
-                  <UploadCloud size={16} className="mr-2" />
+                  <UploadCloud size={16} className="me-2" />
                   <span>{t('courses.upload_image')}</span>
                 </button>
                 <button
@@ -216,7 +216,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                   className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
                   onClick={() => setShowUnsplashPicker(true)}
                 >
-                  <ImageIcon size={16} className="mr-2" />
+                  <ImageIcon size={16} className="me-2" />
                   <span>{t('courses.choose_from_gallery')}</span>
                 </button>
               </div>

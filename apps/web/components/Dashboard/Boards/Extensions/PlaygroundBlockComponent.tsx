@@ -469,7 +469,7 @@ function PlaygroundModal({
 
         <div className="flex-1 flex min-h-0">
           {/* Preview */}
-          <div className="flex-1 border-r border-white/5 relative">
+          <div className="flex-1 border-e border-white/5 relative">
             <div className="absolute inset-0 bg-black/20">
               {showLoading && (
                 <div className="flex items-center justify-center w-full h-full">
@@ -483,7 +483,7 @@ function PlaygroundModal({
               {showPreview && previewSrcdoc && (
                 <div className="relative w-full h-full">
                   {showStreaming && (
-                    <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
+                    <div className="absolute top-4 end-4 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm ring-1 ring-inset ring-white/10">
                       <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
                       <span className="text-xs text-white/70">{t('boards.playground_block.streaming')}</span>
                     </div>
@@ -545,7 +545,7 @@ function PlaygroundModal({
                 <div key={i} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
                   <div className={cn(
                     'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm',
-                    msg.role === 'user' ? 'bg-purple-600/80 text-white rounded-br-md' : 'bg-white/5 text-white/80 rounded-bl-md ring-1 ring-inset ring-white/10'
+                    msg.role === 'user' ? 'bg-purple-600/80 text-white rounded-ee-md' : 'bg-white/5 text-white/80 rounded-es-md ring-1 ring-inset ring-white/10'
                   )}>
                     {msg.role === 'user' ? (
                       <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -560,7 +560,7 @@ function PlaygroundModal({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-3 ring-1 ring-inset ring-white/10">
+                  <div className="bg-white/5 rounded-2xl rounded-es-md px-4 py-3 ring-1 ring-inset ring-white/10">
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
                       <span className="text-sm text-white/50">{t('boards.playground_block.creating')}</span>
@@ -585,7 +585,7 @@ function PlaygroundModal({
                     disabled={isLoading}
                     rows={2}
                     className={cn(
-                      'w-full resize-none rounded-lg ring-1 ring-inset ring-white/10 bg-gray-950/40 px-4 py-3 pr-12',
+                      'w-full resize-none rounded-lg ring-1 ring-inset ring-white/10 bg-gray-950/40 px-4 py-3 pe-12',
                       'text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-white/20',
                       isLoading ? 'opacity-30' : ''
                     )}
@@ -594,7 +594,7 @@ function PlaygroundModal({
                     type="submit"
                     disabled={!canSend}
                     className={cn(
-                      'absolute right-3 bottom-3 p-2 rounded-lg transition-all',
+                      'absolute end-3 bottom-3 p-2 rounded-lg transition-all',
                       canSend ? 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20 outline outline-1 outline-neutral-100/10 hover:outline-neutral-200/40' : 'bg-white/5 text-white/30 cursor-not-allowed'
                     )}
                   >

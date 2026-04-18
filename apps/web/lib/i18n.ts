@@ -6,6 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from '../locales/en.json';
 
 const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
+  he: () => import('../locales/he.json'),
   fr: () => import('../locales/fr.json'),
   de: () => import('../locales/de.json'),
   es: () => import('../locales/es.json'),

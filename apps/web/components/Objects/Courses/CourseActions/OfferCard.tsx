@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, RefreshCcw, SquareCheck, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
+import { formatMoney, useLocale } from '@/lib/format'
 
 interface OfferCardProps {
   offer: {
@@ -26,10 +27,8 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
     ? offer.benefits.split(',').map((b) => b.trim()).filter(Boolean)
     : []
 
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: offer.currency ?? 'USD',
-  }).format(offer.amount)
+  const locale = useLocale()
+  const formattedPrice = formatMoney(offer.amount, offer.currency ?? 'USD', locale)
 
   return (
     <div className="bg-white rounded-xl nice-shadow overflow-hidden">
@@ -50,7 +49,7 @@ export function OfferCard({ offer, orgslug }: OfferCardProps) {
               <p className="text-sm text-gray-500 mt-1 leading-relaxed line-clamp-2">{offer.description}</p>
             )}
           </div>
-          <div className="shrink-0 text-right">
+          <div className="shrink-0 text-end">
             <div className={`text-xl font-black ${isSubscription ? 'text-indigo-700' : 'text-gray-900'}`}>
               {formattedPrice}
             </div>

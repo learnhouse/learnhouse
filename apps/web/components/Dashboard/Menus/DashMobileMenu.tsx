@@ -21,7 +21,7 @@ function DashMobileMenu() {
   const showPayments = isEnabled('payments')
 
   return (
-    <nav aria-label="Dashboard mobile actions" className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg text-white shadow-xl">
+    <nav aria-label="Dashboard mobile actions" className="fixed bottom-0 start-0 end-0 bg-black/90 backdrop-blur-lg text-white shadow-xl">
       <div className="flex justify-around items-center h-16 px-2">
         <AdminAuthorization authorizationMode="component">
           <ToolTip content={t('common.home')} slateBlack sideOffset={8} side="top">
