@@ -239,5 +239,15 @@ export async function getOrgSlug(): Promise<string | null> {
     return legacyCookie.value
   }
 
+  // Single-tenant fallback: when multi-org is off, every bare-root visit
+  // belongs to the default org. Without this, /login on the root domain
+  // shows the "Enter Your Organization" gate because no subdomain or
+  // orgslug cookie resolves.
+  const multiOrg = cookieStore.get('learnhouse_multi_org')?.value
+  if (multiOrg === 'false') {
+    const defaultOrg = cookieStore.get('learnhouse_default_org')?.value
+    if (defaultOrg) return defaultOrg
+  }
+
   return null
 }
