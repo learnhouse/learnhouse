@@ -35,28 +35,25 @@
   "ignoreDeps": ["@icons-pack/react-simple-icons", "prosemirror-transform", "python"],
   "packageRules": [
     {
-      "matchPackageNames": ["next"],
-      "matchPackagePatterns": ["^@next/", "^eslint-config-next$"],
+      "matchPackageNames": ["next", "@next/*", "eslint-config-next"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Next.js",
       "groupSlug": "nextjs"
     },
     {
-      "matchPackageNames": ["react", "react-dom"],
-      "matchPackagePatterns": ["^@types/react", "^react-"],
+      "matchPackageNames": ["react", "react-dom", "@types/react*", "react-*"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "React",
       "groupSlug": "react"
     },
     {
-      "matchPackageNames": ["typescript"],
-      "matchPackagePatterns": ["^@types/"],
+      "matchPackageNames": ["typescript", "@types/*"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "TypeScript & types",
       "groupSlug": "typescript"
     },
     {
-      "matchPackagePatterns": ["^eslint", "^@eslint/"],
+      "matchPackageNames": ["eslint*", "@eslint/*"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "ESLint",
       "groupSlug": "eslint"
