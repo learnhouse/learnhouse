@@ -174,10 +174,7 @@ function decodeTokenPayload(token: string): { org_uuid?: string; email?: string;
  */
 async function fetchOrgBySlug(orgslug: string): Promise<ResolvedOrg | null> {
   try {
-    const org = await getOrganizationContextInfoWithoutCredentials(orgslug, {
-      revalidate: 60, // Cache for 60 seconds
-      tags: ['organizations'],
-    })
+    const org = await getOrganizationContextInfoWithoutCredentials(orgslug)
 
     if (!org || org.error) {
       return null
@@ -195,10 +192,7 @@ async function fetchOrgBySlug(orgslug: string): Promise<ResolvedOrg | null> {
  */
 async function fetchOrgByUUID(orgUUID: string): Promise<ResolvedOrg | null> {
   try {
-    const org = await getOrganizationContextInfoWithUUID(orgUUID, {
-      revalidate: 60,
-      tags: ['organizations'],
-    }, '')
+    const org = await getOrganizationContextInfoWithUUID(orgUUID, null, '')
 
     if (!org || org.error) {
       return null
