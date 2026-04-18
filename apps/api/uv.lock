@@ -853,7 +853,7 @@ requires-dist = [
     { name = "tiktoken", specifier = "==0.12.0" },
     { name = "typer", specifier = "==0.24.1" },
     { name = "uvicorn", specifier = "==0.44.0" },
-    { name = "workos", specifier = "==5.46.0" },
+    { name = "workos", specifier = "==6.0.2" },
 ]
 
 [[package]]
@@ -1883,17 +1883,16 @@ wheels = [
 
 [[package]]
 name = "workos"
-version = "5.46.0"
+version = "6.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "httpx" },
-    { name = "pydantic" },
     { name = "pyjwt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/13/c7/8eb6f513a39a24544f28d0fd764db1c4a54b897885b9f0aede0b4a28d436/workos-5.46.0.tar.gz", hash = "sha256:db6ce0fa6924bfd7a790c2bdae97cf7be8a970eaaef04156ae554157d24376f2", size = 65693, upload-time = "2026-03-16T20:49:13.215Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/a8/f6da032efd8ea0c2b715375137643136e36af11901fd192cd64ee18d2e53/workos-6.0.2.tar.gz", hash = "sha256:aa72e2a9cea06f89f0fbce33be584b0f0ab176d40778eab6bc050ad06a2ebdee", size = 172135, upload-time = "2026-04-14T18:07:49.757Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cf/8f/43b2345c7d0283660db4c205e93134c4a57406ee896782e7384431906493/workos-5.46.0-py3-none-any.whl", hash = "sha256:b83704d4d6fcafa57439e232f62944b619aabc1c632b0ced9f71501298be0c78", size = 121032, upload-time = "2026-03-16T20:49:11.905Z" },
+    { url = "https://files.pythonhosted.org/packages/76/5a/ce8b361010e9f57729db9963c203534513f9d83a6bb13d5e7e5420847ec1/workos-6.0.2-py3-none-any.whl", hash = "sha256:124a9c19de4bbb2701df46847c5a0dbeda83befe379d95aee470fd505853a867", size = 511258, upload-time = "2026-04-14T18:07:48.065Z" },
 ]
 
 [[package]]
