@@ -3155,7 +3155,8 @@
         "title": "Strumenti compito",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Invii"
+          "submissions": "Invii",
+          "analytics": "Analisi"
         },
         "mobile": {
           "title": "Solo desktop",
@@ -3364,6 +3365,58 @@
           "optional": "facoltativo",
           "placeholder": "Scrivi un commento sulla consegna nel suo insieme. Lo studente lo vedrà accanto al voto.",
           "hint": "Lascia vuoto per mantenere invariato qualsiasi commento precedente."
+        }
+      },
+      "analytics": {
+        "loading": "Caricamento delle analisi...",
+        "empty": {
+          "title": "Nessuna consegna ancora",
+          "description": "Le analisi appariranno non appena gli studenti inizieranno a consegnare."
+        },
+        "kpis": {
+          "average": "Media della classe",
+          "median": "Mediana",
+          "pass_rate": "Tasso di promozione",
+          "pass_rate_sub": "{{passed}} su {{total}} promossi",
+          "on_time": "Tasso di puntualità",
+          "on_time_sub": "{{late}} in ritardo su {{total}}"
+        },
+        "mini": {
+          "highest": "Più alto",
+          "lowest": "Più basso",
+          "spread": "Intervallo",
+          "feedback": "Copertura feedback"
+        },
+        "distribution": {
+          "title": "Distribuzione dei voti",
+          "subtitle": "Come la classe si distribuisce tra le fasce di voto",
+          "empty": "I voti appariranno qui dopo la correzione delle consegne",
+          "students": "Studenti"
+        },
+        "timeline": {
+          "title": "Attività di consegna",
+          "subtitle": "Quando gli studenti hanno consegnato vs. quando li hai valutati",
+          "empty": "Nessuna attività da mostrare ancora",
+          "submitted": "Consegnate",
+          "graded": "Valutate",
+          "due": "Scadenza"
+        },
+        "tasks": {
+          "title": "Prestazioni per attività",
+          "subtitle": "Punteggio medio per attività — le barre basse indicano dove hanno più difficoltà",
+          "empty": "Le prestazioni per attività appariranno dopo le prime valutazioni",
+          "avg_grade": "Voto medio",
+          "attempts": "tentativi"
+        },
+        "top": {
+          "title": "Migliori risultati",
+          "subtitle": "Gli studenti con i voti più alti in questa attività",
+          "empty": "Nessuna consegna valutata ancora"
+        },
+        "attention": {
+          "title": "Potrebbero aver bisogno di supporto",
+          "subtitle": "Studenti che non hanno superato — considera di contattarli",
+          "empty": "Tutti i valutati hanno superato. Ottimo lavoro!"
         }
       },
       "modals": {

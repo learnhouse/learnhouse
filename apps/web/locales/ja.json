@@ -3165,7 +3165,8 @@
         "title": "課題ツール",
         "tabs": {
           "editor": "エディター",
-          "submissions": "提出物"
+          "submissions": "提出物",
+          "analytics": "分析"
         },
         "mobile": {
           "title": "デスクトップ専用",
@@ -3374,6 +3375,58 @@
           "optional": "任意",
           "placeholder": "提出物全体についてコメントを書いてください。学生は成績の横で確認できます。",
           "hint": "空欄にすると、以前のフィードバックは変更されずに保持されます。"
+        }
+      },
+      "analytics": {
+        "loading": "分析を読み込んでいます...",
+        "empty": {
+          "title": "まだ提出がありません",
+          "description": "生徒が提出を始めると、ここに分析が表示されます。"
+        },
+        "kpis": {
+          "average": "クラス平均",
+          "median": "中央値",
+          "pass_rate": "合格率",
+          "pass_rate_sub": "{{total}}人中{{passed}}人が合格",
+          "on_time": "期日内率",
+          "on_time_sub": "{{total}}件中{{late}}件が遅延"
+        },
+        "mini": {
+          "highest": "最高",
+          "lowest": "最低",
+          "spread": "範囲",
+          "feedback": "フィードバック率"
+        },
+        "distribution": {
+          "title": "成績分布",
+          "subtitle": "クラスが成績帯にどう分布しているか",
+          "empty": "採点後にここに成績が表示されます",
+          "students": "生徒"
+        },
+        "timeline": {
+          "title": "提出状況",
+          "subtitle": "生徒が提出した時期と採点時期",
+          "empty": "表示するアクティビティがまだありません",
+          "submitted": "提出済み",
+          "graded": "採点済み",
+          "due": "締切"
+        },
+        "tasks": {
+          "title": "課題別パフォーマンス",
+          "subtitle": "課題ごとの平均点 — 低い棒は生徒がつまずいている箇所を示します",
+          "empty": "採点後に課題別パフォーマンスが表示されます",
+          "avg_grade": "平均点",
+          "attempts": "回"
+        },
+        "top": {
+          "title": "トップパフォーマー",
+          "subtitle": "この課題で最も成績の良い生徒",
+          "empty": "採点済みの提出はまだありません"
+        },
+        "attention": {
+          "title": "サポートが必要かも",
+          "subtitle": "合格しなかった生徒 — 声をかけることを検討してください",
+          "empty": "採点された全員が合格しました。お見事です!"
         }
       },
       "modals": {

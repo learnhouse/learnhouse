@@ -3167,7 +3167,8 @@
         "title": "과제 도구",
         "tabs": {
           "editor": "에디터",
-          "submissions": "제출물"
+          "submissions": "제출물",
+          "analytics": "분석"
         },
         "mobile": {
           "title": "데스크톱 전용",
@@ -3376,6 +3377,58 @@
           "optional": "선택",
           "placeholder": "제출물 전반에 대한 의견을 작성하세요. 학생이 성적 옆에서 확인할 수 있습니다.",
           "hint": "이전 피드백을 변경하지 않으려면 비워두세요."
+        }
+      },
+      "analytics": {
+        "loading": "분석을 불러오는 중...",
+        "empty": {
+          "title": "아직 제출된 과제가 없습니다",
+          "description": "학생들이 과제를 제출하기 시작하면 분석이 표시됩니다."
+        },
+        "kpis": {
+          "average": "반 평균",
+          "median": "중앙값",
+          "pass_rate": "합격률",
+          "pass_rate_sub": "{{total}}명 중 {{passed}}명 합격",
+          "on_time": "정시 제출률",
+          "on_time_sub": "{{total}}건 중 {{late}}건 지각"
+        },
+        "mini": {
+          "highest": "최고",
+          "lowest": "최저",
+          "spread": "범위",
+          "feedback": "피드백 비율"
+        },
+        "distribution": {
+          "title": "성적 분포",
+          "subtitle": "학급이 성적 구간에 어떻게 분포하는지",
+          "empty": "채점이 완료되면 여기에 성적이 표시됩니다",
+          "students": "학생"
+        },
+        "timeline": {
+          "title": "제출 활동",
+          "subtitle": "학생이 제출한 시점 vs. 채점한 시점",
+          "empty": "아직 표시할 활동이 없습니다",
+          "submitted": "제출됨",
+          "graded": "채점됨",
+          "due": "마감일"
+        },
+        "tasks": {
+          "title": "과제별 성과",
+          "subtitle": "과제별 평균 점수 — 낮은 막대는 학생들이 어려워하는 부분을 보여줍니다",
+          "empty": "채점 후 과제별 성과가 표시됩니다",
+          "avg_grade": "평균 점수",
+          "attempts": "시도"
+        },
+        "top": {
+          "title": "상위 성적",
+          "subtitle": "이 과제에서 가장 높은 점수를 받은 학생",
+          "empty": "채점된 제출이 아직 없습니다"
+        },
+        "attention": {
+          "title": "지원이 필요할 수 있음",
+          "subtitle": "합격하지 못한 학생 — 연락해 보세요",
+          "empty": "채점된 모든 학생이 합격했습니다. 잘하셨어요!"
         }
       },
       "modals": {

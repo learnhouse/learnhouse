@@ -3180,7 +3180,8 @@
         "title": "Công cụ bài tập",
         "tabs": {
           "editor": "Trình chỉnh sửa",
-          "submissions": "Bài nộp"
+          "submissions": "Bài nộp",
+          "analytics": "Phân tích"
         },
         "mobile": {
           "title": "Chỉ dành cho máy tính",
@@ -3389,6 +3390,58 @@
           "optional": "tùy chọn",
           "placeholder": "Viết nhận xét về bài nộp tổng thể. Học sinh sẽ thấy nó bên cạnh điểm của mình.",
           "hint": "Để trống để giữ nhận xét trước đó không thay đổi."
+        }
+      },
+      "analytics": {
+        "loading": "Đang tải phân tích...",
+        "empty": {
+          "title": "Chưa có bài nộp",
+          "description": "Phân tích sẽ xuất hiện ngay khi học viên bắt đầu nộp bài."
+        },
+        "kpis": {
+          "average": "Trung bình lớp",
+          "median": "Trung vị",
+          "pass_rate": "Tỷ lệ đạt",
+          "pass_rate_sub": "{{passed}} / {{total}} đạt",
+          "on_time": "Tỷ lệ đúng hạn",
+          "on_time_sub": "{{late}} trễ / {{total}}"
+        },
+        "mini": {
+          "highest": "Cao nhất",
+          "lowest": "Thấp nhất",
+          "spread": "Biên độ",
+          "feedback": "Độ phủ phản hồi"
+        },
+        "distribution": {
+          "title": "Phân bố điểm",
+          "subtitle": "Lớp được trải đều trên các dải điểm",
+          "empty": "Điểm sẽ hiển thị ở đây sau khi chấm",
+          "students": "Học viên"
+        },
+        "timeline": {
+          "title": "Hoạt động nộp bài",
+          "subtitle": "Học viên nộp khi nào so với khi bạn chấm",
+          "empty": "Chưa có hoạt động để hiển thị",
+          "submitted": "Đã nộp",
+          "graded": "Đã chấm",
+          "due": "Hạn nộp"
+        },
+        "tasks": {
+          "title": "Hiệu suất theo bài",
+          "subtitle": "Điểm trung bình mỗi bài — cột thấp cho biết học viên đang gặp khó khăn ở đâu",
+          "empty": "Hiệu suất theo bài sẽ xuất hiện sau khi có điểm",
+          "avg_grade": "Điểm trung bình",
+          "attempts": "lần làm"
+        },
+        "top": {
+          "title": "Học viên xuất sắc",
+          "subtitle": "Các học viên có điểm cao nhất trong bài tập này",
+          "empty": "Chưa có bài nộp nào được chấm"
+        },
+        "attention": {
+          "title": "Có thể cần hỗ trợ",
+          "subtitle": "Học viên không đạt — hãy cân nhắc liên hệ",
+          "empty": "Tất cả người đã chấm đều đạt. Tuyệt vời!"
         }
       },
       "modals": {

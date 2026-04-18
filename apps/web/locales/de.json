@@ -3155,7 +3155,8 @@
         "title": "Aufgaben-Tools",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Einreichungen"
+          "submissions": "Einreichungen",
+          "analytics": "Analysen"
         },
         "mobile": {
           "title": "Nur Desktop",
@@ -3364,6 +3365,58 @@
           "optional": "optional",
           "placeholder": "Schreibe einen Kommentar zur gesamten Abgabe. Der Schüler sieht ihn neben seiner Note.",
           "hint": "Leer lassen, um vorheriges Feedback unverändert zu lassen."
+        }
+      },
+      "analytics": {
+        "loading": "Analysen werden geladen...",
+        "empty": {
+          "title": "Noch keine Abgaben",
+          "description": "Die Analysen erscheinen, sobald Studierende Abgaben einreichen."
+        },
+        "kpis": {
+          "average": "Klassendurchschnitt",
+          "median": "Median",
+          "pass_rate": "Bestehensquote",
+          "pass_rate_sub": "{{passed}} von {{total}} bestanden",
+          "on_time": "Pünktlichkeitsquote",
+          "on_time_sub": "{{late}} von {{total}} verspätet"
+        },
+        "mini": {
+          "highest": "Höchste",
+          "lowest": "Niedrigste",
+          "spread": "Spanne",
+          "feedback": "Feedback-Abdeckung"
+        },
+        "distribution": {
+          "title": "Notenverteilung",
+          "subtitle": "Wie sich die Klasse auf die Notenstufen verteilt",
+          "empty": "Die Noten erscheinen hier, sobald Abgaben bewertet wurden",
+          "students": "Studierende"
+        },
+        "timeline": {
+          "title": "Abgabeaktivität",
+          "subtitle": "Wann abgegeben wurde vs. wann Sie benotet haben",
+          "empty": "Noch keine Aktivität zum Anzeigen",
+          "submitted": "Abgegeben",
+          "graded": "Benotet",
+          "due": "Abgabetermin"
+        },
+        "tasks": {
+          "title": "Aufgabenleistung",
+          "subtitle": "Durchschnittspunkte je Aufgabe — niedrige Balken zeigen, wo es hakt",
+          "empty": "Die Leistung je Aufgabe erscheint nach den ersten Bewertungen",
+          "avg_grade": "Durchschnittsnote",
+          "attempts": "Versuche"
+        },
+        "top": {
+          "title": "Beste Leistungen",
+          "subtitle": "Ihre Studierenden mit den besten Ergebnissen bei dieser Aufgabe",
+          "empty": "Noch keine bewerteten Abgaben"
+        },
+        "attention": {
+          "title": "Brauchen evtl. Unterstützung",
+          "subtitle": "Studierende, die nicht bestanden haben — ggf. ansprechen",
+          "empty": "Alle Bewerteten haben bestanden. Gut gemacht!"
         }
       },
       "modals": {

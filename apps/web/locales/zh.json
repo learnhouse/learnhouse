@@ -3167,7 +3167,8 @@
         "title": "作业工具",
         "tabs": {
           "editor": "编辑器",
-          "submissions": "提交内容"
+          "submissions": "提交内容",
+          "analytics": "分析"
         },
         "mobile": {
           "title": "仅限桌面设备",
@@ -3376,6 +3377,58 @@
           "optional": "可选",
           "placeholder": "写一条关于整个提交的评论。学生将在其成绩旁看到此内容。",
           "hint": "留空以保持之前的反馈不变。"
+        }
+      },
+      "analytics": {
+        "loading": "正在加载分析...",
+        "empty": {
+          "title": "暂无提交",
+          "description": "学生开始提交作业后，分析将显示在这里。"
+        },
+        "kpis": {
+          "average": "班级平均分",
+          "median": "中位数",
+          "pass_rate": "通过率",
+          "pass_rate_sub": "{{total}} 人中 {{passed}} 人通过",
+          "on_time": "准时提交率",
+          "on_time_sub": "{{total}} 份中 {{late}} 份迟交"
+        },
+        "mini": {
+          "highest": "最高",
+          "lowest": "最低",
+          "spread": "分布范围",
+          "feedback": "反馈覆盖率"
+        },
+        "distribution": {
+          "title": "成绩分布",
+          "subtitle": "全班在各成绩段的分布",
+          "empty": "提交批改后成绩将显示在此处",
+          "students": "学生"
+        },
+        "timeline": {
+          "title": "提交活动",
+          "subtitle": "学生提交时间与您批改时间",
+          "empty": "暂无活动可显示",
+          "submitted": "已提交",
+          "graded": "已批改",
+          "due": "截止日期"
+        },
+        "tasks": {
+          "title": "任务表现",
+          "subtitle": "每项任务的平均分 — 较低的柱子提示学生薄弱环节",
+          "empty": "批改后将显示各项任务的表现",
+          "avg_grade": "平均成绩",
+          "attempts": "次尝试"
+        },
+        "top": {
+          "title": "优秀表现者",
+          "subtitle": "本次作业得分最高的学生",
+          "empty": "暂无已批改的提交"
+        },
+        "attention": {
+          "title": "可能需要帮助",
+          "subtitle": "未通过的学生 — 可考虑主动联系",
+          "empty": "所有已批改的学生都通过了。干得好！"
         }
       },
       "modals": {
