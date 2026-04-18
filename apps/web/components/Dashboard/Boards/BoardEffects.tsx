@@ -839,7 +839,8 @@ export default function BoardEffects({ ydoc, provider }: BoardEffectsProps) {
     return () => effectsArray.unobserve(observer)
   }, [ydoc])
 
-  // Clean up old effects from Yjs
+  // Clean up old effects from Yjs, and prune seenIdsRef in lockstep so it
+  // doesn't grow unbounded over long sessions.
   useEffect(() => {
     const timer = setInterval(() => {
       if (!ydoc) return
@@ -849,6 +850,10 @@ export default function BoardEffects({ ydoc, provider }: BoardEffectsProps) {
         if (now - effectsArray.get(i).timestamp > EFFECT_LIFETIME * 2) {
           effectsArray.delete(i, 1)
         }
+      }
+      const liveIds = new Set(effectsArray.toArray().map((ev) => ev.id))
+      for (const id of seenIdsRef.current) {
+        if (!liveIds.has(id)) seenIdsRef.current.delete(id)
       }
     }, 5000)
     return () => clearInterval(timer)

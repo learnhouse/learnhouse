@@ -111,6 +111,8 @@ function BoardEditorInner({
   const canvasRef = useRef<HTMLDivElement>(null)
   const panRafRef = useRef(0)
   const prevToolModeRef = useRef<typeof toolMode | null>(null)
+  const toolModeRef = useRef(toolMode)
+  toolModeRef.current = toolMode
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
   // Multi-select state
@@ -191,6 +193,27 @@ function BoardEditorInner({
     editorProps: {
       attributes: {
         class: 'board-editor outline-none min-h-[2000px] min-w-[3000px] relative',
+      },
+      // Block free-floating text at the canvas root — typing must happen inside
+      // a card or note. Without this, a click on empty canvas lets ProseMirror
+      // insert text into the root paragraph, which renders "on the map".
+      handleTextInput(view) {
+        const { $from } = view.state.selection
+        for (let d = $from.depth; d > 0; d--) {
+          const name = $from.node(d).type.name
+          if (name === 'boardCard' || name === 'noteBlock') return false
+        }
+        return true
+      },
+      handleKeyDown(view, event) {
+        if (event.key !== 'Enter') return false
+        const { $from } = view.state.selection
+        for (let d = $from.depth; d > 0; d--) {
+          const name = $from.node(d).type.name
+          if (name === 'boardCard' || name === 'noteBlock') return false
+        }
+        event.preventDefault()
+        return true
       },
     },
   })
@@ -285,11 +308,15 @@ function BoardEditorInner({
   }, [])
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (toolMode === 'pan' || e.button === 1 || (e.button === 0 && e.shiftKey && toolMode !== 'select')) {
+    // Read from the ref, not state: lets us flip to 'select' synchronously
+    // after a placement so a second mousedown fired in the same tick can't
+    // insert a duplicate block before React commits setToolMode.
+    const mode = toolModeRef.current
+    if (mode === 'pan' || e.button === 1 || (e.button === 0 && e.shiftKey && mode !== 'select')) {
       setIsPanning(true)
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
       e.preventDefault()
-    } else if (toolMode === 'select' && e.button === 0) {
+    } else if (mode === 'select' && e.button === 0) {
       // Check if click landed on a block (node-view-wrapper) — if so, let the block handle it
       const target = e.target as HTMLElement
       const isOnBlock = target.closest('[data-node-view-wrapper]')
@@ -307,7 +334,7 @@ function BoardEditorInner({
           setSelectedPositions(new Set())
         }
       }
-    } else if (toolMode === 'draw') {
+    } else if (mode === 'draw') {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
       e.preventDefault()
@@ -316,9 +343,10 @@ function BoardEditorInner({
       drawPointsRef.current = [{ x, y }]
       setDrawingPath(`M ${x} ${y}`)
       setIsDrawing(true)
-    } else if (toolMode === 'card' && editor) {
+    } else if (mode === 'card' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const cardPos = editor.state.doc.content.size
@@ -328,9 +356,10 @@ function BoardEditorInner({
         content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New card' }] }],
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'youtube' && editor) {
+    } else if (mode === 'youtube' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const ytPos = editor.state.doc.content.size
@@ -339,9 +368,10 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 480, height: 270 },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'playground' && editor) {
+    } else if (mode === 'playground' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -356,9 +386,10 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'activity' && editor) {
+    } else if (mode === 'activity' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -372,9 +403,10 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'embed' && editor) {
+    } else if (mode === 'embed' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -388,9 +420,10 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'webpage' && editor) {
+    } else if (mode === 'webpage' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -404,9 +437,10 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'note' && editor) {
+    } else if (mode === 'note' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -416,9 +450,10 @@ function BoardEditorInner({
         content: [{ type: 'paragraph', content: [{ type: 'text', text: 'New note' }] }],
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'sticker' && editor) {
+    } else if (mode === 'sticker' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -431,9 +466,10 @@ function BoardEditorInner({
         },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'todo' && editor) {
+    } else if (mode === 'todo' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -442,9 +478,10 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 260, height: 260 },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'podcast' && editor) {
+    } else if (mode === 'podcast' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -453,9 +490,10 @@ function BoardEditorInner({
         attrs: { x: Math.round(x), y: Math.round(y), width: 400, height: 280 },
       }).run()
       setToolMode('select')
-    } else if (toolMode === 'frame' && editor) {
+    } else if (mode === 'frame' && editor) {
       const rect = canvasRef.current?.getBoundingClientRect()
       if (!rect) return
+      toolModeRef.current = 'select'
       const x = (e.clientX - rect.left - pan.x) / zoom
       const y = (e.clientY - rect.top - pan.y) / zoom
       const pos = editor.state.doc.content.size
@@ -471,7 +509,7 @@ function BoardEditorInner({
       }).run()
       setToolMode('select')
     }
-  }, [toolMode, pan, zoom, editor])
+  }, [pan, zoom, editor])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     // Track mouse position for placement ghost preview

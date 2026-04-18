@@ -10,6 +10,10 @@ const API_URL = process.env.LEARNHOUSE_API_URL || 'http://localhost:8000'
 const SECRET_KEY = process.env.LEARNHOUSE_AUTH_JWT_SECRET_KEY || ''
 const INTERNAL_KEY = process.env.COLLAB_INTERNAL_KEY || ''
 const REDIS_URL = process.env.LEARNHOUSE_REDIS_URL || 'redis://localhost:6379'
+// Only honor x-forwarded-for when a trusted proxy is known to set it.
+// Without this flag, a direct client can spoof the header per request and
+// bypass the rate limiter by presenting a fresh IP each time.
+const TRUST_PROXY = process.env.COLLAB_TRUST_PROXY === 'true'
 
 // Timeout for all outbound HTTP requests (ms)
 const FETCH_TIMEOUT_MS = 10_000
@@ -164,11 +168,13 @@ const server = new Server({
       throw null
     }
 
-    // Rate limiting by IP
-    const ip =
-      (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-      request.socket.remoteAddress ||
-      'unknown'
+    // Rate limiting by IP. Only read x-forwarded-for when we're explicitly
+    // behind a trusted proxy; otherwise a client can spoof the header to
+    // rotate through unlimited buckets.
+    const forwarded = TRUST_PROXY
+      ? (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+      : undefined
+    const ip = forwarded || request.socket.remoteAddress || 'unknown'
     if (isRateLimited(ip)) {
       response.writeHead(429, { 'Content-Type': 'application/json' })
       response.end(JSON.stringify({ error: 'Too many connection attempts' }))

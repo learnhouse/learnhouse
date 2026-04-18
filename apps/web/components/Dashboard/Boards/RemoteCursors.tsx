@@ -31,6 +31,16 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+const DEFAULT_CURSOR_COLOR = '#958DF1'
+
+// Peers set their color via awareness. We interpolate it into innerHTML/SVG
+// markup, so reject anything that isn't a plain hex code to prevent a
+// collaborator from injecting attributes or markup via the color field.
+function sanitizeColor(value: unknown): string {
+  if (typeof value !== 'string') return DEFAULT_CURSOR_COLOR
+  return /^#[0-9a-fA-F]{3,8}$/.test(value) ? value : DEFAULT_CURSOR_COLOR
+}
+
 export default function RemoteCursors({ provider, canvasRef, pan, zoom }: RemoteCursorsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cursorsRef = useRef<Map<number, CursorData>>(new Map())
@@ -102,6 +112,11 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
     }
   }, [canvasRef, handleMouseMove, handleMouseLeave])
 
+  // Cursor DOM elements keyed by clientId. Keeping identity stable prevents
+  // the index-shift glitch where disconnects caused another peer's transform
+  // to be applied to a cursor until the next full paint.
+  const elementsRef = useRef<Map<number, HTMLElement>>(new Map())
+
   // Listen for remote awareness updates — paint directly to DOM, skip React state
   useEffect(() => {
     if (!provider.awareness) return
@@ -113,46 +128,39 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
       const p = panRef.current
       const z = zoomRef.current
       const cursorMap = cursorsRef.current
-      const existing = container.childNodes
+      const elements = elementsRef.current
       const now = Date.now()
 
-      // Build an ordered list from the map
-      const entries = Array.from(cursorMap.values())
-
-      // Reconcile DOM children
-      for (let i = 0; i < entries.length; i++) {
-        const c = entries[i]
-        let el = existing[i] as HTMLElement | undefined
+      for (const c of cursorMap.values()) {
+        let el = elements.get(c.clientId)
 
         if (!el) {
-          // Create new cursor DOM element
           el = document.createElement('div')
           el.className = 'pointer-events-none absolute left-0 top-0 z-50'
           el.style.willChange = 'transform'
           el.style.transition = 'transform 350ms cubic-bezier(0.4, 0, 0.2, 1)'
+          el.dataset.cid = String(c.clientId)
           el.innerHTML = buildCursorHtml(c, now)
           container.appendChild(el)
+          elements.set(c.clientId, el)
         }
 
-        // Update transform
         el.style.transform = `translate(${c.x * z + p.x}px, ${c.y * z + p.y}px)`
 
-        // Update color/name/bubble if changed
         const hasBubble = c.chatBubble && (now - c.chatBubble.timestamp < BUBBLE_DISPLAY_TIME)
         const bubbleText = hasBubble ? c.chatBubble!.text : ''
-        const prevBubble = el.dataset.bubble || ''
-        const cidChanged = el.dataset.cid !== String(c.clientId)
-
-        if (cidChanged || prevBubble !== bubbleText) {
-          el.dataset.cid = String(c.clientId)
+        if ((el.dataset.bubble || '') !== bubbleText) {
           el.dataset.bubble = bubbleText
           el.innerHTML = buildCursorHtml(c, now)
         }
       }
 
-      // Remove extra DOM nodes
-      while (container.childNodes.length > entries.length) {
-        container.removeChild(container.lastChild!)
+      // Drop elements for cursors that are gone
+      for (const [id, el] of elements) {
+        if (!cursorMap.has(id)) {
+          el.remove()
+          elements.delete(id)
+        }
       }
     }
 
@@ -166,7 +174,7 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
           cursorsRef.current.set(clientId, {
             clientId,
             name: state.user.name || 'Unknown',
-            color: state.user.color || '#958DF1',
+            color: sanitizeColor(state.user.color),
             x: state.cursor.x,
             y: state.cursor.y,
             lastUpdate: now,
@@ -196,54 +204,30 @@ export default function RemoteCursors({ provider, canvasRef, pan, zoom }: Remote
     provider.awareness.on('change', onChange)
     update()
 
-    // Also run a periodic repaint to expire bubbles visually
+    // Periodic repaint to expire bubbles visually
     const bubbleCleanup = setInterval(() => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      rafRef.current = requestAnimationFrame(() => {
-        const container = containerRef.current
-        if (!container) return
-        const now = Date.now()
-        const entries = Array.from(cursorsRef.current.values())
-        for (let i = 0; i < entries.length; i++) {
-          const c = entries[i]
-          const el = container.childNodes[i] as HTMLElement | undefined
-          if (!el) continue
-          const hasBubble = c.chatBubble && (now - c.chatBubble.timestamp < BUBBLE_DISPLAY_TIME)
-          const bubbleText = hasBubble ? c.chatBubble!.text : ''
-          if (el.dataset.bubble !== bubbleText) {
-            el.dataset.bubble = bubbleText
-            el.innerHTML = buildCursorHtml(c, now)
-            // Re-apply transform
-            const p = panRef.current
-            const z = zoomRef.current
-            el.style.transform = `translate(${c.x * z + p.x}px, ${c.y * z + p.y}px)`
-          }
-        }
-      })
+      rafRef.current = requestAnimationFrame(paintCursors)
     }, 1000)
 
     return () => {
       provider.awareness?.off('change', onChange)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       clearInterval(bubbleCleanup)
+      elementsRef.current.clear()
     }
   }, [provider])
 
   // Repaint cursors when pan/zoom changes (no awareness event needed)
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
+    const elements = elementsRef.current
+    const cursors = cursorsRef.current
     const z = zoom
     const p = pan
-    const entries = Array.from(cursorsRef.current.values())
-
-    for (let i = 0; i < entries.length; i++) {
-      const c = entries[i]
-      const el = container.childNodes[i] as HTMLElement | undefined
-      if (el) {
-        el.style.transform = `translate(${c.x * z + p.x}px, ${c.y * z + p.y}px)`
-      }
+    for (const [id, el] of elements) {
+      const c = cursors.get(id)
+      if (!c) continue
+      el.style.transform = `translate(${c.x * z + p.x}px, ${c.y * z + p.y}px)`
     }
   }, [pan, zoom])
 
