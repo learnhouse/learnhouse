@@ -3,7 +3,6 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple, Any, Dict
 from fastapi import HTTPException, status
-from sqlalchemy import func
 from sqlmodel import Session, select
 
 from src.db.communities.communities import Community, DEFAULT_MODERATION_SETTINGS

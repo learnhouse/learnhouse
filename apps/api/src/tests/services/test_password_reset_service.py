@@ -176,23 +176,33 @@ class TestPasswordResetService:
             user_uuid="user_reset",
         )
 
-        with pytest.raises(HTTPException) as missing_org_exc:
-            await send_reset_password_code(
+        fake_redis_ok = MagicMock()
+        fake_redis_ok.incr.return_value = 1
+        with patch(
+            "src.services.users.password_reset._get_redis_connection",
+            return_value=fake_redis_ok,
+        ):
+            with pytest.raises(HTTPException) as missing_org_exc:
+                await send_reset_password_code(
+                    mock_request,
+                    db,
+                    AnonymousUser(),
+                    org.id + 999,
+                    user.email,
+                )
+        assert missing_org_exc.value.status_code == 400
+
+        with patch(
+            "src.services.users.password_reset._get_redis_connection",
+            return_value=fake_redis_ok,
+        ):
+            missing = await send_reset_password_code(
                 mock_request,
                 db,
                 AnonymousUser(),
-                org.id + 999,
-                user.email,
+                org.id,
+                "missing@test.com",
             )
-        assert missing_org_exc.value.status_code == 400
-
-        missing = await send_reset_password_code(
-            mock_request,
-            db,
-            AnonymousUser(),
-            org.id,
-            "missing@test.com",
-        )
         assert missing.startswith("If an account")
 
         with patch(
