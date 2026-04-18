@@ -63,7 +63,7 @@ export default async function StorePage({ params }: { params: PageParams }) {
   let offers: any[] = []
   try {
     const result = await getPublicOffers(org.id)
-    offers = Array.isArray(result) ? result : (result?.data ?? [])
+    offers = result?.success && Array.isArray(result.data) ? result.data : []
   } catch {
     offers = []
   }
