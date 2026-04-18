@@ -6,6 +6,19 @@ import {
   getResponseMetadata,
 } from '@services/utils/ts/requests'
 
+export interface CommunityModerationSettings {
+  block_links?: boolean
+  min_post_length?: number
+  max_post_length?: number
+  max_comment_length?: number
+  slow_mode_seconds?: number
+  max_posts_per_day?: number
+  min_account_age_days?: number
+  require_email_verified?: boolean
+  disable_reactions?: boolean
+  auto_lock_days?: number
+}
+
 export interface Community {
   id: number
   org_id: number
@@ -15,6 +28,7 @@ export interface Community {
   description: string | null
   public: boolean
   moderation_words: string[]
+  moderation_settings: CommunityModerationSettings | null
   thumbnail_image: string | null
   creation_date: string
   update_date: string
@@ -32,6 +46,7 @@ export interface CommunityUpdate {
   description?: string | null
   public?: boolean
   moderation_words?: string[]
+  moderation_settings?: CommunityModerationSettings
 }
 
 export interface CommunityRights {

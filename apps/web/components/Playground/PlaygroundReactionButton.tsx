@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { SmilePlus } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   getPlaygroundReactions,
@@ -59,8 +60,12 @@ export function PlaygroundReactionButton({ playgroundUuid }: PlaygroundReactionB
     try {
       await togglePlaygroundReaction(playgroundUuid, emoji, accessToken)
       await fetchReactions()
-    } catch {
-      // ignore
+    } catch (error: any) {
+      const message =
+        (error?.detail && typeof error.detail === 'object' && error.detail.message) ||
+        error?.message ||
+        'Failed to react.'
+      toast.error(message)
     } finally {
       setIsLoading(false)
       setIsPickerOpen(false)

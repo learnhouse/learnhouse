@@ -129,7 +129,15 @@ export const errorHandling = async (res: any) => {
     } catch (_e) {
       // If we can't parse JSON, use statusText
     }
-    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    let message: string
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+      message = detail.message
+    } else {
+      message = JSON.stringify(detail)
+    }
+    const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
     throw error

@@ -23,7 +23,10 @@ from src.security.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
 )
-from src.services.communities.moderation import validate_discussion_content
+from src.services.communities.moderation import (
+    validate_discussion_content,
+    enforce_posting_limits,
+)
 
 
 class DiscussionSortBy(str, Enum):
@@ -99,6 +102,9 @@ async def create_discussion(
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    # Apply per-user posting limits (slow mode, daily caps, account age, email)
+    await enforce_posting_limits(current_user.id, community, db_session)
 
     # Check content moderation
     await validate_discussion_content(title, content, community.id, db_session)
@@ -448,33 +454,28 @@ async def pin_discussion(
     """
     Pin or unpin a discussion.
 
-    Requires discussion author or admin role.
+    Requires community admin or maintainer role. Authors cannot pin.
     """
-    # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
     discussion = db_session.exec(statement).first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
-    # Get community
     community_statement = select(Community).where(Community.id == discussion.community_id)
     community = db_session.exec(community_statement).first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
-    # Check if user is author or admin
-    is_author = discussion.author_id == current_user.id
     is_admin = await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "update", community.community_uuid, db_session
     )
 
-    if not is_author and not is_admin:
-        raise HTTPException(status_code=403, detail="You don't have permission to pin this discussion")
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Only community moderators can pin discussions")
 
     discussion.is_pinned = is_pinned
     discussion.update_date = str(datetime.now())
@@ -522,33 +523,28 @@ async def lock_discussion(
     """
     Lock or unlock a discussion.
 
-    Requires discussion author or admin role.
+    Requires community admin or maintainer role. Authors cannot lock.
     """
-    # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
     discussion = db_session.exec(statement).first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
-    # Get community
     community_statement = select(Community).where(Community.id == discussion.community_id)
     community = db_session.exec(community_statement).first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
-    # Check if user is author or admin
-    is_author = discussion.author_id == current_user.id
     is_admin = await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "update", community.community_uuid, db_session
     )
 
-    if not is_author and not is_admin:
-        raise HTTPException(status_code=403, detail="You don't have permission to lock this discussion")
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Only community moderators can lock discussions")
 
     discussion.is_locked = is_locked
     discussion.update_date = str(datetime.now())

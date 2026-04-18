@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { SmilePlus } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   getReactions,
@@ -40,8 +41,8 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
     try {
       const result = await getReactions(discussionUuid, accessToken)
       setReactions(result)
-    } catch (error) {
-      console.error('Failed to fetch reactions:', error)
+    } catch (_error) {
+      // silent — reactions list failure is not user-actionable
     }
   }
 
@@ -56,8 +57,12 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
     try {
       await toggleReaction(discussionUuid, emoji, accessToken)
       await fetchReactions()
-    } catch (error) {
-      console.error('Failed to toggle reaction:', error)
+    } catch (error: any) {
+      const message =
+        (error?.detail && typeof error.detail === 'object' && error.detail.message) ||
+        error?.message ||
+        'Failed to react to this discussion.'
+      toast.error(message)
     } finally {
       setIsLoading(false)
       setIsPickerOpen(false)
@@ -117,6 +122,7 @@ export function ReactionButton({ discussionUuid, compact = false }: ReactionButt
             className="w-auto p-2"
             align="start"
             side="top"
+            style={{ zIndex: 9999 }}
           >
             <div className="grid grid-cols-5 gap-1">
               {REACTION_EMOJIS.map((emoji) => {

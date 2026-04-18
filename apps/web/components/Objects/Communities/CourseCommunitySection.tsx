@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
-import { Users, MessageCircle, ArrowRight, ChevronUp } from 'lucide-react'
+import { MessageCircle, ArrowRight, ChevronUp } from 'lucide-react'
 import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import { Community } from '@services/communities/communities'
 import { DiscussionWithAuthor } from '@services/communities/discussions'
@@ -51,8 +51,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
 
   return (
     <div className="w-full my-5">
-      <h2 className="py-5 text-xl md:text-2xl font-bold flex items-center gap-2">
-        <Users size={24} className="text-blue-600" />
+      <h2 className="py-5 text-xl md:text-2xl font-bold text-gray-900">
         {t('communities.course_section.title')}
       </h2>
       <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
@@ -66,7 +65,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
           </div>
           <Link
             href={getUriWithOrg(orgslug, `/community/${communityId}`)}
-            className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
             {t('communities.course_section.view_all')}
             <ArrowRight size={14} />
@@ -81,7 +80,7 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
               <p className="text-sm text-gray-500">{t('communities.course_section.no_discussions')}</p>
               <Link
                 href={getUriWithOrg(orgslug, `/community/${communityId}`)}
-                className="inline-block mt-3 text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="inline-block mt-3 text-sm font-medium text-gray-700 hover:text-gray-900"
               >
                 {t('communities.course_section.start_first')}
               </Link>

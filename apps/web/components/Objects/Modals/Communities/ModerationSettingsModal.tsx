@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { X, Plus, Trash2, Shield, AlertTriangle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Community, updateCommunity } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
@@ -95,9 +96,14 @@ export function ModerationSettingsModal({
       await revalidateTags(['communities'], orgSlug)
       router.refresh()
       onClose()
-    } catch (err) {
-      setError('Failed to save moderation settings')
-      console.error('Failed to update moderation settings:', err)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to save moderation settings.'
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

@@ -13,6 +13,7 @@ from src.db.communities.discussion_reactions import (
     ReactionUser,
 )
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
+from src.services.communities.moderation import get_community_settings
 
 
 async def get_reactions(
@@ -139,6 +140,15 @@ async def toggle_reaction(
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ
     )
+
+    if get_community_settings(community).get("disable_reactions"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Reactions are disabled in this community.",
+                "code": "MODERATION_REACTIONS_DISABLED",
+            },
+        )
 
     # Check if user has already reacted with this emoji
     existing_reaction_statement = select(DiscussionReaction).where(
