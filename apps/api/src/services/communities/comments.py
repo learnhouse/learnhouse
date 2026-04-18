@@ -14,7 +14,7 @@ from src.db.communities.discussion_comments import (
 )
 from src.services.communities.comment_votes import get_user_votes_for_comments
 from src.security.rbac import check_resource_access, AccessAction, authorization_verify_if_user_is_anon
-from src.services.communities.moderation import validate_comment_content
+from src.services.communities.moderation import validate_comment_content, enforce_auto_lock
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
@@ -42,13 +42,6 @@ async def create_comment(
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
-    # Check if discussion is locked
-    if discussion.is_locked:
-        raise HTTPException(
-            status_code=403,
-            detail="This discussion is locked and cannot receive new comments"
-        )
-
     # Get the community and check read access
     community_statement = select(Community).where(
         Community.id == discussion.community_id
@@ -57,6 +50,16 @@ async def create_comment(
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
+
+    # Lazily lock stale threads when auto_lock_days is set
+    await enforce_auto_lock(discussion, community, db_session)
+
+    # Check if discussion is locked (including freshly auto-locked)
+    if discussion.is_locked:
+        raise HTTPException(
+            status_code=403,
+            detail="This discussion is locked and cannot receive new comments"
+        )
 
     await check_resource_access(
         request, db_session, current_user, community.community_uuid, AccessAction.READ

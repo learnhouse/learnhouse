@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
 import { Edit, Trash2, MoreVertical } from 'lucide-react'
+import toast from 'react-hot-toast'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useRouter } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config'
@@ -91,8 +92,13 @@ export function DiscussionDetail({
       await deleteDiscussion(discussion.discussion_uuid, accessToken)
       router.push(getUriWithOrg(orgslug, `/community/${communityId}`))
       router.refresh()
-    } catch (error) {
-      console.error('Failed to delete discussion:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.discussion_detail.delete_failed')
+      toast.error(message)
     }
   }
 
@@ -177,6 +183,7 @@ export function DiscussionDetail({
       <div className="border-t border-gray-100">
         <CommentSection
           discussionUuid={discussion.discussion_uuid}
+          communityUuid={communityUuid}
           isLocked={discussion.is_locked}
         />
       </div>

@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 import { ChevronUp } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteComment, removeCommentUpvote } from '@services/communities/discussions'
@@ -47,12 +48,17 @@ export function CommentUpvoteButton({
       } else {
         await removeCommentUpvote(commentUuid, accessToken)
       }
-    } catch (error) {
+    } catch (err: any) {
       // Revert on error
       setHasVoted(!newHasVoted)
       setVoteCount(newHasVoted ? voteCount : voteCount + 1)
       onVoteChange?.(voteCount, hasVoted)
-      console.error('Comment vote failed:', error)
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to vote.'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
