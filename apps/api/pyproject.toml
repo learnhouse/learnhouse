@@ -7,15 +7,15 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.42.87",
-    "botocore==1.42.87",
+    "boto3==1.42.89",
+    "botocore==1.42.89",
     "faker==40.13.0",
     "fastapi==0.135.3",
     "httpx==0.28.1",
-    "google-genai==1.72.0",
+    "google-genai==1.73.1",
     "pwdlib[argon2]==0.3.0",
     "psycopg2-binary==2.9.11",
-    "pydantic[email]==2.12.5",
+    "pydantic[email]==2.13.0",
     "pytest==9.0.3",
     "pytest-cov==7.1.0",
     "python-dotenv==1.2.2",
@@ -23,7 +23,7 @@ dependencies = [
     "pyyaml==6.0.3",
     "redis==7.4.0",
     "requests==2.33.1",
-    "resend==2.27.0",
+    "resend==2.28.0",
     "sqlmodel==0.0.38",
     "tiktoken==0.12.0",
     "uvicorn==0.44.0",
@@ -36,14 +36,14 @@ dependencies = [
     "pyjwt[crypto]==2.12.1",
     "beautifulsoup4==4.14.3",
     "pytest-asyncio==1.3.0",
-    "sentry-sdk[fastapi]==2.57.0",
+    "sentry-sdk[fastapi]==2.58.0",
     "protobuf==7.34.1",
     "workos==6.0.2",
     "dnspython==2.8.0",
     "defusedxml==0.7.1",
     "llama-index-core==0.14.20",
     "pgvector==0.4.2",
-    "pypdf==6.10.0",
+    "pypdf==6.10.1",
 ]
 
 [tool.ruff]
