@@ -137,6 +137,13 @@ const CoursePage = async (params: any) => {
     notFound()
   }
 
+  // For anonymous visitors denied access to a non-public course, pretend it
+  // doesn't exist (404) rather than showing an access-denied screen — that
+  // would otherwise confirm the course's existence and leak its URL.
+  if (!course_meta && fetchError && !access_token) {
+    notFound()
+  }
+
   // Build Course JSON-LD for structured data
   const courseJsonLd = course_meta ? {
     '@context': 'https://schema.org',

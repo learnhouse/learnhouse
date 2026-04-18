@@ -174,7 +174,14 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
     }
   }, [effectiveData, state.isLoading])
 
-  if (error) return <div className="p-4 text-center text-red-600">Failed to load course. Please refresh the page.</div>
+  // 403/404 are handled by parent pages with a proper access-denied/not-found UI;
+  // rendering a red banner here on top of that just adds noise. For any other
+  // error (network, 500) we show a subtle inline message.
+  if (error) {
+    const status = (error as any)?.status
+    if (status === 403 || status === 404) return null
+    return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
+  }
   if (!effectiveData) return null
 
   return (

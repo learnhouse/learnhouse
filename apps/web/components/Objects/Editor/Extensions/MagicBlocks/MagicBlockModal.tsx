@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import MagicBlockPreview from './MagicBlockPreview'
 import MagicBlockChat from './MagicBlockChat'
+import { extractHtmlDocument } from './extractHtml'
 import type { MagicBlockMessage, MagicBlockContext } from './types'
 import {
   startMagicBlockSession,
@@ -92,21 +93,12 @@ function MagicBlockModal({
       setSessionUuid(newSessionUuid)
       setIterationCount((prev) => prev + 1)
 
-      // Extract HTML from streaming content
-      let finalHtml = streamingContent
-      setStreamingContent((current) => {
-        finalHtml = current
-        return current
-      })
-
-      // Small delay to ensure we have the final content
       setTimeout(() => {
         setStreamingContent((current) => {
-          setHtmlContent(current)
-          // Add AI message
-          const aiMessage: MagicBlockMessage = { role: 'model', content: current }
+          const cleaned = extractHtmlDocument(current) || current
+          setHtmlContent(cleaned)
+          const aiMessage: MagicBlockMessage = { role: 'model', content: cleaned }
           setMessages((prev) => [...prev, aiMessage])
-          setStreamingContent('')
           setIsLoading(false)
           return ''
         })

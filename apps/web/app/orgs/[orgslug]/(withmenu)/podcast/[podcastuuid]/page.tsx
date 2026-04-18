@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getPodcastMeta, PodcastMeta } from '@services/podcasts/podcasts'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getPodcastThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
@@ -106,20 +107,27 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
   })
 
   let podcastMeta: PodcastMeta | null = null
+  let fetchError: { status?: number } | null = null
   try {
     podcastMeta = await getPodcastMeta(
       `podcast_${podcastuuid}`,
       { revalidate: 120, tags: ['podcasts'] },
       access_token
     )
-  } catch (error) {
+  } catch (error: any) {
+    fetchError = { status: error?.status }
     console.error('Error fetching podcast:', error)
+  }
+
+  // Missing, or denied-to-anon: 404 so non-public podcasts aren't enumerable.
+  if (!podcastMeta && (!fetchError || !access_token)) {
+    notFound()
   }
 
   if (!podcastMeta) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-gray-500">Podcast not found</p>
+        <p className="text-gray-500">You do not have permission to view this podcast.</p>
       </div>
     )
   }
