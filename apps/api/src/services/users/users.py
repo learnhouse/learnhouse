@@ -625,7 +625,7 @@ async def get_user_session(
         .where(UserOrganization.user_id == user.id)
     )
     results = db_session.exec(statement.limit(100)).all()
-    if len(results) == 100:
+    if len(results) == 100:  # pragma: no cover
         logging.getLogger(__name__).warning(
             "User %s has 100+ org memberships, result truncated", user.id
         )

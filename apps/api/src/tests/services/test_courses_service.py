@@ -1627,3 +1627,56 @@ class TestGetUserCoursesAndRights:
             _copy_storage_directory("srcdir", "dstdir")
 
         mock_logger_error.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_create_course_rolls_back_on_db_exception(
+        self, db, org, admin_user, mock_request
+    ):
+        """Cover lines 668-670: db_session.rollback() and re-raise when commit fails."""
+        from unittest.mock import MagicMock
+
+        mock_db = MagicMock()
+        mock_db.exec.return_value.first.return_value = org
+        mock_db.flush.side_effect = Exception("DB constraint violation")
+
+        with patch(
+            "src.services.courses.courses.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.courses.check_limits_with_usage"
+        ), patch(
+            "src.services.courses.courses.increase_feature_usage"
+        ):
+            with pytest.raises(Exception, match="DB constraint violation"):
+                await create_course(
+                    mock_request,
+                    org.id,
+                    CourseCreate(
+                        org_id=org.id,
+                        name="Rollback Course",
+                        description="Will fail",
+                        public=False,
+                        published=False,
+                        open_to_contributors=False,
+                    ),
+                    admin_user,
+                    mock_db,
+                )
+
+        mock_db.rollback.assert_called_once()
+
+    def test_replace_uuids_in_content_handles_list(self):
+        """Cover line 1064: list branch in _replace_uuids_in_content."""
+        from src.services.courses.courses import _replace_uuids_in_content
+
+        uuid_map = {"old-uuid": "new-uuid", "another-old": "another-new"}
+
+        # List at top level — exercises the list branch (line 1064)
+        result = _replace_uuids_in_content(["old-uuid", "keep-me", "another-old"], uuid_map)
+        assert result == ["new-uuid", "keep-me", "another-new"]
+
+        # Nested list inside dict
+        result2 = _replace_uuids_in_content(
+            {"blocks": ["old-uuid", "keep-me"]}, uuid_map
+        )
+        assert result2 == {"blocks": ["new-uuid", "keep-me"]}

@@ -11,7 +11,7 @@ import sys
 
 # Ensure apps/api is on sys.path so `src.*` imports work when run standalone
 _api_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-if _api_root not in sys.path:
+if _api_root not in sys.path:  # pragma: no cover
     sys.path.insert(0, _api_root)
 
 from datetime import datetime  # noqa: E402

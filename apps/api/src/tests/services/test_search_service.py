@@ -15,6 +15,7 @@ from src.db.collections import Collection
 from src.db.users import APITokenUser
 from src.db.courses.courses import Course
 from src.db.collections_courses import CollectionCourse
+from src.db.playgrounds import Playground, PlaygroundAccessType
 from src.services.search.search import SearchResult, _escape_like_wildcards, search_across_org
 
 
@@ -290,6 +291,36 @@ class TestSearchAcrossOrg:
                 )
 
         assert getattr(exc_info.value, "status_code", None) == 403
+
+    @pytest.mark.asyncio
+    async def test_search_finds_playgrounds_by_name(
+        self, db, org, anonymous_user, mock_request
+    ):
+        pg = Playground(
+            id=80,
+            name="Searchable Playground",
+            description="A public playground",
+            access_type=PlaygroundAccessType.PUBLIC,
+            published=True,
+            org_id=org.id,
+            playground_uuid="pg_searchable",
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(pg)
+        db.commit()
+
+        with patch(
+            "src.services.search.search.search_courses",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            result = await search_across_org(
+                mock_request, anonymous_user, "test-org", "Searchable Playground", db
+            )
+
+        playground_names = [p.name for p in result.playgrounds]
+        assert "Searchable Playground" in playground_names
 
     @pytest.mark.asyncio
     async def test_search_deduplicates_collection_courses(

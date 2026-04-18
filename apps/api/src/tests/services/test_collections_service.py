@@ -6,6 +6,7 @@ Covers: get_collection, create_collection, update_collection,
 """
 
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -155,6 +156,29 @@ class TestCreateCollection:
         assert stored is not None
 
 
+    @pytest.mark.asyncio
+    async def test_create_collection_course_access_denied_raises_403(
+        self, db, org, course, admin_user, mock_request, bypass_webhooks
+    ):
+        payload = CollectionCreate(
+            name="Forbidden Collection",
+            description="",
+            public=True,
+            courses=[course.id],
+            org_id=org.id,
+        )
+
+        with patch(
+            "src.services.courses.collections.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=[None, HTTPException(status_code=403, detail="Forbidden")],
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await create_collection(mock_request, payload, admin_user, db)
+
+        assert exc_info.value.status_code == 403
+
+
 class TestUpdateCollection:
     """Tests for update_collection()."""
 
@@ -229,6 +253,13 @@ class TestGetCollections:
         assert len(result) >= 1
         names = [c.name for c in result]
         assert "Test Collection" in names
+
+    @pytest.mark.asyncio
+    async def test_get_collections_empty_org_returns_empty_list(
+        self, db, other_org, admin_user, mock_request, bypass_rbac
+    ):
+        result = await get_collections(mock_request, other_org.id, admin_user, db)
+        assert result == []
 
     @pytest.mark.asyncio
     async def test_get_collections_anonymous_only_public(

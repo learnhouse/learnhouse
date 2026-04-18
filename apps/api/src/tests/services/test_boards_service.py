@@ -344,3 +344,85 @@ class TestBoardsService:
                 )
 
         assert exc_info.value.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_boards_by_org_empty_returns_empty_list(
+        self, db, other_org, admin_user, mock_request
+    ):
+        with patch("src.services.boards.boards.require_org_membership"), patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await get_boards_by_org(mock_request, other_org.id, admin_user, db)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_board_members_empty_returns_empty_list(
+        self, db, org, admin_user, mock_request
+    ):
+        board = _make_board(db, org, admin_user, board_uuid="board_no_members")
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await get_board_members(mock_request, board.board_uuid, admin_user, db)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_remove_board_member_not_found_raises(
+        self, db, org, admin_user, mock_request
+    ):
+        board = _make_board(db, org, admin_user, board_uuid="board_remove_missing")
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await remove_board_member(
+                    mock_request, board.board_uuid, 9999, admin_user, db
+                )
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_store_ydoc_state_missing_board_raises(self, db):
+        with pytest.raises(HTTPException) as exc_info:
+            await store_ydoc_state("board_does_not_exist", b"data", db)
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_board_missing_board_raises(
+        self, db, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_board(mock_request, "board_nonexistent", admin_user, db)
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_board_members_batch_stops_at_limit(
+        self, db, org, admin_user, mock_request
+    ):
+        board = _make_board(db, org, admin_user, board_uuid="board_batch_limit")
+        # Add 10 members so member_count >= 10
+        for i in range(100, 110):
+            u = _make_user(db, id=i, email=f"u{i}@test.com", username=f"u{i}")
+            _make_member(db, board.id, u.id)
+
+        new_user = _make_user(db, id=200, email="new200@test.com", username="new200")
+        batch = BoardMemberBatchCreate(
+            members=[BoardMemberCreate(user_id=new_user.id, role=BoardMemberRole.EDITOR)]
+        )
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await add_board_members_batch(
+                mock_request, board.board_uuid, batch, admin_user, db
+            )
+
+        # Batch hit the limit immediately, so no members were added
+        assert result == []

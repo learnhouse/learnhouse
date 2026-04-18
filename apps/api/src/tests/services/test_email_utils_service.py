@@ -1,9 +1,11 @@
 """Tests for src/services/email/utils.py."""
 
+import smtplib
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
+from fastapi import HTTPException
 from starlette.requests import Request
 
 from src.services.email.utils import (
@@ -303,3 +305,52 @@ class TestEmailUtilsService:
         smtp_client.login.assert_not_called()
         smtp_client.sendmail.assert_called_once()
         smtp_client.quit.assert_called_once()
+
+    def test_send_email_resend_failure_raises_503(self):
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(email_provider="resend", resend_api_key="key"),
+        ), patch(
+            "src.services.email.utils.resend.Emails.send",
+            side_effect=Exception("API error"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                send_email("to@test.com", "Subject", "<p>Body</p>")
+        assert exc_info.value.status_code == 503
+
+    def test_send_email_smtp_exception_raises_503(self):
+        smtp_client = Mock()
+        smtp_client.sendmail.side_effect = smtplib.SMTPException("SMTP error")
+        smtp_client.quit.side_effect = Exception("quit failed")
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                email_provider="smtp",
+                smtp_use_tls=False,
+                smtp_username="",
+                smtp_password="",
+            ),
+        ), patch(
+            "src.services.email.utils.smtplib.SMTP",
+            return_value=smtp_client,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                send_email("to@test.com", "Subject", "<p>Body</p>")
+        assert exc_info.value.status_code == 503
+
+    def test_send_email_smtp_os_error_raises_503(self):
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(
+                email_provider="smtp",
+                smtp_use_tls=False,
+                smtp_username="",
+                smtp_password="",
+            ),
+        ), patch(
+            "src.services.email.utils.smtplib.SMTP",
+            side_effect=OSError("conn refused"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                send_email("to@test.com", "Subject", "<p>Body</p>")
+        assert exc_info.value.status_code == 503
