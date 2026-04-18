@@ -2143,3 +2143,38 @@
   min-height: 200px;
   display: block;
 }
+
+/* Hebrew typography polish. Rubik renders Hebrew glyphs a touch tall;
+   normalize line-height and tracking so body text doesn't feel cramped
+   or loose compared to the English default. */
+:where([lang="he"]) {
+  line-height: 1.65;
+  letter-spacing: 0;
+  word-spacing: 0.02em;
+}
+:where([lang="he"]) h1,
+:where([lang="he"]) h2,
+:where([lang="he"]) h3,
+:where([lang="he"]) h4 {
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+:where([lang="he"]) input,
+:where([lang="he"]) textarea,
+:where([lang="he"]) button {
+  letter-spacing: 0;
+}
+
+/* Content islands that are semantically LTR even inside a RTL shell:
+   code blocks, pre, pre-rendered math, video scrubber. Apply dir="ltr"
+   at the component level where it matters; this is the fallback. */
+:where([dir="rtl"]) pre,
+:where([dir="rtl"]) code,
+:where([dir="rtl"]) kbd,
+:where([dir="rtl"]) samp,
+:where([dir="rtl"]) .ProseMirror pre,
+:where([dir="rtl"]) .ProseMirror code {
+  direction: ltr;
+  text-align: start;
+  unicode-bidi: isolate;
+}

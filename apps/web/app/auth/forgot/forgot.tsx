@@ -120,7 +120,7 @@ function ForgotPasswordClient({ org }: ForgotPasswordClientProps) {
                         {/* Back to Login */}
                         <p className="text-center text-gray-600 mt-6">
                             <Link href="/login" className="inline-flex items-center gap-2 font-semibold text-gray-900 hover:underline">
-                                <ArrowLeft size={16} />
+                                <ArrowLeft size={16} className="rtl:-scale-x-100" />
                                 {t('auth.back_to_login')}
                             </Link>
                         </p>

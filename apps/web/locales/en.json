@@ -283,10 +283,13 @@
       "copied": "Copied!",
       "provider": "Provider",
       "error_code": "Error code",
+      "tip_label": "Tip:",
       "tips": {
         "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
         "invalid_state": "Your session may have expired. Please try logging in again.",
         "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "user_not_found": "Your organization requires an administrator to create your account first. Contact your organization admin to request access.",
+        "sso_misconfigured": "There may be a configuration issue with SSO. Please contact your IT administrator.",
         "server_error": "The identity provider is experiencing issues. Please try again later."
       }
     },

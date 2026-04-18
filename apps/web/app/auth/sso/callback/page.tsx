@@ -203,7 +203,7 @@ export default function SSOCallbackPage() {
                   <button
                     onClick={copyToClipboard}
                     className="absolute top-2 end-2 p-1 text-gray-400 hover:text-gray-600"
-                    title="Copy to clipboard"
+                    title={t('auth.sso_callback.copy_details')}
                   >
                     {copied ? (
                       <Check className="w-4 h-4 text-green-500" />
@@ -223,7 +223,7 @@ export default function SSOCallbackPage() {
           {error?.errorCode === 'access_denied' && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> If you declined the login request by mistake, try again and accept the permissions.
+                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.access_denied')}
               </p>
             </div>
           )}
@@ -231,7 +231,7 @@ export default function SSOCallbackPage() {
           {error?.errorCode === 'invalid_state' && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> Your session may have expired. Please try logging in again.
+                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.invalid_state')}
               </p>
             </div>
           )}
@@ -239,7 +239,7 @@ export default function SSOCallbackPage() {
           {error?.errorCode === 'domain_not_allowed' && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> Contact your organization administrator to verify your email domain is allowed.
+                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.domain_not_allowed')}
               </p>
             </div>
           )}
@@ -247,7 +247,7 @@ export default function SSOCallbackPage() {
           {(error?.errorCode === 'auto_provision_disabled' || error?.errorCode === 'user_not_found') && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> Your organization requires an administrator to create your account first. Contact your organization admin to request access.
+                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.user_not_found')}
               </p>
             </div>
           )}
@@ -255,7 +255,7 @@ export default function SSOCallbackPage() {
           {error?.errorCode === 'sso_misconfigured' && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-start">
               <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> There may be a configuration issue with SSO. Please contact your IT administrator.
+                <strong>{t('auth.sso_callback.tip_label')}</strong> {t('auth.sso_callback.tips.sso_misconfigured')}
               </p>
             </div>
           )}

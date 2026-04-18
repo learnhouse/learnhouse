@@ -439,7 +439,7 @@ const CourseClient = (props: any) => {
                             className="text-blue-500 hover:underline text-sm"
                           >
                             <span className="sr-only">Link to {learningText}</span>
-                            <ArrowRight size={14} />
+                            <ArrowRight size={14} className="rtl:-scale-x-100" />
                           </a>
                         )}
                       </div>
@@ -542,7 +542,7 @@ const CourseClient = (props: any) => {
                                     </div>
                                   </div>
                                   <div className="text-neutral-300 group-hover:text-neutral-400 transition-colors cursor-pointer">
-                                    <ArrowRight size={14} />
+                                    <ArrowRight size={14} className="rtl:-scale-x-100" />
                                   </div>
                                 </div>
                               </Link>

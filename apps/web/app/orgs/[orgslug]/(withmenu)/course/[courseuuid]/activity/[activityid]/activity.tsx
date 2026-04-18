@@ -551,7 +551,7 @@ function ActivityClient(props: ActivityClientProps) {
                               disabled={!prevActivity}
                               title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
                             >
-                              <ChevronLeft size={20} className="text-gray-800 shrink-0" />
+                              <ChevronLeft size={20} className="text-gray-800 shrink-0 rtl:-scale-x-100" />
                               <div className="flex flex-col items-start">
                                 <span className="text-xs text-gray-500">{t('common.previous')}</span>
                                 <span className="text-sm capitalize font-semibold text-start">
@@ -586,7 +586,7 @@ function ActivityClient(props: ActivityClientProps) {
                                   {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
                                 </span>
                               </div>
-                              <ChevronRight size={20} className="text-gray-800 shrink-0" />
+                              <ChevronRight size={20} className="text-gray-800 shrink-0 rtl:-scale-x-100" />
                             </button>
                           </div>
                         </div>
@@ -1182,7 +1182,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
       <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.next')}</span>
       <div className="flex items-center space-x-1">
         <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{nextActivity.name}</span>
-        <ChevronRight size={17} className="shrink-0" />
+        <ChevronRight size={17} className="shrink-0 rtl:-scale-x-100" />
       </div>
     </div>
   );
@@ -1234,7 +1234,7 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
     >
       <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.previous')}</span>
       <div className="flex items-center space-x-1">
-        <ChevronLeft size={17} className="shrink-0" />
+        <ChevronLeft size={17} className="shrink-0 rtl:-scale-x-100" />
         <span className="text-xs sm:text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px]">{previousActivity.name}</span>
       </div>
     </div>
@@ -1372,7 +1372,7 @@ function AssignmentTools(props: {
             <span className={`${pillChip} px-1.5 py-0.5 rounded-md text-[11px] font-bold`}>
               {displayGrade}
             </span>
-            <ChevronRight size={15} className="shrink-0" />
+            <ChevronRight size={15} className="shrink-0 rtl:-scale-x-100" />
           </div>
         </button>
 

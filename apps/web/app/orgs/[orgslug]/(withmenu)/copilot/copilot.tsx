@@ -565,7 +565,7 @@ export function CopilotChat({ orgslug }: CopilotProps) {
                       onClick={() => sendMessage(s)}
                       className="group flex items-center gap-2.5 w-fit max-w-full text-start px-3.5 py-2.5 text-[13px] rounded-xl text-neutral-600 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:text-violet-700 dark:hover:text-violet-300 nice-shadow transition-all"
                     >
-                      <ArrowRight size={13} weight="bold" className="flex-shrink-0 text-neutral-400 group-hover:text-violet-500 transition-colors" />
+                      <ArrowRight size={13} weight="bold" className="flex-shrink-0 text-neutral-400 group-hover:text-violet-500 transition-colors rtl:-scale-x-100" />
                       <span className="truncate">{s}</span>
                     </button>
                   ))}
