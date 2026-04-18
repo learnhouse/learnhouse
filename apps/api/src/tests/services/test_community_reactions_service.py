@@ -204,3 +204,84 @@ class TestCommunityReactionsService:
                 )
 
         assert anon_exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_toggle_reaction_error_paths(self, db, org, admin_user, mock_request):
+        # Line 129: discussion not found
+        with patch(
+            "src.services.communities.reactions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.reactions.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as missing_disc_exc:
+                await toggle_reaction(
+                    mock_request, "nonexistent_uuid", "🔥", admin_user, db
+                )
+        assert missing_disc_exc.value.status_code == 404
+
+        # Line 138: orphan discussion (community_id not found)
+        orphan_disc = Discussion(
+            title="Orphan",
+            content="content",
+            label="general",
+            community_id=9999,
+            org_id=org.id,
+            author_id=admin_user.id,
+            discussion_uuid="discussion_orphan2",
+            upvote_count=0, edit_count=0,
+            is_pinned=False, is_locked=False,
+            creation_date="2024-01-01", update_date="2024-01-01",
+        )
+        db.add(orphan_disc)
+        db.commit()
+
+        with patch(
+            "src.services.communities.reactions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.reactions.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as missing_comm_exc:
+                await toggle_reaction(
+                    mock_request, orphan_disc.discussion_uuid, "🔥", admin_user, db
+                )
+        assert missing_comm_exc.value.status_code == 404
+
+        # Line 145: disable_reactions is True
+        community = Community(
+            org_id=org.id,
+            name="No-Reactions Community",
+            description="Desc",
+            public=True,
+            thumbnail_image="",
+            course_id=None,
+            community_uuid="community_noreact",
+            moderation_settings={"disable_reactions": True},
+            moderation_words=[],
+            creation_date="2024-01-01",
+            update_date="2024-01-01",
+        )
+        db.add(community)
+        db.commit()
+        db.refresh(community)
+        disc_with_locked_reactions = _make_discussion(
+            db, community, org, author_id=admin_user.id,
+            discussion_uuid="discussion_noreact"
+        )
+
+        with patch(
+            "src.services.communities.reactions.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.communities.reactions.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as reactions_exc:
+                await toggle_reaction(
+                    mock_request, disc_with_locked_reactions.discussion_uuid,
+                    "🔥", admin_user, db
+                )
+        assert reactions_exc.value.status_code == 403

@@ -163,6 +163,48 @@ class TestAuthUtilsService:
         mock_update_login.assert_called_once_with(user, "10.0.0.7", db_session)
 
     @pytest.mark.asyncio
+    async def test_sign_with_google_username_fallback_to_user(self):
+        """Covers line 76 — username_parts.append('user') when name parts are absent
+        and the email has no '@', so the prefix-based branch is also skipped."""
+        request = Mock(spec=Request)
+        current_user = Mock()
+        db_session = Mock()
+        db_session.exec.return_value.first.return_value = None
+
+        created_result = SimpleNamespace(user_uuid="created-fallback")
+        fake_user_obj = Mock()
+        fake_user_obj.username = None  # will be set by the code under test
+
+        with patch(
+            "src.services.auth.utils.get_google_user_info",
+            # given_name / family_name absent; email has no '@' so prefix branch skipped
+            return_value={"email": "noemail"},
+        ), patch(
+            "src.services.auth.utils.UserCreate",
+            side_effect=lambda **kw: SimpleNamespace(**kw),
+        ), patch(
+            "src.services.auth.utils.create_user_without_org",
+            new_callable=AsyncMock,
+            return_value=created_result,
+        ) as mock_create, patch(
+            "src.services.auth.utils.random.randint",
+            return_value=7,
+        ):
+            result = await signWithGoogle(
+                request=request,
+                access_token="access-token",
+                email="fallback@test.com",
+                org_id=None,
+                current_user=current_user,
+                db_session=db_session,
+            )
+
+        assert result is created_result
+        created_user = mock_create.call_args.args[3]
+        # username must start with "user" (the default fallback) followed by randint
+        assert created_user.username == "user7"
+
+    @pytest.mark.asyncio
     async def test_sign_with_google_missing_email_raises(self):
         request = Mock(spec=Request)
         db_session = Mock()

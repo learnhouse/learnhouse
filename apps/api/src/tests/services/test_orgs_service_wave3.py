@@ -882,6 +882,9 @@ class TestOrgConfigBranchesWave3:
         ), patch(
             "src.services.orgs.orgs.dispatch_webhooks",
             new_callable=AsyncMock,
+        ), patch(
+            "src.core.deployment_mode.get_deployment_mode",
+            return_value="saas",
         ):
             await update_org_favicon(
                 mock_request,

@@ -149,6 +149,9 @@ class TestCommunitiesRouter:
         assert response.status_code == 200
 
     async def test_discussion_endpoints(self, client):
+        response = await client.get("/api/v1/discussions/labels")
+        assert response.status_code == 200
+
         with patch("src.routers.communities.discussions.create_discussion", new_callable=AsyncMock, return_value=_mock_discussion()):
             response = await client.post("/api/v1/communities/community_test/discussions", json={"title": "Hi"})
         assert response.status_code == 200

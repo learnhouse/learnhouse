@@ -432,3 +432,48 @@ class TestTrailService:
         assert db.exec(
             TrailStep.__table__.select().where(TrailStep.course_id == course.id)
         ).all() == []
+
+    @pytest.mark.asyncio
+    async def test_remove_activity_from_trail_raises_when_no_trail(
+        self, db, org, admin_user, mock_request, activity, course
+    ):
+        # Line 370: user has no Trail row yet -- activity and course both exist
+        with pytest.raises(HTTPException) as exc_info:
+            await remove_activity_from_trail(
+                mock_request,
+                admin_user,
+                activity.activity_uuid,
+                db,
+            )
+
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_activity_to_trail_swallows_certificate_exception(
+        self, db, org, admin_user, mock_request, activity
+    ):
+        # Lines 316-318: exception from check_course_completion_and_create_certificate
+        # must not propagate -- add_activity_to_trail should still return successfully.
+        with patch(
+            "src.services.trail.trail.track",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.trail.trail.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.trail.trail.check_course_completion_and_create_certificate",
+            new_callable=AsyncMock,
+            side_effect=Exception("certificate failure"),
+        ), patch(
+            "src.services.trail.trail.is_course_fully_completed",
+            return_value=True,
+        ):
+            result = await add_activity_to_trail(
+                mock_request,
+                admin_user,
+                activity.activity_uuid,
+                db,
+            )
+
+        assert len(result.runs) == 1
+        assert len(result.runs[0].steps) == 1

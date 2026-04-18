@@ -228,6 +228,17 @@ class TestWebhookDispatchHelpers:
         assert delivered.webhook_uuid == selected.webhook_uuid
 
     @pytest.mark.asyncio
+    async def test_deliver_webhooks_logs_error_on_delivery_failure(self, db, org, admin_user):
+        _make_endpoint(db, org, admin_user, webhook_uuid="fail-ep", events=["course_created"])
+        with patch.object(dispatch, "engine", db.get_bind()), patch(
+            "src.services.webhooks.dispatch._deliver_to_endpoint",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("delivery failed"),
+        ), patch("src.services.webhooks.dispatch.logger.error") as mock_error:
+            await dispatch._deliver_webhooks("course_created", org.id, {}, None)
+        mock_error.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_deliver_webhooks_logs_warning_on_session_failure(self):
         with patch(
             "src.services.webhooks.dispatch.Session",
