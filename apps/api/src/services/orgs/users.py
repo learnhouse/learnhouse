@@ -712,6 +712,7 @@ async def invite_batch_users(
             user,
             email,
             request,
+            db_session=db_session,
         )
 
         invited_user_object = {

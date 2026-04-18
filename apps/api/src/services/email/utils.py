@@ -3,6 +3,7 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Optional
 from urllib.parse import urlparse
 
 from pydantic import EmailStr
@@ -54,18 +55,22 @@ def _is_allowed_base_url(url: str) -> bool:
     return False
 
 
-def get_org_signup_base_url(org_slug: str, request: Request) -> str:
+def get_org_signup_base_url(
+    org_slug: str,
+    request: Request,
+    db_session=None,
+    org_id: Optional[int] = None,
+) -> str:
     """
     Return the org-scoped frontend base URL for invitation / signup links.
 
-    Invite emails must land on the org's own frontend subdomain so the
-    signup flow knows which org to join. Using ``get_base_url_from_request``
-    here breaks on multi-tenant SaaS because the request Origin may be the
-    platform root or the caller may be server-side with no Origin header at
-    all — producing a signup link at the platform root rather than the org.
-
-    Matches the ``{slug}.{hosting_config.domain}`` convention already used by
-    the SSO redirect flow.
+    When ``db_session`` and ``org_id`` are supplied, prefers the org's verified
+    custom domain (primary first). Otherwise falls back to
+    ``{slug}.{hosting_config.domain}``. Using the generic subdomain for orgs
+    that have a custom domain is cross-origin to any existing session on the
+    custom domain, which breaks the client-side org-context fetch in some
+    browsers (strict cross-site cookies, ad blockers) and leaves users on an
+    error screen.
 
     Falls back to the request-derived base URL for:
     - Self-hosted single-instance deployments (no subdomain concept).
@@ -80,12 +85,46 @@ def get_org_signup_base_url(org_slug: str, request: Request) -> str:
     ):
         return get_base_url_from_request(request)
 
+    scheme = "https" if config.hosting_config.ssl else "http"
+
+    if db_session is not None and org_id is not None:
+        custom_domain = _get_primary_verified_custom_domain(db_session, org_id)
+        if custom_domain:
+            return f"{scheme}://{custom_domain}"
+
     base_domain = (config.hosting_config.domain or "").strip().rstrip("/")
     if not base_domain or "localhost" in base_domain:
         return get_base_url_from_request(request)
 
-    scheme = "https" if config.hosting_config.ssl else "http"
     return f"{scheme}://{org_slug}.{base_domain}"
+
+
+def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
+    """Return the org's primary verified custom domain, or any verified one."""
+    try:
+        from sqlmodel import select
+        from src.db.custom_domains import CustomDomain
+
+        primary = db_session.exec(
+            select(CustomDomain).where(
+                CustomDomain.org_id == org_id,
+                CustomDomain.status == "verified",
+                CustomDomain.primary == True,  # noqa: E712
+            )
+        ).first()
+        if primary:
+            return primary.domain
+
+        any_verified = db_session.exec(
+            select(CustomDomain).where(
+                CustomDomain.org_id == org_id,
+                CustomDomain.status == "verified",
+            )
+        ).first()
+        return any_verified.domain if any_verified else None
+    except Exception:
+        logger.exception("Failed to look up custom domain for org %s", org_id)
+        return None
 
 
 def get_base_url_from_request(request: Request) -> str:
