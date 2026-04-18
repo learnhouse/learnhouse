@@ -29,7 +29,7 @@ services:
       - "traefik.http.services.lms.loadbalancer.server.port=80"
 
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     restart: always
     env_file:
       - .env
