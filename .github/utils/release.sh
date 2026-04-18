@@ -122,6 +122,7 @@ resolve_usernames() {
     [ -z "$email" ] && continue
     local sha
     sha=$(git log "$range" --pretty=format:"%H" --author="$email" -1)
+    [ -z "$sha" ] && continue
     local username
     username=$(gh api "repos/${REPO}/commits/${sha}" --jq '.author.login // empty' 2>/dev/null || true)
     [ -z "$username" ] && continue
