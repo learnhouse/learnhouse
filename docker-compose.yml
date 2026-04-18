@@ -4,6 +4,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Strip the EE folder at build time to force OSS mode. OSS disables
+        # multi-org routing so lms.lanternroute.com serves the single default
+        # org directly (no "Enter Your Organization" gate). Our commerce
+        # flow is Wix + Grow + bridge, so we don't need LH's EE payments.
+        LEARNHOUSE_PUBLIC: "true"
     restart: always
     env_file:
       - .env
@@ -23,7 +29,7 @@ services:
       - lms_content:/app/api/content
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lms.rule=Host(`${LMS_HOST}`) || Host(`${LMS_ORG_HOST}`)"
+      - "traefik.http.routers.lms.rule=Host(`${LMS_HOST}`)"
       - "traefik.http.routers.lms.entrypoints=websecure"
       - "traefik.http.routers.lms.tls.certresolver=letsencrypt"
       - "traefik.http.services.lms.loadbalancer.server.port=80"
