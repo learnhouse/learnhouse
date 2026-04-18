@@ -39,6 +39,7 @@ from src.services.email.utils import get_base_url_from_request
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+from src.core.deployment_mode import get_deployment_mode
 from src.security.auth import create_access_token, create_refresh_token
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -76,13 +77,17 @@ def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: Sessi
             status_code=status.HTTP_403_FORBIDDEN,
             detail="API token does not have access to this organization",
         )
-    # Enforce pro plan requirement for admin API
-    current_plan = get_org_plan(org.id, db_session)
-    if not plan_meets_requirement(current_plan, "pro"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin API requires a Pro plan or higher.",
-        )
+    # Pro-plan gating applies only in SaaS deployments. OSS and EE modes grant
+    # access unconditionally — consistent with _check_mode_bypass() in
+    # src.security.features_utils.plan_check that every other plan-gated
+    # feature uses.
+    if get_deployment_mode() == "saas":
+        current_plan = get_org_plan(org.id, db_session)
+        if not plan_meets_requirement(current_plan, "pro"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin API requires a Pro plan or higher.",
+            )
     return org
 
 
@@ -936,7 +941,9 @@ async def issue_magic_link(
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 
-    ttl = max(60, min(ttl_seconds, 900))
+    # Max 7 days — long enough for purchase-confirmation emails (buyer may
+    # not click until hours or days after checkout) while still bounded.
+    ttl = max(60, min(ttl_seconds, 604800))
     expires_delta = timedelta(seconds=ttl)
     payload = {
         "sub": user.email,

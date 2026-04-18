@@ -169,7 +169,7 @@ class MagicLinkRequest(BaseModel):
     """Request body for issuing a magic sign-in link."""
     user_id: int
     redirect_to: Optional[str] = Field(default=None, description="Path to redirect to after the user lands on the consume endpoint")
-    ttl_seconds: int = Field(default=300, ge=60, le=900, description="Token lifetime in seconds (60–900)")
+    ttl_seconds: int = Field(default=300, ge=60, le=604800, description="Token lifetime in seconds (60 to 604800 = 7 days)")
 
 
 class MagicLinkResponse(BaseModel):
