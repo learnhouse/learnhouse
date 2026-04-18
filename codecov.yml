@@ -9,6 +9,14 @@ coverage:
         threshold: 1%
         flags:
           - api
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        flags:
+          - api
+        if_ci_failed: success
+        only_pulls: false
 
 flag_management:
   default_rules:
