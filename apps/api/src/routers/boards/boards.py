@@ -295,11 +295,12 @@ async def api_remove_board_member(
     },
 )
 async def api_check_board_membership(
+    request: Request,
     board_uuid: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardMemberRead:
-    return await check_board_membership(board_uuid, current_user, db_session)
+    return await check_board_membership(request, board_uuid, current_user, db_session)
 
 
 # Internal endpoints for Hocuspocus collab server (protected by verify_internal_key dependency on internal_router)

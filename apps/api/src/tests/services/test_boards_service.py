@@ -263,7 +263,9 @@ class TestBoardsService:
         )
         _make_member(db, board.id, member_user.id)
 
-        membership = await check_board_membership(board.board_uuid, admin_user, db)
+        membership = await check_board_membership(
+            mock_request, board.board_uuid, admin_user, db
+        )
         assert membership.role == BoardMemberRole.OWNER
 
         with patch(
@@ -287,15 +289,27 @@ class TestBoardsService:
         assert owner.id is not None
 
     @pytest.mark.asyncio
-    async def test_check_board_membership_errors(self, db, org, admin_user):
+    async def test_check_board_membership_errors(
+        self, db, org, admin_user, mock_request
+    ):
         board = _make_board(db, org, admin_user)
-
-        with pytest.raises(HTTPException) as missing_member_exc:
-            await check_board_membership(board.board_uuid, admin_user, db)
+        # Non-member on a private board is denied. Patch RBAC to simulate denial
+        # so this test exercises the membership path, not RBAC internals.
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=403, detail="denied"),
+        ):
+            with pytest.raises(HTTPException) as missing_member_exc:
+                await check_board_membership(
+                    mock_request, board.board_uuid, admin_user, db
+                )
         assert missing_member_exc.value.status_code == 403
 
         with pytest.raises(HTTPException) as missing_board_exc:
-            await check_board_membership("missing_board", admin_user, db)
+            await check_board_membership(
+                mock_request, "missing_board", admin_user, db
+            )
         assert missing_board_exc.value.status_code == 404
 
     @pytest.mark.asyncio
