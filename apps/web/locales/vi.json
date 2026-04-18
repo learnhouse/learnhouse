@@ -1012,7 +1012,24 @@
     "quick_results": "Kết quả nhanh",
     "view_all_results": "Xem tất cả kết quả",
     "course": "Khóa học",
-    "user": "Người dùng"
+    "user": "Người dùng",
+    "start_heading": "Bạn đang tìm gì?",
+    "start_subtitle": "Tìm kiếm trong mọi không gian của tổ chức này tại một nơi duy nhất.",
+    "all_results": "Tất cả kết quả",
+    "filter_heading": "Lọc theo loại",
+    "empty_section": "Chưa có gì ở đây",
+    "previous": "Trước",
+    "next": "Tiếp",
+    "types": {
+      "all": "Tất cả",
+      "courses": "Khóa học",
+      "collections": "Bộ sưu tập",
+      "users": "Thành viên",
+      "communities": "Cộng đồng",
+      "discussions": "Thảo luận",
+      "playgrounds": "Playground",
+      "podcasts": "Podcast"
+    }
   },
   "ai": {
     "ask_ai": "Hỏi AI",

@@ -1012,7 +1012,24 @@
     "quick_results": "त्वरित परिणाम",
     "view_all_results": "सभी परिणाम देखें",
     "course": "कोर्स",
-    "user": "उपयोगकर्ता"
+    "user": "उपयोगकर्ता",
+    "start_heading": "आप क्या ढूंढ रहे हैं?",
+    "start_subtitle": "इस संगठन की हर जगह एक ही जगह से खोजें।",
+    "all_results": "सभी परिणाम",
+    "filter_heading": "प्रकार के अनुसार फ़िल्टर करें",
+    "empty_section": "यहाँ अभी कुछ नहीं है",
+    "previous": "पिछला",
+    "next": "अगला",
+    "types": {
+      "all": "सभी",
+      "courses": "कोर्स",
+      "collections": "संग्रह",
+      "users": "सदस्य",
+      "communities": "समुदाय",
+      "discussions": "चर्चाएँ",
+      "playgrounds": "प्लेग्राउंड",
+      "podcasts": "पॉडकास्ट"
+    }
   },
   "ai": {
     "ask_ai": "AI से पूछें",

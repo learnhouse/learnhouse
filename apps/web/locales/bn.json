@@ -1012,7 +1012,24 @@
     "quick_results": "দ্রুত ফলাফল",
     "view_all_results": "সব ফলাফল দেখুন",
     "course": "কোর্স",
-    "user": "ব্যবহারকারী"
+    "user": "ব্যবহারকারী",
+    "start_heading": "আপনি কী খুঁজছেন?",
+    "start_subtitle": "এই সংস্থার প্রতিটি অংশে এক জায়গা থেকে অনুসন্ধান করুন।",
+    "all_results": "সব ফলাফল",
+    "filter_heading": "ধরন অনুসারে ফিল্টার করুন",
+    "empty_section": "এখনও কিছু নেই",
+    "previous": "পূর্ববর্তী",
+    "next": "পরবর্তী",
+    "types": {
+      "all": "সব",
+      "courses": "কোর্স",
+      "collections": "সংগ্রহ",
+      "users": "সদস্য",
+      "communities": "সম্প্রদায়",
+      "discussions": "আলোচনা",
+      "playgrounds": "প্লেগ্রাউন্ড",
+      "podcasts": "পডকাস্ট"
+    }
   },
   "ai": {
     "ask_ai": "এআই-কে জিজ্ঞাসা করুন",

@@ -1012,7 +1012,24 @@
     "quick_results": "ผลลัพธ์ด่วน",
     "view_all_results": "ดูผลลัพธ์ทั้งหมด",
     "course": "คอร์สเรียน",
-    "user": "ผู้ใช้"
+    "user": "ผู้ใช้",
+    "start_heading": "คุณกำลังมองหาอะไร?",
+    "start_subtitle": "ค้นหาในทุกพื้นที่ขององค์กรนี้ได้จากที่เดียว",
+    "all_results": "ผลลัพธ์ทั้งหมด",
+    "filter_heading": "กรองตามประเภท",
+    "empty_section": "ยังไม่มีอะไรที่นี่",
+    "previous": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "types": {
+      "all": "ทั้งหมด",
+      "courses": "คอร์ส",
+      "collections": "คอลเลกชัน",
+      "users": "สมาชิก",
+      "communities": "ชุมชน",
+      "discussions": "การสนทนา",
+      "playgrounds": "เพลย์กราวด์",
+      "podcasts": "พอดแคสต์"
+    }
   },
   "ai": {
     "ask_ai": "ถาม AI",

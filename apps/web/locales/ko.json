@@ -999,7 +999,24 @@
     "quick_results": "빠른 결과",
     "view_all_results": "모든 결과 보기",
     "course": "코스",
-    "user": "사용자"
+    "user": "사용자",
+    "start_heading": "무엇을 찾고 계신가요?",
+    "start_subtitle": "이 조직의 모든 공간을 한 곳에서 검색하세요.",
+    "all_results": "모든 결과",
+    "filter_heading": "유형별 필터",
+    "empty_section": "아직 아무것도 없어요",
+    "previous": "이전",
+    "next": "다음",
+    "types": {
+      "all": "전체",
+      "courses": "코스",
+      "collections": "컬렉션",
+      "users": "멤버",
+      "communities": "커뮤니티",
+      "discussions": "토론",
+      "playgrounds": "플레이그라운드",
+      "podcasts": "팟캐스트"
+    }
   },
   "ai": {
     "ask_ai": "AI에게 질문",

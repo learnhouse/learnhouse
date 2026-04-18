@@ -1135,9 +1135,10 @@ async def update_org_watermark_config(
 
     updated_config = _deep_copy_config(org_config)
 
-    # Free plan always shows watermark
+    # Free plan in SaaS always shows watermark; OSS/EE self-hosters can disable it
+    from src.core.deployment_mode import get_deployment_mode
     plan = updated_config.get("plan", updated_config.get("cloud", {}).get("plan", "free"))
-    if plan == "free" and not watermark_enabled:
+    if get_deployment_mode() == "saas" and plan == "free" and not watermark_enabled:
         raise HTTPException(status_code=403, detail="Watermark cannot be disabled on the free plan")
 
     if _is_v2_config(updated_config):

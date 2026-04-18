@@ -999,7 +999,24 @@
     "quick_results": "نتائج سريعة",
     "view_all_results": "عرض كل النتائج",
     "course": "دورة",
-    "user": "مستخدم"
+    "user": "مستخدم",
+    "start_heading": "عن ماذا تبحث؟",
+    "start_subtitle": "ابحث في كل مساحات هذه المؤسسة من مكان واحد.",
+    "all_results": "كل النتائج",
+    "filter_heading": "تصفية حسب النوع",
+    "empty_section": "لا يوجد شيء هنا بعد",
+    "previous": "السابق",
+    "next": "التالي",
+    "types": {
+      "all": "الكل",
+      "courses": "دورات",
+      "collections": "مجموعات",
+      "users": "أعضاء",
+      "communities": "مجتمعات",
+      "discussions": "مناقشات",
+      "playgrounds": "ساحات تجريب",
+      "podcasts": "بودكاست"
+    }
   },
   "ai": {
     "ask_ai": "اسأل الذكاء الاصطناعي",

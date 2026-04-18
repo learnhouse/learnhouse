@@ -1012,7 +1012,24 @@
     "quick_results": "Hasil Cepat",
     "view_all_results": "Lihat semua hasil",
     "course": "Kursus",
-    "user": "Pengguna"
+    "user": "Pengguna",
+    "start_heading": "Apa yang Anda cari?",
+    "start_subtitle": "Cari di semua ruang di organisasi ini dari satu tempat.",
+    "all_results": "Semua hasil",
+    "filter_heading": "Saring berdasarkan tipe",
+    "empty_section": "Belum ada apa-apa di sini",
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
+    "types": {
+      "all": "Semua",
+      "courses": "Kursus",
+      "collections": "Koleksi",
+      "users": "Anggota",
+      "communities": "Komunitas",
+      "discussions": "Diskusi",
+      "playgrounds": "Playground",
+      "podcasts": "Podcast"
+    }
   },
   "ai": {
     "ask_ai": "Tanya AI",

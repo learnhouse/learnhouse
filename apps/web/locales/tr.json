@@ -1012,7 +1012,24 @@
     "quick_results": "Hızlı Sonuçlar",
     "view_all_results": "Tüm sonuçları görüntüle",
     "course": "Kurs",
-    "user": "Kullanıcı"
+    "user": "Kullanıcı",
+    "start_heading": "Ne arıyorsunuz?",
+    "start_subtitle": "Bu kuruluşun her alanında tek bir yerden arayın.",
+    "all_results": "Tüm sonuçlar",
+    "filter_heading": "Türe göre filtrele",
+    "empty_section": "Burada henüz bir şey yok",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "types": {
+      "all": "Tümü",
+      "courses": "Kurslar",
+      "collections": "Koleksiyonlar",
+      "users": "Üyeler",
+      "communities": "Topluluklar",
+      "discussions": "Tartışmalar",
+      "playgrounds": "Playgroundlar",
+      "podcasts": "Podcastler"
+    }
   },
   "ai": {
     "ask_ai": "AI'ya Sor",
