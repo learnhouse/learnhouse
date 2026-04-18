@@ -672,3 +672,64 @@ class TestPasswordResetService:
         refreshed = db.exec(select(User).where(User.email == user.email)).first()
         assert refreshed is not None
         assert security_verify_password("NewPassword123!", refreshed.password)
+
+    @pytest.mark.asyncio
+    async def test_missing_coverage_lines(self, mock_request, db, org, regular_user):
+        # Line 88: IP rate limit exceeded
+        fast_redis = Mock()
+        fast_redis.incr.return_value = 11
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=fast_redis):
+            with pytest.raises(HTTPException) as exc429:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc429.value.status_code == 429
+
+        # Lines 120: send_reset_password_code - no redis_conn_string after rate-limit passes
+        ok_rate_redis = Mock()
+        ok_rate_redis.incr.return_value = 1
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=ok_rate_redis), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string=""))):
+            with pytest.raises(HTTPException) as exc120:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc120.value.status_code == 500
+
+        # Line 129: send_reset_password_code - falsy Redis connection
+        falsy = Mock()
+        falsy.__bool__ = Mock(return_value=False)
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=ok_rate_redis), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://test"))), \
+             patch("src.services.users.password_reset.redis.Redis.from_url", return_value=falsy):
+            with pytest.raises(HTTPException) as exc129:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc129.value.status_code == 500
+
+        # Line 237: change_password_with_reset_code - no redis_conn_string
+        with patch("src.services.users.password_reset.validate_password_complexity",
+                   return_value=SimpleNamespace(is_valid=True, errors=[], requirements={})), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string=""))):
+            with pytest.raises(HTTPException) as exc237:
+                await change_password_with_reset_code(mock_request, db, AnonymousUser(), "NewPass123!", org.id, regular_user.email, "RESET123")
+        assert exc237.value.status_code == 500
+
+        # Line 246: change_password_with_reset_code - falsy Redis connection
+        with patch("src.services.users.password_reset.validate_password_complexity",
+                   return_value=SimpleNamespace(is_valid=True, errors=[], requirements={})), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://test"))), \
+             patch("src.services.users.password_reset.redis.Redis.from_url", return_value=falsy):
+            with pytest.raises(HTTPException) as exc246:
+                await change_password_with_reset_code(mock_request, db, AnonymousUser(), "NewPass123!", org.id, regular_user.email, "RESET123")
+        assert exc246.value.status_code == 500
+
+        # Lines 351-352: send_reset_password_code_platform - email send fails
+        set_redis = Mock()
+        set_redis.set = Mock()
+        with patch("src.services.users.password_reset.generate_secure_reset_code", return_value="FAIL1234"), \
+             patch("src.services.users.password_reset._get_redis_connection", return_value=set_redis), \
+             patch("src.services.users.password_reset.get_base_url_from_request", return_value="https://test"), \
+             patch("src.services.users.password_reset.send_password_reset_email_platform", return_value=False):
+            with pytest.raises(HTTPException) as exc351:
+                await send_reset_password_code_platform(mock_request, db, AnonymousUser(), regular_user.email)
+        assert exc351.value.status_code == 500

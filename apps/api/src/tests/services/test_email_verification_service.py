@@ -449,3 +449,19 @@ class TestEmailVerificationService:
             invalidate_verification_tokens("user-1", "org-1")
 
         fake_redis.delete.assert_called_once_with(b"token-1", b"token-2")
+
+    def test_get_redis_connection_success_returns_client(self):
+        from unittest.mock import MagicMock, patch
+        fake_redis = MagicMock()
+        fake_redis.__bool__ = MagicMock(return_value=True)
+        with patch(
+            "src.services.users.email_verification.get_learnhouse_config",
+            return_value=SimpleNamespace(
+                redis_config=SimpleNamespace(redis_connection_string="redis://test")
+            ),
+        ), patch(
+            "src.services.users.email_verification.redis.Redis.from_url",
+            return_value=fake_redis,
+        ):
+            result = get_redis_connection()
+        assert result is fake_redis

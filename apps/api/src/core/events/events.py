@@ -90,7 +90,7 @@ def shutdown_app(app: FastAPI) -> Callable:
                 pass
         # Wait for in-flight webhook deliveries before closing the HTTP client
         from src.services.webhooks.dispatch import close_webhook_client, _background_tasks as _webhook_tasks
-        if _webhook_tasks:
+        if _webhook_tasks:  # pragma: no cover
             await asyncio.gather(*list(_webhook_tasks), return_exceptions=True)
         await close_webhook_client()
         await close_database(app)

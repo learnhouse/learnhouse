@@ -709,3 +709,88 @@ class TestPlaygroundsService:
                 mock_request, playground.playground_uuid, usergroup.usergroup_uuid, admin_user, db
             )
         assert remove_exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_list_org_playgrounds_empty_returns_empty(
+        self, db, org, admin_user, mock_request
+    ):
+        """Line 211: no playgrounds for the org → returns [] immediately."""
+        result = await list_org_playgrounds(mock_request, org.id, admin_user, db)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_list_org_playgrounds_no_allowed_returns_empty(
+        self, db, org, admin_user, anonymous_user, mock_request
+    ):
+        """Line 272: playgrounds exist but none pass the filter for the user → returns []."""
+        _make_playground(
+            db,
+            org,
+            admin_user,
+            playground_uuid="pg_auth_only_anon",
+            access_type=PlaygroundAccessType.AUTHENTICATED,
+            published=True,
+        )
+        result = await list_org_playgrounds(mock_request, org.id, anonymous_user, db)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_list_org_playgrounds_restricted_accessible_via_usergroup(
+        self, db, org, admin_user, regular_user, mock_request
+    ):
+        """Lines 229-247, 254-261: regular user in a usergroup that grants access to a
+        restricted playground can see it in the listing."""
+        restricted_pg = _make_playground(
+            db,
+            org,
+            admin_user,
+            playground_uuid="pg_restricted_ug_access",
+            access_type=PlaygroundAccessType.RESTRICTED,
+            published=True,
+            created_by=admin_user.id,
+        )
+
+        ug = _make_usergroup(db, org, usergroup_uuid="ug_restricted_access")
+        db.add(
+            UserGroupResource(
+                usergroup_id=ug.id,
+                resource_uuid=restricted_pg.playground_uuid,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+        db.add(
+            UserGroupUser(
+                usergroup_id=ug.id,
+                user_id=regular_user.id,
+                org_id=org.id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+        )
+        db.commit()
+
+        result = await list_org_playgrounds(mock_request, org.id, regular_user, db)
+        assert any(pg.playground_uuid == restricted_pg.playground_uuid for pg in result)
+
+    @pytest.mark.asyncio
+    async def test_list_org_playgrounds_restricted_skips_anonymous_and_no_access(
+        self, db, org, admin_user, regular_user, anonymous_user, mock_request
+    ):
+        restricted_pg = _make_playground(
+            db, org, admin_user,
+            playground_uuid="pg_restricted_filter",
+            access_type=PlaygroundAccessType.RESTRICTED,
+            published=True,
+            created_by=admin_user.id,
+        )
+
+        # Line 255: anonymous user → skip restricted playground
+        anon_result = await list_org_playgrounds(mock_request, org.id, anonymous_user, db)
+        assert all(pg.playground_uuid != restricted_pg.playground_uuid for pg in anon_result)
+
+        # Line 261: non-admin, not owner, no group access → skip
+        regular_result = await list_org_playgrounds(mock_request, org.id, regular_user, db)
+        assert all(pg.playground_uuid != restricted_pg.playground_uuid for pg in regular_result)

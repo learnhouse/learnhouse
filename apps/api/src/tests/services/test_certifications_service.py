@@ -1345,3 +1345,24 @@ class TestGetAllUserCertificates:
         )
 
         assert result == []
+
+
+class TestIsCourseFullyCompleted:
+    """Tests for is_course_fully_completed (line 428)."""
+
+    def test_is_course_fully_completed_no_activities_returns_false(
+        self, db, org, regular_user
+    ):
+        """Line 428: course with no ChapterActivity entries -> returns False."""
+        from src.services.courses.certifications import is_course_fully_completed
+
+        course_no_acts = _create_course_without_certifications(
+            db,
+            org,
+            course_id=333,
+            course_uuid="course_no_acts_completed",
+        )
+
+        result = is_course_fully_completed(regular_user.id, course_no_acts.id, db)
+
+        assert result is False

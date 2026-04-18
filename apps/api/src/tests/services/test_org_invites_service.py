@@ -9,7 +9,9 @@ import pytest
 from fastapi import HTTPException
 
 from src.db.usergroups import UserGroup
+import src.services.orgs.invites as invites_module
 from src.services.orgs.invites import (
+    _get_redis,
     create_invite_code,
     delete_invite_code,
     get_invite_code,
@@ -487,3 +489,18 @@ class TestOrgInvitesService:
             )
 
         assert result is False
+
+
+class TestGetRedis:
+    def test_get_redis_creates_pool_on_first_call(self):
+        fake_pool = Mock()
+        fake_client = Mock()
+
+        with patch.object(invites_module, "_redis_pool", None), \
+             patch("src.services.orgs.invites.redis.ConnectionPool.from_url", return_value=fake_pool) as mock_pool, \
+             patch("src.services.orgs.invites.redis.Redis", return_value=fake_client) as mock_redis:
+            result = _get_redis("redis://test")
+
+        mock_pool.assert_called_once_with("redis://test", max_connections=10)
+        mock_redis.assert_called_once_with(connection_pool=fake_pool)
+        assert result is fake_client

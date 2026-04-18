@@ -373,6 +373,77 @@ class TestContentFilesRouter:
         assert bad_head_response.status_code == 400
         assert no_storage_head_response.status_code == 500
 
+    async def test_storage_no_such_key_returns_404(self, client):
+        from botocore.exceptions import ClientError
+
+        class _NotFoundS3Client:
+            def head_object(self, Bucket, Key):
+                raise ClientError(
+                    {"Error": {"Code": "NoSuchKey", "Message": "Not Found"}},
+                    "HeadObject",
+                )
+
+            def get_object(self, Bucket, Key, Range):
+                raise ClientError(
+                    {"Error": {"Code": "NoSuchKey", "Message": "Not Found"}},
+                    "GetObject",
+                )
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(content_files, "get_storage_client", lambda: _NotFoundS3Client())
+            mp.setattr(content_files, "get_s3_bucket_name", lambda: "bucket")
+            get_404 = await client.get("/content/users/u/avatar.png")
+            head_404 = await client.head("/content/users/u/avatar.png")
+
+        assert get_404.status_code == 404
+        assert head_404.status_code == 404
+
+    async def test_storage_client_errors_return_correct_status(self, client):
+        from botocore.exceptions import ClientError
+
+        class _AccessDeniedS3Client:
+            def head_object(self, Bucket, Key):
+                raise ClientError(
+                    {"Error": {"Code": "AccessDenied", "Message": "Forbidden"}},
+                    "HeadObject",
+                )
+
+            def get_object(self, Bucket, Key, Range):
+                raise ClientError(
+                    {"Error": {"Code": "AccessDenied", "Message": "Forbidden"}},
+                    "GetObject",
+                )
+
+        class _OtherClientErrorS3Client:
+            def head_object(self, Bucket, Key):
+                raise ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Oops"}},
+                    "HeadObject",
+                )
+
+            def get_object(self, Bucket, Key, Range):
+                raise ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Oops"}},
+                    "GetObject",
+                )
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(content_files, "get_storage_client", lambda: _AccessDeniedS3Client())
+            mp.setattr(content_files, "get_s3_bucket_name", lambda: "bucket")
+            get_403 = await client.get("/content/users/u/avatar.png")
+            head_403 = await client.head("/content/users/u/avatar.png")
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(content_files, "get_storage_client", lambda: _OtherClientErrorS3Client())
+            mp.setattr(content_files, "get_s3_bucket_name", lambda: "bucket")
+            get_502 = await client.get("/content/users/u/avatar.png")
+            head_502 = await client.head("/content/users/u/avatar.png")
+
+        assert get_403.status_code == 403
+        assert head_403.status_code == 403
+        assert get_502.status_code == 502
+        assert head_502.status_code == 502
+
     async def test_storage_head_errors_return_502(self, client):
         class _BrokenS3Client:
             def head_object(self, Bucket, Key):

@@ -41,7 +41,7 @@ export const RequestBodyWithAuthHeader = (
   data: any,
   next: any,
   token?: string
-) => {
+): RequestInit => {
   let HeadersConfig = new Headers(
     token
       ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }

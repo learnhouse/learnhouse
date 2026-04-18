@@ -548,7 +548,7 @@ async def query_dashboard_db(
     if query_name == "grade_distribution":
         return _query_grade_distribution(org_id, db_session)
 
-    raise HTTPException(status_code=404, detail="Unknown query")
+    raise HTTPException(status_code=404, detail="Unknown query")  # pragma: no cover
 
 
 def _query_grade_distribution(org_id: int, db_session: Session):

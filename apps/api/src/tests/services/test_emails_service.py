@@ -105,3 +105,14 @@ class TestEmailsService:
         assert "@owner&lt;script&gt;" in invite_body
         assert "member&lt;script&gt;" in role_body
         assert "verify-email?token=token%20123&amp;user=user_uuid&amp;org=org_uuid" in verification_body
+
+    def test_send_invitation_email_without_invite_code(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_invitation_email(
+                "invitee@test.com",
+                "Test Org",
+                "inviter",
+                "https://app.test/signup",
+            )
+        invite_body = send_email.call_args.kwargs["body"]
+        assert "Click the button below" in invite_body

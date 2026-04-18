@@ -138,3 +138,26 @@ class TestAccountLockoutService:
         update_login_info(user, "127.0.0.1", db_session)
 
         assert db_session.commit.call_count == 0
+
+    def test_record_failed_login_naive_locked_until_is_treated_as_utc(self):
+        """Line 101: naive locked_until datetime is given tzinfo=utc, so a
+        future naive timestamp is still detected as a live lockout."""
+        future = (datetime.now() + timedelta(hours=1)).isoformat()
+        user = SimpleNamespace(id=1, locked_until=future)
+        db_session = Mock()
+
+        is_locked, remaining = record_failed_login(user, db_session)
+
+        assert is_locked is True
+        assert remaining is not None
+
+    def test_record_failed_login_invalid_locked_until_treated_as_not_locked(self):
+        """Lines 103-104: unparseable locked_until falls into the except branch
+        and returns is_locked=False."""
+        user = SimpleNamespace(id=1, locked_until="not-a-valid-datetime")
+        db_session = Mock()
+
+        is_locked, remaining = record_failed_login(user, db_session)
+
+        assert is_locked is False
+        assert remaining is None

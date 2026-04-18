@@ -1,6 +1,7 @@
 import zipfile
 from io import BytesIO
 from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -98,6 +99,23 @@ class TestMagicByteValidators:
     @pytest.mark.parametrize("content", [_VALID_ZIP_BYTES, _EMPTY_ZIP_BYTES])
     def test_validate_zip_content_accepts_zip_headers(self, content):
         assert validate_zip_content(content) is True
+
+    def test_validate_zip_content_rejects_zip_bomb(self):
+        huge_entry = MagicMock()
+        huge_entry.file_size = 600 * 1024 * 1024  # 600 MB > 500 MB limit
+        fake_zf = MagicMock()
+        fake_zf.__enter__ = MagicMock(return_value=fake_zf)
+        fake_zf.__exit__ = MagicMock(return_value=False)
+        fake_zf.infolist.return_value = [huge_entry]
+
+        with patch("zipfile.ZipFile", return_value=fake_zf):
+            result = validate_zip_content(_VALID_ZIP_BYTES)
+        assert result is False
+
+    def test_validate_zip_content_returns_false_on_exception(self):
+        with patch("zipfile.ZipFile", side_effect=RuntimeError("corrupt zip")):
+            result = validate_zip_content(_VALID_ZIP_BYTES)
+        assert result is False
 
 
 class TestValidateUpload:
