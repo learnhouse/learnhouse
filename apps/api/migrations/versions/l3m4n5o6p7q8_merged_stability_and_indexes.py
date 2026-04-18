@@ -31,6 +31,16 @@ def upgrade() -> None:
     # ── Constraints ───────────────────────────────────────────────────────────
 
     # M-7: unique (chapter_id, activity_id) on chapteractivity
+    # Dedupe first: legacy data may contain accidental duplicate rows from a
+    # double-write bug (the higher-id row had `order` set to the activity_id).
+    # Keep the lowest-id row per (chapter_id, activity_id) pair.
+    op.execute("""
+        DELETE FROM chapteractivity a
+        USING chapteractivity b
+        WHERE a.chapter_id = b.chapter_id
+          AND a.activity_id = b.activity_id
+          AND a.id > b.id
+    """)
     op.execute("""
         DO $$ BEGIN
             IF NOT EXISTS (

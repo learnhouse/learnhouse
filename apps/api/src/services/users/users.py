@@ -31,6 +31,7 @@ from src.db.users import (
     User,
     UserCreate,
     UserRead,
+    UserReadMinimal,
     UserReadPublic,
     UserRoleWithOrg,
     UserSession,
@@ -547,6 +548,29 @@ async def read_user_by_id(
         )
 
     return UserReadPublic.model_validate(user)
+
+
+async def read_user_public_profile_by_id(
+    request: Request,
+    db_session: Session,
+    user_id: int,
+) -> UserReadMinimal:
+    """
+    Minimal public profile lookup by user ID. Anonymous-accessible.
+
+    Exposes only fields already visible on public author/course surfaces
+    (name, username, avatar). Email, details, and profile are intentionally omitted.
+    """
+    statement = select(User).where(User.id == user_id)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Resource not found",
+        )
+
+    return UserReadMinimal.model_validate(user, from_attributes=True)
 
 
 async def read_user_by_uuid(

@@ -60,6 +60,21 @@ class UserReadPublic(UserBase):
     bio: Optional[str] = ""
 
 
+class UserReadMinimal(BaseModel):
+    """
+    Minimal user profile for anonymous-accessible endpoints.
+
+    Intentionally omits email, details, profile, and verification state.
+    Exposes only what is already visible on public course/author surfaces.
+    """
+    id: int
+    user_uuid: str
+    username: str
+    first_name: str
+    last_name: str
+    avatar_image: Optional[str] = ""
+
+
 class PublicUser(UserRead):
     pass
 

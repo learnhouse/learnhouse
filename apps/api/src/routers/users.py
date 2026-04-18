@@ -23,6 +23,7 @@ from src.db.users import (
     PublicUser,
     UserCreate,
     UserRead,
+    UserReadMinimal,
     UserReadPublic,
     UserSession,
     UserUpdate,
@@ -38,6 +39,7 @@ from src.services.users.users import (
     read_user_by_id,
     read_user_by_uuid,
     read_user_by_username,
+    read_user_public_profile_by_id,
     update_user,
     update_user_avatar,
     update_user_password,
@@ -268,6 +270,33 @@ async def api_create_user_without_org(
     Create User
     """
     return await create_user_without_org(request, db_session, current_user, user_object)
+
+
+@router.get(
+    "/public/id/{user_id}",
+    response_model=UserReadMinimal,
+    tags=["users"],
+    summary="Get minimal public user profile by ID",
+    description=(
+        "Get a minimal public profile by numeric ID. Anonymous-accessible. "
+        "Exposes only fields already visible on public author/course surfaces: "
+        "name, username, avatar. Email, details, and profile are omitted."
+    ),
+    responses={
+        200: {"description": "Minimal public view of the user.", "model": UserReadMinimal},
+        404: {"description": "User not found"},
+    },
+)
+async def api_get_user_public_profile_by_id(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    user_id: int,
+) -> UserReadMinimal:
+    """
+    Minimal public profile lookup — no authentication required.
+    """
+    return await read_user_public_profile_by_id(request, db_session, user_id)
 
 
 @router.get(
