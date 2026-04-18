@@ -14,7 +14,7 @@ type UserAvatarProps = {
   border?: 'border-2' | 'border-4' | 'border-8'
   borderColor?: string
   predefined_avatar?: 'ai' | 'empty'
-  backgroundColor?: 'bg-white' | 'bg-gray-100' 
+  backgroundColor?: 'bg-white' | 'bg-gray-100'
   showProfilePopup?: boolean
   userId?: string
   username?: string

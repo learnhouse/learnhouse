@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { MapPin, Building2, Globe, Briefcase, GraduationCap, Link, Users, Calendar, Lightbulb, Loader2, ExternalLink } from 'lucide-react'
-import { getUser } from '@services/users/users'
+import { getUser, getUserPublicProfile } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 
 type UserProfilePopupProps = {
   children: React.ReactNode
@@ -42,7 +42,11 @@ const ICON_MAP = {
 
 const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const isAuthenticated = Boolean(access_token)
   const router = useRouter()
+  const params = useParams() as any
+  const orgslug = params?.orgslug
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,15 +54,16 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
 
   useEffect(() => {
     if (!hasOpened) return
+    if (!userId) return
 
     const fetchUserData = async () => {
-      if (!userId) return
-
       setIsLoading(true)
       setError(null)
 
       try {
-        const data = await getUser(userId, session?.data?.tokens?.access_token)
+        const data = isAuthenticated
+          ? await getUser(userId, access_token)
+          : await getUserPublicProfile(userId)
         setUserData(data)
       } catch (err) {
         setError('Failed to load user data')
@@ -69,12 +74,17 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
     }
 
     fetchUserData()
-  }, [hasOpened, userId, session?.data?.tokens?.access_token])
+  }, [hasOpened, userId, access_token, isAuthenticated])
 
   const IconComponent = ({ iconName }: { iconName: string }) => {
     const IconElement = ICON_MAP[iconName as keyof typeof ICON_MAP]
     if (!IconElement) return null
     return <IconElement className="w-4 h-4 text-gray-500" />
+  }
+
+  const handleViewProfile = () => {
+    if (!userData?.username) return
+    router.push(`/orgs/${orgslug}/user/${userData.username}`)
   }
 
   return (
@@ -83,11 +93,11 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
         {children}
       </HoverCardTrigger>
       <HoverCardContent className="w-96 bg-white/95 backdrop-blur-md p-0 nice-shadow">
-        {isLoading ? (
+        {isLoading && !userData ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
-        ) : error ? (
+        ) : error && !userData ? (
           <div className="text-sm text-red-500 p-4">{error}</div>
         ) : userData ? (
           <div>
@@ -95,7 +105,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
             <div className="relative">
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-b from-gray-100/30 to-transparent h-28 rounded-t-lg" />
-              
+
               {/* Content */}
               <div className="relative px-5 pt-5 pb-4">
                 <div className="flex items-start gap-4">
@@ -119,14 +129,16 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
                           </Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-gray-600 hover:text-gray-900 flex-shrink-0"
-                        onClick={() => userData.username && router.push(`/user/${userData.username}`)}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </Button>
+                      {isAuthenticated && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-gray-600 hover:text-gray-900 flex-shrink-0"
+                          onClick={handleViewProfile}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                     {userData.bio && (
                       <p className="text-sm text-gray-500 mt-1.5 line-clamp-4 leading-normal">
@@ -159,4 +171,4 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   )
 }
 
-export default UserProfilePopup 
+export default UserProfilePopup
