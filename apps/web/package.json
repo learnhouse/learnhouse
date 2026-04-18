@@ -96,7 +96,7 @@
     "lowlight": "^3.3.0",
     "lucide-react": "^1.0.0",
     "motion": "^12.34.3",
-    "next": "16.2.3",
+    "next": "^16.2.4",
     "nextjs-toploader": "^3.9.17",
     "prosemirror-state": "^1.4.4",
     "qrcode": "^1.5.4",
