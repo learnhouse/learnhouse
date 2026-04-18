@@ -23,7 +23,7 @@ services:
       - lms_content:/app/api/content
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lms.rule=Host(`${LMS_HOST}`)"
+      - "traefik.http.routers.lms.rule=Host(`${LMS_HOST}`) || Host(`${LMS_ORG_HOST}`)"
       - "traefik.http.routers.lms.entrypoints=websecure"
       - "traefik.http.routers.lms.tls.certresolver=letsencrypt"
       - "traefik.http.services.lms.loadbalancer.server.port=80"
