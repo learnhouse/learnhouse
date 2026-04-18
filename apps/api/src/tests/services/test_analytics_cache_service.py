@@ -94,3 +94,13 @@ class TestAnalyticsCacheReadsAndWrites:
         assert redis_client.setex.call_args_list[1].args[1] == 60
         assert redis_client.setex.call_args_list[2].args[1] == 60
         assert mock_debug.call_count == 1
+
+    def test_get_and_set_return_early_when_redis_unavailable(self):
+        with patch(
+            "src.services.analytics.cache._get_redis_client",
+            return_value=None,
+        ):
+            # get_cached_result returns None when Redis unavailable (line 88)
+            assert get_cached_result("event_counts", 1, 7) is None
+            # set_cached_result returns silently when Redis unavailable (line 112)
+            set_cached_result("event_counts", 1, 7, {"count": 5})  # must not raise

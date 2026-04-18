@@ -5,6 +5,7 @@ All org membership and admin checks go through this module.
 Superadmin bypass is baked in — superadmins pass every check automatically.
 """
 
+import logging
 from typing import Optional
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
@@ -14,10 +15,13 @@ from src.db.roles import Role
 from src.security.superadmin import is_user_superadmin
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
+logger = logging.getLogger(__name__)
+
 
 def is_org_member(user_id: int, org_id: int, db_session: Session) -> bool:
     """Check if user is a member of the org (or a superadmin)."""
     if is_user_superadmin(user_id, db_session):
+        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return True
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user_id,
@@ -29,6 +33,7 @@ def is_org_member(user_id: int, org_id: int, db_session: Session) -> bool:
 def is_org_admin(user_id: int, org_id: int, db_session: Session) -> bool:
     """Check if user is an admin/maintainer of the org (or a superadmin)."""
     if is_user_superadmin(user_id, db_session):
+        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return True
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user_id,
@@ -92,6 +97,7 @@ def require_org_role_permission(
         fallback_role_ids: allowed role IDs when rights dict is absent
     """
     if is_user_superadmin(user_id, db_session):
+        logger.debug("Superadmin bypass: user %s accessed org %s", user_id, org_id)
         return
 
     user_org = get_user_org(user_id, org_id, db_session)

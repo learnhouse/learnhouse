@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { linkCommunityToCourse, unlinkCommunityFromCourse, Community } from '@services/communities/communities'
@@ -48,8 +49,8 @@ export function LinkCourseModal({
       try {
         const result = await getOrgCourses(orgSlug, null, accessToken)
         setCourses(result || [])
-      } catch (error) {
-        console.error('Failed to fetch courses:', error)
+      } catch (_error) {
+        // silent — empty list handles it
       } finally {
         setIsLoadingCourses(false)
       }
@@ -75,8 +76,13 @@ export function LinkCourseModal({
       await revalidateTags(['communities'], orgSlug)
       router.refresh()
       onClose()
-    } catch (error) {
-      console.error('Failed to link course:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to link course.'
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -92,8 +98,13 @@ export function LinkCourseModal({
       await revalidateTags(['communities'], orgSlug)
       router.refresh()
       onClose()
-    } catch (error) {
-      console.error('Failed to unlink course:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to unlink course.'
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

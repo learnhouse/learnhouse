@@ -989,7 +989,24 @@
     "quick_results": "Resultados Rápidos",
     "view_all_results": "Ver todos os resultados",
     "course": "Curso",
-    "user": "Usuário"
+    "user": "Usuário",
+    "start_heading": "O que você está procurando?",
+    "start_subtitle": "Pesquise em todos os espaços desta organização em um só lugar.",
+    "all_results": "Todos os resultados",
+    "filter_heading": "Filtrar por tipo",
+    "empty_section": "Ainda não há nada aqui",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "types": {
+      "all": "Tudo",
+      "courses": "Cursos",
+      "collections": "Coleções",
+      "users": "Membros",
+      "communities": "Comunidades",
+      "discussions": "Discussões",
+      "playgrounds": "Playgrounds",
+      "podcasts": "Podcasts"
+    }
   },
   "ai": {
     "ask_ai": "Perguntar à IA",
@@ -1774,9 +1791,31 @@
         },
         "moderation": {
           "title": "Moderação de Conteúdo",
-          "subtitle": "Configure palavras bloqueadas e filtros de conteúdo",
-          "info_title": "Palavras bloqueadas",
-          "info_description": "Discussões e respostas contendo essas palavras serão bloqueadas. Os usuários verão uma mensagem de erro e seu conteúdo não será publicado.",
+          "subtitle": "Configure palavras bloqueadas, limites de taxa e regras de conteúdo",
+          "info_title": "Moderação da comunidade",
+          "info_description": "O conteúdo que violar estas regras será rejeitado com uma mensagem de erro e não será publicado.",
+          "restrictions_title": "Restrições de conteúdo",
+          "length_title": "Limites de comprimento",
+          "rate_limits_title": "Limites de taxa",
+          "account_requirements_title": "Requisitos da conta",
+          "blocked_words_section_title": "Palavras bloqueadas",
+          "block_links_label": "Bloquear links externos",
+          "block_links_description": "Rejeita discussões ou respostas que contenham URLs.",
+          "disable_reactions_label": "Desativar reações",
+          "disable_reactions_description": "Desativa as reações de emoji nas discussões desta comunidade.",
+          "min_post_length_label": "Comprimento mínimo do post",
+          "max_post_length_label": "Comprimento máximo do post",
+          "max_comment_length_label": "Comprimento máximo da resposta",
+          "zero_disables": "Deixe em 0 para desativar.",
+          "slow_mode_label": "Modo lento (segundos)",
+          "slow_mode_hint": "Espera mínima entre postagens do mesmo usuário. 0 para desativar.",
+          "max_posts_per_day_label": "Máx. posts por usuário por dia",
+          "auto_lock_days_label": "Auto-bloquear tópicos inativos (dias)",
+          "auto_lock_days_hint": "Bloqueia discussões após este número de dias de inatividade. 0 para desativar.",
+          "min_account_age_label": "Idade mínima da conta (dias)",
+          "min_account_age_hint": "Usuários com contas mais novas não podem publicar. 0 para desativar.",
+          "require_email_verified_label": "Exigir email verificado",
+          "require_email_verified_description": "Apenas usuários com email verificado podem publicar nesta comunidade.",
           "add_word_label": "Adicionar palavra bloqueada",
           "add_word_placeholder": "Digite uma palavra ou frase...",
           "add_button": "Adicionar",
@@ -3118,7 +3157,8 @@
         "title": "Ferramentas de Tarefa",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Envios"
+          "submissions": "Envios",
+          "analytics": "Análises"
         },
         "mobile": {
           "title": "Apenas Desktop",
@@ -3327,6 +3367,58 @@
           "optional": "opcional",
           "placeholder": "Escreva um comentário sobre a submissão como um todo. O aluno verá isso ao lado da sua nota.",
           "hint": "Deixe em branco para manter qualquer comentário anterior inalterado."
+        }
+      },
+      "analytics": {
+        "loading": "A carregar análises...",
+        "empty": {
+          "title": "Ainda não há entregas",
+          "description": "As análises aparecerão assim que os alunos começarem a enviar os seus trabalhos."
+        },
+        "kpis": {
+          "average": "Média da turma",
+          "median": "Mediana",
+          "pass_rate": "Taxa de aprovação",
+          "pass_rate_sub": "{{passed}} de {{total}} aprovados",
+          "on_time": "Taxa de pontualidade",
+          "on_time_sub": "{{late}} em atraso de {{total}}"
+        },
+        "mini": {
+          "highest": "Maior",
+          "lowest": "Menor",
+          "spread": "Amplitude",
+          "feedback": "Cobertura de feedback"
+        },
+        "distribution": {
+          "title": "Distribuição de notas",
+          "subtitle": "Como a turma se distribui pelas faixas de nota",
+          "empty": "As notas aparecerão aqui depois das correções",
+          "students": "Alunos"
+        },
+        "timeline": {
+          "title": "Atividade de entregas",
+          "subtitle": "Quando os alunos entregaram vs. quando classificou",
+          "empty": "Sem atividade para mostrar ainda",
+          "submitted": "Entregues",
+          "graded": "Classificadas",
+          "due": "Data limite"
+        },
+        "tasks": {
+          "title": "Desempenho por tarefa",
+          "subtitle": "Nota média por tarefa — barras baixas indicam onde os alunos têm dificuldades",
+          "empty": "O desempenho por tarefa aparecerá após as primeiras classificações",
+          "avg_grade": "Nota média",
+          "attempts": "tentativas"
+        },
+        "top": {
+          "title": "Melhores desempenhos",
+          "subtitle": "Os seus alunos com melhores notas neste trabalho",
+          "empty": "Ainda não há entregas classificadas"
+        },
+        "attention": {
+          "title": "Podem precisar de apoio",
+          "subtitle": "Alunos que não foram aprovados — considere falar com eles",
+          "empty": "Todos os classificados foram aprovados. Bom trabalho!"
         }
       },
       "modals": {
@@ -4519,6 +4611,37 @@
           "api_desc": "Integre com suas ferramentas existentes e automatize fluxos de trabalho."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "Bloqueado",
+    "locked_title": "Esta atividade está bloqueada",
+    "locked_auth_required": "Você precisa entrar para acessar esta atividade.",
+    "locked_restricted": "Você precisa fazer parte do grupo de usuários correto para acessar. Peça a um administrador do curso para adicioná-lo.",
+    "activity_locked_hint": "Entre ou junte-se ao grupo de usuários correto para desbloquear.",
+    "back_to_course": "Voltar ao curso",
+    "lock": {
+      "header_access": "Acesso",
+      "title_chapter": "Bloquear este capítulo",
+      "title_activity": "Bloquear esta atividade",
+      "option_public_label": "Público",
+      "option_public_description": "Qualquer pessoa pode abrir, mesmo sem entrar.",
+      "option_authenticated_label": "Somente autenticados",
+      "option_authenticated_description": "Apenas usuários autenticados podem abrir.",
+      "option_restricted_label": "Somente grupos",
+      "option_restricted_description": "Apenas membros dos grupos escolhidos abaixo.",
+      "trigger_public_title": "Acesso: aberto a todos",
+      "trigger_authenticated_title": "Acesso: apenas usuários autenticados",
+      "trigger_restricted_title": "Acesso: grupos de usuários específicos",
+      "usergroups_header": "Grupos de usuários",
+      "usergroups_none_assigned": "Nenhum grupo atribuído — só administradores podem abrir.",
+      "usergroups_remove_title": "Remover",
+      "usergroups_loading": "Carregando grupos…",
+      "usergroups_none_in_org": "Ainda não existem grupos de usuários nesta organização.",
+      "usergroups_all_assigned": "Todos os grupos já foram atribuídos.",
+      "usergroups_add_a_group": "Adicionar um grupo",
+      "toast_add_error": "Não foi possível adicionar o grupo",
+      "toast_remove_error": "Não foi possível remover o grupo"
     }
   }
 }

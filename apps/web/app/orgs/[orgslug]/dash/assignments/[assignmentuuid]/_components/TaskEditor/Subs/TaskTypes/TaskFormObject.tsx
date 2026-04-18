@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
+import { useAssignmentSubmission, useAssignmentTaskSubmissions } from '@components/Contexts/Assignments/AssignmentSubmissionContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
@@ -47,6 +47,16 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
     const taskSubmissionsMap = useAssignmentTaskSubmissions();
+    // Reveal correct answers only after the submission is GRADED AND the
+    // teacher opted in on the assignment. See TaskQuizObject for the same
+    // pattern — keep these consistent across task types.
+    const assignmentSubmission = useAssignmentSubmission() as any;
+    const submissionIsGraded = Array.isArray(assignmentSubmission)
+        && assignmentSubmission.length > 0
+        && assignmentSubmission[0].submission_status === 'GRADED';
+    const showCorrectAnswers = view === 'student'
+        && submissionIsGraded
+        && !!assignment?.assignment_object?.show_correct_answers;
 
     // Anti-paste guard for student inputs. Only active when the teacher
     // enabled anti_copy_paste on the assignment AND we're in the student view.
@@ -514,13 +524,21 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                         value={userSubmissions.submissions?.find(
                                                             (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
                                                         )?.answer || ''}
-                                                        onChange={(e) => handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
-                                                        onBlur={(e) => handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                                        onChange={(e) => !submissionIsGraded && handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                                        onBlur={(e) => !submissionIsGraded && handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
                                                         onPaste={handlePaste}
+                                                        readOnly={submissionIsGraded}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
                                                         className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
                                                     />
+                                                    {showCorrectAnswers && (
+                                                        <div className="mx-2 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md inline-flex items-center space-x-1 w-fit">
+                                                            <Check size={11} />
+                                                            <span className="font-semibold">{t('assignments.form.expected_answer')}:</span>
+                                                            <span>{blank.correctAnswer}</span>
+                                                        </div>
+                                                    )}
                                                     {blank.hint && (
                                                         <div className="mx-2 text-xs text-blue-600 italic">💡 {blank.hint}</div>
                                                     )}

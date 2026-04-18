@@ -21,7 +21,7 @@ export default function NotFound() {
         </h1>
         <p className='text-lg pt-8 text-black tracking-tight font-medium leading-normal'>
           We are very sorry for the inconvenience. It looks like you're trying to
-          <div>access a page that has been deleted or never existed before</div>
+          <span className="block">access a page that has been deleted or never existed before</span>
         </p>
       </div>
       <div className='pt-8 flex flex-col items-center'>

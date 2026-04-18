@@ -1,5 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussion } from '@services/communities/discussions'
@@ -100,6 +101,7 @@ const DiscussionPage = async (params: any) => {
 
   let community = null
   let discussion = null
+  let fetchErrored = false
 
   try {
     community = await getCommunity(
@@ -108,6 +110,7 @@ const DiscussionPage = async (params: any) => {
       access_token ? access_token : undefined
     )
   } catch (error) {
+    fetchErrored = true
     console.error('Failed to fetch community:', error)
   }
 
@@ -118,15 +121,21 @@ const DiscussionPage = async (params: any) => {
       access_token ? access_token : undefined
     )
   } catch (error) {
+    fetchErrored = true
     console.error('Failed to fetch discussion:', error)
+  }
+
+  // Missing or denied-to-anon: 404 so non-public discussions aren't enumerable.
+  if ((!community || !discussion) && (!fetchErrored || !access_token)) {
+    notFound()
   }
 
   if (!community || !discussion) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-600">Discussion not found</h1>
-          <p className="text-gray-400 mt-2">This discussion doesn't exist or you don't have access</p>
+          <h1 className="text-2xl font-bold text-gray-600">You don't have access</h1>
+          <p className="text-gray-400 mt-2">You do not have permission to view this discussion.</p>
         </div>
       </div>
     )

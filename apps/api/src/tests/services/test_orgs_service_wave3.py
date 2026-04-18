@@ -882,6 +882,9 @@ class TestOrgConfigBranchesWave3:
         ), patch(
             "src.services.orgs.orgs.dispatch_webhooks",
             new_callable=AsyncMock,
+        ), patch(
+            "src.core.deployment_mode.get_deployment_mode",
+            return_value="saas",
         ):
             await update_org_favicon(
                 mock_request,
@@ -1145,3 +1148,22 @@ class TestOrgRbacWave3:
         ).first()
         assert result == {"detail": "Analytics configuration updated"}
         assert stored.config["admin_toggles"]["analytics"]["disabled"] is False
+
+
+class TestUpdateOrgWithConfigNoAuthMissingOrg:
+    @pytest.mark.asyncio
+    async def test_update_org_with_config_no_auth_missing_org_raises_404(
+        self, mock_request, db
+    ):
+        from src.services.orgs.orgs import update_org_with_config_no_auth
+        import pytest
+        from fastapi import HTTPException
+
+        with pytest.raises(HTTPException) as exc_info:
+            await update_org_with_config_no_auth(
+                mock_request,
+                {"config_version": "2.0"},
+                99999,
+                db,
+            )
+        assert exc_info.value.status_code == 404

@@ -999,7 +999,24 @@
     "quick_results": "クイック結果",
     "view_all_results": "すべての結果を表示",
     "course": "コース",
-    "user": "ユーザー"
+    "user": "ユーザー",
+    "start_heading": "何をお探しですか？",
+    "start_subtitle": "このオーガニゼーションのあらゆるスペースをひとつの場所から検索できます。",
+    "all_results": "すべての結果",
+    "filter_heading": "タイプで絞り込み",
+    "empty_section": "ここにはまだ何もありません",
+    "previous": "前へ",
+    "next": "次へ",
+    "types": {
+      "all": "すべて",
+      "courses": "コース",
+      "collections": "コレクション",
+      "users": "メンバー",
+      "communities": "コミュニティ",
+      "discussions": "ディスカッション",
+      "playgrounds": "プレイグラウンド",
+      "podcasts": "ポッドキャスト"
+    }
   },
   "ai": {
     "ask_ai": "AI に質問",
@@ -1784,9 +1801,31 @@
         },
         "moderation": {
           "title": "コンテンツモデレーション",
-          "subtitle": "禁止ワードとコンテンツフィルターを設定",
-          "info_title": "禁止ワード",
-          "info_description": "これらのワードを含むディスカッションや返信はブロックされます。ユーザーにはエラーメッセージが表示され、コンテンツは投稿されません。",
+          "subtitle": "ブロックワード、レート制限、コンテンツルールを設定",
+          "info_title": "コミュニティのモデレーション",
+          "info_description": "これらのルールに違反するコンテンツはエラーメッセージとともに拒否され、投稿されません。",
+          "restrictions_title": "コンテンツ制限",
+          "length_title": "文字数制限",
+          "rate_limits_title": "レート制限",
+          "account_requirements_title": "アカウント要件",
+          "blocked_words_section_title": "ブロックワード",
+          "block_links_label": "外部リンクをブロック",
+          "block_links_description": "URLを含むディスカッションや返信を拒否します。",
+          "disable_reactions_label": "リアクションを無効化",
+          "disable_reactions_description": "このコミュニティのディスカッションで絵文字リアクションをオフにします。",
+          "min_post_length_label": "投稿の最小文字数",
+          "max_post_length_label": "投稿の最大文字数",
+          "max_comment_length_label": "返信の最大文字数",
+          "zero_disables": "0のままで無効になります。",
+          "slow_mode_label": "スローモード（秒）",
+          "slow_mode_hint": "同じユーザーの投稿間の最小待機時間。0で無効。",
+          "max_posts_per_day_label": "ユーザーあたりの1日の最大投稿数",
+          "auto_lock_days_label": "古いスレッドを自動ロック（日）",
+          "auto_lock_days_hint": "この日数活動がないディスカッションをロックします。0で無効。",
+          "min_account_age_label": "アカウントの最小経過日数",
+          "min_account_age_hint": "アカウントがこれより新しいユーザーは投稿できません。0で無効。",
+          "require_email_verified_label": "メール認証を必須にする",
+          "require_email_verified_description": "認証済みメールアドレスのユーザーのみがこのコミュニティに投稿できます。",
           "add_word_label": "禁止ワードを追加",
           "add_word_placeholder": "単語やフレーズを入力...",
           "add_button": "追加",
@@ -3126,7 +3165,8 @@
         "title": "課題ツール",
         "tabs": {
           "editor": "エディター",
-          "submissions": "提出物"
+          "submissions": "提出物",
+          "analytics": "分析"
         },
         "mobile": {
           "title": "デスクトップ専用",
@@ -3335,6 +3375,58 @@
           "optional": "任意",
           "placeholder": "提出物全体についてコメントを書いてください。学生は成績の横で確認できます。",
           "hint": "空欄にすると、以前のフィードバックは変更されずに保持されます。"
+        }
+      },
+      "analytics": {
+        "loading": "分析を読み込んでいます...",
+        "empty": {
+          "title": "まだ提出がありません",
+          "description": "生徒が提出を始めると、ここに分析が表示されます。"
+        },
+        "kpis": {
+          "average": "クラス平均",
+          "median": "中央値",
+          "pass_rate": "合格率",
+          "pass_rate_sub": "{{total}}人中{{passed}}人が合格",
+          "on_time": "期日内率",
+          "on_time_sub": "{{total}}件中{{late}}件が遅延"
+        },
+        "mini": {
+          "highest": "最高",
+          "lowest": "最低",
+          "spread": "範囲",
+          "feedback": "フィードバック率"
+        },
+        "distribution": {
+          "title": "成績分布",
+          "subtitle": "クラスが成績帯にどう分布しているか",
+          "empty": "採点後にここに成績が表示されます",
+          "students": "生徒"
+        },
+        "timeline": {
+          "title": "提出状況",
+          "subtitle": "生徒が提出した時期と採点時期",
+          "empty": "表示するアクティビティがまだありません",
+          "submitted": "提出済み",
+          "graded": "採点済み",
+          "due": "締切"
+        },
+        "tasks": {
+          "title": "課題別パフォーマンス",
+          "subtitle": "課題ごとの平均点 — 低い棒は生徒がつまずいている箇所を示します",
+          "empty": "採点後に課題別パフォーマンスが表示されます",
+          "avg_grade": "平均点",
+          "attempts": "回"
+        },
+        "top": {
+          "title": "トップパフォーマー",
+          "subtitle": "この課題で最も成績の良い生徒",
+          "empty": "採点済みの提出はまだありません"
+        },
+        "attention": {
+          "title": "サポートが必要かも",
+          "subtitle": "合格しなかった生徒 — 声をかけることを検討してください",
+          "empty": "採点された全員が合格しました。お見事です!"
         }
       },
       "modals": {
@@ -4527,6 +4619,37 @@
           "api_desc": "既存ツールと統合し、ワークフローを自動化。"
         }
       }
+    }
+  },
+  "course": {
+    "locked": "ロック済み",
+    "locked_title": "このアクティビティはロックされています",
+    "locked_auth_required": "このアクティビティにアクセスするにはサインインが必要です。",
+    "locked_restricted": "アクセスするには該当するユーザーグループのメンバーである必要があります。コース管理者に追加を依頼してください。",
+    "activity_locked_hint": "サインインするか、該当するユーザーグループに参加して解除してください。",
+    "back_to_course": "コースに戻る",
+    "lock": {
+      "header_access": "アクセス",
+      "title_chapter": "このチャプターをロックする",
+      "title_activity": "このアクティビティをロックする",
+      "option_public_label": "公開",
+      "option_public_description": "サインインしなくても誰でも開くことができます。",
+      "option_authenticated_label": "サインイン者のみ",
+      "option_authenticated_description": "サインインしたユーザーのみ開けます。",
+      "option_restricted_label": "ユーザーグループのみ",
+      "option_restricted_description": "下で選択したグループのメンバーのみ。",
+      "trigger_public_title": "アクセス:全員に公開",
+      "trigger_authenticated_title": "アクセス:サインイン済みユーザーのみ",
+      "trigger_restricted_title": "アクセス:特定のユーザーグループのみ",
+      "usergroups_header": "ユーザーグループ",
+      "usergroups_none_assigned": "割り当てられたグループはありません — 管理者のみ開けます。",
+      "usergroups_remove_title": "削除",
+      "usergroups_loading": "グループを読み込み中…",
+      "usergroups_none_in_org": "この組織にはまだユーザーグループがありません。",
+      "usergroups_all_assigned": "すべてのグループが既に割り当てられています。",
+      "usergroups_add_a_group": "グループを追加",
+      "toast_add_error": "グループを追加できませんでした",
+      "toast_remove_error": "グループを削除できませんでした"
     }
   }
 }

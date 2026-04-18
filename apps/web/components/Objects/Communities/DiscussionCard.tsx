@@ -18,6 +18,7 @@ import {
   Megaphone,
   Star,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { getUriWithOrg } from '@services/config/config'
 import {
   DiscussionWithAuthor,
@@ -129,13 +130,19 @@ export function DiscussionCard({
     }
   }
 
+  const getErrorMessage = (err: any, fallback: string) =>
+    (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+    (typeof err?.detail === 'string' && err.detail) ||
+    err?.message ||
+    fallback
+
   const handlePin = async () => {
     if (!accessToken) return
     try {
       const updated = await pinDiscussion(discussion.discussion_uuid, !discussion.is_pinned, accessToken)
       onDiscussionUpdate?.(updated)
-    } catch (error) {
-      console.error('Failed to pin discussion:', error)
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, t('communities.discussion_card.pin_failed')))
     }
   }
 
@@ -144,8 +151,8 @@ export function DiscussionCard({
     try {
       const updated = await lockDiscussion(discussion.discussion_uuid, !discussion.is_locked, accessToken)
       onDiscussionUpdate?.(updated)
-    } catch (error) {
-      console.error('Failed to lock discussion:', error)
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, t('communities.discussion_card.lock_failed')))
     }
   }
 
@@ -154,8 +161,8 @@ export function DiscussionCard({
     try {
       await deleteDiscussion(discussion.discussion_uuid, accessToken)
       onDiscussionDelete?.(discussion.discussion_uuid)
-    } catch (error) {
-      console.error('Failed to delete discussion:', error)
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, t('communities.discussion_card.delete_failed')))
     }
   }
 

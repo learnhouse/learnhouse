@@ -246,19 +246,43 @@ Please modify the HTML code above according to the user's request. Output ONLY t
             # First generation - just use the prompt
             contents.append({"role": "user", "parts": [{"text": prompt}]})
 
-        # Generate response with streaming
-        response = client.models.generate_content_stream(
-            model=gemini_model_name,
-            contents=contents
-        )
+        # Stream Gemini response: run the blocking SDK iterator in a thread and
+        # forward each chunk to the async generator via a Queue so callers see
+        # incremental output instead of waiting for the full response.
+        import threading
+        loop = asyncio.get_running_loop()
+        _sentinel = object()
+        queue: asyncio.Queue = asyncio.Queue()
+        _stream_error: list = []
+
+        def _run_stream():
+            try:
+                resp = client.models.generate_content_stream(
+                    model=gemini_model_name,
+                    contents=contents,
+                )
+                for chunk in resp:
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except Exception as exc:
+                _stream_error.append(exc)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, _sentinel)
+
+        t = threading.Thread(target=_run_stream, daemon=True)
+        t.start()
 
         full_response = ""
-        for chunk in response:
-            if chunk.text:
-                full_response += chunk.text
-                yield chunk.text
-                # Small delay to allow for smooth streaming
-                await asyncio.sleep(0.01)
+        while True:
+            item = await queue.get()
+            if item is _sentinel:
+                break
+            if item.text:
+                full_response += item.text
+                yield item.text
+                await asyncio.sleep(0)
+
+        if _stream_error:
+            raise _stream_error[0]
 
         # Update session after generation completes
         session.message_history.append(MagicBlockMessage(role="user", content=prompt))
@@ -277,19 +301,32 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
 
 def extract_html_from_response(response: str) -> str:
-    """Extract HTML content from the AI response"""
-    # If the response is wrapped in code blocks, extract it
-    if "```html" in response:
-        start = response.find("```html") + 7
-        end = response.find("```", start)
-        if end != -1:
-            return response[start:end].strip()
+    """Extract a single HTML document from the AI response.
 
-    if "```" in response:
-        start = response.find("```") + 3
-        end = response.find("```", start)
-        if end != -1:
-            return response[start:end].strip()
+    Handles markdown code fences and trims to the first complete
+    <!DOCTYPE html>...</html> so duplicated documents don't propagate.
+    """
+    import re
 
-    # If no code blocks, return the response as is (should be raw HTML)
-    return response.strip()
+    text = response
+
+    if "```html" in text:
+        start = text.find("```html") + 7
+        end = text.find("```", start)
+        if end != -1:
+            text = text[start:end]
+    elif "```" in text:
+        start = text.find("```") + 3
+        end = text.find("```", start)
+        if end != -1:
+            text = text[start:end]
+
+    doc_start = re.search(r"<!doctype\s+html[^>]*>|<html[\s>]", text, re.IGNORECASE)
+    if doc_start and doc_start.start() > 0:
+        text = text[doc_start.start():]
+
+    doc_end = re.search(r"</html\s*>", text, re.IGNORECASE)
+    if doc_end:
+        text = text[: doc_end.end()]
+
+    return text.strip()

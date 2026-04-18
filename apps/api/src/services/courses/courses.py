@@ -245,6 +245,9 @@ async def get_courses_orgslug(
     limit: int = 10,
     include_unpublished: bool = False,
 ) -> List[CourseRead]:
+    # Cap limit to prevent excessive DB reads
+    limit = min(limit, 100)
+
     # For anonymous users viewing public courses, try Redis cache first
     is_anon = isinstance(current_user, AnonymousUser)
     if is_anon and not include_unpublished:
@@ -638,11 +641,6 @@ async def create_course(
         course.thumbnail_video = ""
         course.thumbnail_type = ThumbnailType.IMAGE
 
-    # Insert course
-    db_session.add(course)
-    db_session.commit()
-    db_session.refresh(course)
-
     # SECURITY: Make the user the creator of the course
     # For API tokens, use the user who created the token as the author
     if isinstance(current_user, APITokenUser):
@@ -659,10 +657,17 @@ async def create_course(
         update_date=str(datetime.now()),
     )
 
-    # Insert course author
-    db_session.add(resource_author)
-    db_session.commit()
-    db_session.refresh(resource_author)
+    # Insert course and author atomically in a single transaction
+    try:
+        db_session.add(course)
+        db_session.flush()  # Get the ID without committing
+        db_session.refresh(course)
+        db_session.add(resource_author)
+        db_session.commit()  # Single commit for both
+        db_session.refresh(resource_author)
+    except Exception:
+        db_session.rollback()
+        raise
 
     # Get course authors with their roles
     authors_statement = (
@@ -964,26 +969,17 @@ async def get_user_courses(
     # Verify user is not anonymous
     await authorization_verify_if_user_is_anon(current_user.id)
     
-    # Get all resource authors for the user
-    statement = select(ResourceAuthor).where(
-        and_(
+    # Fetch courses the user has authored using a single JOIN query with pagination
+    statement = (
+        select(Course)
+        .join(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+        .where(
             ResourceAuthor.user_id == user_id,
-            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE,
         )
+        .offset((page - 1) * limit)
+        .limit(limit)
     )
-    resource_authors = db_session.exec(statement).all()
-    
-    # Extract course UUIDs from resource authors
-    course_uuids = [author.resource_uuid for author in resource_authors]
-    
-    if not course_uuids:
-        return []
-    
-    # Get courses with the extracted UUIDs
-    statement = select(Course).where(Course.course_uuid.in_(course_uuids)) # type: ignore
-    
-    # Apply pagination
-    statement = statement.offset((page - 1) * limit).limit(limit)
     
     courses = db_session.exec(statement).all()
     
@@ -1060,6 +1056,17 @@ def _delete_storage_file(file_path: str) -> None:
     delete_storage_file(file_path)
 
 
+def _replace_uuids_in_content(content, uuid_map):
+    """Recursively replace UUID values in a nested dict/list structure."""
+    if isinstance(content, dict):
+        return {k: _replace_uuids_in_content(v, uuid_map) for k, v in content.items()}
+    elif isinstance(content, list):
+        return [_replace_uuids_in_content(item, uuid_map) for item in content]
+    elif isinstance(content, str) and content in uuid_map:
+        return uuid_map[content]
+    return content
+
+
 def _copy_storage_directory(src_dir: str, dst_dir: str) -> None:
     """Recursively copy a directory using S3 or local filesystem."""
     import os
@@ -1123,6 +1130,7 @@ async def clone_course(
         file_exists,
         list_directory,
     )
+    from collections import defaultdict
     from src.db.courses.chapters import Chapter
     from src.db.courses.activities import Activity
     from src.db.courses.blocks import Block
@@ -1239,6 +1247,33 @@ async def clone_course(
     )
     chapter_results = db_session.exec(statement).all()
 
+    # Pre-fetch all activities for every chapter in one query to avoid N+1
+    _original_chapter_ids = [ch.id for ch, _ in chapter_results]
+    _all_act_results = db_session.exec(
+        select(Activity, ChapterActivity)
+        .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+        .where(ChapterActivity.chapter_id.in_(_original_chapter_ids))
+        .order_by(ChapterActivity.order)
+    ).all()
+    _activities_by_chapter: dict = defaultdict(list)
+    for _act, _ca in _all_act_results:
+        _activities_by_chapter[_ca.chapter_id].append((_act, _ca))
+
+    # Pre-fetch all blocks for TYPE_DYNAMIC activities in one query to avoid N+1
+    _dynamic_activity_ids = [
+        _act.id for _act, _ in _all_act_results
+        if _act.activity_type.value == "TYPE_DYNAMIC"
+    ]
+    if _dynamic_activity_ids:
+        _all_blocks = db_session.exec(
+            select(Block).where(Block.activity_id.in_(_dynamic_activity_ids))
+        ).all()
+        _blocks_by_activity: dict = defaultdict(list)
+        for _blk in _all_blocks:
+            _blocks_by_activity[_blk.activity_id].append(_blk)
+    else:
+        _blocks_by_activity = {}
+
     # Map old chapter IDs to new chapters
     chapter_id_map = {}
 
@@ -1272,14 +1307,8 @@ async def clone_course(
         )
         db_session.add(new_course_chapter)
 
-        # Get activities for this chapter with order
-        statement = (
-            select(Activity, ChapterActivity)
-            .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
-            .where(ChapterActivity.chapter_id == original_chapter.id)
-            .order_by(ChapterActivity.order)
-        )
-        activity_results = db_session.exec(statement).all()
+        # Use pre-fetched activities (already ordered by ChapterActivity.order)
+        activity_results = _activities_by_chapter.get(original_chapter.id, [])
 
         for original_activity, chapter_activity in activity_results:
             new_activity_uuid = f"activity_{uuid4()}"
@@ -1325,10 +1354,9 @@ async def clone_course(
             # This handles all activity types: videos, documents, SCORM, assignments, etc.
             _copy_storage_directory(original_activity_path, new_activity_path)
 
-            # Clone blocks for dynamic activities
+            # Clone blocks for dynamic activities (use pre-fetched data)
             if original_activity.activity_type.value == "TYPE_DYNAMIC":
-                statement = select(Block).where(Block.activity_id == original_activity.id)
-                original_blocks = db_session.exec(statement).all()
+                original_blocks = _blocks_by_activity.get(original_activity.id, [])
 
                 # Map old block UUIDs to new block UUIDs (for updating activity content references)
                 block_uuid_map = {}
@@ -1394,16 +1422,8 @@ async def clone_course(
 
                 # Update activity content to reference new block UUIDs
                 if new_content and block_uuid_map:
-                    content_str = str(new_content)
-                    for old_uuid, new_uuid in block_uuid_map.items():
-                        content_str = content_str.replace(old_uuid, new_uuid)
-                    # Try to parse back if it was modified
-                    try:
-                        import ast
-                        new_activity.content = ast.literal_eval(content_str)
-                        db_session.add(new_activity)
-                    except Exception:
-                        pass  # Keep original content if parsing fails
+                    new_activity.content = _replace_uuids_in_content(new_content, block_uuid_map)
+                    db_session.add(new_activity)
 
     # Single commit for all chapters, activities, blocks, and links
     db_session.commit()

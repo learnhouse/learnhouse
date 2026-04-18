@@ -265,8 +265,8 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
     // Check if current hostname matches the target
     const expectedHostname = `${orgslug}.${baseDomain}`
 
-    if (currentHostname === expectedHostname || currentHostname === baseDomain) {
-      // Already on the right host (subdomain or base domain)
+    if (currentHostname === expectedHostname) {
+      // Already on the right subdomain
       return `${window.location.origin}${path}`
     }
 

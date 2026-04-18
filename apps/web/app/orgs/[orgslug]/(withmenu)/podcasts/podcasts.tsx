@@ -31,7 +31,7 @@ export default function PodcastsClient({
   const searchParams = useSearchParams()
   const isCreatingPodcast = searchParams.get('new') ? true : false
   const [newPodcastModal, setNewPodcastModal] = useState(isCreatingPodcast)
-  const isUserAdmin = useAdminStatus() as any
+  const { isAdmin: isUserAdmin } = useAdminStatus()
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')

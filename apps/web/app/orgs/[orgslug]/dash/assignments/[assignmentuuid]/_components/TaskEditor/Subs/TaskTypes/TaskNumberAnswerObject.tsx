@@ -1,5 +1,6 @@
 'use client'
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
+import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import {
   useAssignmentsTask,
   useAssignmentsTaskDispatch,
@@ -65,6 +66,15 @@ function TaskNumberAnswerObject({
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
+  // Same reveal gate as the other task types: teacher must opt in, and the
+  // submission must already be GRADED before any correct-answer hint appears.
+  const assignmentSubmission = useAssignmentSubmission() as any
+  const submissionIsGraded = Array.isArray(assignmentSubmission)
+    && assignmentSubmission.length > 0
+    && assignmentSubmission[0].submission_status === 'GRADED'
+  const showCorrectAnswers = view === 'student'
+    && submissionIsGraded
+    && !!assignment?.assignment_object?.show_correct_answers
 
   const [contents, setContents] = useState<NumberAnswerContents>(DEFAULT_CONTENTS)
   const [studentAnswer, setStudentAnswer] = useState<string>('')
@@ -335,7 +345,8 @@ function TaskNumberAnswerObject({
                 type="text"
                 inputMode="decimal"
                 value={studentAnswer}
-                onChange={(e) => setStudentAnswer(e.target.value)}
+                onChange={(e) => !submissionIsGraded && setStudentAnswer(e.target.value)}
+                readOnly={submissionIsGraded}
                 placeholder={t(
                   'dashboard.assignments.editor.task_editor.number_answer.your_answer_placeholder'
                 )}
@@ -345,6 +356,18 @@ function TaskNumberAnswerObject({
                 <span className="text-sm font-medium text-slate-500">{contents.unit}</span>
               )}
             </div>
+            {showCorrectAnswers && (
+              <div className="flex flex-col space-y-1.5 p-3 rounded-md bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 size={13} />
+                  <span>{t('dashboard.assignments.editor.task_editor.number_answer.accepted_range_label')}</span>
+                </div>
+                <div className="text-sm font-mono text-emerald-800">{acceptedRange}</div>
+                {contents.explanation && (
+                  <p className="text-xs text-emerald-800/80 mt-1 whitespace-pre-wrap">{contents.explanation}</p>
+                )}
+              </div>
+            )}
           </>
         )}
 

@@ -149,29 +149,33 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       }
     }
 
-    const result = await toast.promise(
-      updateActivity({ content }, props.activity.activity_uuid, access_token).then(res => {
-        if (!res.success) {
-          throw res;
+    try {
+      const result = await toast.promise(
+        updateActivity({ content }, props.activity.activity_uuid, access_token).then(res => {
+          if (!res.success) {
+            throw res;
+          }
+          // Update local version after successful save
+          if (res.data?.current_version) {
+            setLocalVersion(res.data.current_version);
+            setLocalUpdateDate(res.data.update_date);
+          }
+          return res;
+        }),
+        {
+          loading: t('editor.saving'),
+          success: () => <b>{t('editor.saved')}</b>,
+          error: (err) => {
+            const errorMessage = err?.data?.detail || err?.data?.message || t('editor.save_error');
+            return <b>{errorMessage}</b>;
+          },
         }
-        // Update local version after successful save
-        if (res.data?.current_version) {
-          setLocalVersion(res.data.current_version);
-          setLocalUpdateDate(res.data.update_date);
-        }
-        return res;
-      }),
-      {
-        loading: t('editor.saving'),
-        success: () => <b>{t('editor.saved')}</b>,
-        error: (err) => {
-          const errorMessage = err?.data?.detail || err?.data?.message || t('editor.save_error');
-          return <b>{errorMessage}</b>;
-        },
-      }
-    )
-
-    return { hasConflict: false, result };
+      )
+      return { hasConflict: false, result };
+    } catch {
+      // toast.promise already showed the error toast; return a non-throwing failure result
+      return { hasConflict: false, result: null };
+    }
   }
 
   return (

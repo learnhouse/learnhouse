@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse, Response
 from pathlib import Path
 from sqlmodel import Session, select
+from botocore.exceptions import ClientError
 
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
@@ -231,8 +232,16 @@ async def serve_content_file(
     # Get file metadata
     try:
         head = s3_client.head_object(Bucket=bucket, Key=s3_key)
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code in ("NoSuchKey", "404"):
+            raise HTTPException(status_code=404, detail="File not found")
+        elif code in ("AccessDenied", "403"):
+            raise HTTPException(status_code=403, detail="Access denied")
+        else:
+            raise HTTPException(status_code=502, detail="Storage service error")
     except Exception:
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=502, detail="Storage service error")
 
     file_size = head['ContentLength']
     mime_type = _get_mime_type(safe_path)
@@ -280,7 +289,10 @@ async def serve_content_file(
                     Bucket=bucket, Key=s3_key,
                     Range=f"bytes={pos}-{chunk_end}",
                 )
-                data = resp['Body'].read()
+                try:
+                    data = resp['Body'].read()
+                finally:
+                    resp['Body'].close()
                 if not data:
                     break
                 remaining -= len(data)
@@ -305,7 +317,10 @@ async def serve_content_file(
                     Bucket=bucket, Key=s3_key,
                     Range=f"bytes={pos}-{chunk_end}",
                 )
-                data = resp['Body'].read()
+                try:
+                    data = resp['Body'].read()
+                finally:
+                    resp['Body'].close()
                 if not data:
                     break
                 remaining -= len(data)
@@ -354,8 +369,16 @@ async def head_content_file(
 
     try:
         head = s3_client.head_object(Bucket=bucket, Key=s3_key)
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code in ("NoSuchKey", "404"):
+            raise HTTPException(status_code=404, detail="File not found")
+        elif code in ("AccessDenied", "403"):
+            raise HTTPException(status_code=403, detail="Access denied")
+        else:
+            raise HTTPException(status_code=502, detail="Storage service error")
     except Exception:
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=502, detail="Storage service error")
 
     file_size = head['ContentLength']
     mime_type = _get_mime_type(safe_path)

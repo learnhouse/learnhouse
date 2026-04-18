@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next'
 // Extensions
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
 import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
+import Callout from './Extensions/Callout/Callout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
@@ -138,12 +139,11 @@ function Editor(props: Editor) {
           },
         },
       }),
-      InfoCallout.configure({
-        editable: true,
-      }),
-      WarningCallout.configure({
-        editable: true,
-      }),
+      // New unified callout (info/warning/tip/success/error)
+      Callout,
+      // Legacy nodes — kept for backward compat with existing content
+      InfoCallout.configure({ editable: true }),
+      WarningCallout.configure({ editable: true }),
       ImageBlock.configure({
         editable: true,
         activity: props.activity,
@@ -231,7 +231,12 @@ function Editor(props: Editor) {
     ],
     content: props.content,
     immediatelyRender: false,
-    onCreate: () => { setEditorReady(true); props.onReady?.(); },
+    onCreate: () => {
+      setTimeout(() => {
+        setEditorReady(true)
+        props.onReady?.()
+      }, 0)
+    },
   })
 
   // Handler to check for conflicts on save button hover

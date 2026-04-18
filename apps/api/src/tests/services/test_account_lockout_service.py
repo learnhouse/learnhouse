@@ -55,57 +55,48 @@ class TestAccountLockoutService:
             SimpleNamespace(failed_login_attempts=12)
         ) == 0
 
-        assert format_lockout_message(45) == "Account is locked. Please try again in 45 seconds."
-        assert format_lockout_message(61) == "Account is locked. Please try again in 1 minute."
-        assert format_lockout_message(120) == "Account is locked. Please try again in 2 minutes."
+        generic_message = (
+            "Account is temporarily locked due to too many failed login attempts. "
+            "Please try again later."
+        )
+        assert format_lockout_message(45) == generic_message
+        assert format_lockout_message(61) == generic_message
+        assert format_lockout_message(120) == generic_message
 
     def test_record_failed_login_below_threshold_and_missing_user(self):
-        user = SimpleNamespace(id=1)
+        user = SimpleNamespace(id=1, locked_until=None)
         db_session = Mock()
-        below_threshold_result = Mock()
-        below_threshold_result.scalar.return_value = None
-        update_result = Mock()
-        update_result.scalar.return_value = 1
-        db_session.execute.side_effect = [below_threshold_result, update_result]
 
         is_locked, duration = record_failed_login(user, db_session)
 
         assert is_locked is False
         assert duration is None
-        assert db_session.rollback.call_count == 0
         assert db_session.commit.call_count == 1
+        db_session.refresh.assert_called_once_with(user)
 
-        missing_db_session = Mock()
-        first_result = Mock()
-        first_result.scalar.return_value = 9
-        second_result = Mock()
-        second_result.scalar.return_value = None
-        missing_db_session.execute.side_effect = [first_result, second_result]
+        # An expired locked_until should be treated as not locked
+        expired_user = SimpleNamespace(
+            id=1,
+            locked_until=(datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        )
+        expired_session = Mock()
 
-        is_locked, duration = record_failed_login(user, missing_db_session)
+        is_locked, duration = record_failed_login(expired_user, expired_session)
 
         assert is_locked is False
         assert duration is None
-        missing_db_session.rollback.assert_called_once()
-        assert missing_db_session.commit.call_count == 0
 
     def test_record_failed_login_threshold_locks_account(self):
-        user = SimpleNamespace(id=1)
+        future = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+        user = SimpleNamespace(id=1, locked_until=future)
         db_session = Mock()
-        first_result = Mock()
-        first_result.scalar.return_value = 9
-        second_result = Mock()
-        second_result.scalar.return_value = 10
-        lock_result = Mock()
-        db_session.execute.side_effect = [first_result, second_result, lock_result]
 
         is_locked, duration = record_failed_login(user, db_session)
 
         assert is_locked is True
         assert duration == 300
         assert db_session.commit.call_count == 1
-        assert db_session.rollback.call_count == 0
-        assert db_session.execute.call_count == 3
+        db_session.refresh.assert_called_once_with(user)
 
     def test_reset_failed_attempts_and_update_login_info_found(self):
         user = SimpleNamespace(id=1)
@@ -147,3 +138,26 @@ class TestAccountLockoutService:
         update_login_info(user, "127.0.0.1", db_session)
 
         assert db_session.commit.call_count == 0
+
+    def test_record_failed_login_naive_locked_until_is_treated_as_utc(self):
+        """Line 101: naive locked_until datetime is given tzinfo=utc, so a
+        future naive timestamp is still detected as a live lockout."""
+        future = (datetime.now() + timedelta(hours=1)).isoformat()
+        user = SimpleNamespace(id=1, locked_until=future)
+        db_session = Mock()
+
+        is_locked, remaining = record_failed_login(user, db_session)
+
+        assert is_locked is True
+        assert remaining is not None
+
+    def test_record_failed_login_invalid_locked_until_treated_as_not_locked(self):
+        """Lines 103-104: unparseable locked_until falls into the except branch
+        and returns is_locked=False."""
+        user = SimpleNamespace(id=1, locked_until="not-a-valid-datetime")
+        db_session = Mock()
+
+        is_locked, remaining = record_failed_login(user, db_session)
+
+        assert is_locked is False
+        assert remaining is None

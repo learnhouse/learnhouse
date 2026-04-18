@@ -439,6 +439,65 @@ class TestAuthRouter:
 
         assert response.status_code == 401
 
+    async def test_oauth_invalid_org_id_returns_400(self, client, db, org):
+        with patch("src.routers.auth.get_learnhouse_config"):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 9999},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid org_id"
+
+    async def test_oauth_org_id_valid_but_no_invite_clears_org_id(self, client, db, org):
+        mock_redis = Mock(get=Mock(return_value=None))
+        mock_config = SimpleNamespace(
+            redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
+        )
+        with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
+            "redis.Redis.from_url", return_value=mock_redis
+        ), patch(
+            "src.routers.auth.signWithGoogle",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        assert response.status_code == 401
+
+    async def test_oauth_org_id_redis_unavailable_clears_org_id(self, client, db, org):
+        mock_config = SimpleNamespace(
+            redis_config=SimpleNamespace(redis_connection_string="redis://localhost:6379")
+        )
+        with patch("src.routers.auth.get_learnhouse_config", return_value=mock_config), patch(
+            "redis.Redis.from_url", side_effect=RuntimeError("Redis down")
+        ), patch(
+            "src.routers.auth.signWithGoogle",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            response = await client.post(
+                "/api/v1/auth/oauth",
+                params={"org_id": 1},
+                json={
+                    "email": "user@test.com",
+                    "provider": "google",
+                    "access_token": "google-token",
+                },
+            )
+        assert response.status_code == 401
+
     async def test_verify_email_rate_limited_and_logout_unauthenticated(self, client):
         with patch(
             "src.routers.auth.check_email_verification_rate_limit",

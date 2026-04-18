@@ -204,6 +204,9 @@ class TestCreateAndUpdateUser:
         ), patch(
             "src.services.users.users.send_account_creation_email"
         ), patch(
+            "src.services.users.email_verification.send_verification_email",
+            new_callable=AsyncMock,
+        ), patch(
             "src.services.users.users.get_deployment_mode",
             return_value="oss",
         ), patch(
@@ -615,8 +618,7 @@ class TestUserPasswordAvatarSession:
         ), patch(
             "src.services.users.email_verification.send_verification_email",
             new_callable=AsyncMock,
-            side_effect=Exception("boom"),
-        ), patch(
+        ) as mock_send, patch(
             "src.services.users.users.get_deployment_mode",
             return_value="saas",
         ), patch(
@@ -631,6 +633,31 @@ class TestUserPasswordAvatarSession:
             )
 
         assert created.email_verified is False
+        mock_send.assert_awaited_once()
+
+        # Surface that send-email failures are intentionally not swallowed —
+        # callers may need to react (e.g., roll back analytics, notify ops).
+        with patch(
+            "src.services.users.users.validate_password_complexity",
+            return_value=Mock(is_valid=True),
+        ), patch(
+            "src.services.users.email_verification.send_verification_email",
+            new_callable=AsyncMock,
+            side_effect=Exception("boom"),
+        ), patch(
+            "src.services.users.users.get_deployment_mode",
+            return_value="saas",
+        ), patch(
+            "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(Exception, match="boom"):
+                await create_user_without_org(
+                    mock_request,
+                    db,
+                    admin_user,
+                    _user_create("weak-platform-fail", "weak-platform-fail@test.com"),
+                )
 
     @pytest.mark.asyncio
     async def test_create_user_with_invite_success_and_redis_update(

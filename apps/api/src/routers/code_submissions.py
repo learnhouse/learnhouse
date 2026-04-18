@@ -1,6 +1,7 @@
 from typing import Union
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlmodel import Session, select, col
 from uuid import uuid4
 
@@ -59,14 +60,14 @@ async def get_submission_history(
     submissions = db_session.exec(statement).all()
 
     count_statement = (
-        select(CodeSubmission)
+        select(func.count(CodeSubmission.id))
         .where(
             CodeSubmission.user_id == current_user.id,
             CodeSubmission.activity_uuid == activity_uuid,
             CodeSubmission.block_id == block_id,
         )
     )
-    total = len(db_session.exec(count_statement).all())
+    total = db_session.exec(count_statement).one()
 
     return {
         "submissions": [

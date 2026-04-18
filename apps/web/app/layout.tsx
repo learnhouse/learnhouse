@@ -1,15 +1,11 @@
-'use client'
 import '../styles/globals.css'
-import { SessionProvider } from '@components/Contexts/AuthContext'
-import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL, getLEARNHOUSE_TELEMETRY_DISABLED_VAL } from '@services/config/config'
+import Script from 'next/script'
+import Providers from '@components/Providers'
+import { Wix_Madefor_Text } from 'next/font/google'
 
 const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() === 'localhost'
 const isTelemetryDisabled = getLEARNHOUSE_TELEMETRY_DISABLED_VAL() === 'true'
-import Script from 'next/script'
-import '../lib/i18n'
-import I18nProvider from '@components/Contexts/I18nContext'
-import { Wix_Madefor_Text } from 'next/font/google'
 
 const wixMadeforText = Wix_Madefor_Text({
   subsets: ['latin'],
@@ -23,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html className={wixMadeforText.variable} lang="en">
+    <html className={wixMadeforText.variable} lang="en" suppressHydrationWarning>
       <head>
         {/* Synchronous script — blocks parsing to guarantee window.__RUNTIME_CONFIG__ exists before any JS runs.
             Next.js <Script strategy="beforeInteractive"> is not truly blocking in all browsers (Safari). */}
@@ -34,7 +30,7 @@ export default function RootLayout({
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/embed-bg.js" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {
             isDevEnv ? '' : isTelemetryDisabled ? '' :
                             <Script
@@ -42,15 +38,11 @@ export default function RootLayout({
                                 src="/umami/script.js"
                             />
         }
-        <SessionProvider refetchInterval={600000}>
-          <LHSessionProvider>
-            <I18nProvider>
-              <main className="animate-fade-in">
-                  {children}
-                </main>
-            </I18nProvider>
-          </LHSessionProvider>
-        </SessionProvider>
+        <Providers>
+          <main className="animate-fade-in">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   )

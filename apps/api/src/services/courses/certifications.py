@@ -1,3 +1,5 @@
+import logging
+import secrets
 from typing import List
 from uuid import uuid4
 from datetime import datetime
@@ -19,6 +21,8 @@ from src.security.rbac import check_resource_access, AccessAction
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+logger = logging.getLogger(__name__)
 
 
 ####################################################
@@ -285,23 +289,14 @@ async def create_certificate_user(
     # Extract last 4 characters from user_uuid for uniqueness (since all start with "user_")
     user_uuid_short = user.user_uuid[-4:] if user.user_uuid else "USER"
     
-    # Generate random 2-letter prefix
-    import random
-    import string
-    random_prefix = ''.join(random.choices(string.ascii_uppercase, k=2))
-    
-    # Get the count of existing certificate users for this user today
+    _alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    random_prefix = secrets.choice(_alpha) + secrets.choice(_alpha)
+
     today_user_prefix = f"{random_prefix}-{current_year}{current_month:02d}{current_day:02d}-{user_uuid_short}-"
-    statement = select(CertificateUser).where(
-        CertificateUser.user_certification_uuid.startswith(today_user_prefix)
-    )
-    existing_certificates = db_session.exec(statement).all()
-    
-    # Generate next sequential number for this user today
-    next_number = len(existing_certificates) + 1
-    certificate_number = f"{next_number:03d}"  # Format as 3-digit number with leading zeros
-    
-    user_certification_uuid = f"{today_user_prefix}{certificate_number}"
+
+    next_number_str = secrets.token_hex(4)  # 8-char hex suffix, collision-safe
+
+    user_certification_uuid = f"{today_user_prefix}{next_number_str}"
 
     # Create certificate user
     certificate_user = CertificateUser(
@@ -348,8 +343,8 @@ async def create_certificate_user(
                     },
                 },
             )
-    except Exception:
-        pass  # Don't fail certificate creation if tracking fails
+    except Exception as e:
+        logger.warning("Certificate tracking failed (non-critical): %s", e)
 
     return CertificateUserRead(**certificate_user.model_dump())
 

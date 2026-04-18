@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { MoreHorizontal, Pencil, Trash2, X, Check, Loader2, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   DiscussionCommentWithAuthor,
@@ -40,11 +41,12 @@ function getAvatarUrl(author: DiscussionAuthor | null): string | null {
 
 interface CommentCardProps {
   comment: DiscussionCommentWithAuthor
+  canManage?: boolean
   onDeleted: (commentUuid: string) => void
   onUpdated: (comment: DiscussionCommentWithAuthor) => void
 }
 
-export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps) {
+export function CommentCard({ comment, canManage = false, onDeleted, onUpdated }: CommentCardProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
@@ -57,6 +59,8 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
   const [error, setError] = useState<string | null>(null)
 
   const isAuthor = currentUserId === comment.author_id
+  const canDelete = isAuthor || canManage
+  const showMenu = isAuthor || canManage
   const timeAgo = dayjs(comment.creation_date).fromNow()
   const authorName = comment.author
     ? `${comment.author.first_name} ${comment.author.last_name}`.trim() || comment.author.username
@@ -76,14 +80,13 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
       onUpdated(updated)
       setIsEditing(false)
     } catch (err: any) {
-      console.error('Failed to update reply:', err)
-      if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || t('communities.comments.content_not_allowed'))
-      } else if (typeof err?.detail === 'string') {
-        setError(err.detail)
-      } else {
-        setError(t('communities.comments.failed_to_update'))
-      }
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.comments.failed_to_update')
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -96,8 +99,13 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
     try {
       await deleteComment(comment.comment_uuid, accessToken)
       onDeleted(comment.comment_uuid)
-    } catch (error) {
-      console.error('Failed to delete reply:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.comments.failed_to_delete')
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -205,7 +213,7 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
       </div>
 
       {/* Actions - Right side */}
-      {isAuthor && !isEditing && (
+      {showMenu && !isEditing && (
         <div className={`flex-shrink-0 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -214,17 +222,21 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                {t('communities.comments.edit')}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {t('communities.comments.delete')}
-              </DropdownMenuItem>
+              {isAuthor && (
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  {t('communities.comments.edit')}
+                </DropdownMenuItem>
+              )}
+              {canDelete && (
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t('communities.comments.delete')}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

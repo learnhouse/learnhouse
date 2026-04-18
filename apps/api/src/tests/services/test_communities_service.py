@@ -158,6 +158,7 @@ class TestCommunitiesService:
                     description="Updated Desc",
                     public=False,
                     moderation_words=["x"],
+                    moderation_settings={"max_post_length": 500},
                 ),
                 admin_user,
                 db,

@@ -28,6 +28,7 @@ function EmbedCourseProvider({ children, courseUuid }: { children: React.ReactNo
     },
     courseOrder: null,
     pendingChanges: {},
+    unsyncedChanges: {},
     isSaved: true,
     isLoading: false,
     isSaving: false,

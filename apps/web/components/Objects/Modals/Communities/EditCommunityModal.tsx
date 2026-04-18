@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateCommunity, Community } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
@@ -56,8 +57,13 @@ export function EditCommunityModal({
         router.refresh()
         onClose()
       }
-    } catch (error) {
-      console.error('Failed to update community:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to update community.'
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

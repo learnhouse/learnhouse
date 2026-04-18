@@ -73,7 +73,6 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
   // Use the new field sync hook
   const {
     syncChanges,
-    cancelPendingSync,
     courseStructure,
     isLoading,
     isSaving,
@@ -167,12 +166,8 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     }
   }, [formik.values, formik.initialValues, isLoading, isSaving, syncChanges]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      cancelPendingSync();
-    };
-  }, [cancelPendingSync]);
+  // useCourseFieldSync handles the unmount cleanup (flushing pending edits
+  // instead of discarding them), so no local cleanup is needed here.
 
   if (isLoading || !courseStructure) {
     return <div>{t('dashboard.courses.settings.loading')}</div>;

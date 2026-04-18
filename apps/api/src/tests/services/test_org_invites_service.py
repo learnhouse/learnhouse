@@ -9,7 +9,9 @@ import pytest
 from fastapi import HTTPException
 
 from src.db.usergroups import UserGroup
+import src.services.orgs.invites as invites_module
 from src.services.orgs.invites import (
+    _get_redis,
     create_invite_code,
     delete_invite_code,
     get_invite_code,
@@ -40,7 +42,7 @@ def _fake_config(redis_url="redis://test"):
     )
 
 
-def _fake_redis(scan_keys=None, values=None):
+def _fake_redis(scan_keys=None, values=None, eval_return=1):
     redis_client = Mock()
     redis_client.__bool__ = Mock(return_value=True)
     redis_client.scan_iter = Mock(return_value=scan_keys or [])
@@ -52,6 +54,7 @@ def _fake_redis(scan_keys=None, values=None):
     redis_client.get = Mock(side_effect=_get)
     redis_client.set = Mock()
     redis_client.delete = Mock()
+    redis_client.eval = Mock(return_value=eval_return)
     return redis_client
 
 
@@ -70,7 +73,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=fake_redis,
         ), patch(
             "src.services.orgs.invites.uuid.uuid4",
@@ -90,7 +93,8 @@ class TestOrgInvitesService:
         assert result["invite_code"] == "ABCDEFGH"
         assert result["invite_code_uuid"] == "org_invite_code_invite-uuid"
         assert result["usergroup_id"] == usergroup.id
-        fake_redis.set.assert_called_once()
+        # Code creation now uses an atomic Lua script (eval) instead of SET.
+        fake_redis.eval.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_invite_code_validation_and_limit_guards(
@@ -111,8 +115,8 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
-            return_value=_fake_redis(scan_keys=[f"k{i}" for i in range(6)]),
+            "src.services.orgs.invites._get_redis",
+            return_value=_fake_redis(eval_return=0),
         ):
             with pytest.raises(HTTPException) as limit_exc:
                 await create_invite_code(mock_request, org.id, admin_user, db)
@@ -125,7 +129,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(),
         ):
             with pytest.raises(HTTPException) as group_exc:
@@ -179,7 +183,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(),
         ):
             with pytest.raises(HTTPException) as create_org_exc:
@@ -215,7 +219,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=None,
         ):
             with pytest.raises(HTTPException) as create_conn_exc:
@@ -259,7 +263,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(scan_keys=[], values={b"invite-key": json.dumps(invite_payload)}),
         ):
             with pytest.raises(HTTPException) as get_code_missing_exc:
@@ -279,7 +283,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(scan_keys=[]),
         ):
             with pytest.raises(HTTPException) as delete_missing_keys_exc:
@@ -318,7 +322,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=fake_redis,
         ):
             result = await get_invite_codes(mock_request, org.id, admin_user, db)
@@ -350,7 +354,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=fake_redis,
         ):
             result = await get_invite_code(
@@ -370,7 +374,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(),
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -396,7 +400,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=fake_redis,
         ):
             result = await delete_invite_code(
@@ -417,7 +421,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.rbac_check",
             new_callable=AsyncMock,
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=_fake_redis(),
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -447,7 +451,7 @@ class TestOrgInvitesService:
             "src.services.orgs.invites.get_learnhouse_config",
             return_value=_fake_config(),
         ), patch(
-            "src.services.orgs.invites.redis.Redis.from_url",
+            "src.services.orgs.invites._get_redis",
             return_value=fake_redis,
         ), patch(
             "src.services.email.utils.get_org_signup_base_url",
@@ -485,3 +489,18 @@ class TestOrgInvitesService:
             )
 
         assert result is False
+
+
+class TestGetRedis:
+    def test_get_redis_creates_pool_on_first_call(self):
+        fake_pool = Mock()
+        fake_client = Mock()
+
+        with patch.object(invites_module, "_redis_pool", None), \
+             patch("src.services.orgs.invites.redis.ConnectionPool.from_url", return_value=fake_pool) as mock_pool, \
+             patch("src.services.orgs.invites.redis.Redis", return_value=fake_client) as mock_redis:
+            result = _get_redis("redis://test")
+
+        mock_pool.assert_called_once_with("redis://test", max_connections=10)
+        mock_redis.assert_called_once_with(connection_pool=fake_pool)
+        assert result is fake_client

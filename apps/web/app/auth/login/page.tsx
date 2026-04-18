@@ -11,10 +11,15 @@ export async function generateMetadata(): Promise<Metadata> {
     return { title: 'Login — LearnHouse' }
   }
 
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 60,
-    tags: ['organizations'],
-  })
+  let org: any = null
+  try {
+    org = await getOrganizationContextInfo(orgslug, {
+      revalidate: 60,
+      tags: ['organizations'],
+    })
+  } catch {
+    // Stale cookie or unknown org — fall back to generic title
+  }
 
   return {
     title: 'Login' + ` — ${org?.name || 'LearnHouse'}`,
@@ -29,10 +34,15 @@ const Login = async () => {
     return <OrgNotFound />
   }
 
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 60,
-    tags: ['organizations'],
-  })
+  let org: any = null
+  try {
+    org = await getOrganizationContextInfo(orgslug, {
+      revalidate: 60,
+      tags: ['organizations'],
+    })
+  } catch {
+    return <OrgNotFound />
+  }
 
   if (!org) {
     return <OrgNotFound />

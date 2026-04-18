@@ -1,5 +1,6 @@
 import React from 'react'
 import { Loader2 } from 'lucide-react'
+import { extractHtmlDocument } from './extractHtml'
 
 interface MagicBlockPreviewProps {
   htmlContent: string | null
@@ -29,21 +30,7 @@ function MagicBlockPreview({
       return
     }
 
-    // Extract HTML from the content (handle code blocks)
-    let html = contentToRender
-    if (html.includes('```html')) {
-      const start = html.indexOf('```html') + 7
-      const end = html.indexOf('```', start)
-      if (end !== -1) {
-        html = html.slice(start, end).trim()
-      }
-    } else if (html.includes('```')) {
-      const start = html.indexOf('```') + 3
-      const end = html.indexOf('```', start)
-      if (end !== -1) {
-        html = html.slice(start, end).trim()
-      }
-    }
+    let html = extractHtmlDocument(contentToRender) || contentToRender
 
     // Wrap content with security headers if it's not a complete document
     let wrappedHtml = html

@@ -420,6 +420,56 @@
   to { opacity: 0; transform: translate(-50%, -52%) scale(.96); }
 }
 
+/*
+  Shared <Modal> (components/ui/dialog.tsx) animations.
+  Centering uses the standalone `translate` CSS property (set inline) instead
+  of `transform` — that way the keyframes can animate `translate` + `scale`
+  + `opacity` cleanly, and on exit the modal slides DOWN as it fades.
+*/
+@keyframes modalEnter {
+  from { opacity: 0; scale: 0.94; }
+  to   { opacity: 1; scale: 1; }
+}
+
+@keyframes modalExit {
+  from { opacity: 1; scale: 1; }
+  to   { opacity: 0; scale: 0.96; }
+}
+
+/*
+  Plain CSS classes so Radix's <Presence> reliably detects the animation
+  via getComputedStyle(node).animationName on each state flip.
+
+  Easing: out-expo on enter for a natural spring settle (fast start, soft
+  landing) — feels modern without the cartoonish overshoot of a back-out.
+  Exit uses a sharp ease-in so the close feels instant, not draggy.
+*/
+.lh-modal-content[data-state="open"] {
+  animation: modalEnter 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lh-modal-content[data-state="closed"] {
+  animation: modalExit 120ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes modalOverlayEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalOverlayExit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.lh-modal-overlay[data-state="open"] {
+  animation: modalOverlayEnter 160ms ease-out forwards;
+}
+
+.lh-modal-overlay[data-state="closed"] {
+  animation: modalOverlayExit 130ms ease-in forwards;
+}
+
 /* Flipcard 3D Animation Styles */
 .flipcard-container {
   perspective: 1000px;
@@ -1475,15 +1525,16 @@
   padding: 12px;
   display: flex;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: var(--z-editor-toolbar);
-  width: -webkit-fill-available;
-  width: -moz-available;
+  left: 0;
+  right: 0;
+  width: auto;
   gap: 10px;
 }
 

@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlmodel import Session, select
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
@@ -14,8 +15,17 @@ import logging
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.courses.activities.versioning import create_activity_version
+from src.services.courses.locks import (
+    batch_accessible_restricted_uuids,
+    is_locked_for_user,
+    is_org_admin,
+)
 
 logger = logging.getLogger(__name__)
+
+# Module-level set to hold strong references to background embedding tasks,
+# preventing them from being garbage-collected before they complete.
+_embedding_tasks: set = set()
 
 
 ####################################################
@@ -61,26 +71,28 @@ async def create_activity(
     activity.org_id = chapter.org_id
     activity.course_id = chapter.course_id
 
-    # Insert Activity in DB
+    # Flush to get the DB-assigned ID without committing yet
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    db_session.flush()
 
-    # Find the last activity in the Chapter and add it to the list
-    statement = (
-        select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == activity_object.chapter_id)
-        .order_by(ChapterActivity.order) # type: ignore
-    )
-    chapter_activities = db_session.exec(statement).all()
+    if activity.id is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Activity creation failed: could not retrieve activity ID",
+        )
 
-    last_order = chapter_activities[-1].order if chapter_activities else 0
-    to_be_used_order = last_order + 1
+    # Determine insertion order using MAX to avoid loading all rows
+    max_order = db_session.exec(
+        select(func.max(ChapterActivity.order)).where(
+            ChapterActivity.chapter_id == activity_object.chapter_id
+        )
+    ).first()
+    to_be_used_order = (max_order or 0) + 1
 
     # Add activity to chapter
     activity_chapter = ChapterActivity(
         chapter_id=activity_object.chapter_id,
-        activity_id=activity.id if activity.id else 0,
+        activity_id=activity.id,
         course_id=chapter.course_id,
         org_id=chapter.org_id,
         creation_date=str(datetime.now()),
@@ -88,10 +100,10 @@ async def create_activity(
         order=to_be_used_order,
     )
 
-    # Insert ChapterActivity link in DB
+    # Single atomic commit for both Activity and ChapterActivity
     db_session.add(activity_chapter)
     db_session.commit()
-    db_session.refresh(activity_chapter)
+    db_session.refresh(activity)
 
     return ActivityRead.model_validate(activity)
 
@@ -125,7 +137,7 @@ async def get_activity(
     # Paid access check (via EE hook with fallback to True if EE not available)
     has_paid_access = await check_ee_activity_paid_access(
         request=request,
-        activity_id=activity.id if activity.id else 0,
+        activity_id=activity.id,
         user=current_user,
         db_session=db_session
     )
@@ -135,7 +147,79 @@ async def get_activity(
     # Include last modified user info
     activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
 
+    _apply_activity_lock(activity_read, activity, course, current_user, db_session)
+
     return activity_read
+
+
+def _apply_activity_lock(
+    activity_read: ActivityRead,
+    activity: Activity,
+    course: Course,
+    current_user,
+    db_session: Session,
+) -> None:
+    """Enforce chapter/activity lock_type on a single-activity read.
+
+    Admins/maintainers bypass. A usergroup attached at the course level also
+    unlocks every restricted chapter/activity inside that course (same
+    inheritance rule as the TOC read). For everyone else, if either the
+    activity or its parent chapter is locked, we scrub content/details and set
+    ``is_locked=True`` so the client renders a gate instead of an empty page.
+    """
+    is_anon = isinstance(current_user, AnonymousUser)
+    admin = False if is_anon else is_org_admin(current_user.id, course.org_id, db_session)
+    if admin:
+        return
+
+    parent_chapter_row = db_session.exec(
+        select(Chapter)
+        .join(ChapterActivity, ChapterActivity.chapter_id == Chapter.id)  # type: ignore
+        .where(ChapterActivity.activity_id == activity.id)
+    ).first()
+
+    check_uuids: list[str] = [course.course_uuid]
+    if (activity.lock_type or "public") == "restricted":
+        check_uuids.append(activity.activity_uuid)
+    if parent_chapter_row and (parent_chapter_row.lock_type or "public") == "restricted":
+        check_uuids.append(parent_chapter_row.chapter_uuid)
+
+    accessible: set[str] = set()
+    if not is_anon:
+        accessible = batch_accessible_restricted_uuids(
+            current_user.id, check_uuids, db_session
+        )
+
+    # Course-level usergroup membership unlocks everything below it.
+    if course.course_uuid in accessible:
+        return
+
+    chapter_locked = False
+    if parent_chapter_row:
+        chapter_locked = is_locked_for_user(
+            parent_chapter_row.lock_type,
+            parent_chapter_row.chapter_uuid,
+            course.org_id,
+            current_user,
+            db_session,
+            accessible_restricted_uuids=accessible,
+            is_admin=admin,
+        )
+
+    activity_locked = chapter_locked or is_locked_for_user(
+        activity.lock_type,
+        activity.activity_uuid,
+        course.org_id,
+        current_user,
+        db_session,
+        accessible_restricted_uuids=accessible,
+        is_admin=admin,
+    )
+
+    if activity_locked:
+        activity_read.content = {}
+        activity_read.details = None
+        activity_read.is_locked = True
 
 async def get_activityby_id(
     request: Request,
@@ -172,10 +256,6 @@ async def update_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    import logging
-    import json
-    logger = logging.getLogger(__name__)
-
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
@@ -211,27 +291,8 @@ async def update_activity(
         # Track who made the change
         activity.last_modified_by_id = user_id
 
-    # Debug logging for content updates
-    if 'content' in update_data:
-        content = update_data['content']
-        logger.info(f"[Activity Update] Activity UUID: {activity_uuid}")
-        logger.info(f"[Activity Update] Content type: {type(content)}")
-        if isinstance(content, dict):
-            logger.info(f"[Activity Update] Content has 'type' key: {'type' in content}")
-            logger.info(f"[Activity Update] Content 'type' value: {content.get('type')}")
-            try:
-                # Test serialization with ensure_ascii=False to preserve Unicode
-                content_json = json.dumps(content, ensure_ascii=False)
-                logger.info(f"[Activity Update] Content JSON size: {len(content_json)} bytes")
-                logger.info(f"[Activity Update] Content JSON valid: {content_json.startswith('{') and content_json.endswith('}')}")
-                # Try to parse it back to verify round-trip
-                json.loads(content_json)
-                logger.info("[Activity Update] Content JSON round-trip: SUCCESS")
-            except Exception as e:
-                logger.error(f"[Activity Update] Content JSON serialization error: {e}")
-        elif isinstance(content, str):
-            logger.warning(f"[Activity Update] Content is STRING not dict! Length: {len(content)}")
-            logger.warning(f"[Activity Update] Content preview: {content[:200]}")
+    if 'content' in update_data and isinstance(update_data['content'], str):
+        logger.warning("[Activity Update] Content is STRING not dict for %s", activity_uuid)
 
     for field, value in update_data.items():
         setattr(activity, field, value)
@@ -248,16 +309,13 @@ async def update_activity(
     db_session.commit()
     db_session.refresh(activity)
 
-    # Verify the save worked
-    if 'content' in update_data:
-        logger.info(f"[Activity Update] Post-save content type: {type(activity.content)}")
-        if isinstance(activity.content, dict):
-            logger.info(f"[Activity Update] Post-save content 'type': {activity.content.get('type')}")
-
     # Trigger background re-indexing for RAG when content changes
     if 'content' in update_data:
-        asyncio.create_task(
-            _trigger_course_embedding(activity.course_id, activity.org_id)
+        task = asyncio.create_task(_trigger_course_embedding(activity.course_id, activity.org_id))
+        _embedding_tasks.add(task)
+        task.add_done_callback(_embedding_tasks.discard)
+        task.add_done_callback(
+            lambda t: logger.error("Embedding task failed: %s", t.exception()) if t.exception() else None
         )
 
     activity = ActivityRead.model_validate(activity)
@@ -271,9 +329,12 @@ async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
         from src.core.events.database import get_db_session
         from src.services.ai.rag.embedding_service import embed_course_content
 
-        # Create a new DB session for the background task
         for session in get_db_session():
-            embed_course_content(course_id, org_id, session)
+            course = session.exec(select(Course).where(Course.id == course_id)).first()
+            if not course:
+                logger.warning("Skipping embedding for deleted course %d", course_id)
+                return
+            await embed_course_content(course_id, org_id, session)
     except Exception as e:
         logger.warning("Background embedding update failed (non-critical): %s", e)
 
@@ -344,44 +405,26 @@ async def get_activities(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> list[ActivityRead]:
-    # Get activities that are published and belong to the chapter
+    # Single query joining Activity, Chapter, and Course to avoid 3 sequential queries
     statement = (
-        select(Activity)
-        .join(ChapterActivity)
+        select(Activity, Chapter, Course)
+        .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+        .join(Chapter, ChapterActivity.chapter_id == Chapter.id)
+        .join(Course, Chapter.course_id == Course.id)
         .where(
             ChapterActivity.chapter_id == coursechapter_id,
-            Activity.published == True
+            Activity.published == True,
         )
     )
-    activities = db_session.exec(statement).all()
+    results = db_session.exec(statement).all()
 
-    if not activities:
+    if not results:
         raise HTTPException(
             status_code=404,
             detail="No published activities found",
         )
 
-    # RBAC check
-    statement = select(Chapter).where(Chapter.id == coursechapter_id)
-    chapter = db_session.exec(statement).first()
-    
-    if not chapter:
-        raise HTTPException(
-            status_code=404,
-            detail="Chapter not found",
-        )
-
-    statement = select(Course).where(Course.id == chapter.course_id)
-    course = db_session.exec(statement).first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
-
+    _, chapter, course = results[0]
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    activities = [ActivityRead.model_validate(activity) for activity in activities]
-
-    return activities
+    return [ActivityRead.model_validate(activity) for activity, _, _ in results]

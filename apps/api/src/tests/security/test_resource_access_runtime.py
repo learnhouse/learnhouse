@@ -567,8 +567,10 @@ class TestResourceAccessRuntime:
 
         checker = self._checker(mock_request, session, public_user)
         session.exec.return_value.all.return_value = []
+        # No UserGroups linked → any authenticated user has access, regardless
+        # of the resource's public flag (UsersOnly semantics).
         assert await checker._check_usergroup_membership("course_2", True) is True
-        assert await checker._check_usergroup_membership("course_3", False) is False
+        assert await checker._check_usergroup_membership("course_3", False) is True
 
         checker = self._checker(mock_request, session, public_user)
         session.exec.return_value.all.return_value = [SimpleNamespace(usergroup_id=1)]

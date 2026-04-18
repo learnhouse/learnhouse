@@ -784,12 +784,12 @@ class ResourceAccessChecker:
         )
         usergroup_resources = self.db_session.exec(usergroup_stmt).all()
 
-        # If no UserGroups linked:
-        # - Public resources: accessible to all authenticated users
-        # - Non-public resources: not accessible (only authors/admins can access)
+        # If no UserGroups linked, resource is accessible to any authenticated user.
+        # UsersOnly semantics: public=false + no linked group = signed-in users only;
+        # the anonymous branch short-circuits above via user_id == 0.
         if not usergroup_resources:
-            self._usergroup_cache[cache_key] = is_public
-            return is_public
+            self._usergroup_cache[cache_key] = True
+            return True
 
         # Check if user is a member of any linked UserGroup
         usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]

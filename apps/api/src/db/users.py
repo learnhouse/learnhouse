@@ -1,4 +1,5 @@
 from typing import Optional, TYPE_CHECKING
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Column, Index
@@ -114,6 +115,7 @@ class User(UserBase, table=True):
     last_login_ip: Optional[str] = None
     signup_method: Optional[str] = None
     is_superadmin: bool = Field(default=False)
+    password_changed_at: Optional[datetime] = Field(default=None)
     creation_date: str = ""
     update_date: str = ""
 

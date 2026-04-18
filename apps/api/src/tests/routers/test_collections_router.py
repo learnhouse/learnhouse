@@ -97,3 +97,25 @@ class TestDeleteCollection:
         response = await client.delete("/api/v1/collections/collection_test")
 
         assert response.status_code == 200
+
+
+class TestUpdateCollection:
+    """Tests for PUT /api/v1/collections/{collection_uuid} (line 107)."""
+
+    async def test_update_collection(
+        self, client, org, course, collection, bypass_rbac, bypass_webhooks
+    ):
+        payload = {
+            "name": "Updated Collection",
+            "public": True,
+            "courses": [1],
+            "org_id": 1,
+        }
+
+        response = await client.put(
+            "/api/v1/collections/collection_test", json=payload
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["name"] == "Updated Collection"

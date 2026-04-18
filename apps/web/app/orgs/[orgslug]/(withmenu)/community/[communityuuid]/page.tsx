@@ -1,5 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getServerSession } from '@/lib/auth/server'
 import { getCommunity } from '@services/communities/communities'
 import { getDiscussions, DiscussionWithAuthor } from '@services/communities/discussions'
@@ -91,6 +92,7 @@ const CommunityPage = async (params: any) => {
   const org_id = org.id
 
   let community = null
+  let communityError: { status?: number } | null = null
   let discussions: DiscussionWithAuthor[] = []
 
   try {
@@ -99,7 +101,8 @@ const CommunityPage = async (params: any) => {
       { revalidate: 120, tags: ['communities'] },
       access_token ? access_token : undefined
     )
-  } catch (error) {
+  } catch (error: any) {
+    communityError = { status: error?.status }
     console.error('Failed to fetch community:', error)
   }
 
@@ -119,12 +122,17 @@ const CommunityPage = async (params: any) => {
     }
   }
 
+  // Missing, or denied-to-anon: 404 so non-public communities aren't enumerable.
+  if (!community && (!communityError || !access_token)) {
+    notFound()
+  }
+
   if (!community) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-600">Community not found</h1>
-          <p className="text-gray-400 mt-2">This community doesn't exist or you don't have access</p>
+          <h1 className="text-2xl font-bold text-gray-600">You don't have access</h1>
+          <p className="text-gray-400 mt-2">You do not have permission to view this community.</p>
         </div>
       </div>
     )

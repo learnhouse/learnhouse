@@ -25,6 +25,7 @@ function normalizeMarkTypes(content: any): any {
   return normalized;
 }
 // Custom Extensions
+import Callout from '@components/Objects/Editor/Extensions/Callout/Callout'
 import InfoCallout from '@components/Objects/Editor/Extensions/Callout/Info/InfoCallout'
 import WarningCallout from '@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from '@components/Objects/Editor/Extensions/Image/ImageBlock'
@@ -111,12 +112,10 @@ function Canva(props: Editor) {
       CustomHeading,
       NoTextInput,
       // Custom Extensions
-      InfoCallout.configure({
-        editable: isEditable,
-      }),
-      WarningCallout.configure({
-        editable: isEditable,
-      }),
+      Callout,
+      // Legacy nodes — backward compat with existing calloutInfo/calloutWarning content
+      InfoCallout.configure({ editable: isEditable }),
+      WarningCallout.configure({ editable: isEditable }),
       ImageBlock.configure({
         editable: isEditable,
         activity: props.activity,
@@ -200,7 +199,7 @@ function Canva(props: Editor) {
     <EditorOptionsProvider options={{ isEditable: false }}>
       <div className="w-full mx-auto">
         <AICanvaToolkit activity={props.activity} editor={editor} />
-        <div className={props.hideTableOfContents ? '' : 'canva-content-wrapper'}>
+        <div className="canva-content-wrapper">
           {!props.hideTableOfContents && <TableOfContents editor={editor} />}
           <EditorContent editor={editor} />
         </div>

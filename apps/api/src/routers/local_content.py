@@ -39,7 +39,7 @@ def _validate_content_path(file_path: str) -> Path | None:
     if '..' in decoded or decoded.startswith('/') or '\x00' in decoded:
         return None
     normalized = decoded.replace('\\', '/')
-    if '..' in normalized:
+    if '..' in normalized:  # pragma: no cover
         return None
 
     # Canonicalize via os.path.realpath (resolves symlinks, normalizes) and verify containment.

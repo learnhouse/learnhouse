@@ -13,7 +13,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PageViewTracker } from '@components/Analytics/PageViewTracker'
 import { usePathname } from 'next/navigation'
-import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 import { getGoogleFontUrl, DEFAULT_FONT } from '@/lib/fonts'
 
@@ -32,7 +31,7 @@ function OrgFooter() {
   const plan = usePlan()
   const watermarkConfig = org?.config?.config?.customization?.general?.watermark ?? org?.config?.config?.general?.watermark
   const isFree = plan === 'free'
-  const showWatermark = isOSSMode() || isFree || watermarkConfig !== false
+  const showWatermark = isFree || watermarkConfig !== false
 
   return (
     <footer className="w-full py-8 mt-12">

@@ -132,105 +132,66 @@ async def get_element_organization_id(
     element_type = await check_element_type(element_uuid)
 
     if element_type == "courses":
-        statement = select(Course).where(Course.course_uuid == element_uuid)
-        course = db_session.exec(statement).first()
-        return course.org_id if course else None
+        return db_session.exec(select(Course.org_id).where(Course.course_uuid == element_uuid)).first()
 
     elif element_type == "coursechapters":
-        statement = select(Chapter).where(Chapter.chapter_uuid == element_uuid)
-        chapter = db_session.exec(statement).first()
-        if chapter:
-            # Get org_id from the course
-            course_statement = select(Course).where(Course.id == chapter.course_id)
-            course = db_session.exec(course_statement).first()
-            return course.org_id if course else None
-        return None
+        # Chapter stores org_id directly, no need to join Course
+        return db_session.exec(select(Chapter.org_id).where(Chapter.chapter_uuid == element_uuid)).first()
 
     elif element_type == "activities":
-        statement = select(Activity).where(Activity.activity_uuid == element_uuid)
-        activity = db_session.exec(statement).first()
-        if activity:
-            # Get org_id from the course directly
-            course_statement = select(Course).where(Course.id == activity.course_id)
-            course = db_session.exec(course_statement).first()
-            return course.org_id if course else None
-        return None
+        # Activity stores org_id directly, no need to join Course
+        return db_session.exec(select(Activity.org_id).where(Activity.activity_uuid == element_uuid)).first()
 
     elif element_type == "collections":
-        statement = select(Collection).where(Collection.collection_uuid == element_uuid)
-        collection = db_session.exec(statement).first()
-        return collection.org_id if collection else None
+        return db_session.exec(select(Collection.org_id).where(Collection.collection_uuid == element_uuid)).first()
 
     elif element_type == "organizations":
-        statement = select(Organization).where(Organization.org_uuid == element_uuid)
-        org = db_session.exec(statement).first()
-        return org.id if org else None
+        return db_session.exec(select(Organization.id).where(Organization.org_uuid == element_uuid)).first()
 
     elif element_type == "roles":
-        statement = select(Role).where(Role.role_uuid == element_uuid)
-        role = db_session.exec(statement).first()
-        return role.org_id if role else None
+        return db_session.exec(select(Role.org_id).where(Role.role_uuid == element_uuid)).first()
 
     elif element_type == "usergroups":
-        statement = select(UserGroup).where(UserGroup.usergroup_uuid == element_uuid)
-        usergroup = db_session.exec(statement).first()
-        return usergroup.org_id if usergroup else None
+        return db_session.exec(select(UserGroup.org_id).where(UserGroup.usergroup_uuid == element_uuid)).first()
 
     elif element_type == "users":
-        # Users are not scoped to a single organization
-        # For API tokens, we need to verify user access differently
         return None
 
     elif element_type == "houses":
-        # Houses might not have org_id - return None
         return None
 
     elif element_type == "communities":
         from src.db.communities.communities import Community
-        statement = select(Community).where(Community.community_uuid == element_uuid)
-        community = db_session.exec(statement).first()
-        return community.org_id if community else None
+        return db_session.exec(select(Community.org_id).where(Community.community_uuid == element_uuid)).first()
 
     elif element_type == "discussions":
         from src.db.communities.discussions import Discussion
-        statement = select(Discussion).where(Discussion.discussion_uuid == element_uuid)
-        discussion = db_session.exec(statement).first()
-        return discussion.org_id if discussion else None
+        return db_session.exec(select(Discussion.org_id).where(Discussion.discussion_uuid == element_uuid)).first()
 
     elif element_type == "votes":
-        # Votes don't have org_id directly, need to get from discussion
         from src.db.communities.discussion_votes import DiscussionVote
         from src.db.communities.discussions import Discussion
-        statement = select(DiscussionVote).where(DiscussionVote.vote_uuid == element_uuid)
-        vote = db_session.exec(statement).first()
-        if vote:
-            discussion_statement = select(Discussion).where(Discussion.id == vote.discussion_id)
-            discussion = db_session.exec(discussion_statement).first()
-            return discussion.org_id if discussion else None
-        return None
+        return db_session.exec(
+            select(Discussion.org_id)
+            .join(DiscussionVote, Discussion.id == DiscussionVote.discussion_id)
+            .where(DiscussionVote.vote_uuid == element_uuid)
+        ).first()
 
     elif element_type == "podcasts":
         from src.db.podcasts.podcasts import Podcast
-        statement = select(Podcast).where(Podcast.podcast_uuid == element_uuid)
-        podcast = db_session.exec(statement).first()
-        return podcast.org_id if podcast else None
+        return db_session.exec(select(Podcast.org_id).where(Podcast.podcast_uuid == element_uuid)).first()
 
     elif element_type == "episodes":
         from src.db.podcasts.episodes import PodcastEpisode
         from src.db.podcasts.podcasts import Podcast
-        statement = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == element_uuid)
-        episode = db_session.exec(statement).first()
-        if episode:
-            podcast_statement = select(Podcast).where(Podcast.id == episode.podcast_id)
-            podcast = db_session.exec(podcast_statement).first()
-            return podcast.org_id if podcast else None
-        return None
+        return db_session.exec(
+            select(Podcast.org_id)
+            .join(PodcastEpisode, Podcast.id == PodcastEpisode.podcast_id)
+            .where(PodcastEpisode.episode_uuid == element_uuid)
+        ).first()
 
     elif element_type == "boards":
         from src.db.boards import Board
-        statement = select(Board).where(Board.board_uuid == element_uuid)
-        board = db_session.exec(statement).first()
-        return board.org_id if board else None
+        return db_session.exec(select(Board.org_id).where(Board.board_uuid == element_uuid)).first()
 
-    # Unknown element type
     return None

@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MessageSquare, Send, Loader2, User, AlertCircle, Lock, UserPlus } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
+import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import {
   getComments,
   createComment,
@@ -14,16 +16,18 @@ import UserAvatar from '@components/Objects/UserAvatar'
 
 interface CommentSectionProps {
   discussionUuid: string
+  communityUuid?: string
   isLocked?: boolean
 }
 
-export function CommentSection({ discussionUuid, isLocked = false }: CommentSectionProps) {
+export function CommentSection({ discussionUuid, communityUuid, isLocked = false }: CommentSectionProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const currentUser = session?.data?.user
   const { isUserPartOfTheOrg } = useOrgMembership()
+  const { canManageCommunity } = useCommunityRights(communityUuid || '')
   const canComment = isAuthenticated && isUserPartOfTheOrg
 
   const [comments, setComments] = useState<DiscussionCommentWithAuthor[]>([])
@@ -39,8 +43,8 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
     try {
       const result = await getComments(discussionUuid, 1, 100, null, accessToken)
       setComments(result || [])
-    } catch (error) {
-      console.error('Failed to fetch replies:', error)
+    } catch (_error) {
+      // silent — loading errors are handled by the empty state
     } finally {
       setIsLoading(false)
     }
@@ -66,15 +70,13 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
       setNewComment('')
       setIsFocused(false)
     } catch (err: any) {
-      console.error('Failed to post reply:', err)
-      // Handle moderation error
-      if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || t('communities.comments.content_not_allowed'))
-      } else if (typeof err?.detail === 'string') {
-        setError(err.detail)
-      } else {
-        setError(t('communities.comments.failed_to_post'))
-      }
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.comments.failed_to_post')
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -115,6 +117,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
             <CommentCard
               key={comment.comment_uuid}
               comment={comment}
+              canManage={canManageCommunity}
               onDeleted={handleCommentDeleted}
               onUpdated={handleCommentUpdated}
             />

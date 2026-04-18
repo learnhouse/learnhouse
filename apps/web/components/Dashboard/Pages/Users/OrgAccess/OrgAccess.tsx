@@ -85,8 +85,9 @@ function OrgAccess() {
     const toastId = toast.loading(t('dashboard.users.signups.invite_codes.toasts.changing_method'))
     let res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
-      router.refresh()
+      setJoinMethod(method)
       mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)
+      router.refresh()
       toast.success(t('dashboard.users.signups.invite_codes.toasts.change_success', { method }), {id:toastId})
     } else {
       toast.error(t('dashboard.users.signups.invite_codes.toasts.change_error'), {id:toastId})

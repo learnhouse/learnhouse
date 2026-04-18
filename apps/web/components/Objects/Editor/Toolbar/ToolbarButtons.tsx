@@ -1,40 +1,40 @@
+import { DividerVerticalIcon } from '@radix-ui/react-icons'
 import {
-  FontBoldIcon,
-  FontItalicIcon,
-  StrikethroughIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  DividerVerticalIcon,
-  ListBulletIcon,
-  TableIcon,
-  RowsIcon,
-  ColumnsIcon,
-  SectionIcon,
-  ContainerIcon,
-  ChevronDownIcon,
-} from '@radix-ui/react-icons'
-import {
-  AlertCircle,
-  AlertTriangle,
-  BadgeHelp,
+  ArrowCounterClockwise,
+  ArrowClockwise,
+  ArrowsClockwise,
+  BracketsCurly,
+  CaretDown,
+  CheckCircle,
   Code,
-  CodeSquare,
-  Cuboid,
+  Columns,
+  ColumnsPlusRight,
+  Cube,
+  CursorClick,
   FileText,
-  ImagePlus,
-  Link2,
-  MousePointerClick,
-  RotateCw,
-  Sigma,
-  Tags,
-  User,
-  Video,
-  List,
-  ListOrdered,
-  Globe,
   GitBranch,
+  Globe,
   Headphones,
-} from 'lucide-react'
+  Image as ImageIcon,
+  Info,
+  Lightbulb,
+  Link,
+  ListBullets,
+  ListNumbers,
+  Rows,
+  RowsPlusBottom,
+  SealQuestion,
+  Sigma,
+  Table,
+  Tag,
+  TextB,
+  TextItalic,
+  TextStrikethrough,
+  User,
+  VideoCamera,
+  Warning,
+  XCircle,
+} from '@phosphor-icons/react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import React from 'react'
@@ -49,6 +49,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
   const [showCodeMenu, setShowCodeMenu] = React.useState(false)
+  const [showCalloutMenu, setShowCalloutMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
@@ -65,27 +66,27 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   const tableOptions = [
     {
       label: t('editor.toolbar.insert_table'),
-      icon: <TableIcon />,
+      icon: <Table size={15} />,
       action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
     },
     {
       label: t('editor.toolbar.add_row'),
-      icon: <RowsIcon />,
+      icon: <RowsPlusBottom size={15} />,
       action: () => editor.chain().focus().addRowAfter().run()
     },
     {
       label: t('editor.toolbar.add_column'),
-      icon: <ColumnsIcon />,
+      icon: <ColumnsPlusRight size={15} />,
       action: () => editor.chain().focus().addColumnAfter().run()
     },
     {
       label: t('editor.toolbar.delete_row'),
-      icon: <SectionIcon />,
+      icon: <Rows size={15} />,
       action: () => editor.chain().focus().deleteRow().run()
     },
     {
       label: t('editor.toolbar.delete_column'),
-      icon: <ContainerIcon />,
+      icon: <Columns size={15} />,
       action: () => editor.chain().focus().deleteColumn().run()
     }
   ]
@@ -93,7 +94,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   const listOptions = [
     {
       label: t('editor.toolbar.bullet_list'),
-      icon: <List size={15} />,
+      icon: <ListBullets size={15} />,
       action: () => {
         if (editor.isActive('bulletList')) {
           editor.chain().focus().toggleBulletList().run()
@@ -105,7 +106,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
     },
     {
       label: t('editor.toolbar.ordered_list'),
-      icon: <ListOrdered size={15} />,
+      icon: <ListNumbers size={15} />,
       action: () => {
         if (editor.isActive('orderedList')) {
           editor.chain().focus().toggleOrderedList().run()
@@ -161,31 +162,31 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
   return (
     <div className="flex flex-row items-center justify-start flex-wrap gap-[7px] max-[1200px]:gap-[5px]">
       <div className="editor-tool-btn" onClick={() => editor.chain().focus().undo().run()} aria-label="Undo last action">
-        <ArrowLeftIcon />
+        <ArrowCounterClockwise size={15} />
       </div>
       <div className="editor-tool-btn" onClick={() => editor.chain().focus().redo().run()} aria-label="Redo last action">
-        <ArrowRightIcon />
+        <ArrowClockwise size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`editor-tool-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
         aria-label="Toggle bold formatting"
       >
-        <FontBoldIcon />
+        <TextB size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`editor-tool-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
         aria-label="Toggle italic formatting"
       >
-        <FontItalicIcon />
+        <TextItalic size={15} />
       </div>
       <div
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`editor-tool-btn ${editor.isActive('strike') ? 'is-active' : ''}`}
         aria-label="Toggle strikethrough formatting"
       >
-        <StrikethroughIcon />
+        <TextStrikethrough size={15} />
       </div>
       <div className="relative inline-block shrink-0">
         <div
@@ -193,8 +194,8 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           className={`editor-tool-btn ${showListMenu || editor.isActive('bulletList') || editor.isActive('orderedList') ? 'is-active' : ''}`}
           aria-label="Insert list"
         >
-          <ListBulletIcon />
-          <ChevronDownIcon />
+          <ListBullets size={15} />
+          <CaretDown size={10} />
         </div>
         {showListMenu && (
           <div className="editor-menu-dropdown">
@@ -247,8 +248,8 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           className={`editor-tool-btn ${showTableMenu ? 'is-active' : ''}`}
           aria-label="Insert table"
         >
-          <TableIcon width={18} />
-          <ChevronDownIcon  />
+          <Table size={15} />
+          <CaretDown size={10} />
         </div>
         {showTableMenu && (
           <div className="editor-menu-dropdown">
@@ -271,26 +272,50 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
       <DividerVerticalIcon
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
       />
-      <ToolTip content={t('editor.blocks.info_callout')}>
+      <div className="relative inline-block shrink-0">
         <div
-          className="editor-tool-btn editor-tool-btn-info"
-          onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()}
-          aria-label={t('editor.blocks.info_callout')}
+          onClick={() => setShowCalloutMenu(!showCalloutMenu)}
+          className={`editor-tool-btn editor-tool-btn-info ${
+            showCalloutMenu ||
+            editor.isActive('callout') ||
+            editor.isActive('calloutInfo') ||
+            editor.isActive('calloutWarning')
+              ? 'is-active'
+              : ''
+          }`}
+          aria-label="Callout"
         >
-          <AlertCircle size={15} />
+          <Info size={15} />
+          <CaretDown size={10} />
         </div>
-      </ToolTip>
-      <ToolTip content={t('editor.blocks.warning_callout')}>
-        <div
-          className="editor-tool-btn editor-tool-btn-warning"
-          onClick={() =>
-            editor.chain().focus().toggleNode('calloutWarning').run()
-          }
-          aria-label={t('editor.blocks.warning_callout')}
-        >
-          <AlertTriangle size={15} />
-        </div>
-      </ToolTip>
+        {showCalloutMenu && (
+          <div className="editor-menu-dropdown">
+            {[
+              { type: 'info',    label: 'Info',    icon: <Info      size={14} weight="fill" />, style: 'text-gray-500'   },
+              { type: 'warning', label: 'Warning', icon: <Warning   size={14} weight="fill" />, style: 'text-yellow-500' },
+              { type: 'tip',     label: 'Tip',     icon: <Lightbulb size={14} weight="fill" />, style: 'text-green-500'  },
+              { type: 'success', label: 'Success', icon: <CheckCircle size={14} weight="fill" />, style: 'text-teal-500' },
+              { type: 'error',   label: 'Error',   icon: <XCircle   size={14} weight="fill" />, style: 'text-red-500'   },
+            ].map(({ type, label, icon, style }) => (
+              <div
+                key={type}
+                onClick={() => {
+                  editor.chain().focus().insertContent({
+                    type: 'callout',
+                    attrs: { type },
+                    content: [],
+                  }).run()
+                  setShowCalloutMenu(false)
+                }}
+                className="editor-menu-item"
+              >
+                <span className={`icon ${style}`}>{icon}</span>
+                <span className="label">{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <ToolTip content={t('editor.toolbar.link')}>
         <div style={{ position: 'relative' }}>
           <div
@@ -299,7 +324,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
             className={`editor-tool-btn editor-tool-btn-link ${editor.isActive('link') ? 'is-active' : ''}`}
             aria-label={t('editor.toolbar.link')}
           >
-            <Link2 size={15} />
+            <Link size={15} />
           </div>
           {showLinkInput && (
             <LinkInputTooltip
@@ -324,7 +349,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.image')}
         >
-          <ImagePlus size={15} />
+          <ImageIcon size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.video')}>
@@ -341,7 +366,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.video')}
         >
-          <Video size={15} />
+          <VideoCamera size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content="Audio">
@@ -358,7 +383,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label="Audio"
         >
-          <Headphones size={15} />
+          <Headphones size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.youtube')}>
@@ -380,7 +405,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.math')}
         >
-          <Sigma size={15} />
+          <Sigma size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.pdf')}>
@@ -397,7 +422,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.pdf')}
         >
-          <FileText size={15} />
+          <FileText size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.quiz')}>
@@ -414,7 +439,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.quiz')}
         >
-          <BadgeHelp size={15} />
+          <SealQuestion size={15} weight="fill" />
         </div>
       </ToolTip>
       <div className="relative inline-block shrink-0">
@@ -423,8 +448,8 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           className={`editor-tool-btn editor-tool-btn-code ${showCodeMenu || editor.isActive('codeBlock') || editor.isActive('blockCode') ? 'is-active' : ''}`}
           aria-label={t('editor.toolbar.code_block')}
         >
-          <Code size={15} />
-          <ChevronDownIcon />
+          <Code size={15} weight="fill" />
+          <CaretDown size={10} />
         </div>
         {showCodeMenu && (
           <div className="editor-menu-dropdown">
@@ -435,7 +460,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
               }}
               className={`editor-menu-item ${editor.isActive('codeBlock') ? 'is-active' : ''}`}
             >
-              <span className="icon"><Code size={15} /></span>
+              <span className="icon"><Code size={15} weight="fill" /></span>
               <span className="label">Basic</span>
             </div>
             <div
@@ -454,7 +479,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
               }}
               className="editor-menu-item"
             >
-              <span className="icon"><CodeSquare size={15} /></span>
+              <span className="icon"><BracketsCurly size={15} weight="fill" /></span>
               <span className="label">Playground</span>
             </div>
           </div>
@@ -466,7 +491,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
           aria-label={t('editor.blocks.embed')}
         >
-          <Cuboid size={15} />
+          <Cube size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.badge')}>
@@ -483,7 +508,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }).run()}
           aria-label={t('editor.blocks.badge')}
         >
-          <Tags size={15} />
+          <Tag size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.button')}>
@@ -500,7 +525,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }).run()}
           aria-label={t('editor.blocks.button')}
         >
-          <MousePointerClick size={15} />
+          <CursorClick size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.user')}>
@@ -509,7 +534,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
           aria-label={t('editor.blocks.user')}
         >
-          <User size={15} />
+          <User size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.web_preview')}>
@@ -522,7 +547,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.web_preview')}
         >
-          <Globe size={15} />
+          <Globe size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.flipcard')}>
@@ -542,7 +567,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.flipcard')}
         >
-          <RotateCw size={15} />
+          <ArrowsClockwise size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={t('editor.blocks.scenario')}>
@@ -588,7 +613,7 @@ export const ToolbarButtons = React.memo(({ editor, props }: any) => {
           }
           aria-label={t('editor.blocks.scenario')}
         >
-          <GitBranch size={15} />
+          <GitBranch size={15} weight="fill" />
         </div>
       </ToolTip>
       <ToolTip content={canUseAI ? t('editor.blocks.magic_block') : t('editor.blocks.magic_block_disabled')}>

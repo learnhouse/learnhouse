@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException, Request
@@ -340,3 +342,63 @@ class TestAuth:
 
         token = extract_jwt_from_request(mock_request)
         assert token is None
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_non_session_purpose_raises_401(self, mock_request, mock_db_session):
+        """Token with a non-session purpose is rejected with 401."""
+        token = create_access_token({"sub": "test@example.com", "purpose": "password_reset"})
+
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {JWT_COOKIE_NAME: token}
+
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user(request=mock_request, db_session=mock_db_session)
+
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_stale_token_after_password_change_raises_401(
+        self, mock_request, mock_db_session, mock_user
+    ):
+        """Token issued before password_changed_at is rejected with 401."""
+        # Include an explicit iat claim (the library does not add it automatically)
+        past_iat = int(time.time()) - 10
+        token = create_access_token({"sub": "test@example.com", "iat": past_iat})
+
+        # Set password_changed_at after the token iat (aware datetime)
+        mock_user.password_changed_at = datetime.now(timezone.utc)
+
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {JWT_COOKIE_NAME: token}
+        mock_request.state = Mock()
+
+        with patch("src.security.auth.security_get_user", new_callable=AsyncMock, return_value=mock_user):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(request=mock_request, db_session=mock_db_session)
+
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_stale_token_naive_password_changed_at_raises_401(
+        self, mock_request, mock_db_session, mock_user
+    ):
+        """Naive password_changed_at (no tzinfo) is treated as UTC and still rejects stale token."""
+        # Include an explicit iat claim set in the past
+        past_iat = int(time.time()) - 10
+        token = create_access_token({"sub": "test@example.com", "iat": past_iat})
+
+        # Set password_changed_at as a naive datetime after the token iat
+        mock_user.password_changed_at = datetime.now()
+
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {JWT_COOKIE_NAME: token}
+        mock_request.state = Mock()
+
+        with patch("src.security.auth.security_get_user", new_callable=AsyncMock, return_value=mock_user):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(request=mock_request, db_session=mock_db_session)
+
+        assert exc_info.value.status_code == 401
