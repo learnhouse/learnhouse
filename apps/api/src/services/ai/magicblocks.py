@@ -301,19 +301,32 @@ Please modify the HTML code above according to the user's request. Output ONLY t
 
 
 def extract_html_from_response(response: str) -> str:
-    """Extract HTML content from the AI response"""
-    # If the response is wrapped in code blocks, extract it
-    if "```html" in response:
-        start = response.find("```html") + 7
-        end = response.find("```", start)
-        if end != -1:
-            return response[start:end].strip()
+    """Extract a single HTML document from the AI response.
 
-    if "```" in response:
-        start = response.find("```") + 3
-        end = response.find("```", start)
-        if end != -1:
-            return response[start:end].strip()
+    Handles markdown code fences and trims to the first complete
+    <!DOCTYPE html>...</html> so duplicated documents don't propagate.
+    """
+    import re
 
-    # If no code blocks, return the response as is (should be raw HTML)
-    return response.strip()
+    text = response
+
+    if "```html" in text:
+        start = text.find("```html") + 7
+        end = text.find("```", start)
+        if end != -1:
+            text = text[start:end]
+    elif "```" in text:
+        start = text.find("```") + 3
+        end = text.find("```", start)
+        if end != -1:
+            text = text[start:end]
+
+    doc_start = re.search(r"<!doctype\s+html[^>]*>|<html[\s>]", text, re.IGNORECASE)
+    if doc_start and doc_start.start() > 0:
+        text = text[doc_start.start():]
+
+    doc_end = re.search(r"</html\s*>", text, re.IGNORECASE)
+    if doc_end:
+        text = text[: doc_end.end()]
+
+    return text.strip()

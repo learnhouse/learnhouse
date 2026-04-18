@@ -121,7 +121,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   // Ensure block has a UUID
   React.useEffect(() => {
     if (!node.attrs.blockUuid) {
-      updateAttributes({ blockUuid })
+      queueMicrotask(() => updateAttributes({ blockUuid }))
     }
   }, [node.attrs.blockUuid, blockUuid, updateAttributes])
 
