@@ -1,0 +1,61 @@
+services:
+  lms:
+    image: coins-lms:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      LEARNHOUSE_SELF_HOSTED: "true"
+      LEARNHOUSE_SSL: "true"
+      LEARNHOUSE_EMAIL_PROVIDER: "resend"
+      LEARNHOUSE_USE_DEFAULT_ORG: "true"
+      LEARNHOUSE_SQL_CONNECTION_STRING: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      LEARNHOUSE_REDIS_CONNECTION_STRING: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - lms_content:/app/api/content
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lms.rule=Host(`${LMS_HOST}`)"
+      - "traefik.http.routers.lms.entrypoints=websecure"
+      - "traefik.http.routers.lms.tls.certresolver=letsencrypt"
+      - "traefik.http.services.lms.loadbalancer.server.port=80"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - lms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["sh", "-c", "redis-server --requirepass \"$$REDIS_PASSWORD\""]
+    env_file:
+      - .env
+    volumes:
+      - lms_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  lms_content:
+  lms_postgres_data:
+  lms_redis_data:
