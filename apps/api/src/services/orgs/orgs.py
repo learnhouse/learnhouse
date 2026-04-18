@@ -765,6 +765,12 @@ async def update_org_signup_mechanism(
     db_session.commit()
     db_session.refresh(org_config)
 
+    # Explicit Redis invalidation — the SA after_update hook does this too,
+    # but signup method changes must take effect instantly on the public
+    # /signup page, so we don't want to rely on the hook's success.
+    from src.services.orgs.cache import invalidate_org_cache
+    invalidate_org_cache(org.slug)
+
     await dispatch_webhooks(
         event_name="org_signup_method_changed",
         org_id=org_id,

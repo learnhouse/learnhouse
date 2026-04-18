@@ -15,10 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   let org: any = null
   try {
-    org = await getOrganizationContextInfo(orgslug, {
-      revalidate: 60,
-      tags: ['organizations'],
-    })
+    org = await getOrganizationContextInfo(orgslug, null)
   } catch {
     // Stale cookie or unknown org — fall back to generic title
   }
@@ -38,10 +35,7 @@ const SignUp = async () => {
 
   let org: any = null
   try {
-    org = await getOrganizationContextInfo(orgslug, {
-      revalidate: 60,
-      tags: ['organizations'],
-    })
+    org = await getOrganizationContextInfo(orgslug, null)
   } catch {
     return <OrgNotFound />
   }
