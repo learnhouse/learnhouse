@@ -1406,6 +1406,47 @@
   cursor: not-allowed;
 }
 
+/* ─── Board Mobile ─── */
+@media (max-width: 768px) {
+  /* Hide: toolbar, back bar, feedback */
+  .board-enter-toolbar { display: none !important; }
+  .board-backbar { display: none !important; }
+  .board-feedback { display: none !important; }
+
+  /* Top-right (avatars, clock, timer, share) — center on top, smaller */
+  .board-topright {
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.78);
+    transform-origin: top center;
+    top: calc(var(--status-bar-inset, 0px) + 6px) !important;
+  }
+
+  /* Social stack — just center it, keep the desktop design as-is */
+  .board-social {
+    position: fixed !important;
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 20px !important;
+    align-items: center !important;
+    pointer-events: none !important;
+  }
+  .board-social > * {
+    pointer-events: auto;
+  }
+
+  /* Hide zoom controls (pinch replaces them) */
+  .board-social > :last-child {
+    display: none !important;
+  }
+
+  /* Prevent iOS auto-zoom on chat input */
+  .board-social input {
+    font-size: 16px !important;
+  }
+}
+
 /* Editor toolbar select */
 .editor-tool-select {
   display: flex;
@@ -2194,3 +2235,4 @@
   min-height: 200px;
   display: block;
 }
+
