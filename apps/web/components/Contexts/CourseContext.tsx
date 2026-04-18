@@ -13,7 +13,7 @@ export const getCourseMetaCacheKey = (courseUuid: string, withUnpublishedActivit
 
 // Debounce manager for coordinating saves across components
 class DebounceManager {
-  private debounces: Map<string, NodeJS.Timeout> = new Map()
+  private debounces: Map<string, { timer: NodeJS.Timeout; fn: () => void }> = new Map()
   private listeners: Set<() => void> = new Set()
 
   register(key: string, fn: () => void, delay: number) {
@@ -22,19 +22,31 @@ class DebounceManager {
       this.debounces.delete(key)
       fn()
     }, delay)
-    this.debounces.set(key, timer)
+    this.debounces.set(key, { timer, fn })
   }
 
   cancel(key: string) {
-    const timer = this.debounces.get(key)
-    if (timer) {
-      clearTimeout(timer)
+    const entry = this.debounces.get(key)
+    if (entry) {
+      clearTimeout(entry.timer)
       this.debounces.delete(key)
     }
   }
 
+  // Run the pending function immediately instead of waiting for the timer.
+  // Used on unmount so in-flight edits are not discarded when a parent tab
+  // switches away before the debounce fires.
+  flush(key: string) {
+    const entry = this.debounces.get(key)
+    if (entry) {
+      clearTimeout(entry.timer)
+      this.debounces.delete(key)
+      entry.fn()
+    }
+  }
+
   cancelAll() {
-    this.debounces.forEach(timer => clearTimeout(timer))
+    this.debounces.forEach(entry => clearTimeout(entry.timer))
     this.debounces.clear()
   }
 
@@ -59,6 +71,7 @@ export interface CourseState {
   courseStructure: any
   courseOrder: any
   pendingChanges: Partial<any> // Track pending changes separately
+  unsyncedChanges: Partial<any> // Immediate changes not yet debounce-merged into courseStructure
   isSaved: boolean
   isLoading: boolean
   isSaving: boolean // New: track saving state
@@ -72,6 +85,8 @@ export type CourseAction =
   | { type: 'setCourseOrder'; payload: any }
   | { type: 'updateField'; payload: { field: string; value: any } } // New: granular field update
   | { type: 'mergePendingChanges'; payload: Partial<any> } // New: merge pending changes
+  | { type: 'setUnsyncedChanges'; payload: Partial<any> } // Immediate changes buffer
+  | { type: 'clearUnsyncedChanges' }
   | { type: 'setIsSaved' }
   | { type: 'setIsNotSaved' }
   | { type: 'setIsLoaded' }
@@ -90,7 +105,9 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   const { mutate } = useSWRConfig()
   const lastServerDataRef = useRef<any>(null)
 
-  const swrKey = getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
+  const swrKey = session?.status !== 'loading'
+    ? getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
+    : null
 
   const { data: courseStructureData, error, isValidating } = useSWR(
     swrKey,
@@ -110,6 +127,7 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
     courseStructure: effectiveData || { course_uuid: courseuuid },
     courseOrder: {},
     pendingChanges: {},
+    unsyncedChanges: {},
     isSaved: true,
     isLoading: !effectiveData,
     isSaving: false,
@@ -123,19 +141,26 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
   // Track server data changes
   useEffect(() => {
     if (courseStructureData && !state.isSaving) {
-      const serverDataStr = JSON.stringify(courseStructureData)
-      const lastServerDataStr = JSON.stringify(lastServerDataRef.current)
+      // Skip expensive JSON comparison if reference hasn't changed
+      if (lastServerDataRef.current === courseStructureData) return
 
-      if (serverDataStr !== lastServerDataStr) {
-        lastServerDataRef.current = courseStructureData
+      try {
+        const serverDataStr = JSON.stringify(courseStructureData)
+        const lastServerDataStr = JSON.stringify(lastServerDataRef.current)
 
-        // Only auto-sync from server if we don't have unsaved local changes (e.g. drag-drop reorder)
-        if (state.isSaved) {
-          dispatch({
-            type: 'syncFromServer',
-            payload: { data: courseStructureData, timestamp: Date.now() }
-          })
+        if (serverDataStr !== lastServerDataStr) {
+          lastServerDataRef.current = courseStructureData
+
+          // Only auto-sync from server if we don't have unsaved local changes (e.g. drag-drop reorder)
+          if (state.isSaved) {
+            dispatch({
+              type: 'syncFromServer',
+              payload: { data: courseStructureData, timestamp: Date.now() }
+            })
+          }
         }
+      } catch (e) {
+        console.error('Failed to compare course data:', e)
       }
     }
   }, [courseStructureData, state.isSaving, state.isSaved])
@@ -149,8 +174,15 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
     }
   }, [effectiveData, state.isLoading])
 
-  if (error) return <div>Failed to load course structure</div>
-  if (!effectiveData) return ''
+  // 403/404 are handled by parent pages with a proper access-denied/not-found UI;
+  // rendering a red banner here on top of that just adds noise. For any other
+  // error (network, 500) we show a subtle inline message.
+  if (error) {
+    const status = (error as any)?.status
+    if (status === 403 || status === 404) return null
+    return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
+  }
+  if (!effectiveData) return null
 
   return (
     <CourseContext.Provider value={state}>
@@ -184,9 +216,13 @@ export function useCourseFieldSync(componentId: string) {
   const debounce = useDebounceManager()
 
   const syncChanges = useCallback((changes: Partial<any>, immediate: boolean = false) => {
+    // Immediately mark unsaved and store changes so Save works even before debounce fires
+    dispatch({ type: 'setIsNotSaved' })
+    dispatch({ type: 'setUnsyncedChanges', payload: changes })
+
     const doSync = () => {
-      dispatch({ type: 'setIsNotSaved' })
       dispatch({ type: 'mergePendingChanges', payload: changes })
+      dispatch({ type: 'clearUnsyncedChanges' })
     }
 
     if (immediate) {
@@ -201,10 +237,12 @@ export function useCourseFieldSync(componentId: string) {
     debounce.cancel(componentId)
   }, [componentId, debounce])
 
-  // Cleanup on unmount
+  // Cleanup on unmount — flush (not cancel) so tab-switches don't drop edits
+  // made during the 500ms debounce window. CourseProvider typically stays
+  // mounted across tabs, so the dispatch still lands safely.
   useEffect(() => {
     return () => {
-      debounce.cancel(componentId)
+      debounce.flush(componentId)
     }
   }, [componentId, debounce])
 
@@ -213,6 +251,7 @@ export function useCourseFieldSync(componentId: string) {
     cancelPendingSync,
     courseStructure: course.courseStructure,
     pendingChanges: course.pendingChanges,
+    unsyncedChanges: course.unsyncedChanges,
     isLoading: course.isLoading,
     isSaved: course.isSaved,
     isSaving: course.isSaving,
@@ -257,6 +296,15 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
         },
       }
 
+    case 'setUnsyncedChanges':
+      return {
+        ...state,
+        unsyncedChanges: { ...state.unsyncedChanges, ...action.payload },
+      }
+
+    case 'clearUnsyncedChanges':
+      return { ...state, unsyncedChanges: {} }
+
     case 'commitChanges':
       // Commit pending changes to courseStructure
       return {
@@ -266,6 +314,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
           ...state.pendingChanges,
         },
         pendingChanges: {},
+        unsyncedChanges: {},
         isSaved: true,
       }
 
@@ -274,6 +323,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
       return {
         ...state,
         pendingChanges: {},
+        unsyncedChanges: {},
         isSaved: true,
       }
 
@@ -297,7 +347,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
       }
 
     case 'setIsSaved':
-      return { ...state, isSaved: true, pendingChanges: {} }
+      return { ...state, isSaved: true, pendingChanges: {}, unsyncedChanges: {} }
 
     case 'setIsNotSaved':
       return { ...state, isSaved: false }

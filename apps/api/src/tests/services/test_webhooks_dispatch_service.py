@@ -144,7 +144,9 @@ class TestWebhookDispatchHelpers:
         )
         mock_create.assert_called_once()
         assert "coro" in scheduled
-        task.add_done_callback.assert_called_once()
+        # Two callbacks: one to discard the task from the tracking set,
+        # one to log unexpected exceptions.
+        assert task.add_done_callback.call_count == 2
         assert task in dispatch._background_tasks
 
     @pytest.mark.asyncio
@@ -224,6 +226,17 @@ class TestWebhookDispatchHelpers:
         mock_deliver.assert_awaited_once()
         delivered = mock_deliver.await_args.args[0]
         assert delivered.webhook_uuid == selected.webhook_uuid
+
+    @pytest.mark.asyncio
+    async def test_deliver_webhooks_logs_error_on_delivery_failure(self, db, org, admin_user):
+        _make_endpoint(db, org, admin_user, webhook_uuid="fail-ep", events=["course_created"])
+        with patch.object(dispatch, "engine", db.get_bind()), patch(
+            "src.services.webhooks.dispatch._deliver_to_endpoint",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("delivery failed"),
+        ), patch("src.services.webhooks.dispatch.logger.error") as mock_error:
+            await dispatch._deliver_webhooks("course_created", org.id, {}, None)
+        mock_error.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_deliver_webhooks_logs_warning_on_session_failure(self):

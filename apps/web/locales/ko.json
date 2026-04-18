@@ -999,7 +999,24 @@
     "quick_results": "빠른 결과",
     "view_all_results": "모든 결과 보기",
     "course": "코스",
-    "user": "사용자"
+    "user": "사용자",
+    "start_heading": "무엇을 찾고 계신가요?",
+    "start_subtitle": "이 조직의 모든 공간을 한 곳에서 검색하세요.",
+    "all_results": "모든 결과",
+    "filter_heading": "유형별 필터",
+    "empty_section": "아직 아무것도 없어요",
+    "previous": "이전",
+    "next": "다음",
+    "types": {
+      "all": "전체",
+      "courses": "코스",
+      "collections": "컬렉션",
+      "users": "멤버",
+      "communities": "커뮤니티",
+      "discussions": "토론",
+      "playgrounds": "플레이그라운드",
+      "podcasts": "팟캐스트"
+    }
   },
   "ai": {
     "ask_ai": "AI에게 질문",
@@ -1784,9 +1801,31 @@
         },
         "moderation": {
           "title": "콘텐츠 관리",
-          "subtitle": "차단 단어 및 콘텐츠 필터 설정",
-          "info_title": "차단 단어",
-          "info_description": "이 단어가 포함된 토론과 답글은 차단됩니다. 사용자에게 오류 메시지가 표시되고 콘텐츠가 게시되지 않습니다.",
+          "subtitle": "차단 단어, 속도 제한 및 콘텐츠 규칙 구성",
+          "info_title": "커뮤니티 중재",
+          "info_description": "이 규칙을 위반하는 콘텐츠는 오류 메시지와 함께 거부되며 게시되지 않습니다.",
+          "restrictions_title": "콘텐츠 제한",
+          "length_title": "길이 제한",
+          "rate_limits_title": "속도 제한",
+          "account_requirements_title": "계정 요구사항",
+          "blocked_words_section_title": "차단된 단어",
+          "block_links_label": "외부 링크 차단",
+          "block_links_description": "URL이 포함된 토론 또는 답글을 거부합니다.",
+          "disable_reactions_label": "반응 비활성화",
+          "disable_reactions_description": "이 커뮤니티의 토론에서 이모지 반응을 끕니다.",
+          "min_post_length_label": "게시물 최소 길이",
+          "max_post_length_label": "게시물 최대 길이",
+          "max_comment_length_label": "답글 최대 길이",
+          "zero_disables": "비활성화하려면 0으로 두세요.",
+          "slow_mode_label": "저속 모드(초)",
+          "slow_mode_hint": "동일 사용자의 게시물 간 최소 대기 시간. 0으로 비활성화.",
+          "max_posts_per_day_label": "사용자당 일일 최대 게시물 수",
+          "auto_lock_days_label": "오래된 스레드 자동 잠금(일)",
+          "auto_lock_days_hint": "이 기간 동안 활동이 없는 토론을 잠급니다. 0으로 비활성화.",
+          "min_account_age_label": "최소 계정 나이(일)",
+          "min_account_age_hint": "더 최근의 계정을 가진 사용자는 게시할 수 없습니다. 0으로 비활성화.",
+          "require_email_verified_label": "이메일 인증 필수",
+          "require_email_verified_description": "인증된 이메일이 있는 사용자만 이 커뮤니티에 게시할 수 있습니다.",
           "add_word_label": "차단 단어 추가",
           "add_word_placeholder": "단어 또는 문구 입력...",
           "add_button": "추가",
@@ -3128,7 +3167,8 @@
         "title": "과제 도구",
         "tabs": {
           "editor": "에디터",
-          "submissions": "제출물"
+          "submissions": "제출물",
+          "analytics": "분석"
         },
         "mobile": {
           "title": "데스크톱 전용",
@@ -3337,6 +3377,58 @@
           "optional": "선택",
           "placeholder": "제출물 전반에 대한 의견을 작성하세요. 학생이 성적 옆에서 확인할 수 있습니다.",
           "hint": "이전 피드백을 변경하지 않으려면 비워두세요."
+        }
+      },
+      "analytics": {
+        "loading": "분석을 불러오는 중...",
+        "empty": {
+          "title": "아직 제출된 과제가 없습니다",
+          "description": "학생들이 과제를 제출하기 시작하면 분석이 표시됩니다."
+        },
+        "kpis": {
+          "average": "반 평균",
+          "median": "중앙값",
+          "pass_rate": "합격률",
+          "pass_rate_sub": "{{total}}명 중 {{passed}}명 합격",
+          "on_time": "정시 제출률",
+          "on_time_sub": "{{total}}건 중 {{late}}건 지각"
+        },
+        "mini": {
+          "highest": "최고",
+          "lowest": "최저",
+          "spread": "범위",
+          "feedback": "피드백 비율"
+        },
+        "distribution": {
+          "title": "성적 분포",
+          "subtitle": "학급이 성적 구간에 어떻게 분포하는지",
+          "empty": "채점이 완료되면 여기에 성적이 표시됩니다",
+          "students": "학생"
+        },
+        "timeline": {
+          "title": "제출 활동",
+          "subtitle": "학생이 제출한 시점 vs. 채점한 시점",
+          "empty": "아직 표시할 활동이 없습니다",
+          "submitted": "제출됨",
+          "graded": "채점됨",
+          "due": "마감일"
+        },
+        "tasks": {
+          "title": "과제별 성과",
+          "subtitle": "과제별 평균 점수 — 낮은 막대는 학생들이 어려워하는 부분을 보여줍니다",
+          "empty": "채점 후 과제별 성과가 표시됩니다",
+          "avg_grade": "평균 점수",
+          "attempts": "시도"
+        },
+        "top": {
+          "title": "상위 성적",
+          "subtitle": "이 과제에서 가장 높은 점수를 받은 학생",
+          "empty": "채점된 제출이 아직 없습니다"
+        },
+        "attention": {
+          "title": "지원이 필요할 수 있음",
+          "subtitle": "합격하지 못한 학생 — 연락해 보세요",
+          "empty": "채점된 모든 학생이 합격했습니다. 잘하셨어요!"
         }
       },
       "modals": {
@@ -4529,6 +4621,37 @@
           "api_desc": "기존 도구와 통합하고 워크플로를 자동화하세요."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "잠김",
+    "locked_title": "이 활동은 잠겨 있습니다",
+    "locked_auth_required": "이 활동에 접근하려면 로그인해야 합니다.",
+    "locked_restricted": "접근하려면 해당 사용자 그룹의 멤버여야 합니다. 코스 관리자에게 추가를 요청하세요.",
+    "activity_locked_hint": "로그인하거나 해당 사용자 그룹에 참여하여 잠금을 해제하세요.",
+    "back_to_course": "코스로 돌아가기",
+    "lock": {
+      "header_access": "접근",
+      "title_chapter": "이 챕터 잠그기",
+      "title_activity": "이 활동 잠그기",
+      "option_public_label": "공개",
+      "option_public_description": "로그인하지 않아도 누구나 열 수 있습니다.",
+      "option_authenticated_label": "로그인한 사용자만",
+      "option_authenticated_description": "로그인한 사용자만 열 수 있습니다.",
+      "option_restricted_label": "사용자 그룹 전용",
+      "option_restricted_description": "아래에서 선택한 그룹의 멤버만.",
+      "trigger_public_title": "접근: 모두에게 공개",
+      "trigger_authenticated_title": "접근: 로그인한 사용자만",
+      "trigger_restricted_title": "접근: 특정 사용자 그룹만",
+      "usergroups_header": "사용자 그룹",
+      "usergroups_none_assigned": "지정된 그룹 없음 — 관리자만 열 수 있습니다.",
+      "usergroups_remove_title": "제거",
+      "usergroups_loading": "그룹 로드 중…",
+      "usergroups_none_in_org": "이 조직에는 아직 사용자 그룹이 없습니다.",
+      "usergroups_all_assigned": "모든 그룹이 이미 지정되었습니다.",
+      "usergroups_add_a_group": "그룹 추가",
+      "toast_add_error": "그룹을 추가할 수 없습니다",
+      "toast_remove_error": "그룹을 제거할 수 없습니다"
     }
   }
 }

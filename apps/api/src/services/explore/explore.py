@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-from sqlalchemy import text
+from sqlalchemy import func, cast, String, literal
 
 from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.organizations import Organization, OrganizationRead
@@ -14,16 +14,12 @@ def _get_sort_expression(salt: str):
     if not salt:
         return Organization.name
 
-    # Sanitize salt to prevent SQL injection - only allow alphanumeric and basic chars
     import re
     if not re.match(r'^[a-zA-Z0-9_-]+$', salt):
         return Organization.name
 
-    # Create a deterministic ordering using md5(salt + id)
-    # Note: salt is validated above to only contain safe characters
-    return text(
-        f"md5('{salt}' || id)"
-    )
+    # Use parameterized SQLAlchemy functions instead of text() interpolation
+    return func.md5(func.concat(literal(salt), cast(Organization.id, String)))
 
 async def get_orgs_for_explore(
     request: Request,
@@ -70,6 +66,8 @@ async def get_courses_for_an_org_explore(
     request: Request,
     db_session: Session,
     org_uuid: str,
+    page: int = 1,
+    limit: int = 30,
 ) -> list[CourseRead]:
     statement = select(Organization).where(Organization.org_uuid == org_uuid)
     result = db_session.exec(statement)
@@ -80,17 +78,18 @@ async def get_courses_for_an_org_explore(
             status_code=404,
             detail="Organization not found",
         )
-    
-    statement = select(Course).where(Course.org_id == org.id, Course.public == True)
+
+    limit = min(max(limit, 1), 100)
+    page = max(page, 1)
+
+    statement = (
+        select(Course)
+        .where(Course.org_id == org.id, Course.public == True)
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
     result = db_session.exec(statement)
-    courses = result.all()
-
-    courses_list = []
-
-    for course in courses:
-        courses_list.append(course)
-
-    return courses_list
+    return list(result.all())
 
 async def get_course_for_explore(
     request: Request,

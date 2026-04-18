@@ -26,6 +26,7 @@ import {
     Zap,
     Shield,
     AlertTriangle,
+    Eye,
 } from 'lucide-react';
 
 type GradingType = 'ALPHABET' | 'NUMERIC' | 'PERCENTAGE' | 'PASS_FAIL' | 'GPA_SCALE';
@@ -38,6 +39,7 @@ interface Assignment {
     grading_type?: GradingType;
     auto_grading?: boolean;
     anti_copy_paste?: boolean;
+    show_correct_answers?: boolean;
     assignment_tasks?: any[];
 }
 
@@ -138,6 +140,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             grading_type: assignment.grading_type || 'ALPHABET',
             auto_grading: assignment.auto_grading || false,
             anti_copy_paste: assignment.anti_copy_paste || false,
+            show_correct_answers: assignment.show_correct_answers || false,
         },
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
@@ -298,6 +301,13 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
                         description={t('dashboard.assignments.modals.edit.form.anti_copy_paste_description')}
                         checked={formik.values.anti_copy_paste}
                         onChange={(v) => formik.setFieldValue('anti_copy_paste', v, true)}
+                    />
+                    <ToggleRow
+                        icon={<Eye size={16} className="text-indigo-500" />}
+                        label={t('dashboard.assignments.modals.edit.form.show_correct_answers_label')}
+                        description={t('dashboard.assignments.modals.edit.form.show_correct_answers_description')}
+                        checked={formik.values.show_correct_answers}
+                        onChange={(v) => formik.setFieldValue('show_correct_answers', v, true)}
                     />
                 </div>
             </div>

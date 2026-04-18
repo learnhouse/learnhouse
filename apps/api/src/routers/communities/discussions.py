@@ -211,11 +211,11 @@ async def api_update_discussion(
     "/discussions/{discussion_uuid}/pin",
     response_model=DiscussionReadWithVoteStatus,
     summary="Pin or unpin a discussion",
-    description="Toggle the pinned state of a discussion. Requires the discussion author or an admin role.",
+    description="Toggle the pinned state of a discussion. Requires a community admin or maintainer role.",
     responses={
         200: {"description": "Discussion pin state updated.", "model": DiscussionReadWithVoteStatus},
         401: {"description": "Authentication required"},
-        403: {"description": "User is not the author or lacks admin role"},
+        403: {"description": "User lacks the required moderator role"},
         404: {"description": "Discussion not found"},
     },
 )
@@ -227,9 +227,7 @@ async def api_pin_discussion(
     db_session: Session = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
-    Pin or unpin a discussion.
-
-    Requires discussion author or admin role.
+    Pin or unpin a discussion. Requires community admin or maintainer role.
     """
     return await pin_discussion(
         request, discussion_uuid, pin_data.is_pinned, current_user, db_session
@@ -240,11 +238,11 @@ async def api_pin_discussion(
     "/discussions/{discussion_uuid}/lock",
     response_model=DiscussionReadWithVoteStatus,
     summary="Lock or unlock a discussion",
-    description="Toggle the locked state of a discussion. Locked discussions cannot receive new comments. Requires the discussion author or an admin role.",
+    description="Toggle the locked state of a discussion. Locked discussions cannot receive new comments. Requires a community admin or maintainer role.",
     responses={
         200: {"description": "Discussion lock state updated.", "model": DiscussionReadWithVoteStatus},
         401: {"description": "Authentication required"},
-        403: {"description": "User is not the author or lacks admin role"},
+        403: {"description": "User lacks the required moderator role"},
         404: {"description": "Discussion not found"},
     },
 )
@@ -256,9 +254,7 @@ async def api_lock_discussion(
     db_session: Session = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
-    Lock or unlock a discussion.
-
-    Requires discussion author or admin role.
+    Lock or unlock a discussion. Requires community admin or maintainer role.
     """
     return await lock_discussion(
         request, discussion_uuid, lock_data.is_locked, current_user, db_session

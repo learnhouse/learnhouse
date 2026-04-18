@@ -1,6 +1,20 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from sqlalchemy import Column, ForeignKey, Index, Integer, Text, JSON
 from sqlmodel import Field, SQLModel
+
+
+DEFAULT_MODERATION_SETTINGS: Dict[str, Any] = {
+    "block_links": False,
+    "min_post_length": 0,
+    "max_post_length": 0,
+    "max_comment_length": 0,
+    "slow_mode_seconds": 0,
+    "max_posts_per_day": 0,
+    "min_account_age_days": 0,
+    "require_email_verified": False,
+    "disable_reactions": False,
+    "auto_lock_days": 0,
+}
 
 
 class CommunityBase(SQLModel):
@@ -25,6 +39,9 @@ class Community(CommunityBase, table=True):
     )
     community_uuid: str = Field(default="", index=True)
     moderation_words: List[str] = Field(default=[], sa_column=Column(JSON, default=[]))
+    moderation_settings: Optional[Dict[str, Any]] = Field(
+        default=None, sa_column=Column(JSON, nullable=True)
+    )
     creation_date: str = ""
     update_date: str = ""
 
@@ -39,6 +56,7 @@ class CommunityUpdate(SQLModel):
     description: Optional[str] = None
     public: Optional[bool] = None
     moderation_words: Optional[List[str]] = None
+    moderation_settings: Optional[Dict[str, Any]] = None
 
 
 class CommunityRead(CommunityBase):
@@ -47,5 +65,6 @@ class CommunityRead(CommunityBase):
     course_id: Optional[int] = Field(default=None, foreign_key="course.id")
     community_uuid: str
     moderation_words: List[str] = []
+    moderation_settings: Optional[Dict[str, Any]] = None
     creation_date: str
     update_date: str

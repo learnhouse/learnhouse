@@ -504,16 +504,18 @@ async def remove_batch_users_from_org(
             detail="Cannot remove all admins from the organization",
         )
 
-    removed_count = 0
-    for user_id in user_ids:
-        statement = select(UserOrganization).where(
-            UserOrganization.user_id == user_id, UserOrganization.org_id == org.id
+    if user_ids:
+        remove_stmt = select(UserOrganization).where(
+            UserOrganization.user_id.in_(user_ids),
+            UserOrganization.org_id == org.id,
         )
-        user_org = db_session.exec(statement).first()
+        user_orgs_to_remove = db_session.exec(remove_stmt).all()
+    else:
+        user_orgs_to_remove = []
 
-        if user_org:
-            db_session.delete(user_org)
-            removed_count += 1
+    removed_count = len(user_orgs_to_remove)
+    for user_org in user_orgs_to_remove:
+        db_session.delete(user_org)
 
     db_session.commit()
 

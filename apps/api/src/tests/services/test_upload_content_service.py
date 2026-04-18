@@ -157,3 +157,43 @@ class TestUploadContentService:
             os.chdir(old_cwd)
 
         assert exc.value.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_upload_content_s3_cleanup_oserror_is_swallowed(self, tmp_path):
+        fake_config = SimpleNamespace(
+            hosting_config=SimpleNamespace(
+                content_delivery=SimpleNamespace(
+                    type="s3api",
+                    s3api=SimpleNamespace(
+                        endpoint_url="http://s3.test",
+                        bucket_name="bucket",
+                    ),
+                )
+            )
+        )
+        s3_client = Mock()
+
+        import os
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            with patch(
+                "src.services.utils.upload_content.get_learnhouse_config",
+                return_value=fake_config,
+            ), patch(
+                "src.services.utils.upload_content.boto3.client",
+                return_value=s3_client,
+            ), patch(
+                "src.services.utils.upload_content.os.remove",
+                side_effect=OSError("cleanup failed"),
+            ):
+                await upload_content(
+                    directory="logos",
+                    type_of_dir="orgs",
+                    uuid="org_uuid",
+                    file_binary=b"ok",
+                    file_and_format="logo.png",
+                )
+            s3_client.upload_file.assert_called_once()
+        finally:
+            os.chdir(old_cwd)

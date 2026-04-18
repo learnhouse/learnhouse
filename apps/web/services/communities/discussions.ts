@@ -140,7 +140,15 @@ export async function createDiscussion(
   const res = await getResponseMetadata(result)
   if (!res.success) {
     const detail = res.data?.detail || res.data?.message || res.data
-    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    let message: string
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+      message = detail.message
+    } else {
+      message = JSON.stringify(detail)
+    }
+    const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
     throw error
@@ -160,7 +168,15 @@ export async function updateDiscussion(
   const res = await getResponseMetadata(result)
   if (!res.success) {
     const detail = res.data?.detail || res.data?.message || res.data
-    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    let message: string
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+      message = detail.message
+    } else {
+      message = JSON.stringify(detail)
+    }
+    const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
     throw error
@@ -293,7 +309,15 @@ export async function createComment(
   const res = await getResponseMetadata(result)
   if (!res.success) {
     const detail = res.data?.detail || res.data?.message || res.data
-    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    let message: string
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+      message = detail.message
+    } else {
+      message = JSON.stringify(detail)
+    }
+    const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
     throw error

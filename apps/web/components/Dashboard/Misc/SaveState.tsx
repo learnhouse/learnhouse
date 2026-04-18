@@ -10,7 +10,7 @@ import {
 } from '@components/Contexts/CourseContext'
 import { Check, SaveAllIcon, Timer, Loader2, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
 import { updateCertification } from '@services/courses/certifications'
@@ -39,6 +39,12 @@ function SaveState(props: { orgslug: string }) {
   const isSaving = course?.isSaving ?? false
   const courseStructure = course?.courseStructure
   const withUnpublishedActivities = course?.withUnpublishedActivities ?? false
+
+  // Ref so saveCourseState always reads the latest unsynced changes without stale closure
+  const unsyncedChangesRef = useRef<Partial<any>>({})
+  useEffect(() => {
+    unsyncedChangesRef.current = course?.unsyncedChanges ?? {}
+  }, [course?.unsyncedChanges])
 
   // Unified cache key
   const cacheKey = courseStructure?.course_uuid
@@ -83,8 +89,9 @@ function SaveState(props: { orgslug: string }) {
 
       // 2. Save course metadata
       try {
-        // Clean up temporary fields before saving
-        const dataToSave = { ...courseStructure }
+        // Merge unsynced changes (changes made before debounce fired) so clicking Save
+        // immediately after editing doesn't lose the latest values
+        const dataToSave = { ...courseStructure, ...unsyncedChangesRef.current }
         delete dataToSave._certificationData // Don't send certification temp data to course endpoint
 
         await updateCourse(
@@ -123,10 +130,9 @@ function SaveState(props: { orgslug: string }) {
         }
       }
 
-      // All critical saves succeeded, now update caches
+      // All critical saves succeeded, now update caches with the fully merged data
       if (cacheKey) {
-        // Revalidate SWR cache with the latest data
-        await mutate(cacheKey, courseStructure, { revalidate: false })
+        await mutate(cacheKey, { ...courseStructure, ...unsyncedChangesRef.current }, { revalidate: false })
       }
 
       // Revalidate server-side cache

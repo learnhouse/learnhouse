@@ -1,6 +1,7 @@
 import logging
 from typing import Literal, Optional
 import boto3
+import botocore.config
 from botocore.exceptions import ClientError
 import os
 from fastapi import HTTPException, UploadFile
@@ -100,6 +101,7 @@ async def upload_content(
         s3 = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
+            config=botocore.config.Config(connect_timeout=10, read_timeout=60, retries={"max_attempts": 2}),
         )
 
         bucket_name = learnhouse_config.hosting_config.content_delivery.s3api.bucket_name or "learnhouse-media"
@@ -121,5 +123,5 @@ async def upload_content(
             # Clean up local temp file after S3 upload
             try:
                 os.remove(local_path)
-            except OSError:
-                pass
+            except OSError as cleanup_err:
+                logger.error("Failed to clean up temp file %s: %s", local_path, cleanup_err)

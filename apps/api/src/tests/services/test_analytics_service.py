@@ -72,6 +72,24 @@ class TestAnalyticsSendEvent:
         mock_warning.assert_not_called()
 
     @pytest.mark.asyncio
+    async def test_send_event_logs_client_error_on_4xx(self):
+        response = SimpleNamespace(status_code=400, text="bad-request")
+        client = AsyncMock()
+        client.post.return_value = response
+
+        with patch(
+            "src.services.analytics.analytics._get_ingest_client",
+            return_value=client,
+        ), patch("src.services.analytics.analytics.datetime") as mock_datetime, patch(
+            "src.services.analytics.analytics.logger.error"
+        ) as mock_error:
+            mock_datetime.now.return_value = SimpleNamespace(strftime=Mock(return_value="2024-01-01 00:00:00"))
+            await _send_event("page_view", org_id=1, user_id=2, session_id="s", properties={}, source="api", ip="")
+
+        mock_error.assert_called_once()
+        assert mock_error.call_args.args[1] == 400
+
+    @pytest.mark.asyncio
     async def test_send_event_posts_payload_and_logs_http_errors(self):
         response = SimpleNamespace(status_code=500, text="failure-body")
         client = AsyncMock()
@@ -109,7 +127,7 @@ class TestAnalyticsSendEvent:
             "ip": "10.0.0.1",
         }
         mock_warning.assert_called_once_with(
-            "Tinybird ingest failed (%s): %s",
+            "Tinybird ingest server error (%s): %s",
             500,
             "failure-body",
         )

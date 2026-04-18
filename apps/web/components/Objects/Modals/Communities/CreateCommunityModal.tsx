@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { createCommunity } from '@services/communities/communities'
@@ -59,8 +60,13 @@ export function CreateCommunityModal({
         router.refresh()
         onClose()
       }
-    } catch (error) {
-      console.error('Failed to create community:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        'Failed to create community.'
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

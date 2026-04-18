@@ -1108,3 +1108,22 @@ class TestOrgUsersService:
 
         assert result["summary"]["sent"] == 1
         assert result["summary"]["already_invited"] == 1
+
+    @pytest.mark.asyncio
+    async def test_remove_batch_users_from_org_empty_list(
+        self, mock_request, db, org, admin_user
+    ):
+        """Line 514: user_ids is empty -> user_orgs_to_remove = [] (else branch)."""
+        with patch(
+            "src.services.orgs.users.rbac_check",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.routers.users._invalidate_session_cache"
+        ), patch(
+            "src.services.orgs.users.decrease_feature_usage"
+        ):
+            result = await remove_batch_users_from_org(
+                mock_request, org.id, [], db, admin_user
+            )
+
+        assert result == {"detail": "0 user(s) removed from org"}

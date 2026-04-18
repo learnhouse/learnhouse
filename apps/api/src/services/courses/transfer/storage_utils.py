@@ -13,6 +13,7 @@ import os
 import threading
 from typing import Optional
 import boto3
+import botocore.config
 from botocore.exceptions import ClientError, NoCredentialsError
 from config.config import get_learnhouse_config
 
@@ -49,6 +50,7 @@ def get_storage_client():
         _s3_client = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
+            config=botocore.config.Config(connect_timeout=10, read_timeout=60, retries={"max_attempts": 2}),
         )
         return _s3_client
 

@@ -49,7 +49,7 @@ async def api_create_image_file_block(
     """
     Create new image file
     """
-    return await create_image_block(request, file_object, activity_uuid, db_session)
+    return await create_image_block(request, file_object, activity_uuid, db_session, current_user)
 
 
 @router.get(
@@ -100,7 +100,7 @@ async def api_create_video_file_block(
     """
     Create new video file
     """
-    return await create_video_block(request, file_object, activity_uuid, db_session)
+    return await create_video_block(request, file_object, activity_uuid, db_session, current_user)
 
 
 @router.get(
@@ -151,7 +151,7 @@ async def api_create_pdf_file_block(
     """
     Create new pdf file
     """
-    return await create_pdf_block(request, file_object, activity_uuid, db_session)
+    return await create_pdf_block(request, file_object, activity_uuid, db_session, current_user)
 
 
 @router.get(
@@ -202,7 +202,7 @@ async def api_create_audio_file_block(
     """
     Create new audio file
     """
-    return await create_audio_block(request, file_object, activity_uuid, db_session)
+    return await create_audio_block(request, file_object, activity_uuid, db_session, current_user)
 
 
 @router.get(

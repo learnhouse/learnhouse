@@ -243,6 +243,8 @@ async def update_community(
         community.public = community_object.public
     if community_object.moderation_words is not None:
         community.moderation_words = community_object.moderation_words
+    if community_object.moderation_settings is not None:
+        community.moderation_settings = community_object.moderation_settings
 
     community.update_date = str(datetime.now())
 

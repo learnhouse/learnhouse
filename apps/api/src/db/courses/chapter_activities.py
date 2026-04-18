@@ -1,8 +1,11 @@
 from typing import Optional
-from sqlalchemy import BigInteger, Column, ForeignKey, Integer
+from sqlalchemy import BigInteger, Column, ForeignKey, Integer, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 class ChapterActivity(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint('chapter_id', 'activity_id', name='uq_chapteractivity_chapter_activity'),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     order: int
     chapter_id: int = Field(sa_column=Column(BigInteger, ForeignKey("chapter.id", ondelete="CASCADE"), index=True))

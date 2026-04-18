@@ -989,7 +989,24 @@
     "quick_results": "Snelle resultaten",
     "view_all_results": "Bekijk alle resultaten",
     "course": "Cursus",
-    "user": "Gebruiker"
+    "user": "Gebruiker",
+    "start_heading": "Waar ben je naar op zoek?",
+    "start_subtitle": "Zoek in elke ruimte van deze organisatie op één plek.",
+    "all_results": "Alle resultaten",
+    "filter_heading": "Filter op type",
+    "empty_section": "Hier staat nog niets",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "types": {
+      "all": "Alles",
+      "courses": "Cursussen",
+      "collections": "Collecties",
+      "users": "Leden",
+      "communities": "Communities",
+      "discussions": "Discussies",
+      "playgrounds": "Playgrounds",
+      "podcasts": "Podcasts"
+    }
   },
   "ai": {
     "ask_ai": "Vraag AI",
@@ -1774,9 +1791,31 @@
         },
         "moderation": {
           "title": "Contentmoderatie",
-          "subtitle": "Configureer geblokkeerde woorden en contentfilters",
-          "info_title": "Geblokkeerde woorden",
-          "info_description": "Discussies en reacties met deze woorden worden geblokkeerd. Gebruikers zien een foutmelding en hun content wordt niet geplaatst.",
+          "subtitle": "Configureer geblokkeerde woorden, rate limits en contentregels",
+          "info_title": "Community-moderatie",
+          "info_description": "Content die deze regels overtreedt, wordt afgewezen met een foutmelding en wordt niet geplaatst.",
+          "restrictions_title": "Contentbeperkingen",
+          "length_title": "Lengtelimieten",
+          "rate_limits_title": "Rate limits",
+          "account_requirements_title": "Account-vereisten",
+          "blocked_words_section_title": "Geblokkeerde woorden",
+          "block_links_label": "Externe links blokkeren",
+          "block_links_description": "Weigert discussies of reacties die URL's bevatten.",
+          "disable_reactions_label": "Reacties uitschakelen",
+          "disable_reactions_description": "Schakelt emoji-reacties op discussies in deze community uit.",
+          "min_post_length_label": "Minimale postlengte",
+          "max_post_length_label": "Maximale postlengte",
+          "max_comment_length_label": "Maximale lengte antwoord",
+          "zero_disables": "Laat op 0 staan om uit te schakelen.",
+          "slow_mode_label": "Langzame modus (seconden)",
+          "slow_mode_hint": "Minimale wachttijd tussen berichten van dezelfde gebruiker. 0 om uit te schakelen.",
+          "max_posts_per_day_label": "Max. berichten per gebruiker per dag",
+          "auto_lock_days_label": "Oude threads automatisch vergrendelen (dagen)",
+          "auto_lock_days_hint": "Vergrendelt discussies na dit aantal dagen inactiviteit. 0 om uit te schakelen.",
+          "min_account_age_label": "Minimale accountleeftijd (dagen)",
+          "min_account_age_hint": "Gebruikers met nieuwere accounts kunnen niet plaatsen. 0 om uit te schakelen.",
+          "require_email_verified_label": "Geverifieerd e-mailadres vereist",
+          "require_email_verified_description": "Alleen gebruikers met een geverifieerd e-mailadres kunnen in deze community plaatsen.",
           "add_word_label": "Geblokkeerd woord toevoegen",
           "add_word_placeholder": "Voer een woord of zin in...",
           "add_button": "Toevoegen",
@@ -3118,7 +3157,8 @@
         "title": "Opdracht Tooling",
         "tabs": {
           "editor": "Editor",
-          "submissions": "Inzendingen"
+          "submissions": "Inzendingen",
+          "analytics": "Analyses"
         },
         "mobile": {
           "title": "Alleen voor Desktop",
@@ -3327,6 +3367,58 @@
           "optional": "optioneel",
           "placeholder": "Schrijf een commentaar over de hele inzending. De student ziet dit naast zijn cijfer.",
           "hint": "Laat leeg om eerdere feedback ongewijzigd te houden."
+        }
+      },
+      "analytics": {
+        "loading": "Analyses worden geladen...",
+        "empty": {
+          "title": "Nog geen inzendingen",
+          "description": "De analyses verschijnen zodra studenten hun werk inleveren."
+        },
+        "kpis": {
+          "average": "Klasgemiddelde",
+          "median": "Mediaan",
+          "pass_rate": "Slagingspercentage",
+          "pass_rate_sub": "{{passed}} van {{total}} geslaagd",
+          "on_time": "Op-tijd-percentage",
+          "on_time_sub": "{{late}} te laat van {{total}}"
+        },
+        "mini": {
+          "highest": "Hoogste",
+          "lowest": "Laagste",
+          "spread": "Spreiding",
+          "feedback": "Feedbackdekking"
+        },
+        "distribution": {
+          "title": "Cijferverdeling",
+          "subtitle": "Hoe de klas verdeeld is over cijferbanden",
+          "empty": "Cijfers verschijnen hier zodra inzendingen zijn beoordeeld",
+          "students": "Studenten"
+        },
+        "timeline": {
+          "title": "Inzendingsactiviteit",
+          "subtitle": "Wanneer studenten inleverden vs. wanneer u beoordeelde",
+          "empty": "Nog geen activiteit om te tonen",
+          "submitted": "Ingeleverd",
+          "graded": "Beoordeeld",
+          "due": "Deadline"
+        },
+        "tasks": {
+          "title": "Prestaties per taak",
+          "subtitle": "Gemiddelde score per taak — lage balken tonen waar studenten het moeilijk hebben",
+          "empty": "Prestaties per taak verschijnen na de eerste beoordelingen",
+          "avg_grade": "Gemiddeld cijfer",
+          "attempts": "pogingen"
+        },
+        "top": {
+          "title": "Topprestaties",
+          "subtitle": "Uw studenten met de hoogste scores voor deze opdracht",
+          "empty": "Nog geen beoordeelde inzendingen"
+        },
+        "attention": {
+          "title": "Mogelijk extra steun nodig",
+          "subtitle": "Studenten die niet geslaagd zijn — overweeg contact op te nemen",
+          "empty": "Iedereen die beoordeeld is, is geslaagd. Goed gedaan!"
         }
       },
       "modals": {
@@ -4519,6 +4611,37 @@
           "api_desc": "Integreer met bestaande tools en automatiseer workflows."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "Vergrendeld",
+    "locked_title": "Deze activiteit is vergrendeld",
+    "locked_auth_required": "Je moet inloggen om deze activiteit te openen.",
+    "locked_restricted": "Je moet lid zijn van de juiste gebruikersgroep om dit te openen. Vraag een cursusbeheerder om je toe te voegen.",
+    "activity_locked_hint": "Log in of word lid van de juiste gebruikersgroep om dit te ontgrendelen.",
+    "back_to_course": "Terug naar cursus",
+    "lock": {
+      "header_access": "Toegang",
+      "title_chapter": "Dit hoofdstuk vergrendelen",
+      "title_activity": "Deze activiteit vergrendelen",
+      "option_public_label": "Openbaar",
+      "option_public_description": "Iedereen kan dit openen, ook zonder in te loggen.",
+      "option_authenticated_label": "Alleen ingelogd",
+      "option_authenticated_description": "Alleen ingelogde gebruikers kunnen dit openen.",
+      "option_restricted_label": "Alleen gebruikersgroepen",
+      "option_restricted_description": "Alleen leden van de groepen die je hieronder kiest.",
+      "trigger_public_title": "Toegang: voor iedereen",
+      "trigger_authenticated_title": "Toegang: alleen ingelogde gebruikers",
+      "trigger_restricted_title": "Toegang: specifieke gebruikersgroepen",
+      "usergroups_header": "Gebruikersgroepen",
+      "usergroups_none_assigned": "Geen groepen toegewezen — alleen beheerders kunnen dit openen.",
+      "usergroups_remove_title": "Verwijderen",
+      "usergroups_loading": "Groepen laden…",
+      "usergroups_none_in_org": "Er bestaan nog geen gebruikersgroepen in deze organisatie.",
+      "usergroups_all_assigned": "Alle groepen zijn al toegewezen.",
+      "usergroups_add_a_group": "Groep toevoegen",
+      "toast_add_error": "Groep kon niet worden toegevoegd",
+      "toast_remove_error": "Groep kon niet worden verwijderd"
     }
   }
 }

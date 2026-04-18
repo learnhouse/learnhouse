@@ -765,6 +765,12 @@ async def update_org_signup_mechanism(
     db_session.commit()
     db_session.refresh(org_config)
 
+    # Explicit Redis invalidation — the SA after_update hook does this too,
+    # but signup method changes must take effect instantly on the public
+    # /signup page, so we don't want to rely on the hook's success.
+    from src.services.orgs.cache import invalidate_org_cache
+    invalidate_org_cache(org.slug)
+
     await dispatch_webhooks(
         event_name="org_signup_method_changed",
         org_id=org_id,
@@ -1129,9 +1135,10 @@ async def update_org_watermark_config(
 
     updated_config = _deep_copy_config(org_config)
 
-    # Free plan always shows watermark
+    # Free plan in SaaS always shows watermark; OSS/EE self-hosters can disable it
+    from src.core.deployment_mode import get_deployment_mode
     plan = updated_config.get("plan", updated_config.get("cloud", {}).get("plan", "free"))
-    if plan == "free" and not watermark_enabled:
+    if get_deployment_mode() == "saas" and plan == "free" and not watermark_enabled:
         raise HTTPException(status_code=403, detail="Watermark cannot be disabled on the free plan")
 
     if _is_v2_config(updated_config):

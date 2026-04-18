@@ -16,6 +16,11 @@ from src.services.courses.chapters import (
     reorder_chapters_and_activities,
     update_chapter,
 )
+from src.services.courses.lock_usergroups import (
+    add_usergroup_to_chapter,
+    get_chapter_usergroups,
+    remove_usergroup_from_chapter,
+)
 
 from src.services.users.users import PublicUser
 from src.security.auth import get_current_user
@@ -200,3 +205,51 @@ async def api_delete_coursechapter(
     """
 
     return await delete_chapter(request, chapter_id, current_user, db_session)
+
+
+@router.get(
+    "/{chapter_uuid}/usergroups",
+    summary="List user groups assigned to a locked chapter",
+    description="Return the user groups that can access this chapter when lock_type is 'restricted'.",
+)
+async def api_list_chapter_usergroups(
+    request: Request,
+    chapter_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await get_chapter_usergroups(request, chapter_uuid, current_user, db_session)
+
+
+@router.post(
+    "/{chapter_uuid}/usergroups/{usergroup_uuid}",
+    summary="Grant a user group access to a locked chapter",
+    description="Associate a user group with this chapter so its members can access it when lock_type is 'restricted'.",
+)
+async def api_add_chapter_usergroup(
+    request: Request,
+    chapter_uuid: str,
+    usergroup_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await add_usergroup_to_chapter(
+        request, chapter_uuid, usergroup_uuid, current_user, db_session
+    )
+
+
+@router.delete(
+    "/{chapter_uuid}/usergroups/{usergroup_uuid}",
+    summary="Revoke a user group's access to a locked chapter",
+    description="Remove the association between a user group and this chapter.",
+)
+async def api_remove_chapter_usergroup(
+    request: Request,
+    chapter_uuid: str,
+    usergroup_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    return await remove_usergroup_from_chapter(
+        request, chapter_uuid, usergroup_uuid, current_user, db_session
+    )

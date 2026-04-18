@@ -61,11 +61,18 @@ def ask_ai(
         # Add current question
         contents.append({"role": "user", "parts": [{"text": question}]})
 
-        # Generate response
-        response = client.models.generate_content(
-            model=gemini_model_name,
-            contents=contents
-        )
+        # Generate response (60s timeout)
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(
+                client.models.generate_content,
+                model=gemini_model_name,
+                contents=contents,
+            )
+            try:
+                response = future.result(timeout=60.0)
+            except concurrent.futures.TimeoutError:
+                raise TimeoutError("Gemini API request timed out after 60s")
 
         return {
             "output": response.text,
@@ -87,7 +94,7 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
     if redis_conn_string:
         try:
             # Connect to Redis and get message history
-            r = redis.from_url(redis_conn_string)
+            r = redis.from_url(redis_conn_string, socket_connect_timeout=5, socket_timeout=5)
             history_data = r.get(f"chat_history:{session_id}")
             if history_data:
                 if isinstance(history_data, bytes):
@@ -117,7 +124,7 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
         return
 
     try:
-        r = redis.from_url(redis_conn_string)
+        r = redis.from_url(redis_conn_string, socket_connect_timeout=5, socket_timeout=5)
 
         # Get existing history
         history_key = f"chat_history:{aichat_uuid}"
@@ -169,7 +176,7 @@ def _get_redis():
     conn = LH_CONFIG.redis_config.redis_connection_string
     if not conn:
         return None
-    return redis.from_url(conn)
+    return redis.from_url(conn, socket_connect_timeout=5, socket_timeout=5)
 
 
 def save_chat_session_meta(aichat_uuid: str, user_id: int, title: str, course_uuid: Optional[str] = None, mode: str = "course_only", org_id: Optional[int] = None):
@@ -384,10 +391,14 @@ async def ask_ai_stream(
         # Add current question
         contents.append({"role": "user", "parts": [{"text": question}]})
 
-        # Generate response with streaming
-        response = client.models.generate_content_stream(
-            model=gemini_model_name,
-            contents=contents
+        # Generate response with streaming (run sync SDK in thread to allow timeout)
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                client.models.generate_content_stream,
+                model=gemini_model_name,
+                contents=contents,
+            ),
+            timeout=90.0,
         )
 
         for chunk in response:
@@ -395,8 +406,12 @@ async def ask_ai_stream(
                 yield chunk.text
                 await asyncio.sleep(0.01)
 
+    except asyncio.TimeoutError:
+        logger.error("ask_ai_stream timed out after 90s")
+        raise
     except Exception as e:
-        yield f"Error: {str(e)}"
+        logger.error("ask_ai_stream failed: %s", e, exc_info=True)
+        raise
 
 
 async def generate_follow_up_suggestions(

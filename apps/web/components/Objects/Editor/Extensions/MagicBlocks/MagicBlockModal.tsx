@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import MagicBlockPreview from './MagicBlockPreview'
 import MagicBlockChat from './MagicBlockChat'
+import { extractHtmlDocument } from './extractHtml'
 import type { MagicBlockMessage, MagicBlockContext } from './types'
 import {
   startMagicBlockSession,
@@ -52,9 +53,10 @@ function MagicBlockModal({
   const [htmlContent, setHtmlContent] = React.useState<string | null>(initialHtmlContent)
   const [error, setError] = React.useState<string | null>(null)
 
-  // Reset state when modal opens with new props
+  // Reset all state only when the modal transitions from closed → open
+  const wasOpenRef = React.useRef(false)
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
       setSessionUuid(initialSessionUuid)
       setMessages(initialMessages)
       setIterationCount(initialIterationCount)
@@ -62,7 +64,15 @@ function MagicBlockModal({
       setStreamingContent('')
       setError(null)
     }
-  }, [isOpen, initialSessionUuid, initialHtmlContent, initialIterationCount, initialMessages])
+    wasOpenRef.current = isOpen
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When async messages load from the server, update them without touching other state
+  React.useEffect(() => {
+    if (isOpen && initialMessages.length > 0) {
+      setMessages((current) => (current.length === 0 ? initialMessages : current))
+    }
+  }, [isOpen, initialMessages])
 
   const handleSendMessage = async (message: string) => {
     if (isLoading || iterationCount >= MAX_ITERATIONS) return
@@ -83,21 +93,12 @@ function MagicBlockModal({
       setSessionUuid(newSessionUuid)
       setIterationCount((prev) => prev + 1)
 
-      // Extract HTML from streaming content
-      let finalHtml = streamingContent
-      setStreamingContent((current) => {
-        finalHtml = current
-        return current
-      })
-
-      // Small delay to ensure we have the final content
       setTimeout(() => {
         setStreamingContent((current) => {
-          setHtmlContent(current)
-          // Add AI message
-          const aiMessage: MagicBlockMessage = { role: 'model', content: current }
+          const cleaned = extractHtmlDocument(current) || current
+          setHtmlContent(cleaned)
+          const aiMessage: MagicBlockMessage = { role: 'model', content: cleaned }
           setMessages((prev) => [...prev, aiMessage])
-          setStreamingContent('')
           setIsLoading(false)
           return ''
         })

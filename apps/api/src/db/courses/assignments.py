@@ -29,6 +29,12 @@ class AssignmentBase(SQLModel):
     # editors and text inputs. This is a soft deterrent — it can be bypassed
     # but it discourages casual AI-assisted copy/paste.
     anti_copy_paste: Optional[bool] = False
+    # When True, after a submission is GRADED the student's task view reveals
+    # the correct answers (which quiz options were right, the accepted short
+    # answer, the expected number, the correct form blanks). Defaults to False
+    # so existing assignments don't start leaking answer keys automatically —
+    # the teacher must explicitly opt in.
+    show_correct_answers: Optional[bool] = False
 
     org_id: int
     course_id: int
@@ -65,6 +71,7 @@ class AssignmentUpdate(SQLModel):
     grading_type: Optional[GradingTypeEnum] = None
     auto_grading: Optional[bool] = None
     anti_copy_paste: Optional[bool] = None
+    show_correct_answers: Optional[bool] = None
     org_id: Optional[int] = None
     course_id: Optional[int] = None
     chapter_id: Optional[int] = None
@@ -141,6 +148,8 @@ class AssignmentTaskRead(AssignmentTaskBase):
 
     id: int
     assignment_task_uuid: str
+    creation_date: str
+    update_date: str
 
 
 class AssignmentTaskUpdate(SQLModel):

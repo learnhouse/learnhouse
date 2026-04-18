@@ -364,25 +364,18 @@ export const slashCommands: SlashCommandItem[] = [
 
   // Callouts category
   {
-    id: 'infoCallout',
-    title: 'Info Callout',
-    description: 'Highlight important information',
+    id: 'callout',
+    title: 'Callout',
+    description: 'Info, warning, tip, success or error block',
     icon: <AlertCircle size={18} />,
     category: 'callouts',
-    keywords: ['info', 'callout', 'note', 'information', 'highlight'],
+    keywords: ['callout', 'info', 'warning', 'tip', 'success', 'error', 'note', 'alert'],
     command: (editor) => {
-      editor.chain().focus().toggleNode('calloutInfo', 'paragraph').run()
-    },
-  },
-  {
-    id: 'warningCallout',
-    title: 'Warning Callout',
-    description: 'Highlight a warning message',
-    icon: <AlertTriangle size={18} />,
-    category: 'callouts',
-    keywords: ['warning', 'callout', 'alert', 'caution', 'danger'],
-    command: (editor) => {
-      editor.chain().focus().toggleNode('calloutWarning', 'paragraph').run()
+      editor.chain().focus().insertContent({
+        type: 'callout',
+        attrs: { type: 'info' },
+        content: [],
+      }).run()
     },
   },
 

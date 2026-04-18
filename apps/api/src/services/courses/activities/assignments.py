@@ -28,6 +28,7 @@ from src.db.courses.assignments import (
     AssignmentUserSubmissionStatus,
     GradingTypeEnum,
 )
+from src.db.courses.certifications import CertificateUser, Certifications
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
@@ -480,6 +481,53 @@ def _percentage_to_gpa(percentage: float) -> str:
     return "0.0"
 
 
+def _build_tasks_breakdown(
+    assignment_tasks,
+    task_submissions_by_task_id: dict,
+    passing_threshold: float,
+) -> list:
+    """
+    Build the per-task breakdown array included in grade responses.
+
+    Shared by the grading path (``_apply_grade_and_finalize``) and the read
+    path (``get_grade_assignment_submission``) so both sides always agree on
+    the numbers. Each row includes the raw grade, the task's max, the
+    percentage, and a ``passed`` flag computed against the assignment's
+    grading-type-aware passing threshold — that way the student's activity
+    view and the teacher's evaluate modal can render consistent pass/fail
+    chips without each one re-deriving its own threshold.
+    """
+    rows = []
+    for index, task in enumerate(
+        sorted(assignment_tasks, key=lambda t: t.id or 0)
+    ):
+        ts = task_submissions_by_task_id.get(task.id)
+        task_max = int(task.max_grade_value or 0)
+        task_raw = int(ts.grade or 0) if ts else 0
+        task_percentage = (
+            round((task_raw / task_max) * 100.0, 2) if task_max > 0 else 0.0
+        )
+        task_percentage = max(min(task_percentage, 100.0), 0.0)
+        rows.append(
+            {
+                "index": index + 1,
+                "assignment_task_uuid": task.assignment_task_uuid,
+                "title": task.title,
+                "description": task.description,
+                "assignment_type": task.assignment_type,
+                "submitted": ts is not None,
+                "grade": task_raw,
+                "max_grade": task_max,
+                "percentage": task_percentage,
+                "percentage_display": f"{task_percentage:.0f}%",
+                "points_summary": f"{task_raw}/{task_max}",
+                "passed": task_percentage >= passing_threshold,
+                "feedback": ts.task_submission_grade_feedback if ts else None,
+            }
+        )
+    return rows
+
+
 def compute_assignment_grade(
     raw_grade: int,
     max_grade: int,
@@ -892,9 +940,11 @@ async def read_assignment_tasks(
             detail="Course not found",
         )
 
-    # Find assignments tasks for an assignment
-    statement = select(AssignmentTask).where(
-        AssignmentTask.assignment_id == assignment.id
+    # Find assignments tasks for an assignment, most recently created first
+    statement = (
+        select(AssignmentTask)
+        .where(AssignmentTask.assignment_id == assignment.id)
+        .order_by(AssignmentTask.creation_date.desc(), AssignmentTask.id.desc())
     )
 
     # RBAC check
@@ -1522,27 +1572,16 @@ async def read_user_assignment_task_submissions_me(
 
 async def read_assignment_task_submissions(
     request: Request,
-    assignment_task_submission_uuid: str,
+    assignment_task_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
+    limit: int = 50,
+    offset: int = 0,
 ):
     _block_api_tokens(current_user)
-    # Check if assignment task submission exists
-    statement = select(AssignmentTaskSubmission).where(
-        AssignmentTaskSubmission.assignment_task_submission_uuid
-        == assignment_task_submission_uuid,
-    )
-    assignment_task_submission = db_session.exec(statement).first()
-
-    if not assignment_task_submission:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment Task Submission not found",
-        )
-
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
-        AssignmentTask.id == assignment_task_submission.assignment_task_id
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid,
     )
     assignment_task = db_session.exec(statement).first()
 
@@ -1572,21 +1611,14 @@ async def read_assignment_task_submissions(
             detail="Course not found",
         )
 
-    # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+    # Only instructors may list all submissions for a task
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
-    # Ownership check: non-instructors may only read their own submissions
-    is_instructor = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", course.course_uuid, db_session
-    )
-    if not is_instructor and int(assignment_task_submission.user_id) != int(current_user.id):
-        raise HTTPException(
-            status_code=403,
-            detail="You can only view your own submissions",
-        )
-
-    # return assignment task submission read
-    return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
+    statement = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id
+    ).limit(limit).offset(offset)
+    submissions = db_session.exec(statement).all()
+    return [AssignmentTaskSubmissionRead.model_validate(s) for s in submissions]
 
 
 async def update_assignment_task_submission(
@@ -1766,19 +1798,6 @@ async def create_assignment_submission(
             detail="Course not found",
         )
 
-    # Check if User already submitted the assignment
-    statement = select(AssignmentUserSubmission).where(
-        AssignmentUserSubmission.assignment_id == assignment.id,
-        AssignmentUserSubmission.user_id == current_user.id,
-    )
-    assignment_user_submission = db_session.exec(statement).first()
-
-    if assignment_user_submission:
-        raise HTTPException(
-            status_code=400,
-            detail="Assignment User Submission already exists",
-        )
-
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
@@ -1943,6 +1962,8 @@ async def read_assignment_submissions(
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
+    limit: int = 50,
+    offset: int = 0,
 ):
     _block_api_tokens(current_user)
     # Find assignment
@@ -1982,11 +2003,32 @@ async def read_assignment_submissions(
             AssignmentUserSubmission.user_id == current_user.id
         )
 
-    # return assignment tasks read
-    return [
-        AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
-        for assignment_user_submission in db_session.exec(statement).all()
-    ]
+    statement = statement.limit(limit).offset(offset)
+
+    # Compute the assignment-level max_grade once so every row can render a
+    # formatted display_grade (e.g. "A", "85/100") rather than just the raw
+    # integer sum from AssignmentUserSubmission.grade. Without this the
+    # submissions list shows "80" while the evaluate modal and the student's
+    # own view show "B" / "80/100" — three places, three formats.
+    tasks_statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_id == assignment.id
+    )
+    assignment_tasks = db_session.exec(tasks_statement).all()
+    max_grade = sum(int(t.max_grade_value or 0) for t in assignment_tasks)
+
+    results = []
+    for sub in db_session.exec(statement).all():
+        row = AssignmentUserSubmissionRead.model_validate(sub).model_dump()
+        if sub.submission_status == AssignmentUserSubmissionStatus.GRADED:
+            row["grade_display"] = compute_assignment_grade(
+                int(sub.grade or 0),
+                max_grade,
+                assignment.grading_type,
+            )
+        else:
+            row["grade_display"] = None
+        results.append(row)
+    return results
 
 
 async def read_user_assignment_submissions(
@@ -2062,14 +2104,26 @@ async def read_user_assignment_submissions_me(
 async def update_assignment_submission(
     request: Request,
     user_id: str,
+    assignment_uuid: str,
     assignment_user_submission_object: AssignmentUserSubmissionCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     _block_api_tokens(current_user)
-    # Check if assignment user submission exists
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if assignment user submission exists (scoped to this specific assignment)
     statement = select(AssignmentUserSubmission).where(
-        AssignmentUserSubmission.user_id == user_id
+        AssignmentUserSubmission.user_id == user_id,
+        AssignmentUserSubmission.assignment_id == assignment.id,
     )
     assignment_user_submission = db_session.exec(statement).first()
 
@@ -2077,18 +2131,6 @@ async def update_assignment_submission(
         raise HTTPException(
             status_code=404,
             detail="Assignment User Submission not found",
-        )
-
-    # Check if assignment exists
-    statement = select(Assignment).where(
-        Assignment.id == assignment_user_submission.assignment_id
-    )
-    assignment = db_session.exec(statement).first()
-
-    if not assignment:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment not found",
         )
 
     # Check if course exists
@@ -2177,7 +2219,43 @@ async def delete_assignment_submission(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
-    # Delete Assignment User Submission
+    # Rejecting a submission means the student is no longer "done" with this
+    # activity — reset the TrailStep so the activity is no longer complete,
+    # clear the teacher-verification flag, and drop any stored grade string.
+    # Leave the per-task AssignmentTaskSubmission rows intact so the student
+    # keeps the work they did and can edit + resubmit rather than starting
+    # from scratch.
+    trailstep_statement = select(TrailStep).where(
+        TrailStep.activity_id == assignment.activity_id,
+        TrailStep.user_id == int(user_id),
+    )
+    trailstep = db_session.exec(trailstep_statement).first()
+    if trailstep:
+        trailstep.complete = False
+        trailstep.teacher_verified = False
+        trailstep.grade = ""
+        trailstep.update_date = str(datetime.now())
+        db_session.add(trailstep)
+
+    # If a course certificate was already issued to this user (the activity
+    # was previously counted as complete and this was the final one), pull it
+    # now — the student can't hold a certificate while an assignment that
+    # gated it is in a rejected state. A new certificate will be re-issued
+    # automatically once the rework is accepted.
+    cert_statement = select(Certifications).where(
+        Certifications.course_id == course.id
+    )
+    certification = db_session.exec(cert_statement).first()
+    if certification:
+        cert_user_statement = select(CertificateUser).where(
+            CertificateUser.user_id == int(user_id),
+            CertificateUser.certification_id == certification.id,
+        )
+        cert_user = db_session.exec(cert_user_statement).first()
+        if cert_user:
+            db_session.delete(cert_user)
+
+    # Delete Assignment User Submission (so the student can create a new one)
     db_session.delete(assignment_user_submission)
     db_session.commit()
 
@@ -2263,30 +2341,11 @@ async def _apply_grade_and_finalize(
         overall_feedback=assignment_user_submission.overall_feedback,
     )
 
-    # Per-task breakdown
-    tasks_breakdown = []
-    for index, task in enumerate(
-        sorted(assignment_tasks, key=lambda t: t.id or 0)
-    ):
-        ts = task_submissions_by_task_id.get(task.id)
-        task_max = int(task.max_grade_value or 0)
-        task_raw = int(ts.grade or 0) if ts else 0
-        task_percentage = round((task_raw / task_max) * 100.0, 2) if task_max > 0 else 0.0
-        task_percentage = max(min(task_percentage, 100.0), 0.0)
-        tasks_breakdown.append(
-            {
-                "index": index + 1,
-                "assignment_task_uuid": task.assignment_task_uuid,
-                "title": task.title,
-                "description": task.description,
-                "assignment_type": task.assignment_type,
-                "submitted": ts is not None,
-                "percentage": task_percentage,
-                "percentage_display": f"{task_percentage:.0f}%",
-                "feedback": ts.task_submission_grade_feedback if ts else None,
-            }
-        )
-    computed["tasks"] = tasks_breakdown
+    computed["tasks"] = _build_tasks_breakdown(
+        assignment_tasks,
+        task_submissions_by_task_id,
+        computed["passing_threshold"],
+    )
 
     # Persist the clamped raw grade + flip status to GRADED in a single commit
     assignment_user_submission.grade = computed["grade"]
@@ -2457,37 +2516,17 @@ async def get_grade_assignment_submission(
         for ts in db_session.exec(ts_statement).all():
             task_submissions_by_task_id[ts.assignment_task_id] = ts
 
-    tasks_breakdown = []
-    for index, task in enumerate(
-        sorted(assignment_tasks, key=lambda t: t.id or 0)
-    ):
-        ts = task_submissions_by_task_id.get(task.id)
-        task_max = int(task.max_grade_value or 0)
-        task_raw = int(ts.grade or 0) if ts else 0
-        # Use the same clamp + percentage logic as the top-level helper
-        task_percentage = round((task_raw / task_max) * 100.0, 2) if task_max > 0 else 0.0
-        task_percentage = max(min(task_percentage, 100.0), 0.0)
-        tasks_breakdown.append(
-            {
-                "index": index + 1,
-                "assignment_task_uuid": task.assignment_task_uuid,
-                "title": task.title,
-                "description": task.description,
-                "assignment_type": task.assignment_type,
-                "submitted": ts is not None,
-                "percentage": task_percentage,
-                "percentage_display": f"{task_percentage:.0f}%",
-                "feedback": ts.task_submission_grade_feedback if ts else None,
-            }
-        )
-
     grade_obj = compute_assignment_grade(
         int(assignment_user_submission.grade or 0),
         max_grade,
         assignment.grading_type,
         overall_feedback=assignment_user_submission.overall_feedback,
     )
-    grade_obj["tasks"] = tasks_breakdown
+    grade_obj["tasks"] = _build_tasks_breakdown(
+        assignment_tasks,
+        task_submissions_by_task_id,
+        grade_obj["passing_threshold"],
+    )
     return grade_obj
 
 

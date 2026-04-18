@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useTranslation } from 'react-i18next'
 import { ChartBar } from '@phosphor-icons/react'
@@ -69,13 +69,8 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
   const isConfigured = analyticsStatus?.configured === true
   const orgslug = org?.slug || ''
 
-  // Get the course UUID from the course context
-  const [courseId, setCourseId] = useState<string | null>(null)
-  useEffect(() => {
-    if (courseContext?.courseStructure?.course_uuid) {
-      setCourseId(courseContext.courseStructure.course_uuid)
-    }
-  }, [courseContext?.courseStructure?.course_uuid])
+  // courseUUID is always available from props; context is only used for activityMap
+  const courseId = courseUUID
 
   // Build activity name map from course structure
   // Keys are the FULL activity_uuid (with prefix) since that's how ClickHouse stores them
@@ -125,14 +120,6 @@ export default function CourseAnalyticsTab({ courseUUID }: { courseUUID: string 
             {t('analytics.course_analytics.not_configured_desc')}
           </p>
         </div>
-      </div>
-    )
-  }
-
-  if (!courseId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
   }

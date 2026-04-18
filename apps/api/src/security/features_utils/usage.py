@@ -57,7 +57,11 @@ def _get_redis_client():
             detail="Redis connection string not found",
         )
 
-    return redis.Redis.from_url(redis_conn_string)
+    return redis.Redis.from_url(
+        redis_conn_string,
+        socket_connect_timeout=5,
+        socket_timeout=5,
+    )
 
 
 def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
@@ -778,14 +782,7 @@ def deduct_ai_credit(
 ) -> int:
     """Deduct AI credits from the organization."""
     r = _get_redis_client()
-
-    used_credits = r.get(f"ai_credits_used:{org_id}")
-    used_credits_count = int(used_credits) if used_credits else 0
-
-    new_usage_count = used_credits_count + amount
-    r.set(f"ai_credits_used:{org_id}", new_usage_count)
-
-    return new_usage_count
+    return r.incrby(f"ai_credits_used:{org_id}", amount)
 
 
 def add_ai_credits(org_id: int, amount: int) -> int:

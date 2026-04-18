@@ -185,11 +185,7 @@ async def create_user(
     else:
         # Import here to avoid circular imports
         from src.services.users.email_verification import send_verification_email
-        try:
-            await send_verification_email(request, db_session, user, org_id)
-        except Exception:
-            # Log but don't fail user creation if email fails
-            pass
+        await send_verification_email(request, db_session, user, org_id)
 
     return user_read
 
@@ -352,11 +348,7 @@ async def create_user_without_org(
         )
     else:
         from src.services.users.email_verification import send_verification_email
-        try:
-            await send_verification_email(request, db_session, user, org_id=None)
-        except Exception:
-            # Don't fail user creation if email fails
-            pass
+        await send_verification_email(request, db_session, user, org_id=None)
 
     return user_read
 
@@ -624,14 +616,19 @@ async def get_user_session(
 
     user = UserRead.model_validate(user)
 
-    # Get roles and orgs in a single JOIN query (avoids N+1)
+    # Get roles and orgs in a single JOIN query (avoids N+1); cap at 100 to prevent
+    # unbounded result sets for users with many org memberships
     statement = (
         select(Role, Organization)
         .join(UserOrganization, UserOrganization.role_id == Role.id)
         .join(Organization, Organization.id == UserOrganization.org_id)
         .where(UserOrganization.user_id == user.id)
     )
-    results = db_session.exec(statement).all()
+    results = db_session.exec(statement.limit(100)).all()
+    if len(results) == 100:  # pragma: no cover
+        logging.getLogger(__name__).warning(
+            "User %s has 100+ org memberships, result truncated", user.id
+        )
 
     roles = []
 

@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateDiscussion, DISCUSSION_LABELS, DiscussionWithAuthor } from '@services/communities/discussions'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -132,16 +133,13 @@ export function EditDiscussionModal({
         onClose()
       }
     } catch (err: any) {
-      console.error('Failed to update discussion:', err)
-      if (err?.detail?.code === 'EDIT_LIMIT_REACHED') {
-        setError(err.detail.message || t('communities.edit_discussion.max_edits_reached', { count: MAX_EDITS }))
-      } else if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || t('communities.edit_discussion.content_not_allowed'))
-      } else if (typeof err?.detail === 'string') {
-        setError(err.detail)
-      } else {
-        setError(t('communities.edit_discussion.failed_to_update'))
-      }
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.edit_discussion.failed_to_update')
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

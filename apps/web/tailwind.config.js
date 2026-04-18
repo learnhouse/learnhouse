@@ -73,19 +73,20 @@ module.exports = {
         // Fixed navigation header (50)
         'nav': '50',
         'nav-menu': '51',
-        // Dropdowns and popovers - MUST be above nav (100+)
+        // Dropdowns (100)
         'dropdown': '100',
-        'popover': '110',
         // Overlays and editor tools (120-140)
         'overlay': '120',
         'editor-toolbar': '130',
         'editor-bubble': '135',
-        // Tooltips (150)
-        'tooltip': '150',
         // Modals - highest priority UI (200+)
         'modal-backdrop': '200',
         'modal': '210',
         'modal-content': '220',
+        // Popovers and tooltips MUST sit above modals so that pickers
+        // launched from inside a modal are not clipped/covered by it.
+        'popover': '250',
+        'tooltip': '250',
         // Toasts and notifications (300+)
         'toast': '300',
         'notification': '310',

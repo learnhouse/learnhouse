@@ -19,6 +19,7 @@ import {
   Check,
   Zap,
   Shield,
+  Eye,
 } from 'lucide-react'
 
 function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
@@ -35,6 +36,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const [gradingType, setGradingType] = React.useState('ALPHABET')
   const [autoGrading, setAutoGrading] = React.useState(false)
   const [antiCopyPaste, setAntiCopyPaste] = React.useState(false)
+  const [showCorrectAnswers, setShowCorrectAnswers] = React.useState(false)
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -62,6 +64,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
         grading_type: gradingType,
         auto_grading: autoGrading,
         anti_copy_paste: antiCopyPaste,
+        show_correct_answers: showCorrectAnswers,
         course_id: course?.courseStructure.id,
         org_id: org?.id,
         chapter_id: chapterId,
@@ -217,6 +220,13 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
             description={t('dashboard.assignments.modals.create.form.anti_copy_paste_description')}
             checked={antiCopyPaste}
             onChange={setAntiCopyPaste}
+          />
+          <SmallToggleRow
+            icon={<Eye size={16} className="text-indigo-500" />}
+            label={t('dashboard.assignments.modals.create.form.show_correct_answers_label')}
+            description={t('dashboard.assignments.modals.create.form.show_correct_answers_description')}
+            checked={showCorrectAnswers}
+            onChange={setShowCorrectAnswers}
           />
         </div>
       </div>

@@ -87,7 +87,11 @@ def get_cookie_domain_for_request(request: Request) -> str | None:
         # Use configured cookie domain for subdomains
         return config_cookie_domain
     else:
-        # Custom domain - no domain restriction (host-specific cookie)
+        # Custom domain - no domain restriction (host-specific cookie).
+        # TODO: add custom domain allowlist — query the CustomDomain table for
+        # active/verified entries and raise HTTPException(400, "Invalid request
+        # origin") when check_value does not match any of them. This requires
+        # threading a db_session into this function (or a separate helper).
         return None
 
 
@@ -192,7 +196,7 @@ def refresh(request: Request, response: Response):
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token missing",
+            detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -200,7 +204,7 @@ def refresh(request: Request, response: Response):
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token",
+            detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -370,6 +374,47 @@ async def third_party_login(
     current_user: AnonymousUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
+    import logging
+    import redis as _redis
+    _logger = logging.getLogger(__name__)
+
+    # Validate org_id before passing it downstream: verify the org exists and
+    # that a pending invite exists for this email in that org.  If the org does
+    # not exist we reject the request. If the org exists but no invite is found
+    # we log a warning and clear org_id so the user is created without an org
+    # association (prevents unauthorized org membership via OAuth).
+    if org_id is not None:
+        from src.db.organizations import Organization
+        org_record = db_session.exec(
+            select(Organization).where(Organization.id == org_id)
+        ).first()
+
+        if not org_record:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid org_id",
+            )
+
+        # Check that a pending email invite exists for this address in the org
+        _invite_found = False
+        try:
+            _lh_config = get_learnhouse_config()
+            _redis_url = _lh_config.redis_config.redis_connection_string
+            if _redis_url:
+                _r = _redis.Redis.from_url(_redis_url)
+                _invite_key = f"invited_user:{body.email}:org:{org_record.org_uuid}"
+                _invite_found = bool(_r.get(_invite_key))
+        except Exception as e:
+            _logger.error("Redis unavailable for invite validation, org_id will be ignored: %s", e)
+
+        if not _invite_found:
+            _logger.warning(
+                "OAuth org_id=%s supplied for email=%s but no pending invite found; ignoring org_id",
+                org_id,
+                body.email,
+            )
+            org_id = None
+
     # Google
     if body.provider == "google":
 
@@ -440,6 +485,7 @@ class VerifyEmailRequest(BaseModel):
     token: str
     user_uuid: str
     org_uuid: str
+    email: Optional[EmailStr] = None
 
 
 @router.post(
@@ -462,8 +508,8 @@ async def api_verify_email(
     """
     Verify user email with token.
     """
-    # Rate limit: 5 attempts per 5 minutes per user_uuid
-    is_allowed, retry_after = check_email_verification_rate_limit(body.user_uuid)
+    # Rate limit: 5 attempts per 5 minutes (keyed on email when provided, user_uuid otherwise)
+    is_allowed, retry_after = check_email_verification_rate_limit(body.email or body.user_uuid)
     if not is_allowed:
         raise HTTPException(
             status_code=429,

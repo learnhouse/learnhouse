@@ -41,22 +41,27 @@ export const RequestBodyWithAuthHeader = (
   data: any,
   next: any,
   token?: string
-) => {
+): RequestInit => {
   let HeadersConfig = new Headers(
     token
       ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
       : { 'Content-Type': 'application/json' }
   )
-  let options: any = {
+  // Always bypass the Next.js fetch data cache for API requests. Two reasons:
+  //   1. It keys by URL+method+body only (not Authorization), so an authed
+  //      response can be served to an anonymous caller.
+  //   2. Access state (public ↔ UsersOnly, published ↔ draft, group membership)
+  //      can change at any time and the tag-based revalidation isn't reliable
+  //      across every code path that mutates it. The backend already has its
+  //      own Redis cache on hot endpoints, so the performance impact is small.
+  return {
     method: method,
     headers: HeadersConfig,
     redirect: 'follow',
     credentials: 'include',
+    cache: 'no-store',
     body: (method === 'POST' || method === 'PUT' || method === 'DELETE') && data !== null ? JSON.stringify(data) : null,
-    // Next.js
-    next: next,
   }
-  return options
 }
 
 export const RequestBodyForm = (method: string, data: any, next: any) => {
@@ -129,7 +134,15 @@ export const errorHandling = async (res: any) => {
     } catch (_e) {
       // If we can't parse JSON, use statusText
     }
-    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
+    let message: string
+    if (typeof detail === 'string') {
+      message = detail
+    } else if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+      message = detail.message
+    } else {
+      message = JSON.stringify(detail)
+    }
+    const error: any = new Error(message)
     error.status = res.status
     error.detail = detail
     throw error

@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCollectionById } from '@services/courses/collections'
@@ -87,14 +88,20 @@ const CollectionPage = async (props: { params: MetadataProps['params'] }) => {
   const access_token = session?.tokens?.access_token
 
   let collection: any = null
+  let fetchError: { status?: number } | null = null
   try {
     collection = await getCollectionById(
       `collection_${params.collectionid}`,
       access_token || '',
       { revalidate: 120, tags: ['collections'] }
     )
-  } catch {
-    // Collection might not exist or user doesn't have access
+  } catch (error: any) {
+    fetchError = { status: error?.status }
+  }
+
+  // Missing, or denied-to-anon: 404 so private collections can't be enumerated.
+  if (!collection && (!fetchError || !access_token)) {
+    notFound()
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([

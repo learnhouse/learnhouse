@@ -82,12 +82,27 @@ def validate_audio_content(content: bytes) -> bool:
 
 
 def validate_zip_content(content: bytes) -> bool:
-    """Validate ZIP file content using magic bytes."""
+    """Validate ZIP file using magic bytes and check for zip bombs."""
     if len(content) < 4:
         return False
 
-    # ZIP magic bytes: PK\x03\x04 (local file header) or PK\x05\x06 (empty archive)
-    return content[:4] == b'PK\x03\x04' or content[:4] == b'PK\x05\x06'
+    if not (content[:4] == b'PK\x03\x04' or content[:4] == b'PK\x05\x06'):
+        return False
+
+    import io
+    import zipfile
+
+    # 500 MB uncompressed limit — protects against zip bomb attacks.
+    max_uncompressed = 500 * 1024 * 1024
+    try:
+        with zipfile.ZipFile(io.BytesIO(content)) as zf:
+            total = sum(info.file_size for info in zf.infolist())
+            if total > max_uncompressed:
+                return False
+    except Exception:
+        return False
+
+    return True
 
 
 # File type configurations (no size limits)

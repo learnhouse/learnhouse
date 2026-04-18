@@ -324,6 +324,52 @@ class TestGetCourseContributors:
 
 class TestAddBulkCourseContributors:
     @pytest.mark.asyncio
+    async def test_add_bulk_course_contributors_missing_course_raises(
+        self, db, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.contributors.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await add_bulk_course_contributors(
+                    mock_request,
+                    "missing-course-uuid",
+                    ["someuser"],
+                    admin_user,
+                    db,
+                )
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_bulk_course_contributors_all_usernames_not_found(
+        self, db, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.contributors.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            result = await add_bulk_course_contributors(
+                mock_request,
+                course.course_uuid,
+                ["ghost1", "ghost2"],
+                admin_user,
+                db,
+            )
+        assert result["successful"] == []
+        assert len(result["failed"]) == 2
+        assert all(f["reason"] == "User not found or invalid" for f in result["failed"])
+
+    @pytest.mark.asyncio
     async def test_add_bulk_course_contributors_mixed_result(
         self, db, course, admin_user, mock_request
     ):
@@ -387,7 +433,9 @@ class TestAddBulkCourseContributors:
         ), patch(
             "src.services.courses.contributors.check_resource_access",
             new_callable=AsyncMock,
-        ), patch.object(db, "add", side_effect=RuntimeError("boom")), patch(
+        ), patch.object(db, "commit", side_effect=RuntimeError("boom")), patch.object(
+            db, "rollback"
+        ), patch(
             "src.services.courses.contributors.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_webhook:
@@ -401,10 +449,85 @@ class TestAddBulkCourseContributors:
 
         mock_webhook.assert_not_awaited()
         assert result["successful"] == []
-        assert result["failed"] == [{"username": "boom", "reason": "boom"}]
+        assert len(result["failed"]) == 1
+        assert result["failed"][0]["username"] == "boom"
+        assert "boom" in result["failed"][0]["reason"]
 
 
 class TestRemoveBulkCourseContributors:
+    @pytest.mark.asyncio
+    async def test_remove_bulk_course_contributors_missing_course_raises(
+        self, db, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.contributors.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await remove_bulk_course_contributors(
+                    mock_request,
+                    "missing-course-uuid",
+                    ["someuser"],
+                    admin_user,
+                    db,
+                )
+        assert exc_info.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_remove_bulk_course_contributors_all_usernames_not_found(
+        self, db, course, admin_user, mock_request
+    ):
+        with patch(
+            "src.services.courses.contributors.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            result = await remove_bulk_course_contributors(
+                mock_request,
+                course.course_uuid,
+                ["ghost1", "ghost2"],
+                admin_user,
+                db,
+            )
+        assert result["successful"] == []
+        assert len(result["failed"]) == 2
+        assert all(f["reason"] == "User not found or invalid" for f in result["failed"])
+
+    @pytest.mark.asyncio
+    async def test_remove_bulk_course_contributors_user_not_contributor_fails(
+        self, db, course, admin_user, mock_request
+    ):
+        non_contrib = _make_user(db, user_id=60, username="noncontrib")
+
+        with patch(
+            "src.services.courses.contributors.authorization_verify_if_user_is_anon",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.contributors.dispatch_webhooks",
+            new_callable=AsyncMock,
+        ):
+            result = await remove_bulk_course_contributors(
+                mock_request,
+                course.course_uuid,
+                [non_contrib.username],
+                admin_user,
+                db,
+            )
+        assert result["successful"] == []
+        assert len(result["failed"]) == 1
+        assert result["failed"][0]["reason"] == "User is not a contributor for this course"
+
     @pytest.mark.asyncio
     async def test_remove_bulk_course_contributors_mixed_result(
         self, db, course, admin_user, mock_request
@@ -464,7 +587,9 @@ class TestRemoveBulkCourseContributors:
         ), patch(
             "src.services.courses.contributors.check_resource_access",
             new_callable=AsyncMock,
-        ), patch.object(db, "delete", side_effect=RuntimeError("boom")), patch(
+        ), patch.object(db, "commit", side_effect=RuntimeError("boom")), patch.object(
+            db, "rollback"
+        ), patch(
             "src.services.courses.contributors.dispatch_webhooks",
             new_callable=AsyncMock,
         ) as mock_webhook:
@@ -478,4 +603,6 @@ class TestRemoveBulkCourseContributors:
 
         mock_webhook.assert_not_awaited()
         assert result["successful"] == []
-        assert result["failed"] == [{"username": "boom", "reason": "boom"}]
+        assert len(result["failed"]) == 1
+        assert result["failed"][0]["username"] == "boom"
+        assert "boom" in result["failed"][0]["reason"]

@@ -1,9 +1,9 @@
 'use client'
 import PageLoading from '@components/Objects/Loaders/PageLoading';
-import { useSession } from '@components/Contexts/AuthContext';
+import { useSession, UseSessionReturn } from '@components/Contexts/AuthContext';
 import React, { useContext, createContext } from 'react'
 
-export const SessionContext = createContext({}) as any
+export const SessionContext = createContext<UseSessionReturn | null>(null)
 
 /**
  * Provides session context to all children. Does NOT block rendering —
@@ -26,7 +26,7 @@ function LHSessionProvider({ children }: { children: React.ReactNode }) {
  * Pages with custom skeletons (like the editor) should NOT use this.
  */
 export function SessionGate({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
-    const session = useContext(SessionContext) as any
+    const session = useContext(SessionContext)
 
     if (session && session.status === 'loading') {
         return fallback ? <>{fallback}</> : <PageLoading />

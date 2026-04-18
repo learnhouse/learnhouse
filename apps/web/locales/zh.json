@@ -999,7 +999,24 @@
     "quick_results": "快捷结果",
     "view_all_results": "查看所有结果",
     "course": "课程",
-    "user": "用户"
+    "user": "用户",
+    "start_heading": "您在找什么？",
+    "start_subtitle": "在一个地方搜索此组织的所有空间。",
+    "all_results": "所有结果",
+    "filter_heading": "按类型筛选",
+    "empty_section": "这里还什么都没有",
+    "previous": "上一页",
+    "next": "下一页",
+    "types": {
+      "all": "全部",
+      "courses": "课程",
+      "collections": "合集",
+      "users": "成员",
+      "communities": "社区",
+      "discussions": "讨论",
+      "playgrounds": "实验台",
+      "podcasts": "播客"
+    }
   },
   "ai": {
     "ask_ai": "咨询 AI",
@@ -1784,9 +1801,31 @@
         },
         "moderation": {
           "title": "内容审核",
-          "subtitle": "配置屏蔽词和内容过滤器",
-          "info_title": "屏蔽词",
-          "info_description": "包含这些词的讨论和回复将被屏蔽。用户将看到错误消息，其内容将不会发布。",
+          "subtitle": "配置屏蔽词、速率限制和内容规则",
+          "info_title": "社区审核",
+          "info_description": "违反这些规则的内容将被拒绝并显示错误消息，不会被发布。",
+          "restrictions_title": "内容限制",
+          "length_title": "长度限制",
+          "rate_limits_title": "速率限制",
+          "account_requirements_title": "账户要求",
+          "blocked_words_section_title": "屏蔽词",
+          "block_links_label": "屏蔽外部链接",
+          "block_links_description": "拒绝包含 URL 的讨论或回复。",
+          "disable_reactions_label": "禁用反应",
+          "disable_reactions_description": "关闭此社区讨论中的表情符号反应。",
+          "min_post_length_label": "帖子最小长度",
+          "max_post_length_label": "帖子最大长度",
+          "max_comment_length_label": "回复最大长度",
+          "zero_disables": "保持为 0 以禁用。",
+          "slow_mode_label": "慢速模式（秒）",
+          "slow_mode_hint": "同一用户的帖子之间的最小等待时间。0 表示禁用。",
+          "max_posts_per_day_label": "每个用户每天最大帖子数",
+          "auto_lock_days_label": "自动锁定陈旧主题（天）",
+          "auto_lock_days_hint": "在此天数后锁定无活动的讨论。0 表示禁用。",
+          "min_account_age_label": "最小账户年龄（天）",
+          "min_account_age_hint": "账户较新的用户无法发布。0 表示禁用。",
+          "require_email_verified_label": "要求验证邮箱",
+          "require_email_verified_description": "只有已验证邮箱的用户才能在此社区发布。",
           "add_word_label": "添加屏蔽词",
           "add_word_placeholder": "输入词语或短语...",
           "add_button": "添加",
@@ -3128,7 +3167,8 @@
         "title": "作业工具",
         "tabs": {
           "editor": "编辑器",
-          "submissions": "提交内容"
+          "submissions": "提交内容",
+          "analytics": "分析"
         },
         "mobile": {
           "title": "仅限桌面设备",
@@ -3337,6 +3377,58 @@
           "optional": "可选",
           "placeholder": "写一条关于整个提交的评论。学生将在其成绩旁看到此内容。",
           "hint": "留空以保持之前的反馈不变。"
+        }
+      },
+      "analytics": {
+        "loading": "正在加载分析...",
+        "empty": {
+          "title": "暂无提交",
+          "description": "学生开始提交作业后，分析将显示在这里。"
+        },
+        "kpis": {
+          "average": "班级平均分",
+          "median": "中位数",
+          "pass_rate": "通过率",
+          "pass_rate_sub": "{{total}} 人中 {{passed}} 人通过",
+          "on_time": "准时提交率",
+          "on_time_sub": "{{total}} 份中 {{late}} 份迟交"
+        },
+        "mini": {
+          "highest": "最高",
+          "lowest": "最低",
+          "spread": "分布范围",
+          "feedback": "反馈覆盖率"
+        },
+        "distribution": {
+          "title": "成绩分布",
+          "subtitle": "全班在各成绩段的分布",
+          "empty": "提交批改后成绩将显示在此处",
+          "students": "学生"
+        },
+        "timeline": {
+          "title": "提交活动",
+          "subtitle": "学生提交时间与您批改时间",
+          "empty": "暂无活动可显示",
+          "submitted": "已提交",
+          "graded": "已批改",
+          "due": "截止日期"
+        },
+        "tasks": {
+          "title": "任务表现",
+          "subtitle": "每项任务的平均分 — 较低的柱子提示学生薄弱环节",
+          "empty": "批改后将显示各项任务的表现",
+          "avg_grade": "平均成绩",
+          "attempts": "次尝试"
+        },
+        "top": {
+          "title": "优秀表现者",
+          "subtitle": "本次作业得分最高的学生",
+          "empty": "暂无已批改的提交"
+        },
+        "attention": {
+          "title": "可能需要帮助",
+          "subtitle": "未通过的学生 — 可考虑主动联系",
+          "empty": "所有已批改的学生都通过了。干得好！"
         }
       },
       "modals": {
@@ -4529,6 +4621,37 @@
           "api_desc": "与现有工具集成并自动化工作流程。"
         }
       }
+    }
+  },
+  "course": {
+    "locked": "已锁定",
+    "locked_title": "此活动已锁定",
+    "locked_auth_required": "您需要登录才能访问此活动。",
+    "locked_restricted": "您需要是相应用户组的成员才能访问。请让课程管理员将您添加进来。",
+    "activity_locked_hint": "登录或加入相应的用户组以解锁。",
+    "back_to_course": "返回课程",
+    "lock": {
+      "header_access": "访问权限",
+      "title_chapter": "锁定此章节",
+      "title_activity": "锁定此活动",
+      "option_public_label": "公开",
+      "option_public_description": "任何人都可以打开,无需登录。",
+      "option_authenticated_label": "仅限登录用户",
+      "option_authenticated_description": "只有登录用户可以打开。",
+      "option_restricted_label": "仅限用户组",
+      "option_restricted_description": "只有下面选择的用户组成员可以打开。",
+      "trigger_public_title": "访问权限:对所有人开放",
+      "trigger_authenticated_title": "访问权限:仅限登录用户",
+      "trigger_restricted_title": "访问权限:特定用户组",
+      "usergroups_header": "用户组",
+      "usergroups_none_assigned": "没有分配的组 — 只有管理员可以打开。",
+      "usergroups_remove_title": "移除",
+      "usergroups_loading": "正在加载用户组…",
+      "usergroups_none_in_org": "此组织尚未创建用户组。",
+      "usergroups_all_assigned": "所有用户组都已分配。",
+      "usergroups_add_a_group": "添加用户组",
+      "toast_add_error": "无法添加用户组",
+      "toast_remove_error": "无法移除用户组"
     }
   }
 }

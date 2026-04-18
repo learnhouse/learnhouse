@@ -66,6 +66,126 @@ class TestImportHelpers:
         assert sanitize_path("../..//evil\x00/path") == "evil/path"
         assert sanitize_path("..") == ""
 
+    def test_sanitize_path_returns_empty_when_purepath_contains_dotdot(self):
+        """Cover line 77: return '' when '..' is in PurePosixPath.parts after sanitisation."""
+        from unittest.mock import patch
+
+        class _FakePurePosixPath:
+            def __init__(self, path):
+                self._path = path
+
+            @property
+            def parts(self):
+                # Simulate PurePosixPath unexpectedly returning '..' in parts
+                return ("..", "evil")
+
+        # PurePosixPath is imported locally inside sanitize_path via
+        # "from pathlib import PurePosixPath", so we patch pathlib.PurePosixPath
+        with patch("pathlib.PurePosixPath", _FakePurePosixPath):
+            result = sanitize_path("course/file.txt")
+
+        assert result == ""
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_rejects_oversized_package(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """Cover line 122: HTTPException 413 when upload exceeds MAX_PACKAGE_SIZE."""
+        _set_import_temp_dir(monkeypatch, tmp_path)
+
+        # Patch MAX_PACKAGE_SIZE to 0 so any content triggers the size limit
+        monkeypatch.setattr(
+            "src.services.courses.transfer.import_service.MAX_PACKAGE_SIZE", 0
+        )
+
+        # Use valid ZIP bytes (PK magic) but they'll exceed the patched limit immediately
+        package_bytes = _zip_bytes({"manifest.json": b"test"})
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await analyze_import_package(
+                    mock_request,
+                    _upload_file(package_bytes),
+                    org.id,
+                    admin_user,
+                    db,
+                )
+
+        assert exc_info.value.status_code == 413
+        assert "too large" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_skips_path_traversal_and_extracts_dirs(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """Cover lines 153 (empty safe_path skip), 159 (abspath traversal skip), 162 (is_dir makedirs)."""
+        import zipfile as zf
+        from io import BytesIO
+
+        _set_import_temp_dir(monkeypatch, tmp_path)
+
+        manifest = {
+            "version": "2.0.0",
+            "format": "learnhouse-course-export",
+            "courses": [{"course_uuid": "c1", "path": "c1"}],
+        }
+        course_data = {"course_uuid": "c1", "name": "Test"}
+
+        buf = BytesIO()
+        with zf.ZipFile(buf, "w", compression=zf.ZIP_STORED) as z:
+            # directory entry → covers line 162 (call 1)
+            dir_info = zf.ZipInfo("c1/subdir/")
+            dir_info.external_attr = 0o40755 << 16
+            z.writestr(dir_info, "")
+            # pure dot-dot entry → sanitize_path returns '' → covers line 153 (call 2)
+            z.writestr("..", b"evil")
+            # valid files (calls 3 and 4)
+            z.writestr("manifest.json", json.dumps(manifest))
+            z.writestr("c1/course.json", json.dumps(course_data))
+            # extra entry whose path will be made to escape extract_dir → covers line 159 (call 5)
+            z.writestr("c1/extra.txt", b"extra")
+
+        package_bytes = buf.getvalue()
+
+        # Patch sanitize_path so that:
+        # - call #2 (the ".." entry) returns "" → covers line 153
+        # - call #3 (manifest.json) returns "../../escape" → covers line 159
+        import src.services.courses.transfer.import_service as _imp
+
+        original_sanitize = _imp.sanitize_path
+        call_count = {"n": 0}
+
+        def _patched_sanitize(path):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                return ""              # empty → line 153 fires
+            if call_count["n"] == 5:
+                return "../../escape"  # escapes extract_dir → line 159 fires
+            return original_sanitize(path)
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ), patch(
+            "src.services.courses.transfer.import_service.sanitize_path",
+            side_effect=_patched_sanitize,
+        ):
+            result = await analyze_import_package(
+                mock_request,
+                _upload_file(package_bytes),
+                org.id,
+                admin_user,
+                db,
+            )
+
+        assert result.temp_id
+        extract_dir = tmp_path / result.temp_id / "extracted"
+        # The directory entry should have been created
+        assert (extract_dir / "c1" / "subdir").is_dir()
+
     @pytest.mark.asyncio
     async def test_analyze_import_package_success(self, db, org, admin_user, mock_request, tmp_path, monkeypatch):
         manifest = {

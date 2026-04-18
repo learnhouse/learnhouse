@@ -2,7 +2,6 @@
 
 import json
 import string
-import uuid
 from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
@@ -126,8 +125,7 @@ class TestPasswordResetService:
         assert result.startswith("If an account")
         fake_redis.set.assert_called_once()
         key = fake_redis.set.call_args.args[0]
-        assert key.startswith("reset_email_invite_code_")
-        assert f":user:{user.user_uuid}:org:{org.org_uuid}:code:RESET123" in key
+        assert key == f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:RESET123"
         payload = json.loads(fake_redis.set.call_args.args[1])
         assert payload["reset_code"] == "RESET123"
         assert payload["created_by"] == user.user_uuid
@@ -166,10 +164,7 @@ class TestPasswordResetService:
         assert platform_result.startswith("If an account")
         mock_platform_send.assert_called_once()
         platform_key = fake_redis.set.call_args_list[-1].args[0]
-        assert platform_key.startswith("reset_email_invite_code_")
-        assert (
-            f":user:{user.user_uuid}:platform:code:RESET456" in platform_key
-        )
+        assert platform_key == f"pwd_reset:user:{user.user_uuid}:platform:code:RESET456"
 
     @pytest.mark.asyncio
     async def test_send_reset_password_code_error_paths(self, mock_request, db, org):
@@ -181,23 +176,33 @@ class TestPasswordResetService:
             user_uuid="user_reset",
         )
 
-        with pytest.raises(HTTPException) as missing_org_exc:
-            await send_reset_password_code(
+        fake_redis_ok = MagicMock()
+        fake_redis_ok.incr.return_value = 1
+        with patch(
+            "src.services.users.password_reset._get_redis_connection",
+            return_value=fake_redis_ok,
+        ):
+            with pytest.raises(HTTPException) as missing_org_exc:
+                await send_reset_password_code(
+                    mock_request,
+                    db,
+                    AnonymousUser(),
+                    org.id + 999,
+                    user.email,
+                )
+        assert missing_org_exc.value.status_code == 400
+
+        with patch(
+            "src.services.users.password_reset._get_redis_connection",
+            return_value=fake_redis_ok,
+        ):
+            missing = await send_reset_password_code(
                 mock_request,
                 db,
                 AnonymousUser(),
-                org.id + 999,
-                user.email,
+                org.id,
+                "missing@test.com",
             )
-        assert missing_org_exc.value.status_code == 400
-
-        missing = await send_reset_password_code(
-            mock_request,
-            db,
-            AnonymousUser(),
-            org.id,
-            "missing@test.com",
-        )
         assert missing.startswith("If an account")
 
         with patch(
@@ -279,15 +284,11 @@ class TestPasswordResetService:
         assert user is not None
         old_password = user.password
         reset_code = "RESET123"
-        redis_key = (
-            f"reset_email_invite_code_{uuid.uuid4()}:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
-        )
+        redis_key = f"pwd_reset:user:{user.user_uuid}:org:{org.org_uuid}:code:{reset_code}"
         fake_redis = Mock()
-        fake_redis.scan_iter.return_value = [redis_key]
         fake_redis.get.return_value = json.dumps(
             {
                 "reset_code": reset_code,
-                "reset_email_invite_uuid": "reset_email_invite_code_test",
                 "reset_code_expires": int(datetime.now().timestamp()) + 3600,
                 "reset_code_type": "password_reset",
                 "created_at": datetime.now().isoformat(),
@@ -380,7 +381,7 @@ class TestPasswordResetService:
             ),
         ), patch(
             "src.services.users.password_reset.redis.Redis.from_url",
-            return_value=Mock(scan_iter=Mock(return_value=[])),
+            return_value=Mock(get=Mock(return_value=None)),
         ):
             with pytest.raises(HTTPException) as invalid_format_exc:
                 await change_password_with_reset_code(
@@ -418,7 +419,7 @@ class TestPasswordResetService:
             ),
         ), patch(
             "src.services.users.password_reset.redis.Redis.from_url",
-            return_value=Mock(scan_iter=Mock(return_value=[])),
+            return_value=Mock(get=Mock(return_value=None)),
         ):
             with pytest.raises(HTTPException) as no_match_exc:
                 await change_password_with_reset_code(
@@ -433,7 +434,6 @@ class TestPasswordResetService:
         assert no_match_exc.value.status_code == 400
 
         fake_redis = Mock()
-        fake_redis.scan_iter.return_value = [b"reset-key"]
         fake_redis.get.return_value = None
         with patch(
             "src.services.users.password_reset.validate_password_complexity",
@@ -541,7 +541,7 @@ class TestPasswordResetService:
             return_value=SimpleNamespace(is_valid=True, errors=[], requirements={}),
         ), patch(
             "src.services.users.password_reset._get_redis_connection",
-            return_value=Mock(scan_iter=Mock(return_value=[])),
+            return_value=Mock(get=Mock(return_value=None)),
         ):
             with pytest.raises(HTTPException) as invalid_format_exc:
                 await change_password_with_reset_code_platform(
@@ -585,7 +585,7 @@ class TestPasswordResetService:
             return_value=SimpleNamespace(is_valid=True, errors=[], requirements={}),
         ), patch(
             "src.services.users.password_reset._get_redis_connection",
-            return_value=Mock(scan_iter=Mock(return_value=[])),
+            return_value=Mock(get=Mock(return_value=None)),
         ):
             with pytest.raises(HTTPException) as no_match_exc:
                 await change_password_with_reset_code_platform(
@@ -672,3 +672,64 @@ class TestPasswordResetService:
         refreshed = db.exec(select(User).where(User.email == user.email)).first()
         assert refreshed is not None
         assert security_verify_password("NewPassword123!", refreshed.password)
+
+    @pytest.mark.asyncio
+    async def test_missing_coverage_lines(self, mock_request, db, org, regular_user):
+        # Line 88: IP rate limit exceeded
+        fast_redis = Mock()
+        fast_redis.incr.return_value = 11
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=fast_redis):
+            with pytest.raises(HTTPException) as exc429:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc429.value.status_code == 429
+
+        # Lines 120: send_reset_password_code - no redis_conn_string after rate-limit passes
+        ok_rate_redis = Mock()
+        ok_rate_redis.incr.return_value = 1
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=ok_rate_redis), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string=""))):
+            with pytest.raises(HTTPException) as exc120:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc120.value.status_code == 500
+
+        # Line 129: send_reset_password_code - falsy Redis connection
+        falsy = Mock()
+        falsy.__bool__ = Mock(return_value=False)
+        with patch("src.services.users.password_reset._get_redis_connection", return_value=ok_rate_redis), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://test"))), \
+             patch("src.services.users.password_reset.redis.Redis.from_url", return_value=falsy):
+            with pytest.raises(HTTPException) as exc129:
+                await send_reset_password_code(mock_request, db, AnonymousUser(), org.id, regular_user.email)
+        assert exc129.value.status_code == 500
+
+        # Line 237: change_password_with_reset_code - no redis_conn_string
+        with patch("src.services.users.password_reset.validate_password_complexity",
+                   return_value=SimpleNamespace(is_valid=True, errors=[], requirements={})), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string=""))):
+            with pytest.raises(HTTPException) as exc237:
+                await change_password_with_reset_code(mock_request, db, AnonymousUser(), "NewPass123!", org.id, regular_user.email, "RESET123")
+        assert exc237.value.status_code == 500
+
+        # Line 246: change_password_with_reset_code - falsy Redis connection
+        with patch("src.services.users.password_reset.validate_password_complexity",
+                   return_value=SimpleNamespace(is_valid=True, errors=[], requirements={})), \
+             patch("src.services.users.password_reset.get_learnhouse_config",
+                   return_value=SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string="redis://test"))), \
+             patch("src.services.users.password_reset.redis.Redis.from_url", return_value=falsy):
+            with pytest.raises(HTTPException) as exc246:
+                await change_password_with_reset_code(mock_request, db, AnonymousUser(), "NewPass123!", org.id, regular_user.email, "RESET123")
+        assert exc246.value.status_code == 500
+
+        # Lines 351-352: send_reset_password_code_platform - email send fails
+        set_redis = Mock()
+        set_redis.set = Mock()
+        with patch("src.services.users.password_reset.generate_secure_reset_code", return_value="FAIL1234"), \
+             patch("src.services.users.password_reset._get_redis_connection", return_value=set_redis), \
+             patch("src.services.users.password_reset.get_base_url_from_request", return_value="https://test"), \
+             patch("src.services.users.password_reset.send_password_reset_email_platform", return_value=False):
+            with pytest.raises(HTTPException) as exc351:
+                await send_reset_password_code_platform(mock_request, db, AnonymousUser(), regular_user.email)
+        assert exc351.value.status_code == 500

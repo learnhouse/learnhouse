@@ -269,6 +269,13 @@ async def test_startup_and_shutdown_app(monkeypatch):
         def cancel(self):
             calls.append("cancel")
 
+        def __await__(self):
+            # shutdown_app awaits the task after cancelling; simulate the
+            # cancellation completing by raising CancelledError, matching the
+            # real asyncio.Task contract.
+            raise asyncio.CancelledError
+            yield  # pragma: no cover - unreachable, makes this a generator
+
     def create_task(coro):
         created_tasks.append(coro)
         coro.close()

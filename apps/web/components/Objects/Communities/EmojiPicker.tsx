@@ -61,7 +61,7 @@ export function EmojiPicker({ value, onChange, triggerClassName, disabled = fals
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start" side="bottom">
+      <PopoverContent className="w-80 p-0" align="start" side="bottom" style={{ zIndex: 9999 }}>
         {/* Category tabs */}
         <div className="flex overflow-x-auto border-b border-gray-100 px-1 py-1 gap-1">
           {Object.keys(EMOJI_CATEGORIES).map((category) => (

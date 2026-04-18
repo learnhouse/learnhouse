@@ -2,7 +2,7 @@ import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
 import {
   Loader2, Video, Upload, X, ArrowLeftRight,
-  CheckCircle2, AlertCircle, Download, Expand
+  CheckCircle2, AlertCircle, Expand,
 } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -15,6 +15,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import LearnHousePlayer from '@components/Objects/Activities/Video/LearnHousePlayer'
 import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
@@ -249,20 +250,6 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     fileId || ''
   ) : null
 
-  const handleDownload = () => {
-    if (!videoUrl) return;
-
-    const link = document.createElement('a');
-    link.href = videoUrl;
-    link.download = `video-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'mp4'}`;
-    link.setAttribute('download', '');
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleExpand = () => {
     setIsModalOpen(true);
   };
@@ -281,26 +268,14 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               }}
             >
               <div className="relative group">
-                <video
-                  controls
-                  preload="metadata"
-                  className="w-full aspect-video object-contain rounded-lg"
-                  src={videoUrl}
-                />
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <LearnHousePlayer src={videoUrl} />
+                <div className="absolute top-2 right-2 z-40 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={handleExpand}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.video_block.expand_video')}
                   >
                     <Expand className="w-4 h-4 text-white" />
-                  </button>
-                  <button
-                    onClick={handleDownload}
-                    className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title={t('editor.blocks.video_block.download_video')}
-                  >
-                    <Download className="w-4 h-4 text-white" />
                   </button>
                 </div>
               </div>
@@ -316,13 +291,10 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           minHeight="lg"
           dialogContent={
             <div className="w-full">
-              <video
+              <LearnHousePlayer
                 key={isModalOpen ? videoUrl : undefined}
-                controls
-                autoPlay
-                preload="metadata"
-                className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
                 src={videoUrl}
+                details={{ autoplay: true }}
               />
             </div>
           }
@@ -442,13 +414,6 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   {t(`editor.blocks.common.${size}`)}
                 </button>
               ))}
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors ml-auto"
-              >
-                <Download size={14} />
-                {t('editor.blocks.common.download')}
-              </button>
             </div>
 
             {/* Video Player */}
@@ -483,13 +448,6 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                       title={t('editor.blocks.video_block.expand_video')}
                     >
                       <Expand className="w-4 h-4 text-white" />
-                    </button>
-                    <button
-                      onClick={handleDownload}
-                      className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                      title={t('editor.blocks.video_block.download_video')}
-                    >
-                      <Download className="w-4 h-4 text-white" />
                     </button>
                   </div>
                 </div>

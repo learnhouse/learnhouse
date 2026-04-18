@@ -11,6 +11,7 @@ import {
   DiscussionSortBy,
   DiscussionWithAuthor,
 } from '@services/communities/discussions'
+import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
@@ -79,8 +80,8 @@ export function DiscussionList({
         })
         return newCounts
       })
-    } catch (error) {
-      console.error('Failed to fetch comment counts:', error)
+    } catch (_error) {
+      // silent — counts fall back to 0
     }
   }
 
@@ -154,8 +155,13 @@ export function DiscussionList({
       mutateDiscussions(communityUuid)
       setSelectedIds(new Set())
       setIsSelectMode(false)
-    } catch (error) {
-      console.error('Failed to delete discussions:', error)
+    } catch (err: any) {
+      const message =
+        (err?.detail && typeof err.detail === 'object' && err.detail.message) ||
+        (typeof err?.detail === 'string' && err.detail) ||
+        err?.message ||
+        t('communities.discussion_list.delete_failed')
+      toast.error(message)
     } finally {
       setIsDeleting(false)
     }

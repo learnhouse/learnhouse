@@ -123,10 +123,11 @@ class TestStorageClientHelpers:
             assert storage_utils.get_storage_client() is mock_client
             assert storage_utils.get_storage_client() is mock_client
 
-        boto_client.assert_called_once_with(
-            "s3",
-            endpoint_url="https://s3.test",
-        )
+        boto_client.assert_called_once()
+        call_kwargs = boto_client.call_args.kwargs
+        assert boto_client.call_args.args == ("s3",)
+        assert call_kwargs["endpoint_url"] == "https://s3.test"
+        assert "config" in call_kwargs
 
 
 class TestFileReadAndExistenceHelpers:
@@ -599,3 +600,85 @@ class TestUploadAndDeleteHelpers:
             "content/course/root.txt",
             "content/course/nested/child.md",
         }
+
+    def test_get_storage_client_returns_cached_client_inside_lock(self):
+        """Cover line 48: inner double-check guard inside the lock returns cached client."""
+        mock_client = Mock()
+
+        # _s3_client starts as None (outer guard passes), then the fake lock sets it
+        # to simulate a concurrent thread acquiring the client before us.
+        class _FakeLock:
+            def __enter__(self_):
+                storage_utils._s3_client = mock_client
+                return self_
+            def __exit__(self_, *args):
+                return False
+
+        with patch.object(storage_utils, "get_content_delivery_type", return_value="s3api"), \
+             patch.object(storage_utils, "_s3_client_lock", _FakeLock()):
+            result = storage_utils.get_storage_client()
+
+        assert result is mock_client
+
+    def test_read_file_content_returns_none_when_s3_client_is_none(self):
+        """Cover line 108: return None when content_delivery is s3api but client is None."""
+        with patch.object(
+            storage_utils,
+            "get_content_delivery_type",
+            return_value="s3api",
+        ), patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=None,
+        ):
+            result = storage_utils.read_file_content("content/file.txt")
+
+        assert result is None
+
+    def test_file_exists_returns_false_when_s3_client_is_none(self):
+        """Cover line 143: return False when content_delivery is s3api but client is None."""
+        with patch.object(
+            storage_utils,
+            "get_content_delivery_type",
+            return_value="s3api",
+        ), patch.object(
+            storage_utils,
+            "get_storage_client",
+            return_value=None,
+        ):
+            result = storage_utils.file_exists("content/file.txt")
+
+        assert result is False
+
+    def test_delete_storage_directory_swallows_rmtree_exception(self, tmp_path):
+        """Cover lines 390-391: except Exception: pass when shutil.rmtree raises."""
+        local_dir = tmp_path / "stubborn-dir"
+        local_dir.mkdir()
+        (local_dir / "file.txt").write_text("data")
+
+        with patch.object(
+            storage_utils,
+            "get_content_delivery_type",
+            return_value="filesystem",
+        ), patch("shutil.rmtree", side_effect=OSError("permission denied")):
+            # Should not raise even though rmtree fails
+            result = storage_utils.delete_storage_directory(str(local_dir))
+
+        assert result is True
+
+    def test_delete_storage_file_swallows_os_remove_exception(self, tmp_path):
+        """Cover lines 424-425: except Exception: pass when os.remove raises."""
+        local_file = tmp_path / "locked-file.txt"
+        local_file.write_text("data")
+
+        with patch.object(
+            storage_utils,
+            "get_content_delivery_type",
+            return_value="filesystem",
+        ), patch("os.path.exists", return_value=True), patch(
+            "os.remove", side_effect=OSError("permission denied")
+        ):
+            # Should not raise even though os.remove fails
+            result = storage_utils.delete_storage_file(str(local_file))
+
+        assert result is True

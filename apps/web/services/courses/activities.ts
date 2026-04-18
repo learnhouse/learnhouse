@@ -161,9 +161,44 @@ export async function updateActivity(
   return res
 }
 
+export async function getActivityUserGroups(
+  activity_uuid: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/usergroups`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  return result.json()
+}
+
+export async function addUserGroupToActivity(
+  activity_uuid: string,
+  usergroup_uuid: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/usergroups/${usergroup_uuid}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  return result.json()
+}
+
+export async function removeUserGroupFromActivity(
+  activity_uuid: string,
+  usergroup_uuid: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/usergroups/${usergroup_uuid}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  return result.json()
+}
+
 export async function getUrlPreview(url: string) {
   const result = await fetch(
-    `${getAPIUrl()}utils/link-preview?url=${url}`,
+    `${getAPIUrl()}utils/link-preview?url=${encodeURIComponent(url)}`,
     RequestBodyWithAuthHeader('GET', null, null, undefined)
   )
   const res = await result.json()

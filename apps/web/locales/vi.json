@@ -1012,7 +1012,24 @@
     "quick_results": "Kết quả nhanh",
     "view_all_results": "Xem tất cả kết quả",
     "course": "Khóa học",
-    "user": "Người dùng"
+    "user": "Người dùng",
+    "start_heading": "Bạn đang tìm gì?",
+    "start_subtitle": "Tìm kiếm trong mọi không gian của tổ chức này tại một nơi duy nhất.",
+    "all_results": "Tất cả kết quả",
+    "filter_heading": "Lọc theo loại",
+    "empty_section": "Chưa có gì ở đây",
+    "previous": "Trước",
+    "next": "Tiếp",
+    "types": {
+      "all": "Tất cả",
+      "courses": "Khóa học",
+      "collections": "Bộ sưu tập",
+      "users": "Thành viên",
+      "communities": "Cộng đồng",
+      "discussions": "Thảo luận",
+      "playgrounds": "Playground",
+      "podcasts": "Podcast"
+    }
   },
   "ai": {
     "ask_ai": "Hỏi AI",
@@ -1797,9 +1814,31 @@
         },
         "moderation": {
           "title": "Kiểm duyệt nội dung",
-          "subtitle": "Cấu hình từ bị chặn và bộ lọc nội dung",
-          "info_title": "Từ bị chặn",
-          "info_description": "Các cuộc thảo luận và trả lời chứa những từ này sẽ bị chặn. Người dùng sẽ thấy thông báo lỗi và nội dung của họ sẽ không được đăng.",
+          "subtitle": "Cấu hình từ bị chặn, giới hạn tốc độ và quy tắc nội dung",
+          "info_title": "Kiểm duyệt cộng đồng",
+          "info_description": "Nội dung vi phạm những quy tắc này sẽ bị từ chối kèm thông báo lỗi và không được đăng.",
+          "restrictions_title": "Hạn chế nội dung",
+          "length_title": "Giới hạn độ dài",
+          "rate_limits_title": "Giới hạn tốc độ",
+          "account_requirements_title": "Yêu cầu tài khoản",
+          "blocked_words_section_title": "Từ bị chặn",
+          "block_links_label": "Chặn liên kết ngoài",
+          "block_links_description": "Từ chối các cuộc thảo luận hoặc trả lời có chứa URL.",
+          "disable_reactions_label": "Tắt biểu cảm",
+          "disable_reactions_description": "Tắt biểu cảm emoji trên các cuộc thảo luận trong cộng đồng này.",
+          "min_post_length_label": "Độ dài bài đăng tối thiểu",
+          "max_post_length_label": "Độ dài bài đăng tối đa",
+          "max_comment_length_label": "Độ dài trả lời tối đa",
+          "zero_disables": "Để 0 để tắt.",
+          "slow_mode_label": "Chế độ chậm (giây)",
+          "slow_mode_hint": "Thời gian chờ tối thiểu giữa các bài đăng của cùng một người dùng. 0 để tắt.",
+          "max_posts_per_day_label": "Số bài đăng tối đa mỗi người dùng mỗi ngày",
+          "auto_lock_days_label": "Tự động khóa chủ đề cũ (ngày)",
+          "auto_lock_days_hint": "Khóa các cuộc thảo luận sau số ngày không hoạt động này. 0 để tắt.",
+          "min_account_age_label": "Độ tuổi tài khoản tối thiểu (ngày)",
+          "min_account_age_hint": "Người dùng có tài khoản mới hơn không thể đăng. 0 để tắt.",
+          "require_email_verified_label": "Yêu cầu email đã xác minh",
+          "require_email_verified_description": "Chỉ người dùng có email đã xác minh mới có thể đăng trong cộng đồng này.",
           "add_word_label": "Thêm từ bị chặn",
           "add_word_placeholder": "Nhập từ hoặc cụm từ...",
           "add_button": "Thêm",
@@ -3141,7 +3180,8 @@
         "title": "Công cụ bài tập",
         "tabs": {
           "editor": "Trình chỉnh sửa",
-          "submissions": "Bài nộp"
+          "submissions": "Bài nộp",
+          "analytics": "Phân tích"
         },
         "mobile": {
           "title": "Chỉ dành cho máy tính",
@@ -3350,6 +3390,58 @@
           "optional": "tùy chọn",
           "placeholder": "Viết nhận xét về bài nộp tổng thể. Học sinh sẽ thấy nó bên cạnh điểm của mình.",
           "hint": "Để trống để giữ nhận xét trước đó không thay đổi."
+        }
+      },
+      "analytics": {
+        "loading": "Đang tải phân tích...",
+        "empty": {
+          "title": "Chưa có bài nộp",
+          "description": "Phân tích sẽ xuất hiện ngay khi học viên bắt đầu nộp bài."
+        },
+        "kpis": {
+          "average": "Trung bình lớp",
+          "median": "Trung vị",
+          "pass_rate": "Tỷ lệ đạt",
+          "pass_rate_sub": "{{passed}} / {{total}} đạt",
+          "on_time": "Tỷ lệ đúng hạn",
+          "on_time_sub": "{{late}} trễ / {{total}}"
+        },
+        "mini": {
+          "highest": "Cao nhất",
+          "lowest": "Thấp nhất",
+          "spread": "Biên độ",
+          "feedback": "Độ phủ phản hồi"
+        },
+        "distribution": {
+          "title": "Phân bố điểm",
+          "subtitle": "Lớp được trải đều trên các dải điểm",
+          "empty": "Điểm sẽ hiển thị ở đây sau khi chấm",
+          "students": "Học viên"
+        },
+        "timeline": {
+          "title": "Hoạt động nộp bài",
+          "subtitle": "Học viên nộp khi nào so với khi bạn chấm",
+          "empty": "Chưa có hoạt động để hiển thị",
+          "submitted": "Đã nộp",
+          "graded": "Đã chấm",
+          "due": "Hạn nộp"
+        },
+        "tasks": {
+          "title": "Hiệu suất theo bài",
+          "subtitle": "Điểm trung bình mỗi bài — cột thấp cho biết học viên đang gặp khó khăn ở đâu",
+          "empty": "Hiệu suất theo bài sẽ xuất hiện sau khi có điểm",
+          "avg_grade": "Điểm trung bình",
+          "attempts": "lần làm"
+        },
+        "top": {
+          "title": "Học viên xuất sắc",
+          "subtitle": "Các học viên có điểm cao nhất trong bài tập này",
+          "empty": "Chưa có bài nộp nào được chấm"
+        },
+        "attention": {
+          "title": "Có thể cần hỗ trợ",
+          "subtitle": "Học viên không đạt — hãy cân nhắc liên hệ",
+          "empty": "Tất cả người đã chấm đều đạt. Tuyệt vời!"
         }
       },
       "modals": {
@@ -4542,6 +4634,37 @@
           "api_desc": "Tích hợp với các công cụ hiện có và tự động hóa quy trình làm việc."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "Đã khóa",
+    "locked_title": "Hoạt động này đã bị khóa",
+    "locked_auth_required": "Bạn cần đăng nhập để truy cập hoạt động này.",
+    "locked_restricted": "Bạn cần là thành viên của nhóm người dùng phù hợp. Hãy nhờ quản trị khóa học thêm bạn vào.",
+    "activity_locked_hint": "Đăng nhập hoặc tham gia nhóm người dùng phù hợp để mở khóa.",
+    "back_to_course": "Quay lại khóa học",
+    "lock": {
+      "header_access": "Truy cập",
+      "title_chapter": "Khóa chương này",
+      "title_activity": "Khóa hoạt động này",
+      "option_public_label": "Công khai",
+      "option_public_description": "Ai cũng có thể mở, kể cả khi chưa đăng nhập.",
+      "option_authenticated_label": "Chỉ người đã đăng nhập",
+      "option_authenticated_description": "Chỉ người dùng đã đăng nhập mới mở được.",
+      "option_restricted_label": "Chỉ nhóm người dùng",
+      "option_restricted_description": "Chỉ thành viên của các nhóm bạn chọn bên dưới.",
+      "trigger_public_title": "Truy cập: mở cho tất cả",
+      "trigger_authenticated_title": "Truy cập: chỉ người đã đăng nhập",
+      "trigger_restricted_title": "Truy cập: các nhóm người dùng cụ thể",
+      "usergroups_header": "Nhóm người dùng",
+      "usergroups_none_assigned": "Chưa có nhóm nào — chỉ quản trị viên mới mở được.",
+      "usergroups_remove_title": "Xóa",
+      "usergroups_loading": "Đang tải các nhóm…",
+      "usergroups_none_in_org": "Tổ chức này chưa có nhóm người dùng nào.",
+      "usergroups_all_assigned": "Tất cả các nhóm đã được gán.",
+      "usergroups_add_a_group": "Thêm nhóm",
+      "toast_add_error": "Không thể thêm nhóm",
+      "toast_remove_error": "Không thể xóa nhóm"
     }
   }
 }

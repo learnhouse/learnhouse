@@ -39,7 +39,7 @@ class CertificateUser(CertificateUserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(sa_column= Column("user_id", ForeignKey("user.id", ondelete="CASCADE")))
     certification_id: int = Field(sa_column= Column("certification_id", ForeignKey("certifications.id", ondelete="CASCADE")))
-    user_certification_uuid: str
+    user_certification_uuid: str = Field(unique=True, index=True)
     created_at: str = ""
     updated_at: str = ""
 

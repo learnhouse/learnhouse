@@ -161,3 +161,33 @@ class TestChaptersRouter:
 
         assert response.status_code == 200
         assert response.json()["detail"] == "chapter deleted"
+
+    async def test_chapter_usergroup_endpoints(self, client):
+        with patch(
+            "src.routers.courses.chapters.get_chapter_usergroups",
+            new_callable=AsyncMock,
+            return_value=[{"usergroup_uuid": "ug1"}],
+        ):
+            list_response = await client.get("/api/v1/chapters/chapter_test/usergroups")
+
+        with patch(
+            "src.routers.courses.chapters.add_usergroup_to_chapter",
+            new_callable=AsyncMock,
+            return_value={"detail": "Usergroup added"},
+        ):
+            add_response = await client.post(
+                "/api/v1/chapters/chapter_test/usergroups/ug1"
+            )
+
+        with patch(
+            "src.routers.courses.chapters.remove_usergroup_from_chapter",
+            new_callable=AsyncMock,
+            return_value={"detail": "Usergroup removed"},
+        ):
+            remove_response = await client.delete(
+                "/api/v1/chapters/chapter_test/usergroups/ug1"
+            )
+
+        assert list_response.status_code == 200
+        assert add_response.status_code == 200
+        assert remove_response.status_code == 200

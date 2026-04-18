@@ -1012,7 +1012,24 @@
     "quick_results": "Hızlı Sonuçlar",
     "view_all_results": "Tüm sonuçları görüntüle",
     "course": "Kurs",
-    "user": "Kullanıcı"
+    "user": "Kullanıcı",
+    "start_heading": "Ne arıyorsunuz?",
+    "start_subtitle": "Bu kuruluşun her alanında tek bir yerden arayın.",
+    "all_results": "Tüm sonuçlar",
+    "filter_heading": "Türe göre filtrele",
+    "empty_section": "Burada henüz bir şey yok",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "types": {
+      "all": "Tümü",
+      "courses": "Kurslar",
+      "collections": "Koleksiyonlar",
+      "users": "Üyeler",
+      "communities": "Topluluklar",
+      "discussions": "Tartışmalar",
+      "playgrounds": "Playgroundlar",
+      "podcasts": "Podcastler"
+    }
   },
   "ai": {
     "ask_ai": "AI'ya Sor",
@@ -1797,9 +1814,31 @@
         },
         "moderation": {
           "title": "İçerik Moderasyonu",
-          "subtitle": "Yasaklı kelimeleri ve içerik filtrelerini yapılandırın",
-          "info_title": "Yasaklı kelimeler",
-          "info_description": "Bu kelimeleri içeren tartışmalar ve yanıtlar engellenecektir. Kullanıcılar bir hata mesajı görecek ve içerikleri yayınlanmayacaktır.",
+          "subtitle": "Engellenen kelimeleri, hız sınırlarını ve içerik kurallarını yapılandırın",
+          "info_title": "Topluluk moderasyonu",
+          "info_description": "Bu kuralları ihlal eden içerik bir hata mesajıyla reddedilecek ve yayınlanmayacaktır.",
+          "restrictions_title": "İçerik kısıtlamaları",
+          "length_title": "Uzunluk sınırları",
+          "rate_limits_title": "Hız sınırları",
+          "account_requirements_title": "Hesap gereksinimleri",
+          "blocked_words_section_title": "Engellenen kelimeler",
+          "block_links_label": "Harici bağlantıları engelle",
+          "block_links_description": "URL içeren tartışmaları veya yanıtları reddeder.",
+          "disable_reactions_label": "Tepkileri devre dışı bırak",
+          "disable_reactions_description": "Bu topluluktaki tartışmalarda emoji tepkilerini kapatır.",
+          "min_post_length_label": "Minimum gönderi uzunluğu",
+          "max_post_length_label": "Maksimum gönderi uzunluğu",
+          "max_comment_length_label": "Maksimum yanıt uzunluğu",
+          "zero_disables": "Devre dışı bırakmak için 0 bırakın.",
+          "slow_mode_label": "Yavaş mod (saniye)",
+          "slow_mode_hint": "Aynı kullanıcının gönderileri arasında minimum bekleme. Devre dışı için 0.",
+          "max_posts_per_day_label": "Kullanıcı başına günlük maks. gönderi",
+          "auto_lock_days_label": "Eski başlıkları otomatik kilitle (gün)",
+          "auto_lock_days_hint": "Bu kadar gün boyunca etkinlik yoksa tartışmaları kilitler. Devre dışı için 0.",
+          "min_account_age_label": "Minimum hesap yaşı (gün)",
+          "min_account_age_hint": "Daha yeni hesaplara sahip kullanıcılar gönderemez. Devre dışı için 0.",
+          "require_email_verified_label": "Doğrulanmış e-posta zorunlu",
+          "require_email_verified_description": "Bu toplulukta yalnızca doğrulanmış e-postaya sahip kullanıcılar gönderi yapabilir.",
           "add_word_label": "Yasaklı kelime ekle",
           "add_word_placeholder": "Kelime veya ifade girin...",
           "add_button": "Ekle",
@@ -3141,7 +3180,8 @@
         "title": "Ödev Aracı",
         "tabs": {
           "editor": "Editör",
-          "submissions": "Gönderimler"
+          "submissions": "Gönderimler",
+          "analytics": "Analizler"
         },
         "mobile": {
           "title": "Sadece Masaüstü",
@@ -3350,6 +3390,58 @@
           "optional": "isteğe bağlı",
           "placeholder": "Teslimat hakkında genel bir yorum yazın. Öğrenci bunu notunun yanında görecek.",
           "hint": "Önceki geri bildirimi değiştirmek istemiyorsanız boş bırakın."
+        }
+      },
+      "analytics": {
+        "loading": "Analizler yükleniyor...",
+        "empty": {
+          "title": "Henüz teslim yok",
+          "description": "Öğrenciler çalışmalarını teslim etmeye başladığında analizler burada görünecek."
+        },
+        "kpis": {
+          "average": "Sınıf ortalaması",
+          "median": "Medyan",
+          "pass_rate": "Geçme oranı",
+          "pass_rate_sub": "{{total}} öğrenciden {{passed}} geçti",
+          "on_time": "Zamanında teslim oranı",
+          "on_time_sub": "{{total}} teslimin {{late}} gecikti"
+        },
+        "mini": {
+          "highest": "En yüksek",
+          "lowest": "En düşük",
+          "spread": "Dağılım",
+          "feedback": "Geri bildirim kapsamı"
+        },
+        "distribution": {
+          "title": "Not dağılımı",
+          "subtitle": "Sınıfın not aralıklarına dağılımı",
+          "empty": "Teslimler notlandıkça notlar burada görünecek",
+          "students": "Öğrenciler"
+        },
+        "timeline": {
+          "title": "Teslim etkinliği",
+          "subtitle": "Öğrencilerin ne zaman teslim ettiği ile ne zaman notladığınız",
+          "empty": "Gösterilecek etkinlik yok",
+          "submitted": "Teslim edildi",
+          "graded": "Notlandı",
+          "due": "Son tarih"
+        },
+        "tasks": {
+          "title": "Görev performansı",
+          "subtitle": "Görev başına ortalama puan — düşük çubuklar öğrencilerin zorlandığı yerleri gösterir",
+          "empty": "Görev performansı ilk notlardan sonra görünecek",
+          "avg_grade": "Ortalama not",
+          "attempts": "deneme"
+        },
+        "top": {
+          "title": "En iyi performans",
+          "subtitle": "Bu ödevde en yüksek puan alan öğrencileriniz",
+          "empty": "Henüz notlanmış teslim yok"
+        },
+        "attention": {
+          "title": "Destek gerekebilir",
+          "subtitle": "Geçemeyen öğrenciler — iletişime geçmeyi düşünün",
+          "empty": "Notlanan herkes geçti. Harika iş!"
         }
       },
       "modals": {
@@ -4542,6 +4634,37 @@
           "api_desc": "Mevcut araçlarınızla entegre olun ve iş akışlarını otomatikleştirin."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "Kilitli",
+    "locked_title": "Bu etkinlik kilitli",
+    "locked_auth_required": "Bu etkinliğe erişmek için giriş yapmanız gerekiyor.",
+    "locked_restricted": "Erişmek için doğru kullanıcı grubunun üyesi olmalısınız. Sizi eklemesi için bir kurs yöneticisine danışın.",
+    "activity_locked_hint": "Bunu açmak için giriş yapın veya doğru kullanıcı grubuna katılın.",
+    "back_to_course": "Kursa dön",
+    "lock": {
+      "header_access": "Erişim",
+      "title_chapter": "Bu bölümü kilitle",
+      "title_activity": "Bu etkinliği kilitle",
+      "option_public_label": "Herkese açık",
+      "option_public_description": "Giriş yapmadan da herkes açabilir.",
+      "option_authenticated_label": "Yalnızca üyeler",
+      "option_authenticated_description": "Yalnızca giriş yapmış kullanıcılar açabilir.",
+      "option_restricted_label": "Yalnızca kullanıcı grupları",
+      "option_restricted_description": "Yalnızca aşağıda seçtiğiniz grupların üyeleri.",
+      "trigger_public_title": "Erişim: herkese açık",
+      "trigger_authenticated_title": "Erişim: yalnızca giriş yapanlar",
+      "trigger_restricted_title": "Erişim: belirli kullanıcı grupları",
+      "usergroups_header": "Kullanıcı grupları",
+      "usergroups_none_assigned": "Atanmış grup yok — yalnızca yöneticiler açabilir.",
+      "usergroups_remove_title": "Kaldır",
+      "usergroups_loading": "Gruplar yükleniyor…",
+      "usergroups_none_in_org": "Bu kuruluşta henüz kullanıcı grubu yok.",
+      "usergroups_all_assigned": "Tüm gruplar zaten atanmış.",
+      "usergroups_add_a_group": "Grup ekle",
+      "toast_add_error": "Grup eklenemedi",
+      "toast_remove_error": "Grup kaldırılamadı"
     }
   }
 }

@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 # Lazy singleton httpx client for Tinybird ingestion
 _ingest_client: httpx.AsyncClient | None = None
 
+# Strong references so the GC does not collect tasks before they complete
+_background_tasks: set = set()
+
 
 def _get_ingest_client() -> httpx.AsyncClient | None:
     global _ingest_client
@@ -48,7 +51,7 @@ async def track(
     if config.tinybird_config is None:
         return
 
-    asyncio.create_task(
+    task = asyncio.create_task(
         _send_event(
             event_name=event_name,
             org_id=org_id,
@@ -59,6 +62,8 @@ async def track(
             ip=ip,
         )
     )
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
 
 async def _send_event(
@@ -89,9 +94,15 @@ async def _send_event(
             "/v0/events?name=events",
             json=payload,
         )
-        if resp.status_code >= 400:
+        if resp.status_code >= 500:
             logger.warning(
-                "Tinybird ingest failed (%s): %s",
+                "Tinybird ingest server error (%s): %s",
+                resp.status_code,
+                resp.text[:200],
+            )
+        elif resp.status_code >= 400:
+            logger.error(
+                "Tinybird ingest client error (%s) — check event payload: %s",
                 resp.status_code,
                 resp.text[:200],
             )

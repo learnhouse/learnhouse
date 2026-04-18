@@ -618,7 +618,9 @@ class TestCreateCertificateUser:
         assert len(parts[0]) == 2
         assert parts[1] == current_date
         assert parts[2] == regular_user.user_uuid[-4:]
-        assert parts[3] == "001"
+        # Suffix is now an 8-char hex token (collision-safe), not sequential.
+        assert len(parts[3]) == 8
+        assert all(c in "0123456789abcdef" for c in parts[3])
         mock_access.assert_awaited_once_with(
             mock_request,
             db,
@@ -1343,3 +1345,24 @@ class TestGetAllUserCertificates:
         )
 
         assert result == []
+
+
+class TestIsCourseFullyCompleted:
+    """Tests for is_course_fully_completed (line 428)."""
+
+    def test_is_course_fully_completed_no_activities_returns_false(
+        self, db, org, regular_user
+    ):
+        """Line 428: course with no ChapterActivity entries -> returns False."""
+        from src.services.courses.certifications import is_course_fully_completed
+
+        course_no_acts = _create_course_without_certifications(
+            db,
+            org,
+            course_id=333,
+            course_uuid="course_no_acts_completed",
+        )
+
+        result = is_course_fully_completed(regular_user.id, course_no_acts.id, db)
+
+        assert result is False

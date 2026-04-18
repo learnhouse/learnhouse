@@ -204,22 +204,96 @@ async def list_org_playgrounds(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> List[PlaygroundRead]:
-    statement = select(Playground).where(Playground.org_id == org_id)
-    playgrounds = db_session.exec(statement).all()
+    playgrounds = db_session.exec(
+        select(Playground).where(Playground.org_id == org_id)
+    ).all()
+    if not playgrounds:
+        return []
 
-    result = []
+    is_anon = isinstance(current_user, AnonymousUser)
+    user_id = None if is_anon else current_user.id
+
+    is_admin = False if is_anon else _is_org_admin(user_id, org_id, db_session)
+
+    # Batch resolve usergroup access for RESTRICTED playgrounds (only needed for
+    # authenticated non-admin non-owner users).
+    accessible_restricted_uuids: set[str] = set()
+    if not is_anon and not is_admin:
+        restricted_uuids = [
+            pg.playground_uuid
+            for pg in playgrounds
+            if pg.access_type == PlaygroundAccessType.RESTRICTED
+            and pg.created_by != user_id
+        ]
+        if restricted_uuids:
+            ugrs = db_session.exec(
+                select(
+                    UserGroupResource.resource_uuid,
+                    UserGroupResource.usergroup_id,
+                ).where(UserGroupResource.resource_uuid.in_(restricted_uuids))
+            ).all()
+            if ugrs:
+                ug_ids = list({row[1] for row in ugrs})
+                member_ug_ids = set(
+                    db_session.exec(
+                        select(UserGroupUser.usergroup_id).where(
+                            UserGroupUser.usergroup_id.in_(ug_ids),
+                            UserGroupUser.user_id == user_id,
+                        )
+                    ).all()
+                )
+                for resource_uuid, ug_id in ugrs:
+                    if ug_id in member_ug_ids:
+                        accessible_restricted_uuids.add(resource_uuid)
+
+    allowed: list[Playground] = []
     for pg in playgrounds:
-        try:
-            _check_read_access(pg, current_user, db_session)
-            # Only include published ones for non-admins
-            if not pg.published:
-                if isinstance(current_user, AnonymousUser):
-                    continue
-                if not _is_org_admin(current_user.id, org_id, db_session) and pg.created_by != current_user.id:
-                    continue
-            result.append(_playground_to_read(pg, db_session))
-        except HTTPException:
+        if pg.access_type == PlaygroundAccessType.AUTHENTICATED and is_anon:
             continue
+        if pg.access_type == PlaygroundAccessType.RESTRICTED:
+            if is_anon:
+                continue
+            if (
+                not is_admin
+                and pg.created_by != user_id
+                and pg.playground_uuid not in accessible_restricted_uuids
+            ):
+                continue
+
+        if not pg.published:
+            if is_anon:
+                continue
+            if not is_admin and pg.created_by != user_id:
+                continue
+
+        allowed.append(pg)
+
+    if not allowed:
+        return []
+
+    org = db_session.get(Organization, org_id)
+    author_ids = {pg.created_by for pg in allowed if pg.created_by}
+    authors_map: dict[int, User] = {}
+    if author_ids:
+        authors = db_session.exec(
+            select(User).where(User.id.in_(author_ids))
+        ).all()
+        authors_map = {u.id: u for u in authors}
+
+    result: List[PlaygroundRead] = []
+    for pg in allowed:
+        read = PlaygroundRead.model_validate(pg)
+        if org:
+            read.org_uuid = org.org_uuid
+            read.org_slug = org.slug
+        author = authors_map.get(pg.created_by) if pg.created_by else None
+        if author:
+            read.author_username = author.username
+            read.author_first_name = author.first_name
+            read.author_last_name = author.last_name
+            read.author_user_uuid = author.user_uuid
+            read.author_avatar_image = author.avatar_image
+        result.append(read)
 
     return result
 

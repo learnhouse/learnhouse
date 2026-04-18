@@ -180,7 +180,12 @@
     "creating": "Creating...",
     "view_details": "View Details",
     "optional": "optional",
-    "close": "Close"
+    "close": "Close",
+    "add": "Add",
+    "for": "for",
+    "results": "result",
+    "powered_by": "Powered by",
+    "choose_an_organization_to_continue": "Choose an organization to continue"
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -191,6 +196,7 @@
   },
   "auth": {
     "login": "Login",
+    "sign_in": "Sign in",
     "email": "Email",
     "password": "Password",
     "forgot_password": "Forgot password?",
@@ -198,6 +204,7 @@
     "sign_up": "Sign up",
     "sign_in_with_google": "Sign in with Google",
     "wrong_email_password": "Wrong Email or password",
+    "error_generic": "Something went wrong. Please try again.",
     "invited_to_join": "Start your learning journey",
     "join": "Join",
     "invite_code_required": "An invite code is required to join",
@@ -314,6 +321,7 @@
   "courses": {
     "my_courses": "My Courses",
     "courses": "Courses",
+    "view_all_courses": "View all courses",
     "no_courses": "No courses yet",
     "create_courses_placeholder": "Create courses to add content",
     "loading_courses": "Loading courses...",
@@ -424,6 +432,7 @@
     "back_to_course": "Back to Course",
     "view_course_progress": "View course progress",
     "no_courses_found": "No courses found",
+    "courses_load_error": "Failed to load courses. Please try again.",
     "add_new_course_update": "Add new Course Update",
     "add_update": "Add Update",
     "apply_to_contribute": "Apply to contribute",
@@ -736,8 +745,10 @@
     "board_created_error": "Failed to create board",
     "search_placeholder": "Search boards...",
     "no_boards_found": "No boards found",
+    "no_search_results": "No boards found",
     "try_different_search": "Try a different search term",
     "no_boards_yet": "No boards yet",
+    "no_boards": "No boards yet",
     "no_boards_description": "Create your first collaborative board to get started.",
     "public": "Public",
     "private": "Private",
@@ -849,7 +860,8 @@
       "member_added": "Member added",
       "member_added_error": "Failed to add member (may already be a member)",
       "member_removed": "Member removed",
-      "member_removed_error": "Failed to remove member"
+      "member_removed_error": "Failed to remove member",
+      "all_groups": "All groups"
     },
     "toolbar": {
       "select": "Select",
@@ -968,7 +980,8 @@
       "move_back": "Move back",
       "move_forward": "Move forward",
       "delete": "Delete",
-      "delete_multiple": "Delete {{count}} items"
+      "delete_multiple": "Delete {{count}} items",
+      "duplicate": "Duplicate"
     },
     "pagination": {
       "previous": "Previous",
@@ -1207,7 +1220,14 @@
     "current_points": "Current points: {{points}}",
     "grade": "Grade",
     "run_autograde": "Run Auto-grade",
-    "due_date": "Due Date"
+    "due_date": "Due Date",
+    "quiz": {
+      "correct_answer": "Correct",
+      "incorrect_answer": "Wrong"
+    },
+    "form": {
+      "expected_answer": "Expected"
+    }
   },
   "certificate": {
     "certificate": "Certificate",
@@ -1246,8 +1266,23 @@
     "search_suggestions": "Search suggestions",
     "quick_results": "Quick Results",
     "view_all_results": "View all results",
-    "course": "Course",
-    "user": "User"
+    "start_heading": "What are you looking for?",
+    "start_subtitle": "Search across every space in this organization in one place.",
+    "all_results": "All results",
+    "filter_heading": "Filter by type",
+    "empty_section": "Nothing here yet",
+    "previous": "Previous",
+    "next": "Next",
+    "types": {
+      "all": "All",
+      "courses": "Courses",
+      "collections": "Collections",
+      "users": "Members",
+      "communities": "Communities",
+      "discussions": "Discussions",
+      "playgrounds": "Playgrounds",
+      "podcasts": "Podcasts"
+    }
   },
   "ai": {
     "ask_ai": "Ask AI",
@@ -1270,6 +1305,7 @@
     "failed_checkout": "Failed to initiate checkout process",
     "stripe_success": "Successfully connected to Stripe!",
     "stripe_failed": "Failed to complete Stripe connection",
+    "stripe_denied": "Stripe connection was cancelled.",
     "stripe_completing": "Completing Stripe Connection",
     "stripe_wait": "Please wait while we finish setting up your Stripe integration...",
     "stripe_return": "You can now return to the dashboard to start using payments.",
@@ -1615,7 +1651,11 @@
       "create_course": "Create Course",
       "create_new_course": "Create a new course",
       "import_course": "Import Course",
+      "import_scorm": "Import SCORM",
       "import_scorm_description": "Import a SCORM package to create a new course",
+      "import_learnhouse": "Import LearnHouse Course",
+      "import_learnhouse_description": "Import a course exported from LearnHouse",
+      "import_select_type": "Select the type of course to import",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
@@ -2097,9 +2137,31 @@
         },
         "moderation": {
           "title": "Content Moderation",
-          "subtitle": "Configure blocked words and content filters",
-          "info_title": "Blocked words",
-          "info_description": "Discussions and replies containing these words will be blocked. Users will see an error message and their content will not be posted.",
+          "subtitle": "Configure blocked words, rate limits, and content rules",
+          "info_title": "Community moderation",
+          "info_description": "Content that violates these rules will be rejected with an error message and will not be posted.",
+          "restrictions_title": "Content restrictions",
+          "length_title": "Length limits",
+          "rate_limits_title": "Rate limits",
+          "account_requirements_title": "Account requirements",
+          "blocked_words_section_title": "Blocked words",
+          "block_links_label": "Block external links",
+          "block_links_description": "Reject discussions or replies that contain URLs.",
+          "disable_reactions_label": "Disable reactions",
+          "disable_reactions_description": "Turn off emoji reactions on discussions in this community.",
+          "min_post_length_label": "Minimum post length",
+          "max_post_length_label": "Maximum post length",
+          "max_comment_length_label": "Maximum reply length",
+          "zero_disables": "Leave at 0 to disable.",
+          "slow_mode_label": "Slow mode (seconds)",
+          "slow_mode_hint": "Minimum wait between posts from the same user. 0 to disable.",
+          "max_posts_per_day_label": "Max posts per user per day",
+          "auto_lock_days_label": "Auto-lock stale threads (days)",
+          "auto_lock_days_hint": "Lock discussions after this many days of inactivity. 0 to disable.",
+          "min_account_age_label": "Minimum account age (days)",
+          "min_account_age_hint": "Users whose accounts are newer cannot post. 0 to disable.",
+          "require_email_verified_label": "Require verified email",
+          "require_email_verified_description": "Only users with a verified email address can post in this community.",
           "add_word_label": "Add blocked word",
           "add_word_placeholder": "Enter a word or phrase...",
           "add_button": "Add",
@@ -3295,6 +3357,34 @@
               "submit": "Save Role",
               "loading": "Saving..."
             },
+            "permissions": {
+              "title": "Permissions",
+              "sections": {
+                "courses": "Courses",
+                "users": "Users",
+                "usergroups": "User Groups",
+                "collections": "Collections",
+                "organizations": "Organizations",
+                "coursechapters": "Course Chapters",
+                "activities": "Activities",
+                "roles": "Roles",
+                "dashboard": "Dashboard"
+              },
+              "actions": {
+                "create": "create",
+                "read": "read",
+                "read_own": "read own",
+                "update": "update",
+                "update_own": "update own",
+                "delete": "delete",
+                "delete_own": "delete own",
+                "access": "access"
+              },
+              "select_all": "Select All",
+              "deselect_all": "Deselect All",
+              "select": "Select",
+              "deselect": "Deselect"
+            },
             "validation": {
               "name_required": "Required",
               "name_min_length": "Name must be at least 2 characters",
@@ -3375,7 +3465,8 @@
         },
         "tabs": {
           "editor": "Editor",
-          "submissions": "Submissions"
+          "submissions": "Submissions",
+          "analytics": "Analytics"
         },
         "mobile": {
           "title": "Desktop Only",
@@ -3581,6 +3672,58 @@
           "finalize_success": "Assignment graded and activity marked as complete"
         }
       },
+      "analytics": {
+        "loading": "Loading analytics...",
+        "empty": {
+          "title": "No submissions yet",
+          "description": "Analytics will appear as soon as students start submitting their work."
+        },
+        "kpis": {
+          "average": "Class Average",
+          "median": "Median",
+          "pass_rate": "Pass Rate",
+          "pass_rate_sub": "{{passed}} of {{total}} passed",
+          "on_time": "On-Time Rate",
+          "on_time_sub": "{{late}} late of {{total}}"
+        },
+        "mini": {
+          "highest": "Highest",
+          "lowest": "Lowest",
+          "spread": "Spread",
+          "feedback": "Feedback coverage"
+        },
+        "distribution": {
+          "title": "Grade distribution",
+          "subtitle": "How the class is spread across grade bands",
+          "empty": "Grades will appear here once submissions are graded",
+          "students": "Students"
+        },
+        "timeline": {
+          "title": "Submission activity",
+          "subtitle": "When students submitted vs. when you graded them",
+          "empty": "No activity to plot yet",
+          "submitted": "Submitted",
+          "graded": "Graded",
+          "due": "Due date"
+        },
+        "tasks": {
+          "title": "Task performance",
+          "subtitle": "Average score per task — low bars highlight where students struggle",
+          "empty": "Per-task performance will appear after graded submissions come in",
+          "avg_grade": "Average grade",
+          "attempts": "attempts"
+        },
+        "top": {
+          "title": "Top performers",
+          "subtitle": "Your highest-scoring students on this assignment",
+          "empty": "No graded submissions yet"
+        },
+        "attention": {
+          "title": "May need support",
+          "subtitle": "Students who did not pass — consider reaching out",
+          "empty": "Everyone who was graded passed. Nice work!"
+        }
+      },
       "modals": {
         "edit": {
           "title": "Edit Assignment",
@@ -3616,6 +3759,8 @@
             "auto_grading_disabled_file": "Automatic grading is unavailable because this assignment has a file submission task that needs human review.",
             "anti_copy_paste_label": "Block copy & paste",
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events in the code editor and text inputs. Note: this is a deterrent — tech-savvy students can bypass it.",
+            "show_correct_answers_label": "Reveal correct answers after grading",
+            "show_correct_answers_description": "Once the submission is graded, show students the right answers alongside their own — which quiz options were correct, the expected short or number answer, and the correct form blanks.",
             "cancel": "Cancel",
             "save": "Save Changes",
             "saving": "Saving..."
@@ -3658,6 +3803,8 @@
             "auto_grading_description": "Grade and complete the activity automatically when the student submits. Only works when every task can be graded without a human.",
             "anti_copy_paste_label": "Block copy & paste",
             "anti_copy_paste_description": "Discourage pasting AI-generated answers by blocking paste events. Note: this is a deterrent — it can be bypassed.",
+            "show_correct_answers_label": "Reveal correct answers after grading",
+            "show_correct_answers_description": "Once graded, students see the right answers next to their own.",
             "submit": "Create activity"
           },
           "toasts": {
@@ -4513,6 +4660,37 @@
           "api_desc": "Integrate with your existing tools and automate workflows."
         }
       }
+    }
+  },
+  "course": {
+    "locked": "Locked",
+    "locked_title": "This activity is locked",
+    "locked_auth_required": "You need to sign in to access this activity.",
+    "locked_restricted": "You need to be a member of the right user group to access this. Ask a course admin to add you.",
+    "activity_locked_hint": "Sign in or join the right user group to unlock this.",
+    "back_to_course": "Back to course",
+    "lock": {
+      "header_access": "Access",
+      "title_chapter": "Lock this chapter",
+      "title_activity": "Lock this activity",
+      "option_public_label": "Public",
+      "option_public_description": "Anyone can open this, even without signing in.",
+      "option_authenticated_label": "Signed-in only",
+      "option_authenticated_description": "Only logged-in users can open this.",
+      "option_restricted_label": "User groups only",
+      "option_restricted_description": "Only members of the user groups you pick below.",
+      "trigger_public_title": "Access: open to everyone",
+      "trigger_authenticated_title": "Access: signed-in users only",
+      "trigger_restricted_title": "Access: specific user groups only",
+      "usergroups_header": "User groups",
+      "usergroups_none_assigned": "No groups assigned — nobody but admins can open this.",
+      "usergroups_remove_title": "Remove",
+      "usergroups_loading": "Loading groups…",
+      "usergroups_none_in_org": "No user groups exist yet in this org.",
+      "usergroups_all_assigned": "All groups are already assigned.",
+      "usergroups_add_a_group": "Add a group",
+      "toast_add_error": "Could not add user group",
+      "toast_remove_error": "Could not remove user group"
     }
   }
 }

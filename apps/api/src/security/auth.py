@@ -240,11 +240,17 @@ async def get_current_user(
         payload = decode_jwt(token)
         if payload:
             # Reject tokens minted for a single-purpose flow (e.g. magic-link
-            # one-time sign-in). Those tokens are only valid at their specific
-            # consume endpoint — allowing them as session tokens would let an
-            # intercepted magic link act as a full session for its entire TTL.
+            # one-time sign-in, password reset, email verification). Those tokens
+            # are only valid at their specific consume endpoint — allowing them as
+            # session tokens would let an intercepted single-use token act as a
+            # full session for its entire TTL.
+            # A token with no "purpose" key (purpose is None via .get) is treated
+            # as a normal session token and is allowed through. A token that
+            # explicitly carries purpose="session" is also allowed. Any other
+            # purpose value — including "password_reset" and "email_verification"
+            # — is rejected.
             token_purpose = payload.get("purpose")
-            if token_purpose and token_purpose != "session":
+            if token_purpose is not None and token_purpose != "session":
                 raise credentials_exception
             username = payload.get("sub")
 
@@ -254,6 +260,20 @@ async def get_current_user(
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email
         if user is None:
             raise credentials_exception
+
+        # If the user changed their password after this token was issued, the
+        # token is stale and must be rejected to force re-authentication.
+        if hasattr(user, 'password_changed_at') and user.password_changed_at:
+            token_iat = payload.get("iat") if token else None
+            if token_iat:
+                issued_at = datetime.fromtimestamp(token_iat, tz=timezone.utc)
+                if user.password_changed_at.tzinfo is None:
+                    pca = user.password_changed_at.replace(tzinfo=timezone.utc)
+                else:
+                    pca = user.password_changed_at
+                if issued_at < pca:
+                    raise credentials_exception
+
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user
         request.state.is_api_token = False
