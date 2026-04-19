@@ -18,10 +18,13 @@ function ClientAdminLayout({
 }) {
     const isMobile = useMediaQuery('(max-width: 768px)')
 
+    // Admin dashboard is English-only, LTR-only, regardless of user's chosen
+    // site language. Per PLAN.md: "Admin-facing: English-only." Overrides the
+    // parent <html dir="rtl"> when a learner picks Hebrew.
     return (
         <SessionGate>
             <AdminAuthorization authorizationMode="page">
-                <div className="flex flex-col md:flex-row">
+                <div dir="ltr" lang="en" className="admin-en-ltr flex flex-col md:flex-row">
                     {isMobile ? (
                         <DashMobileMenu />
                     ) : (

@@ -2178,3 +2178,13 @@
   text-align: start;
   unicode-bidi: isolate;
 }
+
+/* Admin surfaces (/dash/** and /editor/**) force English/LTR and must not
+   inherit the Hebrew typography tweaks from an ancestor <html lang="he">.
+   Reset the three inherited properties on the wrapper; descendants with
+   their own line-height / letter-spacing declarations continue to win. */
+.admin-en-ltr {
+  line-height: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
