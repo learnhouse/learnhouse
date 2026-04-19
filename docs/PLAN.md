@@ -104,12 +104,13 @@ Not LH code — Webflow project work driven by the Webflow MCP (released Feb 202
 2. **Pages** — home, about, courses (one page per course), blog, contact.
 3. **CMS collections** — `courses` (title, slug, short description, long description, price, hero image, `course_uuid` = LH UUID, `grow_early_bird_url`, `grow_standard_url`, `early_bird_active` boolean), `blog_posts` (title, slug, category, body, hero, author), `testimonials` (name, photo, quote, course reference).
 4. **Buy button** — per-course CTA deep-links to the active Grow checkout URL (`early_bird_active` toggles which of the two URLs renders). Both URLs carry `course_uuid` as a hidden `course_id` custom field so Grow echoes it back in the webhook.
-5. **Blog** — Hebrew-first, categories seeded: debt / budgeting / mindset / investing / tools. SEO content engine for Israeli financial search terms.
-6. **Branding** — fonts, palette, logo defined in `/opt/lms/docs/BRAND.md` (new); both Webflow and LH `OrgEditBranding` reference the same source of truth.
-7. **DNS** — `chofshi.co.il` (or whichever Maya picks) → Webflow. A fresh brand-family subdomain (e.g. `app.<marketing-domain>`) → LH instance.
-8. **DKIM / SPF / DMARC** on the marketing domain for Resend (so magic-link emails don't hit Gmail spam).
-9. **Cross-domain GA4** — single measurement ID across Webflow + LH for full-funnel visibility.
-10. **Content sync** — manual for now. Course title/description/price edited in Webflow; LH holds the actual lessons in its admin. Decoupled at launch; `check-course-ids` + `check-prices` scripts (Phase 5) catch drift.
+5. **Blog ↔ course cross-linking** — `blog_posts` gets a `related_courses` multi-reference field → `courses` collection. Blog post detail page renders a "read this → enroll here" card; course page renders a "related articles" list. Zero code; pure CMS-reference rendering.
+6. **Blog** — Hebrew-first, categories seeded: debt / budgeting / mindset / investing / tools. SEO content engine for Israeli financial search terms.
+7. **Branding** — fonts, palette, logo defined in `/opt/lms/docs/BRAND.md` (new); both Webflow and LH `OrgEditBranding` reference the same source of truth.
+8. **DNS** — `chofshi.co.il` (or whichever Maya picks) → Webflow. A fresh brand-family subdomain (e.g. `app.<marketing-domain>`) → LH instance.
+9. **DKIM / SPF / DMARC** on the marketing domain for Resend (so magic-link emails don't hit Gmail spam).
+10. **Cross-domain GA4** — single measurement ID across Webflow + LH for full-funnel visibility.
+11. **Content sync** — auto-pushed from LH to Webflow CMS via bridge webhook (see Phase 5: LH → Webflow sync). Title/description/price/slug/`course_uuid` flow from LH (source of truth) to Webflow on course write events. Hero image is Webflow-authored, not synced. `check-course-ids` remains as the LH ↔ Grow drift check.
 
 ## Phase 4 — Grow checkout
 
@@ -135,7 +136,7 @@ Credit cards (Visa / Mastercard / Isracard / Amex), **Bit**, **תשלומים** 
 2. Submit:
    - **עוסק פטור** or **עוסק מורשה** number (longest lead time — if not registered, handle at רשות המסים first, 1–2 weeks).
    - תעודת זהות.
-   - Israeli bank account for payouts (IBAN / account+branch).
+   - Israeli bank account for payouts (IBAN / account+branch). **Personal account is fine at launch while עוסק פטור** — there's no separate legal entity. Open a dedicated business account at the מורשה-crossover (~₪107K/yr) or at 6 months, whichever comes first, for bookkeeping hygiene.
    - Business description + expected monthly turnover.
 3. KYC: selfie + ID.
 4. Bank verification: Grow tests a small deposit.
@@ -230,6 +231,18 @@ All admin endpoints require an API token created at `/api/v1/orgs/{org_id}/api-t
 - `bun run check-prices` — query Webflow CMS items for `courses` collection via Webflow Data API, query Grow product prices, diff per course. Exit non-zero on mismatch.
 - `bun run reconcile` — daily cron (see above).
 
+### LH → Webflow course-metadata sync
+
+Keeps the Webflow `courses` CMS collection as a mirror of LH course state. Replaces the need for manual Webflow course-card edits and makes LH↔Webflow drift structurally impossible.
+
+- **Trigger**: LH fires outbound webhooks on course write events. Add a minimal dispatcher at `apps/api/src/services/webhooks/course_events.py` that POSTs to `LH_COURSE_WEBHOOK_URL` on `course.created`, `course.updated`, `course.deleted` with payload `{ event, course_uuid, title, short_description, long_description, price, slug }` and HMAC signature using `LH_COURSE_WEBHOOK_SECRET`.
+- **Bridge handler**: new route `POST /webhooks/lh-course` at `services/bridge/src/webhooks/lh-course.ts` — verifies signature, upserts the matching Webflow CMS `courses` item via Webflow Data API (`PATCH /collections/{courses_id}/items/{item_id}`), matching by `course_uuid` field. If no match, creates a new item. On `deleted`, archives the Webflow item (doesn't hard-delete — blog posts may still reference it via `related_courses`).
+- **Env vars (new)**: `WEBFLOW_API_TOKEN`, `WEBFLOW_SITE_ID`, `WEBFLOW_COURSES_COLLECTION_ID`, `LH_COURSE_WEBHOOK_URL` (on LH side), `LH_COURSE_WEBHOOK_SECRET` (both sides).
+- **Fields synced**: title (He + En if localized), short/long description, price, slug. **Not** synced: hero image (Maya uploads to Webflow once; not canonical in LH).
+- **Idempotency**: the Webflow upsert is naturally idempotent on `course_uuid`, so the SQLite store isn't used for this path.
+- **Client**: `services/bridge/src/clients/webflow.ts` — thin wrapper around Webflow Data API with typed methods `upsertCourse`, `archiveCourse`.
+- **Test**: create a course in LH → Webflow item appears within 5s. Edit LH price → Webflow updates. Delete LH course → Webflow item archived.
+
 **Tests:**
 - Unit: webhook signature verification, payload parsing, idempotency.
 - Integration: fake-Grow-webhook → real LH dev instance → verify enrollment + email sent (Resend test mode).
@@ -245,11 +258,11 @@ Small, targeted LH changes beyond Phases 1–2.
 ## Phase 7 — Post-launch (deferred)
 
 - **Free preview path** — (a) mark lesson 1 public-visibility in LH + link from Webflow "Preview this course" button; (b) lead-magnet PDF (email-gated) as a top-of-funnel entry. Both deferred to post-launch per the 2–3 month comfortable-scope decision.
+- **Runtime live-data widgets on Webflow** — (a) enrollment count per course ("127 students enrolled") fetched from a new public LH endpoint `GET /api/v1/courses/{course_uuid}/enrollment-count` (cache 5 min); (b) "spots left" for early-bird with an automatic CMS toggle when the threshold hits. Implemented as Webflow custom-code embeds hitting LH's public API. Skip if Maya doesn't want the noise at launch. Enabled by the LH → Webflow sync (Phase 5) sharing `course_uuid` as the key.
 - **Coupons / discount codes** — beyond early-bird, for affiliates/partners. Grow supports; wire through a `coupon_code` custom field if needed.
 - **Payment plans** — 3× ₪200 instead of ₪497 upfront; Grow supports on credit cards (תשלומים covers most cases; anything beyond needs Grow's payment-plan product).
 - **Multi-seller (aspirational)** — today single-tenant (Maya). No v1 architectural concessions. LH is already org-scoped; scaling is a config + onboarding exercise when concrete.
 - **LH admin Hebrew** — if/when we onboard Hebrew-only operators.
-- **Content sync automation** — Webflow CMS course fields ↔ LH course metadata as a one-way push. `check-course-ids` + `check-prices` are stop-gaps; a real sync can come later.
 - **CI pipeline** — GitHub Actions → SSH-build-deploy to the VPS. Manual `git pull && docker compose up -d --build` for now.
 
 ## Critical files / repos
@@ -266,14 +279,17 @@ Small, targeted LH changes beyond Phases 1–2.
 | Codemod | `apps/web/scripts/codemod-rtl.mjs` (new, one-shot) |
 | Hardcoded `en-US` formatters | `apps/web/components/Objects/Account/subpages/AccountPurchases.tsx:30,37`; `.../CourseActionsMobile.tsx`; `.../OfferCard.tsx`; `apps/web/components/Payments/PaymentWall.tsx` |
 | Hardcoded learner-side strings | `apps/web/components/Objects/Account/subpages/AccountPurchases.tsx:48,54,68` (+ auth components TBD) |
-| Bridge service | `services/bridge/` — Hono + Bun + TS + zod; webhook handler, LH client, Mailchimp client, Resend client |
+| Bridge service | `services/bridge/` — Hono + Bun + TS + zod; Grow handler, LH client, Mailchimp client, Webflow client, Resend client |
 | Bridge entry | `services/bridge/src/index.ts` |
 | Grow webhook handler | `services/bridge/src/webhooks/grow.ts` |
+| LH course webhook handler | `services/bridge/src/webhooks/lh-course.ts` (new) |
 | LH admin client | `services/bridge/src/clients/learnhouse.ts` |
 | Mailchimp client | `services/bridge/src/clients/mailchimp.ts` (new) |
+| Webflow Data API client | `services/bridge/src/clients/webflow.ts` (new) — upsertCourse / archiveCourse |
 | Resend email | `services/bridge/src/email/welcome.ts` + He template; `refund.ts` (new) + He template |
 | Idempotency store | `services/bridge/data/idempotency.sqlite` (gitignored) |
 | Bridge scripts | `services/bridge/scripts/{replay,check-course-ids,check-prices,reconcile}.ts` |
+| LH outbound course-event webhook dispatcher | `apps/api/src/services/webhooks/course_events.py` (new) |
 | Magic-link reissue (LH) | `apps/web/app/auth/magic/request/page.tsx` (new) |
 | Magic-link reissue endpoint (LH) | `apps/api/src/routers/auth/magic_reissue.py` (new) |
 | Brand source-of-truth | `/opt/lms/docs/BRAND.md` (new) |
