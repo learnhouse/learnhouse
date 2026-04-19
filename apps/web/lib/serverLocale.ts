@@ -12,6 +12,12 @@ export const DEFAULT_LANG = 'he'
 export const LOCALE_COOKIE = 'i18next'
 
 export async function getServerLocale(): Promise<string> {
+  const hdrs = await headers()
+
+  // Admin surfaces (dash / editor) are English/LTR regardless of the
+  // learner's chosen locale. Middleware sets this header for matching paths.
+  if (hdrs.get('x-lh-admin-route') === '1') return 'en'
+
   const cookieStore = await cookies()
   const fromCookie = cookieStore.get(LOCALE_COOKIE)?.value
   if (fromCookie) {
@@ -19,7 +25,6 @@ export async function getServerLocale(): Promise<string> {
     if (SUPPORTED_LANGS.has(code)) return code
   }
 
-  const hdrs = await headers()
   const accept = hdrs.get('accept-language')
   if (accept) {
     for (const part of accept.split(',')) {
