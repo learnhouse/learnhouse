@@ -122,13 +122,16 @@ Goal: a small, dedicated service that turns a Grow "paid" webhook into an LH enr
 **Flow:**
 1. Receive webhook → verify signature (reject if invalid).
 2. Check idempotency store (transaction ID → already processed?). If yes, 200 OK.
-3. Extract `email`, `name`, `course_id`, `transaction_id` from payload.
-4. Call LH FastAPI:
-   - `POST /api/v1/users` (upsert by email) — returns LH user ID. (Verify the exact endpoint during implementation; may need a service-account token.)
-   - `POST /api/v1/courses/{course_id}/enrollments` with the user ID.
-5. Generate a magic-link token (signed JWT, 7-day expiry) → build URL `https://<lh-host>/auth/magic?token=...`.
-6. Send via Resend: He-localized email template with the magic link and a "welcome to the course" message. Store `transaction_id` in idempotency store.
+3. Extract `email`, `name`, `course_uuid`, `transaction_id` from payload.
+4. Call LH admin API (token-gated; mint at `POST /api/v1/orgs/{org_id}/api-tokens`):
+   - `GET /api/v1/admin/{org_slug}/users/by-email/{email}` — find existing buyer; 404 → not yet a member.
+   - If 404: `POST /api/v1/admin/{org_slug}/users` (`ProvisionUserRequest`) to create + attach in one call. Email is auto-verified, no signup-flow email triggered.
+   - `POST /api/v1/admin/{org_slug}/enrollments/{user_id}/{course_uuid}` — atomic Trail + TrailRun create. Returns 400 if already enrolled (treat as success: `{ alreadyEnrolled: true }`).
+5. `POST /api/v1/admin/{org_slug}/auth/magic-link` (`MagicLinkRequest`: `user_id`, optional `redirect_to`, `ttl_seconds` up to 604800 = 7 days). Returns `{ url, token, expires_at }`. The URL is what the buyer clicks to land logged-in. (Earlier draft proposed rolling our own JWT — unnecessary; LH ships this.)
+6. Send via Resend: He-localized email template embedding the magic-link URL and a "welcome to the course" message. Store `transaction_id` in idempotency store.
 7. 200 OK to Grow.
+
+All admin endpoints require an API token created at `/api/v1/orgs/{org_id}/api-tokens` with at least `users.action_create/read/update` and `courses.action_read` rights (see `apps/api/src/db/roles.py:39-72`). The bridge stores the token as `LH_ADMIN_TOKEN`; LH validates token org-boundary on every call.
 
 **Error handling:**
 - Webhook signature invalid → 401.
