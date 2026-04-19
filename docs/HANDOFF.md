@@ -33,60 +33,30 @@ Short version for picking up from Claude Code on the VPS.
   (web on :8000, api on :9000, collab on :4000 behind an internal
   nginx on :80).
 
-## Stuck (current blocker)
+## Resolved (single-tenant OSS mode is live)
 
-LH still reports `mode:"ee"` + `multi_org_enabled:true` so the
-"Enter Your Organization" gate appears on the bare root domain,
-preventing direct login. We need single-tenant (OSS mode).
+The earlier blocker — LH reporting `mode:"ee"` + `multi_org_enabled:true`
+and the secondary `top_domain:"https"` parse bug — are both fixed.
 
-Two levers exist in the code:
-
-1. **Build arg** `LEARNHOUSE_PUBLIC=true` — the Dockerfile does
-   `rm -rf /app/api/ee` when this is set. Already added to
-   `docker-compose.yml` under `build.args`. On the last rebuild it
-   didn't seem to take effect (probably Docker layer cache).
-
-2. **Runtime env** `LEARNHOUSE_DISABLE_EE=1` — checked first in
-   `apps/api/src/core/ee_hooks.py::is_ee_available()`. Returns False
-   unconditionally when set, so `get_deployment_mode()` falls through
-   to `'oss'`. Added to `docker-compose.yml` under `environment`.
-
-Last observed state on the VPS:
+Verified live:
 ```
 $ curl -sS https://lms.lanternroute.com/api/v1/instance/info
-{"mode":"ee","multi_org_enabled":true,"default_org_slug":"default",
- "frontend_domain":"https://lms.lanternroute.com","top_domain":"https"}
+{"mode":"oss","multi_org_enabled":false,"default_org_slug":"default",
+ "frontend_domain":"lms.lanternroute.com","top_domain":"lms.lanternroute.com"}
 ```
 
-The env var isn't reaching the container — likely because `docker compose up -d` didn't recreate the container after the YAML changed.
+Fix path (commits, oldest → newest):
+- `68e2ea79 feat(deploy): force OSS mode (single-tenant) via LEARNHOUSE_PUBLIC build arg`
+- `3df0b91c fix(deploy): also set LEARNHOUSE_DISABLE_EE=1 runtime flag`
+- `8c307cf8 fix(web): resolve default org for /login in single-tenant mode`
+- `dae1fd81 feat(api): idempotent first-boot bootstrap from env`
+- `5df42a1e fix(admin): OSS-mode bypass + raise magic-link TTL ceiling to 7 days`
 
-**Diagnosis commands to run next:**
+Bootstrap (`apps/api/src/services/setup/setup.py`) seeded the default org
++ admin user on first boot from `LEARNHOUSE_INITIAL_ADMIN_EMAIL/PASSWORD`.
 
-```bash
-cd /opt/lms
-git pull
-grep DISABLE_EE docker-compose.yml          # must show: LEARNHOUSE_DISABLE_EE: "1"
-docker compose down
-docker compose up -d
-sleep 10
-docker compose exec lms env | grep LEARNHOUSE_DISABLE_EE
-# expected: LEARNHOUSE_DISABLE_EE=1
-curl -sS https://lms.lanternroute.com/api/v1/instance/info
-# expected: "mode":"oss","multi_org_enabled":false
-```
-
-If `env | grep` still prints nothing after `down` + `up -d`,
-something's stripping the var between compose and the container.
-Double-check `.env` doesn't override it with an empty value
-(`grep DISABLE_EE .env` should print nothing, or show `=1`).
-
-## Secondary issue (not blocking)
-
-The instance/info response also shows `"top_domain":"https"`, which
-means LH is parsing the URL scheme as if it were the domain. Root
-cause is in the backend `instance/info` handler's parsing of
-`LEARNHOUSE_FRONTEND_DOMAIN`. If cookies scope weirdly after login,
-patch the parsing. Not blocking first login.
+For the current setup state (feature flags, signup mode, what's still
+pending operator content/asset decisions), see `docs/LH-SETUP-PLAYBOOK.md`.
 
 ## Admin credentials (change on first login)
 
