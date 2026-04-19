@@ -91,19 +91,19 @@ for q in \
   "config/boards?boards_enabled=false" \
   "config/podcasts?podcasts_enabled=false" \
   "config/playgrounds?playgrounds_enabled=false" \
-  "config/collections?collections_enabled=true" \
+  "config/collections?collections_enabled=false" \
   "config/ai?ai_enabled=false&copilot_enabled=false" \
   "signup_mechanism?signup_mechanism=inviteOnly"
 do curl -s -o /dev/null -w "%{http_code} $q\n" -X PUT "$B/$q" -H "$H"; done
 ```
 
-**Resulting state** (verified): `payments boards communities podcasts playgrounds ai = disabled`; `collections collaboration analytics api members = enabled`; `signup_mode = inviteOnly`. Endpoints live in `apps/api/src/routers/orgs/orgs.py:328-565`.
+**Resulting state** (verified): `payments boards communities podcasts playgrounds ai collections = disabled`; `analytics api members = enabled`; `signup_mode = inviteOnly`. Endpoints live in `apps/api/src/routers/orgs/orgs.py:328-565`.
 
 Notes from the audit:
 - `analytics` left ON: events fire to Tinybird async, but Tinybird env vars are blank → calls gracefully no-op (`apps/api/src/services/analytics/analytics.py:34`). Safe to revisit if a Tinybird account is ever provisioned.
-- `collaboration` left ON: only meaningful for boards (Yjs/Hocuspocus). With boards off, it's dead code in practice. No cost.
+- `collaboration` has **no admin API toggle** — it runs as a Hocuspocus/Yjs sidecar inside the same container (see `docker/start.sh`). Only meaningful for boards (Yjs). With boards off it's dead code. Removing the Hocuspocus process requires editing the container start script, not the API. Skip unless footprint becomes an issue.
 - `api` left ON: **required** for Phase 5 — bridge needs `/api-tokens` to mint a token.
-- `collections` flipped ON (was off): no enforcement, no cost; useful if course #3+ ever ships.
+- `collections` flipped OFF (2026-04-19): Maya's audience is 2–5 courses medium-term; flat course list is clearer than a collections/courses hierarchy. Re-enable later if she expands catalog.
 
 ---
 
