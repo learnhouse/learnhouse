@@ -5,7 +5,7 @@ import { getUser, getUserPublicProfile } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 type UserProfilePopupProps = {
   children: React.ReactNode
@@ -45,8 +45,6 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   const access_token = session?.data?.tokens?.access_token
   const isAuthenticated = Boolean(access_token)
   const router = useRouter()
-  const params = useParams() as any
-  const orgslug = params?.orgslug
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -84,7 +82,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
 
   const handleViewProfile = () => {
     if (!userData?.username) return
-    router.push(`/orgs/${orgslug}/user/${userData.username}`)
+    router.push(`/user/${userData.username}`)
   }
 
   return (
