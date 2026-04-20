@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
@@ -48,28 +49,18 @@ import {
   ExternalLink,
 } from 'lucide-react'
 
-// Zapier brand mark — the 8-point orange blossom from Zapier's brand system.
-// Rendered inline so we don't need to ship an image asset, and scales cleanly
-// at any size. Brand color #FF4A00.
 const ZapierLogo: React.FC<{ size?: number; className?: string }> = ({
   size = 20,
   className,
 }) => (
-  <svg
+  <Image
+    src="/zapier_logo.png"
+    alt="Zapier"
     width={size}
     height={size}
-    viewBox="0 0 100 100"
-    xmlns="http://www.w3.org/2000/svg"
     className={className}
-    aria-hidden="true"
-  >
-    <g fill="#FF4A00">
-      <ellipse cx="50" cy="50" rx="9" ry="42" />
-      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(45 50 50)" />
-      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(90 50 50)" />
-      <ellipse cx="50" cy="50" rx="9" ry="42" transform="rotate(135 50 50)" />
-    </g>
-  </svg>
+    unoptimized
+  />
 )
 import {
   WebhookEndpoint,
@@ -357,8 +348,8 @@ const OrgEditAutomations: React.FC = () => {
         {/* ── Zapier hero card (subtle variant) ────────────────────── */}
         <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
           <div className="px-5 py-4 flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[#FFF5F0] flex items-center justify-center nice-shadow">
-              <ZapierLogo size={22} />
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden nice-shadow">
+              <ZapierLogo size={40} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
