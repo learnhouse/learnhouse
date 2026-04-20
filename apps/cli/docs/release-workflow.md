@@ -6,69 +6,67 @@ How to release a new version of the LearnHouse CLI to npm.
 
 - npm org `learnhouse` created on [npmjs.com](https://www.npmjs.com)
 - `NPM_TOKEN` (Automation type) added to GitHub repo: **Settings > Secrets > Actions**
+- `gh` CLI installed and authenticated (`gh auth status`)
 - Push access to the repository
 
-## Steps
+## Quick release (recommended)
 
-### 1. Bump the version
-
-From the CLI directory:
+From the repo root, run the release script with the new version:
 
 ```bash
-cd apps/cli
+./.github/utils/release-cli.sh 1.4.3
 ```
 
-Pick the bump type based on the changes:
+Pick the version based on the changes:
 
-| Command | When to use | Example |
-|---------|-------------|---------|
-| `bun run version:patch` | Bug fixes, small tweaks | 0.1.0 → 0.1.1 |
-| `bun run version:minor` | New features, non-breaking | 0.1.0 → 0.2.0 |
-| `bun run version:major` | Breaking changes | 0.1.0 → 1.0.0 |
+| Bump type | When to use | Example |
+|-----------|-------------|---------|
+| patch | Bug fixes, small tweaks | 1.4.2 → 1.4.3 |
+| minor | New features, non-breaking | 1.4.2 → 1.5.0 |
+| major | Breaking changes | 1.4.2 → 2.0.0 |
 
-This updates **both** `package.json` and `src/constants.ts` to keep them in sync.
+The script does everything end-to-end:
 
-### 2. Commit the version bump
+1. Fetches latest from `origin`
+2. Bumps `apps/cli/package.json` and `apps/cli/src/constants.ts` (keeps them in sync)
+3. Commits the bump on `dev` and pushes (skipped if already at that version)
+4. Creates and pushes the tag `cli-<version>` (e.g. `cli-1.4.3`) — **no `v` prefix**
+5. Generates a changelog from `feat/fix/refactor/chore` commits that touched `apps/cli/`
+6. Creates a GitHub Release authored by you (not the bot)
 
-```bash
-git add apps/cli/package.json apps/cli/src/constants.ts
-git commit -m "chore: bump cli to 0.2.0"
-```
+The tag push triggers `.github/workflows/cli-publish.yaml`, which:
 
-### 3. Create a git tag
+1. Checks out the code and sets up Node + Bun
+2. Installs dependencies (`bun install --frozen-lockfile`)
+3. Builds (`bun run build`)
+4. Verifies the tag version matches `package.json` (fails if mismatched)
+5. Publishes to npm (`npm publish --no-git-checks`)
 
-The tag **must** follow the format `cli-v<version>`:
-
-```bash
-git tag cli-v0.2.0
-```
-
-### 4. Push the commit and tag
-
-```bash
-git push origin your-branch
-git push origin cli-v0.2.0
-```
-
-### 5. Automatic — GitHub Actions takes over
-
-The tag push triggers `.github/workflows/cli-publish.yaml` which:
-
-1. Checks out the code
-2. Sets up Bun
-3. Installs dependencies (`bun install --frozen-lockfile`)
-4. Builds the CLI (`bun run build`)
-5. Verifies the tag version matches `package.json` (fails if mismatched)
-6. Publishes to npm (`npm publish`) — `prepublishOnly` runs a fresh build as a safety net
-7. Creates a GitHub Release with auto-generated release notes
-
-### 6. Verify
+## Verify
 
 After the workflow completes (~1-2 minutes):
 
 - **npm:** https://www.npmjs.com/package/learnhouse — should show the new version
-- **GitHub:** Check the Releases page for the auto-generated release
-- **Test:** `npx learnhouse@latest --version` should print the new version
+- **GitHub:** Releases page shows the new release
+- **Test:** `npx learnhouse@latest --version` prints the new version
+
+## Manual release (fallback)
+
+If the script can't run (no `gh`, not on macOS, etc.), do it by hand:
+
+```bash
+cd apps/cli
+bun run version:patch   # or version:minor / version:major
+git add apps/cli/package.json apps/cli/src/constants.ts
+git commit -m "release(cli): bump version to 1.4.3"
+git push origin dev
+
+# Tag format is cli-<version> — NO "v" prefix
+git tag cli-1.4.3
+git push origin cli-1.4.3
+```
+
+The tag push still triggers the publish workflow. You'll need to create the GitHub Release manually if you want one (`gh release create cli-1.4.3 --title "CLI 1.4.3" ...`).
 
 ## How it works
 
@@ -76,47 +74,41 @@ After the workflow completes (~1-2 minutes):
 
 | File | Field | Why |
 |------|-------|-----|
-| `package.json` | `"version"` | npm uses this for publishing |
-| `src/constants.ts` | `VERSION` | CLI displays this at runtime (banner, `--version`) |
+| `apps/cli/package.json` | `"version"` | npm uses this for publishing |
+| `apps/cli/src/constants.ts` | `VERSION` | CLI displays this at runtime (banner, `--version`) |
 
-The `scripts/bump-version.js` script updates both at once so they never drift.
+The release script (and `scripts/bump-version.js`) update both at once so they never drift.
 
 ### Tag format
 
-The workflow only triggers on tags matching `cli-v*`. This means:
+The workflow only triggers on tags matching `cli-[0-9]*`. This means:
 
-- Regular commits and PRs **never** trigger a publish
-- Only explicit `git tag cli-v*` + push triggers it
-- Other tags (e.g. `api-v1.0.0`) are ignored
+- Tags **must** be `cli-1.4.3` — **not** `cli-v1.4.3`, **not** `v1.4.3`
+- Regular commits and PRs never trigger a publish
+- Only an explicit `cli-<numeric-version>` tag push triggers it
+- Other tags (e.g. `api-1.0.0`) are ignored
 
 ### Safety checks
 
-- **Version mismatch guard:** The workflow extracts the version from the tag and compares it to `package.json`. If they don't match, the publish fails.
-- **prepublishOnly:** npm automatically runs `tsup` before every publish, ensuring the `dist/` bundle is always fresh.
-- **frozen lockfile:** Dependencies are installed with `--frozen-lockfile` so CI never silently updates packages.
-
-## Quick reference
-
-```bash
-# Full release flow (example: releasing 0.2.0)
-cd apps/cli
-bun run version:minor                                    # 0.1.0 → 0.2.0
-git add apps/cli/package.json apps/cli/src/constants.ts
-git commit -m "chore: bump cli to 0.2.0"
-git tag cli-v0.2.0
-git push origin your-branch && git push origin cli-v0.2.0
-# Done — GitHub Actions handles the rest
-```
+- **Version mismatch guard:** the workflow extracts the version from the tag and compares it to `package.json`. If they don't match, publish fails.
+- **prepublishOnly:** npm runs `tsup` before every publish, so `dist/` is always fresh.
+- **frozen lockfile:** `bun install --frozen-lockfile` prevents silent dependency updates in CI.
 
 ## Troubleshooting
 
 ### Workflow didn't trigger
-- Check the tag format: must be `cli-v*` (e.g. `cli-v0.2.0`, not `v0.2.0`)
-- Verify the tag was pushed: `git ls-remote --tags origin | grep cli-v`
+- Tag format must be `cli-<version>` with no `v` (e.g. `cli-1.4.3`)
+- Verify the tag was pushed: `git ls-remote --tags origin | grep cli-`
+- If you tagged with a `v` by mistake, delete it and re-tag:
+  ```bash
+  git tag -d cli-v1.4.3
+  git push origin :refs/tags/cli-v1.4.3
+  ./.github/utils/release-cli.sh 1.4.3
+  ```
 
-### Version mismatch error
-- You tagged `cli-v0.2.0` but `package.json` says `0.1.0`
-- Fix: run `bun run version:minor` (or the correct bump), amend the commit, re-tag
+### Version mismatch error in CI
+- You tagged `cli-1.4.3` but `package.json` says something else
+- Fix: run the correct bump, amend the commit, delete and recreate the tag
 
 ### npm 403 / auth error
 - Check that `NPM_TOKEN` secret is set in GitHub repo settings
@@ -125,4 +117,4 @@ git push origin your-branch && git push origin cli-v0.2.0
 
 ### Build fails
 - Run `bun run build` locally first to catch TypeScript errors
-- Check that `bun install --frozen-lockfile` works (if not, update `bun.lockb`)
+- If `bun install --frozen-lockfile` fails, update `bun.lock` and commit it
