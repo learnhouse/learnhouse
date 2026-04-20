@@ -8,7 +8,7 @@ SSO capabilities through WorkOS's unified API for SAML and OIDC.
 import os
 from typing import Optional
 from workos import WorkOSClient
-from workos.exceptions import BadRequestException
+from workos import BadRequestError
 
 from .base import SSOProvider, SSOUserProfile, SSOAuthenticationError, SSOConfigurationError
 
@@ -134,7 +134,7 @@ class WorkOSProvider(SSOProvider):
                 }
             )
 
-        except BadRequestException as e:
+        except BadRequestError as e:
             raise SSOAuthenticationError(
                 f"Invalid authorization code: {str(e)}",
                 provider=self.provider_name,
