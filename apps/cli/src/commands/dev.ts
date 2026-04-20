@@ -145,10 +145,11 @@ function spawnService(command: string, args: string[], cwd: string, label: strin
   const child = spawn(command, args, {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
     env: {
       ...process.env,
       ...serviceEnv,
-      PATH: `${localBin}:${process.env.PATH ?? ''}`,
+      PATH: `${localBin}${path.delimiter}${process.env.PATH ?? ''}`,
     },
   })
   prefixStream(child, label, color)

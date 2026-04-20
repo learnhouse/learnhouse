@@ -1,6 +1,6 @@
 {
   "name": "learnhouse",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "The official LearnHouse CLI — deploy, manage, and operate your LearnHouse instance",
   "type": "module",
   "bin": {
