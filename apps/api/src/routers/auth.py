@@ -267,41 +267,32 @@ async def login(
             },
         )
 
-    # Step 2: Get user to check lockout status
+    # Step 2: Look up user record up front (used for lockout bookkeeping and
+    # post-auth checks).  SECURITY: we intentionally do NOT return lockout or
+    # "email not verified" responses here before the password is verified —
+    # otherwise the existence of the account leaks to unauthenticated callers
+    # and enables account enumeration.
     statement = select(User).where(User.email == username)
     user_record = db_session.exec(statement).first()
 
+    is_pre_locked = False
+    pre_lock_remaining: Optional[int] = None
     if user_record:
-        # Step 3: Check if account is locked
-        is_locked, remaining_seconds = check_account_locked(user_record)
-        if is_locked and remaining_seconds:
-            raise HTTPException(
-                status_code=status.HTTP_423_LOCKED,
-                detail={
-                    "code": "ACCOUNT_LOCKED",
-                    "message": format_lockout_message(remaining_seconds),
-                    "retry_after": remaining_seconds,
-                },
-            )
+        is_pre_locked, pre_lock_remaining = check_account_locked(user_record)
 
-    # Step 4: Authenticate user
+    # Step 3: Authenticate. authenticate_user returns False for both
+    # "unknown user" and "wrong password", so the two failure modes are
+    # indistinguishable from here on.
     user = await authenticate_user(
         request, username, password, db_session
     )
 
     if not user:
-        # Record failed attempt if user exists
+        # Record failed attempt if user exists (no effect on response — we
+        # always return the same generic 401 so the caller cannot tell
+        # "no such user" from "wrong password" or "locked out").
         if user_record:
-            is_now_locked, lockout_duration = record_failed_login(user_record, db_session)
-            if is_now_locked:
-                raise HTTPException(
-                    status_code=status.HTTP_423_LOCKED,
-                    detail={
-                        "code": "ACCOUNT_LOCKED",
-                        "message": f"Account locked due to too many failed attempts. Please try again in {lockout_duration // 60} minutes.",
-                        "retry_after": lockout_duration,
-                    },
-                )
+            record_failed_login(user_record, db_session)
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -310,6 +301,21 @@ async def login(
                 "message": "Incorrect Email or password",
             },
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Password was correct. From here on, disclosing lockout/verification
+    # state no longer enables enumeration since the caller has proven they
+    # control the account.
+
+    # Step 4: Enforce lockout from prior failed attempts.
+    if is_pre_locked and pre_lock_remaining:
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail={
+                "code": "ACCOUNT_LOCKED",
+                "message": format_lockout_message(pre_lock_remaining),
+                "retry_after": pre_lock_remaining,
+            },
         )
 
     # Step 5: Check email verification (required for SaaS login only)
