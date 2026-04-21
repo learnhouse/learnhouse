@@ -400,9 +400,21 @@ async def update_user(
                 detail="Email already exists",
             )
 
-    # Update user; strip protected fields to prevent privilege escalation
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
+    # Update user; strip protected fields to prevent privilege escalation.
+    # email_verified is also protected so changing the email cannot leave
+    # the account appearing "already verified" on the new address.
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "email_verified", "email_verified_at"}
     user_data = user_object.model_dump(exclude_unset=True)
+
+    # SECURITY: if the email actually changed, force re-verification on the
+    # new address. SaaS login requires email_verified=True, so this prevents
+    # a compromised session from pivoting to an attacker-controlled address
+    # while keeping the trusted-since-signup flag set.
+    incoming_email = user_data.get("email")
+    if incoming_email is not None and incoming_email != user.email:
+        user.email_verified = False
+        user.email_verified_at = None
+
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
             setattr(user, key, value)
