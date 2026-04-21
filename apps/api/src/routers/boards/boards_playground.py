@@ -8,7 +8,7 @@ from src.db.organizations import Organization
 from src.db.boards import Board
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, get_authenticated_user
 from src.security.features_utils.usage import (
     check_ai_credits,
     deduct_ai_credit,
@@ -66,7 +66,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def start_boards_playground_session(
     request: Request,
     session_request: StartBoardsPlaygroundSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Start a new Boards Playground AI generation session with streaming response."""
@@ -130,7 +130,7 @@ async def start_boards_playground_session(
 async def iterate_boards_playground_session(
     request: Request,
     message_request: SendBoardsPlaygroundMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Continue an existing Boards Playground session with a new message."""

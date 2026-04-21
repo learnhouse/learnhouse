@@ -17,7 +17,7 @@ from src.routers.boards.boards_playground import (
     event_generator as boards_event_generator,
     get_org_ai_model as get_boards_org_ai_model,
 )
-from src.security.auth import get_current_user
+from src.security.auth import get_authenticated_user, get_current_user
 from src.security.features_utils.dependencies import require_boards_feature
 
 
@@ -38,6 +38,7 @@ def app(db, admin_user):
     app.include_router(boards_playground_router, prefix="/api/v1/boards")
     app.dependency_overrides[get_db_session] = lambda: db
     app.dependency_overrides[get_current_user] = lambda: admin_user
+    app.dependency_overrides[get_authenticated_user] = lambda: admin_user
     app.dependency_overrides[require_boards_feature] = lambda: True
     yield app
     app.dependency_overrides.clear()

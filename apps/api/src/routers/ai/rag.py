@@ -18,7 +18,7 @@ from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, get_authenticated_user
 from src.security.features_utils.usage import check_ai_credits, deduct_ai_credit
 from src.security.org_auth import require_org_admin
 from src.services.ai.base import (
@@ -142,7 +142,7 @@ async def rag_chat_event_generator(
 async def api_rag_chat(
     request: Request,
     chat_request: RAGChatRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
