@@ -30,7 +30,10 @@ class UserUpdate(UserBase):
     username: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    email: str
+    # SECURITY: must be EmailStr (not str) so the user-profile update path
+    # validates the format. UserBase already types email as EmailStr; this
+    # redeclaration is kept only to signal it is a required field on update.
+    email: EmailStr
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
     details: Optional[dict] = Field(default_factory=dict)
