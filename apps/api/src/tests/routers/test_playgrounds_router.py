@@ -236,9 +236,7 @@ class TestPlaygroundsRouter:
         assert response.status_code == 404
 
         with patch(
-            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
-        ), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+            "src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"
         ), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
@@ -260,9 +258,7 @@ class TestPlaygroundsRouter:
         assert response.status_code == 404
 
         with patch(
-            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
-        ), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+            "src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"
         ), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
@@ -284,9 +280,7 @@ class TestPlaygroundsRouter:
         assert response.status_code == 404
 
         with patch(
-            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
-        ), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
+            "src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"
         ), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
@@ -362,10 +356,6 @@ class TestPlaygroundsRouter:
                 context=SimpleNamespace(course_uuid=None),
                 message_history=[],
             ),
-        ), patch(
-            "src.routers.playgrounds.playgrounds_generator.check_ai_credits"
-        ), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
         ), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
@@ -569,9 +559,7 @@ class TestPlaygroundsRouter:
             message_history=[],
         )
 
-        with patch("src.routers.playgrounds.playgrounds_generator.check_ai_credits"), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
-        ), patch(
+        with patch("src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
         ), patch(
@@ -613,9 +601,7 @@ class TestPlaygroundsRouter:
         with patch(
             "src.routers.playgrounds.playgrounds_generator.get_playground_session",
             return_value=iterate_session,
-        ), patch("src.routers.playgrounds.playgrounds_generator.check_ai_credits"), patch(
-            "src.routers.playgrounds.playgrounds_generator.deduct_ai_credit"
-        ), patch(
+        ), patch("src.routers.playgrounds.playgrounds_generator.reserve_ai_credit"), patch(
             "src.routers.playgrounds.playgrounds_generator.get_org_ai_model",
             return_value="gemini-test",
         ), patch(

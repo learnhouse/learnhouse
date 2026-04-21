@@ -215,6 +215,53 @@ async def authorization_verify_if_user_is_author(
     return False
 
 
+def _load_applicable_roles(
+    db_session: Session,
+    user_id: int,
+    target_org_id: int | None,
+):
+    """
+    Load roles that may grant a user permission on a resource in ``target_org_id``.
+
+    A role applies when either (a) it belongs to the target organization and the
+    user holds it there, or (b) it is a global default role (``org_id IS NULL``)
+    and the user is a member of the target organization. When ``target_org_id``
+    is ``None`` (placeholder UUIDs used during top-level creation), every role
+    the user holds is returned — existence checks and org-scoped request bodies
+    gate those paths downstream.
+    """
+    if target_org_id is None:
+        statement = (
+            select(Role)
+            .join(UserOrganization)
+            .where(
+                (UserOrganization.org_id == Role.org_id)
+                | (Role.org_id == null())
+            )
+            .where(UserOrganization.user_id == user_id)
+        )
+        return db_session.exec(statement).all()
+
+    is_member_of_target = db_session.exec(
+        select(UserOrganization).where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == target_org_id,
+        )
+    ).first()
+
+    if not is_member_of_target:
+        # Non-member: never grant role-based access to this org's resources.
+        return []
+
+    statement = (
+        select(Role)
+        .join(UserOrganization)
+        .where(UserOrganization.user_id == user_id)
+        .where((Role.org_id == target_org_id) | (Role.org_id == null()))
+    )
+    return db_session.exec(statement).all()
+
+
 # Tested and working
 async def authorization_verify_based_on_roles(
     request: Request,
@@ -229,15 +276,15 @@ async def authorization_verify_based_on_roles(
 
     element_type = await check_element_type(element_uuid)
 
-    # Get user roles bound to an organization and standard roles
-    statement = (
-        select(Role)
-        .join(UserOrganization)
-        .where((UserOrganization.org_id == Role.org_id) | (Role.org_id == null()))
-        .where(UserOrganization.user_id == user_id)
-    )
+    # SECURITY: role-based fallback must be scoped to the target resource's org.
+    # Without this check, a user with e.g. admin-in-orgA whose admin role grants
+    # courses.action_update=True could mutate a course in orgB purely because
+    # one of their org roles carries the permission.
+    target_org_id = await get_element_organization_id(element_uuid, db_session)
 
-    user_roles_in_organization_and_standard_roles = db_session.exec(statement).all()
+    user_roles_in_organization_and_standard_roles = _load_applicable_roles(
+        db_session, user_id, target_org_id
+    )
 
     
     # Check if user is the author of the resource for "own" permissions

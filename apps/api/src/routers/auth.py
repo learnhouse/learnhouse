@@ -12,12 +12,15 @@ from src.security.auth import (
     get_current_user,
     create_access_token,
     create_refresh_token,
+    decode_jwt,
     decode_refresh_token,
     extract_jwt_from_request,
+    revoke_user_sessions_before,
     JWT_ACCESS_TOKEN_EXPIRES,
     JWT_REFRESH_COOKIE_NAME,
     JWT_COOKIE_NAME,
 )
+from src.services.users.users import security_get_user
 from src.services.auth.utils import signWithGoogle
 from src.services.dev.dev import isDevModeEnabled
 from src.services.security.rate_limiting import (
@@ -463,11 +466,16 @@ async def third_party_login(
         401: {"description": "No authenticated session was found"},
     },
 )
-def logout(request: Request, response: Response):
+async def logout(
+    request: Request,
+    response: Response,
+    db_session: Session = Depends(get_db_session),
+):
     """
-    Because the JWT are stored in an httponly cookie now, we cannot
-    log the user out by simply deleting the cookies in the frontend.
-    We need the backend to send us a response to delete the cookies.
+    Clear the auth cookies and revoke every JWT (access and refresh) that was
+    issued for this user up to this moment. The revocation is enforced by
+    ``get_current_user`` via a Redis blocklist, so stolen tokens cannot
+    outlive logout simply by being replayed outside the browser.
     """
     token = extract_jwt_from_request(request)
     if not token:
@@ -476,6 +484,21 @@ def logout(request: Request, response: Response):
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Best-effort resolve the user to revoke every session they have across
+    # devices (not just the one tied to this cookie).
+    payload = decode_jwt(token)
+    if payload and payload.get("sub"):
+        try:
+            user_record = await security_get_user(
+                request, db_session, email=payload["sub"]
+            )
+            if user_record is not None and user_record.id is not None:
+                revoke_user_sessions_before(user_record.id)
+        except Exception:
+            # Never block logout on a revocation-store hiccup; cookies are
+            # still cleared below so the browser session ends.
+            pass
 
     unset_auth_cookies(response, request)
     return {"msg": "Successfully logout"}

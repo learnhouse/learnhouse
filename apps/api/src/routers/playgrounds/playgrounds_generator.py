@@ -11,7 +11,7 @@ from src.db.courses.courses import Course
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
-from src.security.features_utils.usage import check_ai_credits, deduct_ai_credit
+from src.security.features_utils.usage import reserve_ai_credit
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
 from src.security.features_utils.dependencies import require_playgrounds_feature
@@ -123,8 +123,7 @@ async def start_playground_session(
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions to generate content")
 
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 
@@ -215,8 +214,7 @@ async def iterate_playground_session(
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 

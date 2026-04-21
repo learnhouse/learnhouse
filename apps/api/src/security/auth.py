@@ -108,17 +108,19 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """
     Create a JWT access token.
 
-    SECURITY FIX: Always sets expiration claim, even in dev mode.
-    This ensures that if a token is created in dev mode but later validated
-    in production mode, it will have a proper expiration.
+    SECURITY: always sets ``exp`` and ``iat`` claims. ``iat`` lets
+    :func:`get_current_user` enforce both password-change-based revocation and
+    the logout blocklist (see :func:`revoke_user_sessions_before`), neither of
+    which can work on tokens missing an issuance timestamp.
     """
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = now + expires_delta
     else:
         # SECURITY: Always set expiration (8 hours default)
-        expire = datetime.now(timezone.utc) + JWT_ACCESS_TOKEN_EXPIRES
-    to_encode.update({"exp": expire})
+        expire = now + JWT_ACCESS_TOKEN_EXPIRES
+    to_encode.update({"exp": expire, "iat": now})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -131,16 +133,87 @@ def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
     """
     Create a JWT refresh token.
 
-    SECURITY: Always sets expiration claim for refresh tokens.
+    SECURITY: always sets ``exp`` and ``iat`` claims. ``iat`` is required for
+    logout/password-change revocation to apply to refresh tokens.
     """
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + JWT_REFRESH_TOKEN_EXPIRES
-    to_encode.update({"exp": expire, "type": "refresh"})
+        expire = now + JWT_REFRESH_TOKEN_EXPIRES
+    to_encode.update({"exp": expire, "iat": now, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def _get_revocation_redis_client():
+    """Return a Redis client for the session-revocation blocklist, or ``None``
+    if Redis isn't configured. Failing open is acceptable here because JWTs
+    still honour ``exp`` and ``password_changed_at`` — the blocklist is a
+    defense-in-depth timer, not the only wall.
+    """
+    try:
+        import redis  # local import keeps auth module importable in Redis-less tests
+        lh_config = get_learnhouse_config()
+        url = lh_config.redis_config.redis_connection_string
+        if not url:
+            return None
+        return redis.Redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+    except Exception:
+        return None
+
+
+def revoke_user_sessions_before(user_id: int, cutoff: Optional[datetime] = None) -> bool:
+    """
+    Record that any JWT for ``user_id`` issued strictly before ``cutoff`` (or
+    now, if omitted) must be rejected by :func:`get_current_user`. Safe to
+    call on every logout; the key is written with a TTL that matches the
+    longest possible session so old keys garbage-collect themselves.
+    """
+    ts = (cutoff or datetime.now(timezone.utc)).replace(microsecond=0)
+    r = _get_revocation_redis_client()
+    if r is None:
+        return False
+    try:
+        r.setex(
+            f"jwt_revoked_before:{user_id}",
+            int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
+            int(ts.timestamp()),
+        )
+        return True
+    except Exception:
+        return False
+
+
+def _is_token_revoked_for_user(user_id: int, token_iat: Optional[datetime]) -> bool:
+    if token_iat is None:
+        # Without ``iat`` we cannot compare — treat as potentially revoked only
+        # if the user has an active revocation key. This prevents pre-upgrade
+        # tokens from silently bypassing logout once the key is set.
+        r = _get_revocation_redis_client()
+        if r is None:
+            return False
+        try:
+            raw = r.get(f"jwt_revoked_before:{user_id}")
+            return raw is not None
+        except Exception:
+            return False
+
+    r = _get_revocation_redis_client()
+    if r is None:
+        return False
+    try:
+        raw = r.get(f"jwt_revoked_before:{user_id}")
+    except Exception:
+        return False
+    if raw is None:
+        return False
+    try:
+        cutoff_ts = int(raw)
+    except (TypeError, ValueError):
+        return False
+    return int(token_iat.timestamp()) < cutoff_ts
 
 
 def decode_refresh_token(token: str) -> Optional[dict]:
@@ -261,18 +334,30 @@ async def get_current_user(
         if user is None:
             raise credentials_exception
 
+        token_iat_raw = payload.get("iat") if token else None
+        issued_at: Optional[datetime] = None
+        if token_iat_raw:
+            try:
+                issued_at = datetime.fromtimestamp(token_iat_raw, tz=timezone.utc)
+            except (TypeError, ValueError, OSError):
+                issued_at = None
+
         # If the user changed their password after this token was issued, the
         # token is stale and must be rejected to force re-authentication.
-        if hasattr(user, 'password_changed_at') and user.password_changed_at:
-            token_iat = payload.get("iat") if token else None
-            if token_iat:
-                issued_at = datetime.fromtimestamp(token_iat, tz=timezone.utc)
-                if user.password_changed_at.tzinfo is None:
-                    pca = user.password_changed_at.replace(tzinfo=timezone.utc)
-                else:
-                    pca = user.password_changed_at
-                if issued_at < pca:
-                    raise credentials_exception
+        pca_raw = getattr(user, "password_changed_at", None)
+        if isinstance(pca_raw, datetime) and issued_at is not None:
+            if pca_raw.tzinfo is None:
+                pca = pca_raw.replace(tzinfo=timezone.utc)
+            else:
+                pca = pca_raw
+            if issued_at < pca:
+                raise credentials_exception
+
+        # SECURITY: if the user logged out after this token was issued, reject
+        # it. This closes the "stolen token survives logout for its TTL" gap
+        # without requiring a full DB-backed session store.
+        if user.id is not None and _is_token_revoked_for_user(user.id, issued_at):
+            raise credentials_exception
 
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user

@@ -315,9 +315,13 @@ async def editor_chat_event_generator(
                         # Send content before the marker
                         content_before_raw = buffer[:end_idx]
                         content_before = content_before_raw.rstrip('\n\r \t')
-                        logger.info(f"Found end marker at index {end_idx}")
-                        logger.info(f"Content before marker (raw, last 30): {repr(content_before_raw[-30:])}")
-                        logger.info(f"Content before marker (stripped, last 30): {repr(content_before[-30:])}")
+                        logger.debug(f"Found end marker at index {end_idx}")
+                        logger.debug(
+                            f"Content before marker (raw length): {len(content_before_raw)}"
+                        )
+                        logger.debug(
+                            f"Content before marker (stripped length): {len(content_before)}"
+                        )
                         if content_before:
                             content_buffer += content_before
                             yield f"data: {json.dumps({'type': 'content_chunk', 'content': content_before})}\n\n"
@@ -325,9 +329,9 @@ async def editor_chat_event_generator(
                         # Exit content block mode - strip all whitespace from final content
                         in_content_block = False
                         final_content = content_buffer.strip()
-                        # Log for debugging
-                        logger.info(f"Sending content_end with {len(final_content)} chars")
-                        logger.info(f"Content ends with (last 50): {repr(final_content[-50:]) if len(final_content) > 50 else repr(final_content)}")
+                        logger.debug(
+                            f"Sending content_end with {len(final_content)} chars"
+                        )
                         yield f"data: {json.dumps({'type': 'content_end', 'full_content': final_content})}\n\n"
 
                         # Keep everything after the marker

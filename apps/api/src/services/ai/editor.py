@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from src.db.organizations import Organization
-from src.security.features_utils.usage import check_ai_credits, deduct_ai_credit
+from src.security.features_utils.usage import reserve_ai_credit
 from src.db.courses.courses import Course, CourseRead
 from src.db.users import PublicUser
 from src.db.courses.activities import Activity, ActivityRead
@@ -163,9 +163,8 @@ async def editor_ai_start_chat_session_stream(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check limits and usage
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    # Atomic credit reservation to prevent concurrent over-use.
+    reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)
@@ -266,9 +265,8 @@ async def editor_ai_send_message_stream(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check limits and usage
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    # Atomic credit reservation to prevent concurrent over-use.
+    reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)

@@ -21,6 +21,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.security.org_auth import require_org_membership, require_org_admin
+from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
 
 logger = logging.getLogger(__name__)
 
@@ -510,6 +511,21 @@ async def check_domain_ssl_status(
             "has_ssl": False,
             "status": "pending_verification",
             "message": "Domain must be verified before SSL can be provisioned.",
+        }
+
+    # SECURITY: resolve the domain and reject private / link-local / loopback
+    # addresses before opening a TCP connection. Without this, an admin can
+    # register (and then verify DNS via control over the target) a custom
+    # domain that points at 169.254.169.254 or 127.0.0.1 and probe internal
+    # services via this endpoint's response-differential timing.
+    try:
+        resolve_and_validate_url(f"https://{domain.domain}")
+    except SSRFBlockedError as exc:
+        logger.warning("SSL probe refused for %s: %s", domain.domain, exc)
+        return {
+            "has_ssl": False,
+            "status": "invalid",
+            "message": "Domain resolves to a non-public address and cannot be checked.",
         }
 
     # Attempt TLS handshake

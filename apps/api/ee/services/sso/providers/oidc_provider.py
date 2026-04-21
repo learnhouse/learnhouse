@@ -10,6 +10,12 @@ import httpx
 from typing import Optional
 from urllib.parse import urlencode
 
+from src.services.utils.ssrf_guard import (
+    SSRFBlockedError,
+    assert_connected_peer_allowed,
+    resolve_and_validate_url,
+)
+
 from .base import SSOProvider, SSOUserProfile, SSOAuthenticationError, SSOConfigurationError
 
 
@@ -60,10 +66,24 @@ class CustomOIDCProvider(SSOProvider):
         issuer = issuer_url.rstrip('/')
         discovery_url = f"{issuer}/.well-known/openid-configuration"
 
+        # SECURITY: validate the URL resolves to a public address before we
+        # dispatch the request. Without this, an admin-configured ``issuer_url``
+        # can be pointed at 127.0.0.1, 169.254.169.254 (AWS IMDS), or internal
+        # ranges to exfiltrate metadata-service credentials.
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            validated_ips = resolve_and_validate_url(discovery_url, allow_http=False)
+        except SSRFBlockedError as exc:
+            raise SSOConfigurationError(
+                f"Refusing to fetch OIDC discovery: {exc}",
+                provider=self.provider_name,
+                field="issuer_url",
+            )
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
                 response = await client.get(discovery_url)
                 response.raise_for_status()
+                assert_connected_peer_allowed(response, validated_ips)
                 discovery = response.json()
 
                 # Validate required fields

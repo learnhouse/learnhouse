@@ -38,15 +38,22 @@ async def signWithGoogle(
     # Google
     google_user = await get_google_user_info(access_token)
 
-    # Use Google email with fallback to parameter email
-    user_email = google_user.get("email", email)
-    
-    # Validate we have a valid email
-    if not user_email:
+    # SECURITY: trust only the email Google returns *and* explicitly marks as
+    # verified. Previously this fell back to the body-supplied ``email`` when
+    # Google omitted it (which happens whenever the access token was minted
+    # without the ``email`` scope), letting an attacker with any valid Google
+    # token impersonate any LearnHouse user whose address they knew. The body
+    # ``email`` field is kept in the request schema for backward compatibility
+    # but is no longer used for identity resolution.
+    google_email = google_user.get("email")
+    google_email_verified = google_user.get("email_verified")
+    if not google_email or not google_email_verified:
         raise HTTPException(
-            status_code=400,
-            detail="No email address available from Google or request"
+            status_code=401,
+            detail="Google did not return a verified email for this account",
         )
+    # Normalise to lower-case to match the DB unique-ish invariant on email.
+    user_email = google_email.strip().lower()
 
     user = db_session.exec(
         select(User).where(User.email == user_email)

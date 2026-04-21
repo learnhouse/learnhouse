@@ -5,13 +5,13 @@ coverage:
   status:
     project:
       default:
-        target: auto
+        target: 90%
         threshold: 1%
         flags:
           - api
     patch:
       default:
-        target: auto
+        target: 90%
         threshold: 1%
         flags:
           - api
