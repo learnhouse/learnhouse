@@ -41,7 +41,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-embed', mergeAttributes(HTMLAttributes), 0]
+    return ['block-embed', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

@@ -354,6 +354,9 @@ const OrgEditAutomations: React.FC = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="font-semibold text-gray-800 text-[15px]">Zapier</h2>
+                <Badge className="bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold uppercase tracking-wider hover:bg-violet-50">
+                  Beta
+                </Badge>
                 {zapierWebhooks.length > 0 && (
                   <Badge className="bg-[#FFF5F0] text-[#FF4A00] border border-[#FFE5D6] text-[10px] font-semibold uppercase tracking-wider hover:bg-[#FFF5F0]">
                     {zapierWebhooks.length} active {zapierWebhooks.length === 1 ? 'Zap' : 'Zaps'}

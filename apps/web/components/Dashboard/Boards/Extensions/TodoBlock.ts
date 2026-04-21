@@ -27,7 +27,7 @@ export const TodoBlockExtension = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'todo-block' }), 0]
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'todo-block' })]
   },
 
   addNodeView() {

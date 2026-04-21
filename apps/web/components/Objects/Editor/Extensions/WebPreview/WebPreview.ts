@@ -31,7 +31,7 @@ const WebPreview = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['web-preview', mergeAttributes(HTMLAttributes), 0]
+    return ['web-preview', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

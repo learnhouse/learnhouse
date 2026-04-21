@@ -26,7 +26,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-audio', mergeAttributes(HTMLAttributes), 0]
+    return ['block-audio', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

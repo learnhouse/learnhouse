@@ -26,7 +26,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-video', mergeAttributes(HTMLAttributes), 0]
+    return ['block-video', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {
