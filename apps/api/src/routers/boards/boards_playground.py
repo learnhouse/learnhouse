@@ -14,6 +14,7 @@ from src.security.features_utils.usage import (
 )
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
+from src.security.org_auth import is_org_member
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
     create_boards_playground_session,
@@ -83,12 +84,22 @@ async def start_boards_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # SECURITY (F-5): verify the authenticated user is a member of the
+    # board's org before reserving credits. Otherwise a user in org A can
+    # drain org B's AI credit bucket by supplying any board_uuid from org B.
+    if not is_org_member(current_user.id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
-    # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)
 
-    # Create new session
     session = create_boards_playground_session(
         block_uuid=session_request.block_uuid,
         board_uuid=session_request.board_uuid,
@@ -159,6 +170,16 @@ async def iterate_boards_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # SECURITY (F-5): same cross-org drain protection as /playground/start.
+    if not is_org_member(current_user.id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)

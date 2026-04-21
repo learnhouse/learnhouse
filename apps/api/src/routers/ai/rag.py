@@ -20,7 +20,7 @@ from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_current_user, get_authenticated_user
 from src.security.features_utils.usage import reserve_ai_credit
-from src.security.org_auth import require_org_admin
+from src.security.org_auth import is_org_member, require_org_admin
 from src.services.ai.base import (
     get_chat_session_history,
     save_message_to_history,
@@ -155,7 +155,6 @@ async def api_rag_chat(
     org_id = None
 
     if chat_request.course_uuid:
-        # Resolve course
         course = db_session.exec(
             select(Course).where(Course.course_uuid == chat_request.course_uuid)
         ).first()
@@ -164,7 +163,6 @@ async def api_rag_chat(
         course_id = course.id
         org_id = course.org_id
     else:
-        # Cross-course mode: resolve org from org_slug if provided, else fall back to first membership
         if chat_request.org_slug:
             org = db_session.exec(
                 select(Organization).where(Organization.slug == chat_request.org_slug)
@@ -182,6 +180,17 @@ async def api_rag_chat(
             if not user_org:
                 raise HTTPException(status_code=403, detail="User has no organization")
             org_id = user_org.org_id
+
+    # SECURITY (F-5): before touching any org-scoped resource (including the
+    # credit bucket), verify the authenticated user is actually a member of
+    # the resolved org. Without this check, an attacker in org A can drain
+    # org B's AI credits or run RAG against org B's indexed content by
+    # supplying a course_uuid or org_slug from org B.
+    if not is_org_member(current_user.id, org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
 
     # Check if copilot is enabled for this org
     org_config = db_session.exec(
@@ -201,6 +210,10 @@ async def api_rag_chat(
             copilot_enabled = config.get("features", {}).get("ai", {}).get("copilot_enabled", True)
         if not copilot_enabled:
             raise HTTPException(status_code=403, detail="Copilot is disabled for this organization")
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org_id)
 
     # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
     reserve_ai_credit(org_id, db_session, amount=2)

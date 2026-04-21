@@ -265,6 +265,67 @@ def check_email_verification_rate_limit(email: str) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+# AI endpoint rate-limit tunables. Exposed as module-level constants so tests
+# can monkeypatch them without touching the bucket semantics.
+AI_USER_MAX_REQUESTS_PER_MINUTE = 30
+AI_ORG_MAX_REQUESTS_PER_MINUTE = 120
+AI_RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+def check_ai_rate_limit(user_id: int, org_id: int) -> Tuple[bool, int]:
+    """
+    Per-user AND per-org sliding-window rate limit for AI endpoints.
+
+    AI routes consume real model spend and provider capacity. Credits alone
+    don't prevent a single authenticated user from saturating workers — they
+    throttle spend, not concurrency. This guard enforces both a per-user
+    ceiling (to stop a single actor from exhausting capacity) and a per-org
+    ceiling (to protect multi-tenant fairness).
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds). ``retry_after`` reflects
+        whichever bucket denied the request, so the client's Retry-After
+        header is always honoured.
+    """
+    user_allowed, _user_count, user_retry = check_rate_limit(
+        key=f"ai:user:{user_id}",
+        max_attempts=AI_USER_MAX_REQUESTS_PER_MINUTE,
+        window_seconds=AI_RATE_LIMIT_WINDOW_SECONDS,
+    )
+    if not user_allowed:
+        return False, user_retry
+
+    org_allowed, _org_count, org_retry = check_rate_limit(
+        key=f"ai:org:{org_id}",
+        max_attempts=AI_ORG_MAX_REQUESTS_PER_MINUTE,
+        window_seconds=AI_RATE_LIMIT_WINDOW_SECONDS,
+    )
+    if not org_allowed:
+        return False, org_retry
+
+    return True, AI_RATE_LIMIT_WINDOW_SECONDS
+
+
+def enforce_ai_rate_limit(user_id: int, org_id: int) -> None:
+    """
+    Raise HTTP 429 with a Retry-After header if the per-user OR per-org AI
+    rate limit is exceeded. Uses the existing rate-limit error envelope
+    ({"code":"RATE_LIMITED","message":...,"retry_after":...}) so the
+    frontend can reuse its existing 429 handler without any change.
+    """
+    is_allowed, retry_after = check_ai_rate_limit(user_id, org_id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": "Too many AI requests. Please slow down.",
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+
 def increment_rate_limit(key: str, window_seconds: int) -> None:
     """
     Increment a rate limit counter for tracking purposes.
