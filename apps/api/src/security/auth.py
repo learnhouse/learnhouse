@@ -11,7 +11,16 @@ import jwt
 from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.users.users import security_verify_password
-from src.security.security import ALGORITHM, SECRET_KEY
+from src.security.security import ALGORITHM, SECRET_KEY, security_hash_password
+
+
+# SECURITY: Pre-computed Argon2 hash of an unknown password. Verifying a
+# submitted password against this hash takes roughly the same wall-clock time
+# as verifying against a real user's hash, so an attacker cannot distinguish
+# "user exists, wrong password" from "user does not exist" by timing the login
+# endpoint. The value is computed once at import time so we do not re-hash on
+# every unauthenticated attempt.
+_DUMMY_PASSWORD_HASH = security_hash_password("unused-sentinel-for-timing-equalization")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -98,6 +107,12 @@ async def authenticate_user(
 ) -> User | bool:
     user = await security_get_user(request, db_session, email)
     if not user:
+        # SECURITY: run a real password-verify against a dummy hash so
+        # unknown-user responses take roughly the same time as known-user
+        # wrong-password responses. Without this, an attacker can enumerate
+        # accounts via response timing alone (Argon2 verify is slow, skipping
+        # it is fast).
+        security_verify_password(password, _DUMMY_PASSWORD_HASH)
         return False
     if not security_verify_password(password, user.password):
         return False

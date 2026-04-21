@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { MapPin, Building2, Globe, Briefcase, GraduationCap, Link, Users, Calendar, Lightbulb, Loader2, ExternalLink } from 'lucide-react'
-import { getUser, getUserPublicProfile } from '@services/users/users'
+import { getUser } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -53,15 +53,17 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
   useEffect(() => {
     if (!hasOpened) return
     if (!userId) return
+    // SECURITY: the profile fetch requires authentication to avoid leaking a
+    // user enumeration surface. Anonymous viewers get a placeholder popup
+    // (the trigger avatar is still rendered via `children`).
+    if (!isAuthenticated) return
 
     const fetchUserData = async () => {
       setIsLoading(true)
       setError(null)
 
       try {
-        const data = isAuthenticated
-          ? await getUser(userId, access_token)
-          : await getUserPublicProfile(userId)
+        const data = await getUser(userId, access_token)
         setUserData(data)
       } catch (err) {
         setError('Failed to load user data')
@@ -91,7 +93,11 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
         {children}
       </HoverCardTrigger>
       <HoverCardContent className="w-96 bg-white/95 backdrop-blur-md p-0 nice-shadow">
-        {isLoading && !userData ? (
+        {!isAuthenticated ? (
+          <div className="px-5 py-4 text-sm text-gray-600">
+            Sign in to view this profile.
+          </div>
+        ) : isLoading && !userData ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>

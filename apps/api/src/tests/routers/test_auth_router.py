@@ -325,12 +325,20 @@ class TestAuthRouter:
             )
         assert response.status_code == 429
 
+        # SECURITY: a locked account only surfaces 423 once the caller has
+        # proven they know the password — otherwise the status leaks that the
+        # account exists (enumeration). authenticate_user is mocked to succeed
+        # here to simulate the correct-password branch.
         with patch(
             "src.routers.auth.check_login_rate_limit",
             return_value=(True, None),
         ), patch(
             "src.routers.auth.check_account_locked",
             return_value=(True, 90),
+        ), patch(
+            "src.routers.auth.authenticate_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
         ):
             response = await client.post(
                 "/api/v1/auth/login",
@@ -338,7 +346,12 @@ class TestAuthRouter:
             )
         assert response.status_code == 423
 
-    async def test_login_failed_attempt_locks_account(self, client, auth_user):
+    async def test_login_failed_attempt_records_but_returns_generic_401(
+        self, client, auth_user
+    ):
+        """A failed password attempt must return the same generic 401 whether
+        or not the account is (or becomes) locked — otherwise the status leaks
+        account existence and lockout state to unauthenticated callers."""
         with patch(
             "src.routers.auth.check_login_rate_limit",
             return_value=(True, None),
@@ -358,7 +371,8 @@ class TestAuthRouter:
                 data={"username": auth_user.email, "password": "bad"},
             )
 
-        assert response.status_code == 423
+        assert response.status_code == 401
+        assert response.json()["detail"]["code"] == "INVALID_CREDENTIALS"
 
     async def test_oauth_logout_and_email_endpoints(self, client, auth_user):
         with patch(
