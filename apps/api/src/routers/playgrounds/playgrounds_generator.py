@@ -123,6 +123,9 @@ async def start_playground_session(
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions to generate content")
 
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
@@ -214,6 +217,9 @@ async def iterate_playground_session(
     if not can_edit:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)

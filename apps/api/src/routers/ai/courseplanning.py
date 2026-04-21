@@ -134,6 +134,9 @@ async def start_course_planning_session(
     # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Create new session with language
@@ -213,6 +216,9 @@ async def iterate_course_planning_session(
     # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Use provided plan or session's current plan
@@ -482,6 +488,9 @@ async def generate_activity_content(
     # Get AI model — pro models cost more credits
     ai_model = get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
     deduct_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Get current content if iterating

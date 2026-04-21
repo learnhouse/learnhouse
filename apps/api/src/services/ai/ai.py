@@ -101,6 +101,10 @@ def ai_start_activity_chat_session(
             detail="Organization not found",
         )
 
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
+
     # Reserve credit atomically before the AI call; refund below on failure.
     reserve_ai_credit(org.id, db_session)
 
@@ -238,6 +242,10 @@ def ai_send_activity_chat_message(
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(statement).first()
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, course.org_id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
     reserve_ai_credit(course.org_id, db_session)
@@ -422,6 +430,10 @@ async def ai_start_activity_chat_session_stream(
         chat_session_object.activity_uuid, db_session
     )
 
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
+
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)
 
@@ -460,6 +472,10 @@ async def ai_send_activity_chat_message_stream(
     activity, course, org, ai_model, ai_friendly_text = _get_activity_and_course_info(
         chat_session_object.activity_uuid, db_session
     )
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(current_user.id, org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)

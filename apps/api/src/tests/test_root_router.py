@@ -64,6 +64,7 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     install_package("src.routers.communities")
     install_package("src.routers.podcasts")
     install_package("src.routers.playgrounds")
+    install_package("src.routers.integrations")
     install_package("src.services")
     install_package("src.services.dev")
     install_package("src.security")
@@ -93,6 +94,13 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         install_router_module(f"src.routers.{name}", f"src.routers.{name}")
 
     install_router_module("src.routers.utils", "src.routers.utils")
+
+    install_router_module(
+        "src.routers.integrations.zapier", "src.routers.integrations.zapier"
+    )
+    sys.modules["src.routers.integrations"].zapier = sys.modules[
+        "src.routers.integrations.zapier"
+    ]
 
     install_router_module("src.routers.ai.ai", "src.routers.ai.ai")
     install_router_module("src.routers.ai.magicblocks", "src.routers.ai.magicblocks")
@@ -234,7 +242,14 @@ def _install_stub_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     async def require_non_api_token_user(user):
         return user
 
-    install("src.security.api_token_utils", require_non_api_token_user=require_non_api_token_user)
+    async def get_authenticated_non_api_token_user(request=None, db_session=None):
+        return object()
+
+    install(
+        "src.security.api_token_utils",
+        require_non_api_token_user=require_non_api_token_user,
+        get_authenticated_non_api_token_user=get_authenticated_non_api_token_user,
+    )
 
     plan_module = _module(
         "src.security.features_utils.plan_check",
@@ -298,7 +313,11 @@ class TestRootRouter:
         )
         assert usergroups["prefix"] == "/usergroups"
         assert usergroups["tags"] == ["usergroups"]
+        # F-2: usergroups now requires an authenticated, non-API-token user
+        # in addition to the plan gate. Before the fix, anonymous callers
+        # could bypass auth if the plan check happened to allow them.
         assert _dependency_names(usergroups) == [
+            "get_authenticated_non_api_token_user",
             "require_plan_for_usergroups_standard_user_groups",
         ]
 
@@ -307,8 +326,9 @@ class TestRootRouter:
         )
         assert api_tokens["prefix"] == "/orgs"
         assert api_tokens["tags"] == ["api-tokens"]
+        # F-2: api_tokens uses the stricter auth dep that also rejects anon.
         assert _dependency_names(api_tokens) == [
-            "get_non_api_token_user",
+            "get_authenticated_non_api_token_user",
             "require_plan_pro_api_access",
         ]
 
@@ -339,6 +359,8 @@ class TestRootRouter:
         boards = next(call for call in calls if call["router_name"] == "src.routers.boards.boards")
         assert boards["prefix"] == "/boards"
         assert boards["tags"] == ["boards"]
+        # boards has some public-ish endpoints (board preview) so it keeps the
+        # permissive dep; the strict dep is applied on boards_playground below.
         assert _dependency_names(boards) == [
             "get_non_api_token_user",
             "require_plan_for_boards_pro_boards",
