@@ -27,7 +27,7 @@ from src.services.ai.schemas.editor import (
 )
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.security.auth import get_authenticated_user
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ router = APIRouter()
 async def api_ai_start_activity_chat_session(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
@@ -74,7 +74,7 @@ async def api_ai_start_activity_chat_session(
 async def api_ai_send_activity_chat_message(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
@@ -142,7 +142,7 @@ async def activity_chat_event_generator(
 async def api_ai_start_activity_chat_session_stream(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -197,7 +197,7 @@ async def api_ai_start_activity_chat_session_stream(
 async def api_ai_send_activity_chat_message_stream(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -391,7 +391,7 @@ async def editor_chat_event_generator(
 async def api_editor_ai_start_chat_session_stream(
     request: Request,
     chat_session_object: StartEditorAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -446,7 +446,7 @@ async def api_editor_ai_start_chat_session_stream(
 async def api_editor_ai_send_message_stream(
     request: Request,
     chat_session_object: SendEditorAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
