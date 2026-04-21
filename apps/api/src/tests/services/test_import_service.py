@@ -346,6 +346,93 @@ class TestImportHelpers:
         assert "Suspicious compression ratio" in compression_exc.value.detail
 
     @pytest.mark.asyncio
+    async def test_analyze_import_package_rejects_entry_count_overflow(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """F-10: archives with > MAX_ENTRY_COUNT entries are refused up-front."""
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        monkeypatch.setattr(
+            "src.services.courses.transfer.import_service.MAX_ENTRY_COUNT", 2
+        )
+        package = _zip_bytes({"a": b"1", "b": b"2", "c": b"3"})
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package), org.id, admin_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "too many entries" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_rejects_oversized_entry(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """F-10: single entry exceeding MAX_ENTRY_SIZE is refused before extraction."""
+        _set_import_temp_dir(monkeypatch, tmp_path)
+        monkeypatch.setattr(
+            "src.services.courses.transfer.import_service.MAX_ENTRY_SIZE", 10
+        )
+        package = _zip_bytes({"manifest.json": b"A" * 100})
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(package), org.id, admin_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "per-file size limit" in exc.value.detail
+
+    @pytest.mark.asyncio
+    async def test_analyze_import_package_rejects_symlink_entry(
+        self, db, org, admin_user, mock_request, tmp_path, monkeypatch
+    ):
+        """
+        F-10: zip entries with the S_IFLNK mode flag in external_attr are
+        symbolic links — extracting them lets a malicious archive redirect
+        later writes. We refuse the archive.
+        """
+        import zipfile as zf
+        from io import BytesIO
+
+        _set_import_temp_dir(monkeypatch, tmp_path)
+
+        buf = BytesIO()
+        with zf.ZipFile(buf, "w", compression=zf.ZIP_STORED) as z:
+            # Minimum manifest + course.json so we pass every earlier gate.
+            z.writestr(
+                "manifest.json",
+                json.dumps(
+                    {
+                        "format": "learnhouse-course-export",
+                        "version": "2.0.0",
+                        "courses": [{"course_uuid": "c1", "path": "c1"}],
+                    }
+                ),
+            )
+            z.writestr("c1/course.json", json.dumps({"course_uuid": "c1", "name": "x"}))
+            # Symlink entry: 0xA1ED (S_IFLNK | 0o755) shifted into the upper
+            # 16 bits of external_attr — matches the convention zipfile uses.
+            sym_info = zf.ZipInfo("c1/evil_link")
+            sym_info.external_attr = (0xA1ED) << 16
+            z.writestr(sym_info, "/etc/passwd")
+
+        with patch(
+            "src.services.courses.transfer.import_service.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await analyze_import_package(
+                    mock_request, _upload_file(buf.getvalue()), org.id, admin_user, db
+                )
+        assert exc.value.status_code == 400
+        assert "symlink" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
     async def test_analyze_import_package_handles_unexpected_errors(
         self,
         db,

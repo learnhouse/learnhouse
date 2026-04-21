@@ -19,7 +19,7 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.auth import get_current_user, get_authenticated_user
-from src.security.features_utils.usage import check_ai_credits, deduct_ai_credit
+from src.security.features_utils.usage import reserve_ai_credit
 from src.security.org_auth import require_org_admin
 from src.services.ai.base import (
     get_chat_session_history,
@@ -202,9 +202,8 @@ async def api_rag_chat(
         if not copilot_enabled:
             raise HTTPException(status_code=403, detail="Copilot is disabled for this organization")
 
-    # Check AI credits — RAG chat makes 2 API calls (embedding + generation)
-    check_ai_credits(org_id, db_session)
-    deduct_ai_credit(org_id, db_session, amount=2)
+    # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
+    reserve_ai_credit(org_id, db_session, amount=2)
 
     # Get or create chat session
     is_new_session = chat_request.aichat_uuid is None

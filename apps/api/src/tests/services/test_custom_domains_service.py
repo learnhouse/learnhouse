@@ -735,6 +735,17 @@ class TestResolveAndSslStatus:
             }
         )
 
+        # The F-09 fix resolves the domain through the SSRF guard before
+        # opening a TCP connection. Test hostnames do not have real DNS, so we
+        # stub the guard to declare the domain public and let the socket-layer
+        # mocks drive the assertions. The patch stays active for every
+        # sub-block below via a single outer context.
+        ssrf_cm = patch(
+            "src.services.orgs.custom_domains.resolve_and_validate_url",
+            return_value={"203.0.113.1"},
+        )
+        ssrf_cm.start()
+
         with patch(
             "src.services.orgs.custom_domains.ssl.create_default_context",
             return_value=fake_context,
@@ -819,6 +830,46 @@ class TestResolveAndSslStatus:
             "status": "unknown",
             "message": "Could not determine SSL status.",
         }
+
+        ssrf_cm.stop()
+
+    @pytest.mark.asyncio
+    async def test_check_domain_ssl_status_refuses_private_address(
+        self, mock_request, db, org, admin_user
+    ):
+        """
+        F-09: the SSRF guard fires when an (admin-registered) custom domain
+        resolves to a blocked range such as 169.254.169.254. The endpoint
+        must short-circuit without opening a socket and return a benign
+        ``invalid`` response matching the existing error-shape contract.
+        """
+        from src.services.utils.ssrf_guard import SSRFBlockedError
+
+        domain = _make_custom_domain(
+            db,
+            org.id,
+            domain="imds.example.com",
+            status="verified",
+            verification_token="token-imds",
+        )
+
+        with patch(
+            "src.services.orgs.custom_domains.resolve_and_validate_url",
+            side_effect=SSRFBlockedError(
+                "URL https://imds.example.com resolves to blocked address range (169.254.169.254)"
+            ),
+        ), patch(
+            "src.services.orgs.custom_domains.socket.create_connection"
+        ) as socket_mock:
+            result = await check_domain_ssl_status(
+                mock_request, db, org.id, domain.domain_uuid, admin_user
+            )
+
+        # Socket must never have been touched — this is the whole point.
+        socket_mock.assert_not_called()
+        assert result["has_ssl"] is False
+        assert result["status"] == "invalid"
+        assert "non-public" in result["message"].lower()
 
     @pytest.mark.asyncio
     async def test_custom_domain_missing_org_and_domain_paths(
