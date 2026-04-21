@@ -59,7 +59,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["scenarios-block", mergeAttributes(HTMLAttributes), 0];
+    return ["scenarios-block", mergeAttributes(HTMLAttributes)];
   },
 
   addNodeView() {

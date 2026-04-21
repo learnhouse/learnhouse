@@ -57,7 +57,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-magic', mergeAttributes(HTMLAttributes), 0]
+    return ['block-magic', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

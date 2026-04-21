@@ -76,7 +76,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-code-playground', mergeAttributes(HTMLAttributes), 0]
+    return ['block-code-playground', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {

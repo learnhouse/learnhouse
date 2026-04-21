@@ -26,7 +26,7 @@ export default Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['block-math-equation', mergeAttributes(HTMLAttributes), 0]
+    return ['block-math-equation', mergeAttributes(HTMLAttributes)]
   },
 
   addNodeView() {
