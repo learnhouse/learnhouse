@@ -161,6 +161,9 @@ class AuthBrandingConfig(BaseModel):
     background_type: Literal["gradient", "custom", "unsplash"] = "gradient"
     background_image: str = ""
     text_color: Literal["light", "dark"] = "light"
+    unsplash_photographer_name: str = ""
+    unsplash_photographer_url: str = ""
+    unsplash_photo_url: str = ""
 
 
 # ============================================================================

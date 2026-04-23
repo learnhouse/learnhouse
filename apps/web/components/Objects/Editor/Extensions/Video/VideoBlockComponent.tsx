@@ -24,7 +24,6 @@ const VIDEO_SIZES = {
   small: { width: 480, label: 'Small' },
   medium: { width: 720, label: 'Medium' },
   large: { width: 960, label: 'Large' },
-  full: { width: '100%', label: 'Full Width' }
 } as const
 
 type VideoSize = keyof typeof VIDEO_SIZES
@@ -32,14 +31,13 @@ type VideoSize = keyof typeof VIDEO_SIZES
 // Helper function to determine video size from width
 const getVideoSizeFromWidth = (width: number | string | undefined): VideoSize => {
   if (!width) return 'medium'
-  if (width === '100%') return 'full'
+  if (width === '100%') return 'large'
 
   const numWidth = typeof width === 'string' ? parseInt(width) : width
 
   if (numWidth <= VIDEO_SIZES.small.width) return 'small'
   if (numWidth <= VIDEO_SIZES.medium.width) return 'medium'
-  if (numWidth <= VIDEO_SIZES.large.width) return 'large'
-  return 'full'
+  return 'large'
 }
 
 interface Organization {
@@ -119,7 +117,11 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const initialBlockObject = React.useMemo(() => {
     if (!node.attrs.blockObject) return null
     if ('size' in node.attrs.blockObject && typeof node.attrs.blockObject.size === 'string') {
-      return node.attrs.blockObject as VideoBlockObject
+      const block = node.attrs.blockObject as VideoBlockObject
+      if ((block.size as string) === 'full') {
+        return { ...block, size: 'large' as VideoSize }
+      }
+      return block
     }
     return convertLegacyBlock(node.attrs.blockObject as LegacyVideoBlockObject)
   }, [node.attrs.blockObject, convertLegacyBlock])
