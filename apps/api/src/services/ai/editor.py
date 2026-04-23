@@ -6,6 +6,7 @@ from src.db.organizations import Organization
 from src.security.features_utils.usage import reserve_ai_credit
 from src.db.courses.courses import Course, CourseRead
 from src.db.users import PublicUser
+from src.security.auth import resolve_acting_user_id
 from src.db.courses.activities import Activity, ActivityRead
 from src.services.ai.base import get_chat_session_history
 from src.services.ai.schemas.editor import (
@@ -164,8 +165,10 @@ async def editor_ai_start_chat_session_stream(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)
@@ -270,8 +273,10 @@ async def editor_ai_send_message_stream(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)

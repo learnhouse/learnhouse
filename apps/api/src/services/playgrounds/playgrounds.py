@@ -13,7 +13,8 @@ from src.db.playgrounds import (
 )
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
-from src.db.users import PublicUser, AnonymousUser, User
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
+from src.security.auth import resolve_acting_user_id
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
@@ -98,7 +99,7 @@ def _user_in_playground_usergroup(
 
 def _check_read_access(
     playground: Playground,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> None:
     """Raise 403 if current_user cannot read this playground."""
@@ -112,11 +113,12 @@ def _check_read_access(
         return
 
     # RESTRICTED
-    if _is_org_admin(current_user.id, playground.org_id, db_session):
+    acting_user_id = resolve_acting_user_id(current_user)
+    if _is_org_admin(acting_user_id, playground.org_id, db_session):
         return
-    if playground.created_by == current_user.id:
+    if playground.created_by == acting_user_id:
         return
-    if _user_in_playground_usergroup(current_user.id, playground.playground_uuid, db_session):
+    if _user_in_playground_usergroup(acting_user_id, playground.playground_uuid, db_session):
         return
 
     raise HTTPException(status_code=403, detail="Access denied to this playground")

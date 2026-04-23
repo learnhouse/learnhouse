@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.services.search.search import search_across_org, SearchResult
 from src.services.security.rate_limiting import check_search_rate_limit
 
@@ -40,8 +40,9 @@ async def api_search_across_org(
     """
     # Per-user throttle: search touches full-text indexes and one session can
     # drive significant DB load without a cap. ``detail`` is a plain string
-    # so the frontend's generic error path renders it as-is.
-    caller_id = getattr(current_user, "id", None)
+    # so the frontend's generic error path renders it as-is. Resolve API tokens
+    # to their creator so token-driven searches don't bypass the throttle.
+    caller_id = resolve_acting_user_id(current_user)
     if caller_id and not isinstance(current_user, AnonymousUser):
         is_allowed, retry_after = check_search_rate_limit(caller_id)
         if not is_allowed:

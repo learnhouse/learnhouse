@@ -7,8 +7,8 @@ import logging
 from src.db.organizations import Organization
 from src.db.boards import Board
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user, get_authenticated_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
@@ -66,7 +66,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def start_boards_playground_session(
     request: Request,
     session_request: StartBoardsPlaygroundSession,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Start a new Boards Playground AI generation session with streaming response."""
@@ -87,7 +87,8 @@ async def start_boards_playground_session(
     # SECURITY (F-5): verify the authenticated user is a member of the
     # board's org before reserving credits. Otherwise a user in org A can
     # drain org B's AI credit bucket by supplying any board_uuid from org B.
-    if not is_org_member(current_user.id, org.id, db_session):
+    start_acting_user_id = resolve_acting_user_id(current_user)
+    if not is_org_member(start_acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
@@ -95,7 +96,7 @@ async def start_boards_playground_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(start_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
@@ -138,7 +139,7 @@ async def start_boards_playground_session(
 async def iterate_boards_playground_session(
     request: Request,
     message_request: SendBoardsPlaygroundMessage,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Continue an existing Boards Playground session with a new message."""
@@ -171,7 +172,8 @@ async def iterate_boards_playground_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # SECURITY (F-5): same cross-org drain protection as /playground/start.
-    if not is_org_member(current_user.id, org.id, db_session):
+    iterate_acting_user_id = resolve_acting_user_id(current_user)
+    if not is_org_member(iterate_acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
@@ -179,7 +181,7 @@ async def iterate_boards_playground_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(iterate_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)

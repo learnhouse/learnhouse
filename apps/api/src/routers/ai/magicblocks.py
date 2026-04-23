@@ -7,8 +7,8 @@ from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user, get_authenticated_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
     reserve_ai_credit,
 )
@@ -82,7 +82,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def start_magicblock_session(
     request: Request,
     session_request: StartMagicBlockSession,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -118,7 +118,7 @@ async def start_magicblock_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
     reserve_ai_credit(org.id, db_session, amount=3)
@@ -169,7 +169,7 @@ async def start_magicblock_session(
 async def iterate_magicblock_session(
     request: Request,
     message_request: SendMagicBlockMessage,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -217,7 +217,7 @@ async def iterate_magicblock_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
     reserve_ai_credit(org.id, db_session, amount=3)
@@ -260,7 +260,7 @@ async def iterate_magicblock_session(
 )
 async def get_session_state(
     session_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> MagicBlockSessionResponse:
     """

@@ -5,6 +5,7 @@ from sqlmodel import Session, select, and_, or_
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import resolve_acting_user_id
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.security.superadmin import is_user_superadmin
@@ -117,8 +118,12 @@ async def get_communities_by_org(
     page = max(page, 1)
     offset = (page - 1) * limit
 
+    # Resolve to the token's creator for API-token callers so ownership /
+    # admin / membership checks run against a real user_id.
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # For anonymous users, only show public communities
-    if isinstance(current_user, AnonymousUser) or current_user.id == 0:
+    if isinstance(current_user, AnonymousUser) or acting_user_id == 0:
         query = select(Community).where(
             Community.org_id == org_id,
             Community.public == True
@@ -128,7 +133,7 @@ async def get_communities_by_org(
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # Superadmins bypass admin check — they can see all communities
-    if is_user_superadmin(current_user.id, db_session):
+    if is_user_superadmin(acting_user_id, db_session):
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = db_session.exec(query).all()
@@ -137,10 +142,10 @@ async def get_communities_by_org(
     # Check if user has admin-level permissions (can read all communities)
     # First check role-based permissions, then fall back to org admin status
     has_admin_read = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", f"community_{org_id}", db_session
+        request, acting_user_id, "update", f"community_{org_id}", db_session
     )
     is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "read", f"org_{org_id}", db_session
+        request, acting_user_id, "read", f"org_{org_id}", db_session
     )
 
     if is_admin_or_maintainer:
@@ -158,12 +163,12 @@ async def get_communities_by_org(
         .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Community.community_uuid)
         .outerjoin(UserGroupUser, and_(
             UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-            UserGroupUser.user_id == current_user.id
+            UserGroupUser.user_id == acting_user_id
         ))
         .where(or_(
             Community.public == True,
             UserGroupResource.resource_uuid.is_(None),  # Not in any UserGroup
-            UserGroupUser.user_id == current_user.id,  # User in linked UserGroup
+            UserGroupUser.user_id == acting_user_id,  # User in linked UserGroup
         ))
         .distinct()
     )
@@ -390,11 +395,14 @@ async def get_community_user_rights(
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
 
+    # API tokens report rights under their creator's identity.
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Initialize rights object
     rights = {
         "community_uuid": community_uuid,
-        "user_id": current_user.id,
-        "is_anonymous": current_user.id == 0,
+        "user_id": acting_user_id,
+        "is_anonymous": acting_user_id == 0,
         "permissions": {
             "read": False,
             "create": False,
@@ -414,7 +422,7 @@ async def get_community_user_rights(
     }
 
     # Handle anonymous users
-    if current_user.id == 0:
+    if acting_user_id == 0:
         if community.public:
             rights["permissions"]["read"] = True
             rights["access"]["via_public"] = True
@@ -435,17 +443,17 @@ async def get_community_user_rights(
 
         membership_stmt = select(UserGroupUser).where(
             UserGroupUser.usergroup_id.in_(usergroup_ids),
-            UserGroupUser.user_id == current_user.id
+            UserGroupUser.user_id == acting_user_id
         )
         user_memberships = db_session.exec(membership_stmt).all()
         rights["access"]["via_usergroups"] = [m.usergroup_id for m in user_memberships]
 
     # Check admin/maintainer role using role-based permissions
     has_update_permission = await authorization_verify_based_on_roles(
-        request, current_user.id, "update", community_uuid, db_session
+        request, acting_user_id, "update", community_uuid, db_session
     )
     is_admin_or_maintainer = has_update_permission or await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "update", community_uuid, db_session
+        request, acting_user_id, "update", community_uuid, db_session
     )
 
     # Check if user has access via public, UserGroups, or admin status

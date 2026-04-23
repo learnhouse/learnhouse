@@ -31,6 +31,7 @@ from src.db.resource_authors import (
     ResourceAuthorshipEnum,
     ResourceAuthorshipStatusEnum,
 )
+from src.security.auth import resolve_acting_user_id
 from src.services.courses.transfer.storage_utils import (
     upload_file_to_s3,
     is_s3_enabled,
@@ -427,10 +428,11 @@ async def create_course_from_migration(
         db_session.add(course)
         db_session.flush()
 
-        # Create resource author
+        # Create resource author — resolve through helper so API-token
+        # callers record their creator as the author instead of user_id=0.
         author = ResourceAuthor(
             resource_uuid=course_uuid,
-            user_id=current_user.id,
+            user_id=resolve_acting_user_id(current_user),
             authorship=ResourceAuthorshipEnum.CREATOR,
             authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
             creation_date=now,

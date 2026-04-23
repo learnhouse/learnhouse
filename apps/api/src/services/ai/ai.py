@@ -12,7 +12,7 @@ from src.db.courses.courses import Course, CourseRead
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.courses.activities import Activity, ActivityRead
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.services.ai.base import (
     ask_ai,
     get_chat_session_history,
@@ -102,8 +102,10 @@ def ai_start_activity_chat_session(
         )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
     reserve_ai_credit(org.id, db_session)
@@ -245,7 +247,7 @@ def ai_send_activity_chat_message(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, course.org_id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
     reserve_ai_credit(course.org_id, db_session)
@@ -431,8 +433,10 @@ async def ai_start_activity_chat_session_stream(
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)
@@ -474,8 +478,10 @@ async def ai_send_activity_chat_message_stream(
     )
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
     reserve_ai_credit(org.id, db_session)

@@ -17,8 +17,8 @@ from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
-from src.db.users import PublicUser
-from src.security.auth import get_current_user, get_authenticated_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import reserve_ai_credit
 from src.security.org_auth import is_org_member, require_org_admin
 from src.services.ai.base import (
@@ -142,7 +142,7 @@ async def rag_chat_event_generator(
 async def api_rag_chat(
     request: Request,
     chat_request: RAGChatRequest,
-    current_user: PublicUser = Depends(get_authenticated_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -174,7 +174,7 @@ async def api_rag_chat(
             from src.db.user_organizations import UserOrganization
             user_org = db_session.exec(
                 select(UserOrganization).where(
-                    UserOrganization.user_id == current_user.id
+                    UserOrganization.user_id == resolve_acting_user_id(current_user)
                 )
             ).first()
             if not user_org:
@@ -186,7 +186,7 @@ async def api_rag_chat(
     # the resolved org. Without this check, an attacker in org A can drain
     # org B's AI credits or run RAG against org B's indexed content by
     # supplying a course_uuid or org_slug from org B.
-    if not is_org_member(current_user.id, org_id, db_session):
+    if not is_org_member(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
@@ -212,8 +212,10 @@ async def api_rag_chat(
             raise HTTPException(status_code=403, detail="Copilot is disabled for this organization")
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve API tokens to creator so rate-limit buckets per creator, not 0.
+    chat_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org_id)
+    enforce_ai_rate_limit(chat_acting_user_id, org_id)
 
     # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
     reserve_ai_credit(org_id, db_session, amount=2)
@@ -240,7 +242,7 @@ async def api_rag_chat(
             sources,
             chat_request.message,  # context_text for follow-ups
             "gemini-2.5-flash",
-            user_id=current_user.id,
+            user_id=chat_acting_user_id,
             course_uuid=chat_request.course_uuid,
             is_new_session=is_new_session,
             mode=chat_request.mode,
@@ -270,7 +272,7 @@ async def api_rag_chat(
 async def api_rag_index(
     request: Request,
     index_request: RAGIndexRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -285,7 +287,7 @@ async def api_rag_index(
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Require admin/maintainer access
-    require_org_admin(current_user.id, course.org_id, db_session)
+    require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
 
     # Run indexing
     chunks_indexed = await embed_course_content(
@@ -315,7 +317,7 @@ async def api_rag_index(
     },
 )
 async def api_rag_sessions(
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
     org_slug: Optional[str] = None,
 ):
@@ -327,7 +329,7 @@ async def api_rag_sessions(
         ).first()
         if org:
             org_id = org.id
-    sessions = get_user_chat_sessions(current_user.id, org_id=org_id)
+    sessions = get_user_chat_sessions(resolve_acting_user_id(current_user), org_id=org_id)
     return {"sessions": sessions}
 
 
@@ -343,10 +345,10 @@ async def api_rag_sessions(
 )
 async def api_rag_session_messages(
     aichat_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
 ):
     """Load message history for a specific chat session."""
-    messages = get_chat_messages(aichat_uuid, current_user.id)
+    messages = get_chat_messages(aichat_uuid, resolve_acting_user_id(current_user))
     if messages is None:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"messages": messages}
@@ -364,10 +366,10 @@ async def api_rag_session_messages(
 )
 async def api_rag_session_delete(
     aichat_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
 ):
     """Delete a chat session."""
-    deleted = delete_chat_session(aichat_uuid, current_user.id)
+    deleted = delete_chat_session(aichat_uuid, resolve_acting_user_id(current_user))
     if not deleted:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"status": "deleted"}
@@ -391,11 +393,11 @@ class RAGSessionUpdateRequest(BaseModel):
 async def api_rag_session_update(
     aichat_uuid: str,
     body: RAGSessionUpdateRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
 ):
     """Update session title and/or favorite status."""
     updated = update_chat_session_meta(
-        aichat_uuid, current_user.id,
+        aichat_uuid, resolve_acting_user_id(current_user),
         title=body.title,
         favorite=body.favorite,
     )

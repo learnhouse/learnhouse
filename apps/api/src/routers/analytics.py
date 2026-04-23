@@ -9,13 +9,13 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser, AnonymousUser, User
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.db.trail_runs import TrailRun
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.superadmin import is_user_superadmin
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -306,7 +306,7 @@ def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
     },
 )
 async def analytics_status(
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -332,13 +332,13 @@ async def analytics_status(
 async def ingest_frontend_event(
     body: FrontendEvent,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, body.org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), body.org_id, db_session)
 
     if body.event_name not in ALLOWED_FRONTEND_EVENTS:
         raise HTTPException(status_code=400, detail="Invalid event name")
@@ -369,7 +369,7 @@ async def ingest_frontend_event(
     await track(
         event_name=body.event_name,
         org_id=body.org_id,
-        user_id=current_user.id,
+        user_id=resolve_acting_user_id(current_user),
         session_id=body.session_id,
         properties=properties,
         source="frontend",
@@ -399,15 +399,15 @@ async def query_dashboard_detail(
     query_name: str,
     org_id: int,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     if query_name not in DETAIL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown detail query")
@@ -468,16 +468,16 @@ async def query_dashboard(
     query_name: str,
     org_id: int,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Admin check
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     if query_name not in ALL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown query")
@@ -522,15 +522,15 @@ async def query_dashboard_db(
     query_name: str,
     org_id: int,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     DB_QUERIES = {"grade_distribution"}
 
@@ -640,15 +640,15 @@ async def query_course_dashboard_detail(
     org_id: int,
     course_uuid: str,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Pro plan required for all course analytics
     current_plan = get_org_plan(org_id, db_session)
@@ -744,15 +744,15 @@ async def query_course_dashboard(
     org_id: int,
     course_uuid: str,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Pro plan required for all course analytics
     current_plan = get_org_plan(org_id, db_session)
@@ -799,15 +799,15 @@ async def query_course_dashboard(
 async def export_analytics(
     org_id: int,
     request: Request,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(current_user.id, org_id, db_session)
+    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Parse params
     fmt = request.query_params.get("format", "json")
@@ -884,13 +884,13 @@ async def export_analytics(
 )
 async def get_plan_info(
     org_id: int,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(current_user.id, org_id, db_session)
+    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
     current_plan = get_org_plan(org_id, db_session)
     tier = "advanced" if plan_meets_requirement(current_plan, "pro") else "core"
