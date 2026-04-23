@@ -739,6 +739,19 @@ async def api_admin_get_user_by_email(
 ) -> UserRead:
     token_user = _require_api_token(current_user)
     _resolve_org_slug(org_slug, token_user, db_session)
+
+    # Throttle per-token: 200/404 distinguishes "in org" vs "not in org",
+    # which is useful to integrators but also a bulk-enumeration oracle if
+    # a token is leaked.
+    from src.services.security.rate_limiting import check_admin_user_lookup_rate_limit
+    is_allowed, retry_after = check_admin_user_lookup_rate_limit(token_user.id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many user lookups. Please slow down.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
     return await get_user_by_email(token_user, email, db_session)
 
 

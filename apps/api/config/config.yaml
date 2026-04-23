@@ -5,7 +5,8 @@ contact_email: hi@learnhouse.app
 # This config is optimized for local development. You can change the values according to your needs.
 
 general:
-  development_mode: true
+  # SECURITY: default to production-safe; enable with LEARNHOUSE_DEVELOPMENT_MODE=true for local dev.
+  development_mode: false
 
 security:
   # SECURITY: Set via LEARNHOUSE_AUTH_JWT_SECRET_KEY env var (required, min 32 chars).

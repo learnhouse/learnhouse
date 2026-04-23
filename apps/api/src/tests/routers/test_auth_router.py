@@ -179,16 +179,41 @@ class TestAuthHelpers:
 
 
 class TestAuthRouter:
-    async def test_refresh_success(self, client):
+    async def test_refresh_success(self, client, auth_user):
+        """Refresh issues a new access token AND rotates the refresh cookie.
+
+        F-02 / F-05: the handler now looks up the user, enforces the
+        ``password_changed_at`` / logout revocation guards, and marks the
+        refresh token's ``jti`` as consumed. Each mock below corresponds to
+        one of those guards running on a clean happy-path token.
+        """
         with patch(
             "src.routers.auth.check_refresh_rate_limit",
             return_value=(True, None),
         ), patch(
             "src.routers.auth.decode_refresh_token",
-            return_value={"sub": "auth@test.com"},
+            return_value={
+                "sub": auth_user.email,
+                "iat": 1,
+                "exp": 9_999_999_999,
+                "jti": "legit-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user",
+            return_value=False,
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used",
+            return_value=True,  # first use of this jti
         ), patch(
             "src.routers.auth.create_access_token",
             return_value="new-access-token",
+        ), patch(
+            "src.routers.auth.create_refresh_token",
+            return_value="new-refresh-token",
         ), patch(
             "src.routers.auth.get_token_expiry_ms",
             return_value=12345,

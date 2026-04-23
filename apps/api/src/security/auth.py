@@ -148,16 +148,23 @@ def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
     """
     Create a JWT refresh token.
 
-    SECURITY: always sets ``exp`` and ``iat`` claims. ``iat`` is required for
-    logout/password-change revocation to apply to refresh tokens.
+    Always sets ``exp``, ``iat`` and a random ``jti``. ``iat`` is required
+    for logout/password-change revocation to apply to refresh tokens;
+    ``jti`` enables one-time-use rotation with replay detection.
     """
+    import secrets as _secrets
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:
         expire = now + JWT_REFRESH_TOKEN_EXPIRES
-    to_encode.update({"exp": expire, "iat": now, "type": "refresh"})
+    to_encode.update({
+        "exp": expire,
+        "iat": now,
+        "type": "refresh",
+        "jti": _secrets.token_urlsafe(16),
+    })
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -253,6 +260,34 @@ def decode_refresh_token(token: str) -> Optional[dict]:
         return payload
     except PyJWTError:
         return None
+
+
+def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
+    """
+    Atomically record a refresh token jti as consumed. Returns True on the
+    first call for a given jti and False for every subsequent replay.
+
+    A replayed jti is a strong theft signal; callers should revoke all of
+    the user's sessions.
+    """
+    r = _get_revocation_redis_client()
+    if r is None:
+        # Redis unavailable — fail open for usability (tokens still honour exp
+        # and password_changed_at). This is the same defense-in-depth posture
+        # as the logout blocklist.
+        return True
+    try:
+        # NX + TTL = set-if-not-exists, auto-cleanup after the full refresh
+        # window so keys don't accumulate forever.
+        ok = r.set(
+            f"refresh_used:{user_id}:{jti}",
+            "1",
+            nx=True,
+            ex=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
+        )
+        return bool(ok)
+    except Exception:
+        return True
 
 
 async def _verify_api_token_org_boundary(

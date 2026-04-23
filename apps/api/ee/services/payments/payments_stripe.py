@@ -346,19 +346,33 @@ class StripePaymentProvider(IPaymentProvider):
         except stripe.SignatureVerificationError:
             raise HTTPException(status_code=400, detail="Invalid signature")
 
-        # Idempotency guard: skip events already processed (e.g. Stripe retries)
-        # Redis is best-effort — if unavailable we process the event anyway.
-        _r = None
+        # Idempotency guard must be a single atomic claim — a separate
+        # ``exists`` + ``set`` pair would let two concurrent retries both
+        # pass the check and double-process the event. Enrollment activation
+        # and usergroup sync are not idempotent at the DB layer.
+        #
+        # On Redis outage we fail closed (503). Stripe retries deliveries
+        # for up to 3 days, so a delayed retry is strictly better than
+        # double-processing. TTL is well beyond the retry window.
         _redis_key = f"stripe_evt:{event.id}"
+        _STRIPE_EVENT_TTL_SECONDS = 14 * 24 * 60 * 60
         try:
             from src.security.features_utils.usage import _get_redis_client
             _r = _get_redis_client()
-            if _r.exists(_redis_key):
+            claimed = _r.set(_redis_key, "1", nx=True, ex=_STRIPE_EVENT_TTL_SECONDS)
+            if not claimed:
                 logger.info("Stripe event %s already processed, skipping", event.id)
                 return {"status": "success", "message": "Already processed"}
         except Exception as _redis_err:
-            logger.warning("Redis unavailable for Stripe idempotency check, processing event anyway: %s", _redis_err)
-            _r = None
+            logger.error(
+                "Redis unavailable for Stripe idempotency claim; rejecting webhook "
+                "so Stripe retries: %s",
+                _redis_err,
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="Idempotency store unavailable; please retry",
+            )
 
         try:
             event_type = event.type
@@ -483,12 +497,6 @@ class StripePaymentProvider(IPaymentProvider):
                 logger.warning(f"Unhandled Stripe event type: {event_type}")
                 return {"status": "ignored", "message": f"Unhandled event type: {event_type}"}
 
-            # Mark event as processed; 72-hour TTL covers Stripe's retry window
-            if _r is not None:
-                try:
-                    _r.setex(_redis_key, 72 * 3600, "1")
-                except Exception as _redis_err:
-                    logger.warning("Redis unavailable when marking Stripe event %s as processed: %s", event.id, _redis_err)
             return {"status": "success"}
 
         except Exception as e:

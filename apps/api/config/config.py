@@ -220,6 +220,45 @@ def get_learnhouse_config() -> LearnHouseConfig:
     cookies_domain = env_cookie_domain or yaml_config.get("hosting_config", {}).get(
         "cookies_config", {}
     ).get("domain")
+
+    # Cookie-domain guard: a broad parent like ".example.com" means every
+    # subdomain can read the session cookie. Refuse single-label public
+    # parents outright (e.g. ".com"); warn on any other broad parent unless
+    # the operator opts in with LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD=true.
+    # ".localhost" is exempt — it's an RFC 6761 reserved TLD, not routable.
+    _eff_dev_mode = (
+        env_development_mode
+        if env_development_mode is not None
+        else yaml_config.get("general", {}).get("development_mode")
+    )
+    _TESTING = os.environ.get("TESTING", "").lower() in ("true", "1", "yes")
+    if (
+        not _eff_dev_mode
+        and not _TESTING
+        and cookies_domain
+        and cookies_domain.startswith(".")
+        and cookies_domain.lower() != ".localhost"
+    ):
+        tenant_eTLD = cookies_domain.lstrip(".")
+        allow_broad = os.environ.get(
+            "LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD", ""
+        ).lower() in ("true", "1", "yes")
+        if "." not in tenant_eTLD:
+            raise ValueError(
+                f"SECURITY ERROR: LEARNHOUSE_COOKIE_DOMAIN={cookies_domain!r} is "
+                "too broad (single-label parent). Use a specific domain like "
+                "'.app.example.com'."
+            )
+        if not allow_broad:
+            import logging as _cfg_log
+            _cfg_log.getLogger(__name__).warning(
+                "LEARNHOUSE_COOKIE_DOMAIN is set to the broad parent %r. "
+                "Every subdomain will share the session cookie. If that is "
+                "intentional, set LEARNHOUSE_COOKIE_DOMAIN_ALLOW_BROAD=true to "
+                "silence this warning.",
+                cookies_domain,
+            )
+
     cookie_config = CookieConfig(domain=cookies_domain)
 
     frontend_domain = env_frontend_domain or yaml_config.get("hosting_config", {}).get(
@@ -388,6 +427,23 @@ def get_learnhouse_config() -> LearnHouseConfig:
         gemini_api_key=gemini_api_key,
         is_ai_enabled=bool(is_ai_enabled),
     )
+
+    # Surface missing internal-service keys at boot rather than at first
+    # request — the per-endpoint handlers fail closed either way, but a
+    # 403 from a cron job is harder to diagnose than a startup log line.
+    if not development_mode:
+        import logging as _cfg_log
+        _log = _cfg_log.getLogger(__name__)
+        if not os.environ.get("CLOUD_INTERNAL_KEY"):
+            _log.warning(
+                "CLOUD_INTERNAL_KEY is not set. Internal endpoints "
+                "(custom domain sync, cloud_internal) will reject every request."
+            )
+        if not os.environ.get("LEARNHOUSE_PLATFORM_API_KEY"):
+            _log.warning(
+                "LEARNHOUSE_PLATFORM_API_KEY is not set. Platform endpoints "
+                "(packs internal_router) will reject every request."
+            )
 
     # Create LearnHouseConfig object
     config = LearnHouseConfig(

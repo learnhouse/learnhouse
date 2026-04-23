@@ -181,7 +181,12 @@ def require_plan_for_usergroups(required_plan: PlanLevel, feature_name: str):
                     pass
 
         if org_id is None:
-            # Can't determine org, allow the request (other checks will handle auth)
+            # Fall through: these specialised wrappers are used on routers
+            # whose routes sometimes carry the discriminator in the request
+            # body (e.g. playground /start, /iterate) or via uuids that
+            # reference org-scoped children (discussions, comments). The
+            # handler's own RBAC still enforces tenant isolation; the plan
+            # cap is a soft ceiling here, not the last line of defence.
             return True
 
         current_plan = get_org_plan(org_id, db_session)
@@ -278,7 +283,12 @@ def require_plan_for_certifications(required_plan: PlanLevel, feature_name: str)
                         org_id = course.org_id
 
         if org_id is None:
-            # Can't determine org, allow the request (other checks will handle auth)
+            # Fall through: these specialised wrappers are used on routers
+            # whose routes sometimes carry the discriminator in the request
+            # body (e.g. playground /start, /iterate) or via uuids that
+            # reference org-scoped children (discussions, comments). The
+            # handler's own RBAC still enforces tenant isolation; the plan
+            # cap is a soft ceiling here, not the last line of defence.
             return True
 
         current_plan = get_org_plan(org_id, db_session)
@@ -342,7 +352,12 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
                     org_id = board.org_id
 
         if org_id is None:
-            # Can't determine org, allow the request (other checks will handle auth)
+            # Fall through: these specialised wrappers are used on routers
+            # whose routes sometimes carry the discriminator in the request
+            # body (e.g. playground /start, /iterate) or via uuids that
+            # reference org-scoped children (discussions, comments). The
+            # handler's own RBAC still enforces tenant isolation; the plan
+            # cap is a soft ceiling here, not the last line of defence.
             return True
 
         current_plan = get_org_plan(org_id, db_session)
@@ -406,7 +421,12 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
                     org_id = playground.org_id
 
         if org_id is None:
-            # Can't determine org, allow the request (other checks will handle auth)
+            # Fall through: these specialised wrappers are used on routers
+            # whose routes sometimes carry the discriminator in the request
+            # body (e.g. playground /start, /iterate) or via uuids that
+            # reference org-scoped children (discussions, comments). The
+            # handler's own RBAC still enforces tenant isolation; the plan
+            # cap is a soft ceiling here, not the last line of defence.
             return True
 
         current_plan = get_org_plan(org_id, db_session)
@@ -480,7 +500,12 @@ def require_plan_for_community(required_plan: PlanLevel, feature_name: str):
                     org_id = community.org_id
 
         if org_id is None:
-            # Can't determine org, allow the request (other checks will handle auth)
+            # Fall through: these specialised wrappers are used on routers
+            # whose routes sometimes carry the discriminator in the request
+            # body (e.g. playground /start, /iterate) or via uuids that
+            # reference org-scoped children (discussions, comments). The
+            # handler's own RBAC still enforces tenant isolation; the plan
+            # cap is a soft ceiling here, not the last line of defence.
             return True
 
         current_plan = get_org_plan(org_id, db_session)

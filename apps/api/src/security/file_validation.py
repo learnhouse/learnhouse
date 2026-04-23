@@ -105,42 +105,48 @@ def validate_zip_content(content: bytes) -> bool:
     return True
 
 
-# File type configurations (no size limits)
+# Per-type size caps. Storage-fill DoS is the main risk; caps here are the
+# last line of defence in addition to any edge/nginx client_max_body_size.
+# Limits match or exceed the frontend's own client-side caps (including the
+# course migration dropzone's 5 GB-per-file ceiling) so no legitimate upload
+# flow hits a 413 it didn't already hit client-side.
+_GB = 1024 * 1024 * 1024
+_MB = 1024 * 1024
 FILE_TYPES = {
     'image': {
         'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
         'mime_types': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-        'max_size': None,  # No limit
+        'max_size': 15 * _MB,
         'validator': validate_image_content
     },
     'video': {
         'extensions': ['.mp4', '.webm'],
         'mime_types': ['video/mp4', 'video/webm'],
-        'max_size': None,  # No limit
+        'max_size': 5 * _GB,
         'validator': validate_video_content
     },
     'document': {
         'extensions': ['.pdf'],
         'mime_types': ['application/pdf'],
-        'max_size': None,  # No limit
+        'max_size': 500 * _MB,
         'validator': lambda content: content.startswith(b'%PDF-')
     },
     'audio': {
         'extensions': ['.mp3', '.wav', '.ogg', '.m4a'],
         'mime_types': ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4'],
-        'max_size': None,  # No limit
+        'max_size': 1 * _GB,
         'validator': validate_audio_content
     },
     'scorm': {
         'extensions': ['.zip'],
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
-        'max_size': None,  # No limit
+        'max_size': 5 * _GB,  # bounded further by the zip-bomb guard
         'validator': validate_zip_content
     },
     'database': {
         'extensions': ['.sqlite', '.db', '.sqlite3'],
         'mime_types': ['application/vnd.sqlite3', 'application/x-sqlite3', 'application/octet-stream'],
-        'max_size': 50 * 1024 * 1024,  # 50MB limit for database files
+        'max_size': 50 * _MB,
         'validator': lambda content: content[:16].startswith(b'SQLite format 3\x00')
     },
     'office': {
@@ -149,7 +155,7 @@ FILE_TYPES = {
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ],
-        'max_size': None,  # No limit
+        'max_size': 500 * _MB,
         'validator': validate_zip_content  # OOXML formats are ZIP-based
     }
 }

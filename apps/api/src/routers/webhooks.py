@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session
 
 from src.core.events.database import get_db_session
@@ -12,6 +12,7 @@ from src.db.webhooks import (
 )
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
+from src.services.security.rate_limiting import check_webhook_mutation_rate_limit
 from src.services.webhooks.webhooks import (
     create_webhook_endpoint,
     delete_webhook_endpoint,
@@ -23,6 +24,28 @@ from src.services.webhooks.webhooks import (
     update_webhook_endpoint,
 )
 from src.services.webhooks.events import WEBHOOK_EVENTS
+
+
+def _enforce_webhook_rate_limit(org_id: int, action: str) -> None:
+    """Throttle webhook mutations per-org (raises 429 with Retry-After).
+
+    ``detail`` is a plain string so the frontend's generic error handler
+    (``getResponseMetadata`` → ``toast.error(data.detail)``) renders a
+    readable message. Programmatic clients can still use the ``Retry-After``
+    header for backoff.
+    """
+    is_allowed, retry_after = check_webhook_mutation_rate_limit(org_id, action)
+    if not is_allowed:
+        minutes = max(1, retry_after // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Too many webhook {action} requests. "
+                f"Please try again in about {minutes} minute"
+                f"{'s' if minutes != 1 else ''}."
+            ),
+            headers={"Retry-After": str(retry_after)},
+        )
 
 router = APIRouter()
 
@@ -65,6 +88,7 @@ async def api_create_webhook_endpoint(
     The signing secret is only returned once upon creation.
     Store it securely as it cannot be retrieved later.
     """
+    _enforce_webhook_rate_limit(org_id, "create")
     return await create_webhook_endpoint(
         request, db_session, org_id, webhook_object, current_user
     )
@@ -215,6 +239,7 @@ async def api_send_test_event(
     db_session: Session = Depends(get_db_session),
 ) -> dict:
     """Send a test 'ping' event to verify the webhook endpoint is reachable."""
+    _enforce_webhook_rate_limit(org_id, "test")
     return await send_test_event(
         request, db_session, org_id, webhook_uuid, current_user
     )

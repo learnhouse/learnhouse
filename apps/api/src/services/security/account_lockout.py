@@ -1,17 +1,51 @@
 """
-Account lockout service for protecting against brute force attacks.
+Account lockout service.
 
-Locks account after 10 failed login attempts for 5 minutes.
+Locks an account after 10 failed login attempts for 5 minutes — but only
+when the attempts span multiple source IPs. Per-account lockout paired with
+IP-only login rate limiting would otherwise be a DoS amplifier: a single
+attacker rotating IPs could lock any account with 10 requests while staying
+under the per-IP rate cap. Multi-IP gating ensures a single misbehaving
+client (e.g. a stale password in a keychain) can't trigger a lock on its own.
 """
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 from sqlmodel import Session
 from src.db.users import User
 
 
+logger = logging.getLogger(__name__)
+
 # Configuration
 MAX_FAILED_ATTEMPTS = 10
 LOCKOUT_DURATION_MINUTES = 5
+# Rolling window over which distinct IPs are counted for lockout eligibility.
+FAILED_IP_WINDOW_SECONDS = 30 * 60
+
+
+def _record_failed_ip(user_id: int, ip_address: Optional[str]) -> int:
+    """
+    Record a failed-login IP for this user and return the approximate count of
+    distinct IPs that have hit this account in the current window. Uses Redis
+    HyperLogLog so the storage is O(12KB) per account regardless of volume.
+
+    Returns 1 (i.e. "only one IP observed") if Redis is unavailable or the
+    caller did not supply an IP, so behaviour matches the historical
+    per-account counter in degraded environments.
+    """
+    if not ip_address:
+        return 1
+    try:
+        from src.services.security.rate_limiting import get_redis_connection
+        r = get_redis_connection()
+        key = f"failed_login_ips:{user_id}"
+        r.pfadd(key, ip_address)
+        r.expire(key, FAILED_IP_WINDOW_SECONDS)
+        return int(r.pfcount(key) or 1)
+    except Exception:
+        logger.debug("Redis unavailable for failed-login IP tracking", exc_info=True)
+        return 1
 
 
 def check_account_locked(user: User) -> Tuple[bool, Optional[int]]:
@@ -48,26 +82,44 @@ def check_account_locked(user: User) -> Tuple[bool, Optional[int]]:
         return False, None
 
 
-def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional[int]]:
+def record_failed_login(
+    user: User,
+    db_session: Session,
+    ip_address: Optional[str] = None,
+) -> Tuple[bool, Optional[int]]:
     """
-    Record a failed login attempt and lock account if threshold is reached.
+    Record a failed login attempt and lock the account if the threshold is
+    reached AND the attempts originated from more than one source IP.
 
-    SECURITY: Uses a single atomic SQL UPDATE to prevent race conditions.
-    Without atomic updates, concurrent login attempts could bypass the lockout
-    by both reading the same count before either increments it.
+    Uses a single atomic SQL UPDATE so concurrent login attempts can't
+    bypass the lockout by both reading the counter before either increments.
+
+    The lockout only engages when ``distinct_ips >= 2`` in the tracking
+    window — see the module docstring for why single-IP lockouts would be
+    a DoS amplifier. The failure counter still increments for single-IP
+    attacks so the audit trail is preserved, but ``locked_until`` stays
+    unset; the existing per-IP login rate limiter handles that case.
 
     Args:
         user: User who failed login
         db_session: Database session
+        ip_address: Source IP of the failed attempt. Optional for backwards
+            compatibility; callers should supply it whenever available.
 
     Returns:
         Tuple of (is_now_locked, lockout_duration_seconds)
     """
     from sqlalchemy import update, case, func
 
-    # Single atomic statement: increment the counter AND conditionally set
-    # locked_until when the threshold is reached — no separate read or second
-    # UPDATE required.
+    distinct_ips = _record_failed_ip(user.id, ip_address)
+    MIN_DISTINCT_IPS_FOR_LOCK = 2
+
+    lock_trigger = (
+        (User.failed_login_attempts + 1 >= MAX_FAILED_ATTEMPTS)
+        if distinct_ips >= MIN_DISTINCT_IPS_FOR_LOCK
+        else False
+    )
+
     stmt = (
         update(User)
         .where(User.id == user.id)
@@ -75,7 +127,7 @@ def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional
             failed_login_attempts=User.failed_login_attempts + 1,
             locked_until=case(
                 (
-                    User.failed_login_attempts + 1 >= MAX_FAILED_ATTEMPTS,
+                    lock_trigger,
                     func.now() + timedelta(minutes=LOCKOUT_DURATION_MINUTES),
                 ),
                 else_=User.locked_until,
