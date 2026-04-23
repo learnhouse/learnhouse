@@ -12,8 +12,11 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useTranslation } from 'react-i18next'
+import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
+const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
+const withUtm = (url?: string | null) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
 function ImageBlockComponent(props: any) {
   const { t } = useTranslation()
@@ -37,6 +40,12 @@ function ImageBlockComponent(props: any) {
   })
   const [alignment, setAlignment] = React.useState(props.node.attrs.alignment || 'center')
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [isUnsplashOpen, setIsUnsplashOpen] = React.useState(false)
+
+  const unsplashUrl: string | null = props.node.attrs.unsplash_url || null
+  const unsplashPhotographerName: string | null = props.node.attrs.unsplash_photographer_name || null
+  const unsplashPhotographerUrl: string | null = props.node.attrs.unsplash_photographer_url || null
+  const unsplashPhotoUrl: string | null = props.node.attrs.unsplash_photo_url || null
 
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -133,13 +142,50 @@ function ImageBlockComponent(props: any) {
     });
   };
 
-  const imageUrl = blockObject ? getActivityBlockMediaDirectory(
+  const uploadedImageUrl = blockObject ? getActivityBlockMediaDirectory(
     org?.org_uuid,
     course?.courseStructure?.course_uuid,
     blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
     blockObject.block_uuid,
     fileId || '',
     'imageBlock'
+  ) : null;
+
+  const imageUrl = unsplashUrl || uploadedImageUrl;
+
+  const handleUnsplashSelect = (url: string, meta?: UnsplashPhotoMeta) => {
+    props.updateAttributes({
+      unsplash_url: url,
+      unsplash_photographer_name: meta?.photographer_name || '',
+      unsplash_photographer_url: meta?.photographer_url || '',
+      unsplash_photo_url: meta?.photo_url || '',
+      size: imageSize,
+      alignment: alignment,
+    })
+    setIsUnsplashOpen(false)
+  }
+
+  const unsplashCredit = unsplashUrl && unsplashPhotographerName ? (
+    <p className="mt-2 text-[11px] text-neutral-500">
+      Photo by{' '}
+      <a
+        href={withUtm(unsplashPhotographerUrl) || withUtm(unsplashPhotoUrl)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-neutral-700"
+      >
+        {unsplashPhotographerName}
+      </a>
+      {' '}on{' '}
+      <a
+        href={`https://unsplash.com/${UNSPLASH_UTM}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline hover:text-neutral-700"
+      >
+        Unsplash
+      </a>
+    </p>
   ) : null;
 
   useEffect(() => {}, [course, org])
@@ -155,18 +201,29 @@ function ImageBlockComponent(props: any) {
     }
   };
 
+  const getItemsAlignmentClass = () => {
+    switch (alignment) {
+      case 'left':
+        return 'items-start';
+      case 'right':
+        return 'items-end';
+      default:
+        return 'items-center';
+    }
+  };
+
   // Activity view mode - show only the image without block wrapper
-  if (!isEditable && blockObject && imageUrl) {
+  if (!isEditable && imageUrl) {
+    const viewFrameStyle: React.CSSProperties = { width: imageSize.width, maxWidth: '100%' };
     return (
       <>
         <NodeViewWrapper className="block-image w-full">
-          <div className={`w-full flex ${getAlignmentClass()}`}>
-            <div className="relative group">
+          <div className={`w-full flex flex-col ${getItemsAlignmentClass()}`}>
+            <div className="relative group" style={viewFrameStyle}>
               <img
                 src={imageUrl}
                 alt=""
-                className="rounded-lg max-w-full h-auto"
-                style={{ width: imageSize.width, maxWidth: '100%' }}
+                className="rounded-lg max-w-full h-auto w-full"
               />
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -176,15 +233,22 @@ function ImageBlockComponent(props: any) {
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
-                <button
-                  onClick={handleDownload}
-                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title={t('editor.blocks.image_block.download_image')}
-                >
-                  <Download className="w-4 h-4 text-white" />
-                </button>
+                {blockObject && (
+                  <button
+                    onClick={handleDownload}
+                    className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                    title={t('editor.blocks.image_block.download_image')}
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                  </button>
+                )}
               </div>
             </div>
+            {unsplashCredit && (
+              <div style={viewFrameStyle}>
+                {unsplashCredit}
+              </div>
+            )}
           </div>
         </NodeViewWrapper>
 
@@ -195,12 +259,13 @@ function ImageBlockComponent(props: any) {
           minWidth="lg"
           minHeight="lg"
           dialogContent={
-            <div className="w-full flex items-center justify-center">
+            <div className="w-full flex flex-col items-center justify-center">
               <img
                 src={imageUrl}
                 alt=""
                 className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
               />
+              {unsplashCredit}
             </div>
           }
         />
@@ -209,7 +274,7 @@ function ImageBlockComponent(props: any) {
   }
 
   // Activity view mode - no image available
-  if (!isEditable && !blockObject) {
+  if (!isEditable && !imageUrl) {
     return null
   }
 
@@ -226,43 +291,65 @@ function ImageBlockComponent(props: any) {
           </div>
 
           {/* Upload Zone - shown when no image */}
-          {!blockObject && isEditable && (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={`
-                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-                ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
-              `}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleImageChange}
-                accept={SUPPORTED_FILES}
-                className="hidden"
-              />
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                  <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+          {!blockObject && !unsplashUrl && isEditable && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`
+                  border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px]
+                  ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
+                `}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleImageChange}
+                  accept={SUPPORTED_FILES}
+                  className="hidden"
+                />
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-7 h-7 mx-auto text-neutral-400" />
+                    <div>
+                      <p className="text-sm font-medium text-neutral-700">
+                        {t('editor.blocks.image_block.drop_or_browse')}
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        {t('editor.blocks.image_block.supported_formats')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUnsplashOpen(true)}
+                disabled={isLoading}
+                className="border border-neutral-200 rounded-lg text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[160px] p-6 bg-white hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed outline-none"
+              >
+                <div className="space-y-2">
+                  <svg
+                    viewBox="0 0 448 512"
+                    aria-hidden="true"
+                    className="w-7 h-7 mx-auto text-neutral-500 fill-current"
+                  >
+                    <path d="M448,230.17V480H0V230.17H137.6V355.09H310.4V230.17ZM310.4,32H137.6V156.91H310.4Z" />
+                  </svg>
                   <div>
-                    <p className="text-sm font-medium text-neutral-700">
-                      {t('editor.blocks.image_block.drop_or_browse')}
-                    </p>
-                    <p className="text-xs text-neutral-500 mt-1">
-                      {t('editor.blocks.image_block.supported_formats')}
-                    </p>
+                    <p className="text-sm font-medium text-neutral-700">Browse Unsplash</p>
+                    <p className="text-xs text-neutral-500 mt-1">Free high-quality photos</p>
                   </div>
                 </div>
-              )}
+              </button>
             </div>
           )}
 
@@ -275,8 +362,8 @@ function ImageBlockComponent(props: any) {
           )}
 
           {/* Image display - edit mode */}
-          {blockObject && isEditable && (
-            <div className={`w-full flex ${getAlignmentClass()}`}>
+          {imageUrl && isEditable && (
+            <div className={`w-full flex flex-col ${getItemsAlignmentClass()}`}>
               <Resizable
                 defaultSize={{ width: imageSize.width, height: '100%' }}
                 handleStyles={{
@@ -353,13 +440,18 @@ function ImageBlockComponent(props: any) {
                   </div>
                 </div>
               </Resizable>
+              {unsplashCredit && (
+                <div style={{ width: imageSize.width, maxWidth: '100%' }}>
+                  {unsplashCredit}
+                </div>
+              )}
             </div>
           )}
 
         </div>
       </NodeViewWrapper>
 
-      {blockObject && imageUrl && (
+      {imageUrl && (
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
@@ -367,14 +459,23 @@ function ImageBlockComponent(props: any) {
           minWidth="lg"
           minHeight="lg"
           dialogContent={
-            <div className="w-full flex items-center justify-center">
+            <div className="w-full flex flex-col items-center justify-center">
               <img
                 src={imageUrl}
                 alt=""
                 className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
               />
+              {unsplashCredit}
             </div>
           }
+        />
+      )}
+
+      {isUnsplashOpen && (
+        <UnsplashImagePicker
+          isOpen={isUnsplashOpen}
+          onSelect={handleUnsplashSelect}
+          onClose={() => setIsUnsplashOpen(false)}
         />
       )}
     </>

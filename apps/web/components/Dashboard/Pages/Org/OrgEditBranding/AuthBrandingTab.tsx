@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
-import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
 
@@ -44,6 +44,9 @@ export default function AuthBrandingTab() {
   const [backgroundType, setBackgroundType] = useState<BackgroundType>(existingConfig.background_type || 'gradient')
   const [backgroundImage, setBackgroundImage] = useState<string>(existingConfig.background_image || '')
   const [textColor, setTextColor] = useState<TextColor>(existingConfig.text_color || 'light')
+  const [unsplashPhotographerName, setUnsplashPhotographerName] = useState<string>(existingConfig.unsplash_photographer_name || '')
+  const [unsplashPhotographerUrl, setUnsplashPhotographerUrl] = useState<string>(existingConfig.unsplash_photographer_url || '')
+  const [unsplashPhotoUrl, setUnsplashPhotoUrl] = useState<string>(existingConfig.unsplash_photo_url || '')
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
@@ -56,6 +59,9 @@ export default function AuthBrandingTab() {
       setBackgroundType(config.background_type || 'gradient')
       setBackgroundImage(config.background_image || '')
       setTextColor(config.text_color || 'light')
+      setUnsplashPhotographerName(config.unsplash_photographer_name || '')
+      setUnsplashPhotographerUrl(config.unsplash_photographer_url || '')
+      setUnsplashPhotoUrl(config.unsplash_photo_url || '')
     }
   }, [org])
 
@@ -68,6 +74,9 @@ export default function AuthBrandingTab() {
         background_type: backgroundType,
         background_image: backgroundImage,
         text_color: textColor,
+        unsplash_photographer_name: backgroundType === 'unsplash' ? unsplashPhotographerName : '',
+        unsplash_photographer_url: backgroundType === 'unsplash' ? unsplashPhotographerUrl : '',
+        unsplash_photo_url: backgroundType === 'unsplash' ? unsplashPhotoUrl : '',
       }
       await updateOrgAuthBrandingConfig(org.id, config, access_token)
       await revalidateTags(['organizations'], org.slug)
@@ -101,9 +110,12 @@ export default function AuthBrandingTab() {
     }
   }
 
-  const handleUnsplashSelect = (imageUrl: string) => {
+  const handleUnsplashSelect = (imageUrl: string, meta?: UnsplashPhotoMeta) => {
     setBackgroundImage(imageUrl)
     setBackgroundType('unsplash')
+    setUnsplashPhotographerName(meta?.photographer_name || '')
+    setUnsplashPhotographerUrl(meta?.photographer_url || '')
+    setUnsplashPhotoUrl(meta?.photo_url || '')
     setLocalBackgroundPreview(null)
     setShowUnsplashPicker(false)
   }

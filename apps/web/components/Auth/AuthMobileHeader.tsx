@@ -15,7 +15,12 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
   const {
     background_type = 'gradient',
     background_image = '',
+    unsplash_photographer_name = '',
+    unsplash_photographer_url = '',
+    unsplash_photo_url = '',
   } = authBranding
+  const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
+  const withUtm = (url: string) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
   const getBackgroundStyle = (): React.CSSProperties => {
     if (background_type === 'gradient' || !background_image) {
@@ -77,6 +82,30 @@ export default function AuthMobileHeader({ org }: AuthMobileHeaderProps) {
       <span className="relative z-10 font-semibold text-white text-lg truncate">
         {org?.name}
       </span>
+
+      {/* Unsplash attribution (required by Unsplash API guidelines) */}
+      {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
+        <span className="relative z-10 ml-auto text-[10px] leading-tight text-white/70 truncate max-w-[45%] text-right">
+          Photo by{' '}
+          <a
+            href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            {unsplash_photographer_name}
+          </a>
+          {' '}on{' '}
+          <a
+            href={`https://unsplash.com/${UNSPLASH_UTM}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Unsplash
+          </a>
+        </span>
+      )}
     </div>
   )
 }
