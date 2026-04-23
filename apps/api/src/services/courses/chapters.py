@@ -3,7 +3,8 @@ from typing import List
 from uuid import uuid4
 from sqlalchemy import func
 from sqlmodel import Session, select
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.security.auth import resolve_acting_user_id
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.activities import Activity, ActivityRead
 from src.db.courses.chapter_activities import ChapterActivity
@@ -365,7 +366,7 @@ async def get_course_chapters(
 def _apply_locks_to_chapters(
     chapters: List[ChapterRead],
     course: "Course | None",
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> None:
     """Compute is_locked for each chapter + activity and strip content for locked items.
@@ -381,7 +382,8 @@ def _apply_locks_to_chapters(
         return
 
     is_anon = isinstance(current_user, AnonymousUser)
-    admin = False if is_anon else is_org_admin(current_user.id, course.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    admin = False if is_anon else is_org_admin(acting_user_id, course.org_id, db_session)
 
     # Admins see everything — no stripping.
     if admin:
@@ -400,7 +402,7 @@ def _apply_locks_to_chapters(
     accessible: set[str] = set()
     if not is_anon:
         accessible = batch_accessible_restricted_uuids(
-            current_user.id, check_uuids, db_session
+            acting_user_id, check_uuids, db_session
         )
 
     # Course-level usergroup membership unlocks everything below it.

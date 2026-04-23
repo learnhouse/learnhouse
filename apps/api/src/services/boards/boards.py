@@ -15,7 +15,8 @@ from src.db.boards import (
     BoardMemberRole,
 )
 from src.db.organizations import Organization
-from src.db.users import PublicUser, AnonymousUser, User
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
+from src.security.auth import resolve_acting_user_id
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.rbac import AccessAction, check_resource_access
 from src.security.org_auth import require_org_membership
@@ -93,12 +94,12 @@ async def get_board(
 async def get_boards_by_org(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> List[BoardRead]:
     # Require org membership before listing boards — prevents unauthenticated
     # and cross-org enumeration of boards.
-    require_org_membership(current_user.id, org_id, db_session)
+    require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
     statement = (
         select(Board)

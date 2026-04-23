@@ -13,8 +13,8 @@ from sqlmodel import Session, select
 
 from src.core.events.database import get_db_session
 from src.db.organizations import Organization
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
     add_ai_credits,
     get_ai_credits_summary,
@@ -90,7 +90,7 @@ async def verify_user_is_org_member(
 )
 async def get_org_ai_credits(
     org_id: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> AICreditsSummary:
     """
@@ -107,7 +107,7 @@ async def get_org_ai_credits(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_is_org_member(current_user.id, org_id, db_session):
+    if not await verify_user_is_org_member(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
             status_code=403,
             detail="User is not a member of this organization",
@@ -139,7 +139,7 @@ async def get_org_ai_credits(
 async def add_org_ai_credits(
     org_id: int,
     request: AddCreditsRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> AddCreditsResponse:
     """
@@ -162,7 +162,7 @@ async def add_org_ai_credits(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is an admin of the organization
-    if not await verify_user_is_org_admin(current_user.id, org_id, db_session):
+    if not await verify_user_is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
             status_code=403,
             detail="Only organization admins can add AI credits",
@@ -201,7 +201,7 @@ async def add_org_ai_credits(
 )
 async def reset_org_ai_credits(
     org_id: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> ResetCreditsResponse:
     """
@@ -224,7 +224,7 @@ async def reset_org_ai_credits(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is an admin of the organization
-    if not await verify_user_is_org_admin(current_user.id, org_id, db_session):
+    if not await verify_user_is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(
             status_code=403,
             detail="Only organization admins can reset AI credits",

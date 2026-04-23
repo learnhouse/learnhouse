@@ -9,8 +9,8 @@ from src.db.organizations import Organization
 from src.db.playgrounds import Playground
 from src.db.courses.courses import Course
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.usage import reserve_ai_credit
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -96,7 +96,7 @@ async def _get_course_context(
 async def start_playground_session(
     request: Request,
     session_request: StartPlaygroundSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Start a new Playground AI generation session with streaming response."""
@@ -113,10 +113,11 @@ async def start_playground_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user can edit (must be creator or have update rights)
+    generate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = _get_user_rights(generate_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == generate_acting_user_id
     can_edit = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )
@@ -125,7 +126,7 @@ async def start_playground_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(generate_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
@@ -177,7 +178,7 @@ async def start_playground_session(
 async def iterate_playground_session(
     request: Request,
     message_request: SendPlaygroundMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Continue an existing Playground session with a new message."""
@@ -207,10 +208,11 @@ async def iterate_playground_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user can edit
+    iterate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
-    rights = _get_user_rights(current_user.id, playground.org_id, db_session)
+    rights = _get_user_rights(iterate_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
-    is_owner = playground.created_by == current_user.id
+    is_owner = playground.created_by == iterate_acting_user_id
     can_edit = pg_rights.get("action_update", False) or (
         is_owner and pg_rights.get("action_update_own", False)
     )
@@ -219,7 +221,7 @@ async def iterate_playground_session(
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(iterate_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
@@ -266,7 +268,7 @@ async def iterate_playground_session(
 )
 async def get_session_state(
     session_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> PlaygroundSessionResponse:
     """Get the current state of a Playground session."""

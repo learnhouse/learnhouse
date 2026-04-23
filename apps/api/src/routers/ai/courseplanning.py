@@ -15,8 +15,8 @@ from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.org_auth import is_org_member
 from src.security.features_utils.usage import (
     reserve_ai_credit,
@@ -109,7 +109,7 @@ async def verify_user_org_membership(user_id: int, org_id: int, db_session: Sess
 async def start_course_planning_session(
     request: Request,
     session_request: StartCoursePlanningSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -124,7 +124,7 @@ async def start_course_planning_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_org_membership(current_user.id, org.id, db_session):
+    if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
@@ -132,7 +132,7 @@ async def start_course_planning_session(
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
     reserve_ai_credit(org.id, db_session, amount=credit_cost)
@@ -177,7 +177,7 @@ async def start_course_planning_session(
 async def iterate_course_planning_session(
     request: Request,
     message_request: SendCoursePlanningMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -205,7 +205,7 @@ async def iterate_course_planning_session(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_org_membership(current_user.id, org.id, db_session):
+    if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
@@ -213,7 +213,7 @@ async def iterate_course_planning_session(
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
     reserve_ai_credit(org.id, db_session, amount=credit_cost)
@@ -257,7 +257,7 @@ async def iterate_course_planning_session(
 async def finalize_course_plan(
     request: Request,
     finalize_request: FinalizeCoursePlanRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> FinalizeCoursePlanResponse:
     """
@@ -282,7 +282,7 @@ async def finalize_course_plan(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_org_membership(current_user.id, org.id, db_session):
+    if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     plan = finalize_request.plan
@@ -307,10 +307,11 @@ async def finalize_course_plan(
     db_session.commit()
     db_session.refresh(course)
 
-    # Make the current user the creator of the course
+    # Make the current user the creator of the course (resolve API tokens to
+    # their creator so authorship records a real user_id, not the token id 0).
     resource_author = ResourceAuthor(
         resource_uuid=course.course_uuid,
-        user_id=current_user.id,
+        user_id=resolve_acting_user_id(current_user),
         authorship=ResourceAuthorshipEnum.CREATOR,
         authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
         creation_date=str(datetime.now()),
@@ -431,7 +432,7 @@ async def finalize_course_plan(
 async def generate_activity_content(
     request: Request,
     content_request: GenerateActivityContentRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -476,7 +477,7 @@ async def generate_activity_content(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_org_membership(current_user.id, org.id, db_session):
+    if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
@@ -484,7 +485,7 @@ async def generate_activity_content(
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
-    enforce_ai_rate_limit(current_user.id, org.id)
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
     reserve_ai_credit(org.id, db_session, amount=credit_cost)
@@ -590,7 +591,7 @@ def validate_prosemirror_content(content: dict) -> tuple[bool, str]:
 async def save_activity_content(
     request: Request,
     save_request: SaveActivityContentRequest,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -637,7 +638,7 @@ async def save_activity_content(
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user is a member of the organization
-    if not await verify_user_org_membership(current_user.id, org.id, db_session):
+    if not await verify_user_org_membership(resolve_acting_user_id(current_user), org.id, db_session):
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Direct update using SQLAlchemy ORM
@@ -696,7 +697,7 @@ async def save_activity_content(
 )
 async def get_session_state(
     session_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> CoursePlanningSessionResponse:
     """

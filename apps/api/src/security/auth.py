@@ -25,6 +25,22 @@ _DUMMY_PASSWORD_HASH = security_hash_password("unused-sentinel-for-timing-equali
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+def resolve_acting_user_id(
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
+) -> int:
+    """Return the real user id behind an authenticated principal.
+
+    API tokens authenticate as APITokenUser with id=0 (the token id, not a
+    user id). The real user is APITokenUser.created_by_user_id. Use this
+    whenever a check needs a real user_id — ResourceAuthor lookups, org
+    admin/role checks, author comparisons — so tokens resolve to their
+    creator instead of silently failing against id=0.
+    """
+    if isinstance(current_user, APITokenUser):
+        return current_user.created_by_user_id
+    return current_user.id
+
+
 #### JWT Auth Configuration ####################################################
 JWT_SECRET_KEY = SECRET_KEY
 # Dev mode only affects whether expiration is VERIFIED, not whether it's SET

@@ -14,6 +14,7 @@ from src.db.communities.discussions import Discussion, DiscussionRead
 from src.db.playgrounds import Playground, PlaygroundRead, PlaygroundAccessType
 from src.db.podcasts.podcasts import Podcast, PodcastRead
 from src.services.courses.courses import search_courses
+from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import is_org_member
 
 
@@ -148,7 +149,7 @@ async def search_across_org(
 
     is_anon = isinstance(current_user, AnonymousUser)
     user_is_member = (
-        not is_anon and is_org_member(current_user.id, org.id, db_session)
+        not is_anon and is_org_member(resolve_acting_user_id(current_user), org.id, db_session)
     )
     only_public = is_anon or not user_is_member
 
