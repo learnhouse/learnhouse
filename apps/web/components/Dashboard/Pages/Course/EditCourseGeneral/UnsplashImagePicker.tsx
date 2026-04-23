@@ -17,6 +17,9 @@ async function getUnsplashApi() {
 }
 
 const IMAGES_PER_PAGE = 20;
+const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral';
+
+const withUtm = (url?: string) => (url ? `${url}${UNSPLASH_UTM}` : UNSPLASH_UTM);
 
 const predefinedLabels = [
   { name: 'Nature', icon: Flower },
@@ -41,8 +44,14 @@ const predefinedLabels = [
   { name: 'Gaming', icon: Gamepad },
 ];
 
+export interface UnsplashPhotoMeta {
+  photo_url: string;
+  photographer_name: string;
+  photographer_url: string;
+}
+
 interface UnsplashImagePickerProps {
-  onSelect: (imageUrl: string) => void;
+  onSelect: (imageUrl: string, meta?: UnsplashPhotoMeta) => void;
   onClose: () => void;
   isOpen?: boolean;
 }
@@ -127,8 +136,22 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
     }
   };
 
-  const handleImageSelect = (imageUrl: string) => {
-    onSelect(imageUrl);
+  const handleImageSelect = async (image: any) => {
+    try {
+      const unsplash = await getUnsplashApi();
+      const downloadLocation = image?.links?.download_location;
+      if (downloadLocation) {
+        unsplash.photos.trackDownload({ downloadLocation });
+      }
+    } catch (error) {
+      console.error('Error tracking Unsplash download:', error);
+    }
+    const meta: UnsplashPhotoMeta = {
+      photo_url: image?.links?.html || '',
+      photographer_name: image?.user?.name || '',
+      photographer_url: image?.user?.links?.html || '',
+    };
+    onSelect(image.urls.regular, meta);
     onClose();
   };
 
@@ -162,13 +185,37 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
       <div className="flex-1 overflow-y-auto p-4 pt-0">
         <div className="grid grid-cols-3 gap-4">
           {images.map(image => (
-            <div key={image.id} className="relative w-full pb-[56.25%]">
-              <img
-                src={image.urls.small}
-                alt={image.alt_description}
-                className="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleImageSelect(image.urls.regular)}
-              />
+            <div key={image.id} className="flex flex-col gap-1">
+              <div className="relative w-full pb-[56.25%]">
+                <img
+                  src={image.urls.small}
+                  alt={image.alt_description}
+                  className="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => handleImageSelect(image)}
+                />
+              </div>
+              <p className="text-[11px] text-gray-500 truncate">
+                Photo by{' '}
+                <a
+                  href={withUtm(image.user?.links?.html)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-gray-700"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {image.user?.name}
+                </a>
+                {' '}on{' '}
+                <a
+                  href={`https://unsplash.com/${UNSPLASH_UTM}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-gray-700"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Unsplash
+                </a>
+              </p>
             </div>
           ))}
         </div>
@@ -181,6 +228,18 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
             Load More
           </button>
         )}
+      </div>
+
+      <div className="border-t border-gray-100 px-4 py-2 text-[11px] text-gray-500 text-center">
+        Photos from{' '}
+        <a
+          href={`https://unsplash.com/${UNSPLASH_UTM}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-700"
+        >
+          Unsplash
+        </a>
       </div>
     </div>
   );

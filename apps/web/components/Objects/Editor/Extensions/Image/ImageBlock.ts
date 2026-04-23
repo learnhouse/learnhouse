@@ -20,6 +20,18 @@ export default Node.create({
       alignment: {
         default: 'center',
       },
+      unsplash_url: {
+        default: null,
+      },
+      unsplash_photographer_name: {
+        default: null,
+      },
+      unsplash_photographer_url: {
+        default: null,
+      },
+      unsplash_photo_url: {
+        default: null,
+      },
     }
   },
 

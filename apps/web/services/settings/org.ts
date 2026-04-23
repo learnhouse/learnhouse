@@ -124,6 +124,9 @@ export interface AuthBrandingConfig {
   background_type: 'gradient' | 'custom' | 'unsplash'
   background_image: string
   text_color: 'light' | 'dark'
+  unsplash_photographer_name?: string
+  unsplash_photographer_url?: string
+  unsplash_photo_url?: string
 }
 
 export async function updateOrgAuthBrandingConfig(
