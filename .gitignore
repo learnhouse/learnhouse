@@ -60,3 +60,5 @@ apps/web/runtime-config.json
 
 # Claude Code
 .claude/
+.agents
+skills-lock.json
