@@ -4,7 +4,7 @@ from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.users import AnonymousUser, APITokenUser, PublicUser, User
+from src.db.users import AnonymousUser, PublicUser, User
 from src.security.auth import resolve_acting_user_id
 from fastapi import HTTPException, Request
 from uuid import uuid4

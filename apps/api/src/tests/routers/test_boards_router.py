@@ -82,6 +82,11 @@ def _mock_member(**overrides) -> BoardMemberRead:
 
 
 class TestBoardsRouter:
+    @pytest.fixture(autouse=True)
+    def _bypass_ai_rate_limit(self):
+        with patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
+            yield
+
     async def test_boards_playground_helpers_and_error_paths(
         self, client, db, org, other_org, admin_user
     ):

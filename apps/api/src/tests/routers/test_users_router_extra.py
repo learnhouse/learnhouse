@@ -244,6 +244,14 @@ class TestSessionCacheHelpers:
 
 
 class TestAuthorizationAndCreationEndpoints:
+    @pytest.fixture(autouse=True)
+    def _bypass_invite_rate_limit(self):
+        with patch(
+            "src.routers.users.check_invite_acceptance_rate_limit",
+            return_value=(True, 0),
+        ):
+            yield
+
     async def test_authorization_endpoint(self, client):
         with patch(
             "src.routers.users.authorize_user_action",

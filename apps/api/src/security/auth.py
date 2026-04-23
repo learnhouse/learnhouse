@@ -405,7 +405,7 @@ async def get_current_user(
         if token_iat_raw:
             try:
                 issued_at = datetime.fromtimestamp(token_iat_raw, tz=timezone.utc)
-            except (TypeError, ValueError, OSError):
+            except (TypeError, ValueError, OSError, OverflowError):
                 issued_at = None
 
         # If the user changed their password after this token was issued, the

@@ -28,6 +28,12 @@ from src.db.boards import Board
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _bypass_ai_rate_limit():
+    with patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
+        yield
+
+
 def _mk_board(db, *, org_id: int, uid: int, uuid: str) -> Board:
     b = Board(
         id=uid,
