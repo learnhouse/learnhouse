@@ -31,7 +31,6 @@ from src.db.users import (
     User,
     UserCreate,
     UserRead,
-    UserReadMinimal,
     UserReadPublic,
     UserRoleWithOrg,
     UserSession,
@@ -106,24 +105,19 @@ async def create_user(
     # Usage check
     check_limits_with_usage("members", org_id, db_session)
 
-    # Username
-    statement = select(User).where(User.username == user.username)
-    result = db_session.exec(statement)
-
-    if result.first():
-        raise HTTPException(
-            status_code=400,
-            detail="Username already exists",
+    # SECURITY: single generic error for both email and username conflicts so
+    # the endpoint cannot be used to probe which addresses or handles are
+    # already registered (account enumeration).
+    conflict = db_session.exec(
+        select(User).where(
+            (User.username == user.username) | (User.email == user.email)
         )
+    ).first()
 
-    # Email
-    statement = select(User).where(User.email == user.email)
-    result = db_session.exec(statement)
-
-    if result.first():
+    if conflict:
         raise HTTPException(
             status_code=400,
-            detail="Email already exists",
+            detail="Email or username is already in use",
         )
 
     # Exclude unset values; strip protected fields to prevent privilege escalation
@@ -306,24 +300,18 @@ async def create_user_without_org(
 
     # Verifications
 
-    # Username
-    statement = select(User).where(User.username == user.username)
-    result = db_session.exec(statement)
-
-    if result.first():
-        raise HTTPException(
-            status_code=400,
-            detail="Username already exists",
+    # SECURITY: single generic error for both email and username conflicts to
+    # prevent account enumeration via this org-less signup endpoint.
+    conflict = db_session.exec(
+        select(User).where(
+            (User.username == user.username) | (User.email == user.email)
         )
+    ).first()
 
-    # Email
-    statement = select(User).where(User.email == user.email)
-    result = db_session.exec(statement)
-
-    if result.first():
+    if conflict:
         raise HTTPException(
             status_code=400,
-            detail="Email already exists",
+            detail="Email or username is already in use",
         )
 
     # Exclude unset values; strip protected fields to prevent privilege escalation
@@ -376,33 +364,37 @@ async def update_user(
 
     # Verifications
 
-    # Username
-    statement = select(User).where(User.username == user_object.username)
-    username_user = db_session.exec(statement).first()
+    # SECURITY: merge email/username conflict errors into one generic message
+    # so an authenticated attacker cannot iterate candidate usernames/emails
+    # via the update endpoint to enumerate other accounts.
+    conflict = db_session.exec(
+        select(User).where(
+            ((User.username == user_object.username) | (User.email == user_object.email))
+            & (User.id != current_user.id)
+        )
+    ).first()
 
-    if username_user:
-        isSameUser = username_user.id == current_user.id
-        if not isSameUser:
-            raise HTTPException(
-                status_code=400,
-                detail="Username already exists",
-            )
+    if conflict:
+        raise HTTPException(
+            status_code=400,
+            detail="Email or username is already in use",
+        )
 
-    # Email
-    statement = select(User).where(User.email == user_object.email)
-    email_user = db_session.exec(statement).first()
-
-    if email_user:
-        isSameUser = email_user.id == current_user.id
-        if not isSameUser:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already exists",
-            )
-
-    # Update user; strip protected fields to prevent privilege escalation
-    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid"}
+    # Update user; strip protected fields to prevent privilege escalation.
+    # email_verified is also protected so changing the email cannot leave
+    # the account appearing "already verified" on the new address.
+    _PROTECTED_FIELDS = {"is_superadmin", "id", "user_uuid", "email_verified", "email_verified_at"}
     user_data = user_object.model_dump(exclude_unset=True)
+
+    # SECURITY: if the email actually changed, force re-verification on the
+    # new address. SaaS login requires email_verified=True, so this prevents
+    # a compromised session from pivoting to an attacker-controlled address
+    # while keeping the trusted-since-signup flag set.
+    incoming_email = user_data.get("email")
+    if incoming_email is not None and incoming_email != user.email:
+        user.email_verified = False
+        user.email_verified_at = None
+
     for key, value in user_data.items():
         if key not in _PROTECTED_FIELDS:
             setattr(user, key, value)
@@ -548,29 +540,6 @@ async def read_user_by_id(
         )
 
     return UserReadPublic.model_validate(user)
-
-
-async def read_user_public_profile_by_id(
-    request: Request,
-    db_session: Session,
-    user_id: int,
-) -> UserReadMinimal:
-    """
-    Minimal public profile lookup by user ID. Anonymous-accessible.
-
-    Exposes only fields already visible on public author/course surfaces
-    (name, username, avatar). Email, details, and profile are intentionally omitted.
-    """
-    statement = select(User).where(User.id == user_id)
-    user = db_session.exec(statement).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="Resource not found",
-        )
-
-    return UserReadMinimal.model_validate(user, from_attributes=True)
 
 
 async def read_user_by_uuid(

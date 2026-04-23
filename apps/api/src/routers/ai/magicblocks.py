@@ -7,11 +7,10 @@ from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
-    check_ai_credits,
-    deduct_ai_credit,
+    reserve_ai_credit,
 )
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -83,7 +82,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def start_magicblock_session(
     request: Request,
     session_request: StartMagicBlockSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -117,9 +116,12 @@ async def start_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check AI credits and deduct
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+
+    # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
+    reserve_ai_credit(org.id, db_session, amount=3)
 
     # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)
@@ -167,7 +169,7 @@ async def start_magicblock_session(
 async def iterate_magicblock_session(
     request: Request,
     message_request: SendMagicBlockMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -213,9 +215,12 @@ async def iterate_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check AI credits and deduct
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+
+    # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
+    reserve_ai_credit(org.id, db_session, amount=3)
 
     # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)
@@ -255,7 +260,7 @@ async def iterate_magicblock_session(
 )
 async def get_session_state(
     session_uuid: str,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> MagicBlockSessionResponse:
     """

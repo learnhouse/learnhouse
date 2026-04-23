@@ -5,6 +5,7 @@ from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser, User
+from src.security.auth import resolve_acting_user_id
 from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
@@ -168,7 +169,8 @@ def _apply_activity_lock(
     ``is_locked=True`` so the client renders a gate instead of an empty page.
     """
     is_anon = isinstance(current_user, AnonymousUser)
-    admin = False if is_anon else is_org_admin(current_user.id, course.org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    admin = False if is_anon else is_org_admin(acting_user_id, course.org_id, db_session)
     if admin:
         return
 
@@ -187,7 +189,7 @@ def _apply_activity_lock(
     accessible: set[str] = set()
     if not is_anon:
         accessible = batch_accessible_restricted_uuids(
-            current_user.id, check_uuids, db_session
+            acting_user_id, check_uuids, db_session
         )
 
     # Course-level usergroup membership unlocks everything below it.

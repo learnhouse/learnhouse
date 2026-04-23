@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 from src.core.events.database import get_db_session
 from src.db.organizations import Organization
 from src.db.packs import OrgPackRead
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.features_utils.packs import AVAILABLE_PACKS
 from src.security.org_auth import is_org_admin
 from src.services.packs.packs import (
@@ -184,14 +184,14 @@ class PackSummaryResponse(BaseModel):
 )
 async def api_get_org_packs(
     org_id: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    if not is_org_admin(current_user.id, org_id, db_session):
+    if not is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view packs")
 
     active_packs = get_org_active_packs(org_id, db_session)
@@ -220,14 +220,14 @@ async def api_get_org_packs(
 )
 async def api_get_org_pack_summary(
     org_id: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    if not is_org_admin(current_user.id, org_id, db_session):
+    if not is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view pack summary")
 
     return get_org_pack_summary(org_id, db_session)

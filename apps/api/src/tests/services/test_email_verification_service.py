@@ -405,6 +405,9 @@ class TestEmailVerificationService:
         db.add(verified_user)
         db.commit()
 
+        # SECURITY: resend-verification must return the same generic response
+        # whether or not the account exists or is already verified — otherwise
+        # it can be used to enumerate accounts or probe verification state.
         with patch(
             "src.services.users.email_verification.check_verification_resend_rate_limit",
             return_value=(True, 0),
@@ -415,7 +418,7 @@ class TestEmailVerificationService:
                 verified_user.email,
                 org.id,
             )
-        assert already == "Email is already verified"
+        assert already.startswith("If an account")
 
         verified_user.email_verified = False
         db.add(verified_user)

@@ -5,14 +5,14 @@ from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.security.features_utils.usage import (
-    check_ai_credits,
-    deduct_ai_credit,
+    refund_ai_credit,
+    reserve_ai_credit,
 )
 from src.db.courses.courses import Course, CourseRead
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.courses.activities import Activity, ActivityRead
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.services.ai.base import (
     ask_ai,
     get_chat_session_history,
@@ -101,8 +101,14 @@ def ai_start_activity_chat_session(
             detail="Organization not found",
         )
 
-    # Check limits and usage (read-only check stays before the AI call)
-    check_ai_credits(org.id, db_session)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+
+    # Reserve credit atomically before the AI call; refund below on failure.
+    reserve_ai_credit(org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -158,11 +164,10 @@ def ai_start_activity_chat_session(
             ai_model,
         )
     except Exception as e:
+        # Refund the credit we reserved up-front since the AI call failed.
+        refund_ai_credit(org.id)
         logger.error("AI service error in ai_start_activity_chat_session: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
-
-    # Deduct credit only after Gemini call succeeds
-    deduct_ai_credit(org.id, db_session)
 
     # Save the message exchange to history
     save_message_to_history(
@@ -240,8 +245,12 @@ def ai_send_activity_chat_message(
     statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(statement).first()
 
-    # Check AI credits (read-only check stays before the AI call)
-    check_ai_credits(course.org_id, db_session)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
+
+    # Reserve credit atomically before the AI call; refund below on failure.
+    reserve_ai_credit(course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -294,11 +303,10 @@ def ai_send_activity_chat_message(
             ai_model,
         )
     except Exception as e:
+        # Refund the credit we reserved up-front since the AI call failed.
+        refund_ai_credit(course.org_id)
         logger.error("AI service error in ai_send_activity_chat_message: %s", e)
         raise HTTPException(status_code=503, detail={"code": "AI_UNAVAILABLE", "message": "AI service is temporarily unavailable"})
-
-    # Deduct credit only after Gemini call succeeds
-    deduct_ai_credit(course.org_id, db_session)
 
     # Save the message exchange to history
     save_message_to_history(
@@ -424,9 +432,14 @@ async def ai_start_activity_chat_session_stream(
         chat_session_object.activity_uuid, db_session
     )
 
-    # Check limits and usage
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+
+    # Atomic credit reservation to prevent concurrent over-use.
+    reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history()
 
@@ -464,9 +477,14 @@ async def ai_send_activity_chat_message_stream(
         chat_session_object.activity_uuid, db_session
     )
 
-    # Check limits and usage
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session)
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    # Resolve through helper so API tokens bucket under their creator rather
+    # than all sharing user_id=0.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
+
+    # Atomic credit reservation to prevent concurrent over-use.
+    reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 

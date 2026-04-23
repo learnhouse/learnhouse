@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, UploadFile, File, Depends, Query
 from sqlmodel import Session
 
 from src.db.users import PublicUser, AnonymousUser
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, get_authenticated_user
 from src.core.events.database import get_db_session
 from src.services.courses.migration.models import (
     MigrationUploadResponse,
@@ -41,7 +41,7 @@ async def api_upload_migration_files(
     org_id: int,
     files: list[UploadFile] = File(...),
     temp_id: Optional[str] = Query(None),
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """Upload files for content migration. Pass temp_id to append to existing upload."""
     return await upload_migration_files(files, existing_temp_id=temp_id)
@@ -61,7 +61,7 @@ async def api_suggest_structure(
     request: Request,
     org_id: int,
     body: SuggestStructureRequest,
-    current_user: PublicUser | AnonymousUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """Use AI to suggest a course structure from uploaded files."""
     return await suggest_structure(

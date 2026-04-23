@@ -38,7 +38,7 @@ class WebhookEndpoint(SQLModel, table=True):
     zap_name: Optional[str] = Field(default=None, max_length=200)
     zap_id: Optional[str] = Field(default=None, max_length=100)
     created_by_user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id"), nullable=False)
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     )
     creation_date: str = ""
     update_date: str = ""

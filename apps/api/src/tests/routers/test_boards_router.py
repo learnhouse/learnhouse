@@ -17,7 +17,7 @@ from src.routers.boards.boards_playground import (
     event_generator as boards_event_generator,
     get_org_ai_model as get_boards_org_ai_model,
 )
-from src.security.auth import get_current_user
+from src.security.auth import get_authenticated_user, get_current_user
 from src.security.features_utils.dependencies import require_boards_feature
 
 
@@ -38,6 +38,7 @@ def app(db, admin_user):
     app.include_router(boards_playground_router, prefix="/api/v1/boards")
     app.dependency_overrides[get_db_session] = lambda: db
     app.dependency_overrides[get_current_user] = lambda: admin_user
+    app.dependency_overrides[get_authenticated_user] = lambda: admin_user
     app.dependency_overrides[require_boards_feature] = lambda: True
     yield app
     app.dependency_overrides.clear()
@@ -81,6 +82,11 @@ def _mock_member(**overrides) -> BoardMemberRead:
 
 
 class TestBoardsRouter:
+    @pytest.fixture(autouse=True)
+    def _bypass_ai_rate_limit(self):
+        with patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
+            yield
+
     async def test_boards_playground_helpers_and_error_paths(
         self, client, db, org, other_org, admin_user
     ):
@@ -150,9 +156,7 @@ class TestBoardsRouter:
         ):
             assert get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
 
-        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ), patch(
@@ -182,9 +186,7 @@ class TestBoardsRouter:
             )
         assert response.status_code == 404
 
-        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ), patch(
@@ -214,9 +216,7 @@ class TestBoardsRouter:
             )
         assert response.status_code == 404
 
-        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ), patch(
@@ -318,9 +318,7 @@ class TestBoardsRouter:
                 block_uuid="block1",
                 message_history=[],
             ),
-        ), patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        ), patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ):
@@ -361,9 +359,7 @@ class TestBoardsRouter:
                 block_uuid="block1",
                 message_history=[],
             ),
-        ), patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        ), patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ):
@@ -413,9 +409,7 @@ class TestBoardsRouter:
                 message_history=[],
             ),
         ), patch(
-            "src.routers.boards.boards_playground.check_ai_credits"
-        ), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
+            "src.routers.boards.boards_playground.reserve_ai_credit"
         ), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
@@ -632,9 +626,7 @@ class TestBoardsRouter:
             message_history=[],
         )
 
-        with patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ), patch(
@@ -671,9 +663,7 @@ class TestBoardsRouter:
         with patch(
             "src.routers.boards.boards_playground.get_boards_playground_session",
             return_value=fake_iter_session,
-        ), patch("src.routers.boards.boards_playground.check_ai_credits"), patch(
-            "src.routers.boards.boards_playground.deduct_ai_credit"
-        ), patch(
+        ), patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
             return_value="gemini-test",
         ), patch(

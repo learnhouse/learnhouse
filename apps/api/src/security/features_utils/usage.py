@@ -780,9 +780,150 @@ def deduct_ai_credit(
     db_session: Session,
     amount: int = 1,
 ) -> int:
-    """Deduct AI credits from the organization."""
+    """Deduct AI credits from the organization.
+
+    Kept for backwards compatibility with call sites that still invoke the
+    legacy check+deduct pattern. New code must use :func:`reserve_ai_credit`
+    which bundles the check and deduction into a single Redis round-trip so
+    that concurrent requests cannot race past the configured limit.
+    """
     r = _get_redis_client()
     return r.incrby(f"ai_credits_used:{org_id}", amount)
+
+
+# Lua script lives at module level so redis-py can cache the SHA.
+# KEYS[1] = ai_credits_used:<org>
+# KEYS[2] = ai_credits_purchased:<org>
+# ARGV[1] = base credits, ARGV[2] = extra credits, ARGV[3] = amount,
+# ARGV[4] = "1" if unlimited plan (base == -1) else "0".
+# Returns new used-count on success, -1 when over quota.
+_ATOMIC_RESERVE_LUA = """
+local unlimited = ARGV[4]
+local amount = tonumber(ARGV[3])
+if unlimited == "1" then
+    return redis.call("INCRBY", KEYS[1], amount)
+end
+local base = tonumber(ARGV[1])
+local extra = tonumber(ARGV[2])
+local purchased = tonumber(redis.call("GET", KEYS[2]) or "0")
+local used = tonumber(redis.call("GET", KEYS[1]) or "0")
+local total = base + extra + purchased
+if total - used < amount then
+    return -1
+end
+return redis.call("INCRBY", KEYS[1], amount)
+"""
+
+
+def _load_org_config_for_ai(org_id: int, db_session: Session):
+    stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    return db_session.exec(stmt).first()
+
+
+def reserve_ai_credit(
+    org_id: int,
+    db_session: Session,
+    amount: int = 1,
+) -> int:
+    """
+    Atomically verify that the organization has ``amount`` AI credits available
+    and decrement the used-counter in a single Redis round-trip. Raises
+    ``HTTPException(403)`` matching the historical error shape of
+    :func:`check_ai_credits` when the quota would be exceeded, so callers can
+    drop the helper in without altering their response contract.
+
+    Returns the new ``ai_credits_used`` count.
+    """
+    from src.security.features_utils.resolve import resolve_feature
+
+    org_config = _load_org_config_for_ai(org_id, db_session)
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization has no config")
+
+    resolved = resolve_feature("ai", org_config.config or {}, org_id)
+    if not resolved["enabled"]:
+        raise HTTPException(
+            status_code=403,
+            detail="AI is not enabled for this organization",
+        )
+
+    # Non-SaaS deployments do not enforce limits but still track usage.
+    if _is_non_saas():
+        r = _get_redis_client()
+        return int(r.incrby(f"ai_credits_used:{org_id}", amount))
+
+    org_plan = _get_org_plan(org_config)
+    base_credits = get_ai_credit_limit(org_plan)
+
+    if base_credits == 0:
+        raise HTTPException(
+            status_code=403,
+            detail="AI credits are not available on the free plan. Please upgrade to Standard or Pro.",
+        )
+
+    config = org_config.config or {}
+    extra = 0
+    if config.get("config_version", "1.0").startswith("2"):
+        extra = config.get("overrides", {}).get("ai", {}).get("extra_limit", 0) or 0
+
+    r = _get_redis_client()
+    unlimited = "1" if base_credits == -1 else "0"
+
+    try:
+        reserve = r.register_script(_ATOMIC_RESERVE_LUA)
+        new_used = reserve(
+            keys=[
+                f"ai_credits_used:{org_id}",
+                f"ai_credits_purchased:{org_id}",
+            ],
+            args=[
+                str(max(0, base_credits)),
+                str(int(extra)),
+                str(int(amount)),
+                unlimited,
+            ],
+        )
+    except Exception:
+        # Fail closed — prefer quota denial over silent over-use.
+        raise HTTPException(
+            status_code=503,
+            detail="AI credit store temporarily unavailable. Please retry.",
+        )
+
+    if int(new_used) == -1:
+        purchased = int(r.get(f"ai_credits_purchased:{org_id}") or 0)
+        total = (0 if base_credits == -1 else base_credits) + extra + purchased
+        raise HTTPException(
+            status_code=403,
+            detail=f"AI credit limit reached. You have used all {total} credits.",
+        )
+
+    return int(new_used)
+
+
+_REFUND_LUA = """
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+local decrement = tonumber(ARGV[1])
+local new_val = current - decrement
+if new_val < 0 then new_val = 0 end
+redis.call("SET", KEYS[1], new_val)
+return new_val
+"""
+
+
+def refund_ai_credit(org_id: int, amount: int = 1) -> int:
+    """
+    Refund ``amount`` previously-reserved AI credits. Callers that use
+    :func:`reserve_ai_credit` before dispatching to the model should refund on
+    downstream failure so a transient AI outage does not consume the org's
+    quota. The decrement is clamped at zero so accidental double-refunds do
+    not mint free credits.
+    """
+    if amount <= 0:
+        return 0
+    r = _get_redis_client()
+    script = r.register_script(_REFUND_LUA)
+    return int(script(keys=[f"ai_credits_used:{org_id}"], args=[str(int(amount))]))
 
 
 def add_ai_credits(org_id: int, amount: int) -> int:

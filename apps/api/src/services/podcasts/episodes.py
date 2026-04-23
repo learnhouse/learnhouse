@@ -5,7 +5,8 @@ from src.db.organizations import Organization
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipStatusEnum
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import resolve_acting_user_id
 from src.db.podcasts.podcasts import Podcast
 from src.db.podcasts.episodes import (
     PodcastEpisode,
@@ -26,7 +27,7 @@ async def _user_can_view_unpublished_episode(
     request: Request,
     episode: PodcastEpisode,
     podcast: Podcast,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> bool:
     """
@@ -35,14 +36,16 @@ async def _user_can_view_unpublished_episode(
     if isinstance(current_user, AnonymousUser):
         return False
 
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Superadmins can view everything
-    if is_user_superadmin(current_user.id, db_session):
+    if is_user_superadmin(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast
     author_statement = select(ResourceAuthor).where(
         ResourceAuthor.resource_uuid == podcast.podcast_uuid,
-        ResourceAuthor.user_id == current_user.id,
+        ResourceAuthor.user_id == acting_user_id,
         ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
     )
     is_author = db_session.exec(author_statement).first()
@@ -54,7 +57,7 @@ async def _user_can_view_unpublished_episode(
         select(Role)
         .join(UserOrganization)
         .where(UserOrganization.org_id == podcast.org_id)
-        .where(UserOrganization.user_id == current_user.id)
+        .where(UserOrganization.user_id == acting_user_id)
     )
     user_roles = db_session.exec(role_statement).all()
     for role in user_roles:

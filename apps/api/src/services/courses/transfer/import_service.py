@@ -51,6 +51,18 @@ MAX_PACKAGE_SIZE = 500 * 1024 * 1024
 # Max compression ratio to prevent zip bombs
 MAX_COMPRESSION_RATIO = 20
 
+# Max individual entry size inside the archive (250MB).
+MAX_ENTRY_SIZE = 250 * 1024 * 1024
+
+# Max entry count inside the archive. Prevents inode exhaustion / "zip of zero-
+# byte files" attacks even when the compression ratio looks innocent.
+MAX_ENTRY_COUNT = 20000
+
+# Zip central-directory external-attribute mask for symbolic links, in the
+# upper 16 bits (Unix mode). 0xA000 is S_IFLNK. Matching the convention used
+# by zipfile authors, we bail out on any entry whose mode includes this flag.
+_ZIP_SYMLINK_MODE = 0xA000 << 16
+
 
 def validate_zip(content: bytes) -> bool:
     """Validate that content is a valid ZIP file"""
@@ -137,9 +149,37 @@ async def analyze_import_package(
         os.makedirs(extract_dir, exist_ok=True)
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            # Check for zip bomb
+            infolist = zip_ref.infolist()
+
+            # SECURITY: cap the number of entries so an archive with millions
+            # of tiny files cannot exhaust inodes even when the aggregate
+            # compression ratio looks reasonable.
+            if len(infolist) > MAX_ENTRY_COUNT:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid package: too many entries (max {MAX_ENTRY_COUNT})"
+                )
+
+            # SECURITY: enforce per-entry size and aggregate-size caps before
+            # touching disk.
             compressed_size = os.path.getsize(zip_path)
-            uncompressed_size = sum(info.file_size for info in zip_ref.infolist())
+            uncompressed_size = 0
+            for info in infolist:
+                if info.file_size > MAX_ENTRY_SIZE:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            f"Invalid package: entry '{info.filename}' exceeds the "
+                            f"per-file size limit"
+                        ),
+                    )
+                uncompressed_size += info.file_size
+
+            if uncompressed_size > MAX_PACKAGE_SIZE:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid package: uncompressed size exceeds limit"
+                )
             if uncompressed_size > compressed_size * MAX_COMPRESSION_RATIO:
                 raise HTTPException(
                     status_code=400,
@@ -147,15 +187,30 @@ async def analyze_import_package(
                 )
 
             # Extract with path sanitization
-            for info in zip_ref.infolist():
+            abs_extract = os.path.realpath(extract_dir)
+            for info in infolist:
+                # SECURITY: reject symlink entries outright — even a contained
+                # symlink can be followed by later entries to write outside
+                # the extract directory.
+                if info.external_attr & _ZIP_SYMLINK_MODE:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=(
+                            f"Invalid package: symlink entry '{info.filename}' is not allowed"
+                        ),
+                    )
+
                 safe_path = sanitize_path(info.filename)
                 if not safe_path:
                     continue
 
                 target_path = os.path.join(extract_dir, safe_path)
 
-                # Ensure target is within extract_dir
-                if not os.path.abspath(target_path).startswith(os.path.abspath(extract_dir)):
+                # SECURITY: use realpath so any symlink already sitting inside
+                # extract_dir (shouldn't happen with a fresh uuid4 tempdir but
+                # defense in depth) cannot redirect the write.
+                resolved = os.path.realpath(target_path)
+                if not (resolved == abs_extract or resolved.startswith(abs_extract + os.sep)):
                     continue
 
                 if info.is_dir():

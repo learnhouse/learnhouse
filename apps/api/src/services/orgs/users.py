@@ -17,7 +17,8 @@ from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_user import UserGroupUser
 from src.db.usergroups import UserGroup, UserGroupRead
-from src.db.users import AnonymousUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
+from src.security.auth import resolve_acting_user_id
 from src.security.features_utils.usage import decrease_feature_usage
 from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
@@ -33,7 +34,7 @@ async def get_organization_users(
     request: Request,
     org_id: str,
     db_session: Session,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     page: int = 1,
     limit: int = 20,
     search: str = "",
@@ -74,8 +75,10 @@ async def get_organization_users(
             detail="Authentication required",
         )
 
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Membership check (superadmins bypass)
-    if not is_org_member(current_user.id, org.id, db_session):
+    if not is_org_member(acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You must be a member of this organization to view its members",
@@ -83,9 +86,9 @@ async def get_organization_users(
 
     # Only admins/maintainers can list organization members
     from src.security.superadmin import is_user_superadmin
-    if not is_user_superadmin(current_user.id, db_session):
+    if not is_user_superadmin(acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
-        if not is_org_admin(current_user.id, org.id, db_session):
+        if not is_org_admin(acting_user_id, org.id, db_session):
             raise HTTPException(
                 status_code=403,
                 detail="Only administrators and maintainers can view organization members",
@@ -278,14 +281,15 @@ async def export_organization_users_csv(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    if not is_org_member(current_user.id, org.id, db_session):
+    export_acting_user_id = resolve_acting_user_id(current_user)
+    if not is_org_member(export_acting_user_id, org.id, db_session):
         raise HTTPException(status_code=403, detail="You must be a member of this organization")
 
     # Only admins/maintainers can export organization members
     from src.security.superadmin import is_user_superadmin
-    if not is_user_superadmin(current_user.id, db_session):
+    if not is_user_superadmin(export_acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
-        if not is_org_admin(current_user.id, org.id, db_session):
+        if not is_org_admin(export_acting_user_id, org.id, db_session):
             raise HTTPException(
                 status_code=403,
                 detail="Only administrators and maintainers can export organization members",

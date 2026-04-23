@@ -43,6 +43,7 @@ import {
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
@@ -78,7 +79,15 @@ function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const { t, i18n } = useTranslation()
+  const pathname = usePathname() || ''
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const isActivePath = (path: string) => {
+    if (path === '/dash') {
+      return pathname === '/dash' || pathname === '/dash/'
+    }
+    return pathname === path || pathname.startsWith(path + '/')
+  }
   const [recentAssignments, setRecentAssignments] = useState<any[]>([])
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const access_token = session?.data?.tokens?.access_token
@@ -234,6 +243,7 @@ function DashLeftMenu() {
               icon={<House size={20} weight="fill" />}
               label={t('common.home')}
               isCollapsed={isCollapsed}
+              active={isActivePath('/dash')}
             />
 
             {/* Courses with hover menu */}
@@ -268,27 +278,42 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <Link
-                href="/dash/courses"
-                aria-label="Open courses menu"
-                className={cn(
-                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
-                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
-                )}
-              >
-                <span className="relative flex items-center justify-center">
-                  <BookOpen size={20} weight="fill" />
-                  {isCollapsed && (
-                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
-                  )}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left">{t('courses.courses')}</span>
-                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
-                  </>
-                )}
-              </Link>
+              {(() => {
+                const active = isActivePath('/dash/courses')
+                return (
+                  <Link
+                    href="/dash/courses"
+                    aria-label="Open courses menu"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "relative flex items-center w-full rounded-lg transition-all",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center">
+                      <BookOpen size={20} weight="fill" />
+                      {isCollapsed && (
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="text-sm font-medium flex-1 text-left">{t('courses.courses')}</span>
+                        <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                      </>
+                    )}
+                  </Link>
+                )
+              })()}
             </HoverMenu>
 
             {/* Assignments with hover menu */}
@@ -327,27 +352,42 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <Link
-                href="/dash/assignments"
-                aria-label="Open assignments menu"
-                className={cn(
-                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
-                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
-                )}
-              >
-                <span className="relative flex items-center justify-center">
-                  <Files size={20} weight="fill" />
-                  {isCollapsed && (
-                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
-                  )}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left">{t('common.assignments')}</span>
-                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
-                  </>
-                )}
-              </Link>
+              {(() => {
+                const active = isActivePath('/dash/assignments')
+                return (
+                  <Link
+                    href="/dash/assignments"
+                    aria-label="Open assignments menu"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "relative flex items-center w-full rounded-lg transition-all",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center">
+                      <Files size={20} weight="fill" />
+                      {isCollapsed && (
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="text-sm font-medium flex-1 text-left">{t('common.assignments')}</span>
+                        <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                      </>
+                    )}
+                  </Link>
+                )
+              })()}
             </HoverMenu>
             </div>
             {showCommunities && (
@@ -356,6 +396,7 @@ function DashLeftMenu() {
                 icon={<ChatsCircle size={20} weight="fill" />}
                 label={t('communities.title')}
                 isCollapsed={isCollapsed}
+                active={isActivePath('/dash/communities')}
               />
             )}
             {showPodcasts && (
@@ -364,6 +405,7 @@ function DashLeftMenu() {
                 icon={<Headphones size={20} weight="fill" />}
                 label={t('podcasts.podcasts')}
                 isCollapsed={isCollapsed}
+                active={isActivePath('/dash/podcasts')}
               />
             )}
             {showBoards && (
@@ -372,6 +414,7 @@ function DashLeftMenu() {
                 icon={<ChalkboardSimple size={20} weight="fill" />}
                 label="Boards"
                 isCollapsed={isCollapsed}
+                active={isActivePath('/dash/boards')}
               />
             )}
             {showPlaygrounds && (
@@ -380,6 +423,7 @@ function DashLeftMenu() {
                 icon={<Cube size={20} weight="fill" />}
                 label="Playgrounds"
                 isCollapsed={isCollapsed}
+                active={isActivePath('/dash/playgrounds')}
               />
             )}
             {/* Users with hover menu */}
@@ -421,27 +465,42 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <Link
-                href="/dash/users/settings/users"
-                aria-label="Open users menu"
-                className={cn(
-                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
-                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
-                )}
-              >
-                <span className="relative flex items-center justify-center">
-                  <Users size={20} weight="fill" />
-                  {isCollapsed && (
-                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
-                  )}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left">{t('common.users')}</span>
-                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
-                  </>
-                )}
-              </Link>
+              {(() => {
+                const active = isActivePath('/dash/users')
+                return (
+                  <Link
+                    href="/dash/users/settings/users"
+                    aria-label="Open users menu"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "relative flex items-center w-full rounded-lg transition-all",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center">
+                      <Users size={20} weight="fill" />
+                      {isCollapsed && (
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="text-sm font-medium flex-1 text-left">{t('common.users')}</span>
+                        <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                      </>
+                    )}
+                  </Link>
+                )
+              })()}
             </HoverMenu>
 
             {showPayments && (
@@ -450,6 +509,7 @@ function DashLeftMenu() {
                 icon={<CurrencyCircleDollar size={20} weight="fill" />}
                 label={t('common.payments')}
                 isCollapsed={isCollapsed}
+                active={isActivePath('/dash/payments')}
               />
             )}
 
@@ -528,27 +588,42 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <Link
-                href="/dash/org/settings/general"
-                aria-label="Open organization menu"
-                className={cn(
-                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
-                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
-                )}
-              >
-                <span className="relative flex items-center justify-center">
-                  <Buildings size={20} weight="fill" />
-                  {isCollapsed && (
-                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
-                  )}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left">{t('common.organization')}</span>
-                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
-                  </>
-                )}
-              </Link>
+              {(() => {
+                const active = isActivePath('/dash/org')
+                return (
+                  <Link
+                    href="/dash/org/settings/general"
+                    aria-label="Open organization menu"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "relative flex items-center w-full rounded-lg transition-all",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center">
+                      <Buildings size={20} weight="fill" />
+                      {isCollapsed && (
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="text-sm font-medium flex-1 text-left">{t('common.organization')}</span>
+                        <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                      </>
+                    )}
+                  </Link>
+                )
+              })()}
             </HoverMenu>
 
             {/* Analytics with hover menu */}
@@ -572,27 +647,42 @@ function DashLeftMenu() {
                 </HoverMenuContent>
               }
             >
-              <Link
-                href="/dash/analytics"
-                aria-label="Analytics"
-                className={cn(
-                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
-                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
-                )}
-              >
-                <span className="relative flex items-center justify-center">
-                  <ChartBar size={20} weight="fill" />
-                  {isCollapsed && (
-                    <CaretDown aria-hidden="true" size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
-                  )}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 text-left">Analytics</span>
-                    <CaretDown aria-hidden="true" size={14} weight="bold" className="text-white/40" />
-                  </>
-                )}
-              </Link>
+              {(() => {
+                const active = isActivePath('/dash/analytics')
+                return (
+                  <Link
+                    href="/dash/analytics"
+                    aria-label="Analytics"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "relative flex items-center w-full rounded-lg transition-all",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.08]",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                      />
+                    )}
+                    <span className="relative flex items-center justify-center">
+                      <ChartBar size={20} weight="fill" />
+                      {isCollapsed && (
+                        <CaretDown aria-hidden="true" size={8} weight="bold" className={cn("absolute -right-2.5", active ? "text-white/60" : "text-white/30")} />
+                      )}
+                    </span>
+                    {!isCollapsed && (
+                      <>
+                        <span className="text-sm font-medium flex-1 text-left">Analytics</span>
+                        <CaretDown aria-hidden="true" size={14} weight="bold" className={active ? "text-white/70" : "text-white/40"} />
+                      </>
+                    )}
+                  </Link>
+                )
+              })()}
             </HoverMenu>
 
             {/* Disabled features shown in an "Other" hover menu */}
@@ -863,20 +953,30 @@ function DashLeftMenu() {
   )
 }
 
-const MenuLink = ({ href, icon, label, isCollapsed, isExternal }: {
+const MenuLink = ({ href, icon, label, isCollapsed, isExternal, active }: {
   href: string
   icon: React.ReactNode
   label: string
   isCollapsed: boolean
   isExternal?: boolean
+  active?: boolean
 }) => {
   const content = (
     <div
       className={cn(
-        "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+        "relative flex items-center w-full rounded-lg transition-all",
+        active
+          ? "text-white bg-white/[0.08]"
+          : "text-white/50 hover:text-white hover:bg-white/[0.08]",
         isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
       )}
     >
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+        />
+      )}
       {icon}
       {!isCollapsed && (
         <span className="text-sm font-medium">{label}</span>
@@ -884,12 +984,13 @@ const MenuLink = ({ href, icon, label, isCollapsed, isExternal }: {
     </div>
   )
 
+  const ariaCurrent = active ? 'page' : undefined
   const linkElement = isExternal ? (
     <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
       {content}
     </a>
   ) : (
-    <Link aria-label={label} href={href}>
+    <Link aria-label={label} aria-current={ariaCurrent} href={href}>
       {content}
     </Link>
   )

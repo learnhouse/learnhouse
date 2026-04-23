@@ -7,14 +7,14 @@ import logging
 from src.db.organizations import Organization
 from src.db.boards import Board
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.db.users import PublicUser, APITokenUser
+from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
-    check_ai_credits,
-    deduct_ai_credit,
+    reserve_ai_credit,
 )
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
+from src.security.org_auth import is_org_member
 from src.services.boards.boards_playground import (
     get_boards_playground_session,
     create_boards_playground_session,
@@ -66,7 +66,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def start_boards_playground_session(
     request: Request,
     session_request: StartBoardsPlaygroundSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Start a new Boards Playground AI generation session with streaming response."""
@@ -84,14 +84,23 @@ async def start_boards_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check AI credits and deduct
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    # SECURITY (F-5): verify the authenticated user is a member of the
+    # board's org before reserving credits. Otherwise a user in org A can
+    # drain org B's AI credit bucket by supplying any board_uuid from org B.
+    start_acting_user_id = resolve_acting_user_id(current_user)
+    if not is_org_member(start_acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
 
-    # Get AI model
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(start_acting_user_id, org.id)
+    reserve_ai_credit(org.id, db_session, amount=3)
+
     ai_model = get_org_ai_model(org.id, db_session)
 
-    # Create new session
     session = create_boards_playground_session(
         block_uuid=session_request.block_uuid,
         board_uuid=session_request.board_uuid,
@@ -130,7 +139,7 @@ async def start_boards_playground_session(
 async def iterate_boards_playground_session(
     request: Request,
     message_request: SendBoardsPlaygroundMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """Continue an existing Boards Playground session with a new message."""
@@ -162,8 +171,18 @@ async def iterate_boards_playground_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    check_ai_credits(org.id, db_session)
-    deduct_ai_credit(org.id, db_session, amount=3)
+    # SECURITY (F-5): same cross-org drain protection as /playground/start.
+    iterate_acting_user_id = resolve_acting_user_id(current_user)
+    if not is_org_member(iterate_acting_user_id, org.id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not a member of this organization",
+        )
+
+    # F-9: per-user + per-org rate limit before any compute / credit spend.
+    from src.services.security.rate_limiting import enforce_ai_rate_limit
+    enforce_ai_rate_limit(iterate_acting_user_id, org.id)
+    reserve_ai_credit(org.id, db_session, amount=3)
 
     ai_model = get_org_ai_model(org.id, db_session)
 

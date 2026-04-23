@@ -5,7 +5,10 @@ This module is separate from auth.py to avoid circular imports.
 """
 
 from typing import Union
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
+from sqlmodel import Session
+
+from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 
 
@@ -68,3 +71,33 @@ async def require_non_api_token_user(
     """
     reject_api_token_access(current_user)
     return current_user
+
+
+async def get_authenticated_non_api_token_user(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+) -> PublicUser:
+    """
+    FastAPI dependency that requires an authenticated, non-API-token user.
+
+    SECURITY: Use this as the router-level dependency on any router that has
+    *no* public endpoints. The historical ``get_non_api_token_user`` helper
+    only rejects API tokens — it silently admits ``AnonymousUser``. Swapping
+    to this dependency closes that gap for routers that should always
+    require an active session.
+
+    Raises:
+        HTTPException 401 if the request is unauthenticated.
+        HTTPException 403 if the caller is an API token.
+    """
+    # Imported locally to avoid a circular dependency on auth.py, which in
+    # turn imports from this module.
+    from src.security.auth import get_authenticated_user
+
+    user = await get_authenticated_user(request, db_session)
+    if isinstance(user, APITokenUser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API tokens cannot access this resource. Only user authentication is allowed.",
+        )
+    return user

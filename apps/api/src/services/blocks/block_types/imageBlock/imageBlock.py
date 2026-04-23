@@ -7,6 +7,7 @@ from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses.courses import Course
 from src.db.users import AnonymousUser, PublicUser
+from src.security.org_auth import is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
@@ -78,17 +79,48 @@ async def create_image_block(
 
 
 async def get_image_block(
-    request: Request, block_uuid: str, current_user: PublicUser, db_session: Session
+    request: Request, block_uuid: str, current_user: PublicUser | AnonymousUser, db_session: Session
 ):
     statement = select(Block).where(Block.block_uuid == block_uuid)
     block = db_session.exec(statement).first()
 
-    if block:
-
-        block = BlockRead.model_validate(block)
-        
-        return block
-    else:
+    if not block:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Image block does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image block does not exist"
         )
+
+    # SECURITY: resolve the block's owning course and enforce RBAC so that
+    # a user who obtains a block UUID from one org cannot read blocks from
+    # another org. Public+published courses remain readable anonymously via
+    # check_resource_access's PUBLIC_VIEW branch.
+    activity = db_session.exec(
+        select(Activity).where(Activity.id == block.activity_id)
+    ).first()
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image block does not exist"
+        )
+    course = db_session.exec(
+        select(Course).where(Course.id == activity.course_id)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image block does not exist"
+        )
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ
+    )
+
+    # Belt-and-braces cross-tenant check: the RBAC "no usergroup linked" rule
+    # grants access to any authenticated user, which is too permissive for
+    # private course media. For non-public courses, additionally require the
+    # caller to be a member of the owning org. Public+published content stays
+    # anonymously readable through the RBAC branch above.
+    if not course.public and isinstance(current_user, PublicUser):
+        if not is_org_member(current_user.id, block.org_id, db_session):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have access to this resource",
+            )
+
+    return BlockRead.model_validate(block)

@@ -30,7 +30,10 @@ class UserUpdate(UserBase):
     username: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    email: str
+    # SECURITY: must be EmailStr (not str) so the user-profile update path
+    # validates the format. UserBase already types email as EmailStr; this
+    # redeclaration is kept only to signal it is a required field on update.
+    email: EmailStr
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
     details: Optional[dict] = Field(default_factory=dict)
@@ -58,21 +61,6 @@ class UserReadPublic(UserBase):
     email_verified: bool = False
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
-
-
-class UserReadMinimal(BaseModel):
-    """
-    Minimal user profile for anonymous-accessible endpoints.
-
-    Intentionally omits email, details, profile, and verification state.
-    Exposes only what is already visible on public course/author surfaces.
-    """
-    id: int
-    user_uuid: str
-    username: str
-    first_name: str
-    last_name: str
-    avatar_image: Optional[str] = ""
 
 
 class PublicUser(UserRead):

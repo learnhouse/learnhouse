@@ -252,22 +252,21 @@ async def resend_verification_email(
             detail=f"Too many verification email requests. Please try again in {retry_after // 60} minutes.",
         )
 
-    # Get user
+    # SECURITY: return the same generic response on every path so the
+    # endpoint cannot be used to enumerate accounts or to detect which
+    # accounts are already verified. We still only send email when the
+    # user exists and is unverified.
+    GENERIC_RESPONSE = (
+        "If an account with this email exists, a verification email has been sent"
+    )
+
     statement = select(User).where(User.email == email)
     user = db_session.exec(statement).first()
 
-    if not user:
-        # Don't reveal if email exists
-        return "If an account with this email exists, a verification email has been sent"
+    if user and not user.email_verified:
+        await send_verification_email(request, db_session, user, org_id)
 
-    # Check if already verified
-    if user.email_verified:
-        return "Email is already verified"
-
-    # Send verification email
-    await send_verification_email(request, db_session, user, org_id)
-
-    return "If an account with this email exists, a verification email has been sent"
+    return GENERIC_RESPONSE
 
 
 def invalidate_verification_tokens(user_uuid: str, org_uuid: str) -> None:

@@ -14,7 +14,7 @@ from src.db.api_tokens import (
     APITokenUpdate,
 )
 from src.db.organizations import Organization
-from src.db.users import PublicUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.roles import Rights
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
@@ -59,6 +59,21 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _block_api_tokens(current_user) -> None:
+    """Block API tokens from managing other API tokens.
+
+    SECURITY: Allowing a token to create / read / update / revoke other tokens
+    is a privilege-escalation surface — a low-rights token could spawn a
+    higher-rights one, or revoke the admin's active token. Token management
+    is a human/admin action and must stay behind user authentication.
+    """
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API tokens cannot manage other API tokens. Use user authentication.",
+        )
+
+
 def verify_token(provided_token: str, stored_hash: str) -> bool:
     """
     Verify a token against its stored hash using timing-safe comparison.
@@ -79,7 +94,7 @@ async def create_api_token(
     db_session: Session,
     token_data: APITokenCreate,
     org_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> APITokenCreatedResponse:
     """
     Create a new API token for an organization.
@@ -94,6 +109,7 @@ async def create_api_token(
     Returns:
         APITokenCreatedResponse: The created token with the full token value (only time it's shown!)
     """
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
@@ -186,9 +202,10 @@ async def list_api_tokens(
     request: Request,
     db_session: Session,
     org_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[APITokenRead]:
     """List all API tokens for an organization."""
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
@@ -220,9 +237,10 @@ async def get_api_token(
     db_session: Session,
     org_id: int,
     token_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> APITokenRead:
     """Get a specific API token by UUID."""
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
@@ -251,9 +269,10 @@ async def update_api_token(
     org_id: int,
     token_uuid: str,
     token_data: APITokenUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> APITokenRead:
     """Update an API token."""
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
@@ -301,9 +320,10 @@ async def revoke_api_token(
     db_session: Session,
     org_id: int,
     token_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> dict:
     """Revoke (soft delete) an API token."""
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 
@@ -338,12 +358,13 @@ async def regenerate_api_token(
     db_session: Session,
     org_id: int,
     token_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> APITokenCreatedResponse:
     """
     Regenerate the secret for an API token.
     The old token will no longer work.
     """
+    _block_api_tokens(current_user)
     # VERIFICATION 1: User must be authenticated
     await authorization_verify_if_user_is_anon(current_user.id)
 

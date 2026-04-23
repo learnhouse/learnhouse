@@ -12,7 +12,10 @@ from src.services.users.password_reset import (
     send_reset_password_code,
     send_reset_password_code_platform,
 )
-from src.services.security.rate_limiting import check_password_reset_rate_limit
+from src.services.security.rate_limiting import (
+    check_password_reset_rate_limit,
+    check_invite_acceptance_rate_limit,
+)
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user, get_authenticated_user
 from src.core.events.database import get_db_session
@@ -23,7 +26,6 @@ from src.db.users import (
     PublicUser,
     UserCreate,
     UserRead,
-    UserReadMinimal,
     UserReadPublic,
     UserSession,
     UserUpdate,
@@ -39,7 +41,6 @@ from src.services.users.users import (
     read_user_by_id,
     read_user_by_uuid,
     read_user_by_username,
-    read_user_public_profile_by_id,
     update_user,
     update_user_avatar,
     update_user_password,
@@ -232,6 +233,20 @@ async def api_create_user_with_orgid_and_invite(
     """
     Create User with Org ID and invite code
     """
+    # Throttle invite-code guessing per IP+org. ``detail`` is a plain string
+    # so the frontend's generic error path renders it as-is.
+    is_allowed, retry_after = check_invite_acceptance_rate_limit(request, org_id)
+    if not is_allowed:
+        minutes = max(1, retry_after // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Too many invite-code attempts. "
+                f"Please try again in about {minutes} minute"
+                f"{'s' if minutes != 1 else ''}."
+            ),
+            headers={"Retry-After": str(retry_after)},
+        )
 
     # TODO: This is temporary, logic should be moved to service
     if (
@@ -270,33 +285,6 @@ async def api_create_user_without_org(
     Create User
     """
     return await create_user_without_org(request, db_session, current_user, user_object)
-
-
-@router.get(
-    "/public/id/{user_id}",
-    response_model=UserReadMinimal,
-    tags=["users"],
-    summary="Get minimal public user profile by ID",
-    description=(
-        "Get a minimal public profile by numeric ID. Anonymous-accessible. "
-        "Exposes only fields already visible on public author/course surfaces: "
-        "name, username, avatar. Email, details, and profile are omitted."
-    ),
-    responses={
-        200: {"description": "Minimal public view of the user.", "model": UserReadMinimal},
-        404: {"description": "User not found"},
-    },
-)
-async def api_get_user_public_profile_by_id(
-    *,
-    request: Request,
-    db_session: Session = Depends(get_db_session),
-    user_id: int,
-) -> UserReadMinimal:
-    """
-    Minimal public profile lookup — no authentication required.
-    """
-    return await read_user_public_profile_by_id(request, db_session, user_id)
 
 
 @router.get(
@@ -476,16 +464,67 @@ async def api_update_user_password(
 
 
 class ResetPasswordRequest(BaseModel):
+    # Email is optional so the legacy path-param variant can reuse the same
+    # body model; the v2 handlers require it.
+    email: Optional[EmailStr] = None
     new_password: str
     org_id: int
     reset_code: str
 
 
+class SendResetCodeRequest(BaseModel):
+    email: EmailStr
+    org_id: int
+
+
+@router.post(
+    "/reset_password/change_password",
+    tags=["users"],
+    summary="Change password with reset code",
+    description="Change a user's password using a reset code. Email, reset code and new password are all supplied in the request body so they never appear in server logs or browser history.",
+    responses={
+        200: {"description": "Password updated successfully using the reset code."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
+async def api_change_password_with_reset_code_v2(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    body: ResetPasswordRequest,
+):
+    """
+    Update User Password with reset code (email in body).
+    """
+    if not body.email:
+        raise HTTPException(status_code=422, detail="email is required")
+
+    # Rate limit: 5 attempts per 5 minutes per email
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+
+    return await change_password_with_reset_code(
+        request,
+        db_session,
+        current_user,
+        body.new_password,
+        body.org_id,
+        body.email,
+        body.reset_code,
+    )
+
+
 @router.post(
     "/reset_password/change_password/{email}",
     tags=["users"],
-    summary="Change password with reset code",
-    description="Change a user's password using a reset code delivered via email. The new password and reset code are sent in the request body (not query params) to keep them out of logs and browser history.",
+    summary="Change password with reset code (legacy path)",
+    description="Deprecated: use /reset_password/change_password with email in the body. This path variant leaks the email into server access logs and exists only for backward compatibility.",
+    deprecated=True,
     responses={
         200: {"description": "Password updated successfully using the reset code."},
         429: {"description": "Too many password reset attempts for this email"},
@@ -499,12 +538,6 @@ async def api_change_password_with_reset_code(
     email: EmailStr,
     body: ResetPasswordRequest,
 ):
-    """
-    Update User Password with reset code.
-
-    SECURITY: Password and reset code are in the request body (not query params)
-    to prevent them from appearing in server logs and browser history.
-    """
     # Rate limit: 5 attempts per 5 minutes per email
     is_allowed, retry_after = check_password_reset_rate_limit(email)
     if not is_allowed:
@@ -519,10 +552,33 @@ async def api_change_password_with_reset_code(
 
 
 @router.post(
-    "/reset_password/send_reset_code/{email}",
+    "/reset_password/send_reset_code",
     tags=["users"],
     summary="Send password reset code",
-    description="Dispatch an org-scoped password reset code to the given email address. Returns a generic response regardless of whether the email exists to avoid user enumeration.",
+    description="Dispatch an org-scoped password reset code to the given email address (email supplied in body so it never appears in access logs). Returns a generic response regardless of whether the email exists to avoid user enumeration.",
+    responses={
+        200: {"description": "Reset code email dispatch requested."},
+        400: {"description": "Organization not found"},
+    },
+)
+async def api_send_password_reset_email_v2(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    body: SendResetCodeRequest,
+):
+    return await send_reset_password_code(
+        request, db_session, current_user, body.org_id, body.email
+    )
+
+
+@router.post(
+    "/reset_password/send_reset_code/{email}",
+    tags=["users"],
+    summary="Send password reset code (legacy path)",
+    description="Deprecated: use /reset_password/send_reset_code with email in the body.",
+    deprecated=True,
     responses={
         200: {"description": "Reset code email dispatch requested."},
         400: {"description": "Organization not found"},
@@ -536,24 +592,55 @@ async def api_send_password_reset_email(
     email: EmailStr,
     org_id: int,
 ):
-    """
-    Update User Password
-    """
     return await send_reset_password_code(
         request, db_session, current_user, org_id, email
     )
 
 
 class PlatformResetPasswordRequest(BaseModel):
+    email: Optional[EmailStr] = None
     new_password: str
     reset_code: str
+
+
+class SendPlatformResetCodeRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post(
+    "/reset_password/platform/send_reset_code",
+    tags=["users"],
+    summary="Send platform password reset code",
+    description="Dispatch a platform-level password reset code (email supplied in body so it does not appear in access logs). Subject to rate limiting per email.",
+    responses={
+        200: {"description": "Reset code email dispatch requested."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
+async def api_send_password_reset_email_platform_v2(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    body: SendPlatformResetCodeRequest,
+):
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+    return await send_reset_password_code_platform(
+        request, db_session, current_user, body.email
+    )
 
 
 @router.post(
     "/reset_password/platform/send_reset_code/{email}",
     tags=["users"],
-    summary="Send platform password reset code",
-    description="Dispatch a platform-level password reset code (no org required). Subject to rate limiting per email.",
+    summary="Send platform password reset code (legacy path)",
+    description="Deprecated: use /reset_password/platform/send_reset_code with email in the body.",
+    deprecated=True,
     responses={
         200: {"description": "Reset code email dispatch requested."},
         429: {"description": "Too many password reset attempts for this email"},
@@ -566,9 +653,6 @@ async def api_send_password_reset_email_platform(
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
 ):
-    """
-    Send password reset code (platform-level, no org required).
-    """
     is_allowed, retry_after = check_password_reset_rate_limit(email)
     if not is_allowed:
         raise HTTPException(
@@ -582,10 +666,41 @@ async def api_send_password_reset_email_platform(
 
 
 @router.post(
-    "/reset_password/platform/change_password/{email}",
+    "/reset_password/platform/change_password",
     tags=["users"],
     summary="Change platform password with reset code",
-    description="Change a user's password at the platform level (no org required) using a reset code. Subject to rate limiting per email.",
+    description="Change a user's password at the platform level (email + reset code + new password all supplied in the body so none of them appear in server access logs).",
+    responses={
+        200: {"description": "Password updated successfully using the reset code."},
+        429: {"description": "Too many password reset attempts for this email"},
+    },
+)
+async def api_change_password_with_reset_code_platform_v2(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    body: PlatformResetPasswordRequest,
+):
+    if not body.email:
+        raise HTTPException(status_code=422, detail="email is required")
+    is_allowed, retry_after = check_password_reset_rate_limit(body.email)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset attempts. Please try again in {retry_after // 60} minutes.",
+        )
+    return await change_password_with_reset_code_platform(
+        request, db_session, current_user, body.new_password, body.email, body.reset_code
+    )
+
+
+@router.post(
+    "/reset_password/platform/change_password/{email}",
+    tags=["users"],
+    summary="Change platform password with reset code (legacy path)",
+    description="Deprecated: use /reset_password/platform/change_password with email in the body.",
+    deprecated=True,
     responses={
         200: {"description": "Password updated successfully using the reset code."},
         429: {"description": "Too many password reset attempts for this email"},
@@ -599,9 +714,6 @@ async def api_change_password_with_reset_code_platform(
     email: EmailStr,
     body: PlatformResetPasswordRequest,
 ):
-    """
-    Change password using a reset code (platform-level, no org required).
-    """
     is_allowed, retry_after = check_password_reset_rate_limit(email)
     if not is_allowed:
         raise HTTPException(

@@ -18,7 +18,8 @@ from sqlmodel import Session, select
 from src.db.user_organizations import UserOrganization
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.security.auth import resolve_acting_user_id
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 
@@ -68,7 +69,7 @@ def is_locked_for_user(
     lock_type: str | None,
     resource_uuid: str,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
     *,
     accessible_restricted_uuids: set[str] | None = None,
@@ -96,7 +97,8 @@ def is_locked_for_user(
     if is_anon:
         return True
 
-    admin = is_admin if is_admin is not None else is_org_admin(current_user.id, org_id, db_session)
+    acting_user_id = resolve_acting_user_id(current_user)
+    admin = is_admin if is_admin is not None else is_org_admin(acting_user_id, org_id, db_session)
     if admin:
         return False
 
@@ -104,6 +106,6 @@ def is_locked_for_user(
         return resource_uuid not in accessible_restricted_uuids
 
     accessible = batch_accessible_restricted_uuids(
-        current_user.id, [resource_uuid], db_session
+        acting_user_id, [resource_uuid], db_session
     )
     return resource_uuid not in accessible

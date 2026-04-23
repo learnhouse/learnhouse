@@ -31,16 +31,28 @@ from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
-from src.security.api_token_utils import require_non_api_token_user
+from src.security.api_token_utils import (
+    get_authenticated_non_api_token_user,
+    require_non_api_token_user,
+)
 from src.security.features_utils.plan_check import require_plan, require_plan_for_boards, require_plan_for_certifications, require_plan_for_community, require_plan_for_usergroups, require_plan_for_playgrounds
 
 
 v1_router = APIRouter(prefix="/api/v1")
 
-# Helper dependency to reject API token access
+# Helper dependency to reject API token access (still admits AnonymousUser —
+# use on routers that contain at least one deliberately-public endpoint).
 async def get_non_api_token_user(user = Depends(get_current_user)):
     """Dependency that rejects API token access."""
     return await require_non_api_token_user(user)
+
+
+# Alias used by routers that have zero public endpoints. Requires a real
+# authenticated session AND rejects API tokens. See F-2 in the security
+# audit for context: the plain ``get_non_api_token_user`` silently admits
+# anonymous callers, which is the wrong default for admin-only or
+# billing/compute-sensitive routes.
+require_authenticated_user = get_authenticated_non_api_token_user
 
 # API Routes
 v1_router.include_router(
@@ -53,7 +65,10 @@ v1_router.include_router(
     usergroups.router,
     prefix="/usergroups",
     tags=["usergroups"],
-    dependencies=[Depends(require_plan_for_usergroups("standard", "User Groups"))]
+    dependencies=[
+        Depends(require_authenticated_user),
+        Depends(require_plan_for_usergroups("standard", "User Groups")),
+    ],
 )
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 v1_router.include_router(
@@ -66,25 +81,25 @@ v1_router.include_router(
     ai_credits.router,
     prefix="/orgs",
     tags=["ai-credits"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     roles.router,
     prefix="/roles",
     tags=["roles"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     api_tokens.router,
     prefix="/orgs",
     tags=["api-tokens"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "API Access"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "API Access"))]
 )
 v1_router.include_router(
     webhooks.router,
     prefix="/orgs",
     tags=["webhooks"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "Webhooks"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan("pro", "Webhooks"))]
 )
 v1_router.include_router(
     zapier_integration.router,
@@ -95,7 +110,7 @@ v1_router.include_router(
     custom_domains.router,
     prefix="/orgs",
     tags=["custom-domains"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("standard", "Custom Domains"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan("standard", "Custom Domains"))]
 )
 # Public domain resolution endpoint (no auth required)
 v1_router.include_router(
@@ -120,12 +135,16 @@ v1_router.include_router(
     packs.router,
     prefix="/orgs",
     tags=["packs"],
-    dependencies=[Depends(get_non_api_token_user)],
+    dependencies=[Depends(require_authenticated_user)],
 )
 v1_router.include_router(
     blocks.router,
     prefix="/blocks",
     tags=["blocks"],
+    # Mixed router: public course pages legitimately fetch block media as
+    # anonymous visitors. Anonymous access is gated per-handler: GET block
+    # handlers run RBAC + org-membership checks in the service layer; POST
+    # block handlers (creates) require ownership via check_resource_access.
     dependencies=[Depends(get_non_api_token_user)]
 )
 v1_router.include_router(
@@ -138,14 +157,14 @@ v1_router.include_router(
     migration_router_module.router,
     prefix="/courses",
     tags=["migration"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(search.router, prefix="/search", tags=["search"])
 v1_router.include_router(
     assignments.router,
     prefix="/assignments",
     tags=["assignments"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
@@ -194,70 +213,70 @@ v1_router.include_router(
     trail.router,
     prefix="/trail",
     tags=["trail"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     ai.router,
     prefix="/ai",
     tags=["ai"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     magicblocks.router,
     prefix="/ai",
     tags=["ai", "magicblocks"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     courseplanning.router,
     prefix="/ai",
     tags=["ai", "courseplanning"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     rag.router,
     prefix="/ai",
     tags=["ai", "rag"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 v1_router.include_router(
     boards_playground.router,
     prefix="/boards",
     tags=["boards", "boards-playground"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_boards("pro", "Boards"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_boards("pro", "Boards"))]
 )
 v1_router.include_router(
     playgrounds_router_module.router,
     prefix="/playgrounds",
     tags=["playgrounds"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
 )
 v1_router.include_router(
     playgrounds_generator_router.router,
     prefix="/playgrounds",
     tags=["playgrounds", "playgrounds-generator"],
-    dependencies=[Depends(get_non_api_token_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
 )
 
 v1_router.include_router(
     analytics_router_module.router,
     prefix="/analytics",
     tags=["analytics"],
-    dependencies=[Depends(get_non_api_token_user)],
+    dependencies=[Depends(require_authenticated_user)],
 )
 
 v1_router.include_router(
     code_execution.router,
     prefix="/code",
     tags=["code-execution"],
-    dependencies=[Depends(get_non_api_token_user)],
+    dependencies=[Depends(require_authenticated_user)],
 )
 
 v1_router.include_router(
     code_submissions.router,
     prefix="/code/submissions",
     tags=["code_submissions"],
-    dependencies=[Depends(get_non_api_token_user)],
+    dependencies=[Depends(require_authenticated_user)],
 )
 
 # Instance info (public, no auth)
@@ -288,7 +307,7 @@ v1_router.include_router(
     utils_router,
     prefix="/utils",
     tags=["utils"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(require_authenticated_user)]
 )
 
 # Video Streaming Routes

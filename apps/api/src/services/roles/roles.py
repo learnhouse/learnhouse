@@ -8,7 +8,8 @@ from src.security.rbac.rbac import (
 )
 from src.security.org_auth import require_org_role_permission, get_user_org_role
 from src.security.superadmin import is_user_superadmin
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.security.auth import resolve_acting_user_id
 from src.db.roles import Role, RoleCreate, RoleRead, RoleUpdate, RoleTypeEnum
 from src.db.organizations import Organization
 from fastapi import HTTPException, Request
@@ -19,7 +20,7 @@ async def create_role(
     request: Request,
     db_session: Session,
     role_object: RoleCreate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ):
     role = Role.model_validate(role_object)
 
@@ -53,7 +54,7 @@ async def create_role(
     # ============================================================================
     # VERIFICATION 3+4: Membership + permission (superadmins bypass)
     # ============================================================================
-    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_create")
+    require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_create")
 
     # ============================================================================
     # VERIFICATION 5: Check if a role with the same name already exists in this organization
@@ -174,8 +175,9 @@ async def create_role(
     # VERIFICATION 8: Ensure user cannot create a role with higher permissions than they have
     # (superadmins skip this check — they can grant any permission)
     # ============================================================================
-    if not is_user_superadmin(current_user.id, db_session):
-        user_role = get_user_org_role(current_user.id, role.org_id, db_session)
+    create_role_user_id = resolve_acting_user_id(current_user)
+    if not is_user_superadmin(create_role_user_id, db_session):
+        user_role = get_user_org_role(create_role_user_id, role.org_id, db_session)
         if role.rights and isinstance(role.rights, dict) and user_role and user_role.rights and isinstance(user_role.rights, dict):
             for right_key, right_permissions in role.rights.items():
                 if right_key in user_role.rights:
@@ -253,7 +255,7 @@ async def get_roles_by_organization(
     request: Request,
     db_session: Session,
     org_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[RoleRead]:
     """
     Get all roles for a specific organization, including global roles.
@@ -285,7 +287,7 @@ async def get_roles_by_organization(
     # ============================================================================
     # VERIFICATION 2+3: Membership + permission (superadmins bypass)
     # ============================================================================
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
+    require_org_role_permission(resolve_acting_user_id(current_user), org_id, db_session, "roles", "action_read")
 
     # ============================================================================
     # GET ROLES: Fetch all roles for the organization AND global roles
@@ -321,7 +323,7 @@ async def get_roles_by_organization(
 
 
 async def read_role(
-    request: Request, db_session: Session, role_id: str, current_user: PublicUser
+    request: Request, db_session: Session, role_id: str, current_user: PublicUser | AnonymousUser | APITokenUser
 ):
     # Convert role_id to integer
     try:
@@ -345,9 +347,10 @@ async def read_role(
 
     # RBAC check — scope permission to the role's own org to prevent cross-org IDOR.
     # Global roles (org_id=None) are readable by any authenticated user.
-    await authorization_verify_if_user_is_anon(current_user.id)
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
     if role.org_id is not None:
-        require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_read")
+        require_org_role_permission(acting_user_id, role.org_id, db_session, "roles", "action_read")
 
     role = RoleRead(**role.model_dump())
 
@@ -358,7 +361,7 @@ async def update_role(
     request: Request,
     db_session: Session,
     role_object: RoleUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ):
     statement = select(Role).where(Role.id == role_object.role_id)
     result = db_session.exec(statement)
@@ -382,7 +385,7 @@ async def update_role(
 
     # RBAC check — scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
-    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_update")
+    require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_update")
 
     # Complete the role object
     role.update_date = str(datetime.now())
@@ -501,7 +504,7 @@ async def update_role(
 
 
 async def delete_role(
-    request: Request, db_session: Session, role_id: str, current_user: PublicUser
+    request: Request, db_session: Session, role_id: str, current_user: PublicUser | AnonymousUser | APITokenUser
 ):
     # Convert role_id to integer
     try:
@@ -535,7 +538,7 @@ async def delete_role(
 
     # RBAC check — scope to the role's own org to prevent cross-org IDOR.
     # org_id is guaranteed non-None here because TYPE_GLOBAL roles are blocked above.
-    require_org_role_permission(current_user.id, role.org_id, db_session, "roles", "action_delete")
+    require_org_role_permission(resolve_acting_user_id(current_user), role.org_id, db_session, "roles", "action_delete")
 
     # Invalidate session cache for all users with this role before deleting
     from src.db.user_organizations import UserOrganization
