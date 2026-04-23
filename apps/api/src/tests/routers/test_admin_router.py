@@ -112,6 +112,10 @@ def _admin_context(api_user):
     with (
         patch("src.routers.admin._require_api_token", return_value=api_user),
         patch("src.routers.admin._resolve_org_slug", return_value=None),
+        patch(
+            "src.services.security.rate_limiting.check_admin_user_lookup_rate_limit",
+            return_value=(True, 0),
+        ),
     ):
         yield
 

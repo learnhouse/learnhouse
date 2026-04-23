@@ -86,6 +86,14 @@ def _mock_delivery(**overrides) -> WebhookDeliveryLogRead:
 
 
 class TestWebhooksRouter:
+    @pytest.fixture(autouse=True)
+    def _bypass_webhook_rate_limit(self):
+        with patch(
+            "src.routers.webhooks.check_webhook_mutation_rate_limit",
+            return_value=(True, 0),
+        ):
+            yield
+
     async def test_list_webhook_events(self, client):
         response = await client.get("/api/v1/orgs/1/webhooks/events")
 

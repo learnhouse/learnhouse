@@ -97,6 +97,11 @@ def _mock_reaction_summary() -> PlaygroundReactionSummary:
 
 
 class TestPlaygroundsRouter:
+    @pytest.fixture(autouse=True)
+    def _bypass_ai_rate_limit(self):
+        with patch("src.services.security.rate_limiting.enforce_ai_rate_limit"):
+            yield
+
     @pytest.mark.asyncio
     async def test_playground_generator_helpers_and_error_paths(
         self, client, db, org, other_org, admin_user

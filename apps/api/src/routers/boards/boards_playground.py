@@ -7,7 +7,7 @@ import logging
 from src.db.organizations import Organization
 from src.db.boards import Board
 from src.core.events.database import get_db_session
-from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.db.users import PublicUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
 from src.security.features_utils.usage import (
     reserve_ai_credit,

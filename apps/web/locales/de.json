@@ -13,7 +13,7 @@
     "organization": "Organisation",
     "dashboard": "Dashboard",
     "settings": "Einstellungen",
-    "language": "Sprreche",
+    "language": "Sprache",
     "english": "Englisch",
     "french": "Französisch",
     "german": "Deutsch",
@@ -95,7 +95,7 @@
           "description": "Communities ist eine Premium-Funktion, die nur für Organisationen in unserem Standard-Plan oder höher verfügbar ist. Upgraden Sie, um Diskussions-Communities für Ihre Mitglieder freizuschalten."
         },
         "seo": {
-          "description": "SEO-Optimierungstools sind nur für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, um Suchmaschinenerscheinung, Social-Sharing-Vorschauen und strukturierte Daten für Ihre Kurse anzupassen.",
+          "description": "SEO-Optimierungstools sind nur für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, um Suchmaschinenerscheinung, Social-Sharing-Vorschaubilder und strukturierte Daten für Ihre Kurse anzupassen.",
           "title": "Standard-Funktion"
         },
         "sso": {
@@ -347,7 +347,7 @@
     "create_course": "Kurs erstellen",
     "create_new_course": "Einen neuen Kurs erstellen",
     "course_name": "Kursname",
-    "course_thumbnail": "Kurs-Vorschaubild",
+    "course_thumbnail": "Kurs-Miniaturansicht",
     "course_learnings": "Kurs-Lernziele",
     "course_learnings_desc": "Was werden Sie lehren? (Enter zum Hinzufügen)",
     "course_tags": "Kurs-Tags",
@@ -506,7 +506,7 @@
       "deselect_all": "Alle abwählen",
       "chapters": "Kapitel",
       "activities": "Aktivitäten",
-      "has_thumbnail": "Hat Vorschaubild",
+      "has_thumbnail": "Hat Miniaturansicht",
       "selected": "ausgewählt",
       "options": "Import-Optionen",
       "name_prefix": "Kursnamen-Präfix",
@@ -800,9 +800,9 @@
         "published_hint": "Diesen Podcast auf Ihrer Organisationsseite sichtbar machen",
         "tags_hint": "Tags durch Kommas trennen",
         "tags_placeholder": "musik, bildung, technik",
-        "thumbnail": "Thumbnail",
+        "thumbnail": "Miniaturansicht",
         "thumbnail_hint": "Empfohlene Größe: 1400x1400px. JPG oder PNG.",
-        "upload_thumbnail": "Thumbnail hochladen",
+        "upload_thumbnail": "Miniaturansicht hochladen",
         "visibility": "Sichtbarkeitseinstellungen"
       },
       "save_changes": "Änderungen speichern",
@@ -841,7 +841,7 @@
     "podcast_name": "Podcast-Name",
     "podcast_name_required": "Podcast-Name ist erforderlich",
     "podcast_tags": "Tags",
-    "podcast_thumbnail": "Podcast-Thumbnail",
+    "podcast_thumbnail": "Podcast-Miniaturansicht",
     "podcast_visibility": "Sichtbarkeit",
     "search_results": "{{count}} Podcast(s) für \"{{query}}\" gefunden"
   },
@@ -1447,11 +1447,11 @@
           "learnings_invalid_json": "Ungültiges JSON-Format",
           "tags_label": "Tags",
           "tags_placeholder": "Enter zum Hinzufügen...",
-          "thumbnail_type_label": "Vorschaubild-Typ",
+          "thumbnail_type_label": "Miniaturansicht-Typ",
           "thumbnail_type_image": "Bild",
           "thumbnail_type_video": "Video",
           "thumbnail_type_both": "Beides",
-          "thumbnail_label": "Vorschaubild",
+          "thumbnail_label": "Miniaturansicht",
           "image_search_placeholder": "Nach Bildern suchen..."
         },
         "thumbnail": {
@@ -1707,7 +1707,7 @@
         "settings": {
           "tabs": {
             "general": "Allgemein",
-            "thumbnail": "Vorschaubild",
+            "thumbnail": "Miniaturansicht",
             "course": "Verknüpfter Kurs",
             "moderation": "Moderation",
             "access": "Zugriff"
@@ -1717,7 +1717,7 @@
             "subtitle": "Community-Name, Beschreibung und Sichtbarkeit verwalten"
           },
           "thumbnail": {
-            "title": "Vorschaubild",
+            "title": "Miniaturansicht",
             "subtitle": "Das Titelbild der Community aktualisieren"
           },
           "course": {
@@ -1775,16 +1775,16 @@
           }
         },
         "thumbnail": {
-          "title": "Community-Vorschaubild",
+          "title": "Community-Miniaturansicht",
           "subtitle": "Laden Sie ein Titelbild für Ihre Community hoch",
-          "no_thumbnail": "Kein Vorschaubild festgelegt",
+          "no_thumbnail": "Keine Miniaturansicht festgelegt",
           "upload_image": "Bild hochladen",
           "browse_unsplash": "Unsplash durchsuchen",
           "uploading": "Wird hochgeladen...",
           "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. Größe: 8MB. Empfohlenes Seitenverhältnis: 16:9",
           "toasts": {
-            "update_success": "Vorschaubild erfolgreich aktualisiert",
-            "update_error": "Fehler beim Aktualisieren des Vorschaubilds",
+            "update_success": "Miniaturansicht erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren der Miniaturansicht",
             "invalid_type": "Ungültiger Dateityp. Bitte laden Sie nur PNG- oder JPG/JPEG-Bilder hoch",
             "file_too_large": "Dateigröße überschreitet das Limit von 8MB"
           }
@@ -2079,7 +2079,7 @@
           "keywords_placeholder": "schlüsselwort1, schlüsselwort2, schlüsselwort3",
           "og_description_label": "OG-Beschreibung",
           "og_description_placeholder": "Benutzerdefinierte Beschreibung für Social-Media-Sharing",
-          "og_image_hint": "Benutzerdefinierte Bild-URL für Social-Sharing. Lassen Sie es leer, um das Kurs-Thumbnail zu verwenden",
+          "og_image_hint": "Benutzerdefinierte Bild-URL für Social-Sharing. Lassen Sie es leer, um die Kurs-Miniaturansicht zu verwenden",
           "og_image_label": "OG-Bild-URL",
           "og_image_placeholder": "https://example.com/image.jpg",
           "og_title_label": "OG-Titel",
@@ -2210,24 +2210,24 @@
         "watermark_label": "\"Made with LearnHouse\"-Wasserzeichen"
       },
       "images": {
-        "title": "Bilder & Vorschauen",
-        "subtitle": "Verwalten Sie das Logo, das Vorschaubild und die Vorschaubilder Ihrer Organisation",
+        "title": "Bilder & Vorschaubilder",
+        "subtitle": "Verwalten Sie das Logo, die Miniaturansicht und die Vorschaubilder Ihrer Organisation",
         "tabs": {
           "logo": "Logo",
-          "thumbnail": "Vorschaubild",
-          "previews": "Vorschauen"
+          "thumbnail": "Miniaturansicht",
+          "previews": "Vorschaubilder"
         },
         "upload_logo": "Neues Logo hochladen",
-        "upload_thumbnail": "Neues Vorschaubild hochladen",
+        "upload_thumbnail": "Neue Miniaturansicht hochladen",
         "uploading": "Hochladen...",
         "uploading_logo": "Logo wird hochgeladen...",
-        "uploading_thumbnail": "Vorschaubild wird hochgeladen...",
-        "uploading_previews": "{{count}} Vorschau wird hochgeladen...",
-        "uploading_previews_plural": "{{count}} Vorschauen werden hochgeladen...",
+        "uploading_thumbnail": "Miniaturansicht wird hochgeladen...",
+        "uploading_previews": "{{count}} Vorschaubild wird hochgeladen...",
+        "uploading_previews_plural": "{{count}} Vorschaubilder werden hochgeladen...",
         "accepted_files": "Akzeptiert PNG, JPG (max. 5MB)",
         "recommended_size": "Empfohlene Größe: 200x100 Pixel",
         "add_preview": "Vorschau hinzufügen",
-        "drag_to_reorder": "Zum Umordnen ziehen • Maximal 4 Vorschauen • Unterstützt Bilder & Videos",
+        "drag_to_reorder": "Zum Umordnen ziehen • Maximal 4 Vorschaubilder • Unterstützt Bilder & Videos",
         "video_modal": {
           "title": "Vorschau hinzufügen",
           "images": "Bilder hochladen",
@@ -2241,17 +2241,17 @@
         "toasts": {
           "logo_success": "Logo aktualisiert",
           "logo_error": "Fehler beim Hochladen des Logos",
-          "thumbnail_success": "Vorschaubild aktualisiert",
-          "thumbnail_error": "Fehler beim Hochladen des Vorschaubilds",
-          "preview_added": "{{count}} Vorschau hinzugefügt",
-          "preview_added_plural": "{{count}} Vorschauen hinzugefügt",
-          "preview_error": "Fehler beim Hochladen der Vorschauen",
-          "preview_removed": "Vorschau entfernt",
-          "preview_remove_error": "Fehler beim Entfernen der Vorschau",
-          "order_updated": "Vorschaureihenfolge aktualisiert",
-          "order_update_error": "Fehler beim Aktualisieren der Vorschaureihenfolge",
-          "max_previews": "Sie können nur noch {{count}} Vorschau hochladen",
-          "max_previews_plural": "Sie können nur noch {{count}} Vorschauen hochladen",
+          "thumbnail_success": "Miniaturansicht aktualisiert",
+          "thumbnail_error": "Fehler beim Hochladen der Miniaturansicht",
+          "preview_added": "{{count}} Vorschaubild hinzugefügt",
+          "preview_added_plural": "{{count}} Vorschaubilder hinzugefügt",
+          "preview_error": "Fehler beim Hochladen der Vorschaubilder",
+          "preview_removed": "Vorschaubild entfernt",
+          "preview_remove_error": "Fehler beim Entfernen des Vorschaubilds",
+          "order_updated": "Reihenfolge der Vorschaubilder aktualisiert",
+          "order_update_error": "Fehler beim Aktualisieren der Reihenfolge",
+          "max_previews": "Sie können nur noch {{count}} Vorschaubild hochladen",
+          "max_previews_plural": "Sie können nur noch {{count}} Vorschaubilder hochladen",
           "invalid_url": "Ungültige {{type}} URL",
           "video_exists": "Dieses Video wurde bereits hinzugefügt",
           "adding_video": "Video-Vorschau wird hinzugefügt...",
@@ -2264,7 +2264,7 @@
         "title": "Branding",
         "subtitle": "Verwalten Sie die visuelle Identität und soziale Präsenz Ihrer Organisation",
         "tabs": {
-          "images": "Bilder & Vorschauen",
+          "images": "Bilder & Vorschaubilder",
           "social": "Soziale Links",
           "theme": "Design",
           "auth": "Auth"
@@ -4214,15 +4214,15 @@
       "save_changes": "Änderungen speichern"
     },
     "thumbnail": {
-      "title": "Vorschaubild",
+      "title": "Miniaturansicht",
       "description": "Board-Coverbild auf Karten angezeigt",
-      "alt": "Board-Vorschaubild",
+      "alt": "Board-Miniaturansicht",
       "uploading": "Wird hochgeladen...",
       "upload_image": "Bild hochladen",
       "gallery": "Galerie",
       "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. 8MB.",
-      "thumbnail_updated": "Vorschaubild aktualisiert",
-      "thumbnail_updated_error": "Vorschaubild konnte nicht hochgeladen werden"
+      "thumbnail_updated": "Miniaturansicht aktualisiert",
+      "thumbnail_updated_error": "Miniaturansicht konnte nicht hochgeladen werden"
     },
     "access": {
       "title": "Zugriffskontrolle",
