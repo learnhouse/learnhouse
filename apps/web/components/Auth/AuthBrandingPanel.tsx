@@ -20,8 +20,13 @@ export default function AuthBrandingPanel({ org, welcomeText }: AuthBrandingPane
     welcome_message = '',
     background_type = 'gradient',
     background_image = '',
-    text_color = 'light'
+    text_color = 'light',
+    unsplash_photographer_name = '',
+    unsplash_photographer_url = '',
+    unsplash_photo_url = '',
   } = authBranding
+  const UNSPLASH_UTM = '?utm_source=LearnHouse&utm_medium=referral'
+  const withUtm = (url: string) => (url ? `${url}${UNSPLASH_UTM}` : '')
 
   // Check if org has enterprise plan - hide LearnHouse branding for enterprise users
   // In OSS mode, always show branding regardless of plan
@@ -132,6 +137,33 @@ export default function AuthBrandingPanel({ org, welcomeText }: AuthBrandingPane
 
         {/* Bottom spacer for visual balance */}
         <div className="h-10" />
+
+        {/* Unsplash attribution (required by Unsplash API guidelines) */}
+        {background_type === 'unsplash' && background_image && unsplash_photographer_name && (
+          <div className={cn(
+            "absolute bottom-3 left-4 right-4 z-10 text-[11px] leading-tight",
+            text_color === 'light' ? "text-white/70" : "text-gray-700"
+          )}>
+            Photo by{' '}
+            <a
+              href={withUtm(unsplash_photographer_url) || withUtm(unsplash_photo_url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-100 opacity-90"
+            >
+              {unsplash_photographer_name}
+            </a>
+            {' '}on{' '}
+            <a
+              href={`https://unsplash.com/${UNSPLASH_UTM}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-100 opacity-90"
+            >
+              Unsplash
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )
