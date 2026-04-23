@@ -29,7 +29,7 @@ class APIToken(APITokenBase, table=True):
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
     )
     created_by_user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id"), nullable=False)
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     )
     creation_date: str = ""
     update_date: str = ""

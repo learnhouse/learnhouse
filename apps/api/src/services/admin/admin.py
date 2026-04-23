@@ -936,11 +936,16 @@ async def issue_magic_link(
 
     ttl = max(60, min(ttl_seconds, 900))
     expires_delta = timedelta(seconds=ttl)
+    # Every link carries a random jti so the consume endpoint can enforce
+    # single-use via a Redis SETNX marker.
+    import secrets as _secrets
+    jti = _secrets.token_urlsafe(16)
     payload = {
         "sub": user.email,
         "purpose": "magic_link",
         "org_id": token_user.org_id,
         "redirect_to": safe_redirect or "",
+        "jti": jti,
     }
     token = create_access_token(data=payload, expires_delta=expires_delta)
 
@@ -981,9 +986,37 @@ async def consume_magic_link_token(
     email = payload.get("sub")
     org_id = payload.get("org_id")
     raw_redirect = payload.get("redirect_to") or None
+    jti = payload.get("jti")
 
     if not email or not org_id:
         raise HTTPException(status_code=410, detail="Magic link payload incomplete")
+
+    # Enforce single-use: the first consume claims the jti; any replay hits
+    # an existing key and is rejected. Tokens minted before jti was added
+    # have none — let them through; the JWT exp (max 15 min) bounds them.
+    # A Redis outage also falls through for the same reason.
+    if jti:
+        try:
+            import redis as _redis
+            from config.config import get_learnhouse_config as _get_cfg
+            _lh_cfg = _get_cfg()
+            _redis_url = _lh_cfg.redis_config.redis_connection_string
+            if _redis_url:
+                _r = _redis.Redis.from_url(
+                    _redis_url, socket_connect_timeout=2, socket_timeout=2
+                )
+                # TTL matches the magic-link max lifetime so the marker
+                # outlives any window the token could still be replayed in.
+                claimed = _r.set(f"magic_link_used:{jti}", "1", nx=True, ex=900)
+                if not claimed:
+                    raise HTTPException(
+                        status_code=410,
+                        detail="Magic link has already been used",
+                    )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
 
     try:
         redirect_to = _validate_magic_link_redirect(raw_redirect)

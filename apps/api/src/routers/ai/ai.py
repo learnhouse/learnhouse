@@ -92,9 +92,20 @@ async def activity_chat_event_generator(
     user_message: str,
     ai_friendly_text: str,
     ai_model: str,
+    org_id: int | None = None,
 ):
-    """Convert async generator to SSE format with follow-up suggestions"""
+    """Convert async generator to SSE format with follow-up suggestions.
+
+    Credits are reserved by the caller before the stream is created. If the
+    stream dies before producing any model output (upstream error, client
+    disconnect, cancellation) we refund one credit so a flaky connection
+    doesn't silently drain the org's quota.
+    """
+    import asyncio
+    from src.security.features_utils.usage import refund_ai_credit
+
     full_response = ""
+    stream_failed = False
     try:
         # Send start event immediately so frontend knows we're ready
         yield f"data: {json.dumps({'type': 'start', 'aichat_uuid': aichat_uuid})}\n\n"
@@ -120,9 +131,22 @@ async def activity_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+    except asyncio.CancelledError:
+        stream_failed = True
+        # Client disconnect / server shutdown. Re-raise so Starlette observes
+        # the cancellation, but let the finally refund first.
+        raise
     except Exception:
+        stream_failed = True
         logger.exception("Error in activity_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
+    finally:
+        # Refund credit if the model produced nothing useful.
+        if org_id is not None and (stream_failed or not full_response):
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
 
 
 @router.post(
@@ -170,6 +194,7 @@ async def api_ai_start_activity_chat_session_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -225,6 +250,7 @@ async def api_ai_send_activity_chat_message_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -243,6 +269,9 @@ async def api_ai_send_activity_chat_message_stream(
 CONTENT_START_MARKER = "<<<CONTENT>>>"
 CONTENT_END_MARKER = "<<<END_CONTENT>>>"
 
+import asyncio  # noqa: E402
+from src.security.features_utils.usage import refund_ai_credit  # noqa: E402
+
 
 async def editor_chat_event_generator(
     stream_generator,
@@ -251,6 +280,7 @@ async def editor_chat_event_generator(
     user_message: str,
     ai_friendly_text: str,
     ai_model: str,
+    org_id: int | None = None,
 ):
     """
     Convert async generator to SSE format for editor AI chat.
@@ -373,9 +403,23 @@ async def editor_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+    except asyncio.CancelledError:
+        # Client disconnect / cancellation — let Starlette observe it after
+        # we refund credits in the finally block.
+        if org_id is not None and not full_response:
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
+        raise
     except Exception:
         logger.exception("Error in editor_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
+        if org_id is not None and not full_response:
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
 
 
 @router.post(
@@ -423,6 +467,7 @@ async def api_editor_ai_start_chat_session_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -478,6 +523,7 @@ async def api_editor_ai_send_message_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={

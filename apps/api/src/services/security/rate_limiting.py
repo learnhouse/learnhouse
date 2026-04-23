@@ -247,6 +247,74 @@ def check_password_reset_rate_limit(email: str) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+def check_webhook_mutation_rate_limit(
+    org_id: int,
+    action: str = "create",
+) -> Tuple[bool, int]:
+    """
+    Rate limit webhook endpoint creation/update/test at 20/hour per org.
+    Webhook endpoints are a fan-out primitive, so without a ceiling a
+    compromised admin can create hundreds and use ``/test`` as an outbound
+    bandwidth amplifier.
+    """
+    key = f"webhook_{action}:{org_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=20,
+        window_seconds=60 * 60,  # 1 hour
+    )
+    return is_allowed, retry_after
+
+
+def check_invite_acceptance_rate_limit(request: Request, org_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit invite-code acceptance at 20 attempts / 15 minutes per IP+org.
+    Deters brute-force against 8-char alphanumeric invite codes.
+    """
+    ip = get_client_ip(request)
+    key = f"invite_accept:{org_id}:{ip}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=20,
+        window_seconds=15 * 60,
+    )
+    return is_allowed, retry_after
+
+
+def check_search_rate_limit(user_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit search queries at 60/min per authenticated user. Search hits
+    full-text indexes and scales poorly under sustained load from one session.
+    """
+    key = f"search:{user_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=60,
+        window_seconds=60,
+    )
+    return is_allowed, retry_after
+
+
+def check_admin_user_lookup_rate_limit(api_token_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit admin-API user lookups by email at 60/min per API token.
+
+    The endpoint returns 404 for "not in org" and 200 for "in org", which is
+    useful to legitimate integrations but also a bulk-enumeration oracle if
+    a token leaks. The cap limits blast radius.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"admin_user_lookup:{api_token_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=60,
+        window_seconds=60,  # 60/min per token
+    )
+    return is_allowed, retry_after
+
+
 def check_email_verification_rate_limit(email: str) -> Tuple[bool, int]:
     """
     Check email verification rate limit: 5 attempts per 5 minutes per email.

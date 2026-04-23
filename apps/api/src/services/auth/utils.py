@@ -1,3 +1,5 @@
+import logging
+import os
 import random
 from datetime import datetime, timezone
 from typing import Optional
@@ -12,7 +14,70 @@ from src.services.security.rate_limiting import get_client_ip
 from src.services.security.account_lockout import update_login_info
 
 
+logger = logging.getLogger(__name__)
+
+# Emit the "audience not configured" warning at most once per process to
+# avoid flooding logs on every login attempt.
+_LOGGED_MISSING_GOOGLE_CLIENT_ID = False
+
+
+async def _verify_google_token_audience(access_token: str) -> None:
+    """
+    Verify that ``access_token`` was minted for our Google OAuth client.
+
+    Google's userinfo endpoint returns the account's email for any valid
+    access token regardless of audience (``aud``/client_id). Without an
+    explicit audience check, an access token obtained by a different OAuth
+    app (e.g. one the victim authorized for an attacker-hosted site) could
+    be replayed against ``/auth/oauth`` to impersonate the victim. Calling
+    the tokeninfo endpoint first and comparing ``aud`` to our registered
+    client_id closes that confused-deputy window.
+
+    If ``LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID`` is not set we log a one-shot
+    warning and fall through so existing deployments keep working, but
+    operators should set it in production.
+    """
+    global _LOGGED_MISSING_GOOGLE_CLIENT_ID
+
+    expected_client_id = os.environ.get("LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID")
+    if not expected_client_id:
+        if not _LOGGED_MISSING_GOOGLE_CLIENT_ID:
+            logger.warning(
+                "LEARNHOUSE_GOOGLE_OAUTH_CLIENT_ID is not set — Google OAuth "
+                "audience verification is DISABLED. Set this env var to your "
+                "Google OAuth client_id to block confused-deputy token reuse."
+            )
+            _LOGGED_MISSING_GOOGLE_CLIENT_ID = True
+        return
+
+    async with httpx.AsyncClient(timeout=5) as client:
+        r = await client.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"access_token": access_token},
+        )
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=401,
+            detail="Google token could not be validated",
+        )
+    body = r.json()
+    aud = body.get("aud") or body.get("azp")
+    if aud != expected_client_id:
+        # Do not echo the presented aud — it could leak which third-party
+        # app the attacker tried to reuse.
+        logger.warning(
+            "Google OAuth audience mismatch: token aud did not match our client_id"
+        )
+        raise HTTPException(
+            status_code=401,
+            detail="Google token was not issued for this application",
+        )
+
+
 async def get_google_user_info(access_token: str):
+    # Validate audience before trusting userinfo (confused-deputy guard).
+    await _verify_google_token_audience(access_token)
+
     url = "https://www.googleapis.com/oauth2/v3/userinfo"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
