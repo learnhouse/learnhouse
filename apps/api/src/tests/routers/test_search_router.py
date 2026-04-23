@@ -37,6 +37,14 @@ async def client(app):
 class TestSearchRouter:
     """Router-level tests for the search endpoint."""
 
+    @pytest.fixture(autouse=True)
+    def _bypass_search_rate_limit(self):
+        with patch(
+            "src.routers.search.check_search_rate_limit",
+            return_value=(True, 0),
+        ):
+            yield
+
     @patch(
         "src.services.search.search.search_courses",
         new_callable=AsyncMock,

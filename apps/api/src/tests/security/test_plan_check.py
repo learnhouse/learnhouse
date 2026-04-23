@@ -161,8 +161,15 @@ class TestPlanCheck:
     @pytest.mark.parametrize(
         ("feature_name", "dependency", "request_kwargs", "expected_status"),
         [
+            # The vanilla ``require_plan`` always requires a resolvable
+            # org_id and fails closed with 400 if missing or malformed.
             ("Analytics", require_plan("pro", "Analytics"), {"path_params": {"org_id": "abc"}}, 400),
             ("Analytics", require_plan("pro", "Analytics"), {"query_params": {"org_id": "abc"}}, 400),
+            # The specialised wrappers fall through when the discriminator
+            # can't be resolved — their routers mount handlers whose
+            # discriminator sometimes lives in the request body or in
+            # child uuids (discussion_uuid, comment_uuid) we don't expand.
+            # Tenant isolation is still enforced by each handler's RBAC.
             ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"path_params": {"usergroup_id": "abc"}}, 200),
             ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"path_params": {"org_id": "abc"}}, 200),
             ("Usergroups", require_plan_for_usergroups("pro", "Usergroups"), {"query_params": {"org_id": "abc"}}, 200),
@@ -211,6 +218,8 @@ class TestPlanCheck:
             "src.security.features_utils.plan_check.plan_meets_requirement",
             return_value=True,
         ):
+            # No discriminator → fall through (handler RBAC still runs).
+            # Resolvable discriminator → plan gate evaluates and returns True.
             assert await dependency(_request(), db) is True
             assert await dependency(_request(path_params={"usergroup_id": str(usergroup.id)}), db) is True
 
@@ -257,6 +266,7 @@ class TestPlanCheck:
             "src.security.features_utils.plan_check.plan_meets_requirement",
             return_value=True,
         ):
+            # No discriminator → fall through (handler RBAC still runs).
             assert await dependency(_request(), db) is True
             assert (
                 await dependency(_request(path_params={"certification_uuid": cert.certification_uuid}), db)
@@ -336,9 +346,11 @@ class TestPlanCheck:
             "src.security.features_utils.plan_check.plan_meets_requirement",
             return_value=True,
         ):
+            # No discriminator → fall through (handler RBAC still runs).
             assert await board_dependency(_request(), db) is True
             assert await playground_dependency(_request(), db) is True
             assert await community_dependency(_request(), db) is True
+
             assert (
                 await board_dependency(_request(path_params={"board_uuid": board.board_uuid}), db)
                 is True

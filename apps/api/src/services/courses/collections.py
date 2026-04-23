@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.security.auth import resolve_acting_user_id
 from src.db.collections import (
     Collection,
     CollectionCreate,
@@ -254,7 +255,7 @@ async def delete_collection(
 async def get_collections(
     request: Request,
     org_id: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
     page: int = 1,
     limit: int = 10,
@@ -267,7 +268,8 @@ async def get_collections(
         select(Collection).where(Collection.org_id == org_id).distinct(Collection.id) # type: ignore
     )
 
-    if current_user.id == 0:
+    acting_user_id = resolve_acting_user_id(current_user)
+    if acting_user_id == 0:
         statement = statement_public
     else:
         statement = statement_all
@@ -288,7 +290,7 @@ async def get_collections(
             CollectionCourse.org_id == org_id
         )
     )
-    if current_user.id == 0:
+    if acting_user_id == 0:
         batch_statement = batch_statement.where(Course.public == True)
 
     batch_results = db_session.exec(batch_statement).all()

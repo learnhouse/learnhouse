@@ -1,9 +1,10 @@
 from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select, and_
-from src.db.users import PublicUser, AnonymousUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+from src.security.auth import resolve_acting_user_id
 from src.security.rbac import authorization_verify_if_user_is_anon, check_resource_access, AccessAction
 from src.services.webhooks.dispatch import dispatch_webhooks
 from typing import List
@@ -12,7 +13,7 @@ from typing import List
 async def apply_course_contributor(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -23,8 +24,10 @@ async def apply_course_contributor(
     - Applications are created with PENDING status
     - Only course owners (CREATOR, MAINTAINER) or admins can approve applications
     """
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
@@ -41,7 +44,7 @@ async def apply_course_contributor(
         select(ResourceAuthor).where(
             and_(
                 ResourceAuthor.resource_uuid == course_uuid,
-                ResourceAuthor.user_id == current_user.id
+                ResourceAuthor.user_id == acting_user_id
             )
         )
     ).first()
@@ -55,7 +58,7 @@ async def apply_course_contributor(
     # Create pending contributor application
     resource_author = ResourceAuthor(
         resource_uuid=course_uuid,
-        user_id=current_user.id,
+        user_id=acting_user_id,
         authorship=ResourceAuthorshipEnum.CONTRIBUTOR,
         authorship_status=ResourceAuthorshipStatusEnum.PENDING,
         creation_date=str(datetime.now()),
@@ -77,7 +80,7 @@ async def update_course_contributor(
     contributor_user_id: int,
     authorship: ResourceAuthorshipEnum,
     authorship_status: ResourceAuthorshipStatusEnum,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -89,7 +92,7 @@ async def update_course_contributor(
     - Requires strict course ownership checks
     """
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(resolve_acting_user_id(current_user))
 
     # SECURITY: Require course ownership or admin role for updating contributors
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)
@@ -144,7 +147,7 @@ async def update_course_contributor(
 async def get_course_contributors(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> List[dict]:
     """
@@ -191,7 +194,7 @@ async def add_bulk_course_contributors(
     request: Request,
     course_uuid: str,
     usernames: List[str],
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -203,7 +206,7 @@ async def add_bulk_course_contributors(
     - Cannot add contributors to courses the user doesn't own
     """
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(resolve_acting_user_id(current_user))
 
     # SECURITY: Require course ownership or admin role for adding contributors
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)
@@ -306,7 +309,7 @@ async def remove_bulk_course_contributors(
     request: Request,
     course_uuid: str,
     usernames: List[str],
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -319,7 +322,7 @@ async def remove_bulk_course_contributors(
     - Cannot remove the course creator
     """
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(resolve_acting_user_id(current_user))
 
     # SECURITY: Require course ownership or admin role for removing contributors
     await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.UPDATE)

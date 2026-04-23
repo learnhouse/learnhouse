@@ -7,6 +7,7 @@ from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses.courses import Course
 from src.db.users import AnonymousUser, PublicUser
+from src.security.org_auth import is_org_member
 from src.security.rbac import check_resource_access, AccessAction
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
@@ -78,16 +79,41 @@ async def create_pdf_block(
 
 
 async def get_pdf_block(
-    request: Request, block_uuid: str, current_user: PublicUser, db_session: Session
+    request: Request, block_uuid: str, current_user: PublicUser | AnonymousUser, db_session: Session
 ):
     statement = select(Block).where(Block.block_uuid == block_uuid)
     block = db_session.exec(statement).first()
 
     if not block:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Video file does not exist"
+            status_code=status.HTTP_404_NOT_FOUND, detail="PDF block does not exist"
         )
 
-    block = BlockRead.model_validate(block)
+    # SECURITY: enforce RBAC on the owning course so the block UUID does not
+    # act as a capability token across organizations.
+    activity = db_session.exec(
+        select(Activity).where(Activity.id == block.activity_id)
+    ).first()
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="PDF block does not exist"
+        )
+    course = db_session.exec(
+        select(Course).where(Course.id == activity.course_id)
+    ).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="PDF block does not exist"
+        )
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ
+    )
 
-    return block
+    if not course.public and isinstance(current_user, PublicUser):
+        if not is_org_member(current_user.id, block.org_id, db_session):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have access to this resource",
+            )
+
+    return BlockRead.model_validate(block)

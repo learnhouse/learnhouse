@@ -23,6 +23,7 @@ from src.db.courses.courses import (
     AuthorWithRole,
     ThumbnailType,
 )
+from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
@@ -238,7 +239,7 @@ async def get_course_meta(
 
 async def get_courses_orgslug(
     request: Request,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     db_session: Session,
     page: int = 1,
@@ -247,6 +248,10 @@ async def get_courses_orgslug(
 ) -> List[CourseRead]:
     # Cap limit to prevent excessive DB reads
     limit = min(limit, 100)
+
+    # Resolve API tokens to their creator so membership / ResourceAuthor
+    # filters run against a real user_id rather than the token id (0).
+    acting_user_id = resolve_acting_user_id(current_user)
 
     # For anonymous users viewing public courses, try Redis cache first
     is_anon = isinstance(current_user, AnonymousUser)
@@ -268,7 +273,7 @@ async def get_courses_orgslug(
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished courses
-        if is_user_superadmin(current_user.id, db_session):
+        if is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             # Check if user has admin/editor role in this organization
@@ -276,7 +281,7 @@ async def get_courses_orgslug(
                 select(Role)
                 .join(UserOrganization)
                 .where(UserOrganization.org_id == org.id)
-                .where(UserOrganization.user_id == current_user.id)
+                .where(UserOrganization.user_id == acting_user_id)
             )
             user_roles = db_session.exec(role_statement).all()
             for role in user_roles:
@@ -315,17 +320,17 @@ async def get_courses_orgslug(
                 .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
                 .outerjoin(UserGroupUser, and_(
                     UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                    UserGroupUser.user_id == current_user.id
+                    UserGroupUser.user_id == acting_user_id
                 ))
                 .outerjoin(ResourceAuthor, and_(
                     ResourceAuthor.resource_uuid == Course.course_uuid,
-                    ResourceAuthor.user_id == current_user.id,
+                    ResourceAuthor.user_id == acting_user_id,
                     ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
                 ))  # type: ignore
                 .where(or_(
                     and_(Course.published == True, Course.public == True),  # Published public courses
                     and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
-                    UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                    UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                     ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
                 ))
             )
@@ -405,13 +410,15 @@ async def get_courses_orgslug(
 
 async def get_courses_count_orgslug(
     request: Request,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     db_session: Session,
 ) -> int:
     """
     Get total count of courses for an organization (respecting visibility rules)
     """
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Base query
     query = (
         select(func.count(Course.id.distinct()))
@@ -422,7 +429,7 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(current_user.id, db_session):
+    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -436,17 +443,17 @@ async def get_courses_count_orgslug(
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
             .outerjoin(UserGroupUser, and_(
                 UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == current_user.id
+                UserGroupUser.user_id == acting_user_id
             ))
             .outerjoin(ResourceAuthor, and_(
                 ResourceAuthor.resource_uuid == Course.course_uuid,
-                ResourceAuthor.user_id == current_user.id,
+                ResourceAuthor.user_id == acting_user_id,
                 ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
                 and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
-                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                UserGroupUser.user_id == acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
@@ -457,7 +464,7 @@ async def get_courses_count_orgslug(
 
 async def search_courses(
     request: Request,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     search_query: str,
     db_session: Session,
@@ -496,10 +503,12 @@ async def search_courses(
         .params(pattern=search_pattern)
     )
 
+    search_acting_user_id = resolve_acting_user_id(current_user)
+
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif is_user_superadmin(current_user.id, db_session):
+    elif is_user_superadmin(search_acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -514,17 +523,17 @@ async def search_courses(
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
             .outerjoin(UserGroupUser, and_(
                 UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == current_user.id
+                UserGroupUser.user_id == search_acting_user_id
             ))
             .outerjoin(ResourceAuthor, and_(
                 ResourceAuthor.resource_uuid == Course.course_uuid,
-                ResourceAuthor.user_id == current_user.id,
+                ResourceAuthor.user_id == search_acting_user_id,
                 ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
             ))  # type: ignore
             .where(or_(
                 and_(Course.published == True, Course.public == True),  # Published public courses
                 and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
-                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                UserGroupUser.user_id == search_acting_user_id,  # Courses in UserGroups where user is a member (including unpublished)
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
@@ -794,7 +803,7 @@ async def update_course(
     request: Request,
     course_object: CourseUpdate,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -828,24 +837,30 @@ async def update_course(
     
     # If sensitive fields are being updated, require additional validation
     if sensitive_fields_updated:
+        # API tokens carry their own per-resource rights and have already passed
+        # the update authorization above via check_resource_access. Resolve the
+        # acting user to the token's creator so the ownership / admin checks run
+        # against a real user_id rather than the token id (which is 0).
+        acting_user_id = resolve_acting_user_id(current_user)
+
         # SECURITY: For sensitive access control changes, require CREATOR or MAINTAINER role
         # Check if user is course owner (CREATOR or MAINTAINER)
         statement = select(ResourceAuthor).where(
             ResourceAuthor.resource_uuid == course_uuid,
-            ResourceAuthor.user_id == current_user.id
+            ResourceAuthor.user_id == acting_user_id
         )
         resource_author = db_session.exec(statement).first()
-        
+
         is_course_owner = False
         if resource_author:
-            if ((resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or 
+            if ((resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or
                 (resource_author.authorship == ResourceAuthorshipEnum.MAINTAINER)) and \
                 resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE:
                 is_course_owner = True
-        
+
         # Check if user has admin or maintainer role
         is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
-            request, current_user.id, "update", course_uuid, db_session
+            request, acting_user_id, "update", course_uuid, db_session
         )
         
         # SECURITY: Only course owners (CREATOR, MAINTAINER) or admins can change access settings
@@ -1460,7 +1475,7 @@ async def clone_course(
 async def get_course_user_rights(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> dict:
     """
@@ -1484,11 +1499,14 @@ async def get_course_user_rights(
             detail="Course not found",
         )
 
+    # API tokens report rights under their creator's identity.
+    rights_acting_user_id = resolve_acting_user_id(current_user)
+
     # Initialize rights object
     rights = {
         "course_uuid": course_uuid,
-        "user_id": current_user.id,
-        "is_anonymous": current_user.id == 0,
+        "user_id": rights_acting_user_id,
+        "is_anonymous": rights_acting_user_id == 0,
         "permissions": {
             "read": False,
             "create": False,
@@ -1519,7 +1537,7 @@ async def get_course_user_rights(
     }
 
     # Handle anonymous users
-    if current_user.id == 0:
+    if rights_acting_user_id == 0:
         # Anonymous users can only read public courses
         if course.public:
             rights["permissions"]["read"] = True
@@ -1528,7 +1546,7 @@ async def get_course_user_rights(
     # Check course ownership
     statement = select(ResourceAuthor).where(
         ResourceAuthor.resource_uuid == course_uuid,
-        ResourceAuthor.user_id == current_user.id
+        ResourceAuthor.user_id == rights_acting_user_id
     )
     resource_author = db_session.exec(statement).first()
     
@@ -1552,24 +1570,24 @@ async def get_course_user_rights(
     
     # Check admin/maintainer role
     is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "update", course_uuid, db_session
+        request, rights_acting_user_id, "update", course_uuid, db_session
     )
-    
+
     if is_admin_or_maintainer:
         rights["roles"]["is_admin"] = True
         rights["roles"]["is_maintainer_role"] = True
 
     # Check instructor role
     has_instructor_permissions = await authorization_verify_based_on_roles(
-        request, current_user.id, "create", "course_x", db_session
+        request, rights_acting_user_id, "create", "course_x", db_session
     )
-    
+
     if has_instructor_permissions:
         rights["roles"]["is_instructor"] = True
 
     # Check user role (basic permissions)
     has_user_permissions = await authorization_verify_based_on_roles(
-        request, current_user.id, "read", course_uuid, db_session
+        request, rights_acting_user_id, "read", course_uuid, db_session
     )
     
     if has_user_permissions:

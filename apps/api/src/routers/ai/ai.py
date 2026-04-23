@@ -27,7 +27,7 @@ from src.services.ai.schemas.editor import (
 )
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.security.auth import get_current_user
+from src.security.auth import get_authenticated_user
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ router = APIRouter()
 async def api_ai_start_activity_chat_session(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
@@ -74,7 +74,7 @@ async def api_ai_start_activity_chat_session(
 async def api_ai_send_activity_chat_message(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
@@ -92,9 +92,20 @@ async def activity_chat_event_generator(
     user_message: str,
     ai_friendly_text: str,
     ai_model: str,
+    org_id: int | None = None,
 ):
-    """Convert async generator to SSE format with follow-up suggestions"""
+    """Convert async generator to SSE format with follow-up suggestions.
+
+    Credits are reserved by the caller before the stream is created. If the
+    stream dies before producing any model output (upstream error, client
+    disconnect, cancellation) we refund one credit so a flaky connection
+    doesn't silently drain the org's quota.
+    """
+    import asyncio
+    from src.security.features_utils.usage import refund_ai_credit
+
     full_response = ""
+    stream_failed = False
     try:
         # Send start event immediately so frontend knows we're ready
         yield f"data: {json.dumps({'type': 'start', 'aichat_uuid': aichat_uuid})}\n\n"
@@ -120,9 +131,22 @@ async def activity_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+    except asyncio.CancelledError:
+        stream_failed = True
+        # Client disconnect / server shutdown. Re-raise so Starlette observes
+        # the cancellation, but let the finally refund first.
+        raise
     except Exception:
+        stream_failed = True
         logger.exception("Error in activity_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
+    finally:
+        # Refund credit if the model produced nothing useful.
+        if org_id is not None and (stream_failed or not full_response):
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
 
 
 @router.post(
@@ -142,7 +166,7 @@ async def activity_chat_event_generator(
 async def api_ai_start_activity_chat_session_stream(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -170,6 +194,7 @@ async def api_ai_start_activity_chat_session_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -197,7 +222,7 @@ async def api_ai_start_activity_chat_session_stream(
 async def api_ai_send_activity_chat_message_stream(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -225,6 +250,7 @@ async def api_ai_send_activity_chat_message_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -243,6 +269,9 @@ async def api_ai_send_activity_chat_message_stream(
 CONTENT_START_MARKER = "<<<CONTENT>>>"
 CONTENT_END_MARKER = "<<<END_CONTENT>>>"
 
+import asyncio  # noqa: E402
+from src.security.features_utils.usage import refund_ai_credit  # noqa: E402
+
 
 async def editor_chat_event_generator(
     stream_generator,
@@ -251,6 +280,7 @@ async def editor_chat_event_generator(
     user_message: str,
     ai_friendly_text: str,
     ai_model: str,
+    org_id: int | None = None,
 ):
     """
     Convert async generator to SSE format for editor AI chat.
@@ -315,9 +345,13 @@ async def editor_chat_event_generator(
                         # Send content before the marker
                         content_before_raw = buffer[:end_idx]
                         content_before = content_before_raw.rstrip('\n\r \t')
-                        logger.info(f"Found end marker at index {end_idx}")
-                        logger.info(f"Content before marker (raw, last 30): {repr(content_before_raw[-30:])}")
-                        logger.info(f"Content before marker (stripped, last 30): {repr(content_before[-30:])}")
+                        logger.debug(f"Found end marker at index {end_idx}")
+                        logger.debug(
+                            f"Content before marker (raw length): {len(content_before_raw)}"
+                        )
+                        logger.debug(
+                            f"Content before marker (stripped length): {len(content_before)}"
+                        )
                         if content_before:
                             content_buffer += content_before
                             yield f"data: {json.dumps({'type': 'content_chunk', 'content': content_before})}\n\n"
@@ -325,9 +359,9 @@ async def editor_chat_event_generator(
                         # Exit content block mode - strip all whitespace from final content
                         in_content_block = False
                         final_content = content_buffer.strip()
-                        # Log for debugging
-                        logger.info(f"Sending content_end with {len(final_content)} chars")
-                        logger.info(f"Content ends with (last 50): {repr(final_content[-50:]) if len(final_content) > 50 else repr(final_content)}")
+                        logger.debug(
+                            f"Sending content_end with {len(final_content)} chars"
+                        )
                         yield f"data: {json.dumps({'type': 'content_end', 'full_content': final_content})}\n\n"
 
                         # Keep everything after the marker
@@ -369,9 +403,23 @@ async def editor_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
+    except asyncio.CancelledError:
+        # Client disconnect / cancellation — let Starlette observe it after
+        # we refund credits in the finally block.
+        if org_id is not None and not full_response:
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
+        raise
     except Exception:
         logger.exception("Error in editor_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI request.'})}\n\n"
+        if org_id is not None and not full_response:
+            try:
+                refund_ai_credit(org_id, 1)
+            except Exception:
+                logger.debug("AI credit refund failed", exc_info=True)
 
 
 @router.post(
@@ -391,7 +439,7 @@ async def editor_chat_event_generator(
 async def api_editor_ai_start_chat_session_stream(
     request: Request,
     chat_session_object: StartEditorAIChatSession,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -419,6 +467,7 @@ async def api_editor_ai_start_chat_session_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={
@@ -446,7 +495,7 @@ async def api_editor_ai_start_chat_session_stream(
 async def api_editor_ai_send_message_stream(
     request: Request,
     chat_session_object: SendEditorAIChatMessage,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
@@ -474,6 +523,7 @@ async def api_editor_ai_send_message_stream(
             context["user_message"],
             context["ai_friendly_text"],
             context["ai_model"],
+            org_id=getattr(context.get("course", None), "org_id", None),
         ),
         media_type="text/event-stream",
         headers={

@@ -18,9 +18,11 @@ from src.db.custom_domains import (
     CustomDomainResolveResponse,
 )
 from src.db.organizations import Organization
-from src.db.users import PublicUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
+from src.security.auth import resolve_acting_user_id
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.security.org_auth import require_org_membership, require_org_admin
+from src.services.utils.ssrf_guard import SSRFBlockedError, resolve_and_validate_url
 
 logger = logging.getLogger(__name__)
 
@@ -199,11 +201,12 @@ async def add_custom_domain(
     db_session: Session,
     domain_data: CustomDomainCreate,
     org_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> CustomDomainRead:
     """Add a new custom domain for an organization."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
@@ -216,7 +219,7 @@ async def add_custom_domain(
         )
 
     # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
-    require_org_admin(current_user.id, org_id, db_session)
+    require_org_admin(acting_user_id, org_id, db_session)
 
     # VERIFICATION 5: Validate domain format
     domain = domain_data.domain.lower().strip()
@@ -279,11 +282,12 @@ async def list_custom_domains(
     request: Request,
     db_session: Session,
     org_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[CustomDomainRead]:
     """List all custom domains for an organization."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
@@ -296,7 +300,7 @@ async def list_custom_domains(
         )
 
     # VERIFICATION 3: Membership (superadmins bypass)
-    require_org_membership(current_user.id, org_id, db_session)
+    require_org_membership(acting_user_id, org_id, db_session)
 
     # Get all custom domains for the organization
     statement = select(CustomDomain).where(
@@ -313,14 +317,15 @@ async def get_custom_domain(
     db_session: Session,
     org_id: int,
     domain_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> CustomDomainRead:
     """Get a specific custom domain by UUID."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(current_user.id, org_id, db_session)
+    require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -343,14 +348,15 @@ async def get_domain_verification_info(
     db_session: Session,
     org_id: int,
     domain_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> CustomDomainVerificationInfo:
     """Get DNS verification instructions for a custom domain."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(current_user.id, org_id, db_session)
+    require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -385,14 +391,15 @@ async def verify_custom_domain(
     db_session: Session,
     org_id: int,
     domain_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> dict:
     """Verify DNS configuration for a custom domain."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    require_org_admin(current_user.id, org_id, db_session)
+    require_org_admin(acting_user_id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
@@ -434,14 +441,15 @@ async def delete_custom_domain(
     db_session: Session,
     org_id: int,
     domain_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> dict:
     """Delete a custom domain."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    require_org_admin(current_user.id, org_id, db_session)
+    require_org_admin(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -482,14 +490,15 @@ async def check_domain_ssl_status(
     db_session: Session,
     org_id: int,
     domain_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> dict:
     """Check SSL certificate status for a custom domain by attempting a TLS handshake."""
+    acting_user_id = resolve_acting_user_id(current_user)
     # VERIFICATION 1: User must be authenticated
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(current_user.id, org_id, db_session)
+    require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -510,6 +519,21 @@ async def check_domain_ssl_status(
             "has_ssl": False,
             "status": "pending_verification",
             "message": "Domain must be verified before SSL can be provisioned.",
+        }
+
+    # SECURITY: resolve the domain and reject private / link-local / loopback
+    # addresses before opening a TCP connection. Without this, an admin can
+    # register (and then verify DNS via control over the target) a custom
+    # domain that points at 169.254.169.254 or 127.0.0.1 and probe internal
+    # services via this endpoint's response-differential timing.
+    try:
+        resolve_and_validate_url(f"https://{domain.domain}")
+    except SSRFBlockedError as exc:
+        logger.warning("SSL probe refused for %s: %s", domain.domain, exc)
+        return {
+            "has_ssl": False,
+            "status": "invalid",
+            "message": "Domain resolves to a non-public address and cannot be checked.",
         }
 
     # Attempt TLS handshake

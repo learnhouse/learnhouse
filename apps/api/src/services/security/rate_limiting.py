@@ -247,6 +247,74 @@ def check_password_reset_rate_limit(email: str) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+def check_webhook_mutation_rate_limit(
+    org_id: int,
+    action: str = "create",
+) -> Tuple[bool, int]:
+    """
+    Rate limit webhook endpoint creation/update/test at 20/hour per org.
+    Webhook endpoints are a fan-out primitive, so without a ceiling a
+    compromised admin can create hundreds and use ``/test`` as an outbound
+    bandwidth amplifier.
+    """
+    key = f"webhook_{action}:{org_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=20,
+        window_seconds=60 * 60,  # 1 hour
+    )
+    return is_allowed, retry_after
+
+
+def check_invite_acceptance_rate_limit(request: Request, org_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit invite-code acceptance at 20 attempts / 15 minutes per IP+org.
+    Deters brute-force against 8-char alphanumeric invite codes.
+    """
+    ip = get_client_ip(request)
+    key = f"invite_accept:{org_id}:{ip}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=20,
+        window_seconds=15 * 60,
+    )
+    return is_allowed, retry_after
+
+
+def check_search_rate_limit(user_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit search queries at 60/min per authenticated user. Search hits
+    full-text indexes and scales poorly under sustained load from one session.
+    """
+    key = f"search:{user_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=60,
+        window_seconds=60,
+    )
+    return is_allowed, retry_after
+
+
+def check_admin_user_lookup_rate_limit(api_token_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit admin-API user lookups by email at 60/min per API token.
+
+    The endpoint returns 404 for "not in org" and 200 for "in org", which is
+    useful to legitimate integrations but also a bulk-enumeration oracle if
+    a token leaks. The cap limits blast radius.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"admin_user_lookup:{api_token_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=60,
+        window_seconds=60,  # 60/min per token
+    )
+    return is_allowed, retry_after
+
+
 def check_email_verification_rate_limit(email: str) -> Tuple[bool, int]:
     """
     Check email verification rate limit: 5 attempts per 5 minutes per email.
@@ -263,6 +331,67 @@ def check_email_verification_rate_limit(email: str) -> Tuple[bool, int]:
     )
 
     return is_allowed, retry_after
+
+
+# AI endpoint rate-limit tunables. Exposed as module-level constants so tests
+# can monkeypatch them without touching the bucket semantics.
+AI_USER_MAX_REQUESTS_PER_MINUTE = 30
+AI_ORG_MAX_REQUESTS_PER_MINUTE = 120
+AI_RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+def check_ai_rate_limit(user_id: int, org_id: int) -> Tuple[bool, int]:
+    """
+    Per-user AND per-org sliding-window rate limit for AI endpoints.
+
+    AI routes consume real model spend and provider capacity. Credits alone
+    don't prevent a single authenticated user from saturating workers — they
+    throttle spend, not concurrency. This guard enforces both a per-user
+    ceiling (to stop a single actor from exhausting capacity) and a per-org
+    ceiling (to protect multi-tenant fairness).
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds). ``retry_after`` reflects
+        whichever bucket denied the request, so the client's Retry-After
+        header is always honoured.
+    """
+    user_allowed, _user_count, user_retry = check_rate_limit(
+        key=f"ai:user:{user_id}",
+        max_attempts=AI_USER_MAX_REQUESTS_PER_MINUTE,
+        window_seconds=AI_RATE_LIMIT_WINDOW_SECONDS,
+    )
+    if not user_allowed:
+        return False, user_retry
+
+    org_allowed, _org_count, org_retry = check_rate_limit(
+        key=f"ai:org:{org_id}",
+        max_attempts=AI_ORG_MAX_REQUESTS_PER_MINUTE,
+        window_seconds=AI_RATE_LIMIT_WINDOW_SECONDS,
+    )
+    if not org_allowed:
+        return False, org_retry
+
+    return True, AI_RATE_LIMIT_WINDOW_SECONDS
+
+
+def enforce_ai_rate_limit(user_id: int, org_id: int) -> None:
+    """
+    Raise HTTP 429 with a Retry-After header if the per-user OR per-org AI
+    rate limit is exceeded. Uses the existing rate-limit error envelope
+    ({"code":"RATE_LIMITED","message":...,"retry_after":...}) so the
+    frontend can reuse its existing 429 handler without any change.
+    """
+    is_allowed, retry_after = check_ai_rate_limit(user_id, org_id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": "Too many AI requests. Please slow down.",
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
 
 
 def increment_rate_limit(key: str, window_seconds: int) -> None:

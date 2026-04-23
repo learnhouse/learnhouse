@@ -11,8 +11,8 @@ from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.db.user_organizations import UserOrganization
-from src.db.users import AnonymousUser, PublicUser
-from src.security.auth import get_current_user
+from src.db.users import AnonymousUser, APITokenUser, PublicUser
+from src.security.auth import get_current_user, resolve_acting_user_id
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from typing import Literal
 
@@ -35,7 +35,7 @@ FeatureName = Literal[
 
 async def require_org_admin(
     org_id: int = Path(..., description="Organization ID"),
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> bool:
     """
@@ -63,15 +63,17 @@ async def require_org_admin(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Superadmin bypass
     from src.security.superadmin import is_user_superadmin
-    if is_user_superadmin(current_user.id, db_session):
+    if is_user_superadmin(acting_user_id, db_session):
         return True
 
     # Check if user is admin in this organization
     statement = (
         select(UserOrganization)
-        .where(UserOrganization.user_id == current_user.id)
+        .where(UserOrganization.user_id == acting_user_id)
         .where(UserOrganization.org_id == org_id)
         .where(UserOrganization.role_id == ADMIN_ROLE_ID)
     )

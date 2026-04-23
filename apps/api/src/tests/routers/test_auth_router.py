@@ -179,16 +179,41 @@ class TestAuthHelpers:
 
 
 class TestAuthRouter:
-    async def test_refresh_success(self, client):
+    async def test_refresh_success(self, client, auth_user):
+        """Refresh issues a new access token AND rotates the refresh cookie.
+
+        F-02 / F-05: the handler now looks up the user, enforces the
+        ``password_changed_at`` / logout revocation guards, and marks the
+        refresh token's ``jti`` as consumed. Each mock below corresponds to
+        one of those guards running on a clean happy-path token.
+        """
         with patch(
             "src.routers.auth.check_refresh_rate_limit",
             return_value=(True, None),
         ), patch(
             "src.routers.auth.decode_refresh_token",
-            return_value={"sub": "auth@test.com"},
+            return_value={
+                "sub": auth_user.email,
+                "iat": 1,
+                "exp": 9_999_999_999,
+                "jti": "legit-jti",
+            },
+        ), patch(
+            "src.routers.auth.security_get_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
+        ), patch(
+            "src.routers.auth._is_token_revoked_for_user",
+            return_value=False,
+        ), patch(
+            "src.routers.auth._mark_refresh_jti_used",
+            return_value=True,  # first use of this jti
         ), patch(
             "src.routers.auth.create_access_token",
             return_value="new-access-token",
+        ), patch(
+            "src.routers.auth.create_refresh_token",
+            return_value="new-refresh-token",
         ), patch(
             "src.routers.auth.get_token_expiry_ms",
             return_value=12345,
@@ -325,12 +350,20 @@ class TestAuthRouter:
             )
         assert response.status_code == 429
 
+        # SECURITY: a locked account only surfaces 423 once the caller has
+        # proven they know the password — otherwise the status leaks that the
+        # account exists (enumeration). authenticate_user is mocked to succeed
+        # here to simulate the correct-password branch.
         with patch(
             "src.routers.auth.check_login_rate_limit",
             return_value=(True, None),
         ), patch(
             "src.routers.auth.check_account_locked",
             return_value=(True, 90),
+        ), patch(
+            "src.routers.auth.authenticate_user",
+            new_callable=AsyncMock,
+            return_value=auth_user,
         ):
             response = await client.post(
                 "/api/v1/auth/login",
@@ -338,7 +371,12 @@ class TestAuthRouter:
             )
         assert response.status_code == 423
 
-    async def test_login_failed_attempt_locks_account(self, client, auth_user):
+    async def test_login_failed_attempt_records_but_returns_generic_401(
+        self, client, auth_user
+    ):
+        """A failed password attempt must return the same generic 401 whether
+        or not the account is (or becomes) locked — otherwise the status leaks
+        account existence and lockout state to unauthenticated callers."""
         with patch(
             "src.routers.auth.check_login_rate_limit",
             return_value=(True, None),
@@ -358,7 +396,8 @@ class TestAuthRouter:
                 data={"username": auth_user.email, "password": "bad"},
             )
 
-        assert response.status_code == 423
+        assert response.status_code == 401
+        assert response.json()["detail"]["code"] == "INVALID_CREDENTIALS"
 
     async def test_oauth_logout_and_email_endpoints(self, client, auth_user):
         with patch(

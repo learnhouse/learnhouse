@@ -47,6 +47,7 @@ class OrgConfigUpdateBody(BaseModel):
         "configuration. This bypasses user auth and is protected by the internal "
         "cloud key header at the dependency level."
     ),
+    dependencies=[Depends(check_internal_cloud_key)],
     responses={
         200: {"description": "Updated organization config payload returned by the service."},
         403: {"description": "Missing or invalid CloudInternalKey header"},
@@ -59,7 +60,6 @@ async def update_org_Config(
     body: OrgConfigUpdateBody,
     db_session: Session = Depends(get_db_session),
 ):
-
     res = await update_org_with_config_no_auth(
         request, body.config, org_id, db_session
     )

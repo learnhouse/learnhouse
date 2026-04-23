@@ -22,20 +22,6 @@ export async function getUser(user_id: string, access_token: string) {
 }
 
 /**
- * Get minimal public profile by user ID. Anonymous-accessible.
- *
- * Returns only name, username, avatar — no email, details, or profile.
- */
-export async function getUserPublicProfile(user_id: string) {
-  const result = await fetch(
-    `${getAPIUrl()}users/public/id/${user_id}`,
-    RequestBodyWithAuthHeader('GET', null, null)
-  )
-  const res = await errorHandling(result)
-  return res
-}
-
-/**
  * Get user by username.
  *
  * SECURITY: Requires authentication to prevent user enumeration attacks.

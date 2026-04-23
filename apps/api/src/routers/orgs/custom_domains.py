@@ -1,4 +1,5 @@
 import os
+import secrets
 from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlmodel import Session
@@ -308,7 +309,11 @@ async def api_list_all_verified_domains(
     Protected by internal API key - used by the domain sync CronJob.
     """
     expected_key = os.getenv("CLOUD_INTERNAL_KEY", "")
-    if not expected_key or x_internal_key != expected_key:
+    if (
+        not expected_key
+        or not x_internal_key
+        or not secrets.compare_digest(x_internal_key, expected_key)
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid internal API key",

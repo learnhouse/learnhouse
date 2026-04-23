@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
+from src.security.auth import resolve_acting_user_id
 from src.db.communities.communities import Community
 from src.services.analytics.analytics import track
 from src.services.analytics import events as analytics_events
@@ -359,8 +360,12 @@ async def update_discussion(
     Requires discussion author or admin role.
     Authors can edit their discussions up to 2 times.
     """
+    # Resolve API tokens to their creator so admin/author checks run against
+    # a real user id rather than the token id (which is 0).
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
@@ -377,16 +382,16 @@ async def update_discussion(
         raise HTTPException(status_code=404, detail="Community not found")
 
     # Check if user is author or admin
-    is_author = discussion.author_id == current_user.id
+    is_author = discussion.author_id == acting_user_id
     is_admin = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "update", community.community_uuid, db_session
+        request, acting_user_id, "update", community.community_uuid, db_session
     )
 
     if not is_author and not is_admin:
         raise HTTPException(status_code=403, detail="You don't have permission to update this discussion")
 
     # Check edit limit for authors (admins can edit unlimited)
-    is_author = discussion.author_id == current_user.id
+    is_author = discussion.author_id == acting_user_id
     max_edits = 2
 
     if is_author and discussion.edit_count >= max_edits:
@@ -433,7 +438,7 @@ async def update_discussion(
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
-        DiscussionVote.user_id == current_user.id,
+        DiscussionVote.user_id == acting_user_id,
     )
     vote = db_session.exec(vote_statement).first()
 
@@ -442,7 +447,6 @@ async def update_discussion(
         author=UserRead.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
-
 
 async def pin_discussion(
     request: Request,
@@ -456,7 +460,8 @@ async def pin_discussion(
 
     Requires community admin or maintainer role. Authors cannot pin.
     """
-    await authorization_verify_if_user_is_anon(current_user.id)
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
     discussion = db_session.exec(statement).first()
@@ -471,7 +476,7 @@ async def pin_discussion(
         raise HTTPException(status_code=404, detail="Community not found")
 
     is_admin = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "update", community.community_uuid, db_session
+        request, acting_user_id, "update", community.community_uuid, db_session
     )
 
     if not is_admin:
@@ -502,7 +507,7 @@ async def pin_discussion(
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
-        DiscussionVote.user_id == current_user.id,
+        DiscussionVote.user_id == acting_user_id,
     )
     vote = db_session.exec(vote_statement).first()
 
@@ -511,7 +516,6 @@ async def pin_discussion(
         author=UserRead.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
-
 
 async def lock_discussion(
     request: Request,
@@ -525,7 +529,8 @@ async def lock_discussion(
 
     Requires community admin or maintainer role. Authors cannot lock.
     """
-    await authorization_verify_if_user_is_anon(current_user.id)
+    acting_user_id = resolve_acting_user_id(current_user)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
     discussion = db_session.exec(statement).first()
@@ -540,7 +545,7 @@ async def lock_discussion(
         raise HTTPException(status_code=404, detail="Community not found")
 
     is_admin = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "update", community.community_uuid, db_session
+        request, acting_user_id, "update", community.community_uuid, db_session
     )
 
     if not is_admin:
@@ -571,7 +576,7 @@ async def lock_discussion(
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
-        DiscussionVote.user_id == current_user.id,
+        DiscussionVote.user_id == acting_user_id,
     )
     vote = db_session.exec(vote_statement).first()
 
@@ -580,7 +585,6 @@ async def lock_discussion(
         author=UserRead.model_validate(author.model_dump()) if author else None,
         has_voted=vote is not None,
     )
-
 
 async def delete_discussion(
     request: Request,
@@ -593,8 +597,10 @@ async def delete_discussion(
 
     Requires discussion author or admin role.
     """
+    acting_user_id = resolve_acting_user_id(current_user)
+
     # Verify user is not anonymous
-    await authorization_verify_if_user_is_anon(current_user.id)
+    await authorization_verify_if_user_is_anon(acting_user_id)
 
     # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
@@ -611,9 +617,9 @@ async def delete_discussion(
         raise HTTPException(status_code=404, detail="Community not found")
 
     # Check if user is author or admin
-    is_author = discussion.author_id == current_user.id
+    is_author = discussion.author_id == acting_user_id
     is_admin = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "delete", community.community_uuid, db_session
+        request, acting_user_id, "delete", community.community_uuid, db_session
     )
 
     if not is_author and not is_admin:

@@ -51,9 +51,17 @@ class TestAuthUtilsService:
         db_session.exec.return_value.first.return_value = None
 
         without_org_result = SimpleNamespace(user_uuid="created-without-org")
+        # After the F-03 fix, ``signWithGoogle`` no longer trusts the
+        # body-supplied email as a fallback. Google must return a verified
+        # email for the flow to proceed; the username-prefix fallback still
+        # applies when ``given_name``/``family_name`` are missing from the
+        # Google userinfo response.
         with patch(
             "src.services.auth.utils.get_google_user_info",
-            return_value={},
+            return_value={
+                "email": "fallback@test.com",
+                "email_verified": True,
+            },
         ), patch(
             "src.services.auth.utils.create_user_without_org",
             new_callable=AsyncMock,
@@ -65,7 +73,7 @@ class TestAuthUtilsService:
             result = await signWithGoogle(
                 request=request,
                 access_token="access-token",
-                email="fallback@test.com",
+                email="ignored@body.com",
                 org_id=None,
                 current_user=current_user,
                 db_session=db_session,
@@ -74,6 +82,7 @@ class TestAuthUtilsService:
         assert result is without_org_result
         mock_create_without_org.assert_awaited_once()
         created_user = mock_create_without_org.call_args.args[3]
+        # Server must key off Google's email, never the body-supplied one.
         assert created_user.email == "fallback@test.com"
         assert created_user.username == "fallback42"
         assert created_user.first_name == ""
@@ -85,6 +94,7 @@ class TestAuthUtilsService:
             "src.services.auth.utils.get_google_user_info",
             return_value={
                 "email": "google@test.com",
+                "email_verified": True,
                 "given_name": "Ada",
                 "family_name": "Lovelace",
                 "picture": "https://example.com/avatar.png",
@@ -140,7 +150,7 @@ class TestAuthUtilsService:
 
         with patch(
             "src.services.auth.utils.get_google_user_info",
-            return_value={"email": "existing@test.com"},
+            return_value={"email": "existing@test.com", "email_verified": True},
         ), patch(
             "src.services.auth.utils.get_client_ip",
             return_value="10.0.0.7",
@@ -178,7 +188,7 @@ class TestAuthUtilsService:
         with patch(
             "src.services.auth.utils.get_google_user_info",
             # given_name / family_name absent; email has no '@' so prefix branch skipped
-            return_value={"email": "noemail"},
+            return_value={"email": "noemail", "email_verified": True},
         ), patch(
             "src.services.auth.utils.UserCreate",
             side_effect=lambda **kw: SimpleNamespace(**kw),
@@ -224,5 +234,8 @@ class TestAuthUtilsService:
                     db_session=db_session,
                 )
 
-        assert exc_info.value.status_code == 400
-        assert exc_info.value.detail == "No email address available from Google or request"
+        # After the F-03 fix, a missing or unverified Google email is a 401
+        # (authentication failure) rather than a 400 (malformed request) — the
+        # attacker cannot compensate for it by tweaking their request body.
+        assert exc_info.value.status_code == 401
+        assert "verified email" in exc_info.value.detail.lower()
