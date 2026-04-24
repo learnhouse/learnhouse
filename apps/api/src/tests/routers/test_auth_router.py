@@ -206,9 +206,6 @@ class TestAuthRouter:
             "src.routers.auth._is_token_revoked_for_user",
             return_value=False,
         ), patch(
-            "src.routers.auth._mark_refresh_jti_used",
-            return_value=True,  # first use of this jti
-        ), patch(
             "src.routers.auth.create_access_token",
             return_value="new-access-token",
         ), patch(
