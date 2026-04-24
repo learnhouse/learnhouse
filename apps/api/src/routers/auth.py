@@ -17,7 +17,6 @@ from src.security.auth import (
     extract_jwt_from_request,
     revoke_user_sessions_before,
     _is_token_revoked_for_user,
-    _mark_refresh_jti_used,
     JWT_ACCESS_TOKEN_EXPIRES,
     JWT_REFRESH_TOKEN_EXPIRES,
     JWT_REFRESH_COOKIE_NAME,
@@ -247,19 +246,6 @@ async def refresh(
 
     if _is_token_revoked_for_user(user.id, issued_at):
         raise credentials_exception
-
-    # Single-use rotation + reuse detection: the first caller to present a
-    # given jti claims it; any replay means the token was stolen, so wipe
-    # every session for the user.
-    jti = payload.get("jti")
-    if jti:
-        claimed = _mark_refresh_jti_used(user.id, jti)
-        if not claimed:
-            revoke_user_sessions_before(user.id)
-            unset_auth_cookies(response, request)
-            raise credentials_exception
-    # Tokens minted before jti was added pass through; the rotated token
-    # issued below carries a jti so reuse detection engages from here on.
 
     new_access_token = create_access_token(
         data={"sub": email},

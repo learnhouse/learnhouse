@@ -1,12 +1,10 @@
 """
-F-02 / F-05: refresh-token guards + rotation.
+F-02: refresh-token guards.
 
 Negative tests reproduce the original vulnerabilities:
   * Refresh with a valid token whose ``iat`` predates the user's
-    ``password_changed_at`` is rejected (F-02).
-  * Refresh after the user's sessions were revoked is rejected (F-02).
-  * Replaying an already-consumed ``jti`` is rejected AND revokes the
-    user's remaining sessions (F-05).
+    ``password_changed_at`` is rejected.
+  * Refresh after the user's sessions were revoked is rejected.
 
 Positive tests prove the legitimate flow still works end-to-end.
 """
@@ -112,41 +110,10 @@ async def test_refresh_rejects_token_revoked_by_logout(client):
 
 
 @pytest.mark.asyncio
-async def test_refresh_jti_replay_detected_and_revokes_sessions(client):
-    """
-    F-05: second use of the same jti triggers reuse detection and revokes
-    every session the user has.
-    """
-    user = _fake_user()
-    stack = _patch_happy_path(
-        {"sub": user.email, "iat": 1, "exp": 9_999_999_999, "jti": "stolen-jti"}
-    )
-    with stack[0], stack[1], patch(
-        "src.routers.auth.security_get_user",
-        new_callable=AsyncMock,
-        return_value=user,
-    ), patch(
-        "src.routers.auth._is_token_revoked_for_user",
-        return_value=False,
-    ), patch(
-        "src.routers.auth._mark_refresh_jti_used",
-        return_value=False,  # replay: jti was already used
-    ), patch(
-        "src.routers.auth.revoke_user_sessions_before"
-    ) as revoke_mock:
-        response = await client.get(
-            "/api/v1/auth/refresh",
-            cookies={JWT_REFRESH_COOKIE_NAME: "replayed"},
-        )
-    assert response.status_code == 401
-    revoke_mock.assert_called_once_with(user.id)
-
-
-@pytest.mark.asyncio
 async def test_refresh_happy_path_rotates_refresh_cookie(client):
     """
-    F-05: on the happy path, /auth/refresh issues a new access token AND a
-    new refresh cookie, proving the refresh token rotates every call.
+    On the happy path, /auth/refresh issues a new access token AND a new
+    refresh cookie.
     """
     user = _fake_user()
     stack = _patch_happy_path(
@@ -155,10 +122,9 @@ async def test_refresh_happy_path_rotates_refresh_cookie(client):
     ctxs = [
         patch("src.routers.auth.security_get_user", new_callable=AsyncMock, return_value=user),
         patch("src.routers.auth._is_token_revoked_for_user", return_value=False),
-        patch("src.routers.auth._mark_refresh_jti_used", return_value=True),
     ]
     with stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], \
-         ctxs[0], ctxs[1], ctxs[2]:
+         ctxs[0], ctxs[1]:
         response = await client.get(
             "/api/v1/auth/refresh",
             cookies={JWT_REFRESH_COOKIE_NAME: "legit-token"},
