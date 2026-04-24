@@ -39,6 +39,15 @@ class SecurityConfig(BaseModel):
 class AIConfig(BaseModel):
     gemini_api_key: str | None
     is_ai_enabled: bool | None
+    # Internal URL where the LearnHouse MCP server is reachable from the API.
+    # In the bundled Docker image both run in the same container so this stays
+    # on loopback; when the MCP is scaled out separately, override via
+    # LEARNHOUSE_MCP_INTERNAL_URL.
+    mcp_internal_url: str | None = "http://127.0.0.1:8765/mcp"
+    # Gemini model used by the Atlas dashboard agent. Defaults to 2.5 Flash
+    # because tool-use latency adds up fast; override to gemini-2.5-pro for
+    # harder reasoning tasks.
+    atlas_model: str | None = "gemini-2.5-flash"
 
 
 class S3ApiConfig(BaseModel):
@@ -538,9 +547,21 @@ def get_learnhouse_config() -> LearnHouseConfig:
     )
 
     # AI Config
+    env_mcp_internal_url = os.environ.get("LEARNHOUSE_MCP_INTERNAL_URL")
+    mcp_internal_url = env_mcp_internal_url or yaml_config.get("ai_config", {}).get(
+        "mcp_internal_url"
+    ) or "http://127.0.0.1:8765/mcp"
+
+    env_atlas_model = os.environ.get("LEARNHOUSE_ATLAS_MODEL")
+    atlas_model = env_atlas_model or yaml_config.get("ai_config", {}).get(
+        "atlas_model"
+    ) or "gemini-2.5-flash"
+
     ai_config = AIConfig(
         gemini_api_key=gemini_api_key,
         is_ai_enabled=bool(is_ai_enabled),
+        mcp_internal_url=mcp_internal_url,
+        atlas_model=atlas_model,
     )
 
     # Surface missing internal-service keys at boot rather than at first

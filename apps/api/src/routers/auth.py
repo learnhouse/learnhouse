@@ -3,7 +3,8 @@ from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from pydantic import BaseModel, EmailStr
 from sqlmodel import select
-from src.db.users import AnonymousUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, User, UserRead
+from src.db.organizations import Organization
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
@@ -649,3 +650,62 @@ async def api_resend_verification_email(
         org_id=body.org_id,
     )
     return {"message": result}
+
+
+class AuthMeResponse(BaseModel):
+    user_uuid: str
+    username: str
+    org_id: Optional[int]
+    org_slug: Optional[str]
+    is_api_token: bool
+    token_name: Optional[str]
+
+
+@router.get(
+    "/me",
+    response_model=AuthMeResponse,
+    summary="Describe the current authenticated principal",
+    description=(
+        "Return identity and org scope for the caller. Accepts both JWT sessions "
+        "and API tokens (`Bearer lh_...`). For API tokens, `org_id`/`org_slug` are "
+        "the token's single-org scope; `token_name` is the token's display name. "
+        "For JWT sessions, `org_id`/`org_slug` are null because a user session is "
+        "not scoped to one org. Anonymous requests receive 401."
+    ),
+    responses={
+        200: {"description": "Identity and org scope for the caller."},
+        401: {"description": "No authenticated principal"},
+    },
+)
+async def me(
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if isinstance(current_user, APITokenUser):
+        org = (await db_session.execute(
+            select(Organization).where(Organization.id == current_user.org_id)
+        )).scalars().first()
+        return AuthMeResponse(
+            user_uuid=current_user.user_uuid,
+            username=current_user.username,
+            org_id=current_user.org_id,
+            org_slug=org.slug if org else None,
+            is_api_token=True,
+            token_name=current_user.token_name,
+        )
+
+    return AuthMeResponse(
+        user_uuid=getattr(current_user, "user_uuid", ""),
+        username=getattr(current_user, "username", ""),
+        org_id=None,
+        org_slug=None,
+        is_api_token=False,
+        token_name=None,
+    )

@@ -1,0 +1,37 @@
+[project]
+name = "learnhouse-mcp"
+version = "0.2.0"
+description = "Multi-tenant MCP server for LearnHouse — exposes LearnHouse as tools to any MCP-compatible AI client."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Badr B. (swve)"},
+]
+license = {text = "AGPL-3.0"}
+keywords = ["learnhouse", "mcp", "model-context-protocol", "lms", "ai"]
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "httpx>=0.28.0",
+    "pydantic>=2.10.0",
+    "python-dotenv>=1.0.0",
+    "uvicorn>=0.30.0",
+    "starlette>=0.40.0",
+]
+
+[project.scripts]
+learnhouse-mcp = "learnhouse_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://learnhouse.app"
+Repository = "https://github.com/learnhouse/learnhouse"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/learnhouse_mcp"]
+
+[tool.ruff]
+line-length = 100
+lint.ignore = ["E501"]

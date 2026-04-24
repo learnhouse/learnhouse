@@ -30,6 +30,7 @@ import {
   Palette,
   Rocket,
   Robot,
+  GlobeStand,
   LinkSimple,
   Key,
   Lock,
@@ -174,13 +175,21 @@ function DashLeftMenu() {
   const showPlaygrounds = isEnabled('playgrounds')
   const showPayments = isEnabled('payments')
 
+  // When the user is on the Atlas page, the left nav drops into a slightly
+  // darker flat dark color than the Atlas content — same family, with the
+  // nav reading as a deeper "shelf" the brighter content sits beside.
+  const isOnAtlas = pathname.startsWith('/dash/atlas')
+
   return (
     <TooltipProvider delayDuration={0}>
     <nav
       aria-label="Dashboard sidebar navigation"
       className={cn(
-        "flex flex-col text-white h-screen sticky top-0 z-overlay border-r border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
-        isCollapsed ? "w-[72px]" : "w-64"
+        "flex flex-col text-white h-screen sticky top-0 z-overlay border-r transition-all duration-300",
+        isCollapsed ? "w-[72px]" : "w-64",
+        isOnAtlas
+          ? "bg-[#05040c] border-white/5"
+          : "bg-[#0f0f10] border-white/[0.08]"
       )}
     >
       {/* Header with Logo and Toggle */}
@@ -251,6 +260,14 @@ function DashLeftMenu() {
               label={t('common.home')}
               isCollapsed={isCollapsed}
               active={isActivePath('/dash')}
+            />
+
+            <MenuLink
+              href="/dash/atlas"
+              icon={<GlobeStand size={20} weight="duotone" />}
+              label="Atlas"
+              isCollapsed={isCollapsed}
+              active={isActivePath('/dash/atlas')}
             />
 
             {/* Courses with hover menu */}
