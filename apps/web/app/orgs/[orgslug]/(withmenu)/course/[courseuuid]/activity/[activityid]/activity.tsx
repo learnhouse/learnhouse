@@ -36,6 +36,8 @@ import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
+import PaywallGate from '@components/Pages/Courses/PaywallGate'
+import ThanksModal from '@components/Pages/Courses/ThanksModal'
 import { useTranslation } from 'react-i18next'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
@@ -367,43 +369,68 @@ function ActivityClient(props: ActivityClientProps) {
 
   if (activity?.is_locked) {
     const isAuthenticated = session?.status === 'authenticated'
+    const lockedChapter = (course?.chapters || []).find((ch: any) =>
+      (ch.activities || []).some((a: any) => a.id === activity.id || a.activity_uuid === activity.activity_uuid)
+    )
+    const lockedChapterUuid = lockedChapter?.chapter_uuid
+    const paywallCopy = course?.onboarding_config?.paywall
+
+    const defaultLockedCard = (
+      <div className="max-w-2xl mx-auto my-16 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-8 text-center">
+        <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center mb-4">
+          <Lock className="text-rose-500" size={24} />
+        </div>
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">
+          {t('course.locked_title', 'This activity is locked')}
+        </h1>
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+          {isAuthenticated
+            ? t('course.locked_restricted', 'You need to be a member of the right user group to access this. Ask a course admin to add you.')
+            : t('course.locked_auth_required', 'You need to sign in to access this activity.')}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+          {!isAuthenticated && (
+            <Link
+              href={getUriWithOrg(orgslug, '/login')}
+              className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
+            >
+              {t('auth.sign_in', 'Sign in')}
+            </Link>
+          )}
+          <Link
+            href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+            className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+          >
+            {t('course.back_to_course', 'Back to course')}
+          </Link>
+        </div>
+      </div>
+    )
+
     return (
       <GeneralWrapperStyled>
-        <div className="max-w-2xl mx-auto my-16 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-8 text-center">
-          <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center mb-4">
-            <Lock className="text-rose-500" size={24} />
-          </div>
-          <h1 className="text-xl font-semibold text-gray-900 mb-2">
-            {t('course.locked_title', 'This activity is locked')}
-          </h1>
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            {isAuthenticated
-              ? t('course.locked_restricted', 'You need to be a member of the right user group to access this. Ask a course admin to add you.')
-              : t('course.locked_auth_required', 'You need to sign in to access this activity.')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            {!isAuthenticated && (
-              <Link
-                href={getUriWithOrg(orgslug, '/login')}
-                className="inline-flex items-center justify-center px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
-              >
-                {t('auth.sign_in', 'Sign in')}
-              </Link>
-            )}
-            <Link
-              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
-              className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
-            >
-              {t('course.back_to_course', 'Back to course')}
-            </Link>
-          </div>
-        </div>
+        {lockedChapterUuid ? (
+          <PaywallGate
+            chapterUuid={lockedChapterUuid}
+            orgslug={orgslug}
+            courseUuid={courseuuid}
+            copy={paywallCopy}
+            accessToken={access_token}
+            redirectBackPath={pathname || `/course/${courseuuid}`}
+            fallback={defaultLockedCard}
+          />
+        ) : (
+          defaultLockedCard
+        )}
       </GeneralWrapperStyled>
     )
   }
 
   return (
     <>
+      {course?.onboarding_config?.thanks && (
+        <ThanksModal config={course.onboarding_config.thanks} />
+      )}
       <CourseProvider courseuuid={course?.course_uuid}>
         <Suspense fallback={<LoadingFallback />}>
           <AIChatBotProvider>

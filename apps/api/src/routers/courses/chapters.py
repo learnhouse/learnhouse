@@ -1,12 +1,15 @@
-from typing import List
-from fastapi import APIRouter, Depends, Request
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlmodel import Session, select
 from src.core.events.database import get_db_session
 from src.db.courses.chapters import (
+    Chapter,
     ChapterCreate,
     ChapterRead,
     ChapterUpdate,
     ChapterUpdateOrder,
 )
+from src.db.usergroup_resources import UserGroupResource
 from src.services.courses.chapters import (
     DEPRECEATED_get_course_chapters,
     create_chapter,
@@ -253,3 +256,75 @@ async def api_remove_chapter_usergroup(
     return await remove_usergroup_from_chapter(
         request, chapter_uuid, usergroup_uuid, current_user, db_session
     )
+
+
+@router.get(
+    "/{chapter_uuid}/paywall_offer",
+    summary="Get paywall offer for a locked chapter",
+    description=(
+        "Resolve the purchasable offer (if any) that unlocks a RESTRICTED chapter. "
+        "Walks chapter → UserGroupResource → PaymentsGroupSync → PaymentsOffer. "
+        "Returns 404 when no linked offer exists (free-but-restricted usergroups). "
+        "Public endpoint so anonymous visitors can see the price before signup."
+    ),
+)
+async def api_get_chapter_paywall_offer(
+    request: Request,
+    chapter_uuid: str,
+    db_session: Session = Depends(get_db_session),
+):
+    chapter = db_session.exec(
+        select(Chapter).where(Chapter.chapter_uuid == chapter_uuid)
+    ).first()
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+
+    usergroup_ids = db_session.exec(
+        select(UserGroupResource.usergroup_id).where(
+            UserGroupResource.resource_uuid == chapter_uuid
+        )
+    ).all()
+    if not usergroup_ids:
+        raise HTTPException(status_code=404, detail="No paywall offer for this chapter")
+
+    try:
+        from ee.db.payments.payments_groups import PaymentsGroupSync
+        from ee.db.payments.payments_offers import PaymentsOffer
+        from ee.db.payments.payments import PaymentsConfig
+    except Exception:
+        raise HTTPException(status_code=404, detail="Payments module unavailable")
+
+    sync_rows = db_session.exec(
+        select(PaymentsGroupSync).where(PaymentsGroupSync.usergroup_id.in_(usergroup_ids))
+    ).all()
+    if not sync_rows:
+        raise HTTPException(status_code=404, detail="No paywall offer for this chapter")
+
+    payments_group_ids = [s.payments_group_id for s in sync_rows]
+    offers = db_session.exec(
+        select(PaymentsOffer).where(PaymentsOffer.payments_group_id.in_(payments_group_ids))
+    ).all()
+    if not offers:
+        raise HTTPException(status_code=404, detail="No paywall offer for this chapter")
+
+    # If multiple offers match, pick the cheapest one as the primary ("empezar desde…")
+    offer = sorted(offers, key=lambda o: (o.amount or 0))[0]
+
+    config_row = db_session.exec(
+        select(PaymentsConfig).where(PaymentsConfig.id == offer.payments_config_id)
+    ).first()
+
+    return {
+        "offer_uuid": offer.offer_uuid,
+        "name": offer.name,
+        "description": offer.description,
+        "benefits": offer.benefits,
+        "amount": offer.amount,
+        "currency": offer.currency,
+        "offer_type": offer.offer_type,
+        "price_type": offer.price_type,
+        "provider": getattr(config_row, "provider", None) if config_row else None,
+        "org_id": offer.org_id,
+        "chapter_uuid": chapter.chapter_uuid,
+        "course_id": chapter.course_id,
+    }

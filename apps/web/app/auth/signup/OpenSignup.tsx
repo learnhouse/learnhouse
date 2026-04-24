@@ -1,6 +1,6 @@
 'use client'
 import { useFormik } from 'formik'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect } from 'react'
 import FormLayout, {
   FormField,
@@ -52,18 +52,26 @@ function OpenSignUpComponent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const org = useOrg() as any
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const prefilledEmail = searchParams?.get('email') || ''
+  const nextUrl = searchParams?.get('next') || ''
+  const courseUuid = searchParams?.get('course_uuid') || ''
+  const source = searchParams?.get('source') || ''
   const [error, setError] = React.useState('')
   const [message, setMessage] = React.useState('')
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,
       org_id: org?.id,
-      email: '',
+      email: prefilledEmail,
       password: '',
       username: '',
       bio: '',
       first_name: '',
       last_name: '',
+      role: '',
+      business: '',
+      goal: '',
     },
     validate: (values) => validate(values, t),
     enableReinitialize: true,
@@ -71,7 +79,15 @@ function OpenSignUpComponent() {
       setError('')
       setMessage('')
       setIsSubmitting(true)
-      let res = await signup(values)
+      const { role, business, goal, ...rest } = values as any
+      const details: Record<string, any> = { onboarded: false }
+      if (role) details.role = role
+      if (business) details.business = business
+      if (goal) details.goal = goal
+      if (source) details.signup_source = source
+      if (courseUuid) details.signup_course_uuid = courseUuid
+      const payload = { ...rest, details }
+      let res = await signup(payload)
       let message = await res.json()
       if (res.status == 200) {
         setMessage(t('auth.account_created_success'))
@@ -239,6 +255,61 @@ function OpenSignUpComponent() {
             </Form.Control>
           </FormField>
 
+          {courseUuid && (
+            <>
+              <div className="mt-2 mb-1 text-xs uppercase tracking-wide font-semibold text-gray-500">
+                Cuéntanos un poco sobre ti (opcional)
+              </div>
+
+              <FormField name="role">
+                <FormLabelAndMessage label="Tu rol" />
+                <Form.Control asChild>
+                  <select
+                    name="role"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.role}
+                    className="box-border w-full inline-flex items-center rounded h-[35px] leading-none px-2.5 text-[15px] text-[#7c7c7c] bg-[#fbfdff] shadow-[0_0_0_1px_#edeeef] focus:shadow-[0_0_0_2px_#edeeef] border-none outline-none"
+                  >
+                    <option value="">Selecciona...</option>
+                    <option value="founder">Fundador / Emprendedor</option>
+                    <option value="freelance">Freelance / Consultor</option>
+                    <option value="employee">Empleado</option>
+                    <option value="student">Estudiante</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </Form.Control>
+              </FormField>
+
+              <FormField name="business">
+                <FormLabelAndMessage label="Tipo de negocio" />
+                <Form.Control asChild>
+                  <Input
+                    name="business"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.business}
+                    type="text"
+                    placeholder="p.ej. agencia de marketing, e-commerce, SaaS..."
+                  />
+                </Form.Control>
+              </FormField>
+
+              <FormField name="goal">
+                <FormLabelAndMessage label="¿Qué quieres conseguir con este curso?" />
+                <Form.Control asChild>
+                  <Textarea
+                    name="goal"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.goal}
+                    placeholder="p.ej. automatizar la captación de leads, montar mi primer agente..."
+                  />
+                </Form.Control>
+              </FormField>
+            </>
+          )}
+
           <div className="pt-2">
             <Form.Submit asChild>
               <button className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
@@ -271,7 +342,10 @@ function OpenSignUpComponent() {
       {/* Login Link */}
       <p className="text-center text-gray-600 mt-6">
         {t('auth.already_have_account')}{' '}
-        <Link href="/login" className="font-semibold text-gray-900 hover:underline">
+        <Link
+          href={nextUrl ? `/login?next=${encodeURIComponent(nextUrl)}` : '/login'}
+          className="font-semibold text-gray-900 hover:underline"
+        >
           {t('auth.login')}
         </Link>
       </p>

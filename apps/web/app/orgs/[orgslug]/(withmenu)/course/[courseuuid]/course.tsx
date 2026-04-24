@@ -24,6 +24,12 @@ import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import LandingHero from '@components/Pages/Courses/LandingHero'
+import WelcomeModal from '@components/Pages/Courses/WelcomeModal'
+import ThanksModal from '@components/Pages/Courses/ThanksModal'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import 'github-markdown-css/github-markdown-light.css'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -249,6 +255,30 @@ const CourseClient = (props: any) => {
                 { label: course.name }
               ]} />
             </div>
+
+            {course?.onboarding_config?.landing && (
+              <LandingHero
+                config={course.onboarding_config.landing}
+                orgslug={orgslug}
+                courseuuid={courseuuid}
+                isAuthenticated={!!access_token}
+                firstChapterHref={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+              />
+            )}
+
+            {access_token && session?.data?.user && course?.onboarding_config?.welcome && (
+              <WelcomeModal
+                config={course.onboarding_config.welcome}
+                courseUuid={courseuuid}
+                user={session.data.user}
+                accessToken={access_token}
+              />
+            )}
+
+            {course?.onboarding_config?.thanks && (
+              <ThanksModal config={course.onboarding_config.thanks} />
+            )}
+
             <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <h1 className="text-3xl md:text-3xl font-bold">{course.name}</h1>
               <CourseShare
@@ -384,8 +414,10 @@ const CourseClient = (props: any) => {
                 )}
 
                 <div className="course_metadata_left space-y-2">
-                  <div className="">
-                    <p className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto">{course.about}</p>
+                  <div className="py-5 markdown-body" style={{ backgroundColor: 'transparent' }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {course.about || ''}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>

@@ -296,3 +296,49 @@ def send_email_verification_email(
             footer_note="This link expires in 1 hour. If you didn't create a LearnHouse account, you can safely ignore this email.",
         ),
     )
+
+
+def send_purchase_welcome_email(
+    email: EmailStr,
+    username: str,
+    course_name: str,
+    course_url: str,
+    offer_name: str | None = None,
+):
+    """
+    Send a warm welcome email after a successful paywall purchase.
+
+    Called from the enrollment-activation path (Stripe webhook) when status
+    transitions to COMPLETED. Idempotent at the webhook layer.
+    """
+    safe_username = html.escape(username)
+    safe_course = html.escape(course_name)
+    safe_offer = html.escape(offer_name) if offer_name else ""
+
+    offer_line = (
+        f"<p style=\"{STYLES['p']}\">Compra confirmada: <strong>{safe_offer}</strong>.</p>"
+        if safe_offer else ""
+    )
+
+    body_content = f"""
+        <h1 style="{STYLES['h1']}">¡Bienvenido al curso, {safe_username}!</h1>
+        <p style="{STYLES['p']}">
+            Tu acceso completo a <strong>{safe_course}</strong> ya está activo.
+            Los que terminan el curso son los que hacen el ejercicio y el proyecto
+            de cada capítulo. No te saltes esos bloques.
+        </p>
+        {offer_line}
+        <a href="{course_url}" style="{STYLES['button']}">
+            Empezar el siguiente capítulo
+        </a>
+    """
+
+    return send_email(
+        to=email,
+        subject=f"Bienvenido a {course_name} — tu acceso está activo",
+        body=_email_layout(
+            title="Purchase Welcome",
+            body_content=body_content,
+            footer_note="Si tienes cualquier duda, responde a este email y te ayudamos.",
+        ),
+    )
