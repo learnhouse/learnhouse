@@ -123,7 +123,7 @@
     "tippy.js": "^6.3.7",
     "unsplash-js": "^7.0.20",
     "usehooks-ts": "^3.1.1",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "wavesurfer.js": "^7.12.1",
     "y-prosemirror": "^1.2.12",
     "yjs": "^13.6.20",
