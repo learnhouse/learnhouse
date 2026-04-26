@@ -1,10 +1,20 @@
+from datetime import datetime
 from typing import Literal, Union
+
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlmodel import Session, select
+
 from src.core.events.database import get_db_session
-from ee.db.payments.payments import PaymentsConfig, PaymentsConfigRead
-from src.db.users import PublicUser, APITokenUser
+from ee.db.payments.payments import (
+    PaymentProviderEnum,
+    PaymentsConfig,
+    PaymentsConfigRead,
+)
+from src.db.organizations import Organization
+from src.db.users import APITokenUser, PublicUser
 from src.security.auth import get_current_user
+from src.services.orgs.orgs import rbac_check
 from ee.services.payments.payments_config import (
     init_payments_config,
     get_payments_config,
@@ -58,6 +68,65 @@ router = APIRouter()
 # Separate router for webhook endpoints — these must NOT be behind the
 # require_plan dependency because Stripe calls them without any org_id.
 webhook_router = APIRouter()
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+def _enrich_offer_resources(
+    offer_id: int,
+    group_id: int | None,
+    org_uuid: str,
+    db_session: Session,
+) -> list[dict]:
+    """Return enriched resource metadata for an offer.
+
+    Collects resource UUIDs from direct PaymentsOfferResource links and from
+    the offer's PaymentsGroup, deduplicates them, then enriches each UUID with
+    course metadata when available.
+    """
+    from src.db.courses.courses import Course
+
+    uuids: list[str] = []
+    direct = db_session.exec(
+        select(PaymentsOfferResource).where(PaymentsOfferResource.offer_id == offer_id)
+    ).all()
+    uuids.extend(r.resource_uuid for r in direct)
+    if group_id:
+        group_res = db_session.exec(
+            select(PaymentsGroupResource).where(
+                PaymentsGroupResource.payments_group_id == group_id
+            )
+        ).all()
+        uuids.extend(r.resource_uuid for r in group_res)
+    uuids = list(dict.fromkeys(uuids))  # deduplicate, preserve order
+
+    enriched: list[dict] = []
+    for uuid in uuids:
+        if uuid.startswith("course_"):
+            course = db_session.exec(
+                select(Course).where(Course.course_uuid == uuid)
+            ).first()
+            if course:
+                enriched.append({
+                    "resource_uuid": uuid,
+                    "resource_type": "course",
+                    "name": course.name,
+                    "description": course.description or "",
+                    "thumbnail_image": course.thumbnail_image or "",
+                    "org_uuid": org_uuid,
+                })
+                continue
+        enriched.append({
+            "resource_uuid": uuid,
+            "resource_type": uuid.split("_")[0] if "_" in uuid else "resource",
+            "name": uuid,
+            "description": "",
+            "thumbnail_image": "",
+            "org_uuid": org_uuid,
+        })
+    return enriched
 
 # ---------------------------------------------------------------------------
 # Config
@@ -473,7 +542,6 @@ async def api_list_public_offers(
 ):
     """Public endpoint — lists all publicly listed offers for an org, enriched with resource metadata."""
     from ee.db.payments.payments_offers import PaymentsOffer
-    from src.db.courses.courses import Course
     from src.db.organizations import Organization
 
     org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
@@ -482,48 +550,9 @@ async def api_list_public_offers(
     offers = db_session.exec(
         select(PaymentsOffer).where(
             PaymentsOffer.org_id == org_id,
-            PaymentsOffer.is_publicly_listed == True,
+            PaymentsOffer.is_publicly_listed.is_(True),  # type: ignore
         ).order_by(PaymentsOffer.id.asc())  # type: ignore
     ).all()
-
-    def _enrich_resources(offer_id: int, group_id) -> list[dict]:
-        uuids: list[str] = []
-        direct = db_session.exec(
-            select(PaymentsOfferResource).where(PaymentsOfferResource.offer_id == offer_id)
-        ).all()
-        uuids.extend(r.resource_uuid for r in direct)
-        if group_id:
-            group_res = db_session.exec(
-                select(PaymentsGroupResource).where(PaymentsGroupResource.payments_group_id == group_id)
-            ).all()
-            uuids.extend(r.resource_uuid for r in group_res)
-        uuids = list(dict.fromkeys(uuids))  # deduplicate, preserve order
-
-        enriched = []
-        for uuid in uuids:
-            if uuid.startswith("course_"):
-                course = db_session.exec(
-                    select(Course).where(Course.course_uuid == uuid)
-                ).first()
-                if course:
-                    enriched.append({
-                        "resource_uuid": uuid,
-                        "resource_type": "course",
-                        "name": course.name,
-                        "description": course.description or "",
-                        "thumbnail_image": course.thumbnail_image or "",
-                        "org_uuid": org_uuid,
-                    })
-                    continue
-            enriched.append({
-                "resource_uuid": uuid,
-                "resource_type": uuid.split("_")[0] if "_" in uuid else "resource",
-                "name": uuid,
-                "description": "",
-                "thumbnail_image": "",
-                "org_uuid": org_uuid,
-            })
-        return enriched
 
     return [
         {
@@ -537,7 +566,9 @@ async def api_list_public_offers(
             "currency": o.currency,
             "benefits": o.benefits,
             "payments_group_id": o.payments_group_id,
-            "included_resources": _enrich_resources(o.id, o.payments_group_id),
+            "included_resources": _enrich_offer_resources(
+                o.id, o.payments_group_id, org_uuid, db_session
+            ),
         }
         for o in offers
     ]
@@ -598,7 +629,7 @@ async def api_get_offers_by_resource(
     offers = db_session.exec(
         select(PaymentsOffer).where(
             PaymentsOffer.id.in_(list(offer_ids)),  # type: ignore
-            PaymentsOffer.is_publicly_listed == True,
+            PaymentsOffer.is_publicly_listed.is_(True),  # type: ignore
         )
     ).all()
 
@@ -633,56 +664,28 @@ async def api_get_public_offer(
     db_session: Session = Depends(get_db_session),
 ):
     """Public endpoint — offer metadata + included resources enriched with course details."""
-    from fastapi import HTTPException
     from ee.db.payments.payments_offers import PaymentsOffer
-    from src.db.courses.courses import Course
     from src.db.organizations import Organization
 
     org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
     org_uuid = org.org_uuid if org else ""
 
     offer = db_session.exec(
-        select(PaymentsOffer).where(PaymentsOffer.offer_uuid == offer_uuid, PaymentsOffer.org_id == org_id)
+        select(PaymentsOffer).where(
+            PaymentsOffer.offer_uuid == offer_uuid,
+            PaymentsOffer.org_id == org_id,
+        )
     ).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
 
-    uuids: list[str] = []
-    direct = db_session.exec(
-        select(PaymentsOfferResource).where(PaymentsOfferResource.offer_id == offer.id)
-    ).all()
-    uuids.extend(r.resource_uuid for r in direct)
-    if offer.payments_group_id:
-        group_resources = db_session.exec(
-            select(PaymentsGroupResource).where(
-                PaymentsGroupResource.payments_group_id == offer.payments_group_id
-            )
-        ).all()
-        uuids.extend(r.resource_uuid for r in group_resources)
-    uuids = list(dict.fromkeys(uuids))
-
-    enriched = []
-    for uuid in uuids:
-        if uuid.startswith("course_"):
-            course = db_session.exec(select(Course).where(Course.course_uuid == uuid)).first()
-            if course:
-                enriched.append({
-                    "resource_uuid": uuid,
-                    "resource_type": "course",
-                    "name": course.name,
-                    "description": course.description or "",
-                    "thumbnail_image": course.thumbnail_image or "",
-                    "org_uuid": org_uuid,
-                })
-                continue
-        enriched.append({
-            "resource_uuid": uuid,
-            "resource_type": uuid.split("_")[0] if "_" in uuid else "resource",
-            "name": uuid,
-            "description": "",
-            "thumbnail_image": "",
-            "org_uuid": org_uuid,
-        })
+    provider_value: str | None = None
+    if offer.payments_config_id:
+        pc = db_session.exec(
+            select(PaymentsConfig).where(PaymentsConfig.id == offer.payments_config_id)
+        ).first()
+        if pc:
+            provider_value = pc.provider.value if hasattr(pc.provider, "value") else str(pc.provider)
 
     return {
         "id": offer.id,
@@ -695,7 +698,10 @@ async def api_get_public_offer(
         "currency": offer.currency,
         "benefits": offer.benefits,
         "is_publicly_listed": offer.is_publicly_listed,
-        "included_resources": enriched,
+        "included_resources": _enrich_offer_resources(
+            offer.id, offer.payments_group_id, org_uuid, db_session
+        ),
+        "provider": provider_value,
     }
 
 
@@ -805,12 +811,25 @@ async def api_create_offer_checkout_session(
     db_session: Session = Depends(get_db_session),
 ):
     from ee.db.payments.payments_offers import PaymentsOffer
+    from ee.services.payments.provider_registry import get_provider
+
     offer = db_session.exec(
         select(PaymentsOffer).where(PaymentsOffer.offer_uuid == offer_uuid, PaymentsOffer.org_id == org_id)
     ).first()
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
-    return await create_offer_checkout_session(
+
+    # Dispatch to the offer's configured provider (Stripe / Moyasar / ...).
+    config = db_session.exec(
+        select(PaymentsConfig).where(PaymentsConfig.id == offer.payments_config_id)
+    ).first()
+    if not config:
+        raise HTTPException(
+            status_code=404,
+            detail="Payments configuration for this offer no longer exists",
+        )
+    provider = get_provider(config.provider)
+    return await provider.create_checkout_session(
         request, org_id, offer.id, redirect_uri, current_user, db_session
     )
 
@@ -1087,3 +1106,128 @@ async def api_stripe_express_dashboard(
 ):
     """Return a Stripe Express hosted dashboard URL for the connected Express account."""
     return await get_stripe_express_dashboard_link(org_id, db_session)
+
+
+# ---------------------------------------------------------------------------
+# Moyasar connect/verify
+# ---------------------------------------------------------------------------
+
+class MoyasarConnectVerifyRequest(BaseModel):
+    """Request body for the Moyasar key-verification endpoint."""
+    publishable_key: str
+    secret_key: str
+    webhook_secret: str
+
+
+@router.post(
+    "/{org_id}/moyasar/connect/verify",
+    summary="Verify Moyasar keys and persist encrypted provider_config",
+    description=(
+        "Validate Moyasar API keys by hitting GET /invoices (Moyasar auth: HTTP Basic, "
+        "secret_key as username, empty password). On success, encrypt and persist the "
+        "keys in PaymentsConfig. Requires an org admin."
+    ),
+    responses={
+        200: {"description": "Keys verified; Moyasar config stored and marked active."},
+        400: {"description": "Invalid Moyasar keys"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Caller lacks permission to configure payments for this org"},
+        404: {"description": "Organization not found"},
+        502: {"description": "Could not reach Moyasar"},
+    },
+)
+async def api_verify_moyasar_connection(
+    request: Request,
+    org_id: int,
+    body: MoyasarConnectVerifyRequest,
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """Thin router — delegates all business logic to MoyasarPaymentProvider."""
+    from src.db.organizations import Organization
+    from ee.services.payments.provider_registry import get_provider
+
+    org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
+    if org is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    provider = get_provider(PaymentProviderEnum.MOYASAR)
+    return await provider.verify_and_save_credentials(
+        org_id=org_id,
+        publishable_key=body.publishable_key,
+        secret_key=body.secret_key,
+        webhook_secret=body.webhook_secret,
+        db_session=db_session,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Enrollment status + Moyasar reconciliation
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/enrollments/{enrollment_id}/status",
+    summary="Get enrollment status; reconciles PENDING Moyasar enrollments against the API.",
+    responses={
+        200: {"description": "Enrollment status (PENDING, ACTIVE, CANCELLED)."},
+        401: {"description": "Authentication required"},
+        403: {"description": "Enrollment belongs to a different user"},
+        404: {"description": "Enrollment not found"},
+    },
+)
+async def api_get_enrollment_status(
+    enrollment_id: int,
+    current_user: Union[PublicUser, APITokenUser] = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """Thin router — auth check here, reconciliation delegated to the provider."""
+    from ee.db.payments.payments_enrollments import PaymentsEnrollment
+    from ee.services.payments.provider_registry import get_provider
+
+    e = db_session.exec(
+        select(PaymentsEnrollment).where(PaymentsEnrollment.id == enrollment_id)
+    ).first()
+    if e is None:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    if int(current_user.id) != e.user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # Determine which provider owns this enrollment via its config
+    config = db_session.exec(
+        select(PaymentsConfig).where(
+            PaymentsConfig.org_id == e.org_id,
+            PaymentsConfig.provider == PaymentProviderEnum.MOYASAR,
+        )
+    ).first()
+    if config:
+        provider = get_provider(PaymentProviderEnum.MOYASAR)
+        await provider.reconcile_enrollment(enrollment_id, db_session)
+        # Re-fetch after potential mutation
+        db_session.refresh(e)
+
+    status_name = e.status.name if hasattr(e.status, "name") else str(e.status)
+    return {"status": status_name, "enrollment_id": e.id}
+
+
+# ---------------------------------------------------------------------------
+# Moyasar webhook
+# ---------------------------------------------------------------------------
+
+@webhook_router.post(
+    "/moyasar/webhook",
+    summary="Moyasar webhook endpoint",
+    description="Receive and process Moyasar payment notifications. Verifies HMAC-SHA256 signature from x-moyasar-signature header before mutating enrollment state.",
+    responses={
+        200: {"description": "Webhook accepted."},
+        400: {"description": "Invalid or missing webhook signature"},
+    },
+)
+async def api_handle_moyasar_webhook(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+):
+    from ee.services.payments.provider_registry import get_provider
+    provider = get_provider(PaymentProviderEnum.MOYASAR)
+    return await provider.handle_webhook(request, webhook_type="moyasar", db_session=db_session)

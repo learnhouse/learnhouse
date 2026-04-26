@@ -13,6 +13,7 @@ from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
 # ---------------------------------------------------------------------------
 class PaymentProviderEnum(str, Enum):
     STRIPE = "stripe"
+    MOYASAR = "moyasar"
     # LEMON_SQUEEZY = "lemon_squeezy"  # example future provider
     # PADDLE = "paddle"                # example future provider
 

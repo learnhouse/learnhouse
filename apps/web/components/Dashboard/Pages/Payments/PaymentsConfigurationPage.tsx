@@ -17,6 +17,7 @@ import {
   UnplugIcon,
   XCircle,
   AlertTriangle,
+  CreditCard,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
@@ -24,6 +25,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { Button } from '@components/ui/button';
 import { getMainDomainUri } from '@services/config/config';
 import { SiStripe } from '@icons-pack/react-simple-icons';
+import MoyasarKeysModal from './MoyasarKeysModal';
 
 // ---------------------------------------------------------------------------
 // Provider registry
@@ -34,8 +36,12 @@ interface PaymentProviderDef {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
   tagline: string;
   docsUrl: string;
-  callbackPath: string;
-  getConnectUrl: (orgId: number, accessToken: string, redirectUri: string) => Promise<string>;
+  // 'oauth' providers redirect the browser to a hosted authorize page.
+  // 'keys'  providers collect API keys directly via an in-app modal.
+  connectMode: 'oauth' | 'keys';
+  // Only used when connectMode === 'oauth'
+  callbackPath?: string;
+  getConnectUrl?: (orgId: number, accessToken: string, redirectUri: string) => Promise<string>;
 }
 
 const PAYMENT_PROVIDERS: PaymentProviderDef[] = [
@@ -45,11 +51,20 @@ const PAYMENT_PROVIDERS: PaymentProviderDef[] = [
     Icon: SiStripe,
     tagline: 'Accept one-time payments and subscriptions via Stripe Connect.',
     docsUrl: 'https://stripe.com/docs',
+    connectMode: 'oauth',
     callbackPath: '/payments/stripe/connect/oauth',
     async getConnectUrl(orgId, accessToken, redirectUri) {
       const { connect_url } = await getStripeOnboardingLink(orgId, accessToken, redirectUri);
       return connect_url;
     },
+  },
+  {
+    id: 'moyasar',
+    name: 'Moyasar',
+    Icon: CreditCard,
+    tagline: 'Accept payments from Saudi cards, mada, Apple Pay, STC Pay, and SADAD.',
+    docsUrl: 'https://docs.moyasar.com',
+    connectMode: 'keys',
   },
 ];
 
@@ -122,17 +137,27 @@ interface ProviderCardProps {
 const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, accessToken }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [disconnectError, setDisconnectError] = useState<{ count: number } | null>(null);
-  const isConnected = !!(config?.provider_specific_id && config?.active);
+  const [keysModalOpen, setKeysModalOpen] = useState(false);
+  // OAuth providers report connection via a persisted provider_specific_id (e.g. Stripe acct_...).
+  // Key-based providers (Moyasar) have no such ID; connectedness is simply config.active.
+  const isConnected =
+    provider.connectMode === 'keys'
+      ? !!config?.active
+      : !!(config?.provider_specific_id && config?.active);
 
   const handleConnect = async () => {
+    if (provider.connectMode === 'keys') {
+      setKeysModalOpen(true);
+      return;
+    }
     try {
       setIsConnecting(true);
       if (!config) {
         await initializePaymentConfig(orgId, { provider: provider.id, enabled: true }, provider.id, accessToken);
         await mutate([`/payments/${orgId}/config`, accessToken]);
       }
-      const redirectUri = getMainDomainUri(provider.callbackPath);
-      const url = await provider.getConnectUrl(orgId, accessToken, redirectUri);
+      const redirectUri = getMainDomainUri(provider.callbackPath ?? '/');
+      const url = await provider.getConnectUrl!(orgId, accessToken, redirectUri);
       window.open(url, '_blank');
     } catch {
       toast.error(`Failed to connect ${provider.name}`);
@@ -265,14 +290,15 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
             <AlertTriangle size={16} className="shrink-0 mt-0.5" />
             <p>
               You have <strong>{disconnectError.count} active subscriber{disconnectError.count !== 1 ? 's' : ''}</strong>.
-              Cancel all subscriptions first via your Stripe dashboard before removing.
+              Cancel all subscriptions first via your {provider.name} dashboard before removing.
             </p>
           </div>
         </div>
       )}
 
-      {/* Warning strip when config exists but OAuth not completed */}
-      {config && !isConnected && !disconnectError && (
+      {/* Warning strip when OAuth config exists but authorization not completed.
+          Skipped for 'keys' providers (Moyasar) — their verify step either fully succeeds or fully fails. */}
+      {provider.connectMode === 'oauth' && config && !isConnected && !disconnectError && (
         <div className="bg-amber-50 border-t border-amber-100 px-5 py-2 text-xs text-amber-700 flex items-center justify-between">
           <div className="flex items-center space-x-1.5">
             <Info size={12} className="shrink-0" />
@@ -294,6 +320,18 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, config, orgId, ac
             status="warning"
           />
         </div>
+      )}
+
+      {keysModalOpen && provider.id === 'moyasar' && (
+        <MoyasarKeysModal
+          orgId={orgId}
+          accessToken={accessToken}
+          onClose={() => setKeysModalOpen(false)}
+          onSuccess={() => {
+            setKeysModalOpen(false);
+            mutate([`/payments/${orgId}/config`, accessToken]);
+          }}
+        />
       )}
     </div>
   );

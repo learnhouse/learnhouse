@@ -275,7 +275,7 @@ export default function OfferDetailClient({ orgslug, orgId, offerUuid, offer, ac
 
               {/* Trust signals */}
               <div className="mt-5 pt-4 border-t border-gray-100 space-y-1.5">
-                <p className="text-xs text-gray-400 flex items-center gap-1.5"><ShoppingBag size={11} /> Secure checkout via Stripe</p>
+                <p className="text-xs text-gray-400 flex items-center gap-1.5"><ShoppingBag size={11} /> Secure checkout via {offer.provider === 'moyasar' ? 'Moyasar' : 'Stripe'}</p>
                 {isSubscription && <p className="text-xs text-gray-400">✓ Cancel anytime</p>}
                 <p className="text-xs text-gray-400">✓ Instant access after payment</p>
               </div>

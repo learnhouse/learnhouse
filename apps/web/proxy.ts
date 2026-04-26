@@ -237,21 +237,28 @@ export default async function proxy(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
     const searchParams = req.nextUrl.searchParams
     const orgslug = searchParams.get('state')?.split('_')[0] // Assuming state parameter contains orgslug_randomstring
-    
+
     // Construct the new URL with the required parameters
     const redirectUrl = new URL('/payments/stripe/connect/oauth', req.url)
-    
+
     // Preserve all original search parameters
     searchParams.forEach((value, key) => {
       redirectUrl.searchParams.append(key, value)
     })
-    
+
     // Add orgslug if available
     if (orgslug) {
       redirectUrl.searchParams.set('orgslug', orgslug)
     }
 
     return NextResponse.rewrite(redirectUrl)
+  }
+
+  // Moyasar invoice success_url / back_url lands here — pass through without org rewrite
+  if (req.nextUrl.pathname.startsWith('/payments/moyasar/callback')) {
+    const response = NextResponse.rewrite(new URL(pathname + search, req.url))
+    setInstanceCookies(response, instanceInfo)
+    return response
   }
 
   // Health Check

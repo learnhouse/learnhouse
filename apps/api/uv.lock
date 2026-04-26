@@ -805,6 +805,7 @@ dependencies = [
     { name = "redis" },
     { name = "requests" },
     { name = "resend" },
+    { name = "respx" },
     { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "sqlalchemy-utils" },
     { name = "sqlmodel" },
@@ -846,6 +847,7 @@ requires-dist = [
     { name = "redis", specifier = "==7.4.0" },
     { name = "requests", specifier = "==2.33.1" },
     { name = "resend", specifier = "==2.28.1" },
+    { name = "respx", specifier = ">=0.22.0" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = "==2.58.0" },
     { name = "sqlalchemy-utils", specifier = "==0.42.1" },
     { name = "sqlmodel", specifier = "==0.0.38" },
@@ -1568,6 +1570,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/85/1b94efbd9a2d595e3c7bc26a91987de0df9531c0b2b64da12cd673d46e79/resend-2.28.1.tar.gz", hash = "sha256:c3809ea696fc727b3bd4f4bdd121385d9b3eea453bbb8325e28bdabbd73df356", size = 43107, upload-time = "2026-04-15T15:07:59.608Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/8b/90f8229b6ac7b40d857aad77ce2c117d16171e8efbd4a857eae9a69e0c38/resend-2.28.1-py2.py3-none-any.whl", hash = "sha256:353b87469d96b04b31947974083a3dbcd8fb0418392b8cdb835dac89ea4d2532", size = 68309, upload-time = "2026-04-15T15:07:58.31Z" },
+]
+
+[[package]]
+name = "respx"
+version = "0.23.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/43/98/4e55c9c486404ec12373708d015ebce157966965a5ebe7f28ff2c784d41b/respx-0.23.1.tar.gz", hash = "sha256:242dcc6ce6b5b9bf621f5870c82a63997e8e82bc7c947f9ffe272b8f3dd5a780", size = 29243, upload-time = "2026-04-08T14:37:16.008Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1d/4a/221da6ca167db45693d8d26c7dc79ccfc978a440251bf6721c9aaf251ac0/respx-0.23.1-py2.py3-none-any.whl", hash = "sha256:b18004b029935384bccfa6d7d9d74b4ec9af73a081cc28600fffc0447f4b8c1a", size = 25557, upload-time = "2026-04-08T14:37:14.613Z" },
 ]
 
 [[package]]

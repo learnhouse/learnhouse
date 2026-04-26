@@ -23,10 +23,18 @@ def _stripe_provider() -> IPaymentProvider:
     return StripePaymentProvider()
 
 
+@lru_cache(maxsize=None)
+def _moyasar_provider() -> IPaymentProvider:
+    from ee.services.payments.payments_moyasar import MoyasarPaymentProvider
+    return MoyasarPaymentProvider()
+
+
 def get_provider(provider: PaymentProviderEnum) -> IPaymentProvider:
     """Return a cached, stateless provider instance for the given enum value."""
     if provider == PaymentProviderEnum.STRIPE:
         return _stripe_provider()
+    if provider == PaymentProviderEnum.MOYASAR:
+        return _moyasar_provider()
     # elif provider == PaymentProviderEnum.LEMON_SQUEEZY:
     #     return _lemon_squeezy_provider()
     # elif provider == PaymentProviderEnum.PADDLE:
