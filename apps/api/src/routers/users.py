@@ -45,6 +45,10 @@ from src.services.users.users import (
     update_user_avatar,
     update_user_password,
 )
+from src.services.users.bulk_import import (
+    BulkImportResult,
+    bulk_import_users_from_csv,
+)
 from src.services.courses.courses import get_user_courses
 
 
@@ -208,6 +212,68 @@ async def api_create_user_with_orgid(
         )
     else:
         return await create_user(request, db_session, current_user, user_object, org_id)
+
+
+@router.post(
+    "/{org_id}/bulk-import",
+    response_model=BulkImportResult,
+    tags=["users"],
+    summary="Bulk import users from CSV",
+    description=(
+        "Create many users at once from a CSV upload, optionally enrolling them in "
+        "user groups, courses, and collections. Required column: `email`. Optional: "
+        "`first_name`, `last_name`, `username`, `password`, `role_id`, `user_groups`, "
+        "`courses`, `collections`. Multi-value cells use `|` as the inner separator. "
+        "Empty `password` generates a strong random one (user can recover via "
+        "password reset). Each row is processed independently — failures do not "
+        "abort the batch and are returned in the response `errors` list."
+    ),
+    responses={
+        200: {"description": "Import completed; see body for per-row outcomes.", "model": BulkImportResult},
+        400: {"description": "Malformed CSV or missing/unknown columns"},
+        403: {"description": "Caller lacks permission to create users in this organization"},
+        404: {"description": "Organization does not exist"},
+    },
+)
+async def api_bulk_import_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    file: UploadFile,
+) -> BulkImportResult:
+    """
+    Bulk-create users from a CSV file and assign them to user groups,
+    courses, and collections.
+    """
+    if file.content_type and file.content_type not in (
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/csv",
+        "text/plain",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Expected a CSV file, got content-type: {file.content_type}",
+        )
+
+    raw = await file.read()
+    try:
+        csv_content = raw.decode("utf-8-sig")  # strips BOM if present
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV file must be UTF-8 encoded",
+        )
+
+    return await bulk_import_users_from_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        csv_content=csv_content,
+    )
 
 
 @router.post(

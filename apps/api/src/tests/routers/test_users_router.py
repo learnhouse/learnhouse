@@ -156,3 +156,78 @@ class TestGetUserByUsername:
             response = await client.get("/api/v1/users/username/nonexistent")
 
         assert response.status_code == 404
+
+
+class TestBulkImport:
+    """POST /{org_id}/bulk-import — CSV upload that creates users and enrollments."""
+
+    @staticmethod
+    def _result(**overrides):
+        from src.services.users.bulk_import import BulkImportResult
+        defaults = dict(
+            rows_processed=0,
+            users_created=0,
+            users_skipped_existing=0,
+            users_failed=0,
+            enrollments_added=0,
+            usergroup_assignments_added=0,
+            errors=[],
+        )
+        defaults.update(overrides)
+        return BulkImportResult(**defaults)
+
+    async def test_bulk_import_success(self, client):
+        csv_body = (
+            "email,first_name,last_name\n"
+            "alice@school.pt,Alice,Silva\n"
+            "bob@school.pt,Bob,Costa\n"
+        )
+        with patch(
+            "src.routers.users.bulk_import_users_from_csv",
+            new_callable=AsyncMock,
+            return_value=self._result(rows_processed=2, users_created=2),
+        ):
+            response = await client.post(
+                "/api/v1/users/1/bulk-import",
+                files={"file": ("import.csv", csv_body, "text/csv")},
+            )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["rows_processed"] == 2
+        assert body["users_created"] == 2
+        assert body["errors"] == []
+
+    async def test_bulk_import_rejects_non_csv_content_type(self, client):
+        response = await client.post(
+            "/api/v1/users/1/bulk-import",
+            files={"file": ("import.json", b"{}", "application/json")},
+        )
+
+        assert response.status_code == 400
+        assert "CSV" in response.json()["detail"]
+
+    async def test_bulk_import_rejects_non_utf8(self, client):
+        # 0xC0 is an invalid UTF-8 start byte
+        bad_bytes = b"email\nbad\xc0byte\n"
+        response = await client.post(
+            "/api/v1/users/1/bulk-import",
+            files={"file": ("import.csv", bad_bytes, "text/csv")},
+        )
+
+        assert response.status_code == 400
+        assert "UTF-8" in response.json()["detail"]
+
+    async def test_bulk_import_propagates_service_errors(self, client):
+        with patch(
+            "src.routers.users.bulk_import_users_from_csv",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=400, detail="CSV missing required columns: ['email']"),
+        ):
+            response = await client.post(
+                "/api/v1/users/1/bulk-import",
+                files={"file": ("import.csv", b"name\nfoo\n", "text/csv")},
+            )
+
+        assert response.status_code == 400
+        assert "missing required columns" in response.json()["detail"]
