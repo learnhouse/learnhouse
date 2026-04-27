@@ -128,6 +128,18 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
 
   if (config.s3Enabled) {
     p.log.info('Configure S3 Storage')
+
+    const provider = await p.select({
+      message: 'S3 provider?',
+      options: [
+        { value: 'aws', label: 'AWS S3', hint: 'Default — no endpoint URL needed' },
+        { value: 'wasabi', label: 'Wasabi', hint: 'S3-compatible' },
+        { value: 'custom', label: 'Other (S3-compatible)', hint: 'MinIO, Cloudflare R2, Backblaze B2, etc.' },
+      ],
+      initialValue: 'aws',
+    })
+    if (p.isCancel(provider)) { p.cancel(); process.exit(0) }
+
     const bucket = await p.text({
       message: 'S3 bucket name?',
       validate: validateRequired,
@@ -135,12 +147,43 @@ export async function promptFeatures(): Promise<FeaturesConfig> {
     if (p.isCancel(bucket)) { p.cancel(); process.exit(0) }
     config.s3BucketName = bucket as string
 
-    const endpoint = await p.text({
-      message: 'S3 endpoint URL? (leave empty for AWS S3)',
-      placeholder: 'https://s3.amazonaws.com',
-    })
-    if (p.isCancel(endpoint)) { p.cancel(); process.exit(0) }
-    if (endpoint) config.s3EndpointUrl = endpoint as string
+    if (provider === 'wasabi') {
+      p.log.info('Region URLs: https://docs.wasabi.com/docs/what-are-the-service-urls-for-wasabi-s-different-storage-regions')
+      const region = await p.select({
+        message: 'Wasabi region?',
+        options: [
+          { value: 'us-east-1', label: 'US East 1 (N. Virginia)' },
+          { value: 'us-east-2', label: 'US East 2 (N. Virginia)' },
+          { value: 'us-central-1', label: 'US Central 1 (Texas)' },
+          { value: 'us-west-1', label: 'US West 1 (Oregon)' },
+          { value: 'us-west-2', label: 'US West 2 (San Jose)' },
+          { value: 'ca-central-1', label: 'CA Central 1 (Toronto)' },
+          { value: 'eu-central-1', label: 'EU Central 1 (Amsterdam)' },
+          { value: 'eu-central-2', label: 'EU Central 2 (Frankfurt)' },
+          { value: 'eu-west-1', label: 'EU West 1 (United Kingdom)' },
+          { value: 'eu-west-2', label: 'EU West 2 (Paris)' },
+          { value: 'eu-west-3', label: 'EU West 3 (United Kingdom)' },
+          { value: 'eu-south-1', label: 'EU South 1 (Milan)' },
+          { value: 'ap-northeast-1', label: 'AP Northeast 1 (Tokyo)' },
+          { value: 'ap-northeast-2', label: 'AP Northeast 2 (Osaka)' },
+          { value: 'ap-southeast-1', label: 'AP Southeast 1 (Singapore)' },
+          { value: 'ap-southeast-2', label: 'AP Southeast 2 (Sydney)' },
+        ],
+        initialValue: 'us-east-1',
+      })
+      if (p.isCancel(region)) { p.cancel(); process.exit(0) }
+      config.s3EndpointUrl = `https://s3.${region}.wasabisys.com`
+    } else if (provider === 'custom') {
+      const endpoint = await p.text({
+        message: 'S3 endpoint URL?',
+        placeholder: 'https://s3.example.com',
+        validate: validateRequired,
+      })
+      if (p.isCancel(endpoint)) { p.cancel(); process.exit(0) }
+      config.s3EndpointUrl = endpoint as string
+    }
+
+    p.log.info('Tip: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set in your environment for S3 to work (skip if using AWS IAM roles).')
   }
 
   if (config.googleOAuthEnabled) {
