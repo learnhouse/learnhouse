@@ -1,7 +1,9 @@
 import json
 import logging
 from typing import Literal, List, Optional, Union
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
 import redis
@@ -44,6 +46,22 @@ from src.services.users.users import (
     update_user,
     update_user_avatar,
     update_user_password,
+)
+from src.services.users.bulk_import import (
+    BulkImportResult,
+    bulk_import_users_from_csv,
+)
+from src.services.users.bulk_export import (
+    export_users_to_csv,
+    iter_csv_chunks,
+)
+from src.services.users.bulk_update import (
+    BulkUpdateResult,
+    bulk_update_users_from_csv,
+)
+from src.services.users.bulk_unenroll import (
+    BulkUnenrollResult,
+    bulk_unenroll_users_from_csv,
 )
 from src.services.courses.courses import get_user_courses
 
@@ -208,6 +226,290 @@ async def api_create_user_with_orgid(
         )
     else:
         return await create_user(request, db_session, current_user, user_object, org_id)
+
+
+@router.post(
+    "/{org_id}/bulk-import",
+    response_model=BulkImportResult,
+    tags=["users"],
+    summary="Bulk import users from CSV",
+    description=(
+        "Create many users at once from a CSV upload, optionally enrolling them in "
+        "user groups, courses, and collections. Required column: `email`. Optional: "
+        "`first_name`, `last_name`, `username`, `password`, `role_id`, `user_groups`, "
+        "`courses`, `collections`. Multi-value cells use `|` as the inner separator. "
+        "Empty `password` generates a strong random one (user can recover via "
+        "password reset). Each row is processed independently — failures do not "
+        "abort the batch and are returned in the response `errors` list."
+    ),
+    responses={
+        200: {"description": "Import completed; see body for per-row outcomes.", "model": BulkImportResult},
+        400: {"description": "Malformed CSV or missing/unknown columns"},
+        403: {"description": "Caller lacks permission to create users in this organization"},
+        404: {"description": "Organization does not exist"},
+    },
+)
+async def api_bulk_import_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    file: UploadFile,
+) -> BulkImportResult:
+    """
+    Bulk-create users from a CSV file and assign them to user groups,
+    courses, and collections.
+    """
+    if file.content_type and file.content_type not in (
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/csv",
+        "text/plain",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Expected a CSV file, got content-type: {file.content_type}",
+        )
+
+    raw = await file.read()
+    try:
+        csv_content = raw.decode("utf-8-sig")  # strips BOM if present
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV file must be UTF-8 encoded",
+        )
+
+    return await bulk_import_users_from_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        csv_content=csv_content,
+    )
+
+
+@router.get(
+    "/{org_id}/bulk-export",
+    tags=["users"],
+    summary="Export users from organization as CSV",
+    description=(
+        "Stream a CSV of every user in the organization (or a single user "
+        "group when `usergroup_id` is provided). Columns mirror the "
+        "bulk-import format minus `password` so the file can be edited and "
+        "fed back through the import endpoint. Caller needs `users.action_read`."
+    ),
+    responses={
+        200: {
+            "description": "CSV stream with users.",
+            "content": {"text/csv": {}},
+        },
+        403: {"description": "Caller lacks permission to read users in this organization"},
+        404: {"description": "Organization or user group not found"},
+    },
+)
+async def api_bulk_export_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    usergroup_id: Optional[int] = Query(
+        None,
+        description="Restrict the export to members of this user group",
+    ),
+) -> StreamingResponse:
+    """
+    Bulk export users in the organization as CSV.
+    """
+    csv_content = await export_users_to_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        usergroup_id=usergroup_id,
+    )
+    suffix = f"-usergroup-{usergroup_id}" if usergroup_id else ""
+    filename = f"users-export-org-{org_id}{suffix}-{datetime.now():%Y%m%d}.csv"
+    return StreamingResponse(
+        iter_csv_chunks(csv_content),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+_BULK_IMPORT_TEMPLATE_CSV = (
+    "email,first_name,last_name,username,password,role_id,user_groups,courses,collections\n"
+    "alice@example.org,Alice,Silva,asilva,,4,1|2,course_abc-123,\n"
+    "bob@example.org,Bob,Costa,,,4,1,,collection_xyz-456\n"
+)
+
+_BULK_UNENROLL_TEMPLATE_CSV = (
+    "email,user_groups,courses,collections\n"
+    "alice@example.org,1,course_abc-123,\n"
+    "bob@example.org,,,collection_xyz-456\n"
+)
+
+
+@router.get(
+    "/{org_id}/bulk-import/template.csv",
+    tags=["users"],
+    summary="Download CSV template for bulk-import / bulk-update",
+    description=(
+        "Returns a small CSV template showing the headers and a sample row "
+        "for the bulk-import endpoint. The same template can be used for "
+        "bulk-update (only `email` is required for updates; other fields are "
+        "optional and additive)."
+    ),
+    responses={200: {"description": "CSV template", "content": {"text/csv": {}}}},
+)
+async def api_bulk_import_template(
+    org_id: int,  # noqa: ARG001 — org_id keeps URL shape consistent for clients
+    current_user: PublicUser = Depends(get_current_user),
+) -> StreamingResponse:
+    return StreamingResponse(
+        iter_csv_chunks(_BULK_IMPORT_TEMPLATE_CSV),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="bulk-import-template.csv"'},
+    )
+
+
+@router.get(
+    "/{org_id}/bulk-unenroll/template.csv",
+    tags=["users"],
+    summary="Download CSV template for bulk-unenroll",
+    description=(
+        "Returns a small CSV template showing the headers and a sample row "
+        "for the bulk-unenroll endpoint. Only `email` is required; the other "
+        "columns specify which user groups, courses, or collections to "
+        "remove the user from."
+    ),
+    responses={200: {"description": "CSV template", "content": {"text/csv": {}}}},
+)
+async def api_bulk_unenroll_template(
+    org_id: int,  # noqa: ARG001 — org_id keeps URL shape consistent for clients
+    current_user: PublicUser = Depends(get_current_user),
+) -> StreamingResponse:
+    return StreamingResponse(
+        iter_csv_chunks(_BULK_UNENROLL_TEMPLATE_CSV),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="bulk-unenroll-template.csv"'},
+    )
+
+
+@router.post(
+    "/{org_id}/bulk-update",
+    response_model=BulkUpdateResult,
+    tags=["users"],
+    summary="Bulk update existing users from CSV",
+    description=(
+        "Update existing users in the organization from a CSV upload. Each row "
+        "is matched by `email`; rows whose email is not in the org are reported "
+        "in the `errors` list and skipped. Empty cells are ignored (never used "
+        "to clear a field). `user_groups`, `courses`, and `collections` are "
+        "additive only — use the bulk-unenroll endpoint to remove memberships "
+        "or enrollments."
+    ),
+    responses={
+        200: {"description": "Update completed; see body for per-row outcomes.", "model": BulkUpdateResult},
+        400: {"description": "Malformed CSV or missing/unknown columns"},
+        403: {"description": "Caller lacks permission to update users in this organization"},
+        404: {"description": "Organization does not exist"},
+    },
+)
+async def api_bulk_update_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    file: UploadFile,
+) -> BulkUpdateResult:
+    """
+    Bulk-update existing users from a CSV file.
+    """
+    if file.content_type and file.content_type not in (
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/csv",
+        "text/plain",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Expected a CSV file, got content-type: {file.content_type}",
+        )
+
+    raw = await file.read()
+    try:
+        csv_content = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="CSV file must be UTF-8 encoded")
+
+    return await bulk_update_users_from_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        csv_content=csv_content,
+    )
+
+
+@router.post(
+    "/{org_id}/bulk-unenroll",
+    response_model=BulkUnenrollResult,
+    tags=["users"],
+    summary="Bulk unenroll users from user groups, courses, and collections",
+    description=(
+        "Remove users from listed user groups and courses (and from courses "
+        "in given collections) based on a CSV upload. The user account itself "
+        "is never deleted. Required column: `email`. Optional: `user_groups`, "
+        "`courses`, `collections`. Multi-value cells use `|` as the inner "
+        "separator. Course unenrollment deletes the user's `TrailRun` and any "
+        "associated `TrailStep` rows for that course."
+    ),
+    responses={
+        200: {"description": "Unenroll completed; see body for per-row outcomes.", "model": BulkUnenrollResult},
+        400: {"description": "Malformed CSV or missing/unknown columns"},
+        403: {"description": "Caller lacks permission to remove enrollments in this organization"},
+        404: {"description": "Organization does not exist"},
+    },
+)
+async def api_bulk_unenroll_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    file: UploadFile,
+) -> BulkUnenrollResult:
+    """
+    Bulk-remove users from user groups and courses via a CSV file.
+    """
+    if file.content_type and file.content_type not in (
+        "text/csv",
+        "application/vnd.ms-excel",
+        "application/csv",
+        "text/plain",
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Expected a CSV file, got content-type: {file.content_type}",
+        )
+
+    raw = await file.read()
+    try:
+        csv_content = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="CSV file must be UTF-8 encoded")
+
+    return await bulk_unenroll_users_from_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        csv_content=csv_content,
+    )
 
 
 @router.post(
