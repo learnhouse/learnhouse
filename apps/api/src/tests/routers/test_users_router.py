@@ -279,3 +279,126 @@ class TestBulkExport:
             response = await client.get("/api/v1/users/999/bulk-export")
 
         assert response.status_code == 404
+
+
+class TestBulkUpdate:
+    """POST /{org_id}/bulk-update — CSV upload that updates existing users."""
+
+    @staticmethod
+    def _result(**overrides):
+        from src.services.users.bulk_update import BulkUpdateResult
+        defaults = dict(
+            rows_processed=0,
+            users_updated=0,
+            users_not_found=0,
+            users_failed=0,
+            enrollments_added=0,
+            usergroup_assignments_added=0,
+            errors=[],
+        )
+        defaults.update(overrides)
+        return BulkUpdateResult(**defaults)
+
+    async def test_bulk_update_success(self, client):
+        csv_body = "email,first_name\nalice@school.pt,Alice\n"
+        with patch(
+            "src.routers.users.bulk_update_users_from_csv",
+            new_callable=AsyncMock,
+            return_value=self._result(rows_processed=1, users_updated=1),
+        ):
+            response = await client.post(
+                "/api/v1/users/1/bulk-update",
+                files={"file": ("update.csv", csv_body, "text/csv")},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["users_updated"] == 1
+
+    async def test_bulk_update_user_not_found_reported(self, client):
+        from src.services.users.bulk_import import BulkImportError
+        with patch(
+            "src.routers.users.bulk_update_users_from_csv",
+            new_callable=AsyncMock,
+            return_value=self._result(
+                rows_processed=1,
+                users_not_found=1,
+                errors=[BulkImportError(row=1, email="ghost@x.pt", error="User not found in this organization")],
+            ),
+        ):
+            response = await client.post(
+                "/api/v1/users/1/bulk-update",
+                files={"file": ("update.csv", b"email\nghost@x.pt\n", "text/csv")},
+            )
+
+        body = response.json()
+        assert body["users_not_found"] == 1
+        assert body["errors"][0]["email"] == "ghost@x.pt"
+
+
+class TestBulkUnenroll:
+    """POST /{org_id}/bulk-unenroll — CSV upload that removes memberships and enrollments."""
+
+    @staticmethod
+    def _result(**overrides):
+        from src.services.users.bulk_unenroll import BulkUnenrollResult
+        defaults = dict(
+            rows_processed=0,
+            users_not_found=0,
+            users_failed=0,
+            enrollments_removed=0,
+            usergroup_assignments_removed=0,
+            errors=[],
+        )
+        defaults.update(overrides)
+        return BulkUnenrollResult(**defaults)
+
+    async def test_bulk_unenroll_success(self, client):
+        csv_body = "email,courses\nalice@school.pt,course_abc\n"
+        with patch(
+            "src.routers.users.bulk_unenroll_users_from_csv",
+            new_callable=AsyncMock,
+            return_value=self._result(rows_processed=1, enrollments_removed=1),
+        ):
+            response = await client.post(
+                "/api/v1/users/1/bulk-unenroll",
+                files={"file": ("unenroll.csv", csv_body, "text/csv")},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["enrollments_removed"] == 1
+
+    async def test_bulk_unenroll_rejects_non_csv(self, client):
+        response = await client.post(
+            "/api/v1/users/1/bulk-unenroll",
+            files={"file": ("payload.json", b"{}", "application/json")},
+        )
+        assert response.status_code == 400
+
+
+class TestBulkTemplates:
+    """GET /{org_id}/bulk-import/template.csv and bulk-unenroll/template.csv."""
+
+    async def test_import_template_returns_csv(self, client):
+        response = await client.get("/api/v1/users/1/bulk-import/template.csv")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/csv")
+        assert "bulk-import-template.csv" in response.headers["content-disposition"]
+        # First line should be the header — must include `email`
+        first_line = response.text.splitlines()[0]
+        assert "email" in first_line
+        assert "user_groups" in first_line
+        assert "courses" in first_line
+        assert "collections" in first_line
+
+    async def test_unenroll_template_returns_csv(self, client):
+        response = await client.get("/api/v1/users/1/bulk-unenroll/template.csv")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/csv")
+        assert "bulk-unenroll-template.csv" in response.headers["content-disposition"]
+        first_line = response.text.splitlines()[0]
+        # Unenroll template should NOT include create-only fields
+        assert "password" not in first_line
+        assert "first_name" not in first_line
+        assert "email" in first_line
