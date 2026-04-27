@@ -12,6 +12,7 @@ export const AVAILABLE_LANGUAGES: Language[] = [
   { code: 'ar', translationKey: 'common.arabic', nativeName: 'العربية' },
   { code: 'ja', translationKey: 'common.japanese', nativeName: '日本語' },
   { code: 'pt', translationKey: 'common.portuguese', nativeName: 'Português' },
+  { code: 'ptbr', translationKey: 'common.brazilian_portuguese', nativeName: 'Português (Brasil)' },
   { code: 'ru', translationKey: 'common.russian', nativeName: 'Русский' },
   { code: 'zh', translationKey: 'common.chinese', nativeName: '简体中文' },
   { code: 'hi', translationKey: 'common.hindi', nativeName: 'हिन्दी' },
