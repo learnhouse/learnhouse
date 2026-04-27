@@ -12,6 +12,7 @@ const LOCALE_LOADERS: Record<string, () => Promise<{ default: any }>> = {
   ar: () => import('../locales/ar.json'),
   ja: () => import('../locales/ja.json'),
   pt: () => import('../locales/pt.json'),
+  ptbr: () => import('../locales/ptbr.json'),
   ru: () => import('../locales/ru.json'),
   zh: () => import('../locales/zh.json'),
   hi: () => import('../locales/hi.json'),
@@ -32,13 +33,16 @@ const resources = {
 };
 
 async function loadLocale(lng: string) {
-  const code = lng.split('-')[0]
+  // Map Brazilian Portuguese variants (pt-BR, pt_BR) to our 'ptbr' bundle key
+  const lower = lng.toLowerCase().replace('_', '-');
+  const code = (lower === 'pt-br' || lower.startsWith('pt-br-')) ? 'ptbr' : lng.split('-')[0];
   if (code === 'en' || !LOCALE_LOADERS[code]) return;
   if (i18n.hasResourceBundle(code, 'common')) return;
 
   try {
     const mod = await LOCALE_LOADERS[code]();
     i18n.addResourceBundle(code, 'common', mod.default, true, true);
+    if (code !== lng && i18n.language === lng) i18n.changeLanguage(code);
   } catch (e) {
     console.warn(`Failed to load locale: ${lng}`, e);
   }
@@ -68,7 +72,7 @@ i18n
 
 // Load the detected language if it's not English — export the promise
 // so I18nProvider can wait for resources before rendering
-export const initialLocaleReady = loadLocale(i18n.language.split('-')[0]);
+export const initialLocaleReady = loadLocale(i18n.language);
 
 /**
  * Switch language safely — preloads the bundle before switching
