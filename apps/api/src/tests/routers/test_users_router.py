@@ -231,3 +231,51 @@ class TestBulkImport:
 
         assert response.status_code == 400
         assert "missing required columns" in response.json()["detail"]
+
+
+class TestBulkExport:
+    """GET /{org_id}/bulk-export — CSV stream of users in the organization."""
+
+    async def test_bulk_export_success(self, client):
+        csv_payload = (
+            "email,first_name,last_name,username,role_id,user_groups\n"
+            "alice@school.pt,Alice,Silva,alice,4,1|2\n"
+        )
+        with patch(
+            "src.routers.users.export_users_to_csv",
+            new_callable=AsyncMock,
+            return_value=csv_payload,
+        ):
+            response = await client.get("/api/v1/users/1/bulk-export")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/csv")
+        assert "attachment" in response.headers["content-disposition"]
+        assert "users-export-org-1" in response.headers["content-disposition"]
+        body = response.text
+        assert body.startswith("email,first_name,last_name,username,role_id,user_groups")
+        assert "alice@school.pt" in body
+
+    async def test_bulk_export_with_usergroup_filter(self, client):
+        with patch(
+            "src.routers.users.export_users_to_csv",
+            new_callable=AsyncMock,
+            return_value="email\nbob@school.pt\n",
+        ) as mock_export:
+            response = await client.get("/api/v1/users/1/bulk-export?usergroup_id=42")
+
+        assert response.status_code == 200
+        # Verify the service got the filter argument
+        kwargs = mock_export.call_args.kwargs
+        assert kwargs["usergroup_id"] == 42
+        assert "usergroup-42" in response.headers["content-disposition"]
+
+    async def test_bulk_export_org_not_found(self, client):
+        with patch(
+            "src.routers.users.export_users_to_csv",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=404, detail="Organization not found"),
+        ):
+            response = await client.get("/api/v1/users/999/bulk-export")
+
+        assert response.status_code == 404

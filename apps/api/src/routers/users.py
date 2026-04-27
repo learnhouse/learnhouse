@@ -1,7 +1,9 @@
 import json
 import logging
 from typing import Literal, List, Optional, Union
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
 import redis
@@ -48,6 +50,10 @@ from src.services.users.users import (
 from src.services.users.bulk_import import (
     BulkImportResult,
     bulk_import_users_from_csv,
+)
+from src.services.users.bulk_export import (
+    export_users_to_csv,
+    iter_csv_chunks,
 )
 from src.services.courses.courses import get_user_courses
 
@@ -273,6 +279,55 @@ async def api_bulk_import_users(
         current_user=current_user,
         org_id=org_id,
         csv_content=csv_content,
+    )
+
+
+@router.get(
+    "/{org_id}/bulk-export",
+    tags=["users"],
+    summary="Export users from organization as CSV",
+    description=(
+        "Stream a CSV of every user in the organization (or a single user "
+        "group when `usergroup_id` is provided). Columns mirror the "
+        "bulk-import format minus `password` so the file can be edited and "
+        "fed back through the import endpoint. Caller needs `users.action_read`."
+    ),
+    responses={
+        200: {
+            "description": "CSV stream with users.",
+            "content": {"text/csv": {}},
+        },
+        403: {"description": "Caller lacks permission to read users in this organization"},
+        404: {"description": "Organization or user group not found"},
+    },
+)
+async def api_bulk_export_users(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    org_id: int,
+    usergroup_id: Optional[int] = Query(
+        None,
+        description="Restrict the export to members of this user group",
+    ),
+) -> StreamingResponse:
+    """
+    Bulk export users in the organization as CSV.
+    """
+    csv_content = await export_users_to_csv(
+        request=request,
+        db_session=db_session,
+        current_user=current_user,
+        org_id=org_id,
+        usergroup_id=usergroup_id,
+    )
+    suffix = f"-usergroup-{usergroup_id}" if usergroup_id else ""
+    filename = f"users-export-org-{org_id}{suffix}-{datetime.now():%Y%m%d}.csv"
+    return StreamingResponse(
+        iter_csv_chunks(csv_content),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
