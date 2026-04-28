@@ -404,6 +404,12 @@ async def add_course_to_trail(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
+    if course.is_archived:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Course is archived; new enrollments are not allowed",
+        )
+
     # check if run already exists
     statement = select(TrailRun).where(
         TrailRun.course_id == course.id, TrailRun.user_id == user.id
