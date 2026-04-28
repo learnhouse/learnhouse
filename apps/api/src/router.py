@@ -7,6 +7,7 @@ from src.routers import health
 from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
+from src.routers import calendar as calendar_router_module
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
 from src.routers import api_tokens
@@ -170,6 +171,12 @@ v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
 v1_router.include_router(
     collections.router, prefix="/collections", tags=["collections"]
+)
+v1_router.include_router(
+    calendar_router_module.router,
+    prefix="/calendar",
+    tags=["calendar"],
+    dependencies=[Depends(require_authenticated_user)],
 )
 v1_router.include_router(
     communities_router_module.router,
