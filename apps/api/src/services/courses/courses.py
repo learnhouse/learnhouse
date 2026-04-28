@@ -245,6 +245,7 @@ async def get_courses_orgslug(
     page: int = 1,
     limit: int = 10,
     include_unpublished: bool = False,
+    include_archived: bool = False,
 ) -> List[CourseRead]:
     # Cap limit to prevent excessive DB reads
     limit = min(limit, 100)
@@ -335,6 +336,11 @@ async def get_courses_orgslug(
                 ))
             )
 
+    # Archived courses are hidden by default; only org admins / maintainers
+    # may opt in via include_archived=True.
+    if not (include_archived and can_view_unpublished):
+        query = query.where(Course.is_archived == False)  # noqa: E712
+
     # Apply ordering and pagination — only use DISTINCT when outerjoins may produce duplicates
     query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit)
     if needs_distinct:
@@ -390,6 +396,7 @@ async def get_courses_orgslug(
             "public": course.public,
             "published": course.published,
             "open_to_contributors": course.open_to_contributors,
+            "is_archived": course.is_archived,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,
@@ -397,8 +404,8 @@ async def get_courses_orgslug(
         })
         course_reads.append(course_read)
 
-    # Cache the result for anonymous public views
-    if is_anon and not include_unpublished and course_reads:
+    # Cache the result for anonymous public views (archived stays excluded by default)
+    if is_anon and not include_unpublished and not include_archived and course_reads:
         from src.services.courses.cache import set_cached_courses_list
         set_cached_courses_list(
             org_slug, page, limit,
@@ -413,6 +420,7 @@ async def get_courses_count_orgslug(
     current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     db_session: Session,
+    include_archived: bool = False,
 ) -> int:
     """
     Get total count of courses for an organization (respecting visibility rules)
@@ -457,6 +465,9 @@ async def get_courses_count_orgslug(
                 ResourceAuthor.user_id.isnot(None)  # Courses where user is an ACTIVE resource author
             ))
         )
+
+    if not include_archived:
+        query = query.where(Course.is_archived == False)  # noqa: E712
 
     count = db_session.exec(query).one()
     return count
@@ -585,6 +596,7 @@ async def search_courses(
             "public": course.public,
             "published": course.published,
             "open_to_contributors": course.open_to_contributors,
+            "is_archived": course.is_archived,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,
@@ -925,6 +937,95 @@ async def update_course(
     return course
 
 
+def assert_course_not_archived(course: Course) -> None:
+    """Raise 403 if the course is archived. Use to gate write paths."""
+    if course.is_archived:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Course is archived (read-only); unarchive it first to allow this operation",
+        )
+
+
+async def _set_course_archive_state(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+    archived: bool,
+) -> CourseRead:
+    """Shared archive/unarchive implementation (idempotent)."""
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE,
+    )
+
+    if course.is_archived != archived:
+        course.is_archived = archived
+        course.update_date = str(datetime.now())
+        db_session.add(course)
+        db_session.commit()
+        db_session.refresh(course)
+
+        await dispatch_webhooks(
+            event_name="course_archived" if archived else "course_unarchived",
+            org_id=course.org_id,
+            data={
+                "course_uuid": course.course_uuid,
+                "name": course.name,
+                "is_archived": course.is_archived,
+            },
+        )
+
+    authors_statement = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(ResourceAuthor.id.asc())  # type: ignore
+    )
+    author_results = db_session.exec(authors_statement).all()
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date,
+        )
+        for resource_author, user in author_results
+    ]
+
+    return CourseRead(**course.model_dump(), authors=authors)
+
+
+async def archive_course(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+) -> CourseRead:
+    """Mark a course as archived (read-only). Idempotent."""
+    return await _set_course_archive_state(
+        request, course_uuid, current_user, db_session, archived=True,
+    )
+
+
+async def unarchive_course(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+) -> CourseRead:
+    """Restore an archived course to the active state. Idempotent."""
+    return await _set_course_archive_state(
+        request, course_uuid, current_user, db_session, archived=False,
+    )
+
+
 async def delete_course(
     request: Request,
     course_uuid: str,
@@ -1038,6 +1139,7 @@ async def get_user_courses(
             "public": course.public,
             "published": course.published,
             "open_to_contributors": course.open_to_contributors,
+            "is_archived": course.is_archived,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,

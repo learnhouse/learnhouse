@@ -57,6 +57,10 @@ class CourseBase(SQLModel):
     public: bool
     published: bool = Field(default=False)
     open_to_contributors: bool
+    # Archived courses are read-only: visible to enrolled users and listed
+    # to admins (when include_archived=True) but reject new enrollments and
+    # are hidden from default course listings.
+    is_archived: bool = Field(default=False)
 
 
 class Course(CourseBase, table=True):

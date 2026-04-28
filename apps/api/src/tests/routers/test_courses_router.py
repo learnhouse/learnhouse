@@ -396,6 +396,40 @@ class TestDeleteCourse:
         assert response.json()["course_uuid"] == "course_clone"
 
 
+class TestArchiveCourse:
+    async def test_archive_course_returns_archived_state(self, client):
+        with patch(
+            "src.routers.courses.courses.archive_course",
+            new_callable=AsyncMock,
+            return_value=_mock_course_read(course_uuid="course_test", is_archived=True),
+        ):
+            response = await client.post("/api/v1/courses/course_test/archive")
+
+        assert response.status_code == 200
+        assert response.json()["is_archived"] is True
+
+    async def test_archive_course_not_found(self, client):
+        with patch(
+            "src.routers.courses.courses.archive_course",
+            new_callable=AsyncMock,
+            side_effect=HTTPException(status_code=404, detail="Course not found"),
+        ):
+            response = await client.post("/api/v1/courses/missing/archive")
+
+        assert response.status_code == 404
+
+    async def test_unarchive_course_returns_active_state(self, client):
+        with patch(
+            "src.routers.courses.courses.unarchive_course",
+            new_callable=AsyncMock,
+            return_value=_mock_course_read(course_uuid="course_test", is_archived=False),
+        ):
+            response = await client.post("/api/v1/courses/course_test/unarchive")
+
+        assert response.status_code == 200
+        assert response.json()["is_archived"] is False
+
+
 class TestContributorEndpoints:
     async def test_apply_course_contributor(self, client):
         with patch(

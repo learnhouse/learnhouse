@@ -33,6 +33,8 @@ from src.services.courses.courses import (
     search_courses,
     get_course_user_rights,
     clone_course,
+    archive_course,
+    unarchive_course,
 )
 from src.services.courses.updates import (
     create_update,
@@ -442,6 +444,7 @@ async def api_get_course_by_orgslug(
     limit: int,
     org_slug: str,
     include_unpublished: bool = False,
+    include_archived: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
@@ -449,7 +452,9 @@ async def api_get_course_by_orgslug(
     Get courses by page and limit
     """
     return await get_courses_orgslug(
-        request, current_user, org_slug, db_session, page, limit, include_unpublished
+        request, current_user, org_slug, db_session, page, limit,
+        include_unpublished=include_unpublished,
+        include_archived=include_archived,
     )
 
 
@@ -465,6 +470,7 @@ async def api_get_course_by_orgslug(
 async def api_get_courses_count(
     request: Request,
     org_slug: str,
+    include_archived: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> int:
@@ -472,7 +478,8 @@ async def api_get_courses_count(
     Get total count of courses for an organization
     """
     return await get_courses_count_orgslug(
-        request, current_user, org_slug, db_session
+        request, current_user, org_slug, db_session,
+        include_archived=include_archived,
     )
 
 
@@ -605,6 +612,55 @@ async def api_clone_course(
     - Create permission for courses in the organization
     """
     return await clone_course(request, course_uuid, current_user, db_session)
+
+
+@router.post(
+    "/{course_uuid}/archive",
+    response_model=CourseRead,
+    summary="Archive a course",
+    description=(
+        "Mark a course as archived (read-only). Archived courses reject new "
+        "enrollments and are hidden from default course listings (visible "
+        "with `?include_archived=true`). Existing enrollments and progress "
+        "are preserved. Idempotent: archiving an already-archived course is "
+        "a no-op."
+    ),
+    responses={
+        200: {"description": "Course is now archived", "model": CourseRead},
+        403: {"description": "Caller lacks update permission on this course"},
+        404: {"description": "Course not found"},
+    },
+)
+async def api_archive_course(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> CourseRead:
+    return await archive_course(request, course_uuid, current_user, db_session)
+
+
+@router.post(
+    "/{course_uuid}/unarchive",
+    response_model=CourseRead,
+    summary="Unarchive a course",
+    description=(
+        "Restore an archived course to the active state. Idempotent: "
+        "unarchiving an active course is a no-op."
+    ),
+    responses={
+        200: {"description": "Course is now active", "model": CourseRead},
+        403: {"description": "Caller lacks update permission on this course"},
+        404: {"description": "Course not found"},
+    },
+)
+async def api_unarchive_course(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> CourseRead:
+    return await unarchive_course(request, course_uuid, current_user, db_session)
 
 
 @router.get(
