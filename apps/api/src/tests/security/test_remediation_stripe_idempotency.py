@@ -12,6 +12,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
+pytest.importorskip("ee.services.payments.payments_stripe", reason="EE not present (OSS build)")
+
 from ee.services.payments.payments_stripe import StripePaymentProvider
 
 
