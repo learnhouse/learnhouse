@@ -981,7 +981,10 @@
     "embed": "एम्बेड",
     "embed_code_copied": "एम्बेड कोड कॉपी हो गया!",
     "link_copied": "लिंक कॉपी हो गया!",
-    "share": "साझा करें"
+    "share": "साझा करें",
+    "markdown": "मार्कडाउन",
+    "custom": "कस्टम",
+    "scorm": "स्कॉर्म"
   },
   "assignments": {
     "submit_assignment": "असाइनमेंट सबमिट करें",
@@ -2066,7 +2069,8 @@
             "dynamic_page": "डायनेमिक पेज",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "एम्बेड"
+            "embed": "एम्बेड",
+            "custom": "कस्टम"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",

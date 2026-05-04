@@ -958,7 +958,10 @@
     "embed": "Incorpora",
     "embed_code_copied": "Codice di incorporamento copiato!",
     "link_copied": "Link copiato!",
-    "share": "Condividi"
+    "share": "Condividi",
+    "markdown": "Markdown",
+    "custom": "Personalizzato",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Invia compito",
@@ -2043,7 +2046,8 @@
             "dynamic_page": "Pagina dinamica",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "Personalizzato"
           },
           "toasts": {
             "deleting": "Eliminazione attività...",

@@ -981,7 +981,10 @@
     "embed": "Yerleştir",
     "embed_code_copied": "Yerleştirme kodu kopyalandı!",
     "link_copied": "Bağlantı kopyalandı!",
-    "share": "Paylaş"
+    "share": "Paylaş",
+    "markdown": "Markdown",
+    "custom": "Özel",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Ödevi Gönder",
@@ -2066,7 +2069,8 @@
             "dynamic_page": "Dinamik Sayfa",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Gömme"
+            "embed": "Gömme",
+            "custom": "Özel"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",

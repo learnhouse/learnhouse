@@ -968,7 +968,10 @@
     "embed": "嵌入",
     "embed_code_copied": "嵌入代码已复制！",
     "link_copied": "链接已复制！",
-    "share": "分享"
+    "share": "分享",
+    "markdown": "Markdown",
+    "custom": "自定义",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "提交作业",
@@ -2053,7 +2056,8 @@
             "dynamic_page": "动态页面",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "自定义"
           },
           "toasts": {
             "deleting": "正在删除活动...",

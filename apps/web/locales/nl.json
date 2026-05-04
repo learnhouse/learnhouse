@@ -958,7 +958,10 @@
     "embed": "Insluiten",
     "embed_code_copied": "Insluitcode gekopieerd!",
     "link_copied": "Link gekopieerd!",
-    "share": "Delen"
+    "share": "Delen",
+    "markdown": "Markdown",
+    "custom": "Aangepast",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "Opdracht indienen",
@@ -2043,7 +2046,8 @@
             "dynamic_page": "Dynamische Pagina",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Embed",
+            "custom": "Aangepast"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",

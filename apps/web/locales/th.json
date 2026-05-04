@@ -981,7 +981,10 @@
     "embed": "ฝัง",
     "embed_code_copied": "คัดลอกโค้ดฝังแล้ว!",
     "link_copied": "คัดลอกลิงก์แล้ว!",
-    "share": "แชร์"
+    "share": "แชร์",
+    "markdown": "มาร์กดาวน์",
+    "custom": "กำหนดเอง",
+    "scorm": "สกอร์ม"
   },
   "assignments": {
     "submit_assignment": "ส่งงาน",
@@ -2066,7 +2069,8 @@
             "dynamic_page": "หน้าไดนามิก",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "ฝังเนื้อหา"
+            "embed": "ฝังเนื้อหา",
+            "custom": "กำหนดเอง"
           },
           "toasts": {
             "deleting": "กำลังลบกิจกรรม...",

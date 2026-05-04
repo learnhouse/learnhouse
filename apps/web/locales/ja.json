@@ -968,7 +968,10 @@
     "embed": "埋め込み",
     "embed_code_copied": "埋め込みコードをコピーしました！",
     "link_copied": "リンクをコピーしました！",
-    "share": "共有"
+    "share": "共有",
+    "markdown": "マークダウン",
+    "custom": "カスタム",
+    "scorm": "SCORM"
   },
   "assignments": {
     "submit_assignment": "課題を提出",
@@ -2053,7 +2056,8 @@
             "dynamic_page": "ダイナミックページ",
             "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "埋め込み"
+            "embed": "埋め込み",
+            "custom": "カスタム"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",
