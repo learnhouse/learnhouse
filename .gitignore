@@ -58,5 +58,9 @@ apps/web/runtime-config.json
 .learnhouse/
 .ee-disabled
 
+# Enterprise Edition (private repo, overlaid at SaaS build time, symlinked locally)
+# No trailing slash — must also match a bare symlink at apps/api/ee, not just a directory.
+apps/api/ee
+
 # Claude Code
 .claude/
