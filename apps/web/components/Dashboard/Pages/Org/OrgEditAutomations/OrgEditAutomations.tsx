@@ -345,7 +345,8 @@ const OrgEditAutomations: React.FC = () => {
       descriptionKey="common.plans.feature_restricted.webhooks.description"
     >
       <>
-        {/* ── Zapier hero card (subtle variant) ────────────────────── */}
+        {/* ── Zapier hero card (hidden until the LearnHouse Zapier app is live) ────────────────────── */}
+        {false && (
         <div className="sm:mx-10 mx-0 mb-6 bg-white rounded-xl nice-shadow overflow-hidden">
           <div className="px-5 py-4 flex items-center gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden nice-shadow">
@@ -412,6 +413,7 @@ const OrgEditAutomations: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* ── Manual webhooks ──────────────────────────────────────── */}
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
