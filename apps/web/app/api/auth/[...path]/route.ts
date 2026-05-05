@@ -82,12 +82,12 @@ async function proxyRequest(
     if (domain) {
       response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
       response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Domain=${domain}; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-      response.headers.append('Set-Cookie', `learnhouse_has_session=; Path=/; Domain=${domain}; Max-Age=0; SameSite=Lax${securePart}`)
+      response.headers.append('Set-Cookie', `LH_session=; Path=/; Domain=${domain}; Max-Age=0; SameSite=Lax${securePart}`)
     }
     // Clear host-only cookies (pre-existing or custom domain cookies)
     response.headers.append('Set-Cookie', `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
     response.headers.append('Set-Cookie', `${REFRESH_TOKEN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${securePart}`)
-    response.headers.append('Set-Cookie', `learnhouse_has_session=; Path=/; Max-Age=0; SameSite=Lax${securePart}`)
+    response.headers.append('Set-Cookie', `LH_session=; Path=/; Max-Age=0; SameSite=Lax${securePart}`)
 
     return response
   }
@@ -177,7 +177,7 @@ async function proxyRequest(
     // Set a non-httpOnly marker so the client knows a session exists
     // without making a network request (the actual tokens stay httpOnly)
     if (tokens.access_token || tokens.refresh_token) {
-      response.cookies.set('learnhouse_has_session', '1', {
+      response.cookies.set('LH_session', '1', {
         ...cookieOptions,
         httpOnly: false,
         maxAge: REFRESH_TOKEN_MAX_AGE,

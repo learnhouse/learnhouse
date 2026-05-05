@@ -1,5 +1,14 @@
 import { getUriWithOrg } from '@services/config/config'
 
+/**
+ * Sync canonical URL — safe for client components.
+ *
+ * Resolves via cookies on the client; falls through to a relative path on
+ * the server. Server pages emitting `<meta canonical>`, og:url, or JSON-LD
+ * URLs should use `getServerCanonicalUrl` from `@/lib/seo/utils.server`
+ * instead — it reads tenancy from middleware-injected request headers and
+ * works on cold loads where cookies aren't yet visible to RSC.
+ */
 export function getCanonicalUrl(orgslug: string, path: string): string {
   return getUriWithOrg(orgslug, path).replace(/\/+$/, '')
 }

@@ -23,9 +23,10 @@ from src.routers.auth import (
 from src.security.auth import get_current_user
 
 
-def _mock_config():
+def _mock_config(tenancy: str = "multi"):
     return SimpleNamespace(
         hosting_config=SimpleNamespace(
+            tenancy=tenancy,
             domain="learnhouse.test",
             cookie_config=SimpleNamespace(domain=".learnhouse.test"),
         )
@@ -97,6 +98,25 @@ class TestAuthHelpers:
         with patch("src.routers.auth.get_learnhouse_config", return_value=_mock_config()):
             assert get_cookie_domain_for_request(custom_request) is None
             assert get_cookie_domain_for_request(localhost_request) is None
+
+    def test_get_cookie_domain_single_tenancy_is_always_host_only(self):
+        # In single tenancy the same code path serves localhost dev and any
+        # self-hosted VPS hostname — cookies are always host-only.
+        for origin in (
+            "https://app.learnhouse.test",  # would be subdomain match in multi
+            "https://learn.someschool.edu",  # arbitrary VPS host
+            "http://localhost:3000",
+            "",
+        ):
+            request = Mock()
+            request.headers = {"origin": origin, "referer": "", "host": ""}
+            with patch(
+                "src.routers.auth.get_learnhouse_config",
+                return_value=_mock_config(tenancy="single"),
+            ):
+                assert get_cookie_domain_for_request(request) is None, (
+                    f"single tenancy must return None for origin {origin!r}"
+                )
 
     def test_is_request_secure_prefers_proxy_headers_for_local_proxy(self):
         request = Mock()

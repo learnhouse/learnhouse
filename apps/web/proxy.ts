@@ -1,82 +1,209 @@
-import {
-  getAPIUrl,
-  getConfig,
-} from './services/config/config'
+import { getAPIUrl } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { stripPort, isSubdomainOf, isSameHost, extractSubdomain, isLocalhost as isLocalhostCheck, isIPAddress } from './services/utils/ts/hostUtils'
+import { isLocalhost as isLocalhostCheck } from './services/utils/ts/hostUtils'
 
-// Cached instance info from backend (30-second TTL)
+// =============================================================================
+// Tenancy
+// =============================================================================
+//
+// Three runtime behaviors selected by `instance.tenancy`:
+//
+//   1. multi (EE-only):   slug.{LEARNHOUSE_DOMAIN} subdomain detection +
+//                         per-org custom domains. The detection logic lives in
+//                         `./ee/services/tenancy/...` and is dynamic-imported
+//                         here — OSS proxy.ts never references subdomain or
+//                         custom-domain helpers directly.
+//   2. single (localhost): always serves the default org. Host-only cookies.
+//   3. single (VPS):       any domain on a self-hosted VPS. Same as #2 — we
+//                         trust the incoming Host header.
+//
+// Modes 2 and 3 share `tenancy === "single"`. The OSS code path returns the
+// default org without ever calling subdomain extraction.
+
 interface InstanceInfo {
   multi_org_enabled: boolean
   default_org_slug: string
   mode: 'saas' | 'oss' | 'ee'
+  tenancy: 'multi' | 'single'
   frontend_domain: string
   top_domain: string
 }
+
+// Cached instance info from backend (30-second TTL)
 let _instanceCache: { data: InstanceInfo; ts: number } | null = null
-const INSTANCE_CACHE_TTL = 30 * 1000 // 30 seconds
+const INSTANCE_CACHE_TTL = 30 * 1000
 
 async function getInstanceInfo(): Promise<InstanceInfo> {
   if (_instanceCache && Date.now() - _instanceCache.ts < INSTANCE_CACHE_TTL) {
     return _instanceCache.data
   }
 
-  // Use the same getAPIUrl() that resolveCustomDomain() uses — it already works
-  // in production via runtime env vars injected by server-wrapper.js.
   try {
     const apiUrl = getAPIUrl()
     const res = await fetch(`${apiUrl}instance/info`, { signal: AbortSignal.timeout(3000) })
     if (res.ok) {
-      _instanceCache = { data: await res.json(), ts: Date.now() }
+      const raw = await res.json()
+      // Older backends only return `multi_org_enabled`; derive `tenancy`.
+      const tenancy: 'multi' | 'single' =
+        raw.tenancy === 'multi' || raw.multi_org_enabled ? 'multi' : 'single'
+      _instanceCache = { data: { ...raw, tenancy }, ts: Date.now() }
       return _instanceCache.data
     }
   } catch {
-    // Backend unavailable — use defaults
+    // Backend unavailable — use safe defaults
   }
-  return { multi_org_enabled: false, default_org_slug: 'default', mode: 'oss' as const, frontend_domain: 'localhost:3000', top_domain: 'localhost' }
+  return {
+    multi_org_enabled: false,
+    default_org_slug: 'default',
+    mode: 'oss' as const,
+    tenancy: 'single',
+    frontend_domain: 'localhost:3000',
+    top_domain: 'localhost',
+  }
 }
 
-// Set instance info cookies on a response so client-side can read them synchronously
+// =============================================================================
+// Resolver
+// =============================================================================
+
+interface ResolvedTenant {
+  slug: string
+  customDomain?: string
+  source: 'custom-domain' | 'subdomain' | 'cookie' | 'default'
+}
+
+/**
+ * Resolve the active tenant for this request.
+ *
+ * In `single` tenancy this is unconditionally the default org — no EE code
+ * loaded, no custom-domain lookup, no subdomain extraction. In `multi`
+ * tenancy we delegate to the EE resolver via dynamic import; if the import
+ * or resolver throws (e.g. EE folder removed at deploy time), we log and
+ * fall back to the default org so the site stays up.
+ */
+async function resolveTenant(req: NextRequest, instance: InstanceInfo): Promise<ResolvedTenant> {
+  if (instance.tenancy === 'single') {
+    return { slug: instance.default_org_slug, source: 'default' }
+  }
+
+  try {
+    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    return await mod.resolveMultiFromRequest(req, instance)
+  } catch (err) {
+    console.warn('[proxy] EE multi-tenant resolver unavailable; falling back to default org', err)
+    return { slug: instance.default_org_slug, source: 'default' }
+  }
+}
+
+/**
+ * In `multi` tenancy, ask the EE module whether this Host is a custom domain
+ * (used by the `/redirect_from_auth` handler). Always false in `single`.
+ */
+async function hostIsCustomDomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
+  if (instance.tenancy === 'single' || !host) return false
+  try {
+    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    return mod.isCustomDomain(host, instance.frontend_domain)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Detect the admin subdomain (multi tenancy only). In single mode there is no
+ * admin subdomain — operators reach admin via /admin path.
+ */
+async function isAdminSubdomain(host: string | null, instance: InstanceInfo): Promise<boolean> {
+  if (instance.tenancy === 'single' || !host) return false
+  try {
+    const mod = await import('./ee/services/tenancy/resolveMulti.middleware')
+    return mod.extractOrgSubdomain(host, instance.frontend_domain) === 'admin'
+      // The EE helper filters out reserved subdomains; check raw too:
+      || host.split(':')[0] === `admin.${instance.frontend_domain.split(':')[0]}`
+      || host.startsWith('admin.')
+  } catch {
+    return host.startsWith('admin.')
+  }
+}
+
+// =============================================================================
+// Cookies
+// =============================================================================
+
+/**
+ * Compute the cookie `domain` attribute given the current tenant.
+ * - single tenancy → '' (host-only cookie)
+ * - multi tenancy + custom domain → '' (host-only cookie)
+ * - multi tenancy + apex/subdomain → '.{top_domain}' (cross-subdomain auth)
+ * - localhost in either mode → '' (browsers refuse `Domain=.localhost`)
+ */
+function cookieDomainFor(instance: InstanceInfo, customDomain?: string): string {
+  if (instance.tenancy === 'single') return ''
+  if (customDomain) return ''
+  if (instance.top_domain === 'localhost') return ''
+  return `.${instance.top_domain}`
+}
+
+function setOrgCookies(
+  response: NextResponse,
+  resolved: ResolvedTenant,
+  instance: InstanceInfo,
+) {
+  const domain = cookieDomainFor(instance, resolved.customDomain)
+  response.cookies.set({
+    name: 'LH_org',
+    value: resolved.slug,
+    domain,
+    path: '/',
+  })
+  if (resolved.customDomain) {
+    response.cookies.set({
+      name: 'LH_custom_domain',
+      value: resolved.customDomain,
+      path: '/',
+    })
+    response.headers.set('x-custom-domain', resolved.customDomain)
+  }
+}
+
 function setInstanceCookies(response: NextResponse, info: InstanceInfo) {
-  response.cookies.set({ name: 'learnhouse_multi_org', value: String(info.multi_org_enabled), path: '/' })
-  response.cookies.set({ name: 'learnhouse_default_org', value: info.default_org_slug, path: '/' })
-  response.cookies.set({ name: 'learnhouse_frontend_domain', value: info.frontend_domain, path: '/' })
-  response.cookies.set({ name: 'learnhouse_top_domain', value: info.top_domain, path: '/' })
-  response.cookies.set({ name: 'learnhouse_mode', value: info.mode, path: '/' })
+  response.cookies.set({ name: 'LH_tenancy', value: info.tenancy, path: '/' })
+  response.cookies.set({ name: 'LH_default_org', value: info.default_org_slug, path: '/' })
+  response.cookies.set({ name: 'LH_frontend_domain', value: info.frontend_domain, path: '/' })
+  response.cookies.set({ name: 'LH_top_domain', value: info.top_domain, path: '/' })
+  response.cookies.set({ name: 'LH_mode', value: info.mode, path: '/' })
   return response
 }
 
-// Helper function to resolve custom domain to org
-async function resolveCustomDomain(domain: string): Promise<{ slug: string } | null> {
-  try {
-    const apiUrl = getAPIUrl()
-    const res = await fetch(`${apiUrl}orgs/resolve/domain/${encodeURIComponent(stripPort(domain))}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Short timeout for middleware
-      signal: AbortSignal.timeout(5000),
-    })
-    if (res.ok) {
-      const data = await res.json()
-      return { slug: data.org_slug }
-    }
-    return null
-  } catch (error) {
-    console.error('Error resolving custom domain:', error)
-    return null
+/**
+ * Build a request-header bag that propagates tenancy context to downstream
+ * Server Components on THIS request. Cookies set in the response only become
+ * visible to RSC on the *next* request, so server-side helpers like
+ * `getCanonicalUrl` can't rely on them on the first cold load. Reading the
+ * `x-lh-*` headers via `next/headers` gives them an immediately-available
+ * source of truth.
+ */
+function tenantRequestHeaders(
+  req: NextRequest,
+  resolved: ResolvedTenant,
+  instance: InstanceInfo,
+): Headers {
+  const headers = new Headers(req.headers)
+  headers.set('x-lh-tenancy', instance.tenancy)
+  headers.set('x-lh-org', resolved.slug)
+  headers.set('x-lh-top-domain', instance.top_domain)
+  headers.set('x-lh-frontend-domain', instance.frontend_domain)
+  headers.set('x-lh-mode', instance.mode)
+  if (resolved.customDomain) {
+    headers.set('x-lh-custom-domain', resolved.customDomain)
   }
+  return headers
 }
 
-// Check if the host is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
-function isCustomDomain(fullhost: string | null, domain: string): boolean {
-  if (!fullhost) return false
-  // Skip IP addresses (e.g. k8s internal pod IPs like 10.x.x.x)
-  if (isIPAddress(fullhost)) return false
-  return !isSubdomainOf(fullhost, domain) && !isSameHost(fullhost, domain) && !isLocalhostCheck(fullhost)
-}
+// =============================================================================
+// Middleware
+// =============================================================================
 
 export const config = {
   matcher: [
@@ -86,9 +213,9 @@ export const config = {
      * 2. /_next (Next.js internals)
      * 3. /fonts (inside /public)
      * 4. Umami Analytics
-     * 4. /examples (inside /public)
-     * 5. all root files inside /public (e.g. /favicon.ico)
-     * 6. /embed (activity embeds)
+     * 5. /examples (inside /public)
+     * 6. all root files inside /public (e.g. /favicon.ico)
+     * 7. /embed (activity embeds)
      */
     '/((?!api|_next|fonts|umami|examples|embed|monitoring|[\\w-]+\\.\\w+).*)',
     '/sitemap.xml',
@@ -99,360 +226,171 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
-  // Fetch instance config from backend (cached 10 min)
-  const instanceInfo = await getInstanceInfo()
-  const hosting_mode = instanceInfo.multi_org_enabled ? 'multi' : 'single'
-  const default_org = instanceInfo.default_org_slug
+  const instance = await getInstanceInfo()
   const { pathname, search } = req.nextUrl
-  const fullhost = req.headers ? req.headers.get('host') : ''
+  const fullhost = req.headers.get('host')
 
-  // Check both old and new cookie names for backward compatibility
-  const cookie_orgslug = req.cookies.get('learnhouse_orgslug')?.value || req.cookies.get('learnhouse_current_orgslug')?.value
-
-  // Cache custom domain resolution within this middleware invocation
-  let _resolvedCustomDomainOrg: { slug: string } | null | undefined = undefined
-  async function getResolvedCustomDomain(host: string): Promise<{ slug: string } | null> {
-    if (_resolvedCustomDomainOrg !== undefined) return _resolvedCustomDomainOrg
-    _resolvedCustomDomainOrg = await resolveCustomDomain(host)
-    return _resolvedCustomDomainOrg
-  }
-  
-
-  // Out of orgslug paths & rewrite
-  const standard_paths = ['/home']
-  const auth_paths = ['/login', '/signup', '/reset', '/forgot', '/verify-email']
-
-  // Admin subdomain detection — rewrite to /admin route group
-  // Use prefix check as primary (works even when backend fetch fails in Edge Runtime
-  // where NEXT_PUBLIC_ env vars are inlined at build time and may be localhost defaults).
-  // Fall back to extractSubdomain for correctness when instanceInfo is available.
-  const hostbare = stripPort(fullhost)
-  const isAdminSubdomain = hostbare?.startsWith('admin.') ||
-    (fullhost ? extractSubdomain(fullhost, instanceInfo.frontend_domain) === 'admin' : false)
-  if (isAdminSubdomain) {
+  // -------------------------------------------------------------------------
+  // 1. Admin subdomain (multi only) → rewrite to /admin route group
+  // -------------------------------------------------------------------------
+  if (await isAdminSubdomain(fullhost, instance)) {
     const response = NextResponse.rewrite(new URL(`/admin${pathname}${search}`, req.url))
-    setInstanceCookies(response, instanceInfo)
+    setInstanceCookies(response, instance)
     return response
   }
-  if (standard_paths.includes(pathname)) {
-    // Redirect to the same pathname with the original search params
+
+  // -------------------------------------------------------------------------
+  // 2. Standard out-of-org paths
+  // -------------------------------------------------------------------------
+  if (pathname === '/home') {
     return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
 
-  if (auth_paths.includes(pathname)) {
-    const LEARNHOUSE_DOMAIN = instanceInfo.frontend_domain
-    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
-
-    // Resolve orgslug: custom domain > subdomain > cookie
-    let orgslug: string | undefined
-    let customDomain: string | undefined
-
-    // 1. Check for custom domain first
-    if (isCustomDomain(fullhost, LEARNHOUSE_DOMAIN)) {
-      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
-      if (resolvedOrg) {
-        orgslug = resolvedOrg.slug
-        customDomain = fullhost as string
-      }
-    }
-
-    // 2. Try to extract from subdomain
-    if (!orgslug && fullhost && !isSameHost(fullhost, LEARNHOUSE_DOMAIN)) {
-      const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
-      if (extracted && extracted !== 'auth' && extracted !== 'www' && extracted !== 'api' && extracted !== 'admin') {
-        orgslug = extracted
-      }
-    }
-
-    // 3. Fall back to cookie
-    if (!orgslug) {
-      orgslug = cookie_orgslug
-    }
-
+  // -------------------------------------------------------------------------
+  // 3. Auth pages — resolve tenant for cookie context, rewrite to /auth
+  // -------------------------------------------------------------------------
+  const authPaths = ['/login', '/signup', '/reset', '/forgot', '/verify-email']
+  if (authPaths.includes(pathname)) {
+    const resolved = await resolveTenant(req, instance)
+    const requestHeaders = tenantRequestHeaders(req, resolved, instance)
     const response = NextResponse.rewrite(
-      new URL(`/auth${pathname}${search}`, req.url)
+      new URL(`/auth${pathname}${search}`, req.url),
+      { request: { headers: requestHeaders } },
     )
-
-    // Set cookie if we have an orgslug
-    if (orgslug) {
-      // For custom domains, don't set domain on cookies (let them be host-specific)
-      const cookieDomain = customDomain ? '' : (LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`)
-
-      // Set both old and new cookie names for compatibility
-      response.cookies.set({
-        name: 'learnhouse_current_orgslug',
-        value: orgslug,
-        domain: cookieDomain,
-        path: '/',
-      })
-      response.cookies.set({
-        name: 'learnhouse_orgslug',
-        value: orgslug,
-        domain: cookieDomain,
-        path: '/',
-      })
-
-      // Set custom domain cookie if applicable
-      if (customDomain) {
-        response.cookies.set({
-          name: 'learnhouse_custom_domain',
-          value: customDomain,
-          path: '/',
-        })
-        response.headers.set('x-custom-domain', customDomain)
-      }
-    }
-
-    setInstanceCookies(response, instanceInfo)
+    setOrgCookies(response, resolved, instance)
+    setInstanceCookies(response, instance)
     return response
   }
 
-  // Auth callbacks - pass through without org rewrite
-  if (pathname.startsWith('/auth/sso/') || pathname.startsWith('/auth/callback/') || pathname.startsWith('/auth/token-exchange')) {
+  // -------------------------------------------------------------------------
+  // 4. Auth callbacks — pass through without org rewrite
+  // -------------------------------------------------------------------------
+  if (
+    pathname.startsWith('/auth/sso/')
+    || pathname.startsWith('/auth/callback/')
+    || pathname.startsWith('/auth/token-exchange')
+  ) {
     const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
-    setInstanceCookies(response, instanceInfo)
+    setInstanceCookies(response, instance)
     return response
   }
 
-  // Dynamic Pages Editor
+  // -------------------------------------------------------------------------
+  // 5. Standalone editors / boards — bypass org rewrite
+  // -------------------------------------------------------------------------
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
     return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url))
   }
-
-  // Board Editor — standalone full-screen page, bypass org rewrite
   if (pathname.startsWith('/board/')) {
     const response = NextResponse.rewrite(new URL(pathname + search, req.url))
-    setInstanceCookies(response, instanceInfo)
+    setInstanceCookies(response, instance)
     return response
   }
-
-  // Playground Editor — standalone full-screen page, bypass org rewrite
   if (pathname.startsWith('/editor/playground/')) {
     const response = NextResponse.rewrite(new URL(pathname + search, req.url))
-    setInstanceCookies(response, instanceInfo)
+    setInstanceCookies(response, instance)
     return response
   }
 
-  // Check if the request is for the Stripe callback URL
+  // -------------------------------------------------------------------------
+  // 6. Stripe Connect OAuth callback — preserve search params + add orgslug
+  // -------------------------------------------------------------------------
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
     const searchParams = req.nextUrl.searchParams
-    const orgslug = searchParams.get('state')?.split('_')[0] // Assuming state parameter contains orgslug_randomstring
-    
-    // Construct the new URL with the required parameters
+    const orgslug = searchParams.get('state')?.split('_')[0]
     const redirectUrl = new URL('/payments/stripe/connect/oauth', req.url)
-    
-    // Preserve all original search parameters
     searchParams.forEach((value, key) => {
       redirectUrl.searchParams.append(key, value)
     })
-    
-    // Add orgslug if available
     if (orgslug) {
       redirectUrl.searchParams.set('orgslug', orgslug)
     }
-
     return NextResponse.rewrite(redirectUrl)
   }
 
-  // Health Check
+  // -------------------------------------------------------------------------
+  // 7. Health check
+  // -------------------------------------------------------------------------
   if (pathname.startsWith('/health')) {
     return NextResponse.rewrite(new URL(`/api/health`, req.url))
   }
 
-  // Auth Redirects
-  if (pathname == '/redirect_from_auth') {
-    const searchParams = req.nextUrl.searchParams
-    const queryString = searchParams.toString()
-    const redirectPathname = '/'
+  // -------------------------------------------------------------------------
+  // 8. Auth redirect bridge (cross-domain return path)
+  // -------------------------------------------------------------------------
+  if (pathname === '/redirect_from_auth') {
+    const queryString = req.nextUrl.searchParams.toString()
+    const customDomain = req.cookies.get('LH_custom_domain')?.value
 
-    // Check if we have a custom domain cookie
-    const customDomain = req.cookies.get('learnhouse_custom_domain')?.value
     let redirectUrl: URL
-
     if (customDomain) {
-      // Redirect to the custom domain
       const protocol = req.nextUrl.protocol + '//'
-      redirectUrl = new URL(`${protocol}${customDomain}${redirectPathname}`)
+      redirectUrl = new URL(`${protocol}${customDomain}/`)
     } else {
-      // Redirect to root on the same origin the request came from
-      redirectUrl = new URL(redirectPathname, req.url)
+      redirectUrl = new URL('/', req.url)
     }
-
     if (queryString) {
       redirectUrl.search = queryString
     }
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Podcast RSS Feed rewrite
-  if (pathname.match(/^\/podcast\/([^\/]+)\/feed$/)) {
-    let orgslug: string;
-    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
-      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
-      if (resolvedOrg) {
-        orgslug = resolvedOrg.slug;
-      } else {
-        orgslug = default_org as string;
-      }
-    } else if (hosting_mode === 'multi') {
-      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
-    } else {
-      orgslug = default_org as string;
-    }
-    const feedUrl = new URL(`/api${pathname}`, req.url);
-    const response = NextResponse.rewrite(feedUrl);
-    response.headers.set('X-Feed-Orgslug', orgslug);
-    return response;
+  // -------------------------------------------------------------------------
+  // 9. Per-org metadata endpoints (sitemap, robots, podcast feed)
+  // -------------------------------------------------------------------------
+  if (pathname.match(/^\/podcast\/([^/]+)\/feed$/)) {
+    const resolved = await resolveTenant(req, instance)
+    const feedUrl = new URL(`/api${pathname}`, req.url)
+    const response = NextResponse.rewrite(feedUrl)
+    response.headers.set('X-Feed-Orgslug', resolved.slug)
+    return response
   }
-
   if (pathname.startsWith('/sitemap.xml')) {
-    let orgslug: string;
-
-    // Check custom domain first (fixes bug where sitemap ran before custom domain detection)
-    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
-      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
-      if (resolvedOrg) {
-        orgslug = resolvedOrg.slug
-      } else {
-        orgslug = default_org as string
-      }
-    } else if (hosting_mode === 'multi') {
-      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
-    } else {
-      orgslug = default_org as string;
-    }
-
-    const sitemapUrl = new URL(`/api/sitemap`, req.url);
-    const response = NextResponse.rewrite(sitemapUrl);
-    response.headers.set('X-Sitemap-Orgslug', orgslug);
-    return response;
+    const resolved = await resolveTenant(req, instance)
+    const sitemapUrl = new URL(`/api/sitemap`, req.url)
+    const response = NextResponse.rewrite(sitemapUrl)
+    response.headers.set('X-Sitemap-Orgslug', resolved.slug)
+    return response
   }
-
   if (pathname === '/robots.txt') {
-    let orgslug: string;
-
-    if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
-      const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
-      orgslug = resolvedOrg?.slug || (default_org as string)
-    } else if (hosting_mode === 'multi') {
-      orgslug = extractSubdomain(fullhost, instanceInfo.frontend_domain) || (default_org as string);
-    } else {
-      orgslug = default_org as string;
-    }
-
-    const robotsUrl = new URL(`/api/robots`, req.url);
-    const response = NextResponse.rewrite(robotsUrl);
-    response.headers.set('X-Robots-Orgslug', orgslug);
-    return response;
+    const resolved = await resolveTenant(req, instance)
+    const robotsUrl = new URL(`/api/robots`, req.url)
+    const response = NextResponse.rewrite(robotsUrl)
+    response.headers.set('X-Robots-Orgslug', resolved.slug)
+    return response
   }
 
-  // Custom Domain Detection - check before multi-org mode
-  if (isCustomDomain(fullhost, instanceInfo.frontend_domain)) {
-    const resolvedOrg = await getResolvedCustomDomain(fullhost as string)
-    if (resolvedOrg) {
-      const response = NextResponse.rewrite(
-        new URL(`/orgs/${resolvedOrg.slug}${pathname}`, req.url)
-      )
-
-      // Set cookies for the org
-      response.cookies.set({
-        name: 'learnhouse_current_orgslug',
-        value: resolvedOrg.slug,
-        path: '/',
-      })
-      response.cookies.set({
-        name: 'learnhouse_orgslug',
-        value: resolvedOrg.slug,
-        path: '/',
-      })
-      // Set custom domain cookie for link handling
-      response.cookies.set({
-        name: 'learnhouse_custom_domain',
-        value: fullhost as string,
-        path: '/',
-      })
-      // Set header for server components
-      response.headers.set('x-custom-domain', fullhost as string)
-
-      setInstanceCookies(response, instanceInfo)
-      return response
-    }
-    // If custom domain not found, fall through to default behavior
-  }
-
-  // Multi Organization Mode
-  if (hosting_mode === 'multi') {
-    // Get the organization slug from the URL
-    const LEARNHOUSE_DOMAIN = instanceInfo.frontend_domain
-    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
-
-    let orgslug: string;
-    const extracted = extractSubdomain(fullhost, LEARNHOUSE_DOMAIN)
-
-    // SaaS root domain (learnhouse.io) with no subdomain → show the org picker
-    // instead of silently dropping users into the default org.
-    if (!extracted && !isLocalhostCheck(fullhost) && fullhost && isSameHost(fullhost, LEARNHOUSE_DOMAIN) && pathname === '/') {
+  // -------------------------------------------------------------------------
+  // 10. Apex picker (multi tenancy only) — bare apex root → /home picker
+  // -------------------------------------------------------------------------
+  if (
+    instance.tenancy === 'multi'
+    && pathname === '/'
+    && fullhost
+    && !isLocalhostCheck(fullhost)
+    && !(await hostIsCustomDomain(fullhost, instance))
+  ) {
+    // Only show the picker on the bare apex (not on a subdomain). The
+    // resolver returns source==='default' when no subdomain or custom
+    // domain matched and we're on the apex.
+    const resolved = await resolveTenant(req, instance)
+    if (resolved.source === 'default') {
       const response = NextResponse.rewrite(new URL(`/home${search}`, req.url))
-      setInstanceCookies(response, instanceInfo)
+      setInstanceCookies(response, instance)
       return response
     }
-
-    if (extracted) {
-      orgslug = extracted
-    } else if (isLocalhostCheck(fullhost)) {
-      orgslug = default_org as string
-    } else if (fullhost && !isSameHost(fullhost, LEARNHOUSE_DOMAIN)) {
-      orgslug = cookie_orgslug || (default_org as string)
-    } else {
-      orgslug = default_org as string
-    }
-
-    const response = NextResponse.rewrite(
-      new URL(`/orgs/${orgslug}${pathname}`, req.url)
-    )
-
-    // Set the cookie with the orgslug value (both old and new names)
-    response.cookies.set({
-      name: 'learnhouse_current_orgslug',
-      value: orgslug,
-      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
-      path: '/',
-    })
-    response.cookies.set({
-      name: 'learnhouse_orgslug',
-      value: orgslug,
-      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
-      path: '/',
-    })
-
-    setInstanceCookies(response, instanceInfo)
-    return response
   }
 
-  // Single Organization Mode
-  if (hosting_mode === 'single') {
-    // Get the default organization slug
-    const LEARNHOUSE_TOP_DOMAIN = instanceInfo.top_domain
-    const orgslug = default_org as string
-    const response = NextResponse.rewrite(
-      new URL(`/orgs/${orgslug}${pathname}`, req.url)
-    )
-
-    // Set the cookie with the orgslug value (both old and new names)
-    response.cookies.set({
-      name: 'learnhouse_current_orgslug',
-      value: orgslug,
-      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
-      path: '/',
-    })
-    response.cookies.set({
-      name: 'learnhouse_orgslug',
-      value: orgslug,
-      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
-      path: '/',
-    })
-
-    setInstanceCookies(response, instanceInfo)
-    return response
-  }
+  // -------------------------------------------------------------------------
+  // 11. Tenant-scoped rewrite — the catch-all that puts us under /orgs/{slug}
+  // -------------------------------------------------------------------------
+  const resolved = await resolveTenant(req, instance)
+  const requestHeaders = tenantRequestHeaders(req, resolved, instance)
+  const response = NextResponse.rewrite(
+    new URL(`/orgs/${resolved.slug}${pathname}`, req.url),
+    { request: { headers: requestHeaders } },
+  )
+  setOrgCookies(response, resolved, instance)
+  setInstanceCookies(response, instance)
+  return response
 }

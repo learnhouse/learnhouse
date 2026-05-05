@@ -21,6 +21,7 @@ def _config(**overrides):
         allowed_origins=overrides.pop("allowed_origins", []),
         allowed_regexp=overrides.pop("allowed_regexp", ""),
         self_hosted=overrides.pop("self_hosted", False),
+        tenancy=overrides.pop("tenancy", "multi"),
         domain=overrides.pop("domain", "learnhouse.app"),
         frontend_domain=overrides.pop("frontend_domain", "app.learnhouse.app"),
         ssl=overrides.pop("ssl", True),
@@ -96,12 +97,12 @@ class TestEmailUtilsService:
         ):
             assert not _is_allowed_base_url("https://unknown.test")
 
-    def test_get_org_signup_base_url_uses_request_when_self_hosted_or_dev(self):
+    def test_get_org_signup_base_url_uses_request_in_single_tenancy(self):
         request = _request({"origin": "https://app.test"})
 
         with patch(
             "src.services.email.utils.get_learnhouse_config",
-            return_value=_config(self_hosted=True),
+            return_value=_config(tenancy="single"),
         ), patch(
             "src.services.email.utils.get_base_url_from_request",
             return_value="https://fallback.test",
@@ -109,15 +110,18 @@ class TestEmailUtilsService:
             assert get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
+    def test_is_allowed_base_url_accepts_request_host_in_single_tenancy(self):
+        # In single tenancy the operator's host is authoritative — any
+        # http(s) URL with a non-empty hostname is acceptable, so VPS
+        # deployments don't need to enumerate `allowed_origins`.
         with patch(
             "src.services.email.utils.get_learnhouse_config",
-            return_value=_config(development_mode=True),
-        ), patch(
-            "src.services.email.utils.get_base_url_from_request",
-            return_value="https://fallback.test",
-        ) as mock_base_url:
-            assert get_org_signup_base_url("acme", request) == "https://fallback.test"
-            mock_base_url.assert_called_once_with(request)
+            return_value=_config(tenancy="single"),
+        ):
+            assert _is_allowed_base_url("https://learn.example.org")
+            assert _is_allowed_base_url("http://localhost:3000")
+            assert not _is_allowed_base_url("javascript:alert(1)")
+            assert not _is_allowed_base_url("https://")
 
     @pytest.mark.parametrize(
         "ssl,expected",

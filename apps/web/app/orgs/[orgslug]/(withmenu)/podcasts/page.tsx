@@ -4,6 +4,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastsClient from './podcasts'
 
@@ -30,7 +31,7 @@ export async function generateMetadata({
   const imageUrl = ogImageUrl || (org ? getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image) : undefined)
   const title = buildPageTitle('Podcasts', org?.name || 'Organization', seoConfig)
   const description = org?.description || seoConfig.default_meta_description || `Browse podcasts from ${org?.name || 'this organization'}`
-  const canonical = getCanonicalUrl(orgslug, '/podcasts')
+  const canonical = await getServerCanonicalUrl(orgslug, '/podcasts')
 
   return {
     title,
@@ -97,8 +98,8 @@ export default async function PodcastsPage({ params }: { params: PageParams }) {
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Podcasts', url: getCanonicalUrl(orgslug, '/podcasts') },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Podcasts', url: await getServerCanonicalUrl(orgslug, '/podcasts') },
   ])
 
   return (

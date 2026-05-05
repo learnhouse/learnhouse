@@ -88,7 +88,7 @@ const getLEARNHOUSE_DOMAIN = () => {
   const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
   if (envVal) return envVal
   // 2. Cookie set by middleware from backend instance info
-  const cookieVal = getCookieValue('learnhouse_frontend_domain')
+  const cookieVal = getCookieValue('LH_frontend_domain')
   if (cookieVal) return cookieVal
   // 3. Default
   return 'localhost'
@@ -98,7 +98,7 @@ const getLEARNHOUSE_TOP_DOMAIN = () => {
   const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN')
   if (envVal) return envVal
   // 2. Cookie set by middleware from backend instance info
-  const cookieVal = getCookieValue('learnhouse_top_domain')
+  const cookieVal = getCookieValue('LH_top_domain')
   if (cookieVal) return cookieVal
   // 3. Derive from DOMAIN by stripping port
   const domain = getLEARNHOUSE_DOMAIN()
@@ -192,17 +192,28 @@ export const getPlatformUrl = (path: string): string | null => {
   return `${platformUrl}${path}`
 }
 
-// Multi Organization Mode
-export const isMultiOrgModeEnabled = () => {
-  // 1. Env var (backward compat for existing deploys)
-  const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG')
-  if (envVal) return envVal === 'true'
-  // 2. Client-side: read cookie set by middleware
-  const cookieVal = getCookieValue('learnhouse_multi_org')
-  if (cookieVal !== null) return cookieVal === 'true'
-  // 3. Default
-  return false
+// Tenancy mode — the authoritative client-side getter.
+//
+// Reads the `LH_tenancy` cookie set by the middleware on every request. The
+// cookie is sourced from the backend's instance/info endpoint, so it always
+// reflects the current deployment configuration. Defaults to 'single' when
+// the cookie isn't present (e.g. very first request before middleware runs).
+//
+// We deliberately do NOT consult `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` here —
+// stale env vars from older deploys used to override the runtime cookie and
+// produce broken URLs like `default.localhost:3000`. The env var still has
+// effect at backend boot time; that's the only place it should influence
+// behavior.
+export type TenancyMode = 'multi' | 'single'
+
+export const getTenancy = (): TenancyMode => {
+  const cookieVal = getCookieValue('LH_tenancy')
+  if (cookieVal === 'multi' || cookieVal === 'single') return cookieVal
+  return 'single'
 }
+
+// Backward-compat shim — prefer getTenancy() in new code.
+export const isMultiOrgModeEnabled = () => getTenancy() === 'multi'
 
 /**
  * Get custom domain from context (client-side only)
@@ -228,7 +239,7 @@ export const getCustomDomainFromContext = (): string | null => {
       const cookies = document.cookie.split(';')
       for (const cookie of cookies) {
         const [name, value] = cookie.trim().split('=')
-        if (name === 'learnhouse_custom_domain' && value) {
+        if (name === 'LH_custom_domain' && value) {
           // Cookie only stores hostname, so add current port if present
           const cookieDomain = decodeURIComponent(value)
           const port = window.location.port
@@ -245,53 +256,75 @@ export const getCustomDomainFromContext = (): string | null => {
   return null
 }
 
+/**
+ * Build a URL for a given org's path.
+ *
+ * Returns a RELATIVE path whenever navigation stays on the current origin —
+ * which is always the case in single tenancy and almost always in multi
+ * tenancy (the user is already on the right subdomain or custom domain).
+ * Only when crossing subdomains in multi tenancy do we build an absolute
+ * URL.
+ *
+ * This is intentional: relative paths are robust against tenancy
+ * misconfiguration. A stale env var or legacy cookie can no longer cause
+ * the menu to forge a non-existent subdomain like `default.localhost:3000`.
+ */
 export const getUriWithOrg = (orgslug: string, path: string) => {
-  // Client-side: prefer using current origin when appropriate
+  const tenancy = getTenancy()
+
+  // Client-side
   if (typeof window !== 'undefined') {
-    const multi_org = isMultiOrgModeEnabled()
-
-    // In single-org mode, on custom domain, or when orgslug is missing,
-    // always use current origin to avoid broken subdomain URLs
-    if (!multi_org || getCustomDomainFromContext() || !orgslug) {
-      return `${window.location.origin}${path}`
+    // Single tenancy → always relative. The browser keeps us on the same host.
+    // Custom domain → relative (we're already on the org's host).
+    // Missing slug → relative (caller wants a generic intra-app URL).
+    if (tenancy === 'single' || getCustomDomainFromContext() || !orgslug) {
+      return path
     }
 
-    // Multi-org mode: check if we need to change subdomains
+    // Multi tenancy: relative if we're already on the correct subdomain.
+    const baseDomain = stripPort(getLEARNHOUSE_DOMAIN())
     const currentHostname = window.location.hostname
-    const domainConfig = getLEARNHOUSE_DOMAIN()
-    // Remove port from domain config for hostname comparison
-    const baseDomain = stripPort(domainConfig)
-
-    // Check if current hostname matches the target
     const expectedHostname = `${orgslug}.${baseDomain}`
-
     if (currentHostname === expectedHostname) {
-      // Already on the right subdomain
-      return `${window.location.origin}${path}`
+      return path
     }
 
-    // Different subdomain needed - construct URL with current port
+    // Safety net: only synthesize an absolute subdomain URL when the user is
+    // already on some subdomain of the base domain. If they're on the apex,
+    // localhost, or any host that doesn't end in `.{baseDomain}`, building
+    // `${slug}.${baseDomain}` will land them on a hostname that may not
+    // resolve — e.g. `default.localhost`. In that case, return a relative
+    // path so navigation stays on the current origin.
+    if (!isSubdomainOf(currentHostname, baseDomain)) {
+      return path
+    }
+
+    // Crossing subdomains — build an absolute URL with current scheme/port.
     const protocol = window.location.protocol + '//'
     const port = window.location.port
     const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : ''
     return `${protocol}${orgslug}.${baseDomain}${portSuffix}${path}`
   }
 
-  // Server-side fallback to config-based URL construction
-  const multi_org = isMultiOrgModeEnabled()
-  const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
-  if (multi_org && orgslug) {
+  // Server-side
+  // Single tenancy → relative. The page will render on whatever host the
+  // request came in on; relative URLs resolve correctly at the client.
+  if (tenancy === 'single') {
+    return path
+  }
+
+  // Multi tenancy server-side: build the subdomain URL because we can't
+  // assume server components know the user's current host.
+  if (orgslug) {
     const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
     const domain = getLEARNHOUSE_DOMAIN()
     return `${protocol}${orgslug}.${domain}${path}`
   }
+  const explicitDomain = getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN')
   if (explicitDomain) {
-    // Explicit domain configured: construct absolute URL (needed for RSS, SEO, server-side fetches)
     const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
     return `${protocol}${explicitDomain}${path}`
   }
-  // No explicit domain configured: return relative path to avoid hardcoded 'localhost'
-  // URLs in SSR output that break on non-localhost deployments
   return path
 }
 
@@ -325,12 +358,12 @@ export const getMainDomainUri = (path: string) => {
 export type DeploymentMode = 'saas' | 'oss' | 'ee'
 
 /**
- * Get the current deployment mode from the learnhouse_mode cookie set by middleware.
+ * Get the current deployment mode from the LH_mode cookie set by middleware.
  * Single source of truth for mode detection on the frontend.
  * Defaults to 'oss' when cookie is absent (safe fallback — blocks EE features).
  */
 export const getDeploymentMode = (): DeploymentMode => {
-  return (getCookieValue('learnhouse_mode') as DeploymentMode) || 'oss'
+  return (getCookieValue('LH_mode') as DeploymentMode) || 'oss'
 }
 
 /**
@@ -355,7 +388,7 @@ export const getDefaultOrg = () => {
   const envVal = getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG')
   if (envVal) return envVal
   // 2. Client-side: read cookie set by middleware
-  const cookieVal = getCookieValue('learnhouse_default_org')
+  const cookieVal = getCookieValue('LH_default_org')
   if (cookieVal) return cookieVal
   // 3. Default
   return 'default'
