@@ -49,7 +49,7 @@ JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 JWT_COOKIE_SAMESITE = "lax"
 JWT_COOKIE_SECURE = True
 JWT_COOKIE_DOMAIN = get_learnhouse_config().hosting_config.cookie_config.domain
-JWT_COOKIE_NAME = "access_token_cookie"
+JWT_COOKIE_NAME = "LH_access"
 
 
 def extract_jwt_from_request(request: Request) -> Optional[str]:
@@ -157,7 +157,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
-JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
+JWT_REFRESH_COOKIE_NAME = "LH_refresh"
 
 
 def create_refresh_token(data: dict, expires_delta: timedelta | None = None):

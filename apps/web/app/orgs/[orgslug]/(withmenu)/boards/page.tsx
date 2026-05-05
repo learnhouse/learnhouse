@@ -3,6 +3,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { getBoards } from '@services/boards/boards'
 import BoardsPublicClient from './boards'
@@ -31,7 +32,7 @@ export async function generateMetadata({
   const imageUrl = ogImageUrl || (org ? getOrgThumbnailMediaDirectory(org.org_uuid, org.thumbnail_image) : undefined)
   const title = buildPageTitle('Boards', org?.name || 'Organization', seoConfig)
   const description = org?.description || seoConfig.default_meta_description || `Collaborative boards from ${org?.name || 'this organization'}`
-  const canonical = getCanonicalUrl(orgslug, '/boards')
+  const canonical = await getServerCanonicalUrl(orgslug, '/boards')
 
   return {
     title,
@@ -100,8 +101,8 @@ export default async function BoardsPage({ params }: { params: PageParams }) {
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Boards', url: getCanonicalUrl(orgslug, '/boards') },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Boards', url: await getServerCanonicalUrl(orgslug, '/boards') },
   ])
 
   return (

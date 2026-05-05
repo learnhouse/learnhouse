@@ -26,7 +26,7 @@ async function BoardEditorPage(props: any) {
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   const cookieStore = await cookies()
-  const orgslug = cookieStore.get('learnhouse_current_orgslug')?.value || cookieStore.get('learnhouse_orgslug')?.value || ''
+  const orgslug = cookieStore.get('LH_org')?.value || ''
 
   // Require authentication to access board canvas
   if (!access_token) {

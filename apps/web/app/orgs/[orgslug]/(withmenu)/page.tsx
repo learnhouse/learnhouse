@@ -6,6 +6,7 @@ import { getOrgCollections } from '@services/courses/collections'
 import { getServerSession } from '@/lib/auth/server'
 import { getOrgThumbnailMediaDirectory, getOrgLogoMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import LandingClassic from '@components/Landings/LandingClassic'
 import LandingCustom from '@components/Landings/LandingCustom'
@@ -28,7 +29,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
     : null
   const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = getCanonicalUrl(params.orgslug, '/')
+  const canonical = await getServerCanonicalUrl(params.orgslug, '/')
   const title = buildPageTitle('Home', org.name, seoConfig)
   const description = org.description || seoConfig.default_meta_description || ''
 
@@ -111,7 +112,7 @@ const OrgHomePage = async (params: any) => {
     '@type': 'Organization',
     name: org.name,
     description: org.description,
-    url: getCanonicalUrl(orgslug, '/'),
+    url: await getServerCanonicalUrl(orgslug, '/'),
     ...(logoUrl && { logo: logoUrl }),
   }
 

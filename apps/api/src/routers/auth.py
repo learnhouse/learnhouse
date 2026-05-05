@@ -57,47 +57,57 @@ router = APIRouter()
 
 def get_cookie_domain_for_request(request: Request) -> str | None:
     """
-    Determine the appropriate cookie domain based on the request origin.
+    Determine the appropriate cookie domain based on the tenancy mode.
 
-    - For custom domains: Returns None (cookie is host-specific)
-    - For configured domain/subdomains: Returns the configured cookie domain
-    - For localhost: Returns None
+    - tenancy == "single": always returns None. Cookies are host-only on
+      whatever Host the request arrived with — same code path serves
+      localhost dev and self-hosted VPS deployments on any domain.
+    - tenancy == "multi":
+        - request from a subdomain of LEARNHOUSE_DOMAIN → configured cookie
+          domain (e.g. ".learnhouse.io") so subdomains share the session.
+        - request from a custom (per-org) domain or unknown host → None
+          (host-only cookie).
     """
+    config = get_learnhouse_config()
+    tenancy = config.hosting_config.tenancy
+
+    if tenancy == "single":
+        return None
+
     origin = request.headers.get("origin", "")
     referer = request.headers.get("referer", "")
     host = request.headers.get("host", "")
 
-    # Get the configured domain
-    config_domain = get_learnhouse_config().hosting_config.domain
-    config_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+    config_domain = config.hosting_config.domain
+    config_cookie_domain = config.hosting_config.cookie_config.domain
 
-    # Check origin, referer, or host
     check_value = origin or referer or host
     if not check_value:
         return config_cookie_domain
 
-    # Remove protocol if present
+    # Strip protocol, path, and port for hostname comparison.
     check_value = check_value.replace("https://", "").replace("http://", "")
-    # Remove path and port
     check_value = check_value.split("/")[0].split(":")[0]
 
-    # Localhost always gets no domain
+    # In multi mode, localhost should not appear in practice (would indicate
+    # misconfig). Treat it as host-only as a safety net.
     if "localhost" in check_value or "127.0.0.1" in check_value:
         return None
 
-    # Check if it's a subdomain of the configured domain
-    is_subdomain = check_value.endswith(f".{config_domain}") or check_value == config_domain
+    is_subdomain = (
+        check_value.endswith(f".{config_domain}")
+        or check_value == config_domain
+    )
 
     if is_subdomain:
-        # Use configured cookie domain for subdomains
         return config_cookie_domain
-    else:
-        # Custom domain - no domain restriction (host-specific cookie).
-        # TODO: add custom domain allowlist — query the CustomDomain table for
-        # active/verified entries and raise HTTPException(400, "Invalid request
-        # origin") when check_value does not match any of them. This requires
-        # threading a db_session into this function (or a separate helper).
-        return None
+
+    # Custom (per-org) domain — host-only cookie.
+    # TODO: add custom domain allowlist — query the CustomDomain table for
+    # active/verified entries and raise HTTPException(400, "Invalid request
+    # origin") when check_value does not match any of them. This requires
+    # threading a db_session into this function (or a separate helper).
+    return None
 
 
 def is_request_secure(request: Request | None) -> bool:

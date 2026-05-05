@@ -5,6 +5,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getPodcastThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import PodcastClient from './podcast'
 
@@ -52,7 +53,7 @@ export async function generateMetadata({
         podcastMeta.podcast.thumbnail_image
       )
     : ogImageUrl
-  const canonical = getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`)
+  const canonical = await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`)
 
   return {
     title,
@@ -137,7 +138,7 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
     '@type': 'PodcastSeries',
     name: podcastMeta.podcast.name,
     description: podcastMeta.podcast.description,
-    url: getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`),
+    url: await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`),
     provider: {
       '@type': 'Organization',
       name: org?.name,
@@ -150,9 +151,9 @@ export default async function PodcastPage({ params }: { params: PageParams }) {
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Podcasts', url: getCanonicalUrl(orgslug, '/podcasts') },
-    { name: podcastMeta.podcast.name, url: getCanonicalUrl(orgslug, `/podcast/${podcastuuid}`) },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Podcasts', url: await getServerCanonicalUrl(orgslug, '/podcasts') },
+    { name: podcastMeta.podcast.name, url: await getServerCanonicalUrl(orgslug, `/podcast/${podcastuuid}`) },
   ])
 
   return (

@@ -14,6 +14,10 @@ security:
   auth_jwt_secret_key: ""
 
 hosting_config:
+  # tenancy: "single" (default) serves the default org on any host (localhost
+  # or self-hosted VPS). "multi" enables slug.{domain} subdomain detection and
+  # requires the EE folder. Override with LEARNHOUSE_TENANCY.
+  tenancy: single
   domain: localhost:3000
   frontend_domain: localhost:3000
   ssl: false

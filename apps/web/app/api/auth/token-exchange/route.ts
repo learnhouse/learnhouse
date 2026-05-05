@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
       ...cookieOptions,
       maxAge: REFRESH_TOKEN_MAX_AGE,
     })
-    response.cookies.set('learnhouse_has_session', '1', {
+    response.cookies.set('LH_session', '1', {
       ...cookieOptions,
       httpOnly: false,
       maxAge: REFRESH_TOKEN_MAX_AGE,
