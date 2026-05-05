@@ -180,7 +180,8 @@
     "creating": "Wird erstellt...",
     "view_details": "Details anzeigen",
     "close": "Schließen",
-    "optional": "optional"
+    "optional": "optional",
+    "analytics": "Analytik"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -3502,6 +3503,94 @@
             "creating": "Aufgabe wird erstellt...",
             "success": "Aufgabe erfolgreich erstellt"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Suchen",
+      "placeholder": "Seiten und Inhalte durchsuchen…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Keine Ergebnisse gefunden",
+      "loading": "Suche läuft…",
+      "type_to_search": "Geben Sie mindestens 2 Zeichen ein, um Inhalte zu suchen",
+      "groups": {
+        "pages": "Seiten",
+        "courses": "Kurse",
+        "collections": "Sammlungen",
+        "users": "Benutzer",
+        "communities": "Communitys",
+        "discussions": "Diskussionen",
+        "playgrounds": "Spielwiesen",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Dashboard-Übersicht",
+          "keywords": "startseite, übersicht, start, dashboard"
+        },
+        "courses": {
+          "description": "Verwalten Sie Ihre Kurse",
+          "keywords": "kurse, lektionen, lernen, schulung, klassen"
+        },
+        "assignments": {
+          "description": "Aufgaben verwalten",
+          "keywords": "aufgaben, hausaufgaben, übungen, abgaben"
+        },
+        "communities": {
+          "description": "Communitys verwalten",
+          "keywords": "foren, diskussionen, mitglieder, beiträge"
+        },
+        "podcasts": {
+          "description": "Podcasts verwalten",
+          "keywords": "audio, episoden, sendungen"
+        },
+        "boards": {
+          "description": "Boards verwalten",
+          "keywords": "kanban, projekt, aufgaben, listen"
+        },
+        "playgrounds": {
+          "description": "Code-Spielwiesen",
+          "keywords": "code, sandbox, repl, programmierung"
+        },
+        "analytics": {
+          "description": "Analyse-Dashboards anzeigen",
+          "keywords": "statistiken, metriken, diagramme, berichte"
+        },
+        "users": {
+          "description": "Organisationsbenutzer verwalten",
+          "keywords": "mitglieder, konten, personen"
+        },
+        "usergroups": {
+          "description": "Benutzergruppen verwalten",
+          "keywords": "teams, kohorten, gruppen"
+        },
+        "roles": {
+          "description": "Rollen und Berechtigungen verwalten",
+          "keywords": "berechtigungen, zugriff, rbac, sicherheit"
+        },
+        "signups": {
+          "description": "Anmeldungen prüfen",
+          "keywords": "registrierungen, anträge, anfragen"
+        },
+        "org_general": {
+          "description": "Allgemeine Organisationseinstellungen",
+          "keywords": "name, branding, slug, profil"
+        },
+        "org_features": {
+          "description": "Organisationsfunktionen verwalten",
+          "keywords": "funktionen, module, schalter"
+        },
+        "org_billing": {
+          "description": "Abrechnung und Abonnement",
+          "keywords": "plan, zahlungen, rechnung, abonnement"
+        },
+        "payments_overview": {
+          "description": "Zahlungsübersicht",
+          "keywords": "stripe, dashboard, umsatz"
+        },
+        "payments_products": {
+          "description": "Zahlungsprodukte und Preise",
+          "keywords": "produkte, preise, stripe, stufen"
         }
       }
     }

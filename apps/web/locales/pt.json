@@ -180,7 +180,8 @@
     "boards": "Quadros",
     "close": "Fechar",
     "optional": "opcional",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "Análise"
   },
   "banner": {
     "viewing_as_guest": "Você está visualizando {{name}} como convidado.",
@@ -3504,6 +3505,94 @@
             "creating": "Criando tarefa...",
             "success": "Tarefa criada com sucesso"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Pesquisar",
+      "placeholder": "Pesquisar páginas e conteúdo…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Nenhum resultado encontrado",
+      "loading": "Pesquisando…",
+      "type_to_search": "Digite pelo menos 2 caracteres para pesquisar conteúdo",
+      "groups": {
+        "pages": "Páginas",
+        "courses": "Cursos",
+        "collections": "Coleções",
+        "users": "Usuários",
+        "communities": "Comunidades",
+        "discussions": "Discussões",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Visão geral do painel",
+          "keywords": "início, visão geral, começar, painel"
+        },
+        "courses": {
+          "description": "Gerencie seus cursos",
+          "keywords": "cursos, aulas, aprender, treinamento, turmas"
+        },
+        "assignments": {
+          "description": "Gerencie tarefas",
+          "keywords": "tarefas, deveres, exercícios, entregas"
+        },
+        "communities": {
+          "description": "Gerencie comunidades",
+          "keywords": "fóruns, discussões, membros, postagens"
+        },
+        "podcasts": {
+          "description": "Gerencie podcasts",
+          "keywords": "áudio, episódios, programas"
+        },
+        "boards": {
+          "description": "Gerencie quadros",
+          "keywords": "kanban, projeto, tarefas, listas"
+        },
+        "playgrounds": {
+          "description": "Playgrounds de código",
+          "keywords": "código, sandbox, repl, programação"
+        },
+        "analytics": {
+          "description": "Ver painéis de análise",
+          "keywords": "estatísticas, métricas, gráficos, relatórios"
+        },
+        "users": {
+          "description": "Gerencie usuários da organização",
+          "keywords": "membros, contas, pessoas"
+        },
+        "usergroups": {
+          "description": "Gerencie grupos de usuários",
+          "keywords": "equipes, coortes, grupos"
+        },
+        "roles": {
+          "description": "Gerencie funções e permissões",
+          "keywords": "permissões, acesso, rbac, segurança"
+        },
+        "signups": {
+          "description": "Revisar inscrições",
+          "keywords": "registros, candidaturas, solicitações"
+        },
+        "org_general": {
+          "description": "Configurações gerais da organização",
+          "keywords": "nome, marca, slug, perfil"
+        },
+        "org_features": {
+          "description": "Gerencie funcionalidades da organização",
+          "keywords": "funcionalidades, módulos, interruptores"
+        },
+        "org_billing": {
+          "description": "Faturamento e assinatura",
+          "keywords": "plano, pagamentos, fatura, assinatura"
+        },
+        "payments_overview": {
+          "description": "Visão geral de pagamentos",
+          "keywords": "stripe, painel, receita"
+        },
+        "payments_products": {
+          "description": "Produtos e preços de pagamento",
+          "keywords": "produtos, preços, stripe, níveis"
         }
       }
     }

@@ -180,7 +180,8 @@
     "boards": "Доски",
     "close": "Закрыть",
     "optional": "необязательно",
-    "playgrounds": "Площадки"
+    "playgrounds": "Площадки",
+    "analytics": "Аналитика"
   },
   "banner": {
     "viewing_as_guest": "Вы просматриваете {{name}} как гость.",
@@ -3527,6 +3528,94 @@
             "creating": "Создание задания...",
             "success": "Задание успешно создано"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Поиск",
+      "placeholder": "Поиск страниц и контента…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Ничего не найдено",
+      "loading": "Поиск…",
+      "type_to_search": "Введите не менее 2 символов для поиска контента",
+      "groups": {
+        "pages": "Страницы",
+        "courses": "Курсы",
+        "collections": "Коллекции",
+        "users": "Пользователи",
+        "communities": "Сообщества",
+        "discussions": "Обсуждения",
+        "playgrounds": "Песочницы",
+        "podcasts": "Подкасты"
+      },
+      "entries": {
+        "home": {
+          "description": "Обзор панели",
+          "keywords": "главная, обзор, старт, панель"
+        },
+        "courses": {
+          "description": "Управление курсами",
+          "keywords": "курсы, уроки, обучение, тренинг, классы"
+        },
+        "assignments": {
+          "description": "Управление заданиями",
+          "keywords": "задачи, домашние задания, упражнения"
+        },
+        "communities": {
+          "description": "Управление сообществами",
+          "keywords": "форумы, обсуждения, участники, посты"
+        },
+        "podcasts": {
+          "description": "Управление подкастами",
+          "keywords": "аудио, эпизоды, передачи"
+        },
+        "boards": {
+          "description": "Управление досками",
+          "keywords": "канбан, проект, задачи, списки"
+        },
+        "playgrounds": {
+          "description": "Песочницы кода",
+          "keywords": "код, песочница, repl, программирование"
+        },
+        "analytics": {
+          "description": "Просмотр панелей аналитики",
+          "keywords": "статистика, метрики, графики, отчёты"
+        },
+        "users": {
+          "description": "Управление пользователями организации",
+          "keywords": "участники, аккаунты, люди"
+        },
+        "usergroups": {
+          "description": "Управление группами пользователей",
+          "keywords": "команды, когорты, группы"
+        },
+        "roles": {
+          "description": "Управление ролями и правами",
+          "keywords": "разрешения, доступ, rbac, безопасность"
+        },
+        "signups": {
+          "description": "Просмотр регистраций",
+          "keywords": "регистрации, заявки, запросы"
+        },
+        "org_general": {
+          "description": "Общие настройки организации",
+          "keywords": "название, бренд, slug, профиль"
+        },
+        "org_features": {
+          "description": "Управление функциями организации",
+          "keywords": "функции, модули, переключатели"
+        },
+        "org_billing": {
+          "description": "Биллинг и подписка",
+          "keywords": "план, платежи, счёт, подписка"
+        },
+        "payments_overview": {
+          "description": "Обзор платежей",
+          "keywords": "stripe, панель, доходы"
+        },
+        "payments_products": {
+          "description": "Платёжные продукты и цены",
+          "keywords": "продукты, цены, stripe, уровни"
         }
       }
     }
