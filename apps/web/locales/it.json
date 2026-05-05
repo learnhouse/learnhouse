@@ -180,7 +180,8 @@
     "creating": "Creazione...",
     "view_details": "Visualizza dettagli",
     "close": "Chiudi",
-    "optional": "opzionale"
+    "optional": "opzionale",
+    "analytics": "Analitica"
   },
   "banner": {
     "viewing_as_guest": "Stai visualizzando {{name}} come ospite.",
@@ -3502,6 +3503,94 @@
             "creating": "Creazione compito...",
             "success": "Compito creato con successo"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Cerca",
+      "placeholder": "Cerca pagine e contenuti…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Nessun risultato",
+      "loading": "Ricerca in corso…",
+      "type_to_search": "Digita almeno 2 caratteri per cercare contenuti",
+      "groups": {
+        "pages": "Pagine",
+        "courses": "Corsi",
+        "collections": "Raccolte",
+        "users": "Utenti",
+        "communities": "Comunità",
+        "discussions": "Discussioni",
+        "playgrounds": "Playground",
+        "podcasts": "Podcast"
+      },
+      "entries": {
+        "home": {
+          "description": "Panoramica della dashboard",
+          "keywords": "home, panoramica, inizio, dashboard"
+        },
+        "courses": {
+          "description": "Gestisci i tuoi corsi",
+          "keywords": "corsi, lezioni, imparare, formazione, classi"
+        },
+        "assignments": {
+          "description": "Gestisci i compiti",
+          "keywords": "compiti, esercizi, consegne"
+        },
+        "communities": {
+          "description": "Gestisci le comunità",
+          "keywords": "forum, discussioni, membri, post"
+        },
+        "podcasts": {
+          "description": "Gestisci i podcast",
+          "keywords": "audio, episodi, programmi"
+        },
+        "boards": {
+          "description": "Gestisci le bacheche",
+          "keywords": "kanban, progetto, compiti, liste"
+        },
+        "playgrounds": {
+          "description": "Playground di codice",
+          "keywords": "codice, sandbox, repl, programmazione"
+        },
+        "analytics": {
+          "description": "Visualizza dashboard di analitica",
+          "keywords": "statistiche, metriche, grafici, report"
+        },
+        "users": {
+          "description": "Gestisci gli utenti dell'organizzazione",
+          "keywords": "membri, account, persone"
+        },
+        "usergroups": {
+          "description": "Gestisci gruppi di utenti",
+          "keywords": "team, coorti, gruppi"
+        },
+        "roles": {
+          "description": "Gestisci ruoli e autorizzazioni",
+          "keywords": "autorizzazioni, accesso, rbac, sicurezza"
+        },
+        "signups": {
+          "description": "Controlla le registrazioni",
+          "keywords": "registrazioni, candidature, richieste"
+        },
+        "org_general": {
+          "description": "Impostazioni generali dell'organizzazione",
+          "keywords": "nome, branding, slug, profilo"
+        },
+        "org_features": {
+          "description": "Gestisci le funzionalità dell'organizzazione",
+          "keywords": "funzionalità, moduli, interruttori"
+        },
+        "org_billing": {
+          "description": "Fatturazione e abbonamento",
+          "keywords": "piano, pagamenti, fattura, abbonamento"
+        },
+        "payments_overview": {
+          "description": "Panoramica pagamenti",
+          "keywords": "stripe, dashboard, ricavi"
+        },
+        "payments_products": {
+          "description": "Prodotti e prezzi di pagamento",
+          "keywords": "prodotti, prezzi, stripe, livelli"
         }
       }
     }

@@ -180,7 +180,8 @@
     "boards": "Panolar",
     "close": "Kapat",
     "optional": "isteğe bağlı",
-    "playgrounds": "Oyun Alanları"
+    "playgrounds": "Oyun Alanları",
+    "analytics": "Analitik"
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
@@ -3527,6 +3528,94 @@
             "creating": "Ödev oluşturuluyor...",
             "success": "Ödev başarıyla oluşturuldu"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Ara",
+      "placeholder": "Sayfa ve içeriklerde ara…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Sonuç bulunamadı",
+      "loading": "Aranıyor…",
+      "type_to_search": "İçerik aramak için en az 2 karakter girin",
+      "groups": {
+        "pages": "Sayfalar",
+        "courses": "Kurslar",
+        "collections": "Koleksiyonlar",
+        "users": "Kullanıcılar",
+        "communities": "Topluluklar",
+        "discussions": "Tartışmalar",
+        "playgrounds": "Oyun alanları",
+        "podcasts": "Podcastler"
+      },
+      "entries": {
+        "home": {
+          "description": "Pano genel bakışı",
+          "keywords": "ana sayfa, genel bakış, başlangıç, pano"
+        },
+        "courses": {
+          "description": "Kurslarınızı yönetin",
+          "keywords": "kurslar, dersler, öğrenme, eğitim, sınıflar"
+        },
+        "assignments": {
+          "description": "Ödevleri yönetin",
+          "keywords": "görevler, ev ödevleri, alıştırmalar"
+        },
+        "communities": {
+          "description": "Toplulukları yönetin",
+          "keywords": "forumlar, tartışmalar, üyeler, gönderiler"
+        },
+        "podcasts": {
+          "description": "Podcastleri yönetin",
+          "keywords": "ses, bölümler, programlar"
+        },
+        "boards": {
+          "description": "Panoları yönetin",
+          "keywords": "kanban, proje, görevler, listeler"
+        },
+        "playgrounds": {
+          "description": "Kod oyun alanları",
+          "keywords": "kod, sandbox, repl, programlama"
+        },
+        "analytics": {
+          "description": "Analitik panolarını görüntüleyin",
+          "keywords": "istatistikler, metrikler, grafikler, raporlar"
+        },
+        "users": {
+          "description": "Kuruluş kullanıcılarını yönetin",
+          "keywords": "üyeler, hesaplar, kişiler"
+        },
+        "usergroups": {
+          "description": "Kullanıcı gruplarını yönetin",
+          "keywords": "ekipler, kohortlar, gruplar"
+        },
+        "roles": {
+          "description": "Rolleri ve izinleri yönetin",
+          "keywords": "izinler, erişim, rbac, güvenlik"
+        },
+        "signups": {
+          "description": "Kayıtları inceleyin",
+          "keywords": "kayıtlar, başvurular, istekler"
+        },
+        "org_general": {
+          "description": "Kuruluş genel ayarları",
+          "keywords": "ad, marka, slug, profil"
+        },
+        "org_features": {
+          "description": "Kuruluş özelliklerini yönetin",
+          "keywords": "özellikler, modüller, anahtarlar"
+        },
+        "org_billing": {
+          "description": "Faturalandırma ve abonelik",
+          "keywords": "plan, ödemeler, fatura, abonelik"
+        },
+        "payments_overview": {
+          "description": "Ödeme genel bakışı",
+          "keywords": "stripe, pano, gelir"
+        },
+        "payments_products": {
+          "description": "Ödeme ürünleri ve fiyatlandırma",
+          "keywords": "ürünler, fiyatlar, stripe, kademeler"
         }
       }
     }

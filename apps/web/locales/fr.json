@@ -180,7 +180,8 @@
     "creating": "Création...",
     "view_details": "Détails",
     "close": "Fermer",
-    "optional": "optionnel"
+    "optional": "optionnel",
+    "analytics": "Analytique"
   },
   "banner": {
     "viewing_as_guest": "Vous consultez {{name}} en tant qu'invité.",
@@ -3502,6 +3503,94 @@
             "creating": "Création du devoir...",
             "success": "Devoir créé avec succès"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Rechercher",
+      "placeholder": "Rechercher des pages et du contenu…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Aucun résultat",
+      "loading": "Recherche en cours…",
+      "type_to_search": "Saisissez au moins 2 caractères pour rechercher du contenu",
+      "groups": {
+        "pages": "Pages",
+        "courses": "Cours",
+        "collections": "Collections",
+        "users": "Utilisateurs",
+        "communities": "Communautés",
+        "discussions": "Discussions",
+        "playgrounds": "Bacs à sable",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Vue d'ensemble du tableau de bord",
+          "keywords": "accueil, vue d'ensemble, démarrer, tableau de bord"
+        },
+        "courses": {
+          "description": "Gérer vos cours",
+          "keywords": "cours, leçons, apprendre, formation, classes"
+        },
+        "assignments": {
+          "description": "Gérer les devoirs",
+          "keywords": "tâches, devoirs, exercices, soumissions"
+        },
+        "communities": {
+          "description": "Gérer les communautés",
+          "keywords": "forums, discussions, membres, publications"
+        },
+        "podcasts": {
+          "description": "Gérer les podcasts",
+          "keywords": "audio, épisodes, émissions"
+        },
+        "boards": {
+          "description": "Gérer les tableaux",
+          "keywords": "kanban, projet, tâches, listes"
+        },
+        "playgrounds": {
+          "description": "Bacs à sable de code",
+          "keywords": "code, bac à sable, repl, programmation"
+        },
+        "analytics": {
+          "description": "Voir les tableaux de bord analytiques",
+          "keywords": "statistiques, métriques, graphiques, rapports"
+        },
+        "users": {
+          "description": "Gérer les utilisateurs de l'organisation",
+          "keywords": "membres, comptes, personnes"
+        },
+        "usergroups": {
+          "description": "Gérer les groupes d'utilisateurs",
+          "keywords": "équipes, cohortes, groupes"
+        },
+        "roles": {
+          "description": "Gérer les rôles et autorisations",
+          "keywords": "autorisations, accès, rbac, sécurité"
+        },
+        "signups": {
+          "description": "Examiner les inscriptions",
+          "keywords": "inscriptions, candidatures, demandes"
+        },
+        "org_general": {
+          "description": "Paramètres généraux de l'organisation",
+          "keywords": "nom, image de marque, slug, profil"
+        },
+        "org_features": {
+          "description": "Gérer les fonctionnalités de l'organisation",
+          "keywords": "fonctionnalités, modules, bascules"
+        },
+        "org_billing": {
+          "description": "Facturation et abonnement",
+          "keywords": "plan, paiements, facture, abonnement"
+        },
+        "payments_overview": {
+          "description": "Vue d'ensemble des paiements",
+          "keywords": "stripe, tableau de bord, revenus"
+        },
+        "payments_products": {
+          "description": "Produits et tarifs de paiement",
+          "keywords": "produits, prix, stripe, niveaux"
         }
       }
     }

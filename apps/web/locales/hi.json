@@ -180,7 +180,8 @@
     "creating": "बनाया जा रहा है...",
     "view_details": "विवरण देखें",
     "close": "बंद करें",
-    "optional": "optional"
+    "optional": "optional",
+    "analytics": "विश्लेषण"
   },
   "banner": {
     "viewing_as_guest": "आप {{name}} को अतिथि के रूप में देख रहे हैं।",
@@ -3525,6 +3526,94 @@
             "creating": "असाइनमेंट बनाया जा रहा है...",
             "success": "असाइनमेंट सफलतापूर्वक बनाया गया"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "खोजें",
+      "placeholder": "पृष्ठ और सामग्री खोजें…",
+      "shortcut_hint": "⌘K",
+      "no_results": "कोई परिणाम नहीं मिला",
+      "loading": "खोज रहे हैं…",
+      "type_to_search": "सामग्री खोजने के लिए कम से कम 2 अक्षर दर्ज करें",
+      "groups": {
+        "pages": "पृष्ठ",
+        "courses": "पाठ्यक्रम",
+        "collections": "संग्रह",
+        "users": "उपयोगकर्ता",
+        "communities": "समुदाय",
+        "discussions": "चर्चाएँ",
+        "playgrounds": "प्लेग्राउंड",
+        "podcasts": "पॉडकास्ट"
+      },
+      "entries": {
+        "home": {
+          "description": "डैशबोर्ड अवलोकन",
+          "keywords": "होम, अवलोकन, शुरू, डैशबोर्ड"
+        },
+        "courses": {
+          "description": "अपने पाठ्यक्रम प्रबंधित करें",
+          "keywords": "पाठ्यक्रम, पाठ, सीखें, प्रशिक्षण, कक्षाएँ"
+        },
+        "assignments": {
+          "description": "असाइनमेंट प्रबंधित करें",
+          "keywords": "कार्य, गृहकार्य, अभ्यास, सबमिशन"
+        },
+        "communities": {
+          "description": "समुदाय प्रबंधित करें",
+          "keywords": "फोरम, चर्चाएँ, सदस्य, पोस्ट"
+        },
+        "podcasts": {
+          "description": "पॉडकास्ट प्रबंधित करें",
+          "keywords": "ऑडियो, एपिसोड, शो"
+        },
+        "boards": {
+          "description": "बोर्ड प्रबंधित करें",
+          "keywords": "कानबन, प्रोजेक्ट, कार्य, सूचियाँ"
+        },
+        "playgrounds": {
+          "description": "कोड प्लेग्राउंड",
+          "keywords": "कोड, सैंडबॉक्स, repl, प्रोग्रामिंग"
+        },
+        "analytics": {
+          "description": "विश्लेषण डैशबोर्ड देखें",
+          "keywords": "आँकड़े, मेट्रिक्स, चार्ट, रिपोर्ट"
+        },
+        "users": {
+          "description": "संगठन के उपयोगकर्ताओं को प्रबंधित करें",
+          "keywords": "सदस्य, खाते, लोग"
+        },
+        "usergroups": {
+          "description": "उपयोगकर्ता समूह प्रबंधित करें",
+          "keywords": "टीमें, समूह"
+        },
+        "roles": {
+          "description": "भूमिकाएँ और अनुमतियाँ प्रबंधित करें",
+          "keywords": "अनुमतियाँ, पहुँच, rbac, सुरक्षा"
+        },
+        "signups": {
+          "description": "साइनअप की समीक्षा करें",
+          "keywords": "पंजीकरण, आवेदन, अनुरोध"
+        },
+        "org_general": {
+          "description": "संगठन सामान्य सेटिंग्स",
+          "keywords": "नाम, ब्रांडिंग, slug, प्रोफ़ाइल"
+        },
+        "org_features": {
+          "description": "संगठन सुविधाएँ प्रबंधित करें",
+          "keywords": "सुविधाएँ, मॉड्यूल, टॉगल"
+        },
+        "org_billing": {
+          "description": "बिलिंग और सदस्यता",
+          "keywords": "योजना, भुगतान, चालान, सदस्यता"
+        },
+        "payments_overview": {
+          "description": "भुगतान अवलोकन",
+          "keywords": "stripe, डैशबोर्ड, राजस्व"
+        },
+        "payments_products": {
+          "description": "भुगतान उत्पाद और मूल्य निर्धारण",
+          "keywords": "उत्पाद, मूल्य, stripe, स्तर"
         }
       }
     }

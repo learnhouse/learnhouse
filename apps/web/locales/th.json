@@ -180,7 +180,8 @@
     "boards": "บอร์ด",
     "close": "ปิด",
     "optional": "optional",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "การวิเคราะห์"
   },
   "banner": {
     "viewing_as_guest": "คุณกำลังดู {{name}} ในฐานะแขก",
@@ -3527,6 +3528,94 @@
             "creating": "กำลังสร้างงาน...",
             "success": "สร้างงานสำเร็จแล้ว"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "ค้นหา",
+      "placeholder": "ค้นหาหน้าและเนื้อหา…",
+      "shortcut_hint": "⌘K",
+      "no_results": "ไม่พบผลลัพธ์",
+      "loading": "กำลังค้นหา…",
+      "type_to_search": "พิมพ์อย่างน้อย 2 อักขระเพื่อค้นหาเนื้อหา",
+      "groups": {
+        "pages": "หน้า",
+        "courses": "คอร์ส",
+        "collections": "คอลเลกชัน",
+        "users": "ผู้ใช้",
+        "communities": "ชุมชน",
+        "discussions": "การสนทนา",
+        "playgrounds": "เพลย์กราวด์",
+        "podcasts": "พอดแคสต์"
+      },
+      "entries": {
+        "home": {
+          "description": "ภาพรวมแดชบอร์ด",
+          "keywords": "หน้าแรก, ภาพรวม, เริ่มต้น, แดชบอร์ด"
+        },
+        "courses": {
+          "description": "จัดการคอร์สของคุณ",
+          "keywords": "คอร์ส, บทเรียน, เรียนรู้, ฝึกอบรม, ชั้นเรียน"
+        },
+        "assignments": {
+          "description": "จัดการงานที่มอบหมาย",
+          "keywords": "งาน, การบ้าน, แบบฝึกหัด, การส่งงาน"
+        },
+        "communities": {
+          "description": "จัดการชุมชน",
+          "keywords": "ฟอรัม, การสนทนา, สมาชิก, โพสต์"
+        },
+        "podcasts": {
+          "description": "จัดการพอดแคสต์",
+          "keywords": "เสียง, ตอน, รายการ"
+        },
+        "boards": {
+          "description": "จัดการบอร์ด",
+          "keywords": "คันบัง, โปรเจกต์, งาน, รายการ"
+        },
+        "playgrounds": {
+          "description": "เพลย์กราวด์โค้ด",
+          "keywords": "โค้ด, แซนด์บ็อกซ์, repl, การเขียนโปรแกรม"
+        },
+        "analytics": {
+          "description": "ดูแดชบอร์ดการวิเคราะห์",
+          "keywords": "สถิติ, เมตริก, แผนภูมิ, รายงาน"
+        },
+        "users": {
+          "description": "จัดการผู้ใช้ขององค์กร",
+          "keywords": "สมาชิก, บัญชี, บุคคล"
+        },
+        "usergroups": {
+          "description": "จัดการกลุ่มผู้ใช้",
+          "keywords": "ทีม, กลุ่ม, รุ่น"
+        },
+        "roles": {
+          "description": "จัดการบทบาทและสิทธิ์",
+          "keywords": "สิทธิ์, การเข้าถึง, rbac, ความปลอดภัย"
+        },
+        "signups": {
+          "description": "ตรวจสอบการสมัคร",
+          "keywords": "การลงทะเบียน, ใบสมัคร, คำขอ"
+        },
+        "org_general": {
+          "description": "การตั้งค่าทั่วไปขององค์กร",
+          "keywords": "ชื่อ, แบรนด์, slug, โปรไฟล์"
+        },
+        "org_features": {
+          "description": "จัดการคุณสมบัติขององค์กร",
+          "keywords": "คุณสมบัติ, โมดูล, สวิตช์"
+        },
+        "org_billing": {
+          "description": "การเรียกเก็บเงินและการสมัครสมาชิก",
+          "keywords": "แผน, การชำระเงิน, ใบแจ้งหนี้, การสมัครสมาชิก"
+        },
+        "payments_overview": {
+          "description": "ภาพรวมการชำระเงิน",
+          "keywords": "stripe, แดชบอร์ด, รายได้"
+        },
+        "payments_products": {
+          "description": "ผลิตภัณฑ์และราคาการชำระเงิน",
+          "keywords": "ผลิตภัณฑ์, ราคา, stripe, ระดับ"
         }
       }
     }

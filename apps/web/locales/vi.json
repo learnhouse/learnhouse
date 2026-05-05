@@ -180,7 +180,8 @@
     "boards": "Bảng",
     "close": "Đóng",
     "optional": "optional",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "Phân tích"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -3527,6 +3528,94 @@
             "creating": "Đang tạo bài tập...",
             "success": "Đã tạo bài tập thành công"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Tìm kiếm",
+      "placeholder": "Tìm kiếm trang và nội dung…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Không tìm thấy kết quả",
+      "loading": "Đang tìm kiếm…",
+      "type_to_search": "Nhập ít nhất 2 ký tự để tìm kiếm nội dung",
+      "groups": {
+        "pages": "Trang",
+        "courses": "Khóa học",
+        "collections": "Bộ sưu tập",
+        "users": "Người dùng",
+        "communities": "Cộng đồng",
+        "discussions": "Thảo luận",
+        "playgrounds": "Sân chơi",
+        "podcasts": "Podcast"
+      },
+      "entries": {
+        "home": {
+          "description": "Tổng quan bảng điều khiển",
+          "keywords": "trang chủ, tổng quan, bắt đầu, bảng điều khiển"
+        },
+        "courses": {
+          "description": "Quản lý khóa học của bạn",
+          "keywords": "khóa học, bài học, học tập, đào tạo, lớp học"
+        },
+        "assignments": {
+          "description": "Quản lý bài tập",
+          "keywords": "nhiệm vụ, bài tập về nhà, bài luyện, nộp bài"
+        },
+        "communities": {
+          "description": "Quản lý cộng đồng",
+          "keywords": "diễn đàn, thảo luận, thành viên, bài đăng"
+        },
+        "podcasts": {
+          "description": "Quản lý podcast",
+          "keywords": "âm thanh, tập, chương trình"
+        },
+        "boards": {
+          "description": "Quản lý bảng",
+          "keywords": "kanban, dự án, nhiệm vụ, danh sách"
+        },
+        "playgrounds": {
+          "description": "Sân chơi mã",
+          "keywords": "mã, sandbox, repl, lập trình"
+        },
+        "analytics": {
+          "description": "Xem bảng điều khiển phân tích",
+          "keywords": "thống kê, chỉ số, biểu đồ, báo cáo"
+        },
+        "users": {
+          "description": "Quản lý người dùng của tổ chức",
+          "keywords": "thành viên, tài khoản, mọi người"
+        },
+        "usergroups": {
+          "description": "Quản lý nhóm người dùng",
+          "keywords": "đội, nhóm, lớp"
+        },
+        "roles": {
+          "description": "Quản lý vai trò và quyền",
+          "keywords": "quyền, truy cập, rbac, bảo mật"
+        },
+        "signups": {
+          "description": "Xem đăng ký",
+          "keywords": "đăng ký, đơn đăng ký, yêu cầu"
+        },
+        "org_general": {
+          "description": "Cài đặt chung của tổ chức",
+          "keywords": "tên, thương hiệu, slug, hồ sơ"
+        },
+        "org_features": {
+          "description": "Quản lý tính năng của tổ chức",
+          "keywords": "tính năng, mô-đun, công tắc"
+        },
+        "org_billing": {
+          "description": "Thanh toán và đăng ký",
+          "keywords": "gói, thanh toán, hóa đơn, đăng ký"
+        },
+        "payments_overview": {
+          "description": "Tổng quan thanh toán",
+          "keywords": "stripe, bảng điều khiển, doanh thu"
+        },
+        "payments_products": {
+          "description": "Sản phẩm và giá thanh toán",
+          "keywords": "sản phẩm, giá, stripe, cấp độ"
         }
       }
     }

@@ -42,6 +42,7 @@ import {
   ShoppingBag,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
+import CommandPaletteTrigger from '@components/Dashboard/CommandPalette/CommandPaletteTrigger'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
@@ -232,6 +233,11 @@ function DashLeftMenu() {
             <SidebarSimple size={18} weight="fill" />
           </button>
         )}
+      </div>
+
+      {/* Search trigger */}
+      <div className="px-3 pt-3">
+        <CommandPaletteTrigger isCollapsed={isCollapsed} />
       </div>
 
       {/* Main Navigation - Vertically Centered */}
