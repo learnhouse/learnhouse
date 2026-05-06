@@ -2156,7 +2156,9 @@
           "other": "其他",
           "domains": "域名",
           "sso": "SSO",
-          "usage": "用量"
+          "usage": "用量",
+          "seo": "SEO",
+          "automations": "自动化"
         },
         "pages": {
           "general": {
@@ -3597,12 +3599,94 @@
           "keywords": "计划, 付款, 发票, 订阅"
         },
         "payments_overview": {
-          "description": "付款概览",
-          "keywords": "stripe, 仪表板, 收入"
+          "description": "付款概览和收入",
+          "keywords": "stripe, 仪表板, 收入, 销售",
+          "title": "付款概览"
         },
         "payments_products": {
           "description": "付款产品和定价",
-          "keywords": "产品, 价格, stripe, 等级"
+          "keywords": "产品, 价格, stripe, 等级, 计划",
+          "title": "产品"
+        },
+        "users_add": {
+          "description": "邀请新成员",
+          "keywords": "邀请, 添加, 成员, 发送"
+        },
+        "users_audit_logs": {
+          "description": "组织活动日志",
+          "keywords": "审计, 日志, 历史, 安全, 活动"
+        },
+        "org_branding": {
+          "description": "标志、颜色和视觉标识",
+          "keywords": "品牌, 标志, 颜色, 主题"
+        },
+        "org_landing": {
+          "description": "自定义着陆页",
+          "keywords": "着陆页, 主页, hero, 页面"
+        },
+        "org_seo": {
+          "description": "搜索引擎优化",
+          "keywords": "seo, 搜索, 元, 排名, google"
+        },
+        "org_ai": {
+          "description": "AI 功能和配置",
+          "keywords": "ai, llm, gpt, openai, 生成"
+        },
+        "org_domains": {
+          "description": "自定义域名",
+          "keywords": "域名, dns, 自定义, 子域名, cname"
+        },
+        "org_automations": {
+          "description": "Webhook 和外部集成",
+          "keywords": "webhooks, 自动化, zapier, 集成, 触发器"
+        },
+        "org_api": {
+          "description": "API 令牌和程序化访问",
+          "keywords": "api, 令牌, 访问, 程序化, 密钥"
+        },
+        "org_sso": {
+          "description": "单点登录配置",
+          "keywords": "sso, saml, oauth, 企业, 登录"
+        },
+        "org_other": {
+          "description": "其他组织设置",
+          "keywords": "杂项, 高级, 自定义, 额外"
+        },
+        "payments_groups": {
+          "description": "付款组和捆绑",
+          "keywords": "组, 捆绑, 集合",
+          "title": "付款组"
+        },
+        "payments_configuration": {
+          "description": "Stripe 和付款配置",
+          "keywords": "配置, 设置, stripe, 安装, connect",
+          "title": "配置"
+        },
+        "payments_customers": {
+          "description": "客户和订阅者",
+          "keywords": "客户, 订阅者, 买家, 已付款",
+          "title": "客户"
+        },
+        "courses_migrate": {
+          "description": "从其他 LMS 导入课程",
+          "keywords": "导入, 迁移, 转移, lms, moodle, canvas",
+          "title": "迁移课程"
+        },
+        "account_general": {
+          "description": "个人账户常规设置",
+          "keywords": "账户, 设置, 电子邮件, 姓名, 语言"
+        },
+        "account_profile": {
+          "description": "编辑您的个人资料和简介",
+          "keywords": "个人资料, 简介, 头像, 照片, 公开"
+        },
+        "account_security": {
+          "description": "密码和安全设置",
+          "keywords": "密码, 安全, 2fa, mfa, 会话"
+        },
+        "account_purchases": {
+          "description": "您的购买和订阅",
+          "keywords": "购买, 订阅, 账单, 历史, 收据"
         }
       }
     }

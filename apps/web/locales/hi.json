@@ -2169,7 +2169,9 @@
           "usage": "Usage",
           "other": "अन्य",
           "domains": "Domains",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "स्वचालन"
         },
         "pages": {
           "general": {
@@ -3608,12 +3610,94 @@
           "keywords": "योजना, भुगतान, चालान, सदस्यता"
         },
         "payments_overview": {
-          "description": "भुगतान अवलोकन",
-          "keywords": "stripe, डैशबोर्ड, राजस्व"
+          "description": "भुगतान अवलोकन और राजस्व",
+          "keywords": "stripe, डैशबोर्ड, राजस्व, बिक्री",
+          "title": "भुगतान अवलोकन"
         },
         "payments_products": {
           "description": "भुगतान उत्पाद और मूल्य निर्धारण",
-          "keywords": "उत्पाद, मूल्य, stripe, स्तर"
+          "keywords": "उत्पाद, मूल्य, stripe, स्तर, योजनाएँ",
+          "title": "उत्पाद"
+        },
+        "users_add": {
+          "description": "नए सदस्यों को आमंत्रित करें",
+          "keywords": "आमंत्रित, जोड़ें, सदस्य, भेजें"
+        },
+        "users_audit_logs": {
+          "description": "संगठन गतिविधि लॉग",
+          "keywords": "ऑडिट, लॉग, इतिहास, सुरक्षा, गतिविधि"
+        },
+        "org_branding": {
+          "description": "लोगो, रंग और दृश्य पहचान",
+          "keywords": "ब्रांडिंग, लोगो, रंग, थीम"
+        },
+        "org_landing": {
+          "description": "अपना लैंडिंग पेज अनुकूलित करें",
+          "keywords": "लैंडिंग, होमपेज, hero, पेज"
+        },
+        "org_seo": {
+          "description": "खोज इंजन अनुकूलन",
+          "keywords": "seo, खोज, मेटा, रैंकिंग, google"
+        },
+        "org_ai": {
+          "description": "एआई सुविधाएँ और कॉन्फ़िगरेशन",
+          "keywords": "एआई, llm, gpt, openai, जेनरेशन"
+        },
+        "org_domains": {
+          "description": "कस्टम डोमेन",
+          "keywords": "डोमेन, dns, कस्टम, सबडोमेन, cname"
+        },
+        "org_automations": {
+          "description": "वेबहुक और बाहरी एकीकरण",
+          "keywords": "वेबहुक, स्वचालन, zapier, एकीकरण, ट्रिगर"
+        },
+        "org_api": {
+          "description": "एपीआई टोकन और प्रोग्रामेटिक पहुँच",
+          "keywords": "एपीआई, टोकन, पहुँच, प्रोग्रामेटिक, कुंजी"
+        },
+        "org_sso": {
+          "description": "सिंगल साइन-ऑन कॉन्फ़िगरेशन",
+          "keywords": "sso, saml, oauth, उद्यम, लॉगिन"
+        },
+        "org_other": {
+          "description": "अन्य संगठन सेटिंग्स",
+          "keywords": "विविध, उन्नत, कस्टम, अतिरिक्त"
+        },
+        "payments_groups": {
+          "description": "भुगतान समूह और बंडल",
+          "keywords": "समूह, बंडल, सेट",
+          "title": "भुगतान समूह"
+        },
+        "payments_configuration": {
+          "description": "Stripe और भुगतान कॉन्फ़िगरेशन",
+          "keywords": "कॉन्फ़िगरेशन, सेटिंग्स, stripe, सेटअप, connect",
+          "title": "कॉन्फ़िगरेशन"
+        },
+        "payments_customers": {
+          "description": "ग्राहक और सब्सक्राइबर",
+          "keywords": "ग्राहक, सब्सक्राइबर, खरीदार, भुगतान किया",
+          "title": "ग्राहक"
+        },
+        "courses_migrate": {
+          "description": "किसी अन्य LMS से पाठ्यक्रम आयात करें",
+          "keywords": "आयात, माइग्रेट, स्थानांतरण, lms, moodle, canvas",
+          "title": "पाठ्यक्रम माइग्रेट करें"
+        },
+        "account_general": {
+          "description": "व्यक्तिगत खाता सामान्य सेटिंग्स",
+          "keywords": "खाता, सेटिंग्स, ईमेल, नाम, भाषा"
+        },
+        "account_profile": {
+          "description": "अपनी प्रोफ़ाइल और बायो संपादित करें",
+          "keywords": "प्रोफ़ाइल, बायो, अवतार, फ़ोटो, सार्वजनिक"
+        },
+        "account_security": {
+          "description": "पासवर्ड और सुरक्षा सेटिंग्स",
+          "keywords": "पासवर्ड, सुरक्षा, 2fa, mfa, सत्र"
+        },
+        "account_purchases": {
+          "description": "आपकी खरीदारी और सदस्यताएं",
+          "keywords": "खरीदारी, सदस्यताएं, बिलिंग, इतिहास, रसीदें"
         }
       }
     }

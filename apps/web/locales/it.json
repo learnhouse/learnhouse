@@ -2146,7 +2146,9 @@
           "usage": "Usage",
           "other": "Altro",
           "domains": "Domini",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "Automazioni"
         },
         "pages": {
           "general": {
@@ -3585,12 +3587,94 @@
           "keywords": "piano, pagamenti, fattura, abbonamento"
         },
         "payments_overview": {
-          "description": "Panoramica pagamenti",
-          "keywords": "stripe, dashboard, ricavi"
+          "description": "Panoramica pagamenti e ricavi",
+          "keywords": "stripe, dashboard, ricavi, vendite",
+          "title": "Panoramica pagamenti"
         },
         "payments_products": {
           "description": "Prodotti e prezzi di pagamento",
-          "keywords": "prodotti, prezzi, stripe, livelli"
+          "keywords": "prodotti, prezzi, stripe, livelli, piani",
+          "title": "Prodotti"
+        },
+        "users_add": {
+          "description": "Invita nuovi membri",
+          "keywords": "invita, aggiungi, membri, invia"
+        },
+        "users_audit_logs": {
+          "description": "Registro attività dell'organizzazione",
+          "keywords": "audit, log, cronologia, sicurezza, attività"
+        },
+        "org_branding": {
+          "description": "Logo, colori e identità visiva",
+          "keywords": "branding, logo, colori, tema"
+        },
+        "org_landing": {
+          "description": "Personalizza la tua pagina di destinazione",
+          "keywords": "landing, homepage, hero, pagina"
+        },
+        "org_seo": {
+          "description": "Ottimizzazione per i motori di ricerca",
+          "keywords": "seo, ricerca, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "Funzionalità e configurazione IA",
+          "keywords": "ia, llm, gpt, openai, generazione"
+        },
+        "org_domains": {
+          "description": "Domini personalizzati",
+          "keywords": "dominio, dns, personalizzato, sottodominio, cname"
+        },
+        "org_automations": {
+          "description": "Webhook e integrazioni esterne",
+          "keywords": "webhook, automazioni, zapier, integrazioni, trigger"
+        },
+        "org_api": {
+          "description": "Token API e accesso programmatico",
+          "keywords": "api, token, accesso, programmatico, chiavi"
+        },
+        "org_sso": {
+          "description": "Configurazione Single Sign-On",
+          "keywords": "sso, saml, oauth, azienda, login"
+        },
+        "org_other": {
+          "description": "Altre impostazioni dell'organizzazione",
+          "keywords": "varie, avanzato, personalizzato, extra"
+        },
+        "payments_groups": {
+          "description": "Gruppi e bundle di pagamento",
+          "keywords": "gruppi, bundle, insiemi",
+          "title": "Gruppi di pagamento"
+        },
+        "payments_configuration": {
+          "description": "Configurazione Stripe e pagamenti",
+          "keywords": "configurazione, impostazioni, stripe, setup, connect",
+          "title": "Configurazione"
+        },
+        "payments_customers": {
+          "description": "Clienti e abbonati",
+          "keywords": "clienti, abbonati, acquirenti, pagati",
+          "title": "Clienti"
+        },
+        "courses_migrate": {
+          "description": "Importa corsi da un altro LMS",
+          "keywords": "importa, migra, trasferisci, lms, moodle, canvas",
+          "title": "Migra corsi"
+        },
+        "account_general": {
+          "description": "Impostazioni generali dell'account personale",
+          "keywords": "account, impostazioni, email, nome, lingua"
+        },
+        "account_profile": {
+          "description": "Modifica il tuo profilo e biografia",
+          "keywords": "profilo, bio, avatar, foto, pubblico"
+        },
+        "account_security": {
+          "description": "Password e impostazioni di sicurezza",
+          "keywords": "password, sicurezza, 2fa, mfa, sessioni"
+        },
+        "account_purchases": {
+          "description": "I tuoi acquisti e abbonamenti",
+          "keywords": "acquisti, abbonamenti, fatturazione, cronologia, ricevute"
         }
       }
     }

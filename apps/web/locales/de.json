@@ -2146,7 +2146,9 @@
           "usage": "Usage",
           "other": "Sonstiges",
           "sso": "SSO",
-          "domains": "Domains"
+          "domains": "Domains",
+          "seo": "SEO",
+          "automations": "Automatisierungen"
         },
         "pages": {
           "general": {
@@ -3585,12 +3587,94 @@
           "keywords": "plan, zahlungen, rechnung, abonnement"
         },
         "payments_overview": {
-          "description": "Zahlungsübersicht",
-          "keywords": "stripe, dashboard, umsatz"
+          "description": "Zahlungsübersicht und Umsatz",
+          "keywords": "stripe, dashboard, umsatz, verkäufe",
+          "title": "Zahlungsübersicht"
         },
         "payments_products": {
           "description": "Zahlungsprodukte und Preise",
-          "keywords": "produkte, preise, stripe, stufen"
+          "keywords": "produkte, preise, stripe, stufen, pläne",
+          "title": "Produkte"
+        },
+        "users_add": {
+          "description": "Neue Mitglieder einladen",
+          "keywords": "einladen, hinzufügen, mitglieder, senden"
+        },
+        "users_audit_logs": {
+          "description": "Aktivitätsprotokoll der Organisation",
+          "keywords": "audit, protokolle, verlauf, sicherheit, aktivität"
+        },
+        "org_branding": {
+          "description": "Logo, Farben und visuelle Identität",
+          "keywords": "branding, logo, farben, thema"
+        },
+        "org_landing": {
+          "description": "Landingpage anpassen",
+          "keywords": "landing, startseite, hero, seite"
+        },
+        "org_seo": {
+          "description": "Suchmaschinenoptimierung",
+          "keywords": "seo, suche, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "KI-Funktionen und Konfiguration",
+          "keywords": "ki, llm, gpt, openai, generierung"
+        },
+        "org_domains": {
+          "description": "Benutzerdefinierte Domains",
+          "keywords": "domain, dns, benutzerdefiniert, subdomain, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks und externe Integrationen",
+          "keywords": "webhooks, automatisierungen, zapier, integrationen, trigger"
+        },
+        "org_api": {
+          "description": "API-Token und programmatischer Zugriff",
+          "keywords": "api, token, zugriff, programmatisch, schlüssel"
+        },
+        "org_sso": {
+          "description": "Single Sign-On Konfiguration",
+          "keywords": "sso, saml, oauth, unternehmen, login"
+        },
+        "org_other": {
+          "description": "Weitere Organisationseinstellungen",
+          "keywords": "sonstiges, erweitert, benutzerdefiniert, extra"
+        },
+        "payments_groups": {
+          "description": "Zahlungsgruppen und Bundles",
+          "keywords": "gruppen, bundles, sets",
+          "title": "Zahlungsgruppen"
+        },
+        "payments_configuration": {
+          "description": "Stripe- und Zahlungskonfiguration",
+          "keywords": "konfiguration, einstellungen, stripe, einrichtung, connect",
+          "title": "Konfiguration"
+        },
+        "payments_customers": {
+          "description": "Kunden und Abonnenten",
+          "keywords": "kunden, abonnenten, käufer, bezahlt",
+          "title": "Kunden"
+        },
+        "courses_migrate": {
+          "description": "Kurse von einem anderen LMS importieren",
+          "keywords": "import, migration, transfer, lms, moodle, canvas",
+          "title": "Kurse migrieren"
+        },
+        "account_general": {
+          "description": "Allgemeine Einstellungen des persönlichen Kontos",
+          "keywords": "konto, einstellungen, email, name, sprache"
+        },
+        "account_profile": {
+          "description": "Profil und Biografie bearbeiten",
+          "keywords": "profil, bio, avatar, bild, öffentlich"
+        },
+        "account_security": {
+          "description": "Passwort- und Sicherheitseinstellungen",
+          "keywords": "passwort, sicherheit, 2fa, mfa, sitzungen"
+        },
+        "account_purchases": {
+          "description": "Ihre Käufe und Abonnements",
+          "keywords": "käufe, abonnements, abrechnung, verlauf, belege"
         }
       }
     }

@@ -2146,7 +2146,9 @@
           "usage": "Usage",
           "other": "Autre",
           "domains": "Domaines",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "Automatisations"
         },
         "pages": {
           "general": {
@@ -3585,12 +3587,94 @@
           "keywords": "plan, paiements, facture, abonnement"
         },
         "payments_overview": {
-          "description": "Vue d'ensemble des paiements",
-          "keywords": "stripe, tableau de bord, revenus"
+          "description": "Vue d'ensemble et revenus",
+          "keywords": "stripe, tableau de bord, revenus, ventes",
+          "title": "Vue d'ensemble des paiements"
         },
         "payments_products": {
-          "description": "Produits et tarifs de paiement",
-          "keywords": "produits, prix, stripe, niveaux"
+          "description": "Produits et tarification",
+          "keywords": "produits, prix, stripe, niveaux, plans",
+          "title": "Produits"
+        },
+        "users_add": {
+          "description": "Inviter de nouveaux membres",
+          "keywords": "inviter, ajouter, membres, envoyer"
+        },
+        "users_audit_logs": {
+          "description": "Journal d'activité de l'organisation",
+          "keywords": "audit, journaux, historique, sécurité, activité"
+        },
+        "org_branding": {
+          "description": "Logo, couleurs et identité visuelle",
+          "keywords": "image de marque, logo, couleurs, thème"
+        },
+        "org_landing": {
+          "description": "Personnaliser votre page d'accueil",
+          "keywords": "accueil, page d'accueil, hero, page"
+        },
+        "org_seo": {
+          "description": "Optimisation pour les moteurs de recherche",
+          "keywords": "seo, recherche, meta, classement, google"
+        },
+        "org_ai": {
+          "description": "Fonctionnalités et configuration IA",
+          "keywords": "ia, llm, gpt, openai, génération"
+        },
+        "org_domains": {
+          "description": "Domaines personnalisés",
+          "keywords": "domaine, dns, personnalisé, sous-domaine, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks et intégrations externes",
+          "keywords": "webhooks, automatisations, zapier, intégrations, déclencheurs"
+        },
+        "org_api": {
+          "description": "Jetons API et accès programmatique",
+          "keywords": "api, jetons, accès, programmatique, clés"
+        },
+        "org_sso": {
+          "description": "Configuration de l'authentification unique",
+          "keywords": "sso, saml, oauth, entreprise, connexion"
+        },
+        "org_other": {
+          "description": "Autres paramètres de l'organisation",
+          "keywords": "divers, avancé, personnalisé, supplémentaire"
+        },
+        "payments_groups": {
+          "description": "Groupes et bundles de paiement",
+          "keywords": "groupes, bundles, ensembles",
+          "title": "Groupes de paiement"
+        },
+        "payments_configuration": {
+          "description": "Configuration Stripe et paiements",
+          "keywords": "configuration, paramètres, stripe, installation, connect",
+          "title": "Configuration"
+        },
+        "payments_customers": {
+          "description": "Clients et abonnés",
+          "keywords": "clients, abonnés, acheteurs, payants",
+          "title": "Clients"
+        },
+        "courses_migrate": {
+          "description": "Importer des cours depuis un autre LMS",
+          "keywords": "importer, migrer, transférer, lms, moodle, canvas",
+          "title": "Migrer les cours"
+        },
+        "account_general": {
+          "description": "Paramètres généraux du compte personnel",
+          "keywords": "compte, paramètres, email, nom, langue"
+        },
+        "account_profile": {
+          "description": "Modifier votre profil et votre bio",
+          "keywords": "profil, bio, avatar, photo, public"
+        },
+        "account_security": {
+          "description": "Mot de passe et paramètres de sécurité",
+          "keywords": "mot de passe, sécurité, 2fa, mfa, sessions"
+        },
+        "account_purchases": {
+          "description": "Vos achats et abonnements",
+          "keywords": "achats, abonnements, facturation, historique, reçus"
         }
       }
     }

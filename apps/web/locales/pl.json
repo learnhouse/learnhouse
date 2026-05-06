@@ -2169,7 +2169,9 @@
           "other": "Inne",
           "domains": "Domeny",
           "sso": "SSO",
-          "usage": "Użycie"
+          "usage": "Użycie",
+          "seo": "SEO",
+          "automations": "Automatyzacje"
         },
         "pages": {
           "general": {
@@ -3610,12 +3612,94 @@
           "keywords": "plan, płatności, faktura, subskrypcja"
         },
         "payments_overview": {
-          "description": "Przegląd płatności",
-          "keywords": "stripe, panel, przychody"
+          "description": "Przegląd płatności i przychodów",
+          "keywords": "stripe, panel, przychody, sprzedaż",
+          "title": "Przegląd płatności"
         },
         "payments_products": {
           "description": "Produkty i ceny płatności",
-          "keywords": "produkty, ceny, stripe, poziomy"
+          "keywords": "produkty, ceny, stripe, poziomy, plany",
+          "title": "Produkty"
+        },
+        "users_add": {
+          "description": "Zaproś nowych członków",
+          "keywords": "zapraszaj, dodaj, członkowie, wyślij"
+        },
+        "users_audit_logs": {
+          "description": "Dziennik aktywności organizacji",
+          "keywords": "audyt, logi, historia, bezpieczeństwo, aktywność"
+        },
+        "org_branding": {
+          "description": "Logo, kolory i identyfikacja wizualna",
+          "keywords": "branding, logo, kolory, motyw"
+        },
+        "org_landing": {
+          "description": "Dostosuj stronę docelową",
+          "keywords": "landing, strona główna, hero, strona"
+        },
+        "org_seo": {
+          "description": "Optymalizacja pod wyszukiwarki",
+          "keywords": "seo, wyszukiwanie, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "Funkcje i konfiguracja AI",
+          "keywords": "ai, llm, gpt, openai, generowanie"
+        },
+        "org_domains": {
+          "description": "Niestandardowe domeny",
+          "keywords": "domena, dns, niestandardowa, subdomena, cname"
+        },
+        "org_automations": {
+          "description": "Webhooki i integracje zewnętrzne",
+          "keywords": "webhooki, automatyzacje, zapier, integracje, wyzwalacze"
+        },
+        "org_api": {
+          "description": "Tokeny API i dostęp programistyczny",
+          "keywords": "api, tokeny, dostęp, programistyczny, klucze"
+        },
+        "org_sso": {
+          "description": "Konfiguracja logowania jednokrotnego",
+          "keywords": "sso, saml, oauth, przedsiębiorstwo, logowanie"
+        },
+        "org_other": {
+          "description": "Inne ustawienia organizacji",
+          "keywords": "różne, zaawansowane, niestandardowe, dodatkowe"
+        },
+        "payments_groups": {
+          "description": "Grupy i pakiety płatności",
+          "keywords": "grupy, pakiety, zestawy",
+          "title": "Grupy płatności"
+        },
+        "payments_configuration": {
+          "description": "Konfiguracja Stripe i płatności",
+          "keywords": "konfiguracja, ustawienia, stripe, instalacja, connect",
+          "title": "Konfiguracja"
+        },
+        "payments_customers": {
+          "description": "Klienci i subskrybenci",
+          "keywords": "klienci, subskrybenci, kupujący, opłaceni",
+          "title": "Klienci"
+        },
+        "courses_migrate": {
+          "description": "Importuj kursy z innego LMS",
+          "keywords": "importuj, migruj, przenieś, lms, moodle, canvas",
+          "title": "Migruj kursy"
+        },
+        "account_general": {
+          "description": "Ogólne ustawienia konta osobistego",
+          "keywords": "konto, ustawienia, email, nazwa, język"
+        },
+        "account_profile": {
+          "description": "Edytuj swój profil i biografię",
+          "keywords": "profil, bio, awatar, zdjęcie, publiczne"
+        },
+        "account_security": {
+          "description": "Hasło i ustawienia bezpieczeństwa",
+          "keywords": "hasło, bezpieczeństwo, 2fa, mfa, sesje"
+        },
+        "account_purchases": {
+          "description": "Twoje zakupy i subskrypcje",
+          "keywords": "zakupy, subskrypcje, rozliczenia, historia, paragony"
         }
       }
     }

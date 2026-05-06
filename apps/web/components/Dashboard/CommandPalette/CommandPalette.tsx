@@ -1,11 +1,10 @@
 'use client'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Command } from 'cmdk'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
-  MagnifyingGlass,
   BookOpen,
   Stack,
   User as UserIcon,
@@ -46,6 +45,16 @@ const CONTENT_TYPE_GROUP_KEY: Record<ContentResultType, string> = {
   podcast: 'dashboard.search.groups.podcasts',
 }
 
+const CONTENT_TYPE_ORDER: ContentResultType[] = [
+  'course',
+  'collection',
+  'user',
+  'community',
+  'discussion',
+  'playground',
+  'podcast',
+]
+
 function usePagesFiltered(): SearchMeta[] {
   const { org } = useOrgMembership()
   const resolvedFeatures = org?.config?.config?.resolved_features
@@ -80,15 +89,28 @@ export default function CommandPalette() {
   const { open, setOpen } = useCommandPalette()
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const pages = usePagesFiltered()
-  const { results, isLoading, isWaiting, enabled } = useContentSearch(query)
 
+  const pages = usePagesFiltered()
+  const { results, isLoading, isWaiting } = useContentSearch(query)
   const grouped = useMemo(() => groupContentResults(results), [results])
+
+  // Reset state when palette closes.
+  useEffect(() => {
+    if (!open) setQuery('')
+  }, [open])
 
   const onSelect = (href: string) => {
     setOpen(false)
-    setQuery('')
     router.push(href)
+  }
+
+  const openSelectedInNewTab = (rootEl: HTMLElement | null) => {
+    const selected = rootEl?.querySelector(
+      '[cmdk-item][aria-selected="true"]',
+    ) as HTMLElement | null
+    const href = selected?.getAttribute('data-href')
+    if (!href) return
+    window.open(href, '_blank', 'noopener,noreferrer')
   }
 
   const renderPageItem = (p: SearchMeta) => {
@@ -101,17 +123,21 @@ export default function CommandPalette() {
         key={p.id}
         value={`${title} ${description ?? ''} ${keywords}`}
         onSelect={() => onSelect(p.href)}
-        className="group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 aria-selected:bg-gray-100 aria-selected:text-gray-900"
+        className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
+        data-href={p.href}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-600 group-aria-selected:bg-white">
-          <Icon size={16} />
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-white/60 group-aria-selected/item:bg-white/[0.08] group-aria-selected/item:text-white">
+          <Icon size={15} />
         </span>
-        <span className="flex flex-1 flex-col">
-          <span className="font-medium leading-tight">{title}</span>
+        <span className="flex min-w-0 flex-1 flex-col leading-snug">
+          <span className="truncate text-[14px] font-medium text-white/90 group-aria-selected/item:text-white">
+            {title}
+          </span>
           {description ? (
-            <span className="text-xs text-gray-500 leading-tight">{description}</span>
+            <span className="truncate text-[12.5px] text-white/40">{description}</span>
           ) : null}
         </span>
+        <span className="hidden text-white/40 group-aria-selected/item:inline">↵</span>
       </Command.Item>
     )
   }
@@ -123,17 +149,21 @@ export default function CommandPalette() {
         key={`${r.type}-${r.id}`}
         value={`${r.title} ${r.subtitle ?? ''}`}
         onSelect={() => onSelect(r.href)}
-        className="group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 aria-selected:bg-gray-100 aria-selected:text-gray-900"
+        className="group/item flex cursor-pointer items-center gap-3.5 rounded-lg px-3 py-2.5 text-white/70 transition-colors aria-selected:bg-white/[0.06] aria-selected:text-white"
+        data-href={r.href}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-600 group-aria-selected:bg-white">
-          <Icon size={16} />
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-white/60 group-aria-selected/item:bg-white/[0.08] group-aria-selected/item:text-white">
+          <Icon size={15} />
         </span>
-        <span className="flex flex-1 flex-col min-w-0">
-          <span className="truncate font-medium leading-tight">{r.title}</span>
+        <span className="flex min-w-0 flex-1 flex-col leading-snug">
+          <span className="truncate text-[14px] font-medium text-white/90 group-aria-selected/item:text-white">
+            {r.title}
+          </span>
           {r.subtitle ? (
-            <span className="truncate text-xs text-gray-500 leading-tight">{r.subtitle}</span>
+            <span className="truncate text-[12.5px] text-white/40">{r.subtitle}</span>
           ) : null}
         </span>
+        <span className="hidden text-white/40 group-aria-selected/item:inline">↵</span>
       </Command.Item>
     )
   }
@@ -142,12 +172,12 @@ export default function CommandPalette() {
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
-          className="fixed inset-0 bg-black/40"
+          className="fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:duration-100 data-[state=closed]:duration-75 ease-out"
           style={{ zIndex: 'var(--z-modal-backdrop)' as any }}
         />
         <DialogPrimitive.Content
           aria-label={t('dashboard.search.placeholder')}
-          className="fixed left-1/2 top-[20%] w-[92vw] max-w-[640px] -translate-x-1/2 overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl shadow-black/10"
+          className="fixed left-1/2 top-[10%] flex w-[94vw] max-w-[760px] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-black/85 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)] backdrop-blur-2xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 data-[state=open]:duration-150 data-[state=closed]:duration-100 ease-out"
           style={{ zIndex: 'var(--z-modal)' as any }}
           onOpenAutoFocus={(e) => {
             e.preventDefault()
@@ -155,6 +185,15 @@ export default function CommandPalette() {
             if (input) (input as HTMLInputElement).focus()
           }}
         >
+          {/* Top rim highlight + soft top glow */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.06] via-white/[0.015] to-transparent"
+          />
           <DialogPrimitive.Title className="sr-only">
             {t('dashboard.search.placeholder')}
           </DialogPrimitive.Title>
@@ -162,65 +201,110 @@ export default function CommandPalette() {
           <Command
             label={t('dashboard.search.placeholder')}
             shouldFilter={true}
-            filter={(value, search, keywords) => {
-              const haystack = `${value} ${(keywords ?? []).join(' ')}`.toLowerCase()
+            filter={(value: string, search: string) => {
+              const haystack = value.toLowerCase()
               const needle = search.toLowerCase().trim()
               if (!needle) return 1
               if (haystack.includes(needle)) return 1
               const tokens = needle.split(/\s+/).filter(Boolean)
-              return tokens.every((tok) => haystack.includes(tok)) ? 0.8 : 0
+              return tokens.every((tok: string) => haystack.includes(tok)) ? 0.8 : 0
             }}
+            className="flex flex-col [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-[10.5px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:text-white/35"
           >
-            <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
-              <MagnifyingGlass size={18} className="text-gray-400" />
-              <Command.Input
-                value={query}
-                onValueChange={setQuery}
-                placeholder={t('dashboard.search.placeholder')}
-                className="flex-1 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
+            {/* Header */}
+            <div className="flex items-start gap-4 px-7 pt-6 pb-5">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-medium text-white/45">
+                    {t('dashboard.search.trigger')}
+                  </span>
+                  {(isLoading || isWaiting) && (
+                    <span className="text-[11px] text-white/35">
+                      · {t('dashboard.search.loading')}
+                    </span>
+                  )}
+                </div>
+                <Command.Input
+                  value={query}
+                  onValueChange={setQuery}
+                  placeholder={t('dashboard.search.placeholder')}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const root = (e.currentTarget as HTMLElement).closest(
+                        '[cmdk-root]',
+                      ) as HTMLElement | null
+                      openSelectedInNewTab(root)
+                    }
+                  }}
+                  className="w-full bg-transparent text-[22px] font-medium leading-tight tracking-tight text-white outline-none placeholder:font-medium placeholder:text-white/35"
+                />
+              </div>
+              <img
+                src="/lrn-dash.svg"
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="h-9 w-9 shrink-0 select-none opacity-90"
               />
-              <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-gray-200 bg-gray-50 px-1.5 text-[10px] font-medium text-gray-500">
-                ESC
-              </kbd>
             </div>
 
-            <Command.List className="max-h-[60vh] overflow-y-auto p-2">
-              <Command.Empty className="px-4 py-8 text-center text-sm text-gray-500">
+            {/* Divider */}
+            <div className="border-t border-white/[0.06]" />
+
+            {/* List */}
+            <Command.List
+              className="min-h-[260px] max-h-[55vh] overflow-y-auto px-2 pt-1 pb-2 scroll-py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20"
+              style={{ scrollbarColor: 'rgba(255,255,255,0.15) transparent', scrollbarWidth: 'thin' }}
+            >
+              <Command.Empty className="px-4 py-14 text-center text-sm text-white/45">
                 {isLoading || isWaiting
                   ? t('dashboard.search.loading')
                   : t('dashboard.search.no_results')}
               </Command.Empty>
 
-              <Command.Group
-                heading={t('dashboard.search.groups.pages')}
-                className="px-1 pt-1 pb-2 text-[11px] font-medium uppercase tracking-wide text-gray-400 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5"
-              >
+              <Command.Group heading={t('dashboard.search.groups.pages')}>
                 {pages.map(renderPageItem)}
               </Command.Group>
 
-              {enabled && results.length > 0 && (
-                <>
-                  {(['course', 'collection', 'user', 'community', 'discussion', 'playground', 'podcast'] as ContentResultType[]).map(
-                    (type) => {
-                      const items = grouped[type]
-                      if (items.length === 0) return null
-                      return (
-                        <Command.Group
-                          key={type}
-                          heading={t(CONTENT_TYPE_GROUP_KEY[type])}
-                          className="px-1 pt-1 pb-2 text-[11px] font-medium uppercase tracking-wide text-gray-400 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5"
-                        >
-                          {items.map(renderContentItem)}
-                        </Command.Group>
-                      )
-                    },
-                  )}
-                </>
-              )}
+              {CONTENT_TYPE_ORDER.map((type) => {
+                const items = grouped[type]
+                if (items.length === 0) return null
+                return (
+                  <Command.Group key={type} heading={t(CONTENT_TYPE_GROUP_KEY[type])}>
+                    {items.map(renderContentItem)}
+                  </Command.Group>
+                )
+              })}
             </Command.List>
+
+            {/* Footer */}
+            <div className="flex items-center gap-5 border-t border-white/[0.06] bg-black/20 px-7 py-3 text-[12px] text-white/40">
+              <FooterHint label="Navigate" keys={['↑', '↓']} />
+              <FooterHint label="Open" keys={['↵']} />
+              <FooterHint label="New tab" keys={['⌘', '↵']} />
+              <FooterHint label="Close" keys={['esc']} />
+            </div>
           </Command>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  )
+}
+
+function FooterHint({ label, keys }: { label: string; keys: string[] }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      {keys.map((k) => (
+        <kbd
+          key={k}
+          className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded bg-white/[0.06] px-1 font-sans text-[10.5px] font-medium leading-none text-white/55"
+        >
+          {k}
+        </kbd>
+      ))}
+    </span>
   )
 }
