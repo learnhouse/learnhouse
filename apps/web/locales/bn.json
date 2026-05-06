@@ -2231,6 +2231,8 @@
         "footer_text": "ফুটার টেক্সট",
         "footer_text_placeholder": "ফুটার টেক্সট লিখুন...",
         "footer_text_desc": "আপনার সংস্থার পৃষ্ঠাগুলির নীচে প্রদর্শিত কাস্টম টেক্সট",
+        "default_language": "ডিফল্ট ভাষা",
+        "default_language_desc": "নতুন ভিজিটররা ডিফল্টভাবে যে ভাষায় সাইটটি দেখেন এবং এই সংস্থার পক্ষ থেকে পাঠানো ইমেইলে যে ভাষা ব্যবহৃত হয়। সদস্যরা এখনও নিজেদের UI ভাষা পরিবর্তন করতে পারেন।",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"

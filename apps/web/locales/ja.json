@@ -2218,6 +2218,8 @@
         "footer_text": "フッターテキスト",
         "footer_text_placeholder": "フッターテキストを入力...",
         "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト",
+        "default_language": "デフォルト言語",
+        "default_language_desc": "新しい訪問者にデフォルトで表示される言語であり、この組織を代表して送信されるメールに使用される言語です。メンバーは自分のUI言語を引き続き切り替えできます。",
         "watermark_desc": "組織ページにLearnHouseブランドの透かしを表示",
         "watermark_free_plan": "無料プランでは透かしが常に表示されます",
         "watermark_label": "\"Made with LearnHouse\"透かし"

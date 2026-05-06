@@ -2220,6 +2220,8 @@
         "footer_text": "页脚文本",
         "footer_text_placeholder": "输入页脚文本...",
         "footer_text_desc": "显示在组织页面底部的自定义文本",
+        "default_language": "默认语言",
+        "default_language_desc": "新访客默认看到的语言，也是代表此组织发出的邮件所使用的语言。成员仍可切换自己的界面语言。",
         "watermark_desc": "在您的组织页面上显示 LearnHouse 品牌水印",
         "watermark_free_plan": "免费方案始终显示水印",
         "watermark_label": "\"Made with LearnHouse\" 水印"

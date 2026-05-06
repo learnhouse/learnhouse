@@ -2231,6 +2231,8 @@
         "footer_text": "Teks Footer",
         "footer_text_placeholder": "Masukkan teks footer...",
         "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda",
+        "default_language": "Bahasa default",
+        "default_language_desc": "Bahasa yang dilihat pengunjung baru secara default dan bahasa yang digunakan untuk email yang dikirim atas nama organisasi ini. Anggota tetap dapat mengganti bahasa antarmuka mereka.",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"

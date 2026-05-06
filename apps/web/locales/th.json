@@ -2233,6 +2233,8 @@
         "footer_text": "ข้อความท้ายหน้า",
         "footer_text_placeholder": "ป้อนข้อความท้ายหน้า...",
         "footer_text_desc": "ข้อความที่กำหนดเองที่แสดงที่ด้านล่างของหน้าองค์กรของคุณ",
+        "default_language": "ภาษาเริ่มต้น",
+        "default_language_desc": "ภาษาที่ผู้เยี่ยมชมใหม่เห็นโดยค่าเริ่มต้นและภาษาที่ใช้สำหรับอีเมลที่ส่งในนามขององค์กรนี้ สมาชิกยังคงสามารถเปลี่ยนภาษาของอินเทอร์เฟซของตนได้",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"

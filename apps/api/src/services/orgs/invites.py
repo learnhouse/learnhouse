@@ -12,10 +12,11 @@ from pydantic import EmailStr
 from sqlmodel import Session, select
 
 from config.config import get_learnhouse_config
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.usergroups import UserGroup
 from src.db.users import AnonymousUser, PublicUser, UserRead
-from src.services.orgs.orgs import rbac_check
+from src.services.orgs.orgs import get_org_default_language, rbac_check
 from src.services.users.emails import send_invitation_email
 
 logger = logging.getLogger(__name__)
@@ -370,6 +371,12 @@ def send_invite_email(
     else:
         signup_url = f"{org_base_url}/signup"
 
+    lang = "en"
+    if db_session is not None:
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        org_config = db_session.exec(org_config_stmt).first()
+        lang = get_org_default_language(org_config)
+
     try:
         result = send_invitation_email(
             email=email,
@@ -377,6 +384,7 @@ def send_invite_email(
             inviter_username=user.username,
             invite_code=invite_code,
             signup_url=signup_url,
+            lang=lang,
         )
         return result is not None
     except Exception:

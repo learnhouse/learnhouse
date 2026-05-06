@@ -11,9 +11,11 @@ import redis
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
 from sqlmodel import Session, select
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import User, UserRead
 from config.config import get_learnhouse_config
+from src.services.orgs.orgs import get_org_default_language
 from src.services.users.emails import send_email_verification_email
 from src.services.email.utils import get_base_url_from_request
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
@@ -75,6 +77,7 @@ async def send_verification_email(
     org = None
     org_read = None
     org_uuid = NO_ORG_UUID
+    lang = "en"
 
     if org_id is not None:
         statement = select(Organization).where(Organization.id == org_id)
@@ -87,6 +90,10 @@ async def send_verification_email(
             )
         org_uuid = org.org_uuid
         org_read = OrganizationRead.model_validate(org)
+
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        org_config = db_session.exec(org_config_stmt).first()
+        lang = get_org_default_language(org_config)
 
     # Get Redis connection
     r = get_redis_connection()
@@ -119,6 +126,7 @@ async def send_verification_email(
         organization=org_read,
         email=user.email,
         base_url=base_url,
+        lang=lang,
     )
 
     if not email_sent:

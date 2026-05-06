@@ -6,6 +6,7 @@ from urllib.parse import quote
 from pydantic import EmailStr
 from src.db.organizations import OrganizationRead
 from src.db.users import UserRead
+from src.services.email.translations import t
 from src.services.email.utils import send_email
 
 logger = logging.getLogger(__name__)
@@ -68,26 +69,36 @@ def _email_layout(title: str, body_content: str, footer_note: str = "") -> str:
 def send_account_creation_email(
     user: UserRead,
     email: EmailStr,
+    lang: str = "en",
 ):
     safe_username = html.escape(user.username)
 
+    heading = t(lang, "account_creation.heading", username=safe_username)
+    body_text = t(lang, "account_creation.body")
+    cta = t(lang, "account_creation.cta")
+    academy_link = (
+        '<a href="https://university.learnhouse.io" '
+        'style="color: rgba(0,0,0,0.35); text-decoration: underline;">'
+        f'{t(lang, "academy_link_text")}</a>'
+    )
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Welcome, {safe_username}!</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Your LearnHouse account is ready. Get started by creating your own organization or joining one.
+            {body_text}
         </p>
         <a href="https://university.learnhouse.io" style="{STYLES['button']}">
-            Get Started
+            {cta}
         </a>
     """
 
     return send_email(
         to=email,
-        subject=f"Welcome to LearnHouse, {safe_username}!",
+        subject=t(lang, "account_creation.subject", username=safe_username),
         body=_email_layout(
-            title="Welcome",
+            title=heading,
             body_content=body_content,
-            footer_note="Need help? Visit <a href=\"https://university.learnhouse.io\" style=\"color: rgba(0,0,0,0.35); text-decoration: underline;\">LearnHouse Academy</a> to learn the basics.",
+            footer_note=t(lang, "account_creation.footer", academy_link=academy_link),
         ),
     )
 
@@ -98,6 +109,7 @@ def send_password_reset_email(
     organization: OrganizationRead,
     email: EmailStr,
     base_url: str,
+    lang: str = "en",
 ):
     safe_username = html.escape(user.username)
     safe_code = html.escape(generated_reset_code)
@@ -105,26 +117,30 @@ def send_password_reset_email(
     safe_code_param = quote(generated_reset_code, safe='')
     reset_url = f"{base_url}/reset?email={safe_email}&amp;resetCode={safe_code_param}"
 
+    heading = t(lang, "password_reset.heading")
+    body_text = t(lang, "password_reset.body", username=safe_username)
+    cta = t(lang, "password_reset.cta")
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Reset your password</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Hi {safe_username}, we received a request to reset your password. Use the code below or click the button.
+            {body_text}
         </p>
         <div style="margin: 28px 0;">
             <span style="{STYLES['code']}">{safe_code}</span>
         </div>
         <a href="{reset_url}" style="{STYLES['button']}">
-            Reset Password
+            {cta}
         </a>
     """
 
     return send_email(
         to=email,
-        subject="Reset your password",
+        subject=t(lang, "password_reset.subject"),
         body=_email_layout(
-            title="Reset Password",
+            title=heading,
             body_content=body_content,
-            footer_note="If you didn't request a password reset, you can safely ignore this email. This link will expire shortly.",
+            footer_note=t(lang, "password_reset.footer_org"),
         ),
     )
 
@@ -134,6 +150,7 @@ def send_password_reset_email_platform(
     user: UserRead,
     email: EmailStr,
     base_url: str,
+    lang: str = "en",
 ):
     safe_username = html.escape(user.username)
     safe_code = html.escape(generated_reset_code)
@@ -141,26 +158,30 @@ def send_password_reset_email_platform(
     safe_code_param = quote(generated_reset_code, safe='')
     reset_url = f"{base_url}/reset-password?email={safe_email}&amp;resetCode={safe_code_param}"
 
+    heading = t(lang, "password_reset.heading")
+    body_text = t(lang, "password_reset.body", username=safe_username)
+    cta = t(lang, "password_reset.cta")
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Reset your password</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Hi {safe_username}, we received a request to reset your password. Use the code below or click the button.
+            {body_text}
         </p>
         <div style="margin: 28px 0;">
             <span style="{STYLES['code']}">{safe_code}</span>
         </div>
         <a href="{reset_url}" style="{STYLES['button']}">
-            Reset Password
+            {cta}
         </a>
     """
 
     return send_email(
         to=email,
-        subject="Reset your password",
+        subject=t(lang, "password_reset.subject"),
         body=_email_layout(
-            title="Reset Password",
+            title=heading,
             body_content=body_content,
-            footer_note="If you didn't request a password reset, you can safely ignore this email. This link will expire in 1 hour.",
+            footer_note=t(lang, "password_reset.footer_platform"),
         ),
     )
 
@@ -171,6 +192,7 @@ def send_invitation_email(
     inviter_username: str,
     signup_url: str,
     invite_code: Optional[str] = None,
+    lang: str = "en",
 ):
     safe_org_name = html.escape(org_name)
     safe_inviter = html.escape(inviter_username)
@@ -178,37 +200,42 @@ def send_invitation_email(
     code_section = ""
     if invite_code:
         safe_code = html.escape(invite_code)
+        code_hint = t(lang, "invitation.code_hint")
         code_section = f"""
         <div style="margin: 28px 0;">
             <span style="{STYLES['code']}">{safe_code}</span>
         </div>
         <p style="{STYLES['p']}">
-            Use the invite code above, or click the button below to sign up.
+            {code_hint}
         </p>"""
     else:
         code_section = f"""
         <p style="{STYLES['p']}">
-            Click the button below to get started.
+            {t(lang, "invitation.no_code_hint")}
         </p>"""
 
+    heading = t(lang, "invitation.heading")
+    intro = t(lang, "invitation.intro", inviter=safe_inviter, org_name=safe_org_name)
+    cta = t(lang, "invitation.cta", org_name=safe_org_name)
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">You've been invited!</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            <strong>@{safe_inviter}</strong> has invited you to join <strong>{safe_org_name}</strong> on LearnHouse.
+            {intro}
         </p>
         {code_section}
         <a href="{signup_url}" style="{STYLES['button']}">
-            Join {safe_org_name}
+            {cta}
         </a>
     """
 
     return send_email(
         to=email,
-        subject=f"You've been invited to join {safe_org_name}",
+        subject=t(lang, "invitation.subject", org_name=safe_org_name),
         body=_email_layout(
-            title="Invitation",
+            title=heading,
             body_content=body_content,
-            footer_note=f"This invitation was sent by @{safe_inviter}. If you weren't expecting this, you can safely ignore it.",
+            footer_note=t(lang, "invitation.footer", inviter=safe_inviter),
         ),
     )
 
@@ -218,6 +245,7 @@ def send_role_changed_email(
     username: str,
     org_name: str,
     new_role_name: str,
+    lang: str = "en",
 ):
     """
     Send an email notifying a user that their role has changed in an organization.
@@ -226,23 +254,30 @@ def send_role_changed_email(
     safe_org_name = html.escape(org_name)
     safe_role_name = html.escape(new_role_name)
 
+    heading = t(lang, "role_changed.heading")
+    body_1 = t(
+        lang, "role_changed.body_1",
+        username=safe_username, org_name=safe_org_name, role=safe_role_name,
+    )
+    body_2 = t(lang, "role_changed.body_2")
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Your role has been updated</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Hi {safe_username}, your role in <strong>{safe_org_name}</strong> has been changed to <strong>{safe_role_name}</strong>.
+            {body_1}
         </p>
         <p style="{STYLES['p']}">
-            This may affect what you can access and manage within the organization. If you have any questions, please reach out to your organization administrator.
+            {body_2}
         </p>
     """
 
     return send_email(
         to=email,
-        subject=f"Your role in {safe_org_name} has been updated",
+        subject=t(lang, "role_changed.subject", org_name=safe_org_name),
         body=_email_layout(
-            title="Role Updated",
+            title=heading,
             body_content=body_content,
-            footer_note=f"You received this email because your role was changed in {safe_org_name} on LearnHouse.",
+            footer_note=t(lang, "role_changed.footer", org_name=safe_org_name),
         ),
     )
 
@@ -253,6 +288,7 @@ def send_email_verification_email(
     organization: OrganizationRead | None,
     email: EmailStr,
     base_url: str,
+    lang: str = "en",
 ):
     """
     Send email verification email with verification link.
@@ -263,6 +299,7 @@ def send_email_verification_email(
         organization: Organization context (can be None for no-org signups)
         email: Email address to send to
         base_url: Base URL for constructing the verification link
+        lang: ISO 639-1 language code for email content (defaults to 'en')
 
     Returns:
         Boolean indicating if email was sent successfully
@@ -274,25 +311,30 @@ def send_email_verification_email(
     safe_org_uuid = quote(org_uuid, safe='')
     verification_url = f"{base_url}/verify-email?token={safe_token}&amp;user={safe_user_uuid}&amp;org={safe_org_uuid}"
 
+    heading = t(lang, "email_verification.heading")
+    body_text = t(lang, "email_verification.body", username=safe_username)
+    cta = t(lang, "email_verification.cta")
+    copy_paste = t(lang, "email_verification.copy_paste")
+
     body_content = f"""
-        <h1 style="{STYLES['h1']}">Verify your email</h1>
+        <h1 style="{STYLES['h1']}">{heading}</h1>
         <p style="{STYLES['p']}">
-            Hi {safe_username}, welcome to LearnHouse! Click the button below to verify your email address and activate your account.
+            {body_text}
         </p>
         <a href="{verification_url}" style="{STYLES['button']}">
-            Verify Email Address
+            {cta}
         </a>
         <p style="{STYLES['link_text']}">
-            Or copy and paste this link:<br />{verification_url}
+            {copy_paste}<br />{verification_url}
         </p>
     """
 
     return send_email(
         to=email,
-        subject="Verify your email address",
+        subject=t(lang, "email_verification.subject"),
         body=_email_layout(
-            title="Verify Email",
+            title=heading,
             body_content=body_content,
-            footer_note="This link expires in 1 hour. If you didn't create a LearnHouse account, you can safely ignore this email.",
+            footer_note=t(lang, "email_verification.footer"),
         ),
     )

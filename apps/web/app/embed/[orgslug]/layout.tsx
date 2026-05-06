@@ -2,6 +2,7 @@
 
 import { use } from 'react'
 import { OrgProvider } from '@components/Contexts/OrgContext'
+import OrgLanguageSync from '@components/Contexts/OrgLanguageSync'
 import '@styles/globals.css'
 
 export default function EmbedLayout(
@@ -15,6 +16,7 @@ export default function EmbedLayout(
 
   return (
     <OrgProvider orgslug={params.orgslug}>
+      <OrgLanguageSync />
       {/* Suppress the root layout fade-in animation for embeds */}
       <style>{`.animate-fade-in{animation:none!important;opacity:1!important}`}</style>
       <div className="min-h-screen">
