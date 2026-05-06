@@ -7,6 +7,7 @@ import { getServerSession } from '@/lib/auth/server'
 import { getOrgCourses } from '@services/courses/courses'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 
 type MetadataProps = {
@@ -26,7 +27,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
     : null
   const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = getCanonicalUrl(params.orgslug, '/courses')
+  const canonical = await getServerCanonicalUrl(params.orgslug, '/courses')
   const title = buildPageTitle('Courses', org.name, seoConfig)
   const description = org.description || seoConfig.default_meta_description || ''
 
@@ -91,6 +92,13 @@ const CoursesPage = async (params: any) => {
   ])
   const courses = coursesResult
 
+  // Pre-resolve canonical URLs for every course (single header read, parallel)
+  const courseUrls = await Promise.all(
+    courses.map((course: any) =>
+      getServerCanonicalUrl(orgslug, `/course/${course.course_uuid.replace('course_', '')}`),
+    ),
+  )
+
   const coursesJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -102,14 +110,14 @@ const CoursesPage = async (params: any) => {
         '@type': 'Course',
         name: course.name,
         description: course.description,
-        url: getCanonicalUrl(orgslug, `/course/${course.course_uuid.replace('course_', '')}`),
+        url: courseUrls[index],
       },
     })),
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Courses', url: await getServerCanonicalUrl(orgslug, '/courses') },
   ])
 
   return (

@@ -17,10 +17,25 @@ logger = logging.getLogger(__name__)
 def _is_allowed_base_url(url: str) -> bool:
     """Validate that a URL is an allowed origin for email links."""
     config = get_learnhouse_config()
+    url_stripped = url.rstrip("/")
+
+    # In single tenancy, the operator's host is authoritative — accept any
+    # http(s) URL with a non-empty hostname. The VPS may be reachable on a
+    # domain the operator hasn't enumerated in `allowed_origins`, and that's
+    # the entire point of the single mode.
+    if config.hosting_config.tenancy == "single":
+        parsed = urlparse(url_stripped)
+        if (
+            parsed.scheme in ("http", "https")
+            and parsed.hostname
+            and not parsed.hostname.startswith(".")
+        ):
+            return True
+        return False
+
     allowed_origins = config.hosting_config.allowed_origins
 
     # Check against configured allowed origins
-    url_stripped = url.rstrip("/")
     for allowed in allowed_origins:
         if url_stripped == allowed.rstrip("/"):
             return True
@@ -64,25 +79,22 @@ def get_org_signup_base_url(
     """
     Return the org-scoped frontend base URL for invitation / signup links.
 
-    When ``db_session`` and ``org_id`` are supplied, prefers the org's verified
-    custom domain (primary first). Otherwise falls back to
-    ``{slug}.{hosting_config.domain}``. Using the generic subdomain for orgs
-    that have a custom domain is cross-origin to any existing session on the
-    custom domain, which breaks the client-side org-context fetch in some
-    browsers (strict cross-site cookies, ad blockers) and leaves users on an
-    error screen.
+    Branches on tenancy:
 
-    Falls back to the request-derived base URL for:
-    - Self-hosted single-instance deployments (no subdomain concept).
-    - Development mode (``localhost:3000`` doesn't host working subdomains).
-    - Misconfigured deployments with no ``hosting_config.domain``.
+    - tenancy == "single": always use the URL the request came in on. Same
+      code path serves localhost dev and self-hosted VPS deployments — there
+      is no subdomain concept and no custom-domain table to consult.
+    - tenancy == "multi":
+        1. If ``db_session`` and ``org_id`` are supplied, prefer the org's
+           verified custom domain (primary first). Using the generic
+           subdomain for orgs that have a custom domain would be cross-origin
+           to the user's existing session on the custom domain.
+        2. Else fall back to ``{slug}.{hosting_config.domain}``.
+        3. Misconfigured (no domain or localhost) → request-derived URL.
     """
     config = get_learnhouse_config()
 
-    if (
-        config.hosting_config.self_hosted
-        or config.general_config.development_mode
-    ):
+    if config.hosting_config.tenancy == "single":
         return get_base_url_from_request(request)
 
     scheme = "https" if config.hosting_config.ssl else "http"

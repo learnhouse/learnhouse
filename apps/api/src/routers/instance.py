@@ -47,10 +47,13 @@ async def get_instance_info(db_session: Session = Depends(get_db_session)):
     config = get_learnhouse_config()
     frontend_domain = config.hosting_config.frontend_domain
     top_domain = _strip_port(frontend_domain)
+    tenancy = config.hosting_config.tenancy
 
     result = {
         "mode": get_deployment_mode(),
-        "multi_org_enabled": is_multi_org_allowed(),
+        "tenancy": tenancy,
+        # Deprecated: prefer `tenancy`. Will be removed in a future release.
+        "multi_org_enabled": tenancy == "multi" and is_multi_org_allowed(),
         "default_org_slug": default_org_slug,
         "frontend_domain": frontend_domain,
         "top_domain": top_domain,

@@ -131,6 +131,6 @@ async def test_refresh_happy_path_rotates_refresh_cookie(client):
         )
     assert response.status_code == 200
     assert response.json()["access_token"] == "new-access-token"
-    # Both cookies should have been set: access_token_cookie + refresh_token_cookie.
+    # Both cookies should have been set: LH_access + LH_refresh.
     set_cookies = [c for c in response.headers.get_list("set-cookie")]
-    assert any("refresh_token_cookie=rotated-refresh" in c for c in set_cookies), set_cookies
+    assert any("LH_refresh=rotated-refresh" in c for c in set_cookies), set_cookies
