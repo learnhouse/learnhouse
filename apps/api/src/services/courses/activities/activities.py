@@ -159,6 +159,7 @@ async def get_activity(
 class EditorBootstrapCourse(BaseModel):
     course_uuid: str
     name: str
+    description: str | None = None
     thumbnail_image: str | None = None
     org_uuid: str
     org_id: int
@@ -240,6 +241,7 @@ async def get_editor_bootstrap(
         course=EditorBootstrapCourse(
             course_uuid=course.course_uuid,
             name=course.name,
+            description=course.description,
             thumbnail_image=course.thumbnail_image,
             org_uuid=org.org_uuid,
             org_id=org.id or 0,
