@@ -12,6 +12,7 @@ from sqlalchemy.orm import aliased
 from sqlmodel import Session, select, func
 
 from config.config import get_learnhouse_config
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead, OrganizationUser
 from src.db.roles import Role, RoleRead
 from src.db.user_organizations import UserOrganization
@@ -23,7 +24,7 @@ from src.security.features_utils.usage import decrease_feature_usage
 from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
-from src.services.orgs.orgs import rbac_check
+from src.services.orgs.orgs import get_org_default_language, rbac_check
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -627,15 +628,17 @@ async def update_user_role(
 
     # Send role change notification email
     try:
-        user = db_session.exec(
-            select(User).where(User.id == int(user_id))
-        ).first()
+        user_stmt = select(User).where(User.id == int(user_id))
+        user = db_session.exec(user_stmt).first()
         if user and user.email:
+            org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+            org_config = db_session.exec(org_config_stmt).first()
             send_role_changed_email(
                 email=user.email,
                 username=user.username,
                 org_name=org.name,
                 new_role_name=role.name,
+                lang=get_org_default_language(org_config),
             )
     except Exception:
         logger.warning("Failed to send role change email to user %s", user_id)

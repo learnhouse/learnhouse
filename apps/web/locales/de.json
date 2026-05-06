@@ -2205,6 +2205,8 @@
         "footer_text": "Fußzeilentext",
         "footer_text_placeholder": "Fußzeilentext eingeben...",
         "footer_text_desc": "Benutzerdefinierter Text, der unten auf Ihren Organisationsseiten angezeigt wird",
+        "default_language": "Standardsprache",
+        "default_language_desc": "Die Sprache, die neue Besucher standardmäßig sehen und die für E-Mails im Namen dieser Organisation verwendet wird. Mitglieder können ihre eigene Oberflächensprache weiterhin ändern.",
         "watermark_desc": "LearnHouse-Wasserzeichen auf Ihren Organisationsseiten anzeigen",
         "watermark_free_plan": "Das Wasserzeichen wird im kostenlosen Plan immer angezeigt",
         "watermark_label": "\"Made with LearnHouse\"-Wasserzeichen"

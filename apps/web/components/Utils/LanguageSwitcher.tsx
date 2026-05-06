@@ -37,7 +37,12 @@ const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
           <DropdownMenuItem
             key={language.code}
             className="flex items-center justify-between cursor-pointer"
-            onClick={() => changeLanguage(language.code)}
+            onClick={() => {
+              try {
+                localStorage.setItem('i18nextLng_userPicked', '1')
+              } catch {}
+              changeLanguage(language.code)
+            }}
           >
             <span className="flex items-center space-x-2">
               <span className="text-xs font-mono text-gray-400 w-5">{language.code.toUpperCase()}</span>

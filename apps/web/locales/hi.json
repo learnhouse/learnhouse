@@ -2228,6 +2228,8 @@
         "footer_text": "फ़ुटर टेक्स्ट",
         "footer_text_placeholder": "फ़ुटर टेक्स्ट दर्ज करें...",
         "footer_text_desc": "आपके संगठन के पृष्ठों के नीचे प्रदर्शित कस्टम टेक्स्ट",
+        "default_language": "डिफ़ॉल्ट भाषा",
+        "default_language_desc": "नए विज़िटर को डिफ़ॉल्ट रूप से दिखाई देने वाली भाषा और इस संस्था की ओर से भेजे जाने वाले ईमेल में उपयोग की जाने वाली भाषा। सदस्य अब भी अपनी UI भाषा बदल सकते हैं।",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"

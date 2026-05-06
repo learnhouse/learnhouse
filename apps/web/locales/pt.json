@@ -2207,6 +2207,8 @@
         "footer_text": "Texto do rodapé",
         "footer_text_placeholder": "Digite o texto do rodapé...",
         "footer_text_desc": "Texto personalizado exibido na parte inferior das páginas da sua organização",
+        "default_language": "Idioma padrão",
+        "default_language_desc": "O idioma que novos visitantes veem por padrão e o idioma usado nos e-mails enviados em nome desta organização. Os membros ainda podem alterar o seu próprio idioma de interface.",
         "watermark_desc": "Mostrar marca d'água LearnHouse nas páginas da organização",
         "watermark_free_plan": "A marca d'água é sempre exibida no plano gratuito",
         "watermark_label": "Marca d'água \"Made with LearnHouse\""

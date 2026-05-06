@@ -1112,6 +1112,66 @@ async def update_org_font_config(
     return {"detail": "Font configuration updated"}
 
 
+async def update_org_default_language_config(
+    request: Request,
+    default_language: str,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    from src.services.email.translations import SUPPORTED_LANGUAGES
+
+    if default_language not in SUPPORTED_LANGUAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported language code. Supported: {', '.join(SUPPORTED_LANGUAGES)}",
+        )
+
+    statement = select(Organization).where(Organization.id == org_id)
+    org = db_session.exec(statement).first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = db_session.exec(statement).first()
+
+    if org_config is None:
+        raise HTTPException(status_code=404, detail="Organization config not found")
+
+    updated_config = _deep_copy_config(org_config)
+
+    if _is_v2_config(updated_config):
+        updated_config.setdefault("customization", {}).setdefault("general", {})
+        updated_config["customization"]["general"]["default_language"] = default_language
+    else:
+        updated_config.setdefault("general", {"enabled": True, "color": "", "watermark": True})
+        updated_config["general"]["default_language"] = default_language
+
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Default language updated"}
+
+
+def get_org_default_language(org_config: OrganizationConfig | None) -> str:
+    """Read the org's default language from its config, falling back to 'en'."""
+    if org_config is None or not org_config.config:
+        return "en"
+    cfg = org_config.config
+    v2 = cfg.get("customization", {}).get("general", {}).get("default_language")
+    if v2:
+        return v2
+    v1 = cfg.get("general", {}).get("default_language")
+    return v1 or "en"
+
+
 async def update_org_watermark_config(
     request: Request,
     watermark_enabled: bool,

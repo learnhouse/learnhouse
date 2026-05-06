@@ -7,7 +7,9 @@ import string
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
 from sqlmodel import Session, select
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
+from src.services.orgs.orgs import get_org_default_language
 from src.security.security import security_hash_password
 from config.config import get_learnhouse_config
 from src.services.users.emails import (
@@ -156,6 +158,9 @@ async def send_reset_password_code(
     user_read = UserRead.model_validate(user)
     org_read = OrganizationRead.model_validate(org)
 
+    org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = db_session.exec(org_config_stmt).first()
+
     # Send reset code via email
     base_url = get_base_url_from_request(request)
     isEmailSent = send_password_reset_email(
@@ -164,6 +169,7 @@ async def send_reset_password_code(
         organization=org_read,
         email=user_read.email,
         base_url=base_url,
+        lang=get_org_default_language(org_config),
     )
 
     if not isEmailSent:

@@ -2230,6 +2230,8 @@
         "footer_text": "Alt Bilgi Metni",
         "footer_text_placeholder": "Alt bilgi metnini girin...",
         "footer_text_desc": "Kuruluş sayfalarınızın altında görüntülenen özel metin",
+        "default_language": "Varsayılan dil",
+        "default_language_desc": "Yeni ziyaretçilerin varsayılan olarak gördüğü ve bu kuruluş adına gönderilen e-postalarda kullanılan dil. Üyeler kendi arayüz dillerini değiştirmeye devam edebilir.",
         "watermark_desc": "Organizasyon sayfalarınızda LearnHouse marka filigranını gösterin",
         "watermark_free_plan": "Filigran ücretsiz planda her zaman gösterilir",
         "watermark_label": "\"Made with LearnHouse\" filigranı"
