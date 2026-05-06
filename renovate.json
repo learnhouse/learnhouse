@@ -6,7 +6,6 @@
     "mergeConfidence:all-badges"
   ],
   "baseBranches": ["dev"],
-  "dependencyDashboard": false,
   "schedule": ["every 2 weeks on saturday"],
   "timezone": "UTC",
   "labels": ["dependencies", "renovate"],
