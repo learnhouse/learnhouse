@@ -1,7 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+import dynamic from 'next/dynamic'
 
-import PDFBlockComponent from './PDFBlockComponent'
+const PDFBlockComponent = dynamic(() => import('./PDFBlockComponent'), {
+  ssr: false,
+})
 
 export default Node.create({
   name: 'blockPDF',
@@ -30,6 +33,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(PDFBlockComponent)
+    return ReactNodeViewRenderer(PDFBlockComponent as any)
   },
 })

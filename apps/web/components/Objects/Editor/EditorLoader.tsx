@@ -24,28 +24,20 @@ export default function EditorLoader({ courseid, activityuuid }: EditorLoaderPro
   const access_token = session?.data?.tokens?.access_token
   const [editorReady, setEditorReady] = React.useState(false)
 
-  const { data: courseInfo, error: courseError } = useSWR(
-    access_token ? `${getAPIUrl()}courses/course_${courseid}/meta?slim=true` : null,
+  const { data: bootstrap, error: bootstrapError } = useSWR(
+    access_token
+      ? `${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`
+      : null,
     (url) => swrFetcher(url, access_token),
     { revalidateOnFocus: false }
   )
 
-  const { data: activity, error: activityError } = useSWR(
-    access_token ? `${getAPIUrl()}activities/activity_${activityuuid}` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const courseInfo = bootstrap?.course
+  const activity = bootstrap?.activity
+  const org = bootstrap?.org
+  const dataReady = Boolean(bootstrap)
 
-  const orgUuid = courseInfo?.org_uuid
-  const { data: org, error: orgError } = useSWR(
-    orgUuid && access_token ? `${getAPIUrl()}orgs/uuid/${orgUuid}` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
-
-  const dataReady = courseInfo && activity && org
-
-  if (courseError || activityError || orgError) {
+  if (bootstrapError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
         <p className="text-sm">Failed to load editor. Please refresh the page.</p>

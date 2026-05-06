@@ -7,6 +7,7 @@ import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
+import { preloadComponentsForContent } from './editorPreload'
 
 /**
  * Transforms ProseMirror JSON content to fix mark type names.
@@ -90,6 +91,12 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       return props.content;
     }
   }, [props.content]);
+
+  // Kick off non-awaited dynamic imports for the node-view chunks needed by
+  // the blocks present in this document, so they're cached before TipTap renders.
+  React.useEffect(() => {
+    preloadComponentsForContent(normalizedContent)
+  }, [normalizedContent]);
 
   // Check for remote changes (conflict detection)
   const checkForConflicts = React.useCallback(async (): Promise<ConflictInfo | null> => {

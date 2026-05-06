@@ -4,9 +4,12 @@ from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
+from src.db.organizations import Organization, OrganizationRead
+from src.db.organization_config import OrganizationConfig
 from src.db.users import AnonymousUser, PublicUser, User
 from src.security.auth import resolve_acting_user_id
 from fastapi import HTTPException, Request
+from pydantic import BaseModel
 from uuid import uuid4
 from datetime import datetime
 
@@ -151,6 +154,87 @@ async def get_activity(
     _apply_activity_lock(activity_read, activity, course, current_user, db_session)
 
     return activity_read
+
+
+class EditorBootstrapCourse(BaseModel):
+    course_uuid: str
+    name: str
+    thumbnail_image: str | None = None
+    org_uuid: str
+    org_id: int
+
+
+class EditorBootstrapResponse(BaseModel):
+    activity: ActivityRead
+    course: EditorBootstrapCourse
+    org: OrganizationRead
+
+
+async def get_editor_bootstrap(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser,
+    db_session: Session,
+) -> EditorBootstrapResponse:
+    """Single-roundtrip payload for the activity editor.
+
+    Returns the activity (full content), the small subset of course fields the
+    editor reads, and the organization with resolved feature flags. Replaces
+    three separate fetches (course meta + activity + org) with one.
+    """
+    statement = (
+        select(Activity, Course, Organization, User)
+        .join(Course, Course.id == Activity.course_id)  # type: ignore
+        .join(Organization, Organization.id == Course.org_id)  # type: ignore
+        .outerjoin(User, Activity.last_modified_by_id == User.id)  # type: ignore
+        .where(Activity.activity_uuid == activity_uuid)
+    )
+    db_result = db_session.exec(statement).first()
+
+    if not db_result:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    activity, course, org, last_modified_user = db_result
+
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.READ
+    )
+
+    has_paid_access = await check_ee_activity_paid_access(
+        request=request,
+        activity_id=activity.id,
+        user=current_user,
+        db_session=db_session,
+    )
+
+    activity_read = ActivityRead.model_validate(activity)
+    activity_read.content = (
+        activity_read.content if has_paid_access else {"paid_access": False}
+    )
+    activity_read.last_modified_by_username = (
+        last_modified_user.username if last_modified_user else None
+    )
+    _apply_activity_lock(activity_read, activity, course, current_user, db_session)
+
+    cfg_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    org_config = db_session.exec(cfg_stmt).first()
+
+    # Build org with resolved_features (same shape the existing /orgs/uuid/{uuid}
+    # endpoint returns, so the frontend doesn't have to reshape anything).
+    from src.services.orgs.orgs import _build_org_read_with_resolved
+    org_read = _build_org_read_with_resolved(org, org_config)
+
+    return EditorBootstrapResponse(
+        activity=activity_read,
+        course=EditorBootstrapCourse(
+            course_uuid=course.course_uuid,
+            name=course.name,
+            thumbnail_image=course.thumbnail_image,
+            org_uuid=org.org_uuid,
+            org_id=org.id or 0,
+        ),
+        org=org_read,
+    )
 
 
 def _apply_activity_lock(

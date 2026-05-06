@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import dynamic from 'next/dynamic'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { ToolbarButtons } from './Toolbar/ToolbarButtons'
@@ -36,13 +37,12 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 
-// Lowlight — `common` already includes css, javascript, typescript, xml, python, java
-import { common, createLowlight } from 'lowlight'
-const lowlight = createLowlight(common)
+// Lowlight — slim grammar set; see editorLowlight.ts
+import { lowlight } from './editorLowlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import AIEditorToolkit from './AI/AIEditorToolkit'
-import AIEditorSidePanel from './AI/AIEditorSidePanel'
+const AIEditorToolkit = dynamic(() => import('./AI/AIEditorToolkit'), { ssr: false, loading: () => null })
+const AIEditorSidePanel = dynamic(() => import('./AI/AIEditorSidePanel'), { ssr: false, loading: () => null })
 import AIStreamingMark from './Extensions/AIStreaming/AIStreamingMark'
 import AISelectionHighlight from './Extensions/AISelectionHighlight/AISelectionHighlight'
 import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
@@ -63,8 +63,8 @@ import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
-import VersionHistoryPanel from './VersionHistory/VersionHistoryPanel'
-import MergeConflictModal from './VersionHistory/MergeConflictModal'
+const VersionHistoryPanel = dynamic(() => import('./VersionHistory/VersionHistoryPanel'), { ssr: false, loading: () => null })
+const MergeConflictModal = dynamic(() => import('./VersionHistory/MergeConflictModal'), { ssr: false, loading: () => null })
 import { usePlan } from '@components/Hooks/usePlan'
 
 interface ConflictInfo {
@@ -120,13 +120,19 @@ function Editor(props: Editor) {
   // remove activity_ from activity_uuid
   const activity_uuid = props.activity.activity_uuid.substring(9)
 
-  const editor: any = useEditor({
-    editable: true,
-    extensions: [
+  // Stable closure for PasteFileHandler so the extensions array can be memoized
+  // even if `props.session` reference changes after token refresh.
+  const sessionRef = React.useRef(props.session)
+  sessionRef.current = props.session
+  const getAccessToken = React.useCallback(
+    () => sessionRef.current?.data?.tokens?.access_token,
+    []
+  )
+
+  const extensions = React.useMemo(
+    () => [
       StarterKit.configure({
-        // Disable codeBlock since we use CodeBlockLowlight instead
         codeBlock: false,
-        // Disable link since we use custom getLinkExtension() instead
         link: false,
         bulletList: {
           HTMLAttributes: {
@@ -139,96 +145,46 @@ function Editor(props: Editor) {
           },
         },
       }),
-      // New unified callout (info/warning/tip/success/error)
       Callout,
-      // Legacy nodes — kept for backward compat with existing content
       InfoCallout.configure({ editable: true }),
       WarningCallout.configure({ editable: true }),
-      ImageBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      VideoBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      AudioBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      MathEquationBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      PDFBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      QuizBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Youtube.configure({
-        controls: true,
-        modestBranding: true,
-      }),
-      CodeBlockLowlight.configure({
-        lowlight,
-      }),
-      EmbedObjects.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Badges.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Buttons.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      UserBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Table.configure({
-        resizable: true,
-      }),
+      ImageBlock.configure({ editable: true, activity: props.activity }),
+      VideoBlock.configure({ editable: true, activity: props.activity }),
+      AudioBlock.configure({ editable: true, activity: props.activity }),
+      MathEquationBlock.configure({ editable: true, activity: props.activity }),
+      PDFBlock.configure({ editable: true, activity: props.activity }),
+      QuizBlock.configure({ editable: true, activity: props.activity }),
+      Youtube.configure({ controls: true, modestBranding: true }),
+      CodeBlockLowlight.configure({ lowlight }),
+      EmbedObjects.configure({ editable: true, activity: props.activity }),
+      Badges.configure({ editable: true, activity: props.activity }),
+      Buttons.configure({ editable: true, activity: props.activity }),
+      UserBlock.configure({ editable: true, activity: props.activity }),
+      Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
       getLinkExtension(),
-      WebPreview.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Flipcard.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      Scenarios.configure({
-        editable: true,
-        activity: props.activity,
-      }),
-      CodePlayground.configure({
-        editable: true,
-        activity: props.activity,
-      }),
+      WebPreview.configure({ editable: true, activity: props.activity }),
+      Flipcard.configure({ editable: true, activity: props.activity }),
+      Scenarios.configure({ editable: true, activity: props.activity }),
+      CodePlayground.configure({ editable: true, activity: props.activity }),
       DragHandle,
-      SlashCommands.configure({
-        currentPlan: currentPlan,
-      }),
+      SlashCommands.configure({ currentPlan }),
       PasteFileHandler.configure({
         activity: props.activity,
-        getAccessToken: () => props.session?.data?.tokens?.access_token,
+        getAccessToken,
       }),
-      MagicBlock.configure({
-        editable: true,
-        activity: props.activity,
-      }),
+      MagicBlock.configure({ editable: true, activity: props.activity }),
       AIStreamingMark,
       AISelectionHighlight,
     ],
+    [props.activity, currentPlan, getAccessToken]
+  )
+
+  const editor: any = useEditor({
+    editable: true,
+    extensions,
     content: props.content,
     immediatelyRender: false,
     onCreate: () => {

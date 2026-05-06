@@ -36,9 +36,8 @@ import PDFBlock from '@components/Objects/Editor/Extensions/PDF/PDFBlock'
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
 import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 
-// Lowlight — `common` already includes css, javascript, typescript, xml, python, java
-import { common, createLowlight } from 'lowlight'
-const lowlight = createLowlight(common)
+// Lowlight — slim grammar set; see editorLowlight.ts
+import { lowlight } from '@components/Objects/Editor/editorLowlight'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'

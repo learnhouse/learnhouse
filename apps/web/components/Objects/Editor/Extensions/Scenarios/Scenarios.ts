@@ -1,6 +1,10 @@
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { mergeAttributes, Node } from "@tiptap/core";
-import ScenariosExtension from "./ScenariosExtension";
+import dynamic from "next/dynamic";
+
+const ScenariosExtension = dynamic(() => import("./ScenariosExtension"), {
+  ssr: false,
+});
 
 export default Node.create({
   name: "scenarios",
@@ -63,6 +67,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ScenariosExtension);
+    return ReactNodeViewRenderer(ScenariosExtension as any);
   },
 });

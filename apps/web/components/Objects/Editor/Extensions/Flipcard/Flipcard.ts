@@ -1,6 +1,10 @@
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { mergeAttributes, Node } from "@tiptap/core";
-import FlipcardExtension from "./FlipcardExtension";
+import dynamic from "next/dynamic";
+
+const FlipcardExtension = dynamic(() => import("./FlipcardExtension"), {
+  ssr: false,
+});
 
 export default Node.create({
   name: "flipcard",
@@ -41,6 +45,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(FlipcardExtension);
+    return ReactNodeViewRenderer(FlipcardExtension as any);
   },
 });
