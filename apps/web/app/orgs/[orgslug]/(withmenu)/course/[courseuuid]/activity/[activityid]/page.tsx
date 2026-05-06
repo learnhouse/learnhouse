@@ -6,6 +6,7 @@ import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
@@ -66,7 +67,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
         course_meta?.thumbnail_image
       )
     : orgOgImageUrl || '/empty_thumbnail.png'
-  const canonical = getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}/activity/${params.activityid}`)
+  const canonical = await getServerCanonicalUrl(params.orgslug, `/course/${params.courseuuid}/activity/${params.activityid}`)
 
   // SEO
   return {
@@ -139,11 +140,18 @@ const ActivityPage = async (params: any) => {
     notFound()
   }
 
+  const [homeUrl, coursesUrl, courseUrl, activityUrl] = await Promise.all([
+    getServerCanonicalUrl(orgslug, '/'),
+    getServerCanonicalUrl(orgslug, '/courses'),
+    getServerCanonicalUrl(orgslug, `/course/${courseuuid}`),
+    getServerCanonicalUrl(orgslug, `/course/${courseuuid}/activity/${activityid}`),
+  ])
+
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
-    { name: course_meta.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
-    { name: activity.name, url: getCanonicalUrl(orgslug, `/course/${courseuuid}/activity/${activityid}`) },
+    { name: 'Home', url: homeUrl },
+    { name: 'Courses', url: coursesUrl },
+    { name: course_meta.name, url: courseUrl },
+    { name: activity.name, url: activityUrl },
   ])
 
   return (

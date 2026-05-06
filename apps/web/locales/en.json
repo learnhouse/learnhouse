@@ -2484,7 +2484,8 @@
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
         "watermark_label": "\"Made with LearnHouse\" watermark",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan"
+        "watermark_free_plan": "Watermark is always shown on the free plan",
+        "watermark_ee": "Hidden by your Enterprise Edition license"
       },
       "images": {
         "title": "Images & Previews",

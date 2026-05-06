@@ -6,6 +6,7 @@ import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import { notFound } from 'next/navigation'
 
@@ -77,7 +78,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       },
     },
     alternates: {
-      canonical: seo.canonical_url || getCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`),
+      canonical: seo.canonical_url || (await getServerCanonicalUrl(params.orgslug, `/course/${params.courseuuid}`)),
     },
     openGraph: {
       title: seo.og_title || seo.title || defaultTitle,
@@ -144,13 +145,21 @@ const CoursePage = async (params: any) => {
     notFound()
   }
 
+  // Resolve canonical URLs for JSON-LD (server-side, awaits middleware-injected
+  // tenancy headers). Done in parallel — Promise.all keeps the latency flat.
+  const [homeUrl, coursesUrl, courseUrl] = await Promise.all([
+    getServerCanonicalUrl(orgslug, '/'),
+    getServerCanonicalUrl(orgslug, '/courses'),
+    getServerCanonicalUrl(orgslug, `/course/${courseuuid}`),
+  ])
+
   // Build Course JSON-LD for structured data
   const courseJsonLd = course_meta ? {
     '@context': 'https://schema.org',
     '@type': 'Course',
     name: course_meta.name,
     description: course_meta.description || '',
-    url: getCanonicalUrl(orgslug, `/course/${courseuuid}`),
+    url: courseUrl,
     provider: {
       '@type': 'Organization',
       name: org?.name || '',
@@ -164,9 +173,9 @@ const CoursePage = async (params: any) => {
   } : null
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Courses', url: getCanonicalUrl(orgslug, '/courses') },
-    { name: course_meta?.name || 'Course', url: getCanonicalUrl(orgslug, `/course/${courseuuid}`) },
+    { name: 'Home', url: homeUrl },
+    { name: 'Courses', url: coursesUrl },
+    { name: course_meta?.name || 'Course', url: courseUrl },
   ])
 
   return (

@@ -6,6 +6,7 @@ import { getCommunity } from '@services/communities/communities'
 import { getDiscussions, DiscussionWithAuthor } from '@services/communities/discussions'
 import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import CommunityClient from './community'
 
@@ -38,7 +39,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
     : null
   const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = getCanonicalUrl(params.orgslug, `/community/${params.communityuuid}`)
+  const canonical = await getServerCanonicalUrl(params.orgslug, `/community/${params.communityuuid}`)
 
   return {
     title,
@@ -147,13 +148,13 @@ const CommunityPage = async (params: any) => {
       '@type': 'Organization',
       name: org.name,
     },
-    url: getCanonicalUrl(orgslug, `/community/${communityuuid}`),
+    url: await getServerCanonicalUrl(orgslug, `/community/${communityuuid}`),
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(orgslug, '/') },
-    { name: 'Communities', url: getCanonicalUrl(orgslug, '/communities') },
-    { name: community.name || 'Community', url: getCanonicalUrl(orgslug, `/community/${communityuuid}`) },
+    { name: 'Home', url: await getServerCanonicalUrl(orgslug, '/') },
+    { name: 'Communities', url: await getServerCanonicalUrl(orgslug, '/communities') },
+    { name: community.name || 'Community', url: await getServerCanonicalUrl(orgslug, `/community/${communityuuid}`) },
   ])
 
   return (

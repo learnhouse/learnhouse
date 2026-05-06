@@ -5,6 +5,7 @@ import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@ser
 import { getCollectionById } from '@services/courses/collections'
 import { getServerSession } from '@/lib/auth/server'
 import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 import { JsonLd } from '@components/SEO/JsonLd'
 import CollectionClient from './collection'
 
@@ -41,7 +42,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     ? getOrgOgImageMediaDirectory(org?.org_uuid, seoConfig.default_og_image)
     : null
   const imageUrl = ogImageUrl || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)
-  const canonical = getCanonicalUrl(params.orgslug, `/collections/${params.collectionid}`)
+  const canonical = await getServerCanonicalUrl(params.orgslug, `/collections/${params.collectionid}`)
 
   return {
     title,
@@ -105,9 +106,9 @@ const CollectionPage = async (props: { params: MetadataProps['params'] }) => {
   }
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: getCanonicalUrl(params.orgslug, '/') },
-    { name: 'Collections', url: getCanonicalUrl(params.orgslug, '/courses') },
-    { name: collection?.name || 'Collection', url: getCanonicalUrl(params.orgslug, `/collection/${params.collectionid}`) },
+    { name: 'Home', url: await getServerCanonicalUrl(params.orgslug, '/') },
+    { name: 'Collections', url: await getServerCanonicalUrl(params.orgslug, '/courses') },
+    { name: collection?.name || 'Collection', url: await getServerCanonicalUrl(params.orgslug, `/collection/${params.collectionid}`) },
   ])
 
   return (

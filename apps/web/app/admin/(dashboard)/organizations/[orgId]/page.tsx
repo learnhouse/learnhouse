@@ -96,7 +96,7 @@ function getFrontendDomain(): string {
   return (
     document.cookie
       .split('; ')
-      .find((c) => c.startsWith('learnhouse_frontend_domain='))
+      .find((c) => c.startsWith('LH_frontend_domain='))
       ?.split('=')[1] || 'localhost:3000'
   )
 }
