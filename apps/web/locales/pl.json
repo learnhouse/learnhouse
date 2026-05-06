@@ -180,7 +180,8 @@
     "boards": "Tablice",
     "close": "Zamknij",
     "optional": "opcjonalne",
-    "playgrounds": "Place zabaw"
+    "playgrounds": "Place zabaw",
+    "analytics": "Analityka"
   },
   "banner": {
     "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
@@ -3527,6 +3528,94 @@
             "creating": "Tworzenie zadania...",
             "success": "Zadanie zostało pomyślnie utworzone"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Szukaj",
+      "placeholder": "Szukaj stron i treści…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Nie znaleziono wyników",
+      "loading": "Wyszukiwanie…",
+      "type_to_search": "Wpisz co najmniej 2 znaki, aby wyszukać treść",
+      "groups": {
+        "pages": "Strony",
+        "courses": "Kursy",
+        "collections": "Kolekcje",
+        "users": "Użytkownicy",
+        "communities": "Społeczności",
+        "discussions": "Dyskusje",
+        "playgrounds": "Piaskownice",
+        "podcasts": "Podcasty"
+      },
+      "entries": {
+        "home": {
+          "description": "Przegląd panelu",
+          "keywords": "strona główna, przegląd, start, panel"
+        },
+        "courses": {
+          "description": "Zarządzaj kursami",
+          "keywords": "kursy, lekcje, nauka, szkolenie, klasy"
+        },
+        "assignments": {
+          "description": "Zarządzaj zadaniami",
+          "keywords": "zadania, prace domowe, ćwiczenia"
+        },
+        "communities": {
+          "description": "Zarządzaj społecznościami",
+          "keywords": "fora, dyskusje, członkowie, posty"
+        },
+        "podcasts": {
+          "description": "Zarządzaj podcastami",
+          "keywords": "audio, odcinki, programy"
+        },
+        "boards": {
+          "description": "Zarządzaj tablicami",
+          "keywords": "kanban, projekt, zadania, listy"
+        },
+        "playgrounds": {
+          "description": "Piaskownice kodu",
+          "keywords": "kod, sandbox, repl, programowanie"
+        },
+        "analytics": {
+          "description": "Zobacz pulpity analityczne",
+          "keywords": "statystyki, metryki, wykresy, raporty"
+        },
+        "users": {
+          "description": "Zarządzaj użytkownikami organizacji",
+          "keywords": "członkowie, konta, osoby"
+        },
+        "usergroups": {
+          "description": "Zarządzaj grupami użytkowników",
+          "keywords": "zespoły, kohorty, grupy"
+        },
+        "roles": {
+          "description": "Zarządzaj rolami i uprawnieniami",
+          "keywords": "uprawnienia, dostęp, rbac, bezpieczeństwo"
+        },
+        "signups": {
+          "description": "Przeglądaj rejestracje",
+          "keywords": "rejestracje, wnioski, zgłoszenia"
+        },
+        "org_general": {
+          "description": "Ogólne ustawienia organizacji",
+          "keywords": "nazwa, branding, slug, profil"
+        },
+        "org_features": {
+          "description": "Zarządzaj funkcjami organizacji",
+          "keywords": "funkcje, moduły, przełączniki"
+        },
+        "org_billing": {
+          "description": "Rozliczenia i subskrypcja",
+          "keywords": "plan, płatności, faktura, subskrypcja"
+        },
+        "payments_overview": {
+          "description": "Przegląd płatności",
+          "keywords": "stripe, panel, przychody"
+        },
+        "payments_products": {
+          "description": "Produkty i ceny płatności",
+          "keywords": "produkty, ceny, stripe, poziomy"
         }
       }
     }

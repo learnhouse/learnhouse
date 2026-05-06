@@ -180,7 +180,8 @@
     "boards": "Borden",
     "close": "Sluiten",
     "optional": "optioneel",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "Analyse"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -3504,6 +3505,94 @@
             "creating": "Opdracht aanmaken...",
             "success": "Opdracht succesvol aangemaakt"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Zoeken",
+      "placeholder": "Zoek pagina's en inhoud…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Geen resultaten gevonden",
+      "loading": "Bezig met zoeken…",
+      "type_to_search": "Typ ten minste 2 tekens om inhoud te zoeken",
+      "groups": {
+        "pages": "Pagina's",
+        "courses": "Cursussen",
+        "collections": "Collecties",
+        "users": "Gebruikers",
+        "communities": "Communities",
+        "discussions": "Discussies",
+        "playgrounds": "Speeltuinen",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Dashboardoverzicht",
+          "keywords": "home, overzicht, start, dashboard"
+        },
+        "courses": {
+          "description": "Beheer je cursussen",
+          "keywords": "cursussen, lessen, leren, training, klassen"
+        },
+        "assignments": {
+          "description": "Beheer opdrachten",
+          "keywords": "taken, huiswerk, oefeningen, inzendingen"
+        },
+        "communities": {
+          "description": "Beheer communities",
+          "keywords": "forums, discussies, leden, berichten"
+        },
+        "podcasts": {
+          "description": "Beheer podcasts",
+          "keywords": "audio, afleveringen, shows"
+        },
+        "boards": {
+          "description": "Beheer borden",
+          "keywords": "kanban, project, taken, lijsten"
+        },
+        "playgrounds": {
+          "description": "Code-speeltuinen",
+          "keywords": "code, sandbox, repl, programmeren"
+        },
+        "analytics": {
+          "description": "Bekijk analysedashboards",
+          "keywords": "statistieken, metrieken, grafieken, rapporten"
+        },
+        "users": {
+          "description": "Beheer gebruikers van de organisatie",
+          "keywords": "leden, accounts, mensen"
+        },
+        "usergroups": {
+          "description": "Beheer gebruikersgroepen",
+          "keywords": "teams, cohorten, groepen"
+        },
+        "roles": {
+          "description": "Beheer rollen en machtigingen",
+          "keywords": "machtigingen, toegang, rbac, beveiliging"
+        },
+        "signups": {
+          "description": "Aanmeldingen bekijken",
+          "keywords": "registraties, aanvragen, verzoeken"
+        },
+        "org_general": {
+          "description": "Algemene organisatie-instellingen",
+          "keywords": "naam, branding, slug, profiel"
+        },
+        "org_features": {
+          "description": "Beheer organisatiefuncties",
+          "keywords": "functies, modules, schakelaars"
+        },
+        "org_billing": {
+          "description": "Facturering en abonnement",
+          "keywords": "abonnement, betalingen, factuur"
+        },
+        "payments_overview": {
+          "description": "Betalingsoverzicht",
+          "keywords": "stripe, dashboard, omzet"
+        },
+        "payments_products": {
+          "description": "Betaalproducten en prijzen",
+          "keywords": "producten, prijzen, stripe, niveaus"
         }
       }
     }

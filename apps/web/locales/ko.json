@@ -180,7 +180,8 @@
     "boards": "보드",
     "close": "닫기",
     "optional": "선택사항",
-    "playgrounds": "플레이그라운드"
+    "playgrounds": "플레이그라운드",
+    "analytics": "분석"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -3514,6 +3515,94 @@
             "creating": "과제 생성 중...",
             "success": "과제가 성공적으로 생성되었습니다"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "검색",
+      "placeholder": "페이지 및 콘텐츠 검색…",
+      "shortcut_hint": "⌘K",
+      "no_results": "결과를 찾을 수 없습니다",
+      "loading": "검색 중…",
+      "type_to_search": "콘텐츠를 검색하려면 2자 이상 입력하세요",
+      "groups": {
+        "pages": "페이지",
+        "courses": "강좌",
+        "collections": "컬렉션",
+        "users": "사용자",
+        "communities": "커뮤니티",
+        "discussions": "토론",
+        "playgrounds": "플레이그라운드",
+        "podcasts": "팟캐스트"
+      },
+      "entries": {
+        "home": {
+          "description": "대시보드 개요",
+          "keywords": "홈, 개요, 시작, 대시보드"
+        },
+        "courses": {
+          "description": "강좌 관리",
+          "keywords": "강좌, 수업, 학습, 교육, 클래스"
+        },
+        "assignments": {
+          "description": "과제 관리",
+          "keywords": "작업, 숙제, 연습, 제출"
+        },
+        "communities": {
+          "description": "커뮤니티 관리",
+          "keywords": "포럼, 토론, 회원, 게시물"
+        },
+        "podcasts": {
+          "description": "팟캐스트 관리",
+          "keywords": "오디오, 에피소드, 프로그램"
+        },
+        "boards": {
+          "description": "보드 관리",
+          "keywords": "칸반, 프로젝트, 작업, 목록"
+        },
+        "playgrounds": {
+          "description": "코드 플레이그라운드",
+          "keywords": "코드, 샌드박스, repl, 프로그래밍"
+        },
+        "analytics": {
+          "description": "분석 대시보드 보기",
+          "keywords": "통계, 메트릭, 차트, 보고서"
+        },
+        "users": {
+          "description": "조직 사용자 관리",
+          "keywords": "회원, 계정, 사람"
+        },
+        "usergroups": {
+          "description": "사용자 그룹 관리",
+          "keywords": "팀, 코호트, 그룹"
+        },
+        "roles": {
+          "description": "역할 및 권한 관리",
+          "keywords": "권한, 접근, rbac, 보안"
+        },
+        "signups": {
+          "description": "가입 검토",
+          "keywords": "등록, 신청, 요청"
+        },
+        "org_general": {
+          "description": "조직 일반 설정",
+          "keywords": "이름, 브랜딩, slug, 프로필"
+        },
+        "org_features": {
+          "description": "조직 기능 관리",
+          "keywords": "기능, 모듈, 토글"
+        },
+        "org_billing": {
+          "description": "결제 및 구독",
+          "keywords": "플랜, 결제, 청구서, 구독"
+        },
+        "payments_overview": {
+          "description": "결제 개요",
+          "keywords": "stripe, 대시보드, 수익"
+        },
+        "payments_products": {
+          "description": "결제 상품 및 가격",
+          "keywords": "상품, 가격, stripe, 등급"
         }
       }
     }
