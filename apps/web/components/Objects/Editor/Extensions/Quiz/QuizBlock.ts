@@ -1,7 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+import dynamic from 'next/dynamic'
 
-import QuizBlockComponent from './QuizBlockComponent'
+const QuizBlockComponent = dynamic(() => import('./QuizBlockComponent'), {
+  ssr: false,
+})
 
 export default Node.create({
   name: 'blockQuiz',
@@ -33,6 +36,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(QuizBlockComponent)
+    return ReactNodeViewRenderer(QuizBlockComponent as any)
   },
 })

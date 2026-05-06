@@ -1,7 +1,11 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+import dynamic from 'next/dynamic'
 
-import MathEquationBlockComponent from './MathEquationBlockComponent'
+const MathEquationBlockComponent = dynamic(
+  () => import('./MathEquationBlockComponent'),
+  { ssr: false }
+)
 
 export default Node.create({
   name: 'blockMathEquation',
@@ -30,6 +34,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(MathEquationBlockComponent)
+    return ReactNodeViewRenderer(MathEquationBlockComponent as any)
   },
 })
