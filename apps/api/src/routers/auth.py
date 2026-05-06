@@ -283,7 +283,15 @@ async def refresh(
         domain=cookie_domain,
         expires=int(JWT_REFRESH_TOKEN_EXPIRES.total_seconds()),
     )
-    return {"access_token": new_access_token, "expiry": get_token_expiry_ms()}
+    # Return the rotated refresh token in the body so a Next.js route handler
+    # acting as a proxy can mirror the rotation onto its own cookies. Without
+    # this, browsers behind a proxy keep the OLD refresh token (now consumed
+    # in Redis), and the next refresh call triggers replay detection → 401.
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "expiry": get_token_expiry_ms(),
+    }
 
 
 @router.post(
