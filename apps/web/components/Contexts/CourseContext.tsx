@@ -118,14 +118,20 @@ export function CourseProvider({
     swrKey,
     url => swrFetcher(url, access_token),
     {
-      revalidateOnFocus: true,
+      // Don't refetch on every tab refocus — course meta rarely changes during
+      // an editing session and refetches can stomp on in-flight saves. The
+      // CourseProvider's normal save path keeps the cache fresh.
+      revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      dedupingInterval: 0,
-      keepPreviousData: false,
+      dedupingInterval: 5000,
+      keepPreviousData: true,
       revalidateIfStale: true,
       // When the caller (e.g. the activity editor) already has minimal course
       // data, hydrate SWR with it so children render on first paint instead of
-      // waiting for the meta fetch. SWR will revalidate in the background.
+      // waiting for the meta fetch. Skip the mount fetch entirely — children
+      // never read the chapter tree from this context, so the slim header is
+      // sufficient and the heavy meta fetch is pure waste.
+      revalidateOnMount: !initialCourseStructure,
       fallbackData: initialCourseStructure ?? undefined,
     }
   )

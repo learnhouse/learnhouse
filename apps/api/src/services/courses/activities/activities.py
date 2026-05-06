@@ -182,6 +182,9 @@ async def get_editor_bootstrap(
     All needed rows are pulled in a single SQL round-trip via joins, including
     OrganizationConfig and the parent Chapter (for lock checks) so the lock
     helper does not need a follow-up query.
+
+    Intentionally not cached — activity content must always reflect the latest
+    saved state for collaborators to avoid editing against stale data.
     """
     statement = (
         select(Activity, Course, Organization, OrganizationConfig, User, Chapter)

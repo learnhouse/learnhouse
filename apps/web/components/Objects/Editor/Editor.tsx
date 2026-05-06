@@ -3,7 +3,12 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { ToolbarButtons } from './Toolbar/ToolbarButtons'
+// ToolbarButtons pulls in @phosphor-icons/react (~360KB) and only renders
+// after the editor is interactive — defer it so it doesn't block first paint.
+const ToolbarButtons = dynamic(
+  () => import('./Toolbar/ToolbarButtons').then((m) => m.ToolbarButtons),
+  { ssr: false, loading: () => null }
+)
 import { motion } from 'motion/react'
 import Image from 'next/image'
 import { DividerVerticalIcon, SlashIcon } from '@radix-ui/react-icons'
