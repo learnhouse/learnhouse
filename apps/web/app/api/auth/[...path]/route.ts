@@ -19,6 +19,30 @@ function shouldExtractTokens(path: string): boolean {
   return TOKEN_RESPONSE_PATHS.some(p => path.startsWith(p))
 }
 
+// Decode a JWT payload without verifying the signature. Used purely to read
+// the `exp` claim so we can skip a slow backend refresh when the access token
+// is still valid. If the backend later rejects the token (revoked, etc.), the
+// next API call will 401 and the client will trigger a real refresh.
+function decodeJwtExpiryMs(token: string): number | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    // JWT base64url -> base64
+    const padded = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padding = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4))
+    const json = Buffer.from(padded + padding, 'base64').toString('utf-8')
+    const payload = JSON.parse(json)
+    if (typeof payload.exp !== 'number') return null
+    return payload.exp * 1000
+  } catch {
+    return null
+  }
+}
+
+// Skip the backend refresh roundtrip when the cookie token still has plenty
+// of life left. Two minutes of headroom keeps us safe against clock skew.
+const REFRESH_FAST_PATH_HEADROOM_MS = 2 * 60 * 1000
+
 async function proxyRequest(
   request: NextRequest,
   method: string
@@ -53,6 +77,23 @@ async function proxyRequest(
   // Short-circuit: no refresh token cookie means nothing to refresh
   if (pathSegments === 'refresh' && !refreshToken?.value) {
     return NextResponse.json({ error: 'No refresh token' }, { status: 401 })
+  }
+
+  // Fast-path: if the access token cookie is present and isn't about to
+  // expire, return it without round-tripping to the backend. Saves ~500ms+
+  // on every cold page load where the cookie is still valid.
+  if (
+    pathSegments === 'refresh'
+    && method === 'GET'
+    && accessToken?.value
+  ) {
+    const expiryMs = decodeJwtExpiryMs(accessToken.value)
+    if (expiryMs && expiryMs - Date.now() > REFRESH_FAST_PATH_HEADROOM_MS) {
+      return NextResponse.json({
+        access_token: accessToken.value,
+        expiry: expiryMs,
+      })
+    }
   }
 
   // Handle logout locally — clear cookies and return 200

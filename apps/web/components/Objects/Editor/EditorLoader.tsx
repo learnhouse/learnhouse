@@ -3,7 +3,7 @@ import React from 'react'
 import useSWR from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { useSession } from '@components/Contexts/AuthContext'
+import { useAuth } from '@components/Contexts/AuthContext'
 import EditorSkeleton from './EditorSkeleton'
 import EditorWrapper from './EditorWrapper'
 import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownActivity'
@@ -16,19 +16,23 @@ interface EditorLoaderProps {
 }
 
 /**
- * Single entry point for the editor page. Fetches all data client-side
- * and crossfades from skeleton to editor. No SSR data fetching needed.
+ * Single entry point for the editor page. Fetches the editor's full bootstrap
+ * payload (activity + slim course + org with resolved features) in one request.
+ *
+ * Uses `useAuth().accessToken` rather than `useSession().data.tokens` so the
+ * bootstrap fetch can race the `/users/session` call in parallel: the bare
+ * access token is set the moment `/api/auth/refresh` resolves, while
+ * `session.data` only populates after the subsequent `/users/session` call.
  */
-export default function EditorLoader({ courseid, activityuuid }: EditorLoaderProps) {
-  const session = useSession()
-  const access_token = session?.data?.tokens?.access_token
+export default function EditorLoader({ courseid: _courseid, activityuuid }: EditorLoaderProps) {
+  const { accessToken: access_token } = useAuth()
   const [editorReady, setEditorReady] = React.useState(false)
 
   const { data: bootstrap, error: bootstrapError } = useSWR(
     access_token
       ? `${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`
       : null,
-    (url) => swrFetcher(url, access_token),
+    (url) => swrFetcher(url, access_token ?? undefined),
     { revalidateOnFocus: false }
   )
 

@@ -14,7 +14,15 @@ interface OrgContextValue {
 
 export const OrgContext = createContext<OrgContextValue | null>(null)
 
-export function OrgProvider({ children, orgslug }: { children: React.ReactNode, orgslug: string }) {
+export function OrgProvider({
+  children,
+  orgslug,
+  initialOrg,
+}: {
+  children: React.ReactNode
+  orgslug: string
+  initialOrg?: any
+}) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
@@ -23,7 +31,11 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     (url) => swrFetcher(url, accessToken),
     {
       revalidateOnFocus: false,
-      revalidateOnMount: true,
+      // When the caller already has org data (e.g. from the editor bootstrap),
+      // hydrate SWR with it so renders don't block on a redundant fetch.
+      // SWR will revalidate in the background after the initial paint.
+      revalidateOnMount: !initialOrg,
+      fallbackData: initialOrg ?? undefined,
     }
   )
 

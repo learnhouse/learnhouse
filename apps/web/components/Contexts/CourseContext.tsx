@@ -99,7 +99,12 @@ export type CourseAction =
 export const CourseContext = createContext<CourseState | null>(null)
 export const CourseDispatchContext = createContext<React.Dispatch<CourseAction> | null>(null)
 
-export function CourseProvider({ children, courseuuid, withUnpublishedActivities = false }: any) {
+export function CourseProvider({
+  children,
+  courseuuid,
+  withUnpublishedActivities = false,
+  initialCourseStructure,
+}: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const { mutate } = useSWRConfig()
@@ -118,6 +123,10 @@ export function CourseProvider({ children, courseuuid, withUnpublishedActivities
       dedupingInterval: 0,
       keepPreviousData: false,
       revalidateIfStale: true,
+      // When the caller (e.g. the activity editor) already has minimal course
+      // data, hydrate SWR with it so children render on first paint instead of
+      // waiting for the meta fetch. SWR will revalidate in the background.
+      fallbackData: initialCourseStructure ?? undefined,
     }
   )
 

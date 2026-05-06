@@ -26,14 +26,21 @@ export interface ActivityState {
 }
 
 /**
- * Hook to fetch activity version history
+ * Hook to fetch activity version history.
+ *
+ * Pass `enabled: false` to skip the fetch (e.g., when the panel is closed).
+ * The list is only useful when the user actually opens the version history.
  */
-export function useActivityVersions(activityUuid: string, limit: number = 20) {
+export function useActivityVersions(
+  activityUuid: string,
+  limit: number = 20,
+  enabled: boolean = true
+) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
   const { data: versions, error, isLoading, mutate } = useSWR<ActivityVersion[]>(
-    activityUuid && access_token
+    enabled && activityUuid && access_token
       ? `${getAPIUrl()}activities/${activityUuid}/versions?limit=${limit}`
       : null,
     (url: string) => swrFetcher(url, access_token),
