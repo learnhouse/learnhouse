@@ -116,3 +116,51 @@ class TestEmailsService:
             )
         invite_body = send_email.call_args.kwargs["body"]
         assert "Click the button below" in invite_body
+
+    def test_send_emails_in_french_when_lang_is_fr(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_invitation_email(
+                "invitee@test.com",
+                "Org & Co",
+                "owner",
+                "https://app.test/signup",
+                invite_code="INV-123",
+                lang="fr",
+            )
+            send_password_reset_email(
+                "abcd1234",
+                _user(),
+                _org(),
+                "user@test.com",
+                "https://app.test",
+                lang="fr",
+            )
+            send_role_changed_email(
+                "user@test.com",
+                "member",
+                "Org & Co",
+                "Admin",
+                lang="fr",
+            )
+
+        invite_call = send_email.call_args_list[0].kwargs
+        reset_call = send_email.call_args_list[1].kwargs
+        role_call = send_email.call_args_list[2].kwargs
+
+        assert "Vous êtes invité" in invite_call["body"]
+        assert "Vous êtes invité à rejoindre Org &amp; Co" == invite_call["subject"]
+        assert "Réinitialisez votre mot de passe" in reset_call["body"]
+        assert "Réinitialisez votre mot de passe" == reset_call["subject"]
+        assert "Votre rôle a été mis à jour" in role_call["body"]
+
+    def test_send_emails_falls_back_to_english_for_unknown_lang(self):
+        with patch("src.services.users.emails.send_email", return_value=True) as send_email:
+            send_invitation_email(
+                "invitee@test.com",
+                "Org",
+                "owner",
+                "https://app.test/signup",
+                lang="xx",
+            )
+        body = send_email.call_args.kwargs["body"]
+        assert "You've been invited" in body

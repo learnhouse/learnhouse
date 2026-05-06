@@ -1,4 +1,5 @@
 import { OrgProvider } from '@components/Contexts/OrgContext'
+import OrgLanguageSync from '@components/Contexts/OrgLanguageSync'
 import { getOrgSlug } from '@services/org/orgResolution'
 
 export default async function AuthLayout({
@@ -14,5 +15,10 @@ export default async function AuthLayout({
         return <>{children}</>
     }
 
-    return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
+    return (
+        <OrgProvider orgslug={orgslug}>
+            <OrgLanguageSync />
+            {children}
+        </OrgProvider>
+    )
 }

@@ -2205,6 +2205,8 @@
         "footer_text": "Testo del footer",
         "footer_text_placeholder": "Inserisci il testo del footer...",
         "footer_text_desc": "Testo personalizzato visualizzato in fondo alle pagine della tua organizzazione",
+        "default_language": "Lingua predefinita",
+        "default_language_desc": "La lingua mostrata per impostazione predefinita ai nuovi visitatori e usata per le email inviate per conto di questa organizzazione. I membri possono comunque cambiare la propria lingua dell'interfaccia.",
         "watermark_desc": "Mostra il watermark LearnHouse sulle pagine della tua organizzazione",
         "watermark_free_plan": "Il watermark è sempre mostrato nel piano gratuito",
         "watermark_label": "Watermark \"Made with LearnHouse\""

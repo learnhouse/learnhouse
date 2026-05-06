@@ -2230,6 +2230,8 @@
         "footer_text": "Tekst stopki",
         "footer_text_placeholder": "Wprowadź tekst stopki...",
         "footer_text_desc": "Niestandardowy tekst wyświetlany na dole stron Twojej organizacji",
+        "default_language": "Język domyślny",
+        "default_language_desc": "Język, który nowi odwiedzający widzą domyślnie i którego używają e-maile wysyłane w imieniu tej organizacji. Członkowie nadal mogą zmienić własny język interfejsu.",
         "watermark_desc": "Pokaż znak wodny LearnHouse na stronach organizacji",
         "watermark_free_plan": "Znak wodny jest zawsze widoczny w planie darmowym",
         "watermark_label": "Znak wodny \"Made with LearnHouse\""

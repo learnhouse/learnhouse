@@ -2205,6 +2205,8 @@
         "footer_text": "Texte du pied de page",
         "footer_text_placeholder": "Entrez le texte du pied de page...",
         "footer_text_desc": "Texte personnalisé affiché en bas des pages de votre organisation",
+        "default_language": "Langue par défaut",
+        "default_language_desc": "La langue affichée par défaut aux nouveaux visiteurs et utilisée pour les e-mails envoyés au nom de cette organisation. Les membres peuvent toujours changer leur propre langue d'interface.",
         "watermark_desc": "Afficher le filigrane LearnHouse sur les pages de votre organisation",
         "watermark_free_plan": "Le filigrane est toujours affiché sur le plan gratuit",
         "watermark_label": "Filigrane \"Made with LearnHouse\""
