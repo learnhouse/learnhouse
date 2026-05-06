@@ -1,29 +1,15 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import i18n, { initialLocaleReady } from '../../lib/i18n'
-import { useTranslation } from 'react-i18next'
+import i18n from '../../lib/i18n'
 
 export default function I18nProvider({ children }: { children: React.ReactNode }) {
-  const { i18n: i18nInstance } = useTranslation()
-  const [isReady, setIsReady] = useState(false)
   const [, setLang] = useState(i18n.language)
 
-  useEffect(() => {
-    // Wait for both i18n initialization AND the detected locale bundle to load
-    const waitForReady = async () => {
-      if (!i18n.isInitialized) {
-        await new Promise<void>((resolve) => {
-          i18n.on('initialized', () => resolve())
-        })
-      }
-      await initialLocaleReady
-      setIsReady(true)
-    }
-    waitForReady()
-  }, [])
-
-  // Listen for language changes to force re-render of the entire tree
+  // Listen for language changes to force re-render of the entire tree.
+  // (English is bundled at module load; non-English bundles load lazily and
+  // translations swap in when ready via react-i18next's `useSuspense: false`
+  // — no need to block initial render on the locale fetch.)
   useEffect(() => {
     const handleLanguageChanged = (lng: string) => {
       setLang(lng)
@@ -33,11 +19,6 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
       i18n.off('languageChanged', handleLanguageChanged)
     }
   }, [])
-
-  // Show nothing while i18n + locale resources are loading
-  if (!isReady) {
-    return null
-  }
 
   return <>{children}</>
 }
