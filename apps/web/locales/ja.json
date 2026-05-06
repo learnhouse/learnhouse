@@ -180,7 +180,8 @@
     "creating": "作成中...",
     "view_details": "詳細を見る",
     "close": "閉じる",
-    "optional": "任意"
+    "optional": "任意",
+    "analytics": "分析"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -3512,6 +3513,94 @@
             "creating": "課題を作成中...",
             "success": "課題を正常に作成しました"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "検索",
+      "placeholder": "ページとコンテンツを検索…",
+      "shortcut_hint": "⌘K",
+      "no_results": "結果が見つかりません",
+      "loading": "検索中…",
+      "type_to_search": "コンテンツを検索するには2文字以上入力してください",
+      "groups": {
+        "pages": "ページ",
+        "courses": "コース",
+        "collections": "コレクション",
+        "users": "ユーザー",
+        "communities": "コミュニティ",
+        "discussions": "ディスカッション",
+        "playgrounds": "プレイグラウンド",
+        "podcasts": "ポッドキャスト"
+      },
+      "entries": {
+        "home": {
+          "description": "ダッシュボード概要",
+          "keywords": "ホーム, 概要, 開始, ダッシュボード"
+        },
+        "courses": {
+          "description": "コースを管理",
+          "keywords": "コース, レッスン, 学習, トレーニング, クラス"
+        },
+        "assignments": {
+          "description": "課題を管理",
+          "keywords": "タスク, 宿題, 演習, 提出"
+        },
+        "communities": {
+          "description": "コミュニティを管理",
+          "keywords": "フォーラム, ディスカッション, メンバー, 投稿"
+        },
+        "podcasts": {
+          "description": "ポッドキャストを管理",
+          "keywords": "オーディオ, エピソード, 番組"
+        },
+        "boards": {
+          "description": "ボードを管理",
+          "keywords": "カンバン, プロジェクト, タスク, リスト"
+        },
+        "playgrounds": {
+          "description": "コードプレイグラウンド",
+          "keywords": "コード, サンドボックス, repl, プログラミング"
+        },
+        "analytics": {
+          "description": "分析ダッシュボードを表示",
+          "keywords": "統計, メトリクス, グラフ, レポート"
+        },
+        "users": {
+          "description": "組織のユーザーを管理",
+          "keywords": "メンバー, アカウント, 人"
+        },
+        "usergroups": {
+          "description": "ユーザーグループを管理",
+          "keywords": "チーム, コホート, グループ"
+        },
+        "roles": {
+          "description": "ロールと権限を管理",
+          "keywords": "権限, アクセス, rbac, セキュリティ"
+        },
+        "signups": {
+          "description": "サインアップを確認",
+          "keywords": "登録, 申請, リクエスト"
+        },
+        "org_general": {
+          "description": "組織の一般設定",
+          "keywords": "名前, ブランディング, slug, プロフィール"
+        },
+        "org_features": {
+          "description": "組織機能を管理",
+          "keywords": "機能, モジュール, トグル"
+        },
+        "org_billing": {
+          "description": "請求とサブスクリプション",
+          "keywords": "プラン, 支払い, 請求書, サブスクリプション"
+        },
+        "payments_overview": {
+          "description": "支払い概要",
+          "keywords": "stripe, ダッシュボード, 収益"
+        },
+        "payments_products": {
+          "description": "支払い商品と価格",
+          "keywords": "商品, 価格, stripe, ティア"
         }
       }
     }

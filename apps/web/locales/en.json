@@ -11,6 +11,7 @@
     "payments": "Payments",
     "playgrounds": "Playgrounds",
     "organization": "Organization",
+    "analytics": "Analytics",
     "dashboard": "Dashboard",
     "settings": "Settings",
     "language": "Language",
@@ -3813,6 +3814,43 @@
             "success": "Assignment created successfully"
           }
         }
+      }
+    },
+    "search": {
+      "trigger": "Search",
+      "placeholder": "Search pages and content…",
+      "shortcut_hint": "⌘K",
+      "no_results": "No results found",
+      "loading": "Searching…",
+      "type_to_search": "Type at least 2 characters to search content",
+      "groups": {
+        "pages": "Pages",
+        "courses": "Courses",
+        "collections": "Collections",
+        "users": "Users",
+        "communities": "Communities",
+        "discussions": "Discussions",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home":         { "description": "Dashboard overview",                "keywords": "home, overview, start, dashboard" },
+        "courses":      { "description": "Manage your courses",               "keywords": "courses, lessons, learn, training, classes" },
+        "assignments":  { "description": "Manage assignments",                "keywords": "tasks, homework, exercises, submissions" },
+        "communities":  { "description": "Manage communities",                "keywords": "forums, discussions, members, posts" },
+        "podcasts":     { "description": "Manage podcasts",                   "keywords": "audio, episodes, shows" },
+        "boards":       { "description": "Manage boards",                     "keywords": "kanban, project, tasks, lists" },
+        "playgrounds":  { "description": "Coding playgrounds",                "keywords": "code, sandbox, repl, programming" },
+        "analytics":    { "description": "View analytics dashboards",         "keywords": "stats, metrics, charts, reports, insights" },
+        "users":        { "description": "Manage organization users",         "keywords": "members, accounts, people" },
+        "usergroups":   { "description": "Manage user groups",                "keywords": "teams, cohorts, groups" },
+        "roles":        { "description": "Manage roles & permissions",        "keywords": "permissions, access, rbac, security" },
+        "signups":      { "description": "Review user signups",               "keywords": "registrations, applications, requests" },
+        "org_general":  { "description": "Organization general settings",     "keywords": "name, branding, slug, profile" },
+        "org_features": { "description": "Manage organization features",      "keywords": "features, modules, toggles" },
+        "org_billing":  { "description": "Billing & subscription",            "keywords": "plan, payments, invoice, subscription" },
+        "payments_overview": { "description": "Payments overview",            "keywords": "stripe, dashboard, revenue" },
+        "payments_products": { "description": "Payment products & pricing",   "keywords": "products, prices, stripe, tiers" }
       }
     }
   },

@@ -180,7 +180,8 @@
     "boards": "面板",
     "close": "关闭",
     "optional": "可选",
-    "playgrounds": "游乐场"
+    "playgrounds": "游乐场",
+    "analytics": "分析"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -3514,6 +3515,94 @@
             "creating": "正在创建作业...",
             "success": "作业创建成功"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "搜索",
+      "placeholder": "搜索页面和内容…",
+      "shortcut_hint": "⌘K",
+      "no_results": "未找到结果",
+      "loading": "搜索中…",
+      "type_to_search": "输入至少 2 个字符来搜索内容",
+      "groups": {
+        "pages": "页面",
+        "courses": "课程",
+        "collections": "合集",
+        "users": "用户",
+        "communities": "社区",
+        "discussions": "讨论",
+        "playgrounds": "演练场",
+        "podcasts": "播客"
+      },
+      "entries": {
+        "home": {
+          "description": "仪表板概览",
+          "keywords": "主页, 概览, 开始, 仪表板"
+        },
+        "courses": {
+          "description": "管理你的课程",
+          "keywords": "课程, 课时, 学习, 培训, 班级"
+        },
+        "assignments": {
+          "description": "管理作业",
+          "keywords": "任务, 作业, 练习, 提交"
+        },
+        "communities": {
+          "description": "管理社区",
+          "keywords": "论坛, 讨论, 成员, 帖子"
+        },
+        "podcasts": {
+          "description": "管理播客",
+          "keywords": "音频, 集数, 节目"
+        },
+        "boards": {
+          "description": "管理看板",
+          "keywords": "看板, 项目, 任务, 列表"
+        },
+        "playgrounds": {
+          "description": "代码演练场",
+          "keywords": "代码, 沙盒, repl, 编程"
+        },
+        "analytics": {
+          "description": "查看分析仪表板",
+          "keywords": "统计, 指标, 图表, 报告"
+        },
+        "users": {
+          "description": "管理组织用户",
+          "keywords": "成员, 账户, 人员"
+        },
+        "usergroups": {
+          "description": "管理用户组",
+          "keywords": "团队, 群组, 组别"
+        },
+        "roles": {
+          "description": "管理角色和权限",
+          "keywords": "权限, 访问, rbac, 安全"
+        },
+        "signups": {
+          "description": "审核注册",
+          "keywords": "注册, 申请, 请求"
+        },
+        "org_general": {
+          "description": "组织常规设置",
+          "keywords": "名称, 品牌, slug, 简介"
+        },
+        "org_features": {
+          "description": "管理组织功能",
+          "keywords": "功能, 模块, 开关"
+        },
+        "org_billing": {
+          "description": "账单与订阅",
+          "keywords": "计划, 付款, 发票, 订阅"
+        },
+        "payments_overview": {
+          "description": "付款概览",
+          "keywords": "stripe, 仪表板, 收入"
+        },
+        "payments_products": {
+          "description": "付款产品和定价",
+          "keywords": "产品, 价格, stripe, 等级"
         }
       }
     }

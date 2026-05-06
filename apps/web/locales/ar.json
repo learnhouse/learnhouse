@@ -180,7 +180,8 @@
     "creating": "جاري الإنشاء...",
     "view_details": "عرض التفاصيل",
     "close": "إغلاق",
-    "optional": "اختياري"
+    "optional": "اختياري",
+    "analytics": "التحليلات"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -3512,6 +3513,94 @@
             "creating": "جاري إنشاء الواجب...",
             "success": "تم إنشاء الواجب بنجاح"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "بحث",
+      "placeholder": "ابحث في الصفحات والمحتوى…",
+      "shortcut_hint": "⌘K",
+      "no_results": "لا توجد نتائج",
+      "loading": "جاري البحث…",
+      "type_to_search": "اكتب حرفين على الأقل للبحث في المحتوى",
+      "groups": {
+        "pages": "الصفحات",
+        "courses": "الدورات",
+        "collections": "المجموعات",
+        "users": "المستخدمون",
+        "communities": "المجتمعات",
+        "discussions": "المناقشات",
+        "playgrounds": "ساحات اللعب",
+        "podcasts": "البودكاست"
+      },
+      "entries": {
+        "home": {
+          "description": "نظرة عامة على لوحة التحكم",
+          "keywords": "الرئيسية, نظرة عامة, البدء, لوحة التحكم"
+        },
+        "courses": {
+          "description": "إدارة دوراتك",
+          "keywords": "دورات, دروس, تعلم, تدريب, فصول"
+        },
+        "assignments": {
+          "description": "إدارة الواجبات",
+          "keywords": "مهام, واجبات منزلية, تمارين, تسليمات"
+        },
+        "communities": {
+          "description": "إدارة المجتمعات",
+          "keywords": "منتديات, مناقشات, أعضاء, منشورات"
+        },
+        "podcasts": {
+          "description": "إدارة البودكاست",
+          "keywords": "صوت, حلقات, برامج"
+        },
+        "boards": {
+          "description": "إدارة اللوحات",
+          "keywords": "كانبان, مشروع, مهام, قوائم"
+        },
+        "playgrounds": {
+          "description": "ساحات لعب البرمجة",
+          "keywords": "كود, sandbox, repl, برمجة"
+        },
+        "analytics": {
+          "description": "عرض لوحات التحليلات",
+          "keywords": "إحصائيات, مقاييس, رسوم بيانية, تقارير"
+        },
+        "users": {
+          "description": "إدارة مستخدمي المؤسسة",
+          "keywords": "أعضاء, حسابات, أشخاص"
+        },
+        "usergroups": {
+          "description": "إدارة مجموعات المستخدمين",
+          "keywords": "فرق, مجموعات, أفواج"
+        },
+        "roles": {
+          "description": "إدارة الأدوار والصلاحيات",
+          "keywords": "صلاحيات, وصول, rbac, أمان"
+        },
+        "signups": {
+          "description": "مراجعة التسجيلات",
+          "keywords": "تسجيلات, طلبات, تطبيقات"
+        },
+        "org_general": {
+          "description": "الإعدادات العامة للمؤسسة",
+          "keywords": "الاسم, العلامة التجارية, slug, الملف الشخصي"
+        },
+        "org_features": {
+          "description": "إدارة ميزات المؤسسة",
+          "keywords": "ميزات, وحدات, مفاتيح"
+        },
+        "org_billing": {
+          "description": "الفوترة والاشتراك",
+          "keywords": "خطة, مدفوعات, فاتورة, اشتراك"
+        },
+        "payments_overview": {
+          "description": "نظرة عامة على المدفوعات",
+          "keywords": "stripe, لوحة, إيرادات"
+        },
+        "payments_products": {
+          "description": "منتجات وأسعار الدفع",
+          "keywords": "منتجات, أسعار, stripe, مستويات"
         }
       }
     }

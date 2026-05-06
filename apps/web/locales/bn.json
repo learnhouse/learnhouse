@@ -180,7 +180,8 @@
     "creating": "তৈরি হচ্ছে...",
     "view_details": "বিস্তারিত দেখুন",
     "close": "বন্ধ",
-    "optional": "optional"
+    "optional": "optional",
+    "analytics": "বিশ্লেষণ"
   },
   "banner": {
     "viewing_as_guest": "আপনি {{name}} অতিথি হিসেবে দেখছেন।",
@@ -3525,6 +3526,94 @@
             "creating": "অ্যাসাইনমেন্ট তৈরি হচ্ছে...",
             "success": "অ্যাসাইনমেন্ট সফলভাবে তৈরি হয়েছে"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "অনুসন্ধান",
+      "placeholder": "পৃষ্ঠা এবং বিষয়বস্তু অনুসন্ধান করুন…",
+      "shortcut_hint": "⌘K",
+      "no_results": "কোনো ফলাফল পাওয়া যায়নি",
+      "loading": "অনুসন্ধান করা হচ্ছে…",
+      "type_to_search": "বিষয়বস্তু অনুসন্ধান করতে কমপক্ষে ২টি অক্ষর লিখুন",
+      "groups": {
+        "pages": "পৃষ্ঠা",
+        "courses": "কোর্স",
+        "collections": "সংগ্রহ",
+        "users": "ব্যবহারকারী",
+        "communities": "কমিউনিটি",
+        "discussions": "আলোচনা",
+        "playgrounds": "প্লেগ্রাউন্ড",
+        "podcasts": "পডকাস্ট"
+      },
+      "entries": {
+        "home": {
+          "description": "ড্যাশবোর্ড সংক্ষিপ্ত বিবরণ",
+          "keywords": "হোম, সংক্ষিপ্ত বিবরণ, শুরু, ড্যাশবোর্ড"
+        },
+        "courses": {
+          "description": "আপনার কোর্স পরিচালনা করুন",
+          "keywords": "কোর্স, পাঠ, শিখুন, প্রশিক্ষণ, ক্লাস"
+        },
+        "assignments": {
+          "description": "অ্যাসাইনমেন্ট পরিচালনা করুন",
+          "keywords": "কাজ, হোমওয়ার্ক, অনুশীলন, জমা"
+        },
+        "communities": {
+          "description": "কমিউনিটি পরিচালনা করুন",
+          "keywords": "ফোরাম, আলোচনা, সদস্য, পোস্ট"
+        },
+        "podcasts": {
+          "description": "পডকাস্ট পরিচালনা করুন",
+          "keywords": "অডিও, পর্ব, শো"
+        },
+        "boards": {
+          "description": "বোর্ড পরিচালনা করুন",
+          "keywords": "কানবান, প্রকল্প, কাজ, তালিকা"
+        },
+        "playgrounds": {
+          "description": "কোড প্লেগ্রাউন্ড",
+          "keywords": "কোড, স্যান্ডবক্স, repl, প্রোগ্রামিং"
+        },
+        "analytics": {
+          "description": "বিশ্লেষণ ড্যাশবোর্ড দেখুন",
+          "keywords": "পরিসংখ্যান, মেট্রিক, চার্ট, প্রতিবেদন"
+        },
+        "users": {
+          "description": "সংস্থার ব্যবহারকারী পরিচালনা করুন",
+          "keywords": "সদস্য, অ্যাকাউন্ট, ব্যক্তি"
+        },
+        "usergroups": {
+          "description": "ব্যবহারকারী গোষ্ঠী পরিচালনা করুন",
+          "keywords": "দল, গ্রুপ"
+        },
+        "roles": {
+          "description": "ভূমিকা এবং অনুমতি পরিচালনা করুন",
+          "keywords": "অনুমতি, অ্যাক্সেস, rbac, নিরাপত্তা"
+        },
+        "signups": {
+          "description": "সাইনআপ পর্যালোচনা করুন",
+          "keywords": "নিবন্ধন, আবেদন, অনুরোধ"
+        },
+        "org_general": {
+          "description": "সংস্থার সাধারণ সেটিংস",
+          "keywords": "নাম, ব্র্যান্ডিং, slug, প্রোফাইল"
+        },
+        "org_features": {
+          "description": "সংস্থার বৈশিষ্ট্য পরিচালনা করুন",
+          "keywords": "বৈশিষ্ট্য, মডিউল, টগল"
+        },
+        "org_billing": {
+          "description": "বিলিং এবং সাবস্ক্রিপশন",
+          "keywords": "প্ল্যান, অর্থপ্রদান, চালান, সাবস্ক্রিপশন"
+        },
+        "payments_overview": {
+          "description": "পেমেন্ট সংক্ষিপ্ত বিবরণ",
+          "keywords": "stripe, ড্যাশবোর্ড, রাজস্ব"
+        },
+        "payments_products": {
+          "description": "পেমেন্ট পণ্য এবং মূল্য",
+          "keywords": "পণ্য, মূল্য, stripe, স্তর"
         }
       }
     }

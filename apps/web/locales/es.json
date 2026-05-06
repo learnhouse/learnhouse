@@ -180,7 +180,8 @@
     "creating": "Creando...",
     "view_details": "Ver detalles",
     "close": "Cerrar",
-    "optional": "opcional"
+    "optional": "opcional",
+    "analytics": "Analítica"
   },
   "banner": {
     "viewing_as_guest": "Estás viendo {{name}} como invitado.",
@@ -3502,6 +3503,94 @@
             "creating": "Creando tarea...",
             "success": "Tarea creada con éxito"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Buscar",
+      "placeholder": "Buscar páginas y contenido…",
+      "shortcut_hint": "⌘K",
+      "no_results": "No se encontraron resultados",
+      "loading": "Buscando…",
+      "type_to_search": "Escribe al menos 2 caracteres para buscar contenido",
+      "groups": {
+        "pages": "Páginas",
+        "courses": "Cursos",
+        "collections": "Colecciones",
+        "users": "Usuarios",
+        "communities": "Comunidades",
+        "discussions": "Discusiones",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Resumen del panel",
+          "keywords": "inicio, resumen, comenzar, panel"
+        },
+        "courses": {
+          "description": "Gestiona tus cursos",
+          "keywords": "cursos, lecciones, aprender, formación, clases"
+        },
+        "assignments": {
+          "description": "Gestiona las tareas",
+          "keywords": "tareas, deberes, ejercicios, entregas"
+        },
+        "communities": {
+          "description": "Gestiona las comunidades",
+          "keywords": "foros, discusiones, miembros, publicaciones"
+        },
+        "podcasts": {
+          "description": "Gestiona los podcasts",
+          "keywords": "audio, episodios, programas"
+        },
+        "boards": {
+          "description": "Gestiona los tableros",
+          "keywords": "kanban, proyecto, tareas, listas"
+        },
+        "playgrounds": {
+          "description": "Playgrounds de código",
+          "keywords": "código, sandbox, repl, programación"
+        },
+        "analytics": {
+          "description": "Ver paneles de analítica",
+          "keywords": "estadísticas, métricas, gráficos, informes"
+        },
+        "users": {
+          "description": "Gestiona los usuarios de la organización",
+          "keywords": "miembros, cuentas, personas"
+        },
+        "usergroups": {
+          "description": "Gestiona grupos de usuarios",
+          "keywords": "equipos, cohortes, grupos"
+        },
+        "roles": {
+          "description": "Gestiona roles y permisos",
+          "keywords": "permisos, acceso, rbac, seguridad"
+        },
+        "signups": {
+          "description": "Revisa los registros",
+          "keywords": "registros, solicitudes, peticiones"
+        },
+        "org_general": {
+          "description": "Configuración general de la organización",
+          "keywords": "nombre, marca, slug, perfil"
+        },
+        "org_features": {
+          "description": "Gestiona las funcionalidades de la organización",
+          "keywords": "funcionalidades, módulos, interruptores"
+        },
+        "org_billing": {
+          "description": "Facturación y suscripción",
+          "keywords": "plan, pagos, factura, suscripción"
+        },
+        "payments_overview": {
+          "description": "Resumen de pagos",
+          "keywords": "stripe, panel, ingresos"
+        },
+        "payments_products": {
+          "description": "Productos y precios de pago",
+          "keywords": "productos, precios, stripe, niveles"
         }
       }
     }
