@@ -491,6 +491,74 @@ class TestOrgInvitesService:
         assert result is False
 
 
+class TestSendInviteEmailLangLookup:
+    """Cover the branch in send_invite_email that loads the org's default
+    language from OrganizationConfig and forwards it to send_invitation_email."""
+
+    def test_passes_org_default_language_to_email_helper(
+        self, mock_request, db, org, admin_user
+    ):
+        from datetime import datetime as _dt
+
+        from src.db.organization_config import OrganizationConfig
+        from src.services.orgs.invites import send_invite_email
+
+        db.add(
+            OrganizationConfig(
+                org_id=org.id,
+                config={
+                    "config_version": "2.0",
+                    "customization": {"general": {"default_language": "fr"}},
+                },
+                creation_date=str(_dt.now()),
+                update_date=str(_dt.now()),
+            )
+        )
+        db.commit()
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            return_value="https://test-org.learnhouse.io",
+        ), patch(
+            "src.services.orgs.invites.send_invitation_email",
+            return_value={"id": "email"},
+        ) as mock_send:
+            result = send_invite_email(
+                org,
+                None,
+                admin_user,
+                admin_user.email,
+                mock_request,
+                db_session=db,
+            )
+
+        assert result is True
+        kwargs = mock_send.call_args.kwargs
+        assert kwargs["lang"] == "fr"
+
+    def test_defaults_to_english_when_db_session_is_none(
+        self, mock_request, org, admin_user
+    ):
+        from src.services.orgs.invites import send_invite_email
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            return_value="https://test-org.learnhouse.io",
+        ), patch(
+            "src.services.orgs.invites.send_invitation_email",
+            return_value={"id": "email"},
+        ) as mock_send:
+            send_invite_email(
+                org,
+                None,
+                admin_user,
+                admin_user.email,
+                mock_request,
+            )
+
+        assert mock_send.call_args.kwargs["lang"] == "en"
+
+
 class TestGetRedis:
     def test_get_redis_creates_pool_on_first_call(self):
         fake_pool = Mock()
