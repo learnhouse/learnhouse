@@ -51,6 +51,7 @@ from src.services.orgs.orgs import (
     update_org_color_config,
     update_org_font_config,
     update_org_footer_text_config,
+    update_org_default_language_config,
     update_org_watermark_config,
     update_org_thumbnail,
     update_org_landing,
@@ -640,6 +641,33 @@ async def api_update_org_footer_text_config(
     """
     return await update_org_footer_text_config(
         request, footer_text, org_id, current_user, db_session
+    )
+
+
+@router.put(
+    "/{org_id}/config/default_language",
+    summary="Update organization default language",
+    description="Update the organization's default language used for the public UI and outgoing emails. Admin only.",
+    responses={
+        200: {"description": "Default language updated."},
+        400: {"description": "Unsupported language code"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Caller is not an organization administrator"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def api_update_org_default_language_config(
+    request: Request,
+    org_id: int,
+    default_language: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization default language configuration
+    """
+    return await update_org_default_language_config(
+        request, default_language, org_id, current_user, db_session
     )
 
 

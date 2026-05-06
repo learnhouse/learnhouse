@@ -2210,6 +2210,8 @@
         "footer_text": "Voettekst",
         "footer_text_placeholder": "Voer voettekst in...",
         "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven",
+        "default_language": "Standaardtaal",
+        "default_language_desc": "De taal die nieuwe bezoekers standaard zien en die wordt gebruikt voor e-mails namens deze organisatie. Leden kunnen hun eigen interfacetaal nog steeds wijzigen.",
         "watermark_desc": "LearnHouse-watermerk tonen op organisatiepagina's",
         "watermark_free_plan": "Watermerk wordt altijd getoond bij het gratis plan",
         "watermark_label": "\"Made with LearnHouse\"-watermerk"

@@ -2208,6 +2208,8 @@
         "footer_text": "Texto del pie de página",
         "footer_text_placeholder": "Introduce el texto del pie de página...",
         "footer_text_desc": "Texto personalizado que se muestra en la parte inferior de las páginas de tu organización",
+        "default_language": "Idioma predeterminado",
+        "default_language_desc": "El idioma que ven los nuevos visitantes por defecto y el que se utiliza para los correos enviados en nombre de esta organización. Los miembros pueden cambiar su propio idioma de la interfaz.",
         "watermark_desc": "Mostrar la marca de agua de LearnHouse en las páginas de tu organización",
         "watermark_free_plan": "La marca de agua siempre se muestra en el plan gratuito",
         "watermark_label": "Marca de agua \"Hecho con LearnHouse\""

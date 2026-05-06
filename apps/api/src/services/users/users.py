@@ -23,7 +23,9 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
+from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
+from src.services.orgs.orgs import get_org_default_language
 from src.db.users import (
     AnonymousUser,
     InternalUser,
@@ -173,9 +175,12 @@ async def create_user(
 
     # Send verification email for non-OAuth users, account creation email for OAuth users
     if is_oauth:
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == int(org_id))
+        org_config = db_session.exec(org_config_stmt).first()
         send_account_creation_email(
             user=user_read,
             email=user_read.email,
+            lang=get_org_default_language(org_config),
         )
     else:
         # Import here to avoid circular imports

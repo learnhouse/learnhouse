@@ -2220,6 +2220,8 @@
         "footer_text": "푸터 텍스트",
         "footer_text_placeholder": "푸터 텍스트 입력...",
         "footer_text_desc": "조직 페이지 하단에 표시되는 사용자 지정 텍스트",
+        "default_language": "기본 언어",
+        "default_language_desc": "새 방문자에게 기본으로 표시되는 언어이며, 이 조직을 대신해 발송되는 이메일에 사용되는 언어입니다. 구성원은 자신의 UI 언어를 계속 전환할 수 있습니다.",
         "watermark_desc": "조직 페이지에 LearnHouse 브랜드 워터마크 표시",
         "watermark_free_plan": "무료 플랜에서는 워터마크가 항상 표시됩니다",
         "watermark_label": "\"Made with LearnHouse\" 워터마크"
