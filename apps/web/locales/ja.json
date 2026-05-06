@@ -2156,7 +2156,9 @@
           "usage": "Usage",
           "other": "その他",
           "domains": "ドメイン",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "自動化"
         },
         "pages": {
           "general": {
@@ -3595,12 +3597,94 @@
           "keywords": "プラン, 支払い, 請求書, サブスクリプション"
         },
         "payments_overview": {
-          "description": "支払い概要",
-          "keywords": "stripe, ダッシュボード, 収益"
+          "description": "支払い概要と収益",
+          "keywords": "stripe, ダッシュボード, 収益, 売上",
+          "title": "支払い概要"
         },
         "payments_products": {
           "description": "支払い商品と価格",
-          "keywords": "商品, 価格, stripe, ティア"
+          "keywords": "商品, 価格, stripe, ティア, プラン",
+          "title": "商品"
+        },
+        "users_add": {
+          "description": "新しいメンバーを招待",
+          "keywords": "招待, 追加, メンバー, 送信"
+        },
+        "users_audit_logs": {
+          "description": "組織のアクティビティログ",
+          "keywords": "監査, ログ, 履歴, セキュリティ, アクティビティ"
+        },
+        "org_branding": {
+          "description": "ロゴ、色、ビジュアルアイデンティティ",
+          "keywords": "ブランディング, ロゴ, 色, テーマ"
+        },
+        "org_landing": {
+          "description": "ランディングページのカスタマイズ",
+          "keywords": "ランディング, ホームページ, hero, ページ"
+        },
+        "org_seo": {
+          "description": "検索エンジン最適化",
+          "keywords": "seo, 検索, メタ, ランキング, google"
+        },
+        "org_ai": {
+          "description": "AI機能と設定",
+          "keywords": "ai, llm, gpt, openai, 生成"
+        },
+        "org_domains": {
+          "description": "カスタムドメイン",
+          "keywords": "ドメイン, dns, カスタム, サブドメイン, cname"
+        },
+        "org_automations": {
+          "description": "Webhookと外部連携",
+          "keywords": "webhooks, 自動化, zapier, 連携, トリガー"
+        },
+        "org_api": {
+          "description": "APIトークンとプログラマティックアクセス",
+          "keywords": "api, トークン, アクセス, プログラマティック, キー"
+        },
+        "org_sso": {
+          "description": "シングルサインオン設定",
+          "keywords": "sso, saml, oauth, エンタープライズ, ログイン"
+        },
+        "org_other": {
+          "description": "その他の組織設定",
+          "keywords": "その他, 高度, カスタム, 追加"
+        },
+        "payments_groups": {
+          "description": "支払いグループとバンドル",
+          "keywords": "グループ, バンドル, セット",
+          "title": "支払いグループ"
+        },
+        "payments_configuration": {
+          "description": "Stripeと支払いの設定",
+          "keywords": "設定, セットアップ, stripe, 構成, connect",
+          "title": "設定"
+        },
+        "payments_customers": {
+          "description": "顧客とサブスクライバー",
+          "keywords": "顧客, サブスクライバー, バイヤー, 支払い済み",
+          "title": "顧客"
+        },
+        "courses_migrate": {
+          "description": "他のLMSからコースをインポート",
+          "keywords": "インポート, 移行, 転送, lms, moodle, canvas",
+          "title": "コースの移行"
+        },
+        "account_general": {
+          "description": "個人アカウントの一般設定",
+          "keywords": "アカウント, 設定, メール, 名前, 言語"
+        },
+        "account_profile": {
+          "description": "プロフィールと自己紹介を編集",
+          "keywords": "プロフィール, 自己紹介, アバター, 写真, 公開"
+        },
+        "account_security": {
+          "description": "パスワードとセキュリティ設定",
+          "keywords": "パスワード, セキュリティ, 2fa, mfa, セッション"
+        },
+        "account_purchases": {
+          "description": "購入履歴とサブスクリプション",
+          "keywords": "購入, サブスクリプション, 請求, 履歴, レシート"
         }
       }
     }

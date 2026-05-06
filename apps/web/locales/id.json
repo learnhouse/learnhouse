@@ -2169,7 +2169,9 @@
           "usage": "Usage",
           "other": "Lainnya",
           "domains": "Domains",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "Otomatisasi"
         },
         "pages": {
           "general": {
@@ -3608,12 +3610,94 @@
           "keywords": "paket, pembayaran, faktur, langganan"
         },
         "payments_overview": {
-          "description": "Ringkasan pembayaran",
-          "keywords": "stripe, dasbor, pendapatan"
+          "description": "Ringkasan pembayaran dan pendapatan",
+          "keywords": "stripe, dasbor, pendapatan, penjualan",
+          "title": "Ringkasan Pembayaran"
         },
         "payments_products": {
           "description": "Produk dan harga pembayaran",
-          "keywords": "produk, harga, stripe, tingkatan"
+          "keywords": "produk, harga, stripe, tingkat, paket",
+          "title": "Produk"
+        },
+        "users_add": {
+          "description": "Undang anggota baru",
+          "keywords": "undang, tambah, anggota, kirim"
+        },
+        "users_audit_logs": {
+          "description": "Log aktivitas organisasi",
+          "keywords": "audit, log, riwayat, keamanan, aktivitas"
+        },
+        "org_branding": {
+          "description": "Logo, warna, dan identitas visual",
+          "keywords": "branding, logo, warna, tema"
+        },
+        "org_landing": {
+          "description": "Sesuaikan halaman landing Anda",
+          "keywords": "landing, beranda, hero, halaman"
+        },
+        "org_seo": {
+          "description": "Optimasi mesin pencari",
+          "keywords": "seo, pencarian, meta, peringkat, google"
+        },
+        "org_ai": {
+          "description": "Fitur dan konfigurasi AI",
+          "keywords": "ai, llm, gpt, openai, generasi"
+        },
+        "org_domains": {
+          "description": "Domain kustom",
+          "keywords": "domain, dns, kustom, subdomain, cname"
+        },
+        "org_automations": {
+          "description": "Webhook dan integrasi eksternal",
+          "keywords": "webhook, otomatisasi, zapier, integrasi, pemicu"
+        },
+        "org_api": {
+          "description": "Token API dan akses programatik",
+          "keywords": "api, token, akses, programatik, kunci"
+        },
+        "org_sso": {
+          "description": "Konfigurasi sign-on tunggal",
+          "keywords": "sso, saml, oauth, perusahaan, login"
+        },
+        "org_other": {
+          "description": "Pengaturan organisasi lainnya",
+          "keywords": "lain-lain, lanjutan, kustom, tambahan"
+        },
+        "payments_groups": {
+          "description": "Grup dan bundel pembayaran",
+          "keywords": "grup, bundel, set",
+          "title": "Grup Pembayaran"
+        },
+        "payments_configuration": {
+          "description": "Konfigurasi Stripe dan pembayaran",
+          "keywords": "konfigurasi, pengaturan, stripe, setup, connect",
+          "title": "Konfigurasi"
+        },
+        "payments_customers": {
+          "description": "Pelanggan dan pelanggan langganan",
+          "keywords": "pelanggan, pelanggan langganan, pembeli, dibayar",
+          "title": "Pelanggan"
+        },
+        "courses_migrate": {
+          "description": "Impor kursus dari LMS lain",
+          "keywords": "impor, migrasi, transfer, lms, moodle, canvas",
+          "title": "Migrasi Kursus"
+        },
+        "account_general": {
+          "description": "Pengaturan umum akun pribadi",
+          "keywords": "akun, pengaturan, email, nama, bahasa"
+        },
+        "account_profile": {
+          "description": "Edit profil dan bio Anda",
+          "keywords": "profil, bio, avatar, foto, publik"
+        },
+        "account_security": {
+          "description": "Kata sandi dan pengaturan keamanan",
+          "keywords": "kata sandi, keamanan, 2fa, mfa, sesi"
+        },
+        "account_purchases": {
+          "description": "Pembelian dan langganan Anda",
+          "keywords": "pembelian, langganan, tagihan, riwayat, tanda terima"
         }
       }
     }

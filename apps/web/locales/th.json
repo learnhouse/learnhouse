@@ -2169,7 +2169,9 @@
           "other": "อื่นๆ",
           "domains": "Domains",
           "sso": "SSO",
-          "usage": "Usage"
+          "usage": "Usage",
+          "seo": "SEO",
+          "automations": "การทำงานอัตโนมัติ"
         },
         "pages": {
           "general": {
@@ -3610,12 +3612,94 @@
           "keywords": "แผน, การชำระเงิน, ใบแจ้งหนี้, การสมัครสมาชิก"
         },
         "payments_overview": {
-          "description": "ภาพรวมการชำระเงิน",
-          "keywords": "stripe, แดชบอร์ด, รายได้"
+          "description": "ภาพรวมการชำระเงินและรายได้",
+          "keywords": "stripe, แดชบอร์ด, รายได้, ยอดขาย",
+          "title": "ภาพรวมการชำระเงิน"
         },
         "payments_products": {
           "description": "ผลิตภัณฑ์และราคาการชำระเงิน",
-          "keywords": "ผลิตภัณฑ์, ราคา, stripe, ระดับ"
+          "keywords": "ผลิตภัณฑ์, ราคา, stripe, ระดับ, แผน",
+          "title": "ผลิตภัณฑ์"
+        },
+        "users_add": {
+          "description": "เชิญสมาชิกใหม่",
+          "keywords": "เชิญ, เพิ่ม, สมาชิก, ส่ง"
+        },
+        "users_audit_logs": {
+          "description": "บันทึกกิจกรรมขององค์กร",
+          "keywords": "ตรวจสอบ, บันทึก, ประวัติ, ความปลอดภัย, กิจกรรม"
+        },
+        "org_branding": {
+          "description": "โลโก้ สี และเอกลักษณ์ภาพ",
+          "keywords": "แบรนด์, โลโก้, สี, ธีม"
+        },
+        "org_landing": {
+          "description": "ปรับแต่งหน้า Landing ของคุณ",
+          "keywords": "landing, หน้าแรก, hero, หน้า"
+        },
+        "org_seo": {
+          "description": "การปรับแต่งเครื่องมือค้นหา",
+          "keywords": "seo, ค้นหา, meta, อันดับ, google"
+        },
+        "org_ai": {
+          "description": "คุณสมบัติและการกำหนดค่า AI",
+          "keywords": "ai, llm, gpt, openai, การสร้าง"
+        },
+        "org_domains": {
+          "description": "โดเมนที่กำหนดเอง",
+          "keywords": "โดเมน, dns, กำหนดเอง, โดเมนย่อย, cname"
+        },
+        "org_automations": {
+          "description": "Webhook และการผสานภายนอก",
+          "keywords": "webhook, การทำงานอัตโนมัติ, zapier, การผสาน, ทริกเกอร์"
+        },
+        "org_api": {
+          "description": "โทเค็น API และการเข้าถึงแบบโปรแกรม",
+          "keywords": "api, โทเค็น, การเข้าถึง, โปรแกรม, คีย์"
+        },
+        "org_sso": {
+          "description": "การกำหนดค่า Single Sign-On",
+          "keywords": "sso, saml, oauth, องค์กร, เข้าสู่ระบบ"
+        },
+        "org_other": {
+          "description": "การตั้งค่าองค์กรอื่นๆ",
+          "keywords": "อื่นๆ, ขั้นสูง, กำหนดเอง, เพิ่มเติม"
+        },
+        "payments_groups": {
+          "description": "กลุ่มและชุดการชำระเงิน",
+          "keywords": "กลุ่ม, ชุด, เซต",
+          "title": "กลุ่มการชำระเงิน"
+        },
+        "payments_configuration": {
+          "description": "การกำหนดค่า Stripe และการชำระเงิน",
+          "keywords": "การกำหนดค่า, การตั้งค่า, stripe, การติดตั้ง, connect",
+          "title": "การกำหนดค่า"
+        },
+        "payments_customers": {
+          "description": "ลูกค้าและสมาชิก",
+          "keywords": "ลูกค้า, สมาชิก, ผู้ซื้อ, ชำระแล้ว",
+          "title": "ลูกค้า"
+        },
+        "courses_migrate": {
+          "description": "นำเข้าคอร์สจาก LMS อื่น",
+          "keywords": "นำเข้า, ย้าย, ถ่ายโอน, lms, moodle, canvas",
+          "title": "ย้ายคอร์ส"
+        },
+        "account_general": {
+          "description": "การตั้งค่าทั่วไปของบัญชีส่วนตัว",
+          "keywords": "บัญชี, การตั้งค่า, อีเมล, ชื่อ, ภาษา"
+        },
+        "account_profile": {
+          "description": "แก้ไขโปรไฟล์และประวัติของคุณ",
+          "keywords": "โปรไฟล์, ประวัติ, อวตาร, รูป, สาธารณะ"
+        },
+        "account_security": {
+          "description": "การตั้งค่ารหัสผ่านและความปลอดภัย",
+          "keywords": "รหัสผ่าน, ความปลอดภัย, 2fa, mfa, เซสชัน"
+        },
+        "account_purchases": {
+          "description": "การซื้อและการสมัครสมาชิกของคุณ",
+          "keywords": "การซื้อ, การสมัครสมาชิก, การเรียกเก็บเงิน, ประวัติ, ใบเสร็จ"
         }
       }
     }

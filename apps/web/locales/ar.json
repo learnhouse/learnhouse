@@ -2156,7 +2156,9 @@
           "usage": "Usage",
           "other": "أخرى",
           "sso": "SSO",
-          "domains": "النطاقات"
+          "domains": "النطاقات",
+          "seo": "تحسين محركات البحث",
+          "automations": "الأتمتة"
         },
         "pages": {
           "general": {
@@ -3595,12 +3597,94 @@
           "keywords": "خطة, مدفوعات, فاتورة, اشتراك"
         },
         "payments_overview": {
-          "description": "نظرة عامة على المدفوعات",
-          "keywords": "stripe, لوحة, إيرادات"
+          "description": "نظرة عامة على المدفوعات والإيرادات",
+          "keywords": "stripe, لوحة, إيرادات, مبيعات",
+          "title": "نظرة عامة على المدفوعات"
         },
         "payments_products": {
           "description": "منتجات وأسعار الدفع",
-          "keywords": "منتجات, أسعار, stripe, مستويات"
+          "keywords": "منتجات, أسعار, stripe, مستويات, خطط",
+          "title": "المنتجات"
+        },
+        "users_add": {
+          "description": "ادع أعضاء جدد",
+          "keywords": "دعوة, إضافة, أعضاء, إرسال"
+        },
+        "users_audit_logs": {
+          "description": "سجل نشاط المؤسسة",
+          "keywords": "تدقيق, سجلات, تاريخ, أمان, نشاط"
+        },
+        "org_branding": {
+          "description": "الشعار والألوان والهوية البصرية",
+          "keywords": "علامة تجارية, شعار, ألوان, موضوع"
+        },
+        "org_landing": {
+          "description": "تخصيص صفحتك المقصودة",
+          "keywords": "صفحة هبوط, الصفحة الرئيسية, hero, صفحة"
+        },
+        "org_seo": {
+          "description": "تحسين محركات البحث",
+          "keywords": "seo, بحث, ميتا, ترتيب, google"
+        },
+        "org_ai": {
+          "description": "ميزات وإعدادات الذكاء الاصطناعي",
+          "keywords": "ذكاء اصطناعي, llm, gpt, openai, توليد"
+        },
+        "org_domains": {
+          "description": "النطاقات المخصصة",
+          "keywords": "نطاق, dns, مخصص, نطاق فرعي, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks والتكاملات الخارجية",
+          "keywords": "webhooks, أتمتة, zapier, تكاملات, محفزات"
+        },
+        "org_api": {
+          "description": "رموز API والوصول البرمجي",
+          "keywords": "api, رموز, وصول, برمجي, مفاتيح"
+        },
+        "org_sso": {
+          "description": "إعداد الدخول الموحد",
+          "keywords": "sso, saml, oauth, مؤسسة, تسجيل الدخول"
+        },
+        "org_other": {
+          "description": "إعدادات أخرى للمؤسسة",
+          "keywords": "متنوع, متقدم, مخصص, إضافي"
+        },
+        "payments_groups": {
+          "description": "مجموعات وحزم الدفع",
+          "keywords": "مجموعات, حزم, مجموعات",
+          "title": "مجموعات الدفع"
+        },
+        "payments_configuration": {
+          "description": "إعدادات Stripe والمدفوعات",
+          "keywords": "إعدادات, إعداد, stripe, تثبيت, connect",
+          "title": "الإعدادات"
+        },
+        "payments_customers": {
+          "description": "العملاء والمشتركون",
+          "keywords": "عملاء, مشتركون, مشترون, مدفوعون",
+          "title": "العملاء"
+        },
+        "courses_migrate": {
+          "description": "استيراد الدورات من LMS آخر",
+          "keywords": "استيراد, ترحيل, نقل, lms, moodle, canvas",
+          "title": "ترحيل الدورات"
+        },
+        "account_general": {
+          "description": "الإعدادات العامة للحساب الشخصي",
+          "keywords": "حساب, إعدادات, بريد إلكتروني, اسم, لغة"
+        },
+        "account_profile": {
+          "description": "تعديل ملفك الشخصي وسيرتك الذاتية",
+          "keywords": "ملف شخصي, سيرة ذاتية, صورة رمزية, صورة, عام"
+        },
+        "account_security": {
+          "description": "إعدادات كلمة المرور والأمان",
+          "keywords": "كلمة المرور, أمان, 2fa, mfa, جلسات"
+        },
+        "account_purchases": {
+          "description": "مشترياتك واشتراكاتك",
+          "keywords": "مشتريات, اشتراكات, فواتير, تاريخ, إيصالات"
         }
       }
     }

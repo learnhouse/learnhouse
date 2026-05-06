@@ -1,4 +1,10 @@
-import { Users, UsersThree, ShieldCheck, UserPlus } from '@phosphor-icons/react'
+import {
+  Users,
+  UsersThree,
+  ShieldCheck,
+  UserPlus,
+  ClipboardText,
+} from '@phosphor-icons/react'
 import type { SearchMeta } from '@/lib/dashboard-search/types'
 
 export const searchMetas: SearchMeta[] = [
@@ -9,6 +15,15 @@ export const searchMetas: SearchMeta[] = [
     keywordsKey: 'dashboard.search.entries.users.keywords',
     icon: Users,
     href: '/dash/users/settings/users',
+    group: 'users',
+  },
+  {
+    id: 'dash.users.add',
+    titleKey: 'dashboard.users.settings.tabs.add',
+    descriptionKey: 'dashboard.search.entries.users_add.description',
+    keywordsKey: 'dashboard.search.entries.users_add.keywords',
+    icon: UserPlus,
+    href: '/dash/users/settings/add',
     group: 'users',
   },
   {
@@ -36,6 +51,15 @@ export const searchMetas: SearchMeta[] = [
     keywordsKey: 'dashboard.search.entries.signups.keywords',
     icon: UserPlus,
     href: '/dash/users/settings/signups',
+    group: 'users',
+  },
+  {
+    id: 'dash.users.audit_logs',
+    titleKey: 'dashboard.users.settings.tabs.audit_logs',
+    descriptionKey: 'dashboard.search.entries.users_audit_logs.description',
+    keywordsKey: 'dashboard.search.entries.users_audit_logs.keywords',
+    icon: ClipboardText,
+    href: '/dash/users/settings/audit-logs',
     group: 'users',
   },
 ]

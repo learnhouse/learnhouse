@@ -2169,7 +2169,9 @@
           "other": "Diğer",
           "domains": "Alan Adları",
           "sso": "SSO",
-          "usage": "Kullanım"
+          "usage": "Kullanım",
+          "seo": "SEO",
+          "automations": "Otomasyonlar"
         },
         "pages": {
           "general": {
@@ -3610,12 +3612,94 @@
           "keywords": "plan, ödemeler, fatura, abonelik"
         },
         "payments_overview": {
-          "description": "Ödeme genel bakışı",
-          "keywords": "stripe, pano, gelir"
+          "description": "Ödeme genel bakışı ve gelir",
+          "keywords": "stripe, pano, gelir, satışlar",
+          "title": "Ödeme Genel Bakışı"
         },
         "payments_products": {
           "description": "Ödeme ürünleri ve fiyatlandırma",
-          "keywords": "ürünler, fiyatlar, stripe, kademeler"
+          "keywords": "ürünler, fiyatlar, stripe, kademeler, planlar",
+          "title": "Ürünler"
+        },
+        "users_add": {
+          "description": "Yeni üyeler davet edin",
+          "keywords": "davet, ekle, üyeler, gönder"
+        },
+        "users_audit_logs": {
+          "description": "Kuruluş etkinlik günlüğü",
+          "keywords": "denetim, günlükler, geçmiş, güvenlik, etkinlik"
+        },
+        "org_branding": {
+          "description": "Logo, renkler ve görsel kimlik",
+          "keywords": "marka, logo, renkler, tema"
+        },
+        "org_landing": {
+          "description": "Açılış sayfanızı özelleştirin",
+          "keywords": "açılış, ana sayfa, hero, sayfa"
+        },
+        "org_seo": {
+          "description": "Arama motoru optimizasyonu",
+          "keywords": "seo, arama, meta, sıralama, google"
+        },
+        "org_ai": {
+          "description": "YZ özellikleri ve yapılandırması",
+          "keywords": "yz, llm, gpt, openai, üretim"
+        },
+        "org_domains": {
+          "description": "Özel etki alanları",
+          "keywords": "etki alanı, dns, özel, alt etki alanı, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks ve dış entegrasyonlar",
+          "keywords": "webhooks, otomasyonlar, zapier, entegrasyonlar, tetikleyiciler"
+        },
+        "org_api": {
+          "description": "API tokenları ve programatik erişim",
+          "keywords": "api, tokenlar, erişim, programatik, anahtarlar"
+        },
+        "org_sso": {
+          "description": "Tek oturum açma yapılandırması",
+          "keywords": "sso, saml, oauth, kurumsal, giriş"
+        },
+        "org_other": {
+          "description": "Diğer kuruluş ayarları",
+          "keywords": "diğer, gelişmiş, özel, ek"
+        },
+        "payments_groups": {
+          "description": "Ödeme grupları ve paketler",
+          "keywords": "gruplar, paketler, kümeler",
+          "title": "Ödeme Grupları"
+        },
+        "payments_configuration": {
+          "description": "Stripe ve ödeme yapılandırması",
+          "keywords": "yapılandırma, ayarlar, stripe, kurulum, connect",
+          "title": "Yapılandırma"
+        },
+        "payments_customers": {
+          "description": "Müşteriler ve aboneler",
+          "keywords": "müşteriler, aboneler, alıcılar, ödenmiş",
+          "title": "Müşteriler"
+        },
+        "courses_migrate": {
+          "description": "Başka bir LMS'den kursları içe aktar",
+          "keywords": "içe aktar, taşı, transfer, lms, moodle, canvas",
+          "title": "Kursları Taşı"
+        },
+        "account_general": {
+          "description": "Kişisel hesap genel ayarları",
+          "keywords": "hesap, ayarlar, email, ad, dil"
+        },
+        "account_profile": {
+          "description": "Profilini ve biyografini düzenle",
+          "keywords": "profil, bio, avatar, fotoğraf, halka açık"
+        },
+        "account_security": {
+          "description": "Şifre ve güvenlik ayarları",
+          "keywords": "şifre, güvenlik, 2fa, mfa, oturumlar"
+        },
+        "account_purchases": {
+          "description": "Satın alımlarınız ve abonelikleriniz",
+          "keywords": "satın alımlar, abonelikler, faturalandırma, geçmiş, makbuzlar"
         }
       }
     }

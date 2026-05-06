@@ -2169,7 +2169,9 @@
           "other": "Khác",
           "domains": "Domains",
           "sso": "SSO",
-          "usage": "Usage"
+          "usage": "Usage",
+          "seo": "SEO",
+          "automations": "Tự động hóa"
         },
         "pages": {
           "general": {
@@ -3610,12 +3612,94 @@
           "keywords": "gói, thanh toán, hóa đơn, đăng ký"
         },
         "payments_overview": {
-          "description": "Tổng quan thanh toán",
-          "keywords": "stripe, bảng điều khiển, doanh thu"
+          "description": "Tổng quan thanh toán và doanh thu",
+          "keywords": "stripe, bảng điều khiển, doanh thu, bán hàng",
+          "title": "Tổng quan thanh toán"
         },
         "payments_products": {
           "description": "Sản phẩm và giá thanh toán",
-          "keywords": "sản phẩm, giá, stripe, cấp độ"
+          "keywords": "sản phẩm, giá, stripe, cấp độ, gói",
+          "title": "Sản phẩm"
+        },
+        "users_add": {
+          "description": "Mời thành viên mới",
+          "keywords": "mời, thêm, thành viên, gửi"
+        },
+        "users_audit_logs": {
+          "description": "Nhật ký hoạt động của tổ chức",
+          "keywords": "kiểm toán, nhật ký, lịch sử, bảo mật, hoạt động"
+        },
+        "org_branding": {
+          "description": "Logo, màu sắc và bản sắc trực quan",
+          "keywords": "thương hiệu, logo, màu sắc, chủ đề"
+        },
+        "org_landing": {
+          "description": "Tùy chỉnh trang đích của bạn",
+          "keywords": "trang đích, trang chủ, hero, trang"
+        },
+        "org_seo": {
+          "description": "Tối ưu hóa công cụ tìm kiếm",
+          "keywords": "seo, tìm kiếm, meta, xếp hạng, google"
+        },
+        "org_ai": {
+          "description": "Tính năng và cấu hình AI",
+          "keywords": "ai, llm, gpt, openai, tạo"
+        },
+        "org_domains": {
+          "description": "Tên miền tùy chỉnh",
+          "keywords": "tên miền, dns, tùy chỉnh, tên miền phụ, cname"
+        },
+        "org_automations": {
+          "description": "Webhook và tích hợp bên ngoài",
+          "keywords": "webhook, tự động hóa, zapier, tích hợp, kích hoạt"
+        },
+        "org_api": {
+          "description": "Mã API và truy cập lập trình",
+          "keywords": "api, mã, truy cập, lập trình, khóa"
+        },
+        "org_sso": {
+          "description": "Cấu hình đăng nhập một lần",
+          "keywords": "sso, saml, oauth, doanh nghiệp, đăng nhập"
+        },
+        "org_other": {
+          "description": "Các cài đặt tổ chức khác",
+          "keywords": "khác, nâng cao, tùy chỉnh, bổ sung"
+        },
+        "payments_groups": {
+          "description": "Nhóm và gói thanh toán",
+          "keywords": "nhóm, gói, bộ",
+          "title": "Nhóm thanh toán"
+        },
+        "payments_configuration": {
+          "description": "Cấu hình Stripe và thanh toán",
+          "keywords": "cấu hình, cài đặt, stripe, thiết lập, connect",
+          "title": "Cấu hình"
+        },
+        "payments_customers": {
+          "description": "Khách hàng và người đăng ký",
+          "keywords": "khách hàng, người đăng ký, người mua, đã trả",
+          "title": "Khách hàng"
+        },
+        "courses_migrate": {
+          "description": "Nhập khóa học từ LMS khác",
+          "keywords": "nhập, di chuyển, chuyển giao, lms, moodle, canvas",
+          "title": "Di chuyển khóa học"
+        },
+        "account_general": {
+          "description": "Cài đặt chung tài khoản cá nhân",
+          "keywords": "tài khoản, cài đặt, email, tên, ngôn ngữ"
+        },
+        "account_profile": {
+          "description": "Chỉnh sửa hồ sơ và tiểu sử của bạn",
+          "keywords": "hồ sơ, tiểu sử, ảnh đại diện, ảnh, công khai"
+        },
+        "account_security": {
+          "description": "Mật khẩu và cài đặt bảo mật",
+          "keywords": "mật khẩu, bảo mật, 2fa, mfa, phiên"
+        },
+        "account_purchases": {
+          "description": "Giao dịch mua và đăng ký của bạn",
+          "keywords": "giao dịch mua, đăng ký, thanh toán, lịch sử, biên lai"
         }
       }
     }
