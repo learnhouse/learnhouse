@@ -1,7 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
+import dynamic from 'next/dynamic'
 
-import UserBlockComponent from './UserBlockComponent'
+const UserBlockComponent = dynamic(() => import('./UserBlockComponent'), {
+  ssr: false,
+})
 
 export default Node.create({
   name: 'blockUser',
@@ -30,6 +33,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(UserBlockComponent)
+    return ReactNodeViewRenderer(UserBlockComponent as any)
   },
 })

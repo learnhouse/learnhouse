@@ -11,6 +11,8 @@ from src.services.courses.activities.activities import (
     get_activityby_id,
     update_activity,
     delete_activity,
+    get_editor_bootstrap,
+    EditorBootstrapResponse,
 )
 from src.services.courses.activities.versioning import (
     get_activity_versions,
@@ -174,6 +176,23 @@ async def api_restore_activity_version(
 
 
 # Activity CRUD endpoints
+
+
+@router.get(
+    "/{activity_uuid}/editor-bootstrap",
+    response_model=EditorBootstrapResponse,
+    summary="Editor bootstrap payload",
+    description="Single-roundtrip payload for the activity editor: activity + minimal course + org with resolved features.",
+)
+async def api_get_editor_bootstrap(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> EditorBootstrapResponse:
+    return await get_editor_bootstrap(
+        request, activity_uuid, current_user=current_user, db_session=db_session
+    )
 
 
 @router.get(

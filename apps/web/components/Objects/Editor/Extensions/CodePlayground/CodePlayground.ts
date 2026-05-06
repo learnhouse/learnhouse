@@ -1,6 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
-import CodePlaygroundComponent from './CodePlaygroundComponent'
+import dynamic from 'next/dynamic'
+
+const CodePlaygroundComponent = dynamic(() => import('./CodePlaygroundComponent'), {
+  ssr: false,
+})
 
 export default Node.create({
   name: 'blockCode',
@@ -80,6 +84,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CodePlaygroundComponent)
+    return ReactNodeViewRenderer(CodePlaygroundComponent as any)
   },
 })
