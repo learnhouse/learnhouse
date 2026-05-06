@@ -120,13 +120,24 @@ function Editor(props: Editor) {
   // remove activity_ from activity_uuid
   const activity_uuid = props.activity.activity_uuid.substring(9)
 
-  // Stable closure for PasteFileHandler so the extensions array can be memoized
-  // even if `props.session` reference changes after token refresh.
+  // Stable closures for extension config so the extensions array can be
+  // memoized even if `props.session` / `props.activity` references change
+  // between renders (e.g., after a save updates EditorWrapper state).
   const sessionRef = React.useRef(props.session)
   sessionRef.current = props.session
+  const activityRef = React.useRef(props.activity)
+  activityRef.current = props.activity
   const getAccessToken = React.useCallback(
     () => sessionRef.current?.data?.tokens?.access_token,
     []
+  )
+  // Capture the activity object at first render so extensions get a stable
+  // reference; extensions only read static fields like activity_uuid that
+  // don't change during a session. Keyed off activity_uuid below so a new
+  // activity (different uuid) does rebuild correctly.
+  const stableActivity = React.useMemo(
+    () => activityRef.current,
+    [props.activity.activity_uuid]
   )
 
   const extensions = React.useMemo(
@@ -134,52 +145,44 @@ function Editor(props: Editor) {
       StarterKit.configure({
         codeBlock: false,
         link: false,
-        bulletList: {
-          HTMLAttributes: {
-            class: 'bullet-list',
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: 'ordered-list',
-          },
-        },
+        bulletList: { HTMLAttributes: { class: 'bullet-list' } },
+        orderedList: { HTMLAttributes: { class: 'ordered-list' } },
       }),
       Callout,
       InfoCallout.configure({ editable: true }),
       WarningCallout.configure({ editable: true }),
-      ImageBlock.configure({ editable: true, activity: props.activity }),
-      VideoBlock.configure({ editable: true, activity: props.activity }),
-      AudioBlock.configure({ editable: true, activity: props.activity }),
-      MathEquationBlock.configure({ editable: true, activity: props.activity }),
-      PDFBlock.configure({ editable: true, activity: props.activity }),
-      QuizBlock.configure({ editable: true, activity: props.activity }),
+      ImageBlock.configure({ editable: true, activity: stableActivity }),
+      VideoBlock.configure({ editable: true, activity: stableActivity }),
+      AudioBlock.configure({ editable: true, activity: stableActivity }),
+      MathEquationBlock.configure({ editable: true, activity: stableActivity }),
+      PDFBlock.configure({ editable: true, activity: stableActivity }),
+      QuizBlock.configure({ editable: true, activity: stableActivity }),
       Youtube.configure({ controls: true, modestBranding: true }),
       CodeBlockLowlight.configure({ lowlight }),
-      EmbedObjects.configure({ editable: true, activity: props.activity }),
-      Badges.configure({ editable: true, activity: props.activity }),
-      Buttons.configure({ editable: true, activity: props.activity }),
-      UserBlock.configure({ editable: true, activity: props.activity }),
+      EmbedObjects.configure({ editable: true, activity: stableActivity }),
+      Badges.configure({ editable: true, activity: stableActivity }),
+      Buttons.configure({ editable: true, activity: stableActivity }),
+      UserBlock.configure({ editable: true, activity: stableActivity }),
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
       getLinkExtension(),
-      WebPreview.configure({ editable: true, activity: props.activity }),
-      Flipcard.configure({ editable: true, activity: props.activity }),
-      Scenarios.configure({ editable: true, activity: props.activity }),
-      CodePlayground.configure({ editable: true, activity: props.activity }),
+      WebPreview.configure({ editable: true, activity: stableActivity }),
+      Flipcard.configure({ editable: true, activity: stableActivity }),
+      Scenarios.configure({ editable: true, activity: stableActivity }),
+      CodePlayground.configure({ editable: true, activity: stableActivity }),
       DragHandle,
       SlashCommands.configure({ currentPlan }),
       PasteFileHandler.configure({
-        activity: props.activity,
+        activity: stableActivity,
         getAccessToken,
       }),
-      MagicBlock.configure({ editable: true, activity: props.activity }),
+      MagicBlock.configure({ editable: true, activity: stableActivity }),
       AIStreamingMark,
       AISelectionHighlight,
     ],
-    [props.activity, currentPlan, getAccessToken]
+    [stableActivity, currentPlan, getAccessToken]
   )
 
   const editor: any = useEditor({
@@ -287,8 +290,9 @@ function Editor(props: Editor) {
 
   return (
     <div className="activity-editor-page">
-      {/* Version History Panel */}
-      {canUseVersioning && (
+      {/* Version History Panel — only mount when first opened so the chunk
+          + the versions list fetch don't run on every editor load. */}
+      {canUseVersioning && showVersionHistory && (
         <VersionHistoryPanel
           isOpen={showVersionHistory}
           onClose={() => setShowVersionHistory(false)}
@@ -299,8 +303,8 @@ function Editor(props: Editor) {
         />
       )}
 
-      {/* Merge Conflict Modal */}
-      {editor && (
+      {/* Merge Conflict Modal — same: only mount when actually needed. */}
+      {editor && showMergeModal && (
         <MergeConflictModal
           isOpen={showMergeModal}
           onClose={() => setShowMergeModal(false)}
@@ -315,7 +319,7 @@ function Editor(props: Editor) {
         />
       )}
 
-      <CourseProvider courseuuid={props.course.course_uuid}>
+      <CourseProvider courseuuid={props.course.course_uuid} initialCourseStructure={props.course}>
           <div className="activity-editor-top">
             <div className="activity-editor-doc-section">
               <div className="activity-editor-info-wrapper">

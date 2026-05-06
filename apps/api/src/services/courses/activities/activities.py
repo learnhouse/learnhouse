@@ -178,15 +178,19 @@ async def get_editor_bootstrap(
 ) -> EditorBootstrapResponse:
     """Single-roundtrip payload for the activity editor.
 
-    Returns the activity (full content), the small subset of course fields the
-    editor reads, and the organization with resolved feature flags. Replaces
-    three separate fetches (course meta + activity + org) with one.
+    Replaces three separate fetches (course meta + activity + org) with one.
+    All needed rows are pulled in a single SQL round-trip via joins, including
+    OrganizationConfig and the parent Chapter (for lock checks) so the lock
+    helper does not need a follow-up query.
     """
     statement = (
-        select(Activity, Course, Organization, User)
+        select(Activity, Course, Organization, OrganizationConfig, User, Chapter)
         .join(Course, Course.id == Activity.course_id)  # type: ignore
         .join(Organization, Organization.id == Course.org_id)  # type: ignore
+        .outerjoin(OrganizationConfig, OrganizationConfig.org_id == Organization.id)  # type: ignore
         .outerjoin(User, Activity.last_modified_by_id == User.id)  # type: ignore
+        .outerjoin(ChapterActivity, ChapterActivity.activity_id == Activity.id)  # type: ignore
+        .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore
         .where(Activity.activity_uuid == activity_uuid)
     )
     db_result = db_session.exec(statement).first()
@@ -194,7 +198,7 @@ async def get_editor_bootstrap(
     if not db_result:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    activity, course, org, last_modified_user = db_result
+    activity, course, org, org_config, last_modified_user, parent_chapter = db_result
 
     await check_resource_access(
         request, db_session, current_user, course.course_uuid, AccessAction.READ
@@ -214,10 +218,14 @@ async def get_editor_bootstrap(
     activity_read.last_modified_by_username = (
         last_modified_user.username if last_modified_user else None
     )
-    _apply_activity_lock(activity_read, activity, course, current_user, db_session)
-
-    cfg_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(cfg_stmt).first()
+    _apply_activity_lock(
+        activity_read,
+        activity,
+        course,
+        current_user,
+        db_session,
+        parent_chapter=parent_chapter,
+    )
 
     # Build org with resolved_features (same shape the existing /orgs/uuid/{uuid}
     # endpoint returns, so the frontend doesn't have to reshape anything).
@@ -243,6 +251,8 @@ def _apply_activity_lock(
     course: Course,
     current_user,
     db_session: Session,
+    *,
+    parent_chapter: Chapter | None = None,
 ) -> None:
     """Enforce chapter/activity lock_type on a single-activity read.
 
@@ -258,11 +268,16 @@ def _apply_activity_lock(
     if admin:
         return
 
-    parent_chapter_row = db_session.exec(
-        select(Chapter)
-        .join(ChapterActivity, ChapterActivity.chapter_id == Chapter.id)  # type: ignore
-        .where(ChapterActivity.activity_id == activity.id)
-    ).first()
+    # Caller may have already fetched the parent chapter (e.g. via the editor
+    # bootstrap join); only run the extra query when it wasn't supplied.
+    if parent_chapter is not None:
+        parent_chapter_row = parent_chapter
+    else:
+        parent_chapter_row = db_session.exec(
+            select(Chapter)
+            .join(ChapterActivity, ChapterActivity.chapter_id == Chapter.id)  # type: ignore
+            .where(ChapterActivity.activity_id == activity.id)
+        ).first()
 
     check_uuids: list[str] = [course.course_uuid]
     if (activity.lock_type or "public") == "restricted":
