@@ -93,32 +93,32 @@
           "description": "Cộng đồng là tính năng cao cấp chỉ dành cho các tổ chức trên gói Standard hoặc cao hơn. Nâng cấp để mở khóa cộng đồng thảo luận cho thành viên của bạn."
         },
         "analytics": {
-          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
-          "title": "Standard Feature"
+          "description": "Phân tích là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để mở khóa thông tin chi tiết về người học và nội dung của bạn.",
+          "title": "Tính năng Standard"
         },
         "course_analytics": {
-          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
-          "title": "Pro Feature"
+          "description": "Phân tích khóa học là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để mở khóa dữ liệu tương tác chi tiết, xu hướng đăng ký và tiến độ học tập của từng khóa học.",
+          "title": "Tính năng Pro"
         },
         "custom_domains": {
-          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
-          "title": "Standard Feature"
+          "description": "Tên miền tùy chỉnh là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để sử dụng tên miền riêng cho trải nghiệm mang thương hiệu của bạn.",
+          "title": "Tính năng Standard"
         },
         "podcasts": {
-          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
-          "title": "Standard Feature"
+          "description": "Podcast là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để tạo và chia sẻ podcast với các thành viên của bạn.",
+          "title": "Tính năng Standard"
         },
         "seo": {
-          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
-          "title": "Standard Feature"
+          "description": "Công cụ tối ưu hóa SEO chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để tùy chỉnh hiển thị trên công cụ tìm kiếm, bản xem trước chia sẻ mạng xã hội và dữ liệu có cấu trúc cho khóa học của bạn.",
+          "title": "Tính năng Standard"
         },
         "sso": {
-          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
-          "title": "Enterprise Feature"
+          "description": "Đăng nhập một lần (SSO) là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Enterprise. Nâng cấp để bật xác thực an toàn thông qua nhà cung cấp danh tính của tổ chức bạn.",
+          "title": "Tính năng Enterprise"
         }
       },
-      "current_plan": "Current plan",
-      "upgrade_to": "Upgrade to"
+      "current_plan": "Gói hiện tại",
+      "upgrade_to": "Nâng cấp lên"
     },
     "features": {
       "disabled": {
@@ -179,8 +179,14 @@
     "view_details": "Xem chi tiết",
     "boards": "Bảng",
     "close": "Đóng",
-    "optional": "optional",
-    "playgrounds": "Playgrounds"
+    "optional": "tùy chọn",
+    "playgrounds": "Playgrounds",
+    "analytics": "Phân tích",
+    "add": "Thêm",
+    "choose_an_organization_to_continue": "Chọn một tổ chức để tiếp tục",
+    "for": "cho",
+    "powered_by": "Cung cấp bởi",
+    "results": "kết quả"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -256,65 +262,67 @@
     "invite_required_desc": "Cần mã mời để tham gia {{org}}",
     "invite_code": "Mã mời",
     "validate_invite": "Xác nhận lời mời",
-    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
-    "back_to_login": "Back to Login",
-    "check_email_for_verification": "Check Your Email",
-    "check_inbox_message": "Please check your inbox and click the verification link.",
-    "create_your_account": "Create your account",
-    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
-    "email_verification_required": "Email Verification Required",
-    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
-    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
-    "email_verified_success": "Email Verified!",
-    "login_failed": "Login Failed",
-    "password_req_lowercase": "At least one lowercase letter (a-z)",
-    "password_req_min_length": "At least 8 characters",
-    "password_req_number": "At least one number (0-9)",
-    "password_req_special": "At least one special character (!@#$%...)",
-    "password_req_uppercase": "At least one uppercase letter (A-Z)",
-    "password_requirements_not_met": "Password does not meet requirements",
-    "password_strength": "Password strength",
-    "password_strength_fair": "Fair",
-    "password_strength_good": "Good",
-    "password_strength_strong": "Strong",
-    "password_strength_weak": "Weak",
-    "proceed_to_login": "Proceed to Login",
-    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
-    "resend_verification_email": "Resend verification email",
-    "resend_verification_failed": "Failed to resend verification email. Please try again.",
-    "sign_in_with_sso": "Sign in with SSO",
+    "account_locked_message": "Tài khoản của bạn đã tạm thời bị khóa do quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau.",
+    "back_to_login": "Quay lại đăng nhập",
+    "check_email_for_verification": "Kiểm tra email của bạn",
+    "check_inbox_message": "Vui lòng kiểm tra hộp thư đến của bạn và nhấp vào liên kết xác minh.",
+    "create_your_account": "Tạo tài khoản của bạn",
+    "email_not_verified_message": "Vui lòng xác minh địa chỉ email của bạn trước khi đăng nhập. Kiểm tra hộp thư đến của bạn để tìm email xác minh.",
+    "email_verification_required": "Cần xác minh email",
+    "email_verification_required_join": "Vui lòng xác minh địa chỉ email của bạn trước khi tham gia tổ chức. Kiểm tra hộp thư đến của bạn để tìm email xác minh.",
+    "email_verified_message": "Email của bạn đã được xác minh thành công. Bây giờ bạn có thể đăng nhập vào tài khoản của mình.",
+    "email_verified_success": "Đã xác minh email!",
+    "login_failed": "Đăng nhập thất bại",
+    "password_req_lowercase": "Ít nhất một chữ cái viết thường (a-z)",
+    "password_req_min_length": "Ít nhất 8 ký tự",
+    "password_req_number": "Ít nhất một chữ số (0-9)",
+    "password_req_special": "Ít nhất một ký tự đặc biệt (!@#$%...)",
+    "password_req_uppercase": "Ít nhất một chữ cái viết hoa (A-Z)",
+    "password_requirements_not_met": "Mật khẩu không đáp ứng yêu cầu",
+    "password_strength": "Độ mạnh mật khẩu",
+    "password_strength_fair": "Tạm ổn",
+    "password_strength_good": "Tốt",
+    "password_strength_strong": "Mạnh",
+    "password_strength_weak": "Yếu",
+    "proceed_to_login": "Tiếp tục đến đăng nhập",
+    "rate_limited_message": "Bạn đã thực hiện quá nhiều lần đăng nhập. Vui lòng đợi vài phút trước khi thử lại.",
+    "resend_verification_email": "Gửi lại email xác minh",
+    "resend_verification_failed": "Không thể gửi lại email xác minh. Vui lòng thử lại.",
+    "sign_in_with_sso": "Đăng nhập bằng SSO",
     "sso_callback": {
-      "auth_failed": "Authentication Failed",
-      "authenticating": "Authenticating...",
-      "copied": "Copied!",
-      "copy_details": "Copy to clipboard",
-      "error": "SSO authentication failed. Please try again.",
-      "error_code": "Error code",
-      "go_home": "Go to Home",
-      "hide_details": "Hide technical details",
-      "missing_params": "Invalid SSO callback. Missing required parameters.",
-      "please_wait": "Please wait while we verify your identity",
-      "provider": "Provider",
-      "redirecting": "Redirecting you to the application...",
-      "show_details": "Show technical details",
-      "success": "Authentication Successful",
+      "auth_failed": "Xác thực thất bại",
+      "authenticating": "Đang xác thực...",
+      "copied": "Đã sao chép!",
+      "copy_details": "Sao chép vào bộ nhớ tạm",
+      "error": "Xác thực SSO thất bại. Vui lòng thử lại.",
+      "error_code": "Mã lỗi",
+      "go_home": "Về trang chủ",
+      "hide_details": "Ẩn chi tiết kỹ thuật",
+      "missing_params": "Callback SSO không hợp lệ. Thiếu các tham số bắt buộc.",
+      "please_wait": "Vui lòng đợi trong khi chúng tôi xác minh danh tính của bạn",
+      "provider": "Nhà cung cấp",
+      "redirecting": "Đang chuyển hướng bạn đến ứng dụng...",
+      "show_details": "Hiển thị chi tiết kỹ thuật",
+      "success": "Xác thực thành công",
       "tips": {
-        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
-        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
-        "invalid_state": "Your session may have expired. Please try logging in again.",
-        "server_error": "The identity provider is experiencing issues. Please try again later."
+        "access_denied": "Nếu bạn từ chối yêu cầu đăng nhập do nhầm lẫn, hãy thử lại và chấp nhận các quyền.",
+        "domain_not_allowed": "Liên hệ với quản trị viên tổ chức để xác minh tên miền email của bạn được phép.",
+        "invalid_state": "Phiên của bạn có thể đã hết hạn. Vui lòng thử đăng nhập lại.",
+        "server_error": "Nhà cung cấp danh tính đang gặp sự cố. Vui lòng thử lại sau."
       },
-      "try_again": "Try Again"
+      "try_again": "Thử lại"
     },
-    "sso_error": "SSO authentication failed. Please try again.",
-    "try_again_in": "try again in {{minutes}} min",
-    "verification_email_resent": "Verification Email Sent",
-    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
-    "verification_failed": "Verification Failed",
-    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
-    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
-    "verify_email_title": "Verify Your Email",
-    "verifying_email": "Verifying your email address..."
+    "sso_error": "Xác thực SSO thất bại. Vui lòng thử lại.",
+    "try_again_in": "thử lại sau {{minutes}} phút",
+    "verification_email_resent": "Đã gửi email xác minh",
+    "verification_email_sent_message": "Chúng tôi đã gửi email xác minh đến hộp thư đến của bạn. Vui lòng nhấp vào liên kết trong email để xác minh tài khoản của bạn.",
+    "verification_failed": "Xác minh thất bại",
+    "verification_missing_params": "Thiếu tham số xác minh. Vui lòng kiểm tra liên kết xác minh của bạn.",
+    "verification_trouble": "Gặp khó khăn? Hãy thử yêu cầu email xác minh mới từ trang đăng nhập.",
+    "verify_email_title": "Xác minh email của bạn",
+    "verifying_email": "Đang xác minh địa chỉ email của bạn...",
+    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "sign_in": "Đăng nhập"
   },
   "verify_email": {
     "title": "Xác minh email",
@@ -603,18 +611,20 @@
         "video_takes_time": "Phân tích video có thể mất 1-2 phút",
         "video_hint": "Video có thể mất 1-2 phút để xử lý"
       },
-      "from_existing": "From Existing Content",
-      "from_existing_description": "Upload files from another platform and organize them into a course"
+      "from_existing": "Từ nội dung có sẵn",
+      "from_existing_description": "Tải lên các tệp từ nền tảng khác và sắp xếp chúng thành một khóa học"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Tất cả khóa học",
+      "filter_by_group": "Lọc theo nhóm",
+      "info_title": "Bộ lọc nhóm người dùng",
+      "info_description": "Lọc các khóa học theo nhóm người dùng để chỉ xem các khóa học được gán cho một nhóm cụ thể. Hữu ích cho gia đình hoặc các nhóm cùng dùng chung tổ chức."
     },
-    "copied": "Copied!",
-    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
-    "quit_course_title": "Quit Course?"
+    "copied": "Đã sao chép!",
+    "quit_course_confirm": "Bạn có chắc chắn muốn rời khỏi khóa học này không? Bạn sẽ mất tất cả tiến trình của mình.",
+    "quit_course_title": "Rời khóa học?",
+    "courses_load_error": "Tải khóa học thất bại. Vui lòng thử lại.",
+    "view_all_courses": "Xem tất cả khóa học"
   },
   "communities": {
     "title": "Cộng đồng",
@@ -662,7 +672,8 @@
       "clear_search": "Xóa tìm kiếm",
       "no_discussions": "Chưa có thảo luận nào",
       "no_discussions_description": "Hãy là người đầu tiên bắt đầu thảo luận trong cộng đồng này!",
-      "start_discussion": "Bắt đầu thảo luận"
+      "start_discussion": "Bắt đầu thảo luận",
+      "delete_failed": "Xóa thảo luận thất bại"
     },
     "discussion_detail": {
       "edit": "Chỉnh sửa",
@@ -670,7 +681,8 @@
       "delete_title": "Xóa thảo luận?",
       "delete_confirm": "Bạn có chắc muốn xóa thảo luận này? Không thể hoàn tác hành động này.",
       "delete_button": "Xóa thảo luận",
-      "no_details": "Không có chi tiết bổ sung."
+      "no_details": "Không có chi tiết bổ sung.",
+      "delete_failed": "Xóa thảo luận thất bại"
     },
     "discussion_card": {
       "pin_discussion": "Ghim thảo luận",
@@ -680,7 +692,10 @@
       "delete_discussion": "Xóa thảo luận",
       "delete_title": "Xóa thảo luận?",
       "delete_confirm": "Bạn có chắc muốn xóa thảo luận này? Không thể hoàn tác hành động này.",
-      "votes": "phiếu"
+      "votes": "phiếu",
+      "delete_failed": "Xóa thảo luận thất bại",
+      "lock_failed": "Cập nhật trạng thái khóa thất bại",
+      "pin_failed": "Cập nhật trạng thái ghim thất bại"
     },
     "comments": {
       "no_replies": "Chưa có phản hồi",
@@ -696,7 +711,8 @@
       "cancel": "Hủy",
       "failed_to_post": "Không thể đăng phản hồi. Vui lòng thử lại.",
       "content_not_allowed": "Phản hồi của bạn chứa nội dung không được phép.",
-      "failed_to_update": "Cập nhật thất bại. Vui lòng thử lại."
+      "failed_to_update": "Cập nhật thất bại. Vui lòng thử lại.",
+      "failed_to_delete": "Xóa bình luận thất bại"
     },
     "label_filter": {
       "label": "Nhãn:",
@@ -775,98 +791,98 @@
     "podcast_deleted_success": "Xóa podcast thành công",
     "podcast_deleted_error": "Xóa podcast thất bại",
     "edit_content": "Chỉnh sửa Nội dung",
-    "create_new_podcast": "Create a new podcast for your organization",
-    "create_podcast": "Create Podcast",
-    "create_podcast_btn": "Create Podcast",
-    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
-    "creating_podcast": "Creating podcast...",
+    "create_new_podcast": "Tạo một podcast mới cho tổ chức của bạn",
+    "create_podcast": "Tạo Podcast",
+    "create_podcast_btn": "Tạo Podcast",
+    "create_podcasts_placeholder": "Tạo podcast để chia sẻ nội dung âm thanh với khán giả của bạn",
+    "creating_podcast": "Đang tạo podcast...",
     "dashboard": {
       "episodes": {
-        "audio_hint": "MP3, WAV, or M4A files supported",
-        "audio_label": "Audio File",
-        "create": "Create Episode",
-        "create_error": "Failed to create episode",
-        "create_first": "Create First Episode",
-        "created": "Episode created",
-        "creating": "Creating episode...",
+        "audio_hint": "Hỗ trợ tệp MP3, WAV hoặc M4A",
+        "audio_label": "Tệp âm thanh",
+        "create": "Tạo tập",
+        "create_error": "Không thể tạo tập",
+        "create_first": "Tạo tập đầu tiên",
+        "created": "Đã tạo tập",
+        "creating": "Đang tạo tập...",
         "delete": "Xóa",
-        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
-        "delete_error": "Failed to delete episode",
-        "delete_title": "Delete Episode?",
-        "deleted": "Episode deleted",
-        "deleting": "Deleting episode...",
+        "delete_confirm": "Bạn có chắc chắn muốn xóa tập này không? Hành động này không thể hoàn tác.",
+        "delete_error": "Không thể xóa tập",
+        "delete_title": "Xóa tập?",
+        "deleted": "Đã xóa tập",
+        "deleting": "Đang xóa tập...",
         "description_label": "Mô tả",
-        "description_placeholder": "Enter episode description",
+        "description_placeholder": "Nhập mô tả tập",
         "edit": "Chỉnh sửa",
-        "edit_episode": "Edit Episode",
-        "edit_episode_description": "Update episode details",
-        "new_episode": "New Episode",
-        "new_episode_description": "Add a new episode to this podcast",
-        "no_audio": "No audio file",
-        "no_episodes_description": "Start by adding your first episode",
+        "edit_episode": "Chỉnh sửa tập",
+        "edit_episode_description": "Cập nhật chi tiết tập",
+        "new_episode": "Tập mới",
+        "new_episode_description": "Thêm một tập mới vào podcast này",
+        "no_audio": "Không có tệp âm thanh",
+        "no_episodes_description": "Bắt đầu bằng cách thêm tập đầu tiên của bạn",
         "publish": "Xuất bản",
-        "replace_audio": "Replace Audio File",
-        "save": "Save Changes",
+        "replace_audio": "Thay thế tệp âm thanh",
+        "save": "Lưu thay đổi",
         "title_label": "Tiêu đề",
-        "title_placeholder": "Enter episode title",
+        "title_placeholder": "Nhập tiêu đề tập",
         "unpublish": "Hủy xuất bản",
-        "update_error": "Failed to update episode",
-        "updated": "Episode updated",
-        "updating": "Updating episode...",
-        "upload_audio": "Upload Audio File"
+        "update_error": "Không thể cập nhật tập",
+        "updated": "Đã cập nhật tập",
+        "updating": "Đang cập nhật tập...",
+        "upload_audio": "Tải lên tệp âm thanh"
       },
       "form": {
-        "about": "About",
-        "about_max_length": "About must be at most 2000 characters",
-        "about_placeholder": "Tell listeners more about this podcast...",
-        "public_hint": "Anyone can find and listen to this podcast",
-        "published_hint": "Make this podcast visible on your organization page",
-        "tags_hint": "Separate tags with commas",
-        "tags_placeholder": "music, education, tech",
-        "thumbnail": "Thumbnail",
-        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
-        "upload_thumbnail": "Upload Thumbnail",
-        "visibility": "Visibility Settings"
+        "about": "Giới thiệu",
+        "about_max_length": "Phần giới thiệu phải có tối đa 2000 ký tự",
+        "about_placeholder": "Cho người nghe biết thêm về podcast này...",
+        "public_hint": "Bất kỳ ai cũng có thể tìm và nghe podcast này",
+        "published_hint": "Hiển thị podcast này trên trang tổ chức của bạn",
+        "tags_hint": "Phân tách các thẻ bằng dấu phẩy",
+        "tags_placeholder": "âm nhạc, giáo dục, công nghệ",
+        "thumbnail": "Hình thu nhỏ",
+        "thumbnail_hint": "Kích thước khuyến nghị: 1400x1400px. JPG hoặc PNG.",
+        "upload_thumbnail": "Tải lên hình thu nhỏ",
+        "visibility": "Cài đặt hiển thị"
       },
-      "save_changes": "Save Changes",
-      "save_error": "Failed to save changes",
-      "saved": "Changes saved",
-      "saving": "Saving...",
+      "save_changes": "Lưu thay đổi",
+      "save_error": "Không thể lưu thay đổi",
+      "saved": "Đã lưu thay đổi",
+      "saving": "Đang lưu...",
       "tabs": {
-        "episodes": "Episodes",
+        "episodes": "Các tập",
         "general": "Chung"
       },
-      "view_podcast": "View Podcast"
+      "view_podcast": "Xem Podcast"
     },
-    "failed_to_create_podcast": "Failed to create podcast",
+    "failed_to_create_podcast": "Tạo podcast thất bại",
     "form": {
-      "description_max_length": "Description must be at most 500 characters",
-      "name_max_length": "Name must be at most 100 characters",
-      "name_min_length": "Name must be at least 3 characters",
-      "name_required": "Podcast name is required"
+      "description_max_length": "Mô tả phải có tối đa 500 ký tự",
+      "name_max_length": "Tên phải có tối đa 100 ký tự",
+      "name_min_length": "Tên phải có ít nhất 3 ký tự",
+      "name_required": "Tên podcast là bắt buộc"
     },
     "modals": {
       "create": {
         "cancel": "Hủy",
-        "description": "Fill in the details to create a new podcast",
+        "description": "Điền thông tin chi tiết để tạo một podcast mới",
         "form": {
           "description_label": "Mô tả",
-          "description_placeholder": "Enter podcast description",
-          "name_label": "Podcast Name",
-          "name_placeholder": "Enter podcast name",
-          "public_label": "Make this podcast public"
+          "description_placeholder": "Nhập mô tả podcast",
+          "name_label": "Tên Podcast",
+          "name_placeholder": "Nhập tên podcast",
+          "public_label": "Đặt podcast này ở chế độ công khai"
         },
-        "submit": "Create Podcast",
-        "title": "Create New Podcast"
+        "submit": "Tạo Podcast",
+        "title": "Tạo Podcast mới"
       }
     },
-    "podcast_created_success": "Podcast created successfully",
-    "podcast_name": "Podcast Name",
-    "podcast_name_required": "Podcast name is required",
+    "podcast_created_success": "Tạo podcast thành công",
+    "podcast_name": "Tên Podcast",
+    "podcast_name_required": "Tên podcast là bắt buộc",
     "podcast_tags": "Thẻ",
-    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_thumbnail": "Hình thu nhỏ Podcast",
     "podcast_visibility": "Hiển thị",
-    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
+    "search_results": "Tìm thấy {{count}} podcast cho \"{{query}}\""
   },
   "collections": {
     "collections": "Bộ sưu tập",
@@ -946,8 +962,8 @@
     "activities_count": "{{count}} hoạt động",
     "copy_link": "Sao chép liên kết",
     "embed": "Nhúng",
-    "embed_code_copied": "Embed code copied!",
-    "link_copied": "Link copied!",
+    "embed_code_copied": "Đã sao chép mã nhúng!",
+    "link_copied": "Đã sao chép liên kết!",
     "share": "Chia sẻ"
   },
   "assignments": {
@@ -966,13 +982,20 @@
     "points": "điểm",
     "current_points": "Điểm hiện tại: {{points}}",
     "grade": "Điểm số",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Chạy chấm điểm tự động",
     "due_date": "Hạn nộp",
     "task_breakdown": "Chi tiết nhiệm vụ",
     "no_grade_details": "Chưa có chi tiết điểm.",
     "task_passed": "Đạt",
     "task_not_passed": "Không đạt",
-    "score": "điểm"
+    "score": "điểm",
+    "form": {
+      "expected_answer": "Đáp án mong đợi"
+    },
+    "quiz": {
+      "correct_answer": "Đúng",
+      "incorrect_answer": "Sai"
+    }
   },
   "certificate": {
     "certificate": "Chứng chỉ",
@@ -1059,7 +1082,8 @@
     "subscription": "Gói thuê bao",
     "benefits": "Lợi ích:",
     "min_price": "Giá tối thiểu:",
-    "choose_price": "Chọn giá của bạn"
+    "choose_price": "Chọn giá của bạn",
+    "stripe_denied": "Đã hủy kết nối Stripe."
   },
   "account": {
     "title": "Tài khoản",
@@ -1288,7 +1312,8 @@
           "loading_error": "Không tải được dữ liệu hồ sơ",
           "save_success": "Cập nhật hồ sơ thành công",
           "save_error": "Lỗi khi cập nhật hồ sơ"
-        }
+        },
+        "unknown_section": "Mục không xác định"
       }
     },
     "sign_out": "Đăng xuất",
@@ -1300,7 +1325,7 @@
     "my_progress": "Tiến trình của tôi",
     "no_courses_in_progress": "Chưa có khóa học nào đang học",
     "start_course_to_see_progress": "Bắt đầu một khóa học để xem tiến trình của bạn tại đây",
-    "bio_placeholder": "Tell us a bit about yourself..."
+    "bio_placeholder": "Hãy giới thiệu một chút về bản thân bạn..."
   },
   "roles": {
     "custom_role": "Vai trò tùy chỉnh",
@@ -1733,7 +1758,7 @@
             "thumbnail": "Hình thu nhỏ",
             "course": "Khóa học liên kết",
             "moderation": "Kiểm duyệt",
-            "access": "Access"
+            "access": "Truy cập"
           },
           "general": {
             "title": "Cài đặt chung",
@@ -1752,8 +1777,8 @@
             "subtitle": "Cấu hình cài đặt kiểm duyệt nội dung"
           },
           "access": {
-            "subtitle": "Control who can access this community",
-            "title": "Access Settings"
+            "subtitle": "Kiểm soát ai có thể truy cập cộng đồng này",
+            "title": "Cài đặt truy cập"
           }
         },
         "course": {
@@ -1892,54 +1917,54 @@
         "access": {
           "public": {
             "active": "Hoạt động",
-            "confirmation_button": "Change to Public",
-            "confirmation_message": "Are you sure you want this community to be publicly available?",
-            "confirmation_title": "Change to Public?",
-            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "confirmation_button": "Đổi sang Công khai",
+            "confirmation_message": "Bạn có chắc chắn muốn cộng đồng này được công khai không?",
+            "confirmation_title": "Đổi sang Công khai?",
+            "description": "Cộng đồng này được công khai. Bất kỳ ai cũng có thể xem và tham gia thảo luận.",
             "title": "Công khai"
           },
           "restricted": {
             "active": "Hoạt động",
-            "confirmation_button": "Change to Restricted",
-            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
-            "confirmation_title": "Change to Restricted?",
-            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
-            "title": "Restricted"
+            "confirmation_button": "Đổi sang Hạn chế",
+            "confirmation_message": "Bạn có chắc chắn muốn cộng đồng này bị hạn chế không? Chỉ thành viên của các nhóm người dùng được liên kết mới có quyền truy cập.",
+            "confirmation_title": "Đổi sang Hạn chế?",
+            "description": "Cộng đồng chỉ có thể truy cập bởi các thành viên của Nhóm người dùng được chọn. Liên kết Nhóm người dùng để cấp quyền truy cập.",
+            "title": "Hạn chế"
           },
-          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
-          "title": "Access Settings",
+          "subtitle": "Chọn xem bạn có muốn cộng đồng của mình được công khai hay chỉ truy cập cho các nhóm người dùng cụ thể",
+          "title": "Cài đặt truy cập",
           "toasts": {
-            "update_error": "Failed to update access settings",
-            "update_success": "Access settings updated successfully"
+            "update_error": "Không thể cập nhật cài đặt truy cập",
+            "update_success": "Đã cập nhật cài đặt truy cập thành công"
           },
           "usergroups": {
             "actions": {
               "delete_link": "Xóa",
-              "link_to_usergroup": "Link to User Group"
+              "link_to_usergroup": "Liên kết với Nhóm người dùng"
             },
             "modals": {
-              "create_usergroup": "Create a User Group",
+              "create_usergroup": "Tạo Nhóm người dùng",
               "link_button": "Liên kết",
-              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
-              "link_title": "Link Community to User Group",
-              "no_usergroups": "No User Groups available",
-              "unlink_button": "Remove Access",
-              "unlink_message": "Users from this User Group will no longer have access to this community.",
-              "unlink_title": "Remove User Group Access?",
-              "usergroup_name": "User Group Name",
-              "warning": "Users not in linked User Groups will lose access to this community"
+              "link_description": "Chọn một Nhóm người dùng để liên kết cộng đồng này. Người dùng từ Nhóm người dùng này sẽ có quyền truy cập.",
+              "link_title": "Liên kết Cộng đồng với Nhóm người dùng",
+              "no_usergroups": "Không có Nhóm người dùng nào",
+              "unlink_button": "Xóa quyền truy cập",
+              "unlink_message": "Người dùng từ Nhóm người dùng này sẽ không còn quyền truy cập vào cộng đồng này.",
+              "unlink_title": "Xóa quyền truy cập của Nhóm người dùng?",
+              "usergroup_name": "Tên Nhóm người dùng",
+              "warning": "Người dùng không thuộc các Nhóm người dùng được liên kết sẽ mất quyền truy cập vào cộng đồng này"
             },
-            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "subtitle": "Cấp quyền truy cập vào cộng đồng này bằng cách liên kết với các Nhóm người dùng. Người dùng trong các nhóm này sẽ có thể xem và tham gia.",
             "table": {
               "actions": "Hành động",
               "name": "Tên"
             },
-            "title": "User Groups",
+            "title": "Nhóm người dùng",
             "toasts": {
-              "link_error": "Error {{status}}: {{detail}}",
-              "link_success": "Successfully linked User Group",
-              "unlink_error": "An error occurred while removing User Group access",
-              "unlink_success": "Successfully removed User Group access"
+              "link_error": "Lỗi {{status}}: {{detail}}",
+              "link_success": "Đã liên kết Nhóm người dùng thành công",
+              "unlink_error": "Đã xảy ra lỗi khi xóa quyền truy cập của Nhóm người dùng",
+              "unlink_success": "Đã xóa quyền truy cập của Nhóm người dùng thành công"
             }
           }
         }
@@ -2024,7 +2049,7 @@
             "dynamic_page": "Trang động",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Nhúng"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",
@@ -2037,7 +2062,8 @@
             "create_success": "Đã tạo hoạt động thành công",
             "uploading": "Đang tải tệp lên và tạo hoạt động...",
             "upload_success": "Đã tải tệp lên thành công",
-            "creating_uploading": "Đang tạo hoạt động và tải tệp lên..."
+            "creating_uploading": "Đang tạo hoạt động và tải tệp lên...",
+            "update_error": "Cập nhật hoạt động thất bại"
           },
           "versioning": {
             "version_history": "Lịch sử phiên bản",
@@ -2081,76 +2107,79 @@
               "remote_detected": "Phát hiện thay đổi từ xa",
               "editing_notice": "{{author}} đã thực hiện thay đổi trong khi bạn đang chỉnh sửa"
             }
+          },
+          "descriptions": {
+            "scorm": "Gói học liệu tuân theo chuẩn SCORM"
           }
         }
       },
-      "limit_reached": "Course limit reached ({{limit}})",
+      "limit_reached": "Đã đạt giới hạn khóa học ({{limit}})",
       "seo": {
         "errors": {
-          "save_failed": "Failed to save SEO settings"
+          "save_failed": "Không thể lưu cài đặt SEO"
         },
         "form": {
-          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
-          "canonical_url_label": "Canonical URL",
+          "canonical_url_hint": "Sử dụng nếu khóa học này được sao chép ở nơi khác. Để trống cho URL mặc định",
+          "canonical_url_label": "URL chuẩn",
           "canonical_url_placeholder": "https://example.com/course/your-course",
-          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
-          "description_label": "Meta Description",
-          "description_placeholder": "Enter a compelling description for search results",
-          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
-          "enable_jsonld_label": "Enable JSON-LD Structured Data",
-          "keywords_hint": "Comma-separated list of keywords related to your course",
-          "keywords_label": "Keywords",
-          "keywords_placeholder": "keyword1, keyword2, keyword3",
-          "og_description_label": "OG Description",
-          "og_description_placeholder": "Custom description for social media sharing",
-          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
-          "og_image_label": "OG Image URL",
+          "description_hint": "Để trống để dùng mô tả khóa học. Khuyến nghị: 150-160 ký tự",
+          "description_label": "Mô tả Meta",
+          "description_placeholder": "Nhập mô tả hấp dẫn cho kết quả tìm kiếm",
+          "enable_jsonld_hint": "Thêm đánh dấu schema.org của Course để có rich snippet trong kết quả tìm kiếm",
+          "enable_jsonld_label": "Bật dữ liệu có cấu trúc JSON-LD",
+          "keywords_hint": "Danh sách các từ khóa liên quan đến khóa học của bạn, phân tách bằng dấu phẩy",
+          "keywords_label": "Từ khóa",
+          "keywords_placeholder": "từ khóa 1, từ khóa 2, từ khóa 3",
+          "og_description_label": "Mô tả OG",
+          "og_description_placeholder": "Mô tả tùy chỉnh khi chia sẻ trên mạng xã hội",
+          "og_image_hint": "URL hình ảnh tùy chỉnh để chia sẻ trên mạng xã hội. Để trống để sử dụng hình thu nhỏ khóa học",
+          "og_image_label": "URL ảnh OG",
           "og_image_placeholder": "https://example.com/image.jpg",
-          "og_title_label": "OG Title",
-          "og_title_placeholder": "Custom title for social media sharing",
-          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
-          "robots_nofollow_label": "Prevent following links (nofollow)",
-          "robots_noindex_hint": "When enabled, search engines will not index this course",
-          "robots_noindex_label": "Prevent search engine indexing (noindex)",
-          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
-          "title_label": "SEO Title",
-          "title_placeholder": "Enter a custom title for search engines",
-          "twitter_card_label": "Card Type",
-          "twitter_card_summary": "Summary",
-          "twitter_card_summary_large": "Summary with Large Image",
-          "twitter_description_label": "Twitter Description",
-          "twitter_description_placeholder": "Custom description for Twitter sharing",
-          "twitter_title_label": "Twitter Title",
-          "twitter_title_placeholder": "Custom title for Twitter sharing"
+          "og_title_label": "Tiêu đề OG",
+          "og_title_placeholder": "Tiêu đề tùy chỉnh khi chia sẻ trên mạng xã hội",
+          "robots_nofollow_hint": "Khi bật, công cụ tìm kiếm sẽ không theo các liên kết trên trang này",
+          "robots_nofollow_label": "Ngăn theo các liên kết (nofollow)",
+          "robots_noindex_hint": "Khi bật, công cụ tìm kiếm sẽ không lập chỉ mục khóa học này",
+          "robots_noindex_label": "Ngăn lập chỉ mục công cụ tìm kiếm (noindex)",
+          "title_hint": "Để trống để dùng tên khóa học. Khuyến nghị: 50-60 ký tự",
+          "title_label": "Tiêu đề SEO",
+          "title_placeholder": "Nhập tiêu đề tùy chỉnh cho công cụ tìm kiếm",
+          "twitter_card_label": "Loại thẻ",
+          "twitter_card_summary": "Tóm tắt",
+          "twitter_card_summary_large": "Tóm tắt với hình ảnh lớn",
+          "twitter_description_label": "Mô tả Twitter",
+          "twitter_description_placeholder": "Mô tả tùy chỉnh khi chia sẻ trên Twitter",
+          "twitter_title_label": "Tiêu đề Twitter",
+          "twitter_title_placeholder": "Tiêu đề tùy chỉnh khi chia sẻ trên Twitter"
         },
         "sections": {
           "basic": {
-            "subtitle": "Configure how your course appears in search engine results",
-            "title": "Basic SEO"
+            "subtitle": "Cấu hình cách khóa học của bạn xuất hiện trong kết quả tìm kiếm",
+            "title": "SEO Cơ bản"
           },
           "opengraph": {
-            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "subtitle": "Tùy chỉnh cách khóa học của bạn xuất hiện khi được chia sẻ trên mạng xã hội (Facebook, LinkedIn, v.v.)",
             "title": "Open Graph"
           },
           "robots": {
-            "subtitle": "Control search engine indexing and enable rich snippets",
-            "title": "Robots & Structured Data"
+            "subtitle": "Kiểm soát lập chỉ mục công cụ tìm kiếm và bật rich snippet",
+            "title": "Robots & Dữ liệu có cấu trúc"
           },
           "twitter": {
-            "subtitle": "Customize how your course appears when shared on Twitter/X",
-            "title": "Twitter Card"
+            "subtitle": "Tùy chỉnh cách khóa học của bạn xuất hiện khi được chia sẻ trên Twitter/X",
+            "title": "Thẻ Twitter"
           }
         },
-        "subtitle": "Optimize your course for search engines and social media sharing",
-        "title": "SEO Settings",
+        "subtitle": "Tối ưu hóa khóa học của bạn cho công cụ tìm kiếm và chia sẻ trên mạng xã hội",
+        "title": "Cài đặt SEO",
         "validation": {
-          "description_max_length": "Meta description must be 160 characters or less",
-          "invalid_url": "Please enter a valid URL",
-          "og_description_max_length": "OG description must be 200 characters or less",
-          "og_title_max_length": "OG title must be 70 characters or less",
-          "title_max_length": "SEO title must be 70 characters or less",
-          "twitter_description_max_length": "Twitter description must be 200 characters or less",
-          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+          "description_max_length": "Mô tả Meta phải có 160 ký tự trở xuống",
+          "invalid_url": "Vui lòng nhập URL hợp lệ",
+          "og_description_max_length": "Mô tả OG phải có 200 ký tự trở xuống",
+          "og_title_max_length": "Tiêu đề OG phải có 70 ký tự trở xuống",
+          "title_max_length": "Tiêu đề SEO phải có 70 ký tự trở xuống",
+          "twitter_description_max_length": "Mô tả Twitter phải có 200 ký tự trở xuống",
+          "twitter_title_max_length": "Tiêu đề Twitter phải có 70 ký tự trở xuống"
         }
       }
     },
@@ -2166,9 +2195,11 @@
           "api": "Truy cập API",
           "features": "Tính năng",
           "other": "Khác",
-          "domains": "Domains",
+          "domains": "Tên miền",
           "sso": "SSO",
-          "usage": "Usage"
+          "usage": "Sử dụng",
+          "seo": "SEO",
+          "automations": "Tự động hóa"
         },
         "pages": {
           "general": {
@@ -2200,16 +2231,16 @@
             "subtitle": "Bật hoặc tắt tính năng cho tổ chức của bạn"
           },
           "domains": {
-            "subtitle": "Configure custom domains for your organization",
-            "title": "Custom Domains"
+            "subtitle": "Cấu hình tên miền tùy chỉnh cho tổ chức của bạn",
+            "title": "Tên miền tùy chỉnh"
           },
           "sso": {
-            "subtitle": "Configure SSO for your organization",
-            "title": "Single Sign-On"
+            "subtitle": "Cấu hình SSO cho tổ chức của bạn",
+            "title": "Đăng nhập một lần"
           },
           "usage": {
-            "subtitle": "Monitor your organization's resource usage and plan limits",
-            "title": "Usage"
+            "subtitle": "Theo dõi mức sử dụng tài nguyên và giới hạn gói của tổ chức",
+            "title": "Sử dụng"
           }
         },
         "name": "Tên tổ chức",
@@ -2230,9 +2261,12 @@
         "footer_text": "Văn bản chân trang",
         "footer_text_placeholder": "Nhập văn bản chân trang...",
         "footer_text_desc": "Văn bản tùy chỉnh hiển thị ở cuối các trang của tổ chức",
-        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_label": "\"Made with LearnHouse\" watermark"
+        "default_language": "Ngôn ngữ mặc định",
+        "default_language_desc": "Ngôn ngữ mà khách truy cập mới sẽ thấy theo mặc định và được dùng cho các email gửi thay mặt tổ chức này. Thành viên vẫn có thể thay đổi ngôn ngữ giao diện của mình.",
+        "watermark_desc": "Hiển thị watermark thương hiệu LearnHouse trên các trang tổ chức của bạn",
+        "watermark_free_plan": "Watermark luôn được hiển thị trên gói miễn phí",
+        "watermark_label": "Watermark \"Made with LearnHouse\"",
+        "watermark_ee": "Bị ẩn bởi giấy phép Enterprise Edition của bạn"
       },
       "images": {
         "title": "Hình ảnh & Xem trước",
@@ -2292,7 +2326,7 @@
           "images": "Hình ảnh & Xem trước",
           "social": "Liên kết mạng xã hội",
           "theme": "Chủ đề",
-          "auth": "Auth"
+          "auth": "Xác thực"
         }
       },
       "socials": {
@@ -2366,11 +2400,11 @@
             "description": "Cho phép sắp xếp khóa học thành bộ sưu tập"
           },
           "courses": {
-            "description": "Enable courses and progress tracking for your organization",
+            "description": "Bật khóa học và theo dõi tiến độ cho tổ chức của bạn",
             "title": "Khóa học"
           },
           "podcasts": {
-            "description": "Enable podcast creation and audio content for your organization",
+            "description": "Bật tạo podcast và nội dung âm thanh cho tổ chức của bạn",
             "title": "Podcast"
           }
         },
@@ -2380,7 +2414,7 @@
           "enabled": "Đã bật {{feature}}",
           "disabled": "Đã tắt {{feature}}",
           "error": "Cập nhật cấu hình {{feature}} thất bại",
-          "admin_only": "Only organization admins can enable or disable features"
+          "admin_only": "Chỉ quản trị viên tổ chức mới có thể bật hoặc tắt tính năng"
         }
       },
       "auth_branding": {
@@ -2484,7 +2518,7 @@
             "description": "Thêm phần có văn bản và hình ảnh cạnh nhau"
           },
           "logos": {
-            "label": "Logos",
+            "label": "Logo",
             "description": "Thêm phần để hiển thị logo các đối tác"
           },
           "people": {
@@ -2582,7 +2616,7 @@
           "title": "Phần Logos",
           "title_label": "Tiêu đề",
           "title_placeholder": "Nhập tiêu đề phần",
-          "logos": "Logos",
+          "logos": "Logo",
           "logo_url": "URL logo",
           "alt_text": "Văn bản thay thế",
           "upload_logo": "Tải logo lên",
@@ -2625,43 +2659,43 @@
         "footer_text_placeholder": "Nhập văn bản chân trang..."
       },
       "sso": {
-        "allowed_domains": "Allowed Email Domains",
-        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
-        "auto_provision": "Auto-provision Users",
-        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
-        "delete": "Delete SSO Configuration",
-        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
-        "delete_error": "Failed to delete SSO configuration",
-        "delete_success": "SSO configuration deleted",
-        "deleting": "Deleting...",
-        "enable_sso": "Enable SSO",
-        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
-        "load_error": "Failed to load SSO configuration",
-        "not_configured": "Not configured",
+        "allowed_domains": "Tên miền email được phép",
+        "allowed_domains_help": "Danh sách các tên miền email được phép đăng nhập qua SSO, phân tách bằng dấu phẩy (vd: example.com, company.org). Để trống để cho phép tất cả tên miền.",
+        "auto_provision": "Tự động cấp người dùng",
+        "auto_provision_desc": "Tự động tạo tài khoản người dùng cho lần đăng nhập SSO đầu tiên.",
+        "delete": "Xóa cấu hình SSO",
+        "delete_confirm": "Bạn có chắc chắn muốn xóa cấu hình SSO này không? Người dùng sẽ không còn có thể đăng nhập qua SSO.",
+        "delete_error": "Không thể xóa cấu hình SSO",
+        "delete_success": "Đã xóa cấu hình SSO",
+        "deleting": "Đang xóa...",
+        "enable_sso": "Bật SSO",
+        "enable_sso_desc": "Cho phép người dùng xác thực bằng nhà cung cấp danh tính của tổ chức bạn.",
+        "load_error": "Không thể tải cấu hình SSO",
+        "not_configured": "Chưa cấu hình",
         "oidc_client_id": "Client ID",
         "oidc_client_secret": "Client Secret",
-        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
-        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_client_secret_help": "Giữ bí mật này an toàn. Nó được sử dụng để xác thực với nhà cung cấp danh tính của bạn.",
+        "oidc_info": "Kết nối trực tiếp với bất kỳ nhà cung cấp danh tính tương thích OpenID Connect nào (Azure AD, Okta, Google Workspace, Keycloak).",
         "oidc_issuer_url": "Issuer URL",
-        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_issuer_url_help": "URL issuer OIDC. Các endpoint sẽ được tự động phát hiện từ /.well-known/openid-configuration.",
         "oidc_scopes": "Scopes",
-        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
-        "open_setup_portal": "Configure Identity Provider",
-        "provider": "SSO Provider",
-        "save": "Save Configuration",
-        "save_error": "Failed to save SSO configuration",
-        "save_success": "SSO configuration saved successfully",
-        "saving": "Saving...",
-        "select_provider": "Select a provider",
-        "setup_error": "Failed to get setup portal URL",
-        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "oidc_scopes_help": "Các scope OAuth cần yêu cầu (phân tách bằng dấu cách). Mặc định: openid email profile",
+        "open_setup_portal": "Cấu hình nhà cung cấp danh tính",
+        "provider": "Nhà cung cấp SSO",
+        "save": "Lưu cấu hình",
+        "save_error": "Không thể lưu cấu hình SSO",
+        "save_success": "Đã lưu cấu hình SSO thành công",
+        "saving": "Đang lưu...",
+        "select_provider": "Chọn nhà cung cấp",
+        "setup_error": "Không thể lấy URL cổng thiết lập",
+        "setup_not_available": "Cổng thiết lập không khả dụng. Vui lòng cấu hình nhà cung cấp trước.",
         "status_disabled": "Đã tắt",
         "status_enabled": "Đã bật",
-        "subtitle": "Configure enterprise SSO for your organization",
-        "title": "Single Sign-On (SSO)",
-        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "subtitle": "Cấu hình SSO doanh nghiệp cho tổ chức của bạn",
+        "title": "Đăng nhập một lần (SSO)",
+        "workos_info": "WorkOS cung cấp SSO doanh nghiệp với hỗ trợ các nhà cung cấp danh tính SAML và OIDC.",
         "workos_org_id": "WorkOS Organization ID",
-        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
+        "workos_org_id_help": "ID này được tạo tự động khi bạn cấu hình SSO thông qua cổng thiết lập."
       }
     },
     "users": {
@@ -2831,29 +2865,29 @@
             "sent": "Đã gửi",
             "no": "Chưa"
           },
-          "no_invites": "No pending invitations",
-          "no_results": "No invitations found matching your search",
+          "no_invites": "Không có lời mời nào đang chờ",
+          "no_results": "Không tìm thấy lời mời nào khớp với tìm kiếm của bạn",
           "remove_button": "Xóa",
-          "remove_error": "Error removing invitation",
-          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
-          "remove_success": "Invitation removed",
-          "remove_title": "Remove invitation",
-          "removing": "Removing invitation...",
-          "search_placeholder": "Search by email..."
+          "remove_error": "Lỗi khi xóa lời mời",
+          "remove_message": "Bạn có chắc chắn muốn xóa lời mời cho {{email}} không?",
+          "remove_success": "Đã xóa lời mời",
+          "remove_title": "Xóa lời mời",
+          "removing": "Đang xóa lời mời...",
+          "search_placeholder": "Tìm kiếm theo email..."
         },
         "toasts": {
           "sending": "Đang gửi lời mời...",
           "success": "Đã gửi lời mời thành công",
           "error": "Đã xảy ra lỗi khi gửi lời mời",
-          "partial": "{{sent}} sent, {{failed}} failed"
+          "partial": "{{sent}} đã gửi, {{failed}} thất bại"
         },
         "no_invite_code": "Không có",
         "results": {
-          "failed_count": "{{count}} failed",
-          "sent_count": "{{count}} sent",
-          "skipped_count": "{{count}} already invited",
+          "failed_count": "{{count}} thất bại",
+          "sent_count": "{{count}} đã gửi",
+          "skipped_count": "{{count}} đã được mời",
           "status": {
-            "already_invited": "Already invited",
+            "already_invited": "Đã được mời",
             "email_failed": "Thất bại",
             "sent": "Đã gửi"
           },
@@ -2887,8 +2921,8 @@
             "status": {
               "linked": "Đã liên kết",
               "not_linked": "Chưa liên kết",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "in_group": "Trong nhóm",
+              "not_in_group": "Không trong nhóm"
             },
             "actions": {
               "link": "Liên kết",
@@ -2898,30 +2932,30 @@
               "link_success": "Đã liên kết người dùng thành công",
               "unlink_success": "Đã hủy liên kết người dùng thành công",
               "error": "Lỗi {{status}}: {{detail}}",
-              "bulk_add_success": "Successfully added {{count}} users to group",
-              "bulk_adding": "Adding users to group...",
-              "bulk_error": "An error occurred during the operation",
-              "bulk_remove_success": "Successfully removed {{count}} users from group",
-              "bulk_removing": "Removing users from group..."
+              "bulk_add_success": "Đã thêm {{count}} người dùng vào nhóm thành công",
+              "bulk_adding": "Đang thêm người dùng vào nhóm...",
+              "bulk_error": "Đã xảy ra lỗi trong quá trình thực hiện",
+              "bulk_remove_success": "Đã xóa {{count}} người dùng khỏi nhóm thành công",
+              "bulk_removing": "Đang xóa người dùng khỏi nhóm..."
             },
-            "no_results": "No users found matching your search",
-            "no_users": "No users in this organization yet",
+            "no_results": "Không tìm thấy người dùng nào khớp với tìm kiếm của bạn",
+            "no_users": "Chưa có người dùng nào trong tổ chức này",
             "pagination": {
-              "page": "Page {{current}} of {{total}}",
-              "showing": "Showing {{start}}-{{end}} of {{total}}"
+              "page": "Trang {{current}} trên {{total}}",
+              "showing": "Hiển thị {{start}}-{{end}} trên {{total}}"
             },
-            "search_placeholder": "Search users by name or username...",
+            "search_placeholder": "Tìm kiếm người dùng theo tên hoặc tên đăng nhập...",
             "selection": {
-              "add_selected": "Add {{count}} to Group",
+              "add_selected": "Thêm {{count}} vào nhóm",
               "clear": "Xóa",
-              "count": "{{count}} users selected",
-              "remove_selected": "Remove {{count}} from Group",
-              "select_all_visible": "Select all visible"
+              "count": "Đã chọn {{count}} người dùng",
+              "remove_selected": "Xóa {{count}} khỏi nhóm",
+              "select_all_visible": "Chọn tất cả hiển thị"
             },
             "tabs": {
-              "all": "All Users",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "all": "Tất cả người dùng",
+              "in_group": "Trong nhóm",
+              "not_in_group": "Không trong nhóm"
             }
           },
           "create": {
@@ -2966,16 +3000,16 @@
           "delete_error": "Đã xảy ra lỗi khi xóa nhóm người dùng"
         },
         "count": {
-          "plural": "groups",
-          "singular": "group"
+          "plural": "nhóm",
+          "singular": "nhóm"
         },
         "member_count": {
-          "plural": "members",
-          "singular": "member"
+          "plural": "thành viên",
+          "singular": "thành viên"
         },
-        "no_groups": "No user groups yet",
-        "no_results": "No groups found matching your search",
-        "search_placeholder": "Search groups..."
+        "no_groups": "Chưa có nhóm người dùng nào",
+        "no_results": "Không tìm thấy nhóm nào khớp với tìm kiếm của bạn",
+        "search_placeholder": "Tìm kiếm nhóm..."
       },
       "roles": {
         "title": "Quản lý vai trò và quyền hạn",
@@ -2994,7 +3028,7 @@
           "edit": "Chỉnh sửa",
           "delete": "Xóa",
           "create": "Tạo vai trò",
-          "view_rights": "View Rights"
+          "view_rights": "Xem quyền"
         },
         "modals": {
           "create": {
@@ -3114,6 +3148,34 @@
             "toasts": {
               "success": "Đã lưu vai trò thành công",
               "error": "Đã xảy ra lỗi khi lưu vai trò. Vui lòng thử lại sau."
+            },
+            "permissions": {
+              "actions": {
+                "access": "truy cập",
+                "create": "tạo",
+                "delete": "xóa",
+                "delete_own": "xóa của mình",
+                "read": "đọc",
+                "read_own": "đọc của mình",
+                "update": "cập nhật",
+                "update_own": "cập nhật của mình"
+              },
+              "deselect": "Bỏ chọn",
+              "deselect_all": "Bỏ chọn tất cả",
+              "sections": {
+                "activities": "Hoạt động",
+                "collections": "Bộ sưu tập",
+                "coursechapters": "Chương khóa học",
+                "courses": "Khóa học",
+                "dashboard": "Bảng điều khiển",
+                "organizations": "Tổ chức",
+                "roles": "Vai trò",
+                "usergroups": "Nhóm người dùng",
+                "users": "Người dùng"
+              },
+              "select": "Chọn",
+              "select_all": "Chọn tất cả",
+              "title": "Quyền hạn"
             }
           },
           "delete": {
@@ -3122,8 +3184,8 @@
             "button": "Xóa vai trò"
           },
           "view_rights": {
-            "description": "View all permissions assigned to this role",
-            "title": "{{roleName}} - Permissions"
+            "description": "Xem tất cả các quyền được gán cho vai trò này",
+            "title": "{{roleName}} - Quyền"
           }
         },
         "toasts": {
@@ -3133,15 +3195,15 @@
         },
         "rights": {
           "resources": {
-            "activities": "Activities",
-            "collections": "Collections",
-            "coursechapters": "Course Chapters",
+            "activities": "Hoạt động",
+            "collections": "Bộ sưu tập",
+            "coursechapters": "Chương khóa học",
             "courses": "Khóa học",
-            "dashboard": "Dashboard",
-            "organizations": "Organizations",
-            "roles": "Roles",
-            "usergroups": "User Groups",
-            "users": "Users"
+            "dashboard": "Bảng điều khiển",
+            "organizations": "Tổ chức",
+            "roles": "Vai trò",
+            "usergroups": "Nhóm người dùng",
+            "users": "Người dùng"
           }
         }
       }
@@ -3233,7 +3295,7 @@
           },
           "code": {
             "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "description": "Thử thách lập trình với chấm điểm tự động qua các trường hợp kiểm thử"
           },
           "short_answer": {
             "title": "Câu trả lời ngắn",
@@ -3350,14 +3412,14 @@
           "reject": "Từ chối bài nộp",
           "set_final_grade": "Đặt điểm cuối cùng",
           "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong",
-          "finalize": "Finalize & Complete",
+          "finalize": "Hoàn tất & Kết thúc",
           "reject_description": "Xóa bài nộp và cho phép học sinh nộp lại",
           "set_final_grade_description": "Tính toán và lưu điểm mà không hoàn thành hoạt động",
           "finalize_description": "Đặt điểm cuối cùng và đánh dấu hoạt động là hoàn thành cho học sinh"
         },
         "toasts": {
           "reject_success": "Đã từ chối bài nộp thành công",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Đã chấm bài tập và đánh dấu hoạt động hoàn thành"
         },
         "filters": {
           "all": "Tất cả"
@@ -3481,7 +3543,9 @@
             "anti_copy_paste_description": "Ngăn cản dán câu trả lời do AI tạo bằng cách chặn sự kiện dán. Lưu ý: đây là biện pháp răn đe.",
             "auto_grading_disabled_file": "Chấm điểm tự động không khả dụng vì bài tập này có nhiệm vụ nộp tệp cần sự xem xét của con người.",
             "grading_type_hint": "Cách điểm được hiển thị cho học sinh",
-            "grading_options_hint": "Hành vi khi nộp"
+            "grading_options_hint": "Hành vi khi nộp",
+            "show_correct_answers_description": "Sau khi bài nộp được chấm điểm, hiển thị cho học viên các đáp án đúng bên cạnh đáp án của họ — bao gồm các lựa chọn trắc nghiệm đúng, đáp án ngắn hoặc số mong đợi, và các ô điền chính xác.",
+            "show_correct_answers_label": "Hiển thị đáp án đúng sau khi chấm điểm"
           },
           "toasts": {
             "updating": "Đang cập nhật bài tập...",
@@ -3521,12 +3585,184 @@
             "anti_copy_paste_label": "Chặn sao chép và dán",
             "anti_copy_paste_description": "Ngăn cản dán câu trả lời do AI tạo bằng cách chặn sự kiện dán. Lưu ý: đây là biện pháp răn đe.",
             "grading_type_hint": "Cách điểm được hiển thị cho học sinh",
-            "grading_options_hint": "Hành vi khi nộp"
+            "grading_options_hint": "Hành vi khi nộp",
+            "show_correct_answers_description": "Sau khi chấm điểm, học viên sẽ thấy đáp án đúng bên cạnh đáp án của mình.",
+            "show_correct_answers_label": "Hiển thị đáp án đúng sau khi chấm điểm"
           },
           "toasts": {
             "creating": "Đang tạo bài tập...",
             "success": "Đã tạo bài tập thành công"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Tìm kiếm",
+      "placeholder": "Tìm kiếm trang và nội dung…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Không tìm thấy kết quả",
+      "loading": "Đang tìm kiếm…",
+      "type_to_search": "Nhập ít nhất 2 ký tự để tìm kiếm nội dung",
+      "groups": {
+        "pages": "Trang",
+        "courses": "Khóa học",
+        "collections": "Bộ sưu tập",
+        "users": "Người dùng",
+        "communities": "Cộng đồng",
+        "discussions": "Thảo luận",
+        "playgrounds": "Sân chơi",
+        "podcasts": "Podcast"
+      },
+      "entries": {
+        "home": {
+          "description": "Tổng quan bảng điều khiển",
+          "keywords": "trang chủ, tổng quan, bắt đầu, bảng điều khiển"
+        },
+        "courses": {
+          "description": "Quản lý khóa học của bạn",
+          "keywords": "khóa học, bài học, học tập, đào tạo, lớp học"
+        },
+        "assignments": {
+          "description": "Quản lý bài tập",
+          "keywords": "nhiệm vụ, bài tập về nhà, bài luyện, nộp bài"
+        },
+        "communities": {
+          "description": "Quản lý cộng đồng",
+          "keywords": "diễn đàn, thảo luận, thành viên, bài đăng"
+        },
+        "podcasts": {
+          "description": "Quản lý podcast",
+          "keywords": "âm thanh, tập, chương trình"
+        },
+        "boards": {
+          "description": "Quản lý bảng",
+          "keywords": "kanban, dự án, nhiệm vụ, danh sách"
+        },
+        "playgrounds": {
+          "description": "Sân chơi mã",
+          "keywords": "mã, sandbox, repl, lập trình"
+        },
+        "analytics": {
+          "description": "Xem bảng điều khiển phân tích",
+          "keywords": "thống kê, chỉ số, biểu đồ, báo cáo"
+        },
+        "users": {
+          "description": "Quản lý người dùng của tổ chức",
+          "keywords": "thành viên, tài khoản, mọi người"
+        },
+        "usergroups": {
+          "description": "Quản lý nhóm người dùng",
+          "keywords": "đội, nhóm, lớp"
+        },
+        "roles": {
+          "description": "Quản lý vai trò và quyền",
+          "keywords": "quyền, truy cập, rbac, bảo mật"
+        },
+        "signups": {
+          "description": "Xem đăng ký",
+          "keywords": "đăng ký, đơn đăng ký, yêu cầu"
+        },
+        "org_general": {
+          "description": "Cài đặt chung của tổ chức",
+          "keywords": "tên, thương hiệu, slug, hồ sơ"
+        },
+        "org_features": {
+          "description": "Quản lý tính năng của tổ chức",
+          "keywords": "tính năng, mô-đun, công tắc"
+        },
+        "org_billing": {
+          "description": "Thanh toán và đăng ký",
+          "keywords": "gói, thanh toán, hóa đơn, đăng ký"
+        },
+        "payments_overview": {
+          "description": "Tổng quan thanh toán và doanh thu",
+          "keywords": "stripe, bảng điều khiển, doanh thu, bán hàng",
+          "title": "Tổng quan thanh toán"
+        },
+        "payments_products": {
+          "description": "Sản phẩm và giá thanh toán",
+          "keywords": "sản phẩm, giá, stripe, cấp độ, gói",
+          "title": "Sản phẩm"
+        },
+        "users_add": {
+          "description": "Mời thành viên mới",
+          "keywords": "mời, thêm, thành viên, gửi"
+        },
+        "users_audit_logs": {
+          "description": "Nhật ký hoạt động của tổ chức",
+          "keywords": "kiểm toán, nhật ký, lịch sử, bảo mật, hoạt động"
+        },
+        "org_branding": {
+          "description": "Logo, màu sắc và bản sắc trực quan",
+          "keywords": "thương hiệu, logo, màu sắc, chủ đề"
+        },
+        "org_landing": {
+          "description": "Tùy chỉnh trang đích của bạn",
+          "keywords": "trang đích, trang chủ, hero, trang"
+        },
+        "org_seo": {
+          "description": "Tối ưu hóa công cụ tìm kiếm",
+          "keywords": "seo, tìm kiếm, meta, xếp hạng, google"
+        },
+        "org_ai": {
+          "description": "Tính năng và cấu hình AI",
+          "keywords": "ai, llm, gpt, openai, tạo"
+        },
+        "org_domains": {
+          "description": "Tên miền tùy chỉnh",
+          "keywords": "tên miền, dns, tùy chỉnh, tên miền phụ, cname"
+        },
+        "org_automations": {
+          "description": "Webhook và tích hợp bên ngoài",
+          "keywords": "webhook, tự động hóa, zapier, tích hợp, kích hoạt"
+        },
+        "org_api": {
+          "description": "Mã API và truy cập lập trình",
+          "keywords": "api, mã, truy cập, lập trình, khóa"
+        },
+        "org_sso": {
+          "description": "Cấu hình đăng nhập một lần",
+          "keywords": "sso, saml, oauth, doanh nghiệp, đăng nhập"
+        },
+        "org_other": {
+          "description": "Các cài đặt tổ chức khác",
+          "keywords": "khác, nâng cao, tùy chỉnh, bổ sung"
+        },
+        "payments_groups": {
+          "description": "Nhóm và gói thanh toán",
+          "keywords": "nhóm, gói, bộ",
+          "title": "Nhóm thanh toán"
+        },
+        "payments_configuration": {
+          "description": "Cấu hình Stripe và thanh toán",
+          "keywords": "cấu hình, cài đặt, stripe, thiết lập, connect",
+          "title": "Cấu hình"
+        },
+        "payments_customers": {
+          "description": "Khách hàng và người đăng ký",
+          "keywords": "khách hàng, người đăng ký, người mua, đã trả",
+          "title": "Khách hàng"
+        },
+        "courses_migrate": {
+          "description": "Nhập khóa học từ LMS khác",
+          "keywords": "nhập, di chuyển, chuyển giao, lms, moodle, canvas",
+          "title": "Di chuyển khóa học"
+        },
+        "account_general": {
+          "description": "Cài đặt chung tài khoản cá nhân",
+          "keywords": "tài khoản, cài đặt, email, tên, ngôn ngữ"
+        },
+        "account_profile": {
+          "description": "Chỉnh sửa hồ sơ và tiểu sử của bạn",
+          "keywords": "hồ sơ, tiểu sử, ảnh đại diện, ảnh, công khai"
+        },
+        "account_security": {
+          "description": "Mật khẩu và cài đặt bảo mật",
+          "keywords": "mật khẩu, bảo mật, 2fa, mfa, phiên"
+        },
+        "account_purchases": {
+          "description": "Giao dịch mua và đăng ký của bạn",
+          "keywords": "giao dịch mua, đăng ký, thanh toán, lịch sử, biên lai"
         }
       }
     }
@@ -3643,31 +3879,31 @@
         "cancel": "Hủy",
         "save": "Lưu",
         "apply": "Áp dụng",
-        "align_center": "Center align",
-        "align_left": "Align left",
-        "align_right": "Align right",
+        "align_center": "Căn giữa",
+        "align_left": "Căn trái",
+        "align_right": "Căn phải",
         "download": "Tải xuống",
-        "drop_or_browse": "Drop your file here or click to browse",
-        "expand": "Expand",
-        "full_width": "Full Width",
-        "large": "Large",
-        "medium": "Medium",
-        "size": "Size",
-        "small": "Small",
+        "drop_or_browse": "Thả tệp của bạn vào đây hoặc nhấp để duyệt",
+        "expand": "Mở rộng",
+        "full_width": "Chiều rộng đầy đủ",
+        "large": "Lớn",
+        "medium": "Trung bình",
+        "size": "Kích thước",
+        "small": "Nhỏ",
         "upload": "Tải lên",
-        "uploading": "Uploading..."
+        "uploading": "Đang tải lên..."
       },
       "quiz_block": {
         "question_placeholder": "Nhập câu hỏi của bạn ở đây",
         "answer_placeholder": "Nhập câu trả lời ở đây",
-        "add_answer": "Add Answer",
-        "add_question": "Add Question",
-        "all_correct": "All answers are correct!",
-        "delete_answer": "Delete answer",
-        "mark_correct": "Mark as correct",
-        "mark_incorrect": "Mark as incorrect",
-        "reset_answers": "Reset answers",
-        "some_incorrect": "Some answers are incorrect!",
+        "add_answer": "Thêm câu trả lời",
+        "add_question": "Thêm câu hỏi",
+        "all_correct": "Tất cả các câu trả lời đều đúng!",
+        "delete_answer": "Xóa câu trả lời",
+        "mark_correct": "Đánh dấu đúng",
+        "mark_incorrect": "Đánh dấu sai",
+        "reset_answers": "Đặt lại câu trả lời",
+        "some_incorrect": "Một số câu trả lời chưa đúng!",
         "submit": "Gửi"
       },
       "math_block": {
@@ -3687,13 +3923,13 @@
         "edit_embed": "Chỉnh sửa nhúng",
         "add_embed_from": "Thêm nhúng từ",
         "click_service": "Chọn dịch vụ",
-        "add_embed": "Thêm nhúng",
+        "add_embed": "Thêm nhúng {{name}}",
         "add_embed_url": "Thêm nhúng từ URL",
         "add_embed_code": "Thêm nhúng từ mã",
-        "paste_url": "Dán URL",
+        "paste_url": "Dán URL nhúng {{name}}",
         "paste_any_url": "Dán bất kỳ URL nào",
         "paste_directly": "Dán trực tiếp",
-        "how_to_embed": "Cách nhúng",
+        "how_to_embed": "Cách nhúng {{name}}",
         "paste_code": "Dán mã",
         "paste_iframe": "Dán mã iframe"
       },
@@ -3753,60 +3989,60 @@
         "suggestion_timeline_prompt": "Tạo dòng thời gian tương tác hiển thị các sự kiện lịch sử quan trọng với chi tiết có thể mở rộng"
       },
       "button_block": {
-        "enter_link_url": "Enter link URL"
+        "enter_link_url": "Nhập URL liên kết"
       },
       "flipcard_block": {
-        "back": "Back",
-        "click_to_flip": "Click to flip",
-        "front": "Front"
+        "back": "Mặt sau",
+        "click_to_flip": "Nhấp để lật",
+        "front": "Mặt trước"
       },
       "image_block": {
-        "download_image": "Download image",
-        "drop_or_browse": "Drop your image here or click to browse",
-        "expand_image": "Expand image",
-        "supported_formats": "Supports JPG, PNG, WebP, and GIF",
-        "uploading": "Uploading image...",
-        "viewer_title": "Image Viewer"
+        "download_image": "Tải xuống hình ảnh",
+        "drop_or_browse": "Thả hình ảnh của bạn vào đây hoặc nhấp để duyệt",
+        "expand_image": "Mở rộng hình ảnh",
+        "supported_formats": "Hỗ trợ JPG, PNG, WebP và GIF",
+        "uploading": "Đang tải lên hình ảnh...",
+        "viewer_title": "Trình xem hình ảnh"
       },
       "pdf_block": {
-        "document_title": "PDF Document",
-        "download_pdf": "Download PDF",
-        "drop_or_browse": "Drop your PDF here or click to browse",
-        "expand_pdf": "Expand PDF",
-        "no_pdf": "No PDF available",
-        "supported_formats": "Supports PDF format",
-        "upload_pdf": "Upload PDF",
-        "uploading": "Uploading PDF..."
+        "document_title": "Tài liệu PDF",
+        "download_pdf": "Tải xuống PDF",
+        "drop_or_browse": "Thả PDF của bạn vào đây hoặc nhấp để duyệt",
+        "expand_pdf": "Mở rộng PDF",
+        "no_pdf": "Không có PDF",
+        "supported_formats": "Hỗ trợ định dạng PDF",
+        "upload_pdf": "Tải lên PDF",
+        "uploading": "Đang tải lên PDF..."
       },
       "video_block": {
-        "download_video": "Download video",
-        "drop_or_browse": "Drop your video here or click to browse",
-        "expand_video": "Expand video",
-        "player_title": "Video Player",
-        "supported_formats": "Supports MP4 and WebM formats",
-        "unsupported_format": "Please upload a supported video format (MP4 or WebM)",
-        "uploading": "Uploading video..."
+        "download_video": "Tải xuống video",
+        "drop_or_browse": "Thả video của bạn vào đây hoặc nhấp để duyệt",
+        "expand_video": "Mở rộng video",
+        "player_title": "Trình phát video",
+        "supported_formats": "Hỗ trợ định dạng MP4 và WebM",
+        "unsupported_format": "Vui lòng tải lên định dạng video được hỗ trợ (MP4 hoặc WebM)",
+        "uploading": "Đang tải lên video..."
       }
     },
     "ai_panel": {
-      "add_definition": "Add definition",
-      "add_examples": "Add examples",
-      "add_quiz": "Add quiz",
-      "add_summary": "Add summary",
-      "add_tip": "Add tip",
-      "block_selected": "block selected",
-      "clear_chat": "Clear chat",
-      "clear_selection": "Clear selection",
-      "expand": "Expand",
-      "how_can_i_help": "How can I help improve your content?",
-      "improve_writing": "Improve writing",
-      "input_placeholder": "Ask AI to help with your content...",
-      "question_add_quiz": "Add a quiz",
-      "question_improve": "How can I improve this?",
-      "question_summary": "Add a summary",
-      "simplify": "Simplify",
-      "title": "AI Editor",
-      "translate": "Translate"
+      "add_definition": "Thêm định nghĩa",
+      "add_examples": "Thêm ví dụ",
+      "add_quiz": "Thêm câu hỏi trắc nghiệm",
+      "add_summary": "Thêm tóm tắt",
+      "add_tip": "Thêm mẹo",
+      "block_selected": "khối đã chọn",
+      "clear_chat": "Xóa cuộc trò chuyện",
+      "clear_selection": "Bỏ chọn",
+      "expand": "Mở rộng",
+      "how_can_i_help": "Tôi có thể giúp gì để cải thiện nội dung của bạn?",
+      "improve_writing": "Cải thiện văn bản",
+      "input_placeholder": "Hỏi AI để được giúp đỡ về nội dung của bạn...",
+      "question_add_quiz": "Thêm câu hỏi trắc nghiệm",
+      "question_improve": "Tôi có thể cải thiện điều này như thế nào?",
+      "question_summary": "Thêm tóm tắt",
+      "simplify": "Đơn giản hóa",
+      "title": "Trình chỉnh sửa AI",
+      "translate": "Dịch"
     }
   },
   "analytics": {
@@ -3817,8 +4053,8 @@
       "advanced": "Nâng cao"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Chưa cấu hình phân tích",
+      "description": "Phân tích yêu cầu kết nối Tinybird. Đặt các biến môi trường <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> và <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> để bật."
     },
     "advanced_gate": {
       "requires": "Yêu cầu",
@@ -3827,156 +4063,156 @@
     "common": {
       "loading": "Đang tải...",
       "no_data": "Chưa có dữ liệu",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "Người dùng",
+      "views": "Lượt xem",
+      "enrollments": "Lượt đăng ký",
+      "completions": "Lượt hoàn thành",
+      "course": "Khóa học",
+      "date": "Ngày",
+      "user": "Người dùng",
+      "type": "Loại",
+      "expand": "Mở rộng",
+      "days": "Ngày",
+      "score": "Điểm",
+      "unique_users": "người dùng duy nhất"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "Đang trực tuyến",
+      "last_5_minutes": "5 phút qua",
+      "signups": "Lượt đăng ký",
+      "submissions": "Bài nộp",
+      "daily_active_users": "Người dùng hoạt động hằng ngày",
+      "active_users": "Người dùng hoạt động",
+      "countries": "Quốc gia",
+      "top_countries": "Quốc gia hàng đầu",
+      "devices": "Thiết bị",
+      "desktop": "Máy tính để bàn",
+      "mobile": "Di động",
+      "tablet": "Máy tính bảng",
+      "top_referrers": "Nguồn giới thiệu hàng đầu",
+      "top_referrer": "Nguồn giới thiệu hàng đầu",
+      "enrollment_funnel": "Phễu đăng ký",
+      "page_views": "Lượt xem trang",
+      "course_views": "Lượt xem khóa học",
+      "view_to_enroll": "Xem → Đăng ký",
+      "enroll_to_complete": "Đăng ký → Hoàn thành",
+      "page_to_complete": "Trang → Hoàn thành",
+      "conv_rate": "Tỷ lệ chuyển đổi",
+      "top_courses": "Khóa học hàng đầu",
+      "activity_engagement": "Tương tác hoạt động",
+      "activity": "Hoạt động",
+      "avg_time": "Thời gian TB",
+      "activities": "Hoạt động",
+      "courses": "Khóa học",
       "enrollments": "Đăng ký",
       "completions": "Hoàn thành"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Người dùng trực tuyến",
+        "description": "Người dùng hoạt động trong 5 phút qua"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Lượt đăng ký",
+        "description": "Lượt đăng ký người dùng mới trong {{days}} ngày qua"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Lượt đăng ký",
+        "description": "Lượt đăng ký khóa học trong {{days}} ngày qua"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Lượt hoàn thành",
+        "description": "Lượt hoàn thành khóa học trong {{days}} ngày qua"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Trang hiện tại",
+        "device": "Thiết bị",
+        "country": "Quốc gia",
+        "last_seen": "Hoạt động lần cuối"
       },
       "signups_table": {
         "email": "Email",
-        "method": "Method"
+        "method": "Phương thức"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Xu hướng tăng trưởng tổ chức",
+        "description": "Đăng ký, ghi danh, hoàn thành hằng tuần"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Người dùng mới so với quay lại",
+        "description": "Tăng trưởng so với mức độ giữ chân"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
+        "title": "Giữ chân theo cohort",
+        "description": "% người dùng hoạt động sau tuần đăng ký",
         "cohort": "Cohort",
-        "size": "Size"
+        "size": "Kích thước"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Giờ cao điểm sử dụng",
+        "description": "Khối lượng sự kiện theo ngày và giờ",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "T2",
+          "tue": "T3",
+          "wed": "T4",
+          "thu": "T5",
+          "fri": "T6",
+          "sat": "T7",
+          "sun": "CN"
         },
-        "events": "events"
+        "events": "sự kiện"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Tỷ lệ bỏ học",
+        "description": "Nơi người dùng dừng lại trên mỗi khóa học"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Thời gian hoàn thành",
+        "description": "Số ngày trung vị để hoàn thành mỗi khóa học"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Tốc độ hoàn thành",
+        "description": "Số ngày trung bình giữa các lần hoàn thành hoạt động"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "Hiệu quả của loại nội dung",
+        "description": "Tỷ lệ hoàn thành theo loại hoạt động"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Ma trận hiệu quả khóa học",
+        "description": "Số lượng hoạt động so với tỷ lệ hoàn thành (kích thước theo lượt đăng ký)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Tương quan cộng đồng",
+        "description": "Tỷ lệ hoàn thành: người thảo luận so với người không thảo luận",
+        "discussion_users": "Người dùng có thảo luận",
+        "non_discussion_users": "Người dùng không thảo luận"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Điểm tương tác của người học",
+        "description": "Người học hàng đầu theo điểm tương tác tổng hợp",
+        "user_id": "ID người dùng"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Ảnh chụp tiến độ người dùng",
+        "description": "Người dùng ở từng mức hoàn thành cho mỗi khóa học"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Phân bổ điểm",
+        "description": "Biểu đồ tần suất điểm bài tập"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Hiệu quả tìm kiếm",
+        "description": "Truy vấn hàng đầu và tỷ lệ không có kết quả",
+        "query": "Truy vấn",
+        "searches": "Lượt tìm kiếm",
+        "zero_results": "% Không kết quả"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Tỷ lệ chứng chỉ",
+        "description": "% người hoàn thành nhận chứng chỉ"
       }
     },
     "course_analytics": {
@@ -4196,9 +4432,9 @@
     },
     "export": {
       "button": "Xuất",
-      "csv": "Download CSV",
-      "downloading": "Exporting...",
-      "json": "Download JSON"
+      "csv": "Tải xuống CSV",
+      "downloading": "Đang xuất...",
+      "json": "Tải xuống JSON"
     }
   },
   "onboarding": {
@@ -4297,297 +4533,301 @@
   },
   "boards": {
     "access": {
-      "access_update_error": "Failed to update access",
+      "access_update_error": "Không thể cập nhật quyền truy cập",
       "actions": "Hành động",
       "active": "Hoạt động",
-      "board_set_private": "Board set to private",
-      "board_set_public": "Board set to public",
-      "create_user_group": "Create User Group",
-      "description": "Control who can access this board",
+      "board_set_private": "Đã đặt bảng ở chế độ riêng tư",
+      "board_set_public": "Đã đặt bảng ở chế độ công khai",
+      "create_user_group": "Tạo Nhóm người dùng",
+      "description": "Kiểm soát ai có thể truy cập bảng này",
       "link": "Liên kết",
-      "link_error": "Failed to link: ",
-      "link_to_user_group": "Link to User Group",
-      "link_to_user_group_description": "Select a user group to give them access to this board",
-      "link_to_usergroup_btn": "Link to UserGroup",
-      "make_board_private": "Make Board Private",
-      "make_board_public": "Make Board Public",
-      "no_user_groups": "No user groups linked yet",
-      "no_user_groups_available": "No user groups available",
-      "private_description": "Only linked UserGroups can access this board",
-      "private_option": "Users Only",
-      "public_description": "All signed-in organization members can access this board",
+      "link_error": "Liên kết thất bại: ",
+      "link_to_user_group": "Liên kết với Nhóm người dùng",
+      "link_to_user_group_description": "Chọn một nhóm người dùng để cấp cho họ quyền truy cập bảng này",
+      "link_to_usergroup_btn": "Liên kết với Nhóm người dùng",
+      "make_board_private": "Đặt bảng riêng tư",
+      "make_board_public": "Đặt bảng công khai",
+      "no_user_groups": "Chưa có nhóm người dùng nào được liên kết",
+      "no_user_groups_available": "Không có nhóm người dùng nào",
+      "private_description": "Chỉ các Nhóm người dùng được liên kết mới có thể truy cập bảng này",
+      "private_option": "Chỉ người dùng",
+      "public_description": "Tất cả thành viên đã đăng nhập của tổ chức đều có thể truy cập bảng này",
       "public_option": "Công khai",
-      "set_to_private": "Set to Private",
-      "set_to_private_confirm": "Only members of linked UserGroups will be able to access this board.",
-      "set_to_public": "Set to Public",
-      "set_to_public_confirm": "All signed-in organization members will be able to access this board.",
-      "title": "Access Control",
+      "set_to_private": "Đặt riêng tư",
+      "set_to_private_confirm": "Chỉ thành viên của các Nhóm người dùng được liên kết mới có thể truy cập bảng này.",
+      "set_to_public": "Đặt công khai",
+      "set_to_public_confirm": "Tất cả thành viên đã đăng nhập của tổ chức đều có thể truy cập bảng này.",
+      "title": "Kiểm soát truy cập",
       "unlink": "Hủy liên kết",
-      "unlink_confirm": "This user group will no longer have access to this board.",
-      "unlink_error": "Failed to unlink: ",
-      "unlink_error_generic": "Failed to unlink user group",
-      "unlink_user_group": "Unlink User Group",
-      "user_group": "User Group",
-      "user_group_linked": "User group linked",
-      "user_group_unlinked": "User group unlinked",
-      "user_groups": "User Groups",
-      "user_groups_description": "Manage which user groups have access to this board"
+      "unlink_confirm": "Nhóm người dùng này sẽ không còn quyền truy cập vào bảng này.",
+      "unlink_error": "Không thể hủy liên kết: ",
+      "unlink_error_generic": "Không thể hủy liên kết nhóm người dùng",
+      "unlink_user_group": "Hủy liên kết Nhóm người dùng",
+      "user_group": "Nhóm người dùng",
+      "user_group_linked": "Đã liên kết nhóm người dùng",
+      "user_group_unlinked": "Đã hủy liên kết nhóm người dùng",
+      "user_groups": "Nhóm người dùng",
+      "user_groups_description": "Quản lý các nhóm người dùng có quyền truy cập vào bảng này"
     },
     "activity_block": {
-      "no_activities": "No activities found",
-      "no_courses": "No courses found",
-      "select_course": "Select a course",
-      "unsupported_type": "Unsupported activity type"
+      "no_activities": "Không tìm thấy hoạt động nào",
+      "no_courses": "Không tìm thấy khóa học nào",
+      "select_course": "Chọn một khóa học",
+      "unsupported_type": "Loại hoạt động không được hỗ trợ"
     },
-    "back_to_boards": "Back to boards",
-    "board_created": "Board created",
-    "board_created_error": "Failed to create board",
-    "board_deleted_error": "Failed to delete board",
-    "board_deleted_success": "Board deleted",
-    "board_duplicated_error": "Failed to duplicate board",
-    "board_duplicated_success": "Board duplicated",
+    "back_to_boards": "Quay lại các bảng",
+    "board_created": "Đã tạo bảng",
+    "board_created_error": "Không thể tạo bảng",
+    "board_deleted_error": "Không thể xóa bảng",
+    "board_deleted_success": "Đã xóa bảng",
+    "board_duplicated_error": "Không thể nhân bản bảng",
+    "board_duplicated_success": "Đã nhân bản bảng",
     "boards": "Bảng",
-    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
-    "boards_deleted_success": "{{count}} board(s) deleted",
+    "boards_deleted_partial": "{{success}} đã xóa, {{error}} thất bại",
+    "boards_deleted_success": "Đã xóa {{count}} bảng",
     "chat": {
-      "placeholder": "Say something..."
+      "placeholder": "Hãy nói gì đó..."
     },
     "clear_selection": "Xóa",
-    "create_board": "Create Board",
-    "create_new_board": "Create New Board",
-    "create_new_board_description": "Set up a new collaborative board",
-    "delete_board": "Delete Board",
-    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
-    "delete_board_title": "Delete \"{{name}}\"",
-    "delete_boards_title": "Delete Boards",
-    "delete_selected": "Delete Selected",
-    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
-    "deleting_board": "Deleting board...",
-    "deleting_boards": "Deleting {{count}} board(s)...",
+    "create_board": "Tạo bảng",
+    "create_new_board": "Tạo bảng mới",
+    "create_new_board_description": "Thiết lập một bảng cộng tác mới",
+    "delete_board": "Xóa bảng",
+    "delete_board_confirm": "Bạn có chắc chắn muốn xóa bảng này không? Hành động này không thể hoàn tác.",
+    "delete_board_title": "Xóa \"{{name}}\"",
+    "delete_boards_title": "Xóa các bảng",
+    "delete_selected": "Xóa đã chọn",
+    "delete_selected_confirm": "Bạn có chắc chắn muốn xóa {{count}} bảng không? Hành động này không thể hoàn tác.",
+    "deleting_board": "Đang xóa bảng...",
+    "deleting_boards": "Đang xóa {{count}} bảng...",
     "description": "Mô tả",
-    "description_placeholder": "Brief description...",
-    "duplicate_board": "Duplicate Board",
-    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
-    "duplicate_board_title": "Duplicate \"{{name}}\"",
-    "duplicating_board": "Duplicating board...",
+    "description_placeholder": "Mô tả ngắn...",
+    "duplicate_board": "Nhân bản bảng",
+    "duplicate_board_confirm": "Thao tác này sẽ tạo một bản sao của bảng với cùng các cài đặt.",
+    "duplicate_board_title": "Nhân bản \"{{name}}\"",
+    "duplicating_board": "Đang nhân bản bảng...",
     "effects": {
       "aurora": "Aurora",
-      "black_hole": "Black Hole",
-      "blizzard": "Blizzard",
-      "earthquake": "Earthquake",
-      "fireworks": "Fireworks",
+      "black_hole": "Lỗ đen",
+      "blizzard": "Bão tuyết",
+      "earthquake": "Động đất",
+      "fireworks": "Pháo hoa",
       "glitch": "Glitch",
-      "inferno": "Inferno",
-      "lightning": "Lightning",
+      "inferno": "Lửa địa ngục",
+      "lightning": "Sấm sét",
       "matrix": "Matrix",
-      "nuke": "Nuke",
-      "title": "Effects"
+      "nuke": "Bom hạt nhân",
+      "title": "Hiệu ứng"
     },
     "embed_block": {
-      "add_embed": "Add {{name}} embed",
+      "add_embed": "Thêm nhúng {{name}}",
       "apply": "Áp dụng",
       "code": "Mã",
-      "code_help": "Paste iframe or embed code",
-      "edit_embed": "Edit embed",
-      "edit_embed_code": "Edit embed code",
-      "edit_embed_url": "Edit embed URL",
+      "code_help": "Dán mã iframe hoặc mã nhúng",
+      "edit_embed": "Chỉnh sửa nhúng",
+      "edit_embed_code": "Chỉnh sửa mã nhúng",
+      "edit_embed_url": "Chỉnh sửa URL nhúng",
       "embed": "Nhúng",
-      "paste_code": "Paste embed code",
-      "paste_url": "Paste embed URL",
-      "remove_embed": "Remove embed",
+      "paste_code": "Dán mã nhúng",
+      "paste_url": "Dán URL nhúng",
+      "remove_embed": "Xóa nhúng",
       "url": "URL",
-      "url_help": "Paste a URL from YouTube, Figma, CodePen, Spotify, and more"
+      "url_help": "Dán URL từ YouTube, Figma, CodePen, Spotify và nhiều hơn nữa"
     },
     "general": {
-      "board_updated": "Board updated",
-      "board_updated_error": "Failed to update board",
-      "description": "Basic board information",
-      "save_changes": "Save Changes",
-      "saving": "Saving...",
+      "board_updated": "Đã cập nhật bảng",
+      "board_updated_error": "Không thể cập nhật bảng",
+      "description": "Thông tin cơ bản của bảng",
+      "save_changes": "Lưu thay đổi",
+      "saving": "Đang lưu...",
       "title": "Chung"
     },
-    "member_count": "{{count}} member",
-    "member_count_plural": "{{count}} members",
+    "member_count": "{{count}} thành viên",
+    "member_count_plural": "{{count}} thành viên",
     "members": {
       "actions": "Hành động",
-      "add_member": "Add Member",
-      "add_member_description": "Search for an organization member to add to this board",
-      "adding": "Adding...",
-      "description": "Manage who can collaborate on this board",
-      "editor": "Editor",
-      "member_added": "Member added",
-      "member_added_error": "Failed to add member (may already be a member)",
-      "member_limit_reached": "Member limit reached (10 max)",
-      "member_removed": "Member removed",
-      "member_removed_error": "Failed to remove member",
-      "no_members": "No members yet",
-      "no_users_found": "No users found",
+      "add_member": "Thêm thành viên",
+      "add_member_description": "Tìm kiếm một thành viên của tổ chức để thêm vào bảng này",
+      "adding": "Đang thêm...",
+      "description": "Quản lý ai có thể cộng tác trên bảng này",
+      "editor": "Người chỉnh sửa",
+      "member_added": "Đã thêm thành viên",
+      "member_added_error": "Không thể thêm thành viên (có thể đã là thành viên)",
+      "member_limit_reached": "Đã đạt giới hạn thành viên (tối đa 10)",
+      "member_removed": "Đã xóa thành viên",
+      "member_removed_error": "Không thể xóa thành viên",
+      "no_members": "Chưa có thành viên nào",
+      "no_users_found": "Không tìm thấy người dùng nào",
       "remove": "Xóa",
-      "remove_confirm": "Remove {{name}} from the board?",
-      "remove_member": "Remove Member",
+      "remove_confirm": "Xóa {{name}} khỏi bảng?",
+      "remove_member": "Xóa thành viên",
       "role": "Vai trò",
-      "role_label": "Role:",
-      "search_placeholder": "Search by name or email...",
+      "role_label": "Vai trò:",
+      "search_placeholder": "Tìm theo tên hoặc email...",
       "title": "Thành viên",
       "user": "Người dùng",
-      "viewer": "Viewer"
+      "viewer": "Người xem",
+      "all_groups": "Tất cả nhóm"
     },
     "name": "Tên",
-    "name_placeholder": "e.g., Project Planning",
-    "new_board": "New Board",
-    "no_boards_description": "Create your first collaborative board to get started.",
-    "no_boards_found": "No boards found",
-    "no_boards_yet": "No boards yet",
+    "name_placeholder": "vd. Lập kế hoạch dự án",
+    "new_board": "Bảng mới",
+    "no_boards_description": "Tạo bảng cộng tác đầu tiên của bạn để bắt đầu.",
+    "no_boards_found": "Không tìm thấy bảng nào",
+    "no_boards_yet": "Chưa có bảng nào",
     "node_actions": {
       "delete": "Xóa",
-      "delete_multiple": "Delete {{count}} items",
-      "move_back": "Move back",
-      "move_forward": "Move forward"
+      "delete_multiple": "Xóa {{count}} mục",
+      "move_back": "Đưa ra sau",
+      "move_forward": "Đưa lên trước",
+      "duplicate": "Nhân bản"
     },
-    "open_board": "Open Board",
+    "open_board": "Mở bảng",
     "pagination": {
       "next": "Tiếp theo",
-      "page_of": "Page {{current}} of {{total}}",
+      "page_of": "Trang {{current}} trên {{total}}",
       "previous": "Trước",
-      "results": "{{count}} result for \"{{query}}\"",
-      "results_plural": "{{count}} results for \"{{query}}\""
+      "results": "{{count}} kết quả cho \"{{query}}\"",
+      "results_plural": "{{count}} kết quả cho \"{{query}}\""
     },
     "playground_block": {
-      "ai_content": "AI generated content",
-      "calculator": "Calculator",
-      "chart": "Chart",
+      "ai_content": "Nội dung do AI tạo",
+      "calculator": "Máy tính",
+      "chart": "Biểu đồ",
       "chat_header": "AI Playground",
-      "check_preview": "Check the preview on the left",
-      "creating": "Creating...",
-      "description": "Generate interactive elements powered by AI",
-      "drawing": "Drawing",
+      "check_preview": "Kiểm tra bản xem trước ở bên trái",
+      "creating": "Đang tạo...",
+      "description": "Tạo các thành phần tương tác được hỗ trợ bởi AI",
+      "drawing": "Bản vẽ",
       "edit": "Chỉnh sửa",
-      "empty_state": "Describe what you want to create and watch it come to life",
-      "flashcards": "Flashcards",
+      "empty_state": "Mô tả những gì bạn muốn tạo và xem nó hiện ra",
+      "flashcards": "Thẻ ghi nhớ",
       "generate": "Tạo",
-      "generating": "Generating interactive content...",
-      "input_placeholder": "Describe what you want to create...",
-      "input_placeholder_refine": "Describe changes or refinements...",
-      "max_iterations": "Maximum iterations reached. Save your work!",
-      "prompt_text": "Describe an interactive element to generate",
-      "quiz": "Quiz",
-      "save_close": "Save & Close",
-      "streaming": "Generating...",
-      "timeline": "Timeline",
+      "generating": "Đang tạo nội dung tương tác...",
+      "input_placeholder": "Mô tả những gì bạn muốn tạo...",
+      "input_placeholder_refine": "Mô tả các thay đổi hoặc tinh chỉnh...",
+      "max_iterations": "Đã đạt giới hạn lặp tối đa. Hãy lưu công việc của bạn!",
+      "prompt_text": "Mô tả một thành phần tương tác cần tạo",
+      "quiz": "Câu hỏi trắc nghiệm",
+      "save_close": "Lưu & Đóng",
+      "streaming": "Đang tạo...",
+      "timeline": "Dòng thời gian",
       "title": "AI Playground"
     },
     "private": "Riêng tư",
     "public": "Công khai",
-    "search_placeholder": "Search boards...",
-    "select_all": "Select All",
-    "selected_count": "{{count}} selected",
+    "search_placeholder": "Tìm kiếm bảng...",
+    "select_all": "Chọn tất cả",
+    "selected_count": "Đã chọn {{count}}",
     "settings": "Cài đặt",
     "share": {
-      "share_board": "Share board",
-      "share_this_board": "Share this board"
+      "share_board": "Chia sẻ bảng",
+      "share_this_board": "Chia sẻ bảng này"
     },
     "thumbnail": {
-      "alt": "Board thumbnail",
-      "description": "Board cover image shown on cards",
+      "alt": "Hình thu nhỏ bảng",
+      "description": "Ảnh bìa bảng được hiển thị trên các thẻ",
       "gallery": "Thư viện",
-      "supported_formats": "Supported formats: JPG, JPEG, PNG. Max 8MB.",
-      "thumbnail_updated": "Thumbnail updated",
-      "thumbnail_updated_error": "Failed to upload thumbnail",
-      "title": "Thumbnail",
-      "upload_image": "Upload Image",
-      "uploading": "Uploading..."
+      "supported_formats": "Định dạng hỗ trợ: JPG, JPEG, PNG. Tối đa 8MB.",
+      "thumbnail_updated": "Đã cập nhật hình thu nhỏ",
+      "thumbnail_updated_error": "Không thể tải lên hình thu nhỏ",
+      "title": "Hình thu nhỏ",
+      "upload_image": "Tải ảnh lên",
+      "uploading": "Đang tải lên..."
     },
     "timer": {
       "close": "Đóng",
       "pause": "Tạm dừng",
       "restart": "Khởi động lại",
       "resume": "Tiếp tục",
-      "set_timer": "Set timer",
-      "set_timer_title": "Set Timer",
-      "times_up": "Time's up!"
+      "set_timer": "Đặt hẹn giờ",
+      "set_timer_title": "Đặt hẹn giờ",
+      "times_up": "Hết giờ!"
     },
     "toolbar": {
-      "activity": "Activity",
-      "add_card": "Add Card",
+      "activity": "Hoạt động",
+      "add_card": "Thêm thẻ",
       "ai_playground": "AI Playground",
-      "draw": "Draw",
+      "draw": "Vẽ",
       "embed": "Nhúng",
-      "frame": "Frame",
-      "medium": "Medium",
+      "frame": "Khung",
+      "medium": "Trung bình",
       "note": "Ghi chú",
-      "pan": "Pan",
+      "pan": "Di chuyển",
       "podcast": "Podcast",
-      "redo": "Redo",
+      "redo": "Làm lại",
       "select": "Chọn",
-      "sticker": "Sticker",
-      "sticky_note": "Sticky Note",
-      "thick": "Thick",
-      "thin": "Thin",
-      "todo": "To-do",
-      "undo": "Undo",
-      "webpage": "Webpage",
+      "sticker": "Nhãn dán",
+      "sticky_note": "Ghi chú dán",
+      "thick": "Dày",
+      "thin": "Mỏng",
+      "todo": "Việc cần làm",
+      "undo": "Hoàn tác",
+      "webpage": "Trang web",
       "youtube": "YouTube"
     },
-    "try_different_search": "Try a different search term",
+    "try_different_search": "Thử từ khóa tìm kiếm khác",
     "webpage_block": {
       "add": "Thêm",
-      "blocking_notice": "Some sites may block embedding",
-      "embed_webpage": "Embed a webpage",
-      "open_in_new_tab": "Open in new tab",
+      "blocking_notice": "Một số trang web có thể chặn việc nhúng",
+      "embed_webpage": "Nhúng một trang web",
+      "open_in_new_tab": "Mở trong tab mới",
       "reload": "Tải lại",
       "url_placeholder": "https://example.com"
     },
     "youtube_block": {
       "add": "Thêm",
-      "paste_url": "Paste a YouTube URL",
+      "paste_url": "Dán URL YouTube",
       "url_placeholder": "https://youtube.com/watch?v=..."
     },
     "zoom": {
-      "zoom_in": "Zoom in",
-      "zoom_out": "Zoom out"
-    }
+      "zoom_in": "Phóng to",
+      "zoom_out": "Thu nhỏ"
+    },
+    "no_boards": "Chưa có bảng nào",
+    "no_search_results": "Không tìm thấy bảng nào"
   },
   "embed": {
-    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
-    "not_supported_title": "This activity is not supported",
-    "powered_by": "Powered by LearnHouse",
-    "visit_activity": "Visit Activity Page"
+    "not_supported_description": "Loại hoạt động này yêu cầu xác thực và không thể được nhúng.",
+    "not_supported_title": "Hoạt động này không được hỗ trợ",
+    "powered_by": "Cung cấp bởi LearnHouse",
+    "visit_activity": "Truy cập trang hoạt động"
   },
   "migration": {
-    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
-    "add_activity": "Add Activity",
-    "add_chapter": "Add Chapter",
-    "ai_failed": "AI suggestion failed, falling back to manual organization",
-    "all_files_assigned": "All files assigned",
-    "click_to_add_more": "Click to add more files",
-    "course_created": "Course created successfully!",
-    "course_name": "Course Name",
-    "course_name_placeholder": "e.g. Python Basics for Beginners",
-    "course_structure": "Course Structure",
-    "create_course": "Create Course",
-    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
-    "creating_course": "Creating your course...",
-    "creating_description": "Uploading files and setting up chapters and activities",
-    "creation_error_generic": "Something went wrong. Please try again.",
-    "creation_failed": "Course creation failed",
-    "description": "One-liner Description",
-    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
-    "drop_file_here": "Drop a file here",
-    "drop_files": "Drop your files here or click to browse",
-    "go_to_course": "Go to Course",
-    "new_activity": "New Activity",
-    "new_chapter": "New Chapter",
-    "organize_manually": "Organize Manually",
-    "organize_with_ai": "Organize with AI",
-    "step_complete": "Complete",
-    "step_organize": "Organize",
+    "accepted_formats": "Video (MP4, WebM, MOV), Tài liệu (PDF), Hình ảnh (PNG, JPG, WebP), Âm thanh (MP3, WAV)",
+    "add_activity": "Thêm hoạt động",
+    "add_chapter": "Thêm chương",
+    "ai_failed": "Gợi ý AI thất bại, chuyển sang sắp xếp thủ công",
+    "all_files_assigned": "Đã gán tất cả các tệp",
+    "click_to_add_more": "Nhấp để thêm tệp",
+    "course_created": "Tạo khóa học thành công!",
+    "course_name": "Tên khóa học",
+    "course_name_placeholder": "vd. Python cơ bản cho người mới bắt đầu",
+    "course_structure": "Cấu trúc khóa học",
+    "create_course": "Tạo khóa học",
+    "created_summary": "Đã tạo {{chapters}} chương và {{activities}} hoạt động",
+    "creating_course": "Đang tạo khóa học của bạn...",
+    "creating_description": "Đang tải lên tệp và thiết lập các chương và hoạt động",
+    "creation_error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "creation_failed": "Tạo khóa học thất bại",
+    "description": "Mô tả ngắn gọn",
+    "description_placeholder": "vd. 3 mô-đun bao gồm các nguyên tắc cơ bản, kiểu dữ liệu và hàm",
+    "drop_file_here": "Thả tệp vào đây",
+    "drop_files": "Thả các tệp của bạn vào đây hoặc nhấp để duyệt",
+    "go_to_course": "Đến khóa học",
+    "new_activity": "Hoạt động mới",
+    "new_chapter": "Chương mới",
+    "organize_manually": "Sắp xếp thủ công",
+    "organize_with_ai": "Sắp xếp với AI",
+    "step_complete": "Hoàn thành",
+    "step_organize": "Sắp xếp",
     "step_upload": "Tải lên",
-    "subtitle": "Upload your files and organize them into a course",
-    "title": "Migrate Content",
-    "try_again": "Try Again",
-    "unassigned_files": "Unassigned Files",
-    "upload_failed": "File upload failed",
-    "uploading_files": "Uploading files"
+    "subtitle": "Tải lên tệp của bạn và sắp xếp thành một khóa học",
+    "title": "Di chuyển nội dung",
+    "try_again": "Thử lại",
+    "unassigned_files": "Tệp chưa được gán",
+    "upload_failed": "Tải tệp lên thất bại",
+    "uploading_files": "Đang tải lên các tệp"
   },
   "upgrade_modal": {
     "title": "Khai phá toàn bộ tiềm năng của bạn",
@@ -4665,6 +4905,15 @@
       "usergroups_add_a_group": "Thêm nhóm",
       "toast_add_error": "Không thể thêm nhóm",
       "toast_remove_error": "Không thể xóa nhóm"
-    }
+    },
+    "accessDenied": "Không thể truy cập khóa học này",
+    "backToCourses": "Quay lại danh sách khóa học",
+    "loadError": "Không tìm thấy khóa học này hoặc đã xảy ra lỗi khi tải.",
+    "noPermission": "Bạn không có quyền xem khóa học này."
+  },
+  "pagination": {
+    "next": "Tiếp",
+    "previous": "Trước",
+    "showing_page": "Trang {{current}} trên {{total}}"
   }
 }

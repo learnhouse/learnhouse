@@ -93,32 +93,32 @@
           "description": "ชุมชนเป็นฟีเจอร์พรีเมียมที่มีให้เฉพาะองค์กรในแผน Standard หรือสูงกว่าเท่านั้น อัปเกรดเพื่อปลดล็อกชุมชนสนทนาสำหรับสมาชิกของคุณ"
         },
         "analytics": {
-          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
-          "title": "Standard Feature"
+          "description": "การวิเคราะห์เป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อปลดล็อกข้อมูลเชิงลึกเกี่ยวกับผู้เรียนและเนื้อหาของคุณ",
+          "title": "ฟีเจอร์ Standard"
         },
         "course_analytics": {
-          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
-          "title": "Pro Feature"
+          "description": "การวิเคราะห์คอร์สเป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Pro หรือสูงกว่า อัปเกรดเพื่อปลดล็อกข้อมูลการมีส่วนร่วมโดยละเอียด แนวโน้มการลงทะเบียน และความก้าวหน้าของผู้เรียนสำหรับแต่ละคอร์ส",
+          "title": "ฟีเจอร์ Pro"
         },
         "custom_domains": {
-          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
-          "title": "Standard Feature"
+          "description": "โดเมนที่กำหนดเองเป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อใช้โดเมนของคุณเองและสร้างประสบการณ์เฉพาะแบรนด์",
+          "title": "ฟีเจอร์ Standard"
         },
         "podcasts": {
-          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
-          "title": "Standard Feature"
+          "description": "พอดแคสต์เป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อสร้างและแชร์พอดแคสต์ให้กับสมาชิกของคุณ",
+          "title": "ฟีเจอร์ Standard"
         },
         "seo": {
-          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
-          "title": "Standard Feature"
+          "description": "เครื่องมือเพิ่มประสิทธิภาพ SEO มีให้บริการเฉพาะองค์กรที่ใช้แผน Standard หรือสูงกว่า อัปเกรดเพื่อปรับแต่งการแสดงผลในเครื่องมือค้นหา ตัวอย่างการแชร์บนโซเชียล และข้อมูลแบบมีโครงสร้างสำหรับคอร์สของคุณ",
+          "title": "ฟีเจอร์ Standard"
         },
         "sso": {
-          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
-          "title": "Enterprise Feature"
+          "description": "Single Sign-On (SSO) เป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Enterprise อัปเกรดเพื่อเปิดใช้การยืนยันตัวตนที่ปลอดภัยผ่านผู้ให้บริการระบุตัวตนขององค์กรคุณ",
+          "title": "ฟีเจอร์ Enterprise"
         }
       },
-      "current_plan": "Current plan",
-      "upgrade_to": "Upgrade to"
+      "current_plan": "แผนปัจจุบัน",
+      "upgrade_to": "อัปเกรดเป็น"
     },
     "features": {
       "disabled": {
@@ -179,8 +179,14 @@
     "view_details": "ดูรายละเอียด",
     "boards": "บอร์ด",
     "close": "ปิด",
-    "optional": "optional",
-    "playgrounds": "Playgrounds"
+    "optional": "ไม่บังคับ",
+    "playgrounds": "Playgrounds",
+    "analytics": "การวิเคราะห์",
+    "add": "เพิ่ม",
+    "choose_an_organization_to_continue": "เลือกองค์กรเพื่อดำเนินการต่อ",
+    "for": "สำหรับ",
+    "powered_by": "ขับเคลื่อนโดย",
+    "results": "ผลลัพธ์"
   },
   "banner": {
     "viewing_as_guest": "คุณกำลังดู {{name}} ในฐานะแขก",
@@ -256,65 +262,67 @@
     "invite_required_desc": "ต้องใช้รหัสเชิญเพื่อเข้าร่วม {{org}}",
     "invite_code": "รหัสเชิญ",
     "validate_invite": "ยืนยันคำเชิญ",
-    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
-    "back_to_login": "Back to Login",
-    "check_email_for_verification": "Check Your Email",
-    "check_inbox_message": "Please check your inbox and click the verification link.",
-    "create_your_account": "Create your account",
-    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
-    "email_verification_required": "Email Verification Required",
-    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
-    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
-    "email_verified_success": "Email Verified!",
-    "login_failed": "Login Failed",
-    "password_req_lowercase": "At least one lowercase letter (a-z)",
-    "password_req_min_length": "At least 8 characters",
-    "password_req_number": "At least one number (0-9)",
-    "password_req_special": "At least one special character (!@#$%...)",
-    "password_req_uppercase": "At least one uppercase letter (A-Z)",
-    "password_requirements_not_met": "Password does not meet requirements",
-    "password_strength": "Password strength",
-    "password_strength_fair": "Fair",
-    "password_strength_good": "Good",
-    "password_strength_strong": "Strong",
-    "password_strength_weak": "Weak",
-    "proceed_to_login": "Proceed to Login",
-    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
-    "resend_verification_email": "Resend verification email",
-    "resend_verification_failed": "Failed to resend verification email. Please try again.",
-    "sign_in_with_sso": "Sign in with SSO",
+    "account_locked_message": "บัญชีของคุณถูกล็อกชั่วคราวเนื่องจากพยายามเข้าสู่ระบบล้มเหลวหลายครั้ง โปรดลองอีกครั้งในภายหลัง",
+    "back_to_login": "กลับไปยังหน้าเข้าสู่ระบบ",
+    "check_email_for_verification": "ตรวจสอบอีเมลของคุณ",
+    "check_inbox_message": "โปรดตรวจสอบกล่องจดหมายของคุณและคลิกลิงก์ยืนยัน",
+    "create_your_account": "สร้างบัญชีของคุณ",
+    "email_not_verified_message": "โปรดยืนยันที่อยู่อีเมลของคุณก่อนเข้าสู่ระบบ ตรวจสอบกล่องจดหมายเพื่อดูอีเมลยืนยัน",
+    "email_verification_required": "ต้องยืนยันอีเมล",
+    "email_verification_required_join": "โปรดยืนยันที่อยู่อีเมลของคุณก่อนเข้าร่วมองค์กร ตรวจสอบกล่องจดหมายเพื่อดูอีเมลยืนยัน",
+    "email_verified_message": "อีเมลของคุณได้รับการยืนยันเรียบร้อยแล้ว ตอนนี้คุณสามารถเข้าสู่ระบบบัญชีของคุณได้แล้ว",
+    "email_verified_success": "ยืนยันอีเมลแล้ว!",
+    "login_failed": "เข้าสู่ระบบไม่สำเร็จ",
+    "password_req_lowercase": "ตัวอักษรพิมพ์เล็กอย่างน้อยหนึ่งตัว (a-z)",
+    "password_req_min_length": "อย่างน้อย 8 ตัวอักษร",
+    "password_req_number": "ตัวเลขอย่างน้อยหนึ่งตัว (0-9)",
+    "password_req_special": "อักขระพิเศษอย่างน้อยหนึ่งตัว (!@#$%...)",
+    "password_req_uppercase": "ตัวอักษรพิมพ์ใหญ่อย่างน้อยหนึ่งตัว (A-Z)",
+    "password_requirements_not_met": "รหัสผ่านไม่ตรงตามข้อกำหนด",
+    "password_strength": "ความแข็งแรงของรหัสผ่าน",
+    "password_strength_fair": "พอใช้",
+    "password_strength_good": "ดี",
+    "password_strength_strong": "แข็งแรง",
+    "password_strength_weak": "อ่อน",
+    "proceed_to_login": "ไปยังหน้าเข้าสู่ระบบ",
+    "rate_limited_message": "คุณพยายามเข้าสู่ระบบมากเกินไป โปรดรอสักครู่ก่อนลองอีกครั้ง",
+    "resend_verification_email": "ส่งอีเมลยืนยันอีกครั้ง",
+    "resend_verification_failed": "ส่งอีเมลยืนยันอีกครั้งไม่สำเร็จ โปรดลองอีกครั้ง",
+    "sign_in_with_sso": "เข้าสู่ระบบด้วย SSO",
     "sso_callback": {
-      "auth_failed": "Authentication Failed",
-      "authenticating": "Authenticating...",
-      "copied": "Copied!",
-      "copy_details": "Copy to clipboard",
-      "error": "SSO authentication failed. Please try again.",
-      "error_code": "Error code",
-      "go_home": "Go to Home",
-      "hide_details": "Hide technical details",
-      "missing_params": "Invalid SSO callback. Missing required parameters.",
-      "please_wait": "Please wait while we verify your identity",
-      "provider": "Provider",
-      "redirecting": "Redirecting you to the application...",
-      "show_details": "Show technical details",
-      "success": "Authentication Successful",
+      "auth_failed": "การยืนยันตัวตนล้มเหลว",
+      "authenticating": "กำลังยืนยันตัวตน...",
+      "copied": "คัดลอกแล้ว!",
+      "copy_details": "คัดลอกไปยังคลิปบอร์ด",
+      "error": "การยืนยันตัวตน SSO ล้มเหลว โปรดลองอีกครั้ง",
+      "error_code": "รหัสข้อผิดพลาด",
+      "go_home": "ไปยังหน้าแรก",
+      "hide_details": "ซ่อนรายละเอียดทางเทคนิค",
+      "missing_params": "การเรียกกลับ SSO ไม่ถูกต้อง พารามิเตอร์ที่จำเป็นหายไป",
+      "please_wait": "โปรดรอสักครู่ขณะที่เรากำลังยืนยันตัวตนของคุณ",
+      "provider": "ผู้ให้บริการ",
+      "redirecting": "กำลังเปลี่ยนเส้นทางไปยังแอปพลิเคชัน...",
+      "show_details": "แสดงรายละเอียดทางเทคนิค",
+      "success": "การยืนยันตัวตนสำเร็จ",
       "tips": {
-        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
-        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
-        "invalid_state": "Your session may have expired. Please try logging in again.",
-        "server_error": "The identity provider is experiencing issues. Please try again later."
+        "access_denied": "หากคุณปฏิเสธคำขอเข้าสู่ระบบโดยไม่ตั้งใจ ลองอีกครั้งและยอมรับสิทธิ์การเข้าถึง",
+        "domain_not_allowed": "ติดต่อผู้ดูแลระบบขององค์กรเพื่อตรวจสอบว่าโดเมนอีเมลของคุณได้รับอนุญาตหรือไม่",
+        "invalid_state": "เซสชันของคุณอาจหมดอายุ โปรดลองเข้าสู่ระบบอีกครั้ง",
+        "server_error": "ผู้ให้บริการระบุตัวตนกำลังประสบปัญหา โปรดลองอีกครั้งในภายหลัง"
       },
-      "try_again": "Try Again"
+      "try_again": "ลองอีกครั้ง"
     },
-    "sso_error": "SSO authentication failed. Please try again.",
-    "try_again_in": "try again in {{minutes}} min",
-    "verification_email_resent": "Verification Email Sent",
-    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
-    "verification_failed": "Verification Failed",
-    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
-    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
-    "verify_email_title": "Verify Your Email",
-    "verifying_email": "Verifying your email address..."
+    "sso_error": "การยืนยันตัวตน SSO ล้มเหลว โปรดลองอีกครั้ง",
+    "try_again_in": "ลองอีกครั้งใน {{minutes}} นาที",
+    "verification_email_resent": "ส่งอีเมลยืนยันแล้ว",
+    "verification_email_sent_message": "เราได้ส่งอีเมลยืนยันไปยังกล่องจดหมายของคุณแล้ว โปรดคลิกลิงก์ในอีเมลเพื่อยืนยันบัญชีของคุณ",
+    "verification_failed": "การยืนยันล้มเหลว",
+    "verification_missing_params": "พารามิเตอร์การยืนยันหายไป โปรดตรวจสอบลิงก์ยืนยันของคุณ",
+    "verification_trouble": "พบปัญหาใช่ไหม? ลองขออีเมลยืนยันใหม่จากหน้าเข้าสู่ระบบ",
+    "verify_email_title": "ยืนยันอีเมลของคุณ",
+    "verifying_email": "กำลังยืนยันที่อยู่อีเมลของคุณ...",
+    "error_generic": "เกิดข้อผิดพลาดบางอย่าง กรุณาลองอีกครั้ง",
+    "sign_in": "เข้าสู่ระบบ"
   },
   "verify_email": {
     "title": "การยืนยันอีเมล",
@@ -603,18 +611,20 @@
         "video_takes_time": "การวิเคราะห์วิดีโออาจใช้เวลา 1-2 นาที",
         "video_hint": "วิดีโออาจใช้เวลาประมวลผล 1-2 นาที"
       },
-      "from_existing": "From Existing Content",
-      "from_existing_description": "Upload files from another platform and organize them into a course"
+      "from_existing": "จากเนื้อหาที่มีอยู่",
+      "from_existing_description": "อัปโหลดไฟล์จากแพลตฟอร์มอื่นและจัดระเบียบเป็นคอร์ส"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "คอร์สทั้งหมด",
+      "filter_by_group": "กรองตามกลุ่ม",
+      "info_title": "ตัวกรองกลุ่มผู้ใช้",
+      "info_description": "กรองคอร์สตามกลุ่มผู้ใช้เพื่อดูเฉพาะคอร์สที่กำหนดให้กับกลุ่มที่ระบุ มีประโยชน์สำหรับครอบครัวหรือทีมที่ใช้องค์กรเดียวกัน"
     },
-    "copied": "Copied!",
-    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
-    "quit_course_title": "Quit Course?"
+    "copied": "คัดลอกแล้ว!",
+    "quit_course_confirm": "คุณแน่ใจหรือไม่ว่าต้องการออกจากคอร์สนี้? คุณจะสูญเสียความก้าวหน้าทั้งหมด",
+    "quit_course_title": "ออกจากคอร์ส?",
+    "courses_load_error": "ไม่สามารถโหลดหลักสูตรได้ กรุณาลองอีกครั้ง",
+    "view_all_courses": "ดูหลักสูตรทั้งหมด"
   },
   "communities": {
     "title": "ชุมชน",
@@ -662,7 +672,8 @@
       "clear_search": "ล้างการค้นหา",
       "no_discussions": "ยังไม่มีการสนทนา",
       "no_discussions_description": "เป็นคนแรกที่เริ่มการสนทนาในชุมชนนี้!",
-      "start_discussion": "เริ่มการสนทนา"
+      "start_discussion": "เริ่มการสนทนา",
+      "delete_failed": "ไม่สามารถลบการสนทนาได้"
     },
     "discussion_detail": {
       "edit": "แก้ไข",
@@ -670,7 +681,8 @@
       "delete_title": "ลบการสนทนา?",
       "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
       "delete_button": "ลบการสนทนา",
-      "no_details": "ไม่มีรายละเอียดเพิ่มเติม"
+      "no_details": "ไม่มีรายละเอียดเพิ่มเติม",
+      "delete_failed": "ไม่สามารถลบการสนทนาได้"
     },
     "discussion_card": {
       "pin_discussion": "ปักหมุดการสนทนา",
@@ -680,7 +692,10 @@
       "delete_discussion": "ลบการสนทนา",
       "delete_title": "ลบการสนทนา?",
       "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
-      "votes": "โหวต"
+      "votes": "โหวต",
+      "delete_failed": "ไม่สามารถลบการสนทนาได้",
+      "lock_failed": "ไม่สามารถอัปเดตสถานะการล็อกได้",
+      "pin_failed": "ไม่สามารถอัปเดตสถานะการปักหมุดได้"
     },
     "comments": {
       "no_replies": "ยังไม่มีการตอบกลับ",
@@ -696,7 +711,8 @@
       "cancel": "ยกเลิก",
       "failed_to_post": "ไม่สามารถโพสต์ได้ กรุณาลองอีกครั้ง",
       "content_not_allowed": "คำตอบของคุณมีเนื้อหาที่ไม่อนุญาต",
-      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง"
+      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง",
+      "failed_to_delete": "ไม่สามารถลบความคิดเห็นได้"
     },
     "label_filter": {
       "label": "ป้ายกำกับ:",
@@ -775,98 +791,98 @@
     "podcast_deleted_success": "ลบพอดแคสต์สำเร็จ",
     "podcast_deleted_error": "ลบพอดแคสต์ไม่สำเร็จ",
     "edit_content": "แก้ไขเนื้อหา",
-    "create_new_podcast": "Create a new podcast for your organization",
-    "create_podcast": "Create Podcast",
-    "create_podcast_btn": "Create Podcast",
-    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
-    "creating_podcast": "Creating podcast...",
+    "create_new_podcast": "สร้างพอดแคสต์ใหม่สำหรับองค์กรของคุณ",
+    "create_podcast": "สร้างพอดแคสต์",
+    "create_podcast_btn": "สร้างพอดแคสต์",
+    "create_podcasts_placeholder": "สร้างพอดแคสต์เพื่อแชร์เนื้อหาเสียงกับผู้ฟังของคุณ",
+    "creating_podcast": "กำลังสร้างพอดแคสต์...",
     "dashboard": {
       "episodes": {
-        "audio_hint": "MP3, WAV, or M4A files supported",
-        "audio_label": "Audio File",
-        "create": "Create Episode",
-        "create_error": "Failed to create episode",
-        "create_first": "Create First Episode",
-        "created": "Episode created",
-        "creating": "Creating episode...",
+        "audio_hint": "รองรับไฟล์ MP3, WAV หรือ M4A",
+        "audio_label": "ไฟล์เสียง",
+        "create": "สร้างตอน",
+        "create_error": "สร้างตอนไม่สำเร็จ",
+        "create_first": "สร้างตอนแรก",
+        "created": "สร้างตอนแล้ว",
+        "creating": "กำลังสร้างตอน...",
         "delete": "ลบ",
-        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
-        "delete_error": "Failed to delete episode",
-        "delete_title": "Delete Episode?",
-        "deleted": "Episode deleted",
-        "deleting": "Deleting episode...",
+        "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบตอนนี้? การกระทำนี้ไม่สามารถยกเลิกได้",
+        "delete_error": "ลบตอนไม่สำเร็จ",
+        "delete_title": "ลบตอน?",
+        "deleted": "ลบตอนแล้ว",
+        "deleting": "กำลังลบตอน...",
         "description_label": "คำอธิบาย",
-        "description_placeholder": "Enter episode description",
+        "description_placeholder": "ใส่คำอธิบายของตอน",
         "edit": "แก้ไข",
-        "edit_episode": "Edit Episode",
-        "edit_episode_description": "Update episode details",
-        "new_episode": "New Episode",
-        "new_episode_description": "Add a new episode to this podcast",
-        "no_audio": "No audio file",
-        "no_episodes_description": "Start by adding your first episode",
+        "edit_episode": "แก้ไขตอน",
+        "edit_episode_description": "อัปเดตรายละเอียดของตอน",
+        "new_episode": "ตอนใหม่",
+        "new_episode_description": "เพิ่มตอนใหม่ให้กับพอดแคสต์นี้",
+        "no_audio": "ไม่มีไฟล์เสียง",
+        "no_episodes_description": "เริ่มต้นด้วยการเพิ่มตอนแรกของคุณ",
         "publish": "เผยแพร่",
-        "replace_audio": "Replace Audio File",
-        "save": "Save Changes",
+        "replace_audio": "แทนที่ไฟล์เสียง",
+        "save": "บันทึกการเปลี่ยนแปลง",
         "title_label": "หัวข้อ",
-        "title_placeholder": "Enter episode title",
+        "title_placeholder": "ใส่ชื่อตอน",
         "unpublish": "ยกเลิกเผยแพร่",
-        "update_error": "Failed to update episode",
-        "updated": "Episode updated",
-        "updating": "Updating episode...",
-        "upload_audio": "Upload Audio File"
+        "update_error": "อัปเดตตอนไม่สำเร็จ",
+        "updated": "อัปเดตตอนแล้ว",
+        "updating": "กำลังอัปเดตตอน...",
+        "upload_audio": "อัปโหลดไฟล์เสียง"
       },
       "form": {
-        "about": "About",
-        "about_max_length": "About must be at most 2000 characters",
-        "about_placeholder": "Tell listeners more about this podcast...",
-        "public_hint": "Anyone can find and listen to this podcast",
-        "published_hint": "Make this podcast visible on your organization page",
-        "tags_hint": "Separate tags with commas",
-        "tags_placeholder": "music, education, tech",
-        "thumbnail": "Thumbnail",
-        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
-        "upload_thumbnail": "Upload Thumbnail",
-        "visibility": "Visibility Settings"
+        "about": "เกี่ยวกับ",
+        "about_max_length": "เกี่ยวกับต้องไม่เกิน 2000 ตัวอักษร",
+        "about_placeholder": "บอกเล่าเกี่ยวกับพอดแคสต์นี้ให้ผู้ฟังฟัง...",
+        "public_hint": "ทุกคนสามารถค้นหาและฟังพอดแคสต์นี้ได้",
+        "published_hint": "ทำให้พอดแคสต์นี้แสดงในหน้าองค์กรของคุณ",
+        "tags_hint": "คั่นแท็กด้วยเครื่องหมายจุลภาค",
+        "tags_placeholder": "ดนตรี, การศึกษา, เทคโนโลยี",
+        "thumbnail": "ภาพย่อ",
+        "thumbnail_hint": "ขนาดที่แนะนำ: 1400x1400 พิกเซล รองรับ JPG หรือ PNG",
+        "upload_thumbnail": "อัปโหลดภาพย่อ",
+        "visibility": "ตั้งค่าการมองเห็น"
       },
-      "save_changes": "Save Changes",
-      "save_error": "Failed to save changes",
-      "saved": "Changes saved",
-      "saving": "Saving...",
+      "save_changes": "บันทึกการเปลี่ยนแปลง",
+      "save_error": "บันทึกการเปลี่ยนแปลงไม่สำเร็จ",
+      "saved": "บันทึกการเปลี่ยนแปลงแล้ว",
+      "saving": "กำลังบันทึก...",
       "tabs": {
-        "episodes": "Episodes",
+        "episodes": "ตอน",
         "general": "ทั่วไป"
       },
-      "view_podcast": "View Podcast"
+      "view_podcast": "ดูพอดแคสต์"
     },
-    "failed_to_create_podcast": "Failed to create podcast",
+    "failed_to_create_podcast": "สร้างพอดแคสต์ไม่สำเร็จ",
     "form": {
-      "description_max_length": "Description must be at most 500 characters",
-      "name_max_length": "Name must be at most 100 characters",
-      "name_min_length": "Name must be at least 3 characters",
-      "name_required": "Podcast name is required"
+      "description_max_length": "คำอธิบายต้องไม่เกิน 500 ตัวอักษร",
+      "name_max_length": "ชื่อต้องไม่เกิน 100 ตัวอักษร",
+      "name_min_length": "ชื่อต้องมีอย่างน้อย 3 ตัวอักษร",
+      "name_required": "ต้องระบุชื่อพอดแคสต์"
     },
     "modals": {
       "create": {
         "cancel": "ยกเลิก",
-        "description": "Fill in the details to create a new podcast",
+        "description": "กรอกรายละเอียดเพื่อสร้างพอดแคสต์ใหม่",
         "form": {
           "description_label": "คำอธิบาย",
-          "description_placeholder": "Enter podcast description",
-          "name_label": "Podcast Name",
-          "name_placeholder": "Enter podcast name",
-          "public_label": "Make this podcast public"
+          "description_placeholder": "ใส่คำอธิบายพอดแคสต์",
+          "name_label": "ชื่อพอดแคสต์",
+          "name_placeholder": "ใส่ชื่อพอดแคสต์",
+          "public_label": "ทำให้พอดแคสต์นี้เป็นสาธารณะ"
         },
-        "submit": "Create Podcast",
-        "title": "Create New Podcast"
+        "submit": "สร้างพอดแคสต์",
+        "title": "สร้างพอดแคสต์ใหม่"
       }
     },
-    "podcast_created_success": "Podcast created successfully",
-    "podcast_name": "Podcast Name",
-    "podcast_name_required": "Podcast name is required",
+    "podcast_created_success": "สร้างพอดแคสต์สำเร็จ",
+    "podcast_name": "ชื่อพอดแคสต์",
+    "podcast_name_required": "ต้องระบุชื่อพอดแคสต์",
     "podcast_tags": "แท็ก",
-    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_thumbnail": "ภาพย่อพอดแคสต์",
     "podcast_visibility": "การมองเห็น",
-    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
+    "search_results": "พบ {{count}} พอดแคสต์สำหรับ \"{{query}}\""
   },
   "collections": {
     "collections": "คอลเลกชัน",
@@ -907,7 +923,7 @@
     "quiz": "ควิซ",
     "file_submission": "ส่งไฟล์",
     "form": "แบบฟอร์ม",
-    "code": "Code",
+    "code": "โค้ด",
     "interactive": "โต้ตอบ",
     "activities": "กิจกรรม",
     "current_activity": "กิจกรรมปัจจุบัน",
@@ -946,8 +962,8 @@
     "activities_count": "{{count}} กิจกรรม",
     "copy_link": "คัดลอกลิงก์",
     "embed": "ฝัง",
-    "embed_code_copied": "Embed code copied!",
-    "link_copied": "Link copied!",
+    "embed_code_copied": "คัดลอกโค้ดฝังแล้ว!",
+    "link_copied": "คัดลอกลิงก์แล้ว!",
     "share": "แชร์"
   },
   "assignments": {
@@ -966,13 +982,20 @@
     "points": "คะแนน",
     "current_points": "คะแนนปัจจุบัน: {{points}}",
     "grade": "เกรด",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "ตรวจอัตโนมัติ",
     "due_date": "กำหนดส่ง",
     "task_breakdown": "รายละเอียดงาน",
     "no_grade_details": "ยังไม่มีรายละเอียดคะแนน",
     "task_passed": "ผ่าน",
     "task_not_passed": "ไม่ผ่าน",
-    "score": "คะแนน"
+    "score": "คะแนน",
+    "form": {
+      "expected_answer": "คำตอบที่คาดหวัง"
+    },
+    "quiz": {
+      "correct_answer": "ถูกต้อง",
+      "incorrect_answer": "ผิด"
+    }
   },
   "certificate": {
     "certificate": "ใบประกาศนียบัตร",
@@ -1059,7 +1082,8 @@
     "subscription": "การสมัครสมาชิก",
     "benefits": "สิทธิประโยชน์:",
     "min_price": "ราคาขั้นต่ำ:",
-    "choose_price": "เลือกราคาของคุณ"
+    "choose_price": "เลือกราคาของคุณ",
+    "stripe_denied": "การเชื่อมต่อ Stripe ถูกยกเลิก"
   },
   "account": {
     "title": "บัญชี",
@@ -1288,7 +1312,8 @@
           "loading_error": "โหลดข้อมูลโปรไฟล์ล้มเหลว",
           "save_success": "อัปเดตโปรไฟล์สำเร็จ",
           "save_error": "เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์"
-        }
+        },
+        "unknown_section": "ส่วนที่ไม่รู้จัก"
       }
     },
     "sign_out": "ออกจากระบบ",
@@ -1300,7 +1325,7 @@
     "my_progress": "ความก้าวหน้าของฉัน",
     "no_courses_in_progress": "ไม่มีคอร์สที่กำลังเรียนอยู่",
     "start_course_to_see_progress": "เริ่มเรียนสักคอร์สเพื่อดูความก้าวหน้าของคุณที่นี่",
-    "bio_placeholder": "Tell us a bit about yourself..."
+    "bio_placeholder": "เล่าเกี่ยวกับตัวคุณสักหน่อย..."
   },
   "roles": {
     "custom_role": "บทบาทที่กำหนดเอง",
@@ -1733,7 +1758,7 @@
             "thumbnail": "รูปขนาดย่อ",
             "course": "คอร์สที่เชื่อมโยง",
             "moderation": "การดูแล",
-            "access": "Access"
+            "access": "การเข้าถึง"
           },
           "general": {
             "title": "การตั้งค่าทั่วไป",
@@ -1752,8 +1777,8 @@
             "subtitle": "กำหนดค่าการตั้งค่าการดูแลเนื้อหา"
           },
           "access": {
-            "subtitle": "Control who can access this community",
-            "title": "Access Settings"
+            "subtitle": "ควบคุมว่าใครสามารถเข้าถึงชุมชนนี้ได้",
+            "title": "ตั้งค่าการเข้าถึง"
           }
         },
         "course": {
@@ -1892,54 +1917,54 @@
         "access": {
           "public": {
             "active": "ใช้งานอยู่",
-            "confirmation_button": "Change to Public",
-            "confirmation_message": "Are you sure you want this community to be publicly available?",
-            "confirmation_title": "Change to Public?",
-            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "confirmation_button": "เปลี่ยนเป็นสาธารณะ",
+            "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการให้ชุมชนนี้เป็นสาธารณะ?",
+            "confirmation_title": "เปลี่ยนเป็นสาธารณะ?",
+            "description": "ชุมชนนี้เปิดเป็นสาธารณะ ทุกคนสามารถดูและเข้าร่วมการสนทนาได้",
             "title": "สาธารณะ"
           },
           "restricted": {
             "active": "ใช้งานอยู่",
-            "confirmation_button": "Change to Restricted",
-            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
-            "confirmation_title": "Change to Restricted?",
-            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
-            "title": "Restricted"
+            "confirmation_button": "เปลี่ยนเป็นจำกัดการเข้าถึง",
+            "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการจำกัดการเข้าถึงชุมชนนี้? เฉพาะสมาชิกของกลุ่มผู้ใช้ที่เชื่อมโยงเท่านั้นที่จะสามารถเข้าถึงได้",
+            "confirmation_title": "เปลี่ยนเป็นจำกัดการเข้าถึง?",
+            "description": "ชุมชนนี้เข้าถึงได้เฉพาะสมาชิกของกลุ่มผู้ใช้ที่เลือกไว้ เชื่อมโยงกลุ่มผู้ใช้เพื่ออนุญาตการเข้าถึง",
+            "title": "จำกัดการเข้าถึง"
           },
-          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
-          "title": "Access Settings",
+          "subtitle": "เลือกว่าคุณต้องการให้ชุมชนของคุณเปิดเป็นสาธารณะหรือเข้าถึงได้เฉพาะกลุ่มผู้ใช้บางกลุ่มเท่านั้น",
+          "title": "ตั้งค่าการเข้าถึง",
           "toasts": {
-            "update_error": "Failed to update access settings",
-            "update_success": "Access settings updated successfully"
+            "update_error": "อัปเดตการตั้งค่าการเข้าถึงไม่สำเร็จ",
+            "update_success": "อัปเดตการตั้งค่าการเข้าถึงเรียบร้อยแล้ว"
           },
           "usergroups": {
             "actions": {
               "delete_link": "ลบ",
-              "link_to_usergroup": "Link to User Group"
+              "link_to_usergroup": "เชื่อมโยงกับกลุ่มผู้ใช้"
             },
             "modals": {
-              "create_usergroup": "Create a User Group",
+              "create_usergroup": "สร้างกลุ่มผู้ใช้",
               "link_button": "เชื่อมต่อ",
-              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
-              "link_title": "Link Community to User Group",
-              "no_usergroups": "No User Groups available",
-              "unlink_button": "Remove Access",
-              "unlink_message": "Users from this User Group will no longer have access to this community.",
-              "unlink_title": "Remove User Group Access?",
-              "usergroup_name": "User Group Name",
-              "warning": "Users not in linked User Groups will lose access to this community"
+              "link_description": "เลือกกลุ่มผู้ใช้เพื่อเชื่อมโยงกับชุมชนนี้ ผู้ใช้จากกลุ่มนี้จะมีสิทธิ์เข้าถึง",
+              "link_title": "เชื่อมโยงชุมชนกับกลุ่มผู้ใช้",
+              "no_usergroups": "ไม่มีกลุ่มผู้ใช้ให้เลือก",
+              "unlink_button": "ลบสิทธิ์การเข้าถึง",
+              "unlink_message": "ผู้ใช้จากกลุ่มนี้จะไม่สามารถเข้าถึงชุมชนนี้ได้อีกต่อไป",
+              "unlink_title": "ลบสิทธิ์การเข้าถึงของกลุ่มผู้ใช้?",
+              "usergroup_name": "ชื่อกลุ่มผู้ใช้",
+              "warning": "ผู้ใช้ที่ไม่อยู่ในกลุ่มผู้ใช้ที่เชื่อมโยงจะสูญเสียการเข้าถึงชุมชนนี้"
             },
-            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "subtitle": "อนุญาตการเข้าถึงชุมชนนี้โดยเชื่อมโยงกับกลุ่มผู้ใช้ ผู้ใช้ในกลุ่มเหล่านี้จะสามารถดูและเข้าร่วมได้",
             "table": {
               "actions": "การดำเนินการ",
               "name": "ชื่อ"
             },
-            "title": "User Groups",
+            "title": "กลุ่มผู้ใช้",
             "toasts": {
-              "link_error": "Error {{status}}: {{detail}}",
-              "link_success": "Successfully linked User Group",
-              "unlink_error": "An error occurred while removing User Group access",
-              "unlink_success": "Successfully removed User Group access"
+              "link_error": "ข้อผิดพลาด {{status}}: {{detail}}",
+              "link_success": "เชื่อมโยงกลุ่มผู้ใช้สำเร็จ",
+              "unlink_error": "เกิดข้อผิดพลาดขณะลบสิทธิ์การเข้าถึงของกลุ่มผู้ใช้",
+              "unlink_success": "ลบสิทธิ์การเข้าถึงของกลุ่มผู้ใช้สำเร็จ"
             }
           }
         }
@@ -2022,9 +2047,9 @@
             "assignments": "งานที่มอบหมาย",
             "dynamic": "ไดนามิก",
             "dynamic_page": "หน้าไดนามิก",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "ฝังเนื้อหา"
           },
           "toasts": {
             "deleting": "กำลังลบกิจกรรม...",
@@ -2037,7 +2062,8 @@
             "create_success": "สร้างกิจกรรมสำเร็จแล้ว",
             "uploading": "กำลังอัปโหลดไฟล์และสร้างกิจกรรม...",
             "upload_success": "อัปโหลดไฟล์สำเร็จแล้ว",
-            "creating_uploading": "กำลังสร้างกิจกรรมและอัปโหลดไฟล์..."
+            "creating_uploading": "กำลังสร้างกิจกรรมและอัปโหลดไฟล์...",
+            "update_error": "ไม่สามารถอัปเดตกิจกรรมได้"
           },
           "versioning": {
             "version_history": "ประวัติเวอร์ชัน",
@@ -2081,76 +2107,79 @@
               "remote_detected": "ตรวจพบการเปลี่ยนแปลงจากระยะไกล",
               "editing_notice": "{{author}} ได้ทำการเปลี่ยนแปลงขณะที่คุณกำลังแก้ไข"
             }
+          },
+          "descriptions": {
+            "scorm": "แพ็กเกจการเรียนรู้ที่รองรับ SCORM"
           }
         }
       },
-      "limit_reached": "Course limit reached ({{limit}})",
+      "limit_reached": "ถึงจำนวนคอร์สสูงสุดแล้ว ({{limit}})",
       "seo": {
         "errors": {
-          "save_failed": "Failed to save SEO settings"
+          "save_failed": "บันทึกการตั้งค่า SEO ไม่สำเร็จ"
         },
         "form": {
-          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "canonical_url_hint": "ใช้หากคอร์สนี้ถูกทำซ้ำที่อื่น เว้นว่างไว้เพื่อใช้ URL เริ่มต้น",
           "canonical_url_label": "Canonical URL",
           "canonical_url_placeholder": "https://example.com/course/your-course",
-          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "description_hint": "เว้นว่างไว้เพื่อใช้คำอธิบายของคอร์ส แนะนำ: 150-160 ตัวอักษร",
           "description_label": "Meta Description",
-          "description_placeholder": "Enter a compelling description for search results",
-          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
-          "enable_jsonld_label": "Enable JSON-LD Structured Data",
-          "keywords_hint": "Comma-separated list of keywords related to your course",
-          "keywords_label": "Keywords",
-          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "description_placeholder": "ใส่คำอธิบายที่น่าสนใจสำหรับผลการค้นหา",
+          "enable_jsonld_hint": "เพิ่มมาร์กอัป Course schema.org สำหรับ rich snippets ในผลการค้นหา",
+          "enable_jsonld_label": "เปิดใช้งานข้อมูลแบบมีโครงสร้าง JSON-LD",
+          "keywords_hint": "รายการคำหลักที่เกี่ยวข้องกับคอร์สของคุณ คั่นด้วยเครื่องหมายจุลภาค",
+          "keywords_label": "คำหลัก",
+          "keywords_placeholder": "คำหลัก1, คำหลัก2, คำหลัก3",
           "og_description_label": "OG Description",
-          "og_description_placeholder": "Custom description for social media sharing",
-          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "og_description_placeholder": "คำอธิบายที่กำหนดเองสำหรับการแชร์บนโซเชียล",
+          "og_image_hint": "URL รูปภาพที่กำหนดเองสำหรับการแชร์บนโซเชียล เว้นว่างไว้เพื่อใช้ภาพย่อของคอร์ส",
           "og_image_label": "OG Image URL",
           "og_image_placeholder": "https://example.com/image.jpg",
           "og_title_label": "OG Title",
-          "og_title_placeholder": "Custom title for social media sharing",
-          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
-          "robots_nofollow_label": "Prevent following links (nofollow)",
-          "robots_noindex_hint": "When enabled, search engines will not index this course",
-          "robots_noindex_label": "Prevent search engine indexing (noindex)",
-          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "og_title_placeholder": "ชื่อที่กำหนดเองสำหรับการแชร์บนโซเชียล",
+          "robots_nofollow_hint": "เมื่อเปิดใช้งาน เครื่องมือค้นหาจะไม่ติดตามลิงก์บนหน้านี้",
+          "robots_nofollow_label": "ป้องกันการติดตามลิงก์ (nofollow)",
+          "robots_noindex_hint": "เมื่อเปิดใช้งาน เครื่องมือค้นหาจะไม่จัดทำดัชนีคอร์สนี้",
+          "robots_noindex_label": "ป้องกันการจัดทำดัชนีของเครื่องมือค้นหา (noindex)",
+          "title_hint": "เว้นว่างไว้เพื่อใช้ชื่อคอร์ส แนะนำ: 50-60 ตัวอักษร",
           "title_label": "SEO Title",
-          "title_placeholder": "Enter a custom title for search engines",
-          "twitter_card_label": "Card Type",
+          "title_placeholder": "ใส่ชื่อที่กำหนดเองสำหรับเครื่องมือค้นหา",
+          "twitter_card_label": "ประเภทการ์ด",
           "twitter_card_summary": "Summary",
-          "twitter_card_summary_large": "Summary with Large Image",
-          "twitter_description_label": "Twitter Description",
-          "twitter_description_placeholder": "Custom description for Twitter sharing",
-          "twitter_title_label": "Twitter Title",
-          "twitter_title_placeholder": "Custom title for Twitter sharing"
+          "twitter_card_summary_large": "Summary พร้อมรูปภาพขนาดใหญ่",
+          "twitter_description_label": "คำอธิบาย Twitter",
+          "twitter_description_placeholder": "คำอธิบายที่กำหนดเองสำหรับการแชร์บน Twitter",
+          "twitter_title_label": "ชื่อ Twitter",
+          "twitter_title_placeholder": "ชื่อที่กำหนดเองสำหรับการแชร์บน Twitter"
         },
         "sections": {
           "basic": {
-            "subtitle": "Configure how your course appears in search engine results",
-            "title": "Basic SEO"
+            "subtitle": "กำหนดค่าวิธีการแสดงคอร์สของคุณในผลการค้นหาของเครื่องมือค้นหา",
+            "title": "SEO พื้นฐาน"
           },
           "opengraph": {
-            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "subtitle": "ปรับแต่งวิธีการแสดงคอร์สของคุณเมื่อแชร์บนโซเชียลมีเดีย (Facebook, LinkedIn ฯลฯ)",
             "title": "Open Graph"
           },
           "robots": {
-            "subtitle": "Control search engine indexing and enable rich snippets",
-            "title": "Robots & Structured Data"
+            "subtitle": "ควบคุมการจัดทำดัชนีของเครื่องมือค้นหาและเปิดใช้งาน rich snippets",
+            "title": "Robots และข้อมูลแบบมีโครงสร้าง"
           },
           "twitter": {
-            "subtitle": "Customize how your course appears when shared on Twitter/X",
+            "subtitle": "ปรับแต่งวิธีการแสดงคอร์สของคุณเมื่อแชร์บน Twitter/X",
             "title": "Twitter Card"
           }
         },
-        "subtitle": "Optimize your course for search engines and social media sharing",
-        "title": "SEO Settings",
+        "subtitle": "เพิ่มประสิทธิภาพคอร์สของคุณสำหรับเครื่องมือค้นหาและการแชร์บนโซเชียลมีเดีย",
+        "title": "ตั้งค่า SEO",
         "validation": {
-          "description_max_length": "Meta description must be 160 characters or less",
-          "invalid_url": "Please enter a valid URL",
-          "og_description_max_length": "OG description must be 200 characters or less",
-          "og_title_max_length": "OG title must be 70 characters or less",
-          "title_max_length": "SEO title must be 70 characters or less",
-          "twitter_description_max_length": "Twitter description must be 200 characters or less",
-          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+          "description_max_length": "Meta description ต้องมีไม่เกิน 160 ตัวอักษร",
+          "invalid_url": "โปรดใส่ URL ที่ถูกต้อง",
+          "og_description_max_length": "OG description ต้องมีไม่เกิน 200 ตัวอักษร",
+          "og_title_max_length": "OG title ต้องมีไม่เกิน 70 ตัวอักษร",
+          "title_max_length": "SEO title ต้องมีไม่เกิน 70 ตัวอักษร",
+          "twitter_description_max_length": "Twitter description ต้องมีไม่เกิน 200 ตัวอักษร",
+          "twitter_title_max_length": "Twitter title ต้องมีไม่เกิน 70 ตัวอักษร"
         }
       }
     },
@@ -2166,9 +2195,11 @@
           "api": "การเข้าถึง API",
           "features": "ฟีเจอร์",
           "other": "อื่นๆ",
-          "domains": "Domains",
+          "domains": "โดเมน",
           "sso": "SSO",
-          "usage": "Usage"
+          "usage": "การใช้งาน",
+          "seo": "SEO",
+          "automations": "การทำงานอัตโนมัติ"
         },
         "pages": {
           "general": {
@@ -2200,16 +2231,16 @@
             "subtitle": "เปิดหรือปิดใช้งานฟีเจอร์สำหรับองค์กรของคุณ"
           },
           "domains": {
-            "subtitle": "Configure custom domains for your organization",
-            "title": "Custom Domains"
+            "subtitle": "กำหนดค่าโดเมนที่กำหนดเองสำหรับองค์กรของคุณ",
+            "title": "โดเมนที่กำหนดเอง"
           },
           "sso": {
-            "subtitle": "Configure SSO for your organization",
+            "subtitle": "กำหนดค่า SSO สำหรับองค์กรของคุณ",
             "title": "Single Sign-On"
           },
           "usage": {
-            "subtitle": "Monitor your organization's resource usage and plan limits",
-            "title": "Usage"
+            "subtitle": "ตรวจสอบการใช้ทรัพยากรและขีดจำกัดของแผนสำหรับองค์กรของคุณ",
+            "title": "การใช้งาน"
           }
         },
         "name": "ชื่อองค์กร",
@@ -2230,9 +2261,12 @@
         "footer_text": "ข้อความท้ายหน้า",
         "footer_text_placeholder": "ป้อนข้อความท้ายหน้า...",
         "footer_text_desc": "ข้อความที่กำหนดเองที่แสดงที่ด้านล่างของหน้าองค์กรของคุณ",
-        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_label": "\"Made with LearnHouse\" watermark"
+        "default_language": "ภาษาเริ่มต้น",
+        "default_language_desc": "ภาษาที่ผู้เยี่ยมชมใหม่เห็นโดยค่าเริ่มต้นและภาษาที่ใช้สำหรับอีเมลที่ส่งในนามขององค์กรนี้ สมาชิกยังคงสามารถเปลี่ยนภาษาของอินเทอร์เฟซของตนได้",
+        "watermark_desc": "แสดงลายน้ำแบรนด์ LearnHouse บนหน้าองค์กรของคุณ",
+        "watermark_free_plan": "ลายน้ำจะแสดงตลอดเวลาบนแผนฟรี",
+        "watermark_label": "ลายน้ำ \"Made with LearnHouse\"",
+        "watermark_ee": "ซ่อนโดยใบอนุญาต Enterprise Edition ของคุณ"
       },
       "images": {
         "title": "รูปภาพและตัวอย่าง",
@@ -2292,7 +2326,7 @@
           "images": "รูปภาพและตัวอย่าง",
           "social": "ลิงก์โซเชียล",
           "theme": "ธีม",
-          "auth": "Auth"
+          "auth": "การยืนยันตัวตน"
         }
       },
       "socials": {
@@ -2366,11 +2400,11 @@
             "description": "อนุญาตให้จัดระเบียบคอร์สเป็นคอลเลกชัน"
           },
           "courses": {
-            "description": "Enable courses and progress tracking for your organization",
+            "description": "เปิดใช้งานคอร์สและการติดตามความก้าวหน้าสำหรับองค์กรของคุณ",
             "title": "หลักสูตร"
           },
           "podcasts": {
-            "description": "Enable podcast creation and audio content for your organization",
+            "description": "เปิดใช้งานการสร้างพอดแคสต์และเนื้อหาเสียงสำหรับองค์กรของคุณ",
             "title": "พอดแคสต์"
           }
         },
@@ -2380,7 +2414,7 @@
           "enabled": "เปิดใช้งาน {{feature}} แล้ว",
           "disabled": "ปิดใช้งาน {{feature}} แล้ว",
           "error": "อัปเดตการกำหนดค่า {{feature}} ล้มเหลว",
-          "admin_only": "Only organization admins can enable or disable features"
+          "admin_only": "เฉพาะผู้ดูแลระบบขององค์กรเท่านั้นที่สามารถเปิดหรือปิดใช้งานฟีเจอร์ได้"
         }
       },
       "auth_branding": {
@@ -2625,43 +2659,43 @@
         "footer_text_placeholder": "ป้อนข้อความท้ายหน้า..."
       },
       "sso": {
-        "allowed_domains": "Allowed Email Domains",
-        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
-        "auto_provision": "Auto-provision Users",
-        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
-        "delete": "Delete SSO Configuration",
-        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
-        "delete_error": "Failed to delete SSO configuration",
-        "delete_success": "SSO configuration deleted",
-        "deleting": "Deleting...",
-        "enable_sso": "Enable SSO",
-        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
-        "load_error": "Failed to load SSO configuration",
-        "not_configured": "Not configured",
+        "allowed_domains": "โดเมนอีเมลที่อนุญาต",
+        "allowed_domains_help": "รายการโดเมนอีเมลที่อนุญาตให้เข้าสู่ระบบผ่าน SSO คั่นด้วยเครื่องหมายจุลภาค (เช่น example.com, company.org) เว้นว่างไว้เพื่ออนุญาตทุกโดเมน",
+        "auto_provision": "สร้างผู้ใช้อัตโนมัติ",
+        "auto_provision_desc": "สร้างบัญชีผู้ใช้โดยอัตโนมัติสำหรับการเข้าสู่ระบบ SSO ครั้งแรก",
+        "delete": "ลบการตั้งค่า SSO",
+        "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการตั้งค่า SSO นี้? ผู้ใช้จะไม่สามารถเข้าสู่ระบบผ่าน SSO ได้อีกต่อไป",
+        "delete_error": "ลบการตั้งค่า SSO ไม่สำเร็จ",
+        "delete_success": "ลบการตั้งค่า SSO แล้ว",
+        "deleting": "กำลังลบ...",
+        "enable_sso": "เปิดใช้งาน SSO",
+        "enable_sso_desc": "อนุญาตให้ผู้ใช้ยืนยันตัวตนโดยใช้ผู้ให้บริการระบุตัวตนขององค์กรคุณ",
+        "load_error": "โหลดการตั้งค่า SSO ไม่สำเร็จ",
+        "not_configured": "ยังไม่ได้กำหนดค่า",
         "oidc_client_id": "Client ID",
         "oidc_client_secret": "Client Secret",
-        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
-        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_client_secret_help": "เก็บค่าลับนี้ไว้อย่างปลอดภัย ใช้สำหรับยืนยันตัวตนกับผู้ให้บริการระบุตัวตนของคุณ",
+        "oidc_info": "เชื่อมต่อโดยตรงกับผู้ให้บริการระบุตัวตนที่รองรับ OpenID Connect (Azure AD, Okta, Google Workspace, Keycloak)",
         "oidc_issuer_url": "Issuer URL",
-        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_issuer_url_help": "URL ของ OIDC issuer ระบบจะค้นพบ endpoints อัตโนมัติจาก /.well-known/openid-configuration",
         "oidc_scopes": "Scopes",
-        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
-        "open_setup_portal": "Configure Identity Provider",
-        "provider": "SSO Provider",
-        "save": "Save Configuration",
-        "save_error": "Failed to save SSO configuration",
-        "save_success": "SSO configuration saved successfully",
-        "saving": "Saving...",
-        "select_provider": "Select a provider",
-        "setup_error": "Failed to get setup portal URL",
-        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "oidc_scopes_help": "OAuth scopes ที่จะร้องขอ (คั่นด้วยเว้นวรรค) ค่าเริ่มต้น: openid email profile",
+        "open_setup_portal": "กำหนดค่าผู้ให้บริการระบุตัวตน",
+        "provider": "ผู้ให้บริการ SSO",
+        "save": "บันทึกการตั้งค่า",
+        "save_error": "บันทึกการตั้งค่า SSO ไม่สำเร็จ",
+        "save_success": "บันทึกการตั้งค่า SSO สำเร็จ",
+        "saving": "กำลังบันทึก...",
+        "select_provider": "เลือกผู้ให้บริการ",
+        "setup_error": "ดึง URL ของพอร์ทัลตั้งค่าไม่สำเร็จ",
+        "setup_not_available": "พอร์ทัลตั้งค่ายังไม่พร้อมใช้งาน โปรดกำหนดค่าผู้ให้บริการก่อน",
         "status_disabled": "ปิดใช้งาน",
         "status_enabled": "เปิดใช้งาน",
-        "subtitle": "Configure enterprise SSO for your organization",
+        "subtitle": "กำหนดค่า SSO ระดับองค์กรสำหรับองค์กรของคุณ",
         "title": "Single Sign-On (SSO)",
-        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_info": "WorkOS ให้บริการ SSO ระดับองค์กรพร้อมการรองรับผู้ให้บริการระบุตัวตนแบบ SAML และ OIDC",
         "workos_org_id": "WorkOS Organization ID",
-        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
+        "workos_org_id_help": "ID นี้ถูกสร้างขึ้นโดยอัตโนมัติเมื่อคุณกำหนดค่า SSO ผ่านพอร์ทัลตั้งค่า"
       }
     },
     "users": {
@@ -2831,29 +2865,29 @@
             "sent": "ส่งแล้ว",
             "no": "ยังไม่ส่ง"
           },
-          "no_invites": "No pending invitations",
-          "no_results": "No invitations found matching your search",
+          "no_invites": "ไม่มีคำเชิญที่ค้างอยู่",
+          "no_results": "ไม่พบคำเชิญที่ตรงกับการค้นหาของคุณ",
           "remove_button": "ลบ",
-          "remove_error": "Error removing invitation",
-          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
-          "remove_success": "Invitation removed",
-          "remove_title": "Remove invitation",
-          "removing": "Removing invitation...",
-          "search_placeholder": "Search by email..."
+          "remove_error": "เกิดข้อผิดพลาดในการลบคำเชิญ",
+          "remove_message": "คุณแน่ใจหรือไม่ว่าต้องการลบคำเชิญสำหรับ {{email}}?",
+          "remove_success": "ลบคำเชิญแล้ว",
+          "remove_title": "ลบคำเชิญ",
+          "removing": "กำลังลบคำเชิญ...",
+          "search_placeholder": "ค้นหาด้วยอีเมล..."
         },
         "toasts": {
           "sending": "กำลังส่งคำเชิญ...",
           "success": "ส่งคำเชิญสำเร็จแล้ว",
           "error": "เกิดข้อผิดพลาดในการส่งคำเชิญ",
-          "partial": "{{sent}} sent, {{failed}} failed"
+          "partial": "ส่งสำเร็จ {{sent}} รายการ ล้มเหลว {{failed}} รายการ"
         },
         "no_invite_code": "ไม่มี",
         "results": {
-          "failed_count": "{{count}} failed",
-          "sent_count": "{{count}} sent",
-          "skipped_count": "{{count}} already invited",
+          "failed_count": "ล้มเหลว {{count}}",
+          "sent_count": "ส่งแล้ว {{count}}",
+          "skipped_count": "เชิญไปแล้ว {{count}}",
           "status": {
-            "already_invited": "Already invited",
+            "already_invited": "เชิญไปแล้ว",
             "email_failed": "ล้มเหลว",
             "sent": "ส่งแล้ว"
           },
@@ -2887,8 +2921,8 @@
             "status": {
               "linked": "เชื่อมโยงแล้ว",
               "not_linked": "ยังไม่เชื่อมโยง",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "in_group": "ในกลุ่ม",
+              "not_in_group": "ไม่อยู่ในกลุ่ม"
             },
             "actions": {
               "link": "เชื่อมโยง",
@@ -2898,30 +2932,30 @@
               "link_success": "เชื่อมโยงผู้ใช้งานสำเร็จแล้ว",
               "unlink_success": "ยกเลิกการเชื่อมโยงผู้ใช้งานสำเร็จแล้ว",
               "error": "ข้อผิดพลาด {{status}}: {{detail}}",
-              "bulk_add_success": "Successfully added {{count}} users to group",
-              "bulk_adding": "Adding users to group...",
-              "bulk_error": "An error occurred during the operation",
-              "bulk_remove_success": "Successfully removed {{count}} users from group",
-              "bulk_removing": "Removing users from group..."
+              "bulk_add_success": "เพิ่มผู้ใช้ {{count}} คนเข้ากลุ่มสำเร็จ",
+              "bulk_adding": "กำลังเพิ่มผู้ใช้เข้ากลุ่ม...",
+              "bulk_error": "เกิดข้อผิดพลาดระหว่างดำเนินการ",
+              "bulk_remove_success": "ลบผู้ใช้ {{count}} คนออกจากกลุ่มสำเร็จ",
+              "bulk_removing": "กำลังลบผู้ใช้ออกจากกลุ่ม..."
             },
-            "no_results": "No users found matching your search",
-            "no_users": "No users in this organization yet",
+            "no_results": "ไม่พบผู้ใช้ที่ตรงกับการค้นหาของคุณ",
+            "no_users": "ยังไม่มีผู้ใช้ในองค์กรนี้",
             "pagination": {
-              "page": "Page {{current}} of {{total}}",
-              "showing": "Showing {{start}}-{{end}} of {{total}}"
+              "page": "หน้า {{current}} จาก {{total}}",
+              "showing": "แสดง {{start}}-{{end}} จาก {{total}}"
             },
-            "search_placeholder": "Search users by name or username...",
+            "search_placeholder": "ค้นหาผู้ใช้ตามชื่อหรือชื่อผู้ใช้...",
             "selection": {
-              "add_selected": "Add {{count}} to Group",
+              "add_selected": "เพิ่ม {{count}} เข้ากลุ่ม",
               "clear": "ล้าง",
-              "count": "{{count}} users selected",
-              "remove_selected": "Remove {{count}} from Group",
-              "select_all_visible": "Select all visible"
+              "count": "เลือกผู้ใช้แล้ว {{count}} คน",
+              "remove_selected": "ลบ {{count}} ออกจากกลุ่ม",
+              "select_all_visible": "เลือกทั้งหมดที่มองเห็น"
             },
             "tabs": {
-              "all": "All Users",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "all": "ผู้ใช้ทั้งหมด",
+              "in_group": "ในกลุ่ม",
+              "not_in_group": "ไม่อยู่ในกลุ่ม"
             }
           },
           "create": {
@@ -2966,16 +3000,16 @@
           "delete_error": "เกิดข้อผิดพลาดในการลบกลุ่มผู้ใช้งาน"
         },
         "count": {
-          "plural": "groups",
-          "singular": "group"
+          "plural": "กลุ่ม",
+          "singular": "กลุ่ม"
         },
         "member_count": {
-          "plural": "members",
-          "singular": "member"
+          "plural": "สมาชิก",
+          "singular": "สมาชิก"
         },
-        "no_groups": "No user groups yet",
-        "no_results": "No groups found matching your search",
-        "search_placeholder": "Search groups..."
+        "no_groups": "ยังไม่มีกลุ่มผู้ใช้",
+        "no_results": "ไม่พบกลุ่มที่ตรงกับการค้นหาของคุณ",
+        "search_placeholder": "ค้นหากลุ่ม..."
       },
       "roles": {
         "title": "จัดการบทบาทและสิทธิ์การใช้งาน",
@@ -2994,7 +3028,7 @@
           "edit": "แก้ไข",
           "delete": "ลบ",
           "create": "สร้างบทบาท",
-          "view_rights": "View Rights"
+          "view_rights": "ดูสิทธิ์"
         },
         "modals": {
           "create": {
@@ -3114,6 +3148,34 @@
             "toasts": {
               "success": "บันทึกบทบาทสำเร็จแล้ว",
               "error": "เกิดข้อผิดพลาดในการบันทึกบทบาท โปรดลองอีกครั้งในภายหลัง"
+            },
+            "permissions": {
+              "actions": {
+                "access": "เข้าถึง",
+                "create": "สร้าง",
+                "delete": "ลบ",
+                "delete_own": "ลบของตนเอง",
+                "read": "อ่าน",
+                "read_own": "อ่านของตนเอง",
+                "update": "อัปเดต",
+                "update_own": "อัปเดตของตนเอง"
+              },
+              "deselect": "ยกเลิกการเลือก",
+              "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+              "sections": {
+                "activities": "กิจกรรม",
+                "collections": "คอลเลกชัน",
+                "coursechapters": "บทของหลักสูตร",
+                "courses": "หลักสูตร",
+                "dashboard": "แดชบอร์ด",
+                "organizations": "องค์กร",
+                "roles": "บทบาท",
+                "usergroups": "กลุ่มผู้ใช้",
+                "users": "ผู้ใช้"
+              },
+              "select": "เลือก",
+              "select_all": "เลือกทั้งหมด",
+              "title": "สิทธิ์การใช้งาน"
             }
           },
           "delete": {
@@ -3122,8 +3184,8 @@
             "button": "ลบบทบาท"
           },
           "view_rights": {
-            "description": "View all permissions assigned to this role",
-            "title": "{{roleName}} - Permissions"
+            "description": "ดูสิทธิ์ทั้งหมดที่กำหนดให้กับบทบาทนี้",
+            "title": "{{roleName}} - สิทธิ์"
           }
         },
         "toasts": {
@@ -3133,15 +3195,15 @@
         },
         "rights": {
           "resources": {
-            "activities": "Activities",
-            "collections": "Collections",
-            "coursechapters": "Course Chapters",
+            "activities": "กิจกรรม",
+            "collections": "คอลเลกชัน",
+            "coursechapters": "บทของคอร์ส",
             "courses": "หลักสูตร",
-            "dashboard": "Dashboard",
-            "organizations": "Organizations",
-            "roles": "Roles",
-            "usergroups": "User Groups",
-            "users": "Users"
+            "dashboard": "แดชบอร์ด",
+            "organizations": "องค์กร",
+            "roles": "บทบาท",
+            "usergroups": "กลุ่มผู้ใช้",
+            "users": "ผู้ใช้"
           }
         }
       }
@@ -3232,8 +3294,8 @@
             "description": "แบบฟอร์มสำหรับให้ผู้เรียนกรอกข้อมูล"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "โค้ด",
+            "description": "ความท้าทายด้านโค้ดพร้อมการให้คะแนนกรณีทดสอบอัตโนมัติ"
           },
           "short_answer": {
             "title": "คำตอบสั้น",
@@ -3350,14 +3412,14 @@
           "reject": "ตีกลับงาน",
           "set_final_grade": "ตั้งคะแนนสุดท้าย",
           "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น",
-          "finalize": "Finalize & Complete",
+          "finalize": "สรุปและทำให้สมบูรณ์",
           "reject_description": "ลบงานที่ส่งและอนุญาตให้นักเรียนส่งใหม่",
           "set_final_grade_description": "คำนวณและบันทึกเกรดโดยไม่เสร็จสิ้นกิจกรรม",
           "finalize_description": "ตั้งเกรดสุดท้ายและทำเครื่องหมายกิจกรรมว่าเสร็จสิ้นสำหรับนักเรียน"
         },
         "toasts": {
           "reject_success": "ตีกลับงานสำเร็จแล้ว",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "ให้คะแนนงานและทำเครื่องหมายกิจกรรมว่าสมบูรณ์แล้ว"
         },
         "filters": {
           "all": "ทั้งหมด"
@@ -3481,7 +3543,9 @@
             "anti_copy_paste_description": "ป้องกันการวางคำตอบที่สร้างโดย AI โดยบล็อกเหตุการณ์วาง หมายเหตุ: นี่เป็นเพียงมาตรการป้องกัน",
             "auto_grading_disabled_file": "การให้คะแนนอัตโนมัติไม่สามารถใช้ได้เพราะงานนี้มีการส่งไฟล์ที่ต้องการการตรวจสอบจากมนุษย์",
             "grading_type_hint": "วิธีแสดงเกรดให้นักเรียน",
-            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน"
+            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน",
+            "show_correct_answers_description": "เมื่อการส่งงานได้รับการให้คะแนนแล้ว แสดงคำตอบที่ถูกต้องให้นักเรียนเห็นพร้อมกับคำตอบของตน — ตัวเลือกแบบทดสอบใดที่ถูกต้อง คำตอบสั้นหรือตัวเลขที่คาดหวัง และช่องเติมแบบฟอร์มที่ถูกต้อง",
+            "show_correct_answers_label": "เปิดเผยคำตอบที่ถูกต้องหลังให้คะแนน"
           },
           "toasts": {
             "updating": "กำลังอัปเดตงาน...",
@@ -3521,12 +3585,184 @@
             "anti_copy_paste_label": "บล็อกการคัดลอกและวาง",
             "anti_copy_paste_description": "ป้องกันการวางคำตอบที่สร้างโดย AI โดยบล็อกเหตุการณ์วาง หมายเหตุ: นี่เป็นเพียงมาตรการป้องกัน",
             "grading_type_hint": "วิธีแสดงเกรดให้นักเรียน",
-            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน"
+            "grading_options_hint": "พฤติกรรมเมื่อส่งงาน",
+            "show_correct_answers_description": "เมื่อให้คะแนนแล้ว นักเรียนจะเห็นคำตอบที่ถูกต้องข้างคำตอบของตน",
+            "show_correct_answers_label": "เปิดเผยคำตอบที่ถูกต้องหลังให้คะแนน"
           },
           "toasts": {
             "creating": "กำลังสร้างงาน...",
             "success": "สร้างงานสำเร็จแล้ว"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "ค้นหา",
+      "placeholder": "ค้นหาหน้าและเนื้อหา…",
+      "shortcut_hint": "⌘K",
+      "no_results": "ไม่พบผลลัพธ์",
+      "loading": "กำลังค้นหา…",
+      "type_to_search": "พิมพ์อย่างน้อย 2 อักขระเพื่อค้นหาเนื้อหา",
+      "groups": {
+        "pages": "หน้า",
+        "courses": "คอร์ส",
+        "collections": "คอลเลกชัน",
+        "users": "ผู้ใช้",
+        "communities": "ชุมชน",
+        "discussions": "การสนทนา",
+        "playgrounds": "เพลย์กราวด์",
+        "podcasts": "พอดแคสต์"
+      },
+      "entries": {
+        "home": {
+          "description": "ภาพรวมแดชบอร์ด",
+          "keywords": "หน้าแรก, ภาพรวม, เริ่มต้น, แดชบอร์ด"
+        },
+        "courses": {
+          "description": "จัดการคอร์สของคุณ",
+          "keywords": "คอร์ส, บทเรียน, เรียนรู้, ฝึกอบรม, ชั้นเรียน"
+        },
+        "assignments": {
+          "description": "จัดการงานที่มอบหมาย",
+          "keywords": "งาน, การบ้าน, แบบฝึกหัด, การส่งงาน"
+        },
+        "communities": {
+          "description": "จัดการชุมชน",
+          "keywords": "ฟอรัม, การสนทนา, สมาชิก, โพสต์"
+        },
+        "podcasts": {
+          "description": "จัดการพอดแคสต์",
+          "keywords": "เสียง, ตอน, รายการ"
+        },
+        "boards": {
+          "description": "จัดการบอร์ด",
+          "keywords": "คันบัง, โปรเจกต์, งาน, รายการ"
+        },
+        "playgrounds": {
+          "description": "เพลย์กราวด์โค้ด",
+          "keywords": "โค้ด, แซนด์บ็อกซ์, repl, การเขียนโปรแกรม"
+        },
+        "analytics": {
+          "description": "ดูแดชบอร์ดการวิเคราะห์",
+          "keywords": "สถิติ, เมตริก, แผนภูมิ, รายงาน"
+        },
+        "users": {
+          "description": "จัดการผู้ใช้ขององค์กร",
+          "keywords": "สมาชิก, บัญชี, บุคคล"
+        },
+        "usergroups": {
+          "description": "จัดการกลุ่มผู้ใช้",
+          "keywords": "ทีม, กลุ่ม, รุ่น"
+        },
+        "roles": {
+          "description": "จัดการบทบาทและสิทธิ์",
+          "keywords": "สิทธิ์, การเข้าถึง, rbac, ความปลอดภัย"
+        },
+        "signups": {
+          "description": "ตรวจสอบการสมัคร",
+          "keywords": "การลงทะเบียน, ใบสมัคร, คำขอ"
+        },
+        "org_general": {
+          "description": "การตั้งค่าทั่วไปขององค์กร",
+          "keywords": "ชื่อ, แบรนด์, slug, โปรไฟล์"
+        },
+        "org_features": {
+          "description": "จัดการคุณสมบัติขององค์กร",
+          "keywords": "คุณสมบัติ, โมดูล, สวิตช์"
+        },
+        "org_billing": {
+          "description": "การเรียกเก็บเงินและการสมัครสมาชิก",
+          "keywords": "แผน, การชำระเงิน, ใบแจ้งหนี้, การสมัครสมาชิก"
+        },
+        "payments_overview": {
+          "description": "ภาพรวมการชำระเงินและรายได้",
+          "keywords": "stripe, แดชบอร์ด, รายได้, ยอดขาย",
+          "title": "ภาพรวมการชำระเงิน"
+        },
+        "payments_products": {
+          "description": "ผลิตภัณฑ์และราคาการชำระเงิน",
+          "keywords": "ผลิตภัณฑ์, ราคา, stripe, ระดับ, แผน",
+          "title": "ผลิตภัณฑ์"
+        },
+        "users_add": {
+          "description": "เชิญสมาชิกใหม่",
+          "keywords": "เชิญ, เพิ่ม, สมาชิก, ส่ง"
+        },
+        "users_audit_logs": {
+          "description": "บันทึกกิจกรรมขององค์กร",
+          "keywords": "ตรวจสอบ, บันทึก, ประวัติ, ความปลอดภัย, กิจกรรม"
+        },
+        "org_branding": {
+          "description": "โลโก้ สี และเอกลักษณ์ภาพ",
+          "keywords": "แบรนด์, โลโก้, สี, ธีม"
+        },
+        "org_landing": {
+          "description": "ปรับแต่งหน้า Landing ของคุณ",
+          "keywords": "landing, หน้าแรก, hero, หน้า"
+        },
+        "org_seo": {
+          "description": "การปรับแต่งเครื่องมือค้นหา",
+          "keywords": "seo, ค้นหา, meta, อันดับ, google"
+        },
+        "org_ai": {
+          "description": "คุณสมบัติและการกำหนดค่า AI",
+          "keywords": "ai, llm, gpt, openai, การสร้าง"
+        },
+        "org_domains": {
+          "description": "โดเมนที่กำหนดเอง",
+          "keywords": "โดเมน, dns, กำหนดเอง, โดเมนย่อย, cname"
+        },
+        "org_automations": {
+          "description": "Webhook และการผสานภายนอก",
+          "keywords": "webhook, การทำงานอัตโนมัติ, zapier, การผสาน, ทริกเกอร์"
+        },
+        "org_api": {
+          "description": "โทเค็น API และการเข้าถึงแบบโปรแกรม",
+          "keywords": "api, โทเค็น, การเข้าถึง, โปรแกรม, คีย์"
+        },
+        "org_sso": {
+          "description": "การกำหนดค่า Single Sign-On",
+          "keywords": "sso, saml, oauth, องค์กร, เข้าสู่ระบบ"
+        },
+        "org_other": {
+          "description": "การตั้งค่าองค์กรอื่นๆ",
+          "keywords": "อื่นๆ, ขั้นสูง, กำหนดเอง, เพิ่มเติม"
+        },
+        "payments_groups": {
+          "description": "กลุ่มและชุดการชำระเงิน",
+          "keywords": "กลุ่ม, ชุด, เซต",
+          "title": "กลุ่มการชำระเงิน"
+        },
+        "payments_configuration": {
+          "description": "การกำหนดค่า Stripe และการชำระเงิน",
+          "keywords": "การกำหนดค่า, การตั้งค่า, stripe, การติดตั้ง, connect",
+          "title": "การกำหนดค่า"
+        },
+        "payments_customers": {
+          "description": "ลูกค้าและสมาชิก",
+          "keywords": "ลูกค้า, สมาชิก, ผู้ซื้อ, ชำระแล้ว",
+          "title": "ลูกค้า"
+        },
+        "courses_migrate": {
+          "description": "นำเข้าคอร์สจาก LMS อื่น",
+          "keywords": "นำเข้า, ย้าย, ถ่ายโอน, lms, moodle, canvas",
+          "title": "ย้ายคอร์ส"
+        },
+        "account_general": {
+          "description": "การตั้งค่าทั่วไปของบัญชีส่วนตัว",
+          "keywords": "บัญชี, การตั้งค่า, อีเมล, ชื่อ, ภาษา"
+        },
+        "account_profile": {
+          "description": "แก้ไขโปรไฟล์และประวัติของคุณ",
+          "keywords": "โปรไฟล์, ประวัติ, อวตาร, รูป, สาธารณะ"
+        },
+        "account_security": {
+          "description": "การตั้งค่ารหัสผ่านและความปลอดภัย",
+          "keywords": "รหัสผ่าน, ความปลอดภัย, 2fa, mfa, เซสชัน"
+        },
+        "account_purchases": {
+          "description": "การซื้อและการสมัครสมาชิกของคุณ",
+          "keywords": "การซื้อ, การสมัครสมาชิก, การเรียกเก็บเงิน, ประวัติ, ใบเสร็จ"
         }
       }
     }
@@ -3643,31 +3879,31 @@
         "cancel": "ยกเลิก",
         "save": "บันทึก",
         "apply": "นำไปใช้",
-        "align_center": "Center align",
-        "align_left": "Align left",
-        "align_right": "Align right",
+        "align_center": "จัดกึ่งกลาง",
+        "align_left": "จัดชิดซ้าย",
+        "align_right": "จัดชิดขวา",
         "download": "ดาวน์โหลด",
-        "drop_or_browse": "Drop your file here or click to browse",
-        "expand": "Expand",
-        "full_width": "Full Width",
-        "large": "Large",
-        "medium": "Medium",
-        "size": "Size",
-        "small": "Small",
+        "drop_or_browse": "ลากไฟล์มาที่นี่ หรือคลิกเพื่อเลือก",
+        "expand": "ขยาย",
+        "full_width": "ความกว้างเต็ม",
+        "large": "ใหญ่",
+        "medium": "กลาง",
+        "size": "ขนาด",
+        "small": "เล็ก",
         "upload": "อัปโหลด",
-        "uploading": "Uploading..."
+        "uploading": "กำลังอัปโหลด..."
       },
       "quiz_block": {
         "question_placeholder": "ใส่คำถามของคุณที่นี่",
         "answer_placeholder": "ใส่คำตอบที่นี่",
-        "add_answer": "Add Answer",
-        "add_question": "Add Question",
-        "all_correct": "All answers are correct!",
-        "delete_answer": "Delete answer",
-        "mark_correct": "Mark as correct",
-        "mark_incorrect": "Mark as incorrect",
-        "reset_answers": "Reset answers",
-        "some_incorrect": "Some answers are incorrect!",
+        "add_answer": "เพิ่มคำตอบ",
+        "add_question": "เพิ่มคำถาม",
+        "all_correct": "คำตอบทั้งหมดถูกต้อง!",
+        "delete_answer": "ลบคำตอบ",
+        "mark_correct": "ทำเครื่องหมายว่าถูกต้อง",
+        "mark_incorrect": "ทำเครื่องหมายว่าไม่ถูกต้อง",
+        "reset_answers": "รีเซ็ตคำตอบ",
+        "some_incorrect": "บางคำตอบไม่ถูกต้อง!",
         "submit": "ส่ง"
       },
       "math_block": {
@@ -3687,13 +3923,13 @@
         "edit_embed": "แก้ไขการฝัง",
         "add_embed_from": "เพิ่มการฝังจาก",
         "click_service": "เลือกบริการ",
-        "add_embed": "เพิ่มการฝัง",
+        "add_embed": "เพิ่มการฝัง {{name}}",
         "add_embed_url": "เพิ่มการฝังจาก URL",
         "add_embed_code": "เพิ่มการฝังจากรหัส",
-        "paste_url": "วางURL",
+        "paste_url": "วาง URL การฝัง {{name}}",
         "paste_any_url": "วาง URL ใด ๆ",
         "paste_directly": "วางโดยตรง",
-        "how_to_embed": "วิธีการฝัง",
+        "how_to_embed": "วิธีฝัง {{name}}",
         "paste_code": "วางรหัส",
         "paste_iframe": "วางรหัส iframe"
       },
@@ -3753,60 +3989,60 @@
         "suggestion_timeline_prompt": "สร้างไทม์ไลน์แบบโต้ตอบแสดงเหตุการณ์ทางประวัติศาสตร์สำคัญพร้อมรายละเอียดที่ขยายได้"
       },
       "button_block": {
-        "enter_link_url": "Enter link URL"
+        "enter_link_url": "ใส่ URL ของลิงก์"
       },
       "flipcard_block": {
-        "back": "Back",
-        "click_to_flip": "Click to flip",
-        "front": "Front"
+        "back": "ด้านหลัง",
+        "click_to_flip": "คลิกเพื่อพลิก",
+        "front": "ด้านหน้า"
       },
       "image_block": {
-        "download_image": "Download image",
-        "drop_or_browse": "Drop your image here or click to browse",
-        "expand_image": "Expand image",
-        "supported_formats": "Supports JPG, PNG, WebP, and GIF",
-        "uploading": "Uploading image...",
-        "viewer_title": "Image Viewer"
+        "download_image": "ดาวน์โหลดรูปภาพ",
+        "drop_or_browse": "ลากรูปภาพมาที่นี่ หรือคลิกเพื่อเลือก",
+        "expand_image": "ขยายรูปภาพ",
+        "supported_formats": "รองรับ JPG, PNG, WebP และ GIF",
+        "uploading": "กำลังอัปโหลดรูปภาพ...",
+        "viewer_title": "ตัวดูรูปภาพ"
       },
       "pdf_block": {
-        "document_title": "PDF Document",
-        "download_pdf": "Download PDF",
-        "drop_or_browse": "Drop your PDF here or click to browse",
-        "expand_pdf": "Expand PDF",
-        "no_pdf": "No PDF available",
-        "supported_formats": "Supports PDF format",
-        "upload_pdf": "Upload PDF",
-        "uploading": "Uploading PDF..."
+        "document_title": "เอกสาร PDF",
+        "download_pdf": "ดาวน์โหลด PDF",
+        "drop_or_browse": "ลาก PDF มาที่นี่ หรือคลิกเพื่อเลือก",
+        "expand_pdf": "ขยาย PDF",
+        "no_pdf": "ไม่มี PDF",
+        "supported_formats": "รองรับรูปแบบ PDF",
+        "upload_pdf": "อัปโหลด PDF",
+        "uploading": "กำลังอัปโหลด PDF..."
       },
       "video_block": {
-        "download_video": "Download video",
-        "drop_or_browse": "Drop your video here or click to browse",
-        "expand_video": "Expand video",
-        "player_title": "Video Player",
-        "supported_formats": "Supports MP4 and WebM formats",
-        "unsupported_format": "Please upload a supported video format (MP4 or WebM)",
-        "uploading": "Uploading video..."
+        "download_video": "ดาวน์โหลดวิดีโอ",
+        "drop_or_browse": "ลากวิดีโอมาที่นี่ หรือคลิกเพื่อเลือก",
+        "expand_video": "ขยายวิดีโอ",
+        "player_title": "เครื่องเล่นวิดีโอ",
+        "supported_formats": "รองรับรูปแบบ MP4 และ WebM",
+        "unsupported_format": "โปรดอัปโหลดวิดีโอในรูปแบบที่รองรับ (MP4 หรือ WebM)",
+        "uploading": "กำลังอัปโหลดวิดีโอ..."
       }
     },
     "ai_panel": {
-      "add_definition": "Add definition",
-      "add_examples": "Add examples",
-      "add_quiz": "Add quiz",
-      "add_summary": "Add summary",
-      "add_tip": "Add tip",
-      "block_selected": "block selected",
-      "clear_chat": "Clear chat",
-      "clear_selection": "Clear selection",
-      "expand": "Expand",
-      "how_can_i_help": "How can I help improve your content?",
-      "improve_writing": "Improve writing",
-      "input_placeholder": "Ask AI to help with your content...",
-      "question_add_quiz": "Add a quiz",
-      "question_improve": "How can I improve this?",
-      "question_summary": "Add a summary",
-      "simplify": "Simplify",
+      "add_definition": "เพิ่มคำจำกัดความ",
+      "add_examples": "เพิ่มตัวอย่าง",
+      "add_quiz": "เพิ่มแบบทดสอบ",
+      "add_summary": "เพิ่มบทสรุป",
+      "add_tip": "เพิ่มเคล็ดลับ",
+      "block_selected": "เลือกบล็อกแล้ว",
+      "clear_chat": "ล้างการสนทนา",
+      "clear_selection": "ล้างการเลือก",
+      "expand": "ขยาย",
+      "how_can_i_help": "ฉันจะช่วยปรับปรุงเนื้อหาของคุณได้อย่างไร?",
+      "improve_writing": "ปรับปรุงการเขียน",
+      "input_placeholder": "ขอให้ AI ช่วยกับเนื้อหาของคุณ...",
+      "question_add_quiz": "เพิ่มแบบทดสอบ",
+      "question_improve": "จะปรับปรุงสิ่งนี้ได้อย่างไร?",
+      "question_summary": "เพิ่มบทสรุป",
+      "simplify": "ทำให้เข้าใจง่ายขึ้น",
       "title": "AI Editor",
-      "translate": "Translate"
+      "translate": "แปล"
     }
   },
   "analytics": {
@@ -3817,8 +4053,8 @@
       "advanced": "ขั้นสูง"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "ยังไม่ได้กำหนดค่าการวิเคราะห์",
+      "description": "การวิเคราะห์ต้องการการเชื่อมต่อ Tinybird ตั้งค่าตัวแปรสภาพแวดล้อม <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> และ <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> เพื่อเปิดใช้งาน"
     },
     "advanced_gate": {
       "requires": "ต้องการ",
@@ -3827,156 +4063,156 @@
     "common": {
       "loading": "กำลังโหลด...",
       "no_data": "ยังไม่มีข้อมูล",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "ผู้ใช้",
+      "views": "การดู",
+      "enrollments": "การลงทะเบียน",
+      "completions": "การเรียนจบ",
+      "course": "คอร์ส",
+      "date": "วันที่",
+      "user": "ผู้ใช้",
+      "type": "ประเภท",
+      "expand": "ขยาย",
+      "days": "วัน",
+      "score": "คะแนน",
+      "unique_users": "ผู้ใช้ที่ไม่ซ้ำกัน"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "กำลังออนไลน์",
+      "last_5_minutes": "5 นาทีล่าสุด",
+      "signups": "การสมัคร",
+      "submissions": "การส่งงาน",
+      "daily_active_users": "ผู้ใช้ที่ใช้งานประจำวัน",
+      "active_users": "ผู้ใช้ที่ใช้งาน",
+      "countries": "ประเทศ",
+      "top_countries": "ประเทศยอดนิยม",
+      "devices": "อุปกรณ์",
+      "desktop": "เดสก์ท็อป",
+      "mobile": "มือถือ",
+      "tablet": "แท็บเล็ต",
+      "top_referrers": "ผู้แนะนำยอดนิยม",
+      "top_referrer": "ผู้แนะนำยอดนิยม",
+      "enrollment_funnel": "ช่องทางการลงทะเบียน",
+      "page_views": "การเปิดดูหน้า",
+      "course_views": "การดูคอร์ส",
+      "view_to_enroll": "ดู → ลงทะเบียน",
+      "enroll_to_complete": "ลงทะเบียน → เรียนจบ",
+      "page_to_complete": "หน้า → เรียนจบ",
+      "conv_rate": "อัตราการแปลง",
+      "top_courses": "คอร์สยอดนิยม",
+      "activity_engagement": "การมีส่วนร่วมในกิจกรรม",
+      "activity": "กิจกรรม",
+      "avg_time": "เวลาเฉลี่ย",
+      "activities": "กิจกรรม",
+      "courses": "คอร์ส",
       "enrollments": "การลงทะเบียน",
       "completions": "การสำเร็จ"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "ผู้ใช้ที่กำลังออนไลน์",
+        "description": "ผู้ใช้ที่ใช้งานในช่วง 5 นาทีที่ผ่านมา"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "การสมัคร",
+        "description": "การลงทะเบียนผู้ใช้ใหม่ในช่วง {{days}} วันที่ผ่านมา"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "การลงทะเบียน",
+        "description": "การลงทะเบียนคอร์สในช่วง {{days}} วันที่ผ่านมา"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "การเรียนจบ",
+        "description": "การเรียนจบคอร์สในช่วง {{days}} วันที่ผ่านมา"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "หน้าปัจจุบัน",
+        "device": "อุปกรณ์",
+        "country": "ประเทศ",
+        "last_seen": "เห็นล่าสุด"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "อีเมล",
+        "method": "วิธีการ"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "แนวโน้มการเติบโตขององค์กร",
+        "description": "การสมัคร การลงทะเบียน การเรียนจบรายสัปดาห์"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "ผู้ใช้ใหม่เทียบกับผู้ใช้ที่กลับมา",
+        "description": "การเติบโตเทียบกับสุขภาพการรักษาผู้ใช้"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "การรักษาผู้ใช้ตามกลุ่ม",
+        "description": "% ของผู้ใช้ที่ใช้งานหลังสัปดาห์ที่สมัคร",
+        "cohort": "กลุ่ม",
+        "size": "ขนาด"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "ชั่วโมงการใช้งานสูงสุด",
+        "description": "ปริมาณกิจกรรมตามวันและชั่วโมง",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "จ.",
+          "tue": "อ.",
+          "wed": "พ.",
+          "thu": "พฤ.",
+          "fri": "ศ.",
+          "sat": "ส.",
+          "sun": "อา."
         },
-        "events": "events"
+        "events": "กิจกรรม"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "การออกจากคอร์ส",
+        "description": "ตำแหน่งที่ผู้ใช้หยุดเรียนในแต่ละคอร์ส"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "เวลาที่ใช้จนเรียนจบ",
+        "description": "ค่ามัธยฐานวันที่ใช้เรียนจบในแต่ละคอร์ส"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "ความเร็วในการเรียนจบ",
+        "description": "ค่าเฉลี่ยวันระหว่างการทำกิจกรรมเสร็จ"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "ประสิทธิภาพประเภทเนื้อหา",
+        "description": "อัตราการเรียนจบตามประเภทกิจกรรม"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "เมทริกซ์ประสิทธิภาพคอร์ส",
+        "description": "จำนวนกิจกรรมเทียบกับอัตราการเรียนจบ (ขนาดตามจำนวนการลงทะเบียน)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "ความสัมพันธ์ของชุมชน",
+        "description": "อัตราการเรียนจบ: ผู้ที่ร่วมสนทนาเทียบกับผู้ที่ไม่ร่วมสนทนา",
+        "discussion_users": "ผู้ใช้ที่ร่วมสนทนา",
+        "non_discussion_users": "ผู้ใช้ที่ไม่ร่วมสนทนา"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
+        "title": "คะแนนการมีส่วนร่วมของผู้เรียน",
+        "description": "ผู้เรียนยอดนิยมจากคะแนนการมีส่วนร่วมรวม",
         "user_id": "User ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "ภาพรวมความก้าวหน้าของผู้ใช้",
+        "description": "ผู้ใช้ในแต่ละช่วงการเรียนจบในแต่ละคอร์ส"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "การกระจายของเกรด",
+        "description": "ฮิสโทแกรมเกรดของงานที่ได้รับมอบหมาย"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "ประสิทธิภาพการค้นหา",
+        "description": "คำค้นหายอดนิยมและอัตราผลลัพธ์เป็นศูนย์",
+        "query": "คำค้นหา",
+        "searches": "การค้นหา",
+        "zero_results": "ผลลัพธ์เป็นศูนย์ %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "อัตราการรับใบรับรอง",
+        "description": "% ของผู้เรียนจบที่รับใบรับรอง"
       }
     },
     "course_analytics": {
@@ -4196,9 +4432,9 @@
     },
     "export": {
       "button": "ส่งออก",
-      "csv": "Download CSV",
-      "downloading": "Exporting...",
-      "json": "Download JSON"
+      "csv": "ดาวน์โหลด CSV",
+      "downloading": "กำลังส่งออก...",
+      "json": "ดาวน์โหลด JSON"
     }
   },
   "onboarding": {
@@ -4297,297 +4533,301 @@
   },
   "boards": {
     "access": {
-      "access_update_error": "Failed to update access",
+      "access_update_error": "อัปเดตการเข้าถึงไม่สำเร็จ",
       "actions": "การดำเนินการ",
       "active": "ใช้งานอยู่",
-      "board_set_private": "Board set to private",
-      "board_set_public": "Board set to public",
-      "create_user_group": "Create User Group",
-      "description": "Control who can access this board",
+      "board_set_private": "ตั้งบอร์ดเป็นส่วนตัวแล้ว",
+      "board_set_public": "ตั้งบอร์ดเป็นสาธารณะแล้ว",
+      "create_user_group": "สร้างกลุ่มผู้ใช้",
+      "description": "ควบคุมว่าใครสามารถเข้าถึงบอร์ดนี้ได้",
       "link": "เชื่อมต่อ",
-      "link_error": "Failed to link: ",
-      "link_to_user_group": "Link to User Group",
-      "link_to_user_group_description": "Select a user group to give them access to this board",
-      "link_to_usergroup_btn": "Link to UserGroup",
-      "make_board_private": "Make Board Private",
-      "make_board_public": "Make Board Public",
-      "no_user_groups": "No user groups linked yet",
-      "no_user_groups_available": "No user groups available",
-      "private_description": "Only linked UserGroups can access this board",
-      "private_option": "Users Only",
-      "public_description": "All signed-in organization members can access this board",
+      "link_error": "เชื่อมโยงไม่สำเร็จ: ",
+      "link_to_user_group": "เชื่อมโยงกับกลุ่มผู้ใช้",
+      "link_to_user_group_description": "เลือกกลุ่มผู้ใช้เพื่ออนุญาตให้พวกเขาเข้าถึงบอร์ดนี้",
+      "link_to_usergroup_btn": "เชื่อมโยงกับ UserGroup",
+      "make_board_private": "ทำให้บอร์ดเป็นส่วนตัว",
+      "make_board_public": "ทำให้บอร์ดเป็นสาธารณะ",
+      "no_user_groups": "ยังไม่มีกลุ่มผู้ใช้ที่เชื่อมโยง",
+      "no_user_groups_available": "ไม่มีกลุ่มผู้ใช้ให้เลือก",
+      "private_description": "เฉพาะ UserGroups ที่เชื่อมโยงเท่านั้นที่สามารถเข้าถึงบอร์ดนี้ได้",
+      "private_option": "เฉพาะผู้ใช้",
+      "public_description": "สมาชิกองค์กรทุกคนที่ลงชื่อเข้าใช้สามารถเข้าถึงบอร์ดนี้ได้",
       "public_option": "สาธารณะ",
-      "set_to_private": "Set to Private",
-      "set_to_private_confirm": "Only members of linked UserGroups will be able to access this board.",
-      "set_to_public": "Set to Public",
-      "set_to_public_confirm": "All signed-in organization members will be able to access this board.",
-      "title": "Access Control",
+      "set_to_private": "ตั้งเป็นส่วนตัว",
+      "set_to_private_confirm": "เฉพาะสมาชิกของ UserGroups ที่เชื่อมโยงเท่านั้นที่จะสามารถเข้าถึงบอร์ดนี้ได้",
+      "set_to_public": "ตั้งเป็นสาธารณะ",
+      "set_to_public_confirm": "สมาชิกองค์กรทุกคนที่ลงชื่อเข้าใช้จะสามารถเข้าถึงบอร์ดนี้ได้",
+      "title": "การควบคุมการเข้าถึง",
       "unlink": "ยกเลิกการเชื่อมต่อ",
-      "unlink_confirm": "This user group will no longer have access to this board.",
-      "unlink_error": "Failed to unlink: ",
-      "unlink_error_generic": "Failed to unlink user group",
-      "unlink_user_group": "Unlink User Group",
-      "user_group": "User Group",
-      "user_group_linked": "User group linked",
-      "user_group_unlinked": "User group unlinked",
-      "user_groups": "User Groups",
-      "user_groups_description": "Manage which user groups have access to this board"
+      "unlink_confirm": "กลุ่มผู้ใช้นี้จะไม่สามารถเข้าถึงบอร์ดนี้ได้อีกต่อไป",
+      "unlink_error": "ยกเลิกการเชื่อมโยงไม่สำเร็จ: ",
+      "unlink_error_generic": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้ไม่สำเร็จ",
+      "unlink_user_group": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้",
+      "user_group": "กลุ่มผู้ใช้",
+      "user_group_linked": "เชื่อมโยงกลุ่มผู้ใช้แล้ว",
+      "user_group_unlinked": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้แล้ว",
+      "user_groups": "กลุ่มผู้ใช้",
+      "user_groups_description": "จัดการว่ากลุ่มผู้ใช้ใดสามารถเข้าถึงบอร์ดนี้ได้"
     },
     "activity_block": {
-      "no_activities": "No activities found",
-      "no_courses": "No courses found",
-      "select_course": "Select a course",
-      "unsupported_type": "Unsupported activity type"
+      "no_activities": "ไม่พบกิจกรรม",
+      "no_courses": "ไม่พบคอร์ส",
+      "select_course": "เลือกคอร์ส",
+      "unsupported_type": "ประเภทกิจกรรมไม่รองรับ"
     },
-    "back_to_boards": "Back to boards",
-    "board_created": "Board created",
-    "board_created_error": "Failed to create board",
-    "board_deleted_error": "Failed to delete board",
-    "board_deleted_success": "Board deleted",
-    "board_duplicated_error": "Failed to duplicate board",
-    "board_duplicated_success": "Board duplicated",
+    "back_to_boards": "กลับไปยังบอร์ด",
+    "board_created": "สร้างบอร์ดแล้ว",
+    "board_created_error": "สร้างบอร์ดไม่สำเร็จ",
+    "board_deleted_error": "ลบบอร์ดไม่สำเร็จ",
+    "board_deleted_success": "ลบบอร์ดแล้ว",
+    "board_duplicated_error": "ทำสำเนาบอร์ดไม่สำเร็จ",
+    "board_duplicated_success": "ทำสำเนาบอร์ดแล้ว",
     "boards": "บอร์ด",
-    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
-    "boards_deleted_success": "{{count}} board(s) deleted",
+    "boards_deleted_partial": "ลบสำเร็จ {{success}} รายการ ล้มเหลว {{error}} รายการ",
+    "boards_deleted_success": "ลบบอร์ด {{count}} รายการแล้ว",
     "chat": {
-      "placeholder": "Say something..."
+      "placeholder": "พูดอะไรสักอย่าง..."
     },
     "clear_selection": "ล้าง",
-    "create_board": "Create Board",
-    "create_new_board": "Create New Board",
-    "create_new_board_description": "Set up a new collaborative board",
-    "delete_board": "Delete Board",
-    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
-    "delete_board_title": "Delete \"{{name}}\"",
-    "delete_boards_title": "Delete Boards",
-    "delete_selected": "Delete Selected",
-    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
-    "deleting_board": "Deleting board...",
-    "deleting_boards": "Deleting {{count}} board(s)...",
+    "create_board": "สร้างบอร์ด",
+    "create_new_board": "สร้างบอร์ดใหม่",
+    "create_new_board_description": "ตั้งค่าบอร์ดทำงานร่วมกันใหม่",
+    "delete_board": "ลบบอร์ด",
+    "delete_board_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบบอร์ดนี้? การกระทำนี้ไม่สามารถยกเลิกได้",
+    "delete_board_title": "ลบ \"{{name}}\"",
+    "delete_boards_title": "ลบบอร์ด",
+    "delete_selected": "ลบที่เลือก",
+    "delete_selected_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบบอร์ด {{count}} รายการ? การกระทำนี้ไม่สามารถยกเลิกได้",
+    "deleting_board": "กำลังลบบอร์ด...",
+    "deleting_boards": "กำลังลบบอร์ด {{count}} รายการ...",
     "description": "คำอธิบาย",
-    "description_placeholder": "Brief description...",
-    "duplicate_board": "Duplicate Board",
-    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
-    "duplicate_board_title": "Duplicate \"{{name}}\"",
-    "duplicating_board": "Duplicating board...",
+    "description_placeholder": "คำอธิบายสั้นๆ...",
+    "duplicate_board": "ทำสำเนาบอร์ด",
+    "duplicate_board_confirm": "การกระทำนี้จะสร้างสำเนาของบอร์ดด้วยการตั้งค่าเดียวกัน",
+    "duplicate_board_title": "ทำสำเนา \"{{name}}\"",
+    "duplicating_board": "กำลังทำสำเนาบอร์ด...",
     "effects": {
-      "aurora": "Aurora",
-      "black_hole": "Black Hole",
-      "blizzard": "Blizzard",
-      "earthquake": "Earthquake",
-      "fireworks": "Fireworks",
-      "glitch": "Glitch",
-      "inferno": "Inferno",
-      "lightning": "Lightning",
-      "matrix": "Matrix",
-      "nuke": "Nuke",
-      "title": "Effects"
+      "aurora": "ออโรรา",
+      "black_hole": "หลุมดำ",
+      "blizzard": "พายุหิมะ",
+      "earthquake": "แผ่นดินไหว",
+      "fireworks": "ดอกไม้ไฟ",
+      "glitch": "กลิตช์",
+      "inferno": "เปลวเพลิง",
+      "lightning": "ฟ้าแลบ",
+      "matrix": "เมทริกซ์",
+      "nuke": "นิวเคลียร์",
+      "title": "เอฟเฟกต์"
     },
     "embed_block": {
-      "add_embed": "Add {{name}} embed",
+      "add_embed": "เพิ่มการฝัง {{name}}",
       "apply": "ใช้",
       "code": "โค้ด",
-      "code_help": "Paste iframe or embed code",
-      "edit_embed": "Edit embed",
-      "edit_embed_code": "Edit embed code",
-      "edit_embed_url": "Edit embed URL",
+      "code_help": "วาง iframe หรือโค้ดฝัง",
+      "edit_embed": "แก้ไขการฝัง",
+      "edit_embed_code": "แก้ไขโค้ดฝัง",
+      "edit_embed_url": "แก้ไข URL ฝัง",
       "embed": "ฝัง",
-      "paste_code": "Paste embed code",
-      "paste_url": "Paste embed URL",
-      "remove_embed": "Remove embed",
+      "paste_code": "วางโค้ดฝัง",
+      "paste_url": "วาง URL ฝัง",
+      "remove_embed": "ลบการฝัง",
       "url": "URL",
-      "url_help": "Paste a URL from YouTube, Figma, CodePen, Spotify, and more"
+      "url_help": "วาง URL จาก YouTube, Figma, CodePen, Spotify และอื่นๆ"
     },
     "general": {
-      "board_updated": "Board updated",
-      "board_updated_error": "Failed to update board",
-      "description": "Basic board information",
-      "save_changes": "Save Changes",
-      "saving": "Saving...",
+      "board_updated": "อัปเดตบอร์ดแล้ว",
+      "board_updated_error": "อัปเดตบอร์ดไม่สำเร็จ",
+      "description": "ข้อมูลพื้นฐานของบอร์ด",
+      "save_changes": "บันทึกการเปลี่ยนแปลง",
+      "saving": "กำลังบันทึก...",
       "title": "ทั่วไป"
     },
-    "member_count": "{{count}} member",
-    "member_count_plural": "{{count}} members",
+    "member_count": "{{count}} สมาชิก",
+    "member_count_plural": "{{count}} สมาชิก",
     "members": {
       "actions": "การดำเนินการ",
-      "add_member": "Add Member",
-      "add_member_description": "Search for an organization member to add to this board",
-      "adding": "Adding...",
-      "description": "Manage who can collaborate on this board",
-      "editor": "Editor",
-      "member_added": "Member added",
-      "member_added_error": "Failed to add member (may already be a member)",
-      "member_limit_reached": "Member limit reached (10 max)",
-      "member_removed": "Member removed",
-      "member_removed_error": "Failed to remove member",
-      "no_members": "No members yet",
-      "no_users_found": "No users found",
+      "add_member": "เพิ่มสมาชิก",
+      "add_member_description": "ค้นหาสมาชิกองค์กรเพื่อเพิ่มเข้าในบอร์ดนี้",
+      "adding": "กำลังเพิ่ม...",
+      "description": "จัดการว่าใครสามารถทำงานร่วมกันบนบอร์ดนี้ได้",
+      "editor": "ผู้แก้ไข",
+      "member_added": "เพิ่มสมาชิกแล้ว",
+      "member_added_error": "เพิ่มสมาชิกไม่สำเร็จ (อาจเป็นสมาชิกอยู่แล้ว)",
+      "member_limit_reached": "ถึงจำนวนสมาชิกสูงสุดแล้ว (สูงสุด 10)",
+      "member_removed": "ลบสมาชิกแล้ว",
+      "member_removed_error": "ลบสมาชิกไม่สำเร็จ",
+      "no_members": "ยังไม่มีสมาชิก",
+      "no_users_found": "ไม่พบผู้ใช้",
       "remove": "ลบ",
-      "remove_confirm": "Remove {{name}} from the board?",
-      "remove_member": "Remove Member",
+      "remove_confirm": "ลบ {{name}} ออกจากบอร์ด?",
+      "remove_member": "ลบสมาชิก",
       "role": "บทบาท",
-      "role_label": "Role:",
-      "search_placeholder": "Search by name or email...",
+      "role_label": "บทบาท:",
+      "search_placeholder": "ค้นหาด้วยชื่อหรืออีเมล...",
       "title": "สมาชิก",
       "user": "ผู้ใช้",
-      "viewer": "Viewer"
+      "viewer": "ผู้ดู",
+      "all_groups": "ทุกกลุ่ม"
     },
     "name": "ชื่อ",
-    "name_placeholder": "e.g., Project Planning",
-    "new_board": "New Board",
-    "no_boards_description": "Create your first collaborative board to get started.",
-    "no_boards_found": "No boards found",
-    "no_boards_yet": "No boards yet",
+    "name_placeholder": "เช่น การวางแผนโครงการ",
+    "new_board": "บอร์ดใหม่",
+    "no_boards_description": "สร้างบอร์ดทำงานร่วมกันแรกของคุณเพื่อเริ่มต้น",
+    "no_boards_found": "ไม่พบบอร์ด",
+    "no_boards_yet": "ยังไม่มีบอร์ด",
     "node_actions": {
       "delete": "ลบ",
-      "delete_multiple": "Delete {{count}} items",
-      "move_back": "Move back",
-      "move_forward": "Move forward"
+      "delete_multiple": "ลบ {{count}} รายการ",
+      "move_back": "ย้ายไปด้านหลัง",
+      "move_forward": "ย้ายไปด้านหน้า",
+      "duplicate": "ทำสำเนา"
     },
-    "open_board": "Open Board",
+    "open_board": "เปิดบอร์ด",
     "pagination": {
       "next": "ถัดไป",
-      "page_of": "Page {{current}} of {{total}}",
+      "page_of": "หน้า {{current}} จาก {{total}}",
       "previous": "ก่อนหน้า",
-      "results": "{{count}} result for \"{{query}}\"",
-      "results_plural": "{{count}} results for \"{{query}}\""
+      "results": "{{count}} ผลลัพธ์สำหรับ \"{{query}}\"",
+      "results_plural": "{{count}} ผลลัพธ์สำหรับ \"{{query}}\""
     },
     "playground_block": {
-      "ai_content": "AI generated content",
-      "calculator": "Calculator",
-      "chart": "Chart",
+      "ai_content": "เนื้อหาที่สร้างโดย AI",
+      "calculator": "เครื่องคิดเลข",
+      "chart": "แผนภูมิ",
       "chat_header": "AI Playground",
-      "check_preview": "Check the preview on the left",
-      "creating": "Creating...",
-      "description": "Generate interactive elements powered by AI",
-      "drawing": "Drawing",
+      "check_preview": "ตรวจดูตัวอย่างทางด้านซ้าย",
+      "creating": "กำลังสร้าง...",
+      "description": "สร้างองค์ประกอบเชิงโต้ตอบที่ขับเคลื่อนด้วย AI",
+      "drawing": "การวาด",
       "edit": "แก้ไข",
-      "empty_state": "Describe what you want to create and watch it come to life",
-      "flashcards": "Flashcards",
+      "empty_state": "อธิบายสิ่งที่คุณต้องการสร้างและดูมันมีชีวิตขึ้นมา",
+      "flashcards": "บัตรคำ",
       "generate": "สร้าง",
-      "generating": "Generating interactive content...",
-      "input_placeholder": "Describe what you want to create...",
-      "input_placeholder_refine": "Describe changes or refinements...",
-      "max_iterations": "Maximum iterations reached. Save your work!",
-      "prompt_text": "Describe an interactive element to generate",
-      "quiz": "Quiz",
-      "save_close": "Save & Close",
-      "streaming": "Generating...",
-      "timeline": "Timeline",
+      "generating": "กำลังสร้างเนื้อหาเชิงโต้ตอบ...",
+      "input_placeholder": "อธิบายสิ่งที่คุณต้องการสร้าง...",
+      "input_placeholder_refine": "อธิบายการเปลี่ยนแปลงหรือการปรับปรุง...",
+      "max_iterations": "ถึงจำนวนการทำซ้ำสูงสุดแล้ว บันทึกงานของคุณ!",
+      "prompt_text": "อธิบายองค์ประกอบเชิงโต้ตอบที่จะสร้าง",
+      "quiz": "แบบทดสอบ",
+      "save_close": "บันทึกและปิด",
+      "streaming": "กำลังสร้าง...",
+      "timeline": "ไทม์ไลน์",
       "title": "AI Playground"
     },
     "private": "ส่วนตัว",
     "public": "สาธารณะ",
-    "search_placeholder": "Search boards...",
-    "select_all": "Select All",
-    "selected_count": "{{count}} selected",
+    "search_placeholder": "ค้นหาบอร์ด...",
+    "select_all": "เลือกทั้งหมด",
+    "selected_count": "เลือกแล้ว {{count}} รายการ",
     "settings": "การตั้งค่า",
     "share": {
-      "share_board": "Share board",
-      "share_this_board": "Share this board"
+      "share_board": "แชร์บอร์ด",
+      "share_this_board": "แชร์บอร์ดนี้"
     },
     "thumbnail": {
-      "alt": "Board thumbnail",
-      "description": "Board cover image shown on cards",
+      "alt": "ภาพย่อบอร์ด",
+      "description": "ภาพหน้าปกบอร์ดที่แสดงบนการ์ด",
       "gallery": "แกลเลอรี",
-      "supported_formats": "Supported formats: JPG, JPEG, PNG. Max 8MB.",
-      "thumbnail_updated": "Thumbnail updated",
-      "thumbnail_updated_error": "Failed to upload thumbnail",
-      "title": "Thumbnail",
-      "upload_image": "Upload Image",
-      "uploading": "Uploading..."
+      "supported_formats": "รูปแบบที่รองรับ: JPG, JPEG, PNG ขนาดสูงสุด 8MB",
+      "thumbnail_updated": "อัปเดตภาพย่อแล้ว",
+      "thumbnail_updated_error": "อัปโหลดภาพย่อไม่สำเร็จ",
+      "title": "ภาพย่อ",
+      "upload_image": "อัปโหลดรูปภาพ",
+      "uploading": "กำลังอัปโหลด..."
     },
     "timer": {
       "close": "ปิด",
       "pause": "หยุดชั่วคราว",
       "restart": "เริ่มใหม่",
       "resume": "ดำเนินต่อ",
-      "set_timer": "Set timer",
-      "set_timer_title": "Set Timer",
-      "times_up": "Time's up!"
+      "set_timer": "ตั้งเวลา",
+      "set_timer_title": "ตั้งเวลา",
+      "times_up": "หมดเวลา!"
     },
     "toolbar": {
-      "activity": "Activity",
-      "add_card": "Add Card",
+      "activity": "กิจกรรม",
+      "add_card": "เพิ่มการ์ด",
       "ai_playground": "AI Playground",
-      "draw": "Draw",
+      "draw": "วาด",
       "embed": "ฝัง",
-      "frame": "Frame",
-      "medium": "Medium",
+      "frame": "กรอบ",
+      "medium": "กลาง",
       "note": "บันทึก",
-      "pan": "Pan",
-      "podcast": "Podcast",
-      "redo": "Redo",
+      "pan": "เลื่อน",
+      "podcast": "พอดแคสต์",
+      "redo": "ทำซ้ำ",
       "select": "เลือก",
-      "sticker": "Sticker",
-      "sticky_note": "Sticky Note",
-      "thick": "Thick",
-      "thin": "Thin",
-      "todo": "To-do",
-      "undo": "Undo",
-      "webpage": "Webpage",
+      "sticker": "สติกเกอร์",
+      "sticky_note": "โน้ตติด",
+      "thick": "หนา",
+      "thin": "บาง",
+      "todo": "สิ่งที่ต้องทำ",
+      "undo": "ย้อนกลับ",
+      "webpage": "เว็บเพจ",
       "youtube": "YouTube"
     },
-    "try_different_search": "Try a different search term",
+    "try_different_search": "ลองคำค้นหาอื่น",
     "webpage_block": {
       "add": "เพิ่ม",
-      "blocking_notice": "Some sites may block embedding",
-      "embed_webpage": "Embed a webpage",
-      "open_in_new_tab": "Open in new tab",
+      "blocking_notice": "บางเว็บไซต์อาจบล็อกการฝัง",
+      "embed_webpage": "ฝังเว็บเพจ",
+      "open_in_new_tab": "เปิดในแท็บใหม่",
       "reload": "โหลดใหม่",
       "url_placeholder": "https://example.com"
     },
     "youtube_block": {
       "add": "เพิ่ม",
-      "paste_url": "Paste a YouTube URL",
+      "paste_url": "วาง URL ของ YouTube",
       "url_placeholder": "https://youtube.com/watch?v=..."
     },
     "zoom": {
-      "zoom_in": "Zoom in",
-      "zoom_out": "Zoom out"
-    }
+      "zoom_in": "ซูมเข้า",
+      "zoom_out": "ซูมออก"
+    },
+    "no_boards": "ยังไม่มีบอร์ด",
+    "no_search_results": "ไม่พบบอร์ด"
   },
   "embed": {
-    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
-    "not_supported_title": "This activity is not supported",
-    "powered_by": "Powered by LearnHouse",
-    "visit_activity": "Visit Activity Page"
+    "not_supported_description": "กิจกรรมประเภทนี้ต้องการการยืนยันตัวตนและไม่สามารถฝังได้",
+    "not_supported_title": "กิจกรรมนี้ไม่รองรับ",
+    "powered_by": "ขับเคลื่อนโดย LearnHouse",
+    "visit_activity": "ไปที่หน้ากิจกรรม"
   },
   "migration": {
-    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
-    "add_activity": "Add Activity",
-    "add_chapter": "Add Chapter",
-    "ai_failed": "AI suggestion failed, falling back to manual organization",
-    "all_files_assigned": "All files assigned",
-    "click_to_add_more": "Click to add more files",
-    "course_created": "Course created successfully!",
-    "course_name": "Course Name",
-    "course_name_placeholder": "e.g. Python Basics for Beginners",
-    "course_structure": "Course Structure",
-    "create_course": "Create Course",
-    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
-    "creating_course": "Creating your course...",
-    "creating_description": "Uploading files and setting up chapters and activities",
-    "creation_error_generic": "Something went wrong. Please try again.",
-    "creation_failed": "Course creation failed",
-    "description": "One-liner Description",
-    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
-    "drop_file_here": "Drop a file here",
-    "drop_files": "Drop your files here or click to browse",
-    "go_to_course": "Go to Course",
-    "new_activity": "New Activity",
-    "new_chapter": "New Chapter",
-    "organize_manually": "Organize Manually",
-    "organize_with_ai": "Organize with AI",
-    "step_complete": "Complete",
-    "step_organize": "Organize",
+    "accepted_formats": "วิดีโอ (MP4, WebM, MOV), เอกสาร (PDF), รูปภาพ (PNG, JPG, WebP), เสียง (MP3, WAV)",
+    "add_activity": "เพิ่มกิจกรรม",
+    "add_chapter": "เพิ่มบท",
+    "ai_failed": "AI แนะนำไม่สำเร็จ กลับไปจัดระเบียบด้วยตนเอง",
+    "all_files_assigned": "กำหนดไฟล์ทั้งหมดแล้ว",
+    "click_to_add_more": "คลิกเพื่อเพิ่มไฟล์เพิ่มเติม",
+    "course_created": "สร้างคอร์สสำเร็จ!",
+    "course_name": "ชื่อคอร์ส",
+    "course_name_placeholder": "เช่น Python พื้นฐานสำหรับผู้เริ่มต้น",
+    "course_structure": "โครงสร้างคอร์ส",
+    "create_course": "สร้างคอร์ส",
+    "created_summary": "สร้าง {{chapters}} บทและ {{activities}} กิจกรรมแล้ว",
+    "creating_course": "กำลังสร้างคอร์สของคุณ...",
+    "creating_description": "กำลังอัปโหลดไฟล์และตั้งค่าบทและกิจกรรม",
+    "creation_error_generic": "เกิดข้อผิดพลาด โปรดลองอีกครั้ง",
+    "creation_failed": "สร้างคอร์สไม่สำเร็จ",
+    "description": "คำอธิบายสั้นๆ",
+    "description_placeholder": "เช่น 3 โมดูลครอบคลุมพื้นฐาน ประเภทข้อมูล และฟังก์ชัน",
+    "drop_file_here": "ลากไฟล์มาที่นี่",
+    "drop_files": "ลากไฟล์ของคุณมาที่นี่ หรือคลิกเพื่อเลือก",
+    "go_to_course": "ไปยังคอร์ส",
+    "new_activity": "กิจกรรมใหม่",
+    "new_chapter": "บทใหม่",
+    "organize_manually": "จัดระเบียบด้วยตนเอง",
+    "organize_with_ai": "จัดระเบียบด้วย AI",
+    "step_complete": "เสร็จสมบูรณ์",
+    "step_organize": "จัดระเบียบ",
     "step_upload": "อัปโหลด",
-    "subtitle": "Upload your files and organize them into a course",
-    "title": "Migrate Content",
-    "try_again": "Try Again",
-    "unassigned_files": "Unassigned Files",
-    "upload_failed": "File upload failed",
-    "uploading_files": "Uploading files"
+    "subtitle": "อัปโหลดไฟล์ของคุณและจัดระเบียบเป็นคอร์ส",
+    "title": "ย้ายเนื้อหา",
+    "try_again": "ลองอีกครั้ง",
+    "unassigned_files": "ไฟล์ที่ยังไม่ได้กำหนด",
+    "upload_failed": "อัปโหลดไฟล์ไม่สำเร็จ",
+    "uploading_files": "กำลังอัปโหลดไฟล์"
   },
   "upgrade_modal": {
     "title": "ปลดล็อกศักยภาพเต็มที่ของคุณ",
@@ -4665,6 +4905,15 @@
       "usergroups_add_a_group": "เพิ่มกลุ่ม",
       "toast_add_error": "ไม่สามารถเพิ่มกลุ่มได้",
       "toast_remove_error": "ไม่สามารถลบกลุ่มได้"
-    }
+    },
+    "accessDenied": "ไม่สามารถเข้าถึงหลักสูตรนี้ได้",
+    "backToCourses": "กลับไปที่หลักสูตร",
+    "loadError": "ไม่พบหลักสูตรนี้หรือเกิดข้อผิดพลาดในการโหลด",
+    "noPermission": "คุณไม่มีสิทธิ์ดูหลักสูตรนี้"
+  },
+  "pagination": {
+    "next": "ถัดไป",
+    "previous": "ก่อนหน้า",
+    "showing_page": "แสดงหน้า {{current}} จาก {{total}}"
   }
 }

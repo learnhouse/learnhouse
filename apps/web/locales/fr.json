@@ -180,7 +180,13 @@
     "creating": "Création...",
     "view_details": "Détails",
     "close": "Fermer",
-    "optional": "optionnel"
+    "optional": "optionnel",
+    "analytics": "Analytique",
+    "add": "Ajouter",
+    "choose_an_organization_to_continue": "Choisissez une organisation pour continuer",
+    "for": "pour",
+    "powered_by": "Propulsé par",
+    "results": "résultat"
   },
   "banner": {
     "viewing_as_guest": "Vous consultez {{name}} en tant qu'invité.",
@@ -301,7 +307,9 @@
       },
       "try_again": "Réessayer"
     },
-    "sso_error": "L'authentification SSO a échoué. Veuillez réessayer."
+    "sso_error": "L'authentification SSO a échoué. Veuillez réessayer.",
+    "error_generic": "Une erreur est survenue. Veuillez réessayer.",
+    "sign_in": "Se connecter"
   },
   "validation": {
     "required": "Requis",
@@ -584,14 +592,16 @@
       "from_existing_description": "Téléchargez des fichiers d'une autre plateforme et organisez-les en un cours"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Tous les cours",
+      "filter_by_group": "Filtrer par groupe",
+      "info_title": "Filtre par groupe d'utilisateurs",
+      "info_description": "Filtrez les cours par groupe d'utilisateurs pour n'afficher que les cours attribués à un groupe spécifique. Utile pour les familles ou les équipes partageant la même organisation."
     },
     "copied": "Copié !",
     "quit_course_confirm": "Êtes-vous sûr de vouloir quitter ce cours ? Vous perdrez toute votre progression.",
-    "quit_course_title": "Quitter le cours ?"
+    "quit_course_title": "Quitter le cours ?",
+    "courses_load_error": "Échec du chargement des cours. Veuillez réessayer.",
+    "view_all_courses": "Voir tous les cours"
   },
   "communities": {
     "title": "Communautés",
@@ -639,7 +649,8 @@
       "clear_search": "Effacer la recherche",
       "no_discussions": "Aucune discussion",
       "no_discussions_description": "Soyez le premier à lancer une discussion dans cette communauté !",
-      "start_discussion": "Lancer une discussion"
+      "start_discussion": "Lancer une discussion",
+      "delete_failed": "Échec de la suppression de la discussion"
     },
     "discussion_detail": {
       "edit": "Modifier",
@@ -647,7 +658,8 @@
       "delete_title": "Supprimer la discussion ?",
       "delete_confirm": "Êtes-vous sûr de vouloir supprimer cette discussion ? Cette action est irréversible.",
       "delete_button": "Supprimer la discussion",
-      "no_details": "Aucun détail supplémentaire fourni."
+      "no_details": "Aucun détail supplémentaire fourni.",
+      "delete_failed": "Échec de la suppression de la discussion"
     },
     "discussion_card": {
       "pin_discussion": "Épingler la discussion",
@@ -657,7 +669,10 @@
       "delete_discussion": "Supprimer la discussion",
       "delete_title": "Supprimer la discussion ?",
       "delete_confirm": "Êtes-vous sûr de vouloir supprimer cette discussion ? Cette action est irréversible.",
-      "votes": "votes"
+      "votes": "votes",
+      "delete_failed": "Échec de la suppression de la discussion",
+      "lock_failed": "Échec de la mise à jour du verrouillage",
+      "pin_failed": "Échec de la mise à jour de l'épinglage"
     },
     "comments": {
       "no_replies": "Aucune réponse",
@@ -673,7 +688,8 @@
       "cancel": "Annuler",
       "failed_to_post": "Échec de la publication. Veuillez réessayer.",
       "content_not_allowed": "Votre réponse contient du contenu non autorisé.",
-      "failed_to_update": "Échec de la mise à jour. Veuillez réessayer."
+      "failed_to_update": "Échec de la mise à jour. Veuillez réessayer.",
+      "failed_to_delete": "Échec de la suppression du commentaire"
     },
     "label_filter": {
       "label": "Catégorie :",
@@ -943,13 +959,20 @@
     "points": "points",
     "current_points": "Points : {{points}}",
     "grade": "Noter",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Lancer l'auto-évaluation",
     "due_date": "Échéance",
     "task_breakdown": "Détail des tâches",
     "no_grade_details": "Aucun détail de note disponible pour le moment.",
     "task_passed": "Réussi",
     "task_not_passed": "Échoué",
-    "score": "score"
+    "score": "score",
+    "form": {
+      "expected_answer": "Attendu"
+    },
+    "quiz": {
+      "correct_answer": "Correct",
+      "incorrect_answer": "Incorrect"
+    }
   },
   "certificate": {
     "certificate": "Certificat",
@@ -1036,7 +1059,8 @@
     "subscription": "Abonnement",
     "benefits": "Avantages :",
     "min_price": "Prix mini :",
-    "choose_price": "Choisissez votre prix"
+    "choose_price": "Choisissez votre prix",
+    "stripe_denied": "La connexion Stripe a été annulée."
   },
   "account": {
     "title": "Compte",
@@ -1265,7 +1289,8 @@
           "loading_error": "Échec du chargement des données du profil",
           "save_success": "Profil mis à jour avec succès",
           "save_error": "Erreur lors de la mise à jour du profil"
-        }
+        },
+        "unknown_section": "Section inconnue"
       }
     },
     "sign_out": "Déconnexion",
@@ -1999,9 +2024,9 @@
             "assignments": "Devoirs",
             "dynamic": "Dynamique",
             "dynamic_page": "Page dynamique",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Intégration"
           },
           "toasts": {
             "deleting": "Suppression de l'activité...",
@@ -2014,7 +2039,8 @@
             "create_success": "Activité créée avec succès",
             "uploading": "Téléchargement du fichier et création de l'activité...",
             "upload_success": "Fichier téléchargé avec succès",
-            "creating_uploading": "Création de l'activité et téléchargement du fichier..."
+            "creating_uploading": "Création de l'activité et téléchargement du fichier...",
+            "update_error": "Échec de la mise à jour de l'activité"
           },
           "versioning": {
             "version_history": "Historique des versions",
@@ -2058,6 +2084,9 @@
               "remote_detected": "Modifications distantes détectées",
               "editing_notice": "{{author}} a fait des modifications pendant que vous éditiez"
             }
+          },
+          "descriptions": {
+            "scorm": "Module d'apprentissage conforme à SCORM"
           }
         }
       },
@@ -2142,10 +2171,12 @@
           "ai": "IA",
           "api": "Accès API",
           "features": "Fonctionnalités",
-          "usage": "Usage",
+          "usage": "Utilisation",
           "other": "Autre",
           "domains": "Domaines",
-          "sso": "SSO"
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "Automatisations"
         },
         "pages": {
           "general": {
@@ -2177,8 +2208,8 @@
             "subtitle": "Activez ou désactivez les fonctionnalités de votre organisation"
           },
           "usage": {
-            "title": "Usage",
-            "subtitle": "Monitor your organization's resource usage and plan limits"
+            "title": "Utilisation",
+            "subtitle": "Surveillez l'utilisation des ressources et les limites du plan de votre organisation"
           },
           "domains": {
             "subtitle": "Configurer les domaines personnalisés pour votre organisation",
@@ -2205,9 +2236,12 @@
         "footer_text": "Texte du pied de page",
         "footer_text_placeholder": "Entrez le texte du pied de page...",
         "footer_text_desc": "Texte personnalisé affiché en bas des pages de votre organisation",
+        "default_language": "Langue par défaut",
+        "default_language_desc": "La langue affichée par défaut aux nouveaux visiteurs et utilisée pour les e-mails envoyés au nom de cette organisation. Les membres peuvent toujours changer leur propre langue d'interface.",
         "watermark_desc": "Afficher le filigrane LearnHouse sur les pages de votre organisation",
         "watermark_free_plan": "Le filigrane est toujours affiché sur le plan gratuit",
-        "watermark_label": "Filigrane \"Made with LearnHouse\""
+        "watermark_label": "Filigrane \"Made with LearnHouse\"",
+        "watermark_ee": "Masqué par votre licence Enterprise Edition"
       },
       "images": {
         "title": "Images et aperçus",
@@ -2267,7 +2301,7 @@
           "images": "Images et aperçus",
           "social": "Réseaux sociaux",
           "theme": "Thème",
-          "auth": "Auth"
+          "auth": "Authentification"
         }
       },
       "auth_branding": {
@@ -2619,7 +2653,7 @@
         "oidc_info": "Connectez-vous directement à tout fournisseur d'identité compatible OpenID Connect (Azure AD, Okta, Google Workspace, Keycloak).",
         "oidc_issuer_url": "URL de l'émetteur",
         "oidc_issuer_url_help": "L'URL de l'émetteur OIDC. Les endpoints seront auto-découverts depuis /.well-known/openid-configuration.",
-        "oidc_scopes": "Scopes",
+        "oidc_scopes": "Portées",
         "oidc_scopes_help": "Scopes OAuth à demander (séparés par des espaces). Par défaut : openid email profile",
         "open_setup_portal": "Configurer le fournisseur d'identité",
         "provider": "Fournisseur SSO",
@@ -3089,6 +3123,34 @@
             "toasts": {
               "success": "Rôle enregistré avec succès",
               "error": "Erreur lors de l'enregistrement du rôle, veuillez réessayer plus tard."
+            },
+            "permissions": {
+              "actions": {
+                "access": "accès",
+                "create": "créer",
+                "delete": "supprimer",
+                "delete_own": "supprimer le sien",
+                "read": "lire",
+                "read_own": "lire le sien",
+                "update": "modifier",
+                "update_own": "modifier le sien"
+              },
+              "deselect": "Désélectionner",
+              "deselect_all": "Tout désélectionner",
+              "sections": {
+                "activities": "Activités",
+                "collections": "Collections",
+                "coursechapters": "Chapitres de cours",
+                "courses": "Cours",
+                "dashboard": "Tableau de bord",
+                "organizations": "Organisations",
+                "roles": "Rôles",
+                "usergroups": "Groupes d'utilisateurs",
+                "users": "Utilisateurs"
+              },
+              "select": "Sélectionner",
+              "select_all": "Tout sélectionner",
+              "title": "Permissions"
             }
           },
           "delete": {
@@ -3208,7 +3270,7 @@
           },
           "code": {
             "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "description": "Défi de code avec évaluation automatisée par cas de test"
           },
           "short_answer": {
             "title": "Réponse courte",
@@ -3267,7 +3329,7 @@
             "prompt_label": "Énoncé de la question",
             "prompt_placeholder": "Quelle est la capitale du Maroc ?",
             "answers_label": "Réponses acceptées",
-            "answer_placeholder": "Rabat",
+            "answer_placeholder": "Réponse",
             "add_answer": "Ajouter une autre réponse",
             "no_answers_error": "Ajoutez au moins une réponse acceptée avant d’enregistrer",
             "match_mode_label": "Comment comparer les réponses",
@@ -3325,14 +3387,14 @@
           "reject": "Rejeter le devoir",
           "set_final_grade": "Définir la note finale",
           "mark_as_done": "Marquer l'activité comme terminée pour l'utilisateur",
-          "finalize": "Finalize & Complete",
+          "finalize": "Finaliser et terminer",
           "reject_description": "Supprime la soumission et permet à l’étudiant de resoumettre",
           "set_final_grade_description": "Calcule et enregistre la note sans terminer l’activité",
           "finalize_description": "Définit la note finale et marque l’activité comme terminée pour l’étudiant"
         },
         "toasts": {
           "reject_success": "Devoir rejeté avec succès",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Devoir évalué et activité marquée comme terminée"
         },
         "filters": {
           "all": "Tous"
@@ -3456,7 +3518,9 @@
             "anti_copy_paste_description": "Découragez le collage de réponses générées par IA en bloquant les événements de collage. Note : c’est un dissuasif et peut être contourné.",
             "auto_grading_disabled_file": "La notation automatique est indisponible car ce devoir contient une tâche de soumission de fichier qui nécessite une révision humaine.",
             "grading_type_hint": "Comment les notes sont affichées aux étudiants",
-            "grading_options_hint": "Comportement à la soumission"
+            "grading_options_hint": "Comportement à la soumission",
+            "show_correct_answers_description": "Une fois la soumission notée, montrez aux étudiants les bonnes réponses à côté des leurs — quelles options du quiz étaient correctes, la réponse courte ou numérique attendue, et les bons mots à compléter.",
+            "show_correct_answers_label": "Révéler les bonnes réponses après notation"
           },
           "toasts": {
             "updating": "Mise à jour du devoir...",
@@ -3496,12 +3560,184 @@
             "anti_copy_paste_label": "Bloquer copier-coller",
             "anti_copy_paste_description": "Découragez le collage de réponses générées par IA en bloquant les événements de collage. Note : c’est un dissuasif et peut être contourné.",
             "grading_type_hint": "Comment les notes sont affichées aux étudiants",
-            "grading_options_hint": "Comportement à la soumission"
+            "grading_options_hint": "Comportement à la soumission",
+            "show_correct_answers_description": "Une fois noté, les étudiants voient les bonnes réponses à côté des leurs.",
+            "show_correct_answers_label": "Révéler les bonnes réponses après notation"
           },
           "toasts": {
             "creating": "Création du devoir...",
             "success": "Devoir créé avec succès"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Rechercher",
+      "placeholder": "Rechercher des pages et du contenu…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Aucun résultat",
+      "loading": "Recherche en cours…",
+      "type_to_search": "Saisissez au moins 2 caractères pour rechercher du contenu",
+      "groups": {
+        "pages": "Pages",
+        "courses": "Cours",
+        "collections": "Collections",
+        "users": "Utilisateurs",
+        "communities": "Communautés",
+        "discussions": "Discussions",
+        "playgrounds": "Bacs à sable",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Vue d'ensemble du tableau de bord",
+          "keywords": "accueil, vue d'ensemble, démarrer, tableau de bord"
+        },
+        "courses": {
+          "description": "Gérer vos cours",
+          "keywords": "cours, leçons, apprendre, formation, classes"
+        },
+        "assignments": {
+          "description": "Gérer les devoirs",
+          "keywords": "tâches, devoirs, exercices, soumissions"
+        },
+        "communities": {
+          "description": "Gérer les communautés",
+          "keywords": "forums, discussions, membres, publications"
+        },
+        "podcasts": {
+          "description": "Gérer les podcasts",
+          "keywords": "audio, épisodes, émissions"
+        },
+        "boards": {
+          "description": "Gérer les tableaux",
+          "keywords": "kanban, projet, tâches, listes"
+        },
+        "playgrounds": {
+          "description": "Bacs à sable de code",
+          "keywords": "code, bac à sable, repl, programmation"
+        },
+        "analytics": {
+          "description": "Voir les tableaux de bord analytiques",
+          "keywords": "statistiques, métriques, graphiques, rapports"
+        },
+        "users": {
+          "description": "Gérer les utilisateurs de l'organisation",
+          "keywords": "membres, comptes, personnes"
+        },
+        "usergroups": {
+          "description": "Gérer les groupes d'utilisateurs",
+          "keywords": "équipes, cohortes, groupes"
+        },
+        "roles": {
+          "description": "Gérer les rôles et autorisations",
+          "keywords": "autorisations, accès, rbac, sécurité"
+        },
+        "signups": {
+          "description": "Examiner les inscriptions",
+          "keywords": "inscriptions, candidatures, demandes"
+        },
+        "org_general": {
+          "description": "Paramètres généraux de l'organisation",
+          "keywords": "nom, image de marque, slug, profil"
+        },
+        "org_features": {
+          "description": "Gérer les fonctionnalités de l'organisation",
+          "keywords": "fonctionnalités, modules, bascules"
+        },
+        "org_billing": {
+          "description": "Facturation et abonnement",
+          "keywords": "plan, paiements, facture, abonnement"
+        },
+        "payments_overview": {
+          "description": "Vue d'ensemble et revenus",
+          "keywords": "stripe, tableau de bord, revenus, ventes",
+          "title": "Vue d'ensemble des paiements"
+        },
+        "payments_products": {
+          "description": "Produits et tarification",
+          "keywords": "produits, prix, stripe, niveaux, plans",
+          "title": "Produits"
+        },
+        "users_add": {
+          "description": "Inviter de nouveaux membres",
+          "keywords": "inviter, ajouter, membres, envoyer"
+        },
+        "users_audit_logs": {
+          "description": "Journal d'activité de l'organisation",
+          "keywords": "audit, journaux, historique, sécurité, activité"
+        },
+        "org_branding": {
+          "description": "Logo, couleurs et identité visuelle",
+          "keywords": "image de marque, logo, couleurs, thème"
+        },
+        "org_landing": {
+          "description": "Personnaliser votre page d'accueil",
+          "keywords": "accueil, page d'accueil, hero, page"
+        },
+        "org_seo": {
+          "description": "Optimisation pour les moteurs de recherche",
+          "keywords": "seo, recherche, meta, classement, google"
+        },
+        "org_ai": {
+          "description": "Fonctionnalités et configuration IA",
+          "keywords": "ia, llm, gpt, openai, génération"
+        },
+        "org_domains": {
+          "description": "Domaines personnalisés",
+          "keywords": "domaine, dns, personnalisé, sous-domaine, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks et intégrations externes",
+          "keywords": "webhooks, automatisations, zapier, intégrations, déclencheurs"
+        },
+        "org_api": {
+          "description": "Jetons API et accès programmatique",
+          "keywords": "api, jetons, accès, programmatique, clés"
+        },
+        "org_sso": {
+          "description": "Configuration de l'authentification unique",
+          "keywords": "sso, saml, oauth, entreprise, connexion"
+        },
+        "org_other": {
+          "description": "Autres paramètres de l'organisation",
+          "keywords": "divers, avancé, personnalisé, supplémentaire"
+        },
+        "payments_groups": {
+          "description": "Groupes et bundles de paiement",
+          "keywords": "groupes, bundles, ensembles",
+          "title": "Groupes de paiement"
+        },
+        "payments_configuration": {
+          "description": "Configuration Stripe et paiements",
+          "keywords": "configuration, paramètres, stripe, installation, connect",
+          "title": "Configuration"
+        },
+        "payments_customers": {
+          "description": "Clients et abonnés",
+          "keywords": "clients, abonnés, acheteurs, payants",
+          "title": "Clients"
+        },
+        "courses_migrate": {
+          "description": "Importer des cours depuis un autre LMS",
+          "keywords": "importer, migrer, transférer, lms, moodle, canvas",
+          "title": "Migrer les cours"
+        },
+        "account_general": {
+          "description": "Paramètres généraux du compte personnel",
+          "keywords": "compte, paramètres, email, nom, langue"
+        },
+        "account_profile": {
+          "description": "Modifier votre profil et votre bio",
+          "keywords": "profil, bio, avatar, photo, public"
+        },
+        "account_security": {
+          "description": "Mot de passe et paramètres de sécurité",
+          "keywords": "mot de passe, sécurité, 2fa, mfa, sessions"
+        },
+        "account_purchases": {
+          "description": "Vos achats et abonnements",
+          "keywords": "achats, abonnements, facturation, historique, reçus"
         }
       }
     }
@@ -3983,9 +4219,9 @@
         "activities_count": "{{count}} activités",
         "pct_of_total": "% du total",
         "bar_width_hint": "Largeur de barre = vues relatives",
-        "rate_high": ">70%",
-        "rate_mid": "40–70%",
-        "rate_low": "<40%",
+        "rate_high": ">70 %",
+        "rate_mid": "40–70 %",
+        "rate_low": "<40 %",
         "low_conversion": "faible conversion",
         "avg_completion": "achèvement moy.",
         "avg_prefix": "moy. {{value}}",
@@ -4277,7 +4513,8 @@
       "member_added": "Membre ajouté",
       "member_added_error": "Échec de l'ajout du membre (peut déjà être membre)",
       "member_removed": "Membre supprimé",
-      "member_removed_error": "Échec de la suppression du membre"
+      "member_removed_error": "Échec de la suppression du membre",
+      "all_groups": "Tous les groupes"
     },
     "toolbar": {
       "select": "Sélectionner",
@@ -4287,7 +4524,7 @@
       "sticky_note": "Note adhésive",
       "frame": "Cadre",
       "note": "Note",
-      "sticker": "Sticker",
+      "sticker": "Autocollant",
       "youtube": "YouTube",
       "ai_playground": "Aire de jeu IA",
       "activity": "Activité",
@@ -4396,7 +4633,8 @@
       "move_back": "Reculer",
       "move_forward": "Avancer",
       "delete": "Supprimer",
-      "delete_multiple": "Supprimer {{count}} éléments"
+      "delete_multiple": "Supprimer {{count}} éléments",
+      "duplicate": "Dupliquer"
     },
     "pagination": {
       "previous": "Précédent",
@@ -4426,7 +4664,9 @@
     "duplicating_board": "Duplication du tableau...",
     "open_board": "Ouvrir le tableau",
     "select_all": "Tout sélectionner",
-    "selected_count": "{{count}} sélectionné(s)"
+    "selected_count": "{{count}} sélectionné(s)",
+    "no_boards": "Aucun tableau pour le moment",
+    "no_search_results": "Aucun tableau trouvé"
   },
   "onboarding": {
     "getting_started": "Prise en main",
@@ -4640,6 +4880,15 @@
       "usergroups_add_a_group": "Ajouter un groupe",
       "toast_add_error": "Impossible d'ajouter le groupe",
       "toast_remove_error": "Impossible de retirer le groupe"
-    }
+    },
+    "accessDenied": "Impossible d'accéder à ce cours",
+    "backToCourses": "Retour aux cours",
+    "loadError": "Ce cours est introuvable ou une erreur est survenue lors de son chargement.",
+    "noPermission": "Vous n'avez pas la permission de voir ce cours."
+  },
+  "pagination": {
+    "next": "Suivant",
+    "previous": "Précédent",
+    "showing_page": "Page {{current}} sur {{total}}"
   }
 }

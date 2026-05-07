@@ -180,14 +180,20 @@
     "boards": "Panolar",
     "close": "Kapat",
     "optional": "isteğe bağlı",
-    "playgrounds": "Oyun Alanları"
+    "playgrounds": "Oyun Alanları",
+    "analytics": "Analitik",
+    "add": "Ekle",
+    "choose_an_organization_to_continue": "Devam etmek için bir organizasyon seçin",
+    "for": "için",
+    "powered_by": "Destekleyen",
+    "results": "sonuç"
   },
   "banner": {
     "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
     "join_organization": "Bu organizasyona katılın",
     "to_access_features": "tüm özelliklere erişmek için.",
-    "free_plan_upgrade": "You're on the Free plan. Upgrade to unlock the complete experience.",
-    "free_plan_upgrade_button": "Upgrade"
+    "free_plan_upgrade": "Ücretsiz plandasınız. Tüm deneyimin kilidini açmak için yükseltin.",
+    "free_plan_upgrade_button": "Yükselt"
   },
   "auth": {
     "login": "Giriş Yap",
@@ -324,7 +330,9 @@
     "verification_missing_params": "Eksik doğrulama parametreleri. Lütfen doğrulama bağlantınızı kontrol edin.",
     "verification_trouble": "Sorun mu yaşıyorsunuz? Giriş sayfasından yeni bir doğrulama e-postası istemeyi deneyin.",
     "verify_email_title": "E-postanızı Doğrulayın",
-    "verifying_email": "E-posta adresiniz doğrulanıyor..."
+    "verifying_email": "E-posta adresiniz doğrulanıyor...",
+    "error_generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+    "sign_in": "Giriş Yap"
   },
   "validation": {
     "required": "Gerekli",
@@ -607,14 +615,16 @@
       "from_existing_description": "Başka bir platformdan dosya yükleyin ve bir kurs olarak düzenleyin"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Tüm Kurslar",
+      "filter_by_group": "Gruba göre filtrele",
+      "info_title": "Kullanıcı Grubu Filtresi",
+      "info_description": "Yalnızca belirli bir gruba atanmış kursları görmek için kursları kullanıcı grubuna göre filtreleyin. Aynı organizasyonu paylaşan aileler veya ekipler için kullanışlıdır."
     },
     "copied": "Kopyalandı!",
     "quit_course_confirm": "Bu kurstan çıkmak istediğinizden emin misiniz? Tüm ilerlemenizi kaybedersiniz.",
-    "quit_course_title": "Kurstan Çık?"
+    "quit_course_title": "Kurstan Çık?",
+    "courses_load_error": "Kurslar yüklenemedi. Lütfen tekrar deneyin.",
+    "view_all_courses": "Tüm kursları görüntüle"
   },
   "communities": {
     "title": "Topluluklar",
@@ -662,7 +672,8 @@
       "clear_search": "Aramayı temizle",
       "no_discussions": "Henüz tartışma yok",
       "no_discussions_description": "Bu toplulukta ilk tartışmayı başlatan siz olun!",
-      "start_discussion": "Tartışma Başlat"
+      "start_discussion": "Tartışma Başlat",
+      "delete_failed": "Tartışma silinemedi"
     },
     "discussion_detail": {
       "edit": "Düzenle",
@@ -670,7 +681,8 @@
       "delete_title": "Tartışma silinsin mi?",
       "delete_confirm": "Bu tartışmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
       "delete_button": "Tartışmayı Sil",
-      "no_details": "Ek detay sağlanmadı."
+      "no_details": "Ek detay sağlanmadı.",
+      "delete_failed": "Tartışma silinemedi"
     },
     "discussion_card": {
       "pin_discussion": "Tartışmayı sabitle",
@@ -680,7 +692,10 @@
       "delete_discussion": "Tartışmayı sil",
       "delete_title": "Tartışma silinsin mi?",
       "delete_confirm": "Bu tartışmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-      "votes": "oy"
+      "votes": "oy",
+      "delete_failed": "Tartışma silinemedi",
+      "lock_failed": "Kilit durumu güncellenemedi",
+      "pin_failed": "Sabitleme durumu güncellenemedi"
     },
     "comments": {
       "no_replies": "Henüz yanıt yok",
@@ -696,7 +711,8 @@
       "cancel": "İptal",
       "failed_to_post": "Yanıt gönderilemedi. Lütfen tekrar deneyin.",
       "content_not_allowed": "Yanıtınız izin verilmeyen içerik barındırıyor.",
-      "failed_to_update": "Güncelleme başarısız. Lütfen tekrar deneyin."
+      "failed_to_update": "Güncelleme başarısız. Lütfen tekrar deneyin.",
+      "failed_to_delete": "Yorum silinemedi"
     },
     "label_filter": {
       "label": "Etiket:",
@@ -907,7 +923,7 @@
     "quiz": "Sınav",
     "file_submission": "Dosya Gönderimi",
     "form": "Form",
-    "code": "Code",
+    "code": "Kod",
     "interactive": "Etkileşimli",
     "activities": "Aktiviteler",
     "current_activity": "Mevcut Aktivite",
@@ -966,13 +982,20 @@
     "points": "puan",
     "current_points": "Mevcut puan: {{points}}",
     "grade": "Not",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Otomatik Notlandırmayı Çalıştır",
     "due_date": "Son Teslim Tarihi",
     "task_breakdown": "Görev dökümü",
     "no_grade_details": "Henüz not detayı yok.",
     "task_passed": "Geçti",
     "task_not_passed": "Geçmedi",
-    "score": "skor"
+    "score": "skor",
+    "form": {
+      "expected_answer": "Beklenen"
+    },
+    "quiz": {
+      "correct_answer": "Doğru",
+      "incorrect_answer": "Yanlış"
+    }
   },
   "certificate": {
     "certificate": "Sertifika",
@@ -1059,7 +1082,8 @@
     "subscription": "Abonelik",
     "benefits": "Avantajlar:",
     "min_price": "Minimum fiyat:",
-    "choose_price": "Fiyatınızı seçin"
+    "choose_price": "Fiyatınızı seçin",
+    "stripe_denied": "Stripe bağlantısı iptal edildi."
   },
   "account": {
     "title": "Hesap",
@@ -1288,7 +1312,8 @@
           "loading_error": "Profil verileri yüklenemedi",
           "save_success": "Profil başarıyla güncellendi",
           "save_error": "Profil güncellenirken hata oluştu"
-        }
+        },
+        "unknown_section": "Bilinmeyen bölüm"
       }
     },
     "sign_out": "Çıkış Yap",
@@ -1934,7 +1959,7 @@
               "actions": "İşlemler",
               "name": "Ad"
             },
-            "title": "User Groups",
+            "title": "Kullanıcı Grupları",
             "toasts": {
               "link_error": "Hata {{status}}: {{detail}}",
               "link_success": "Kullanıcı Grubu başarıyla bağlandı",
@@ -2022,9 +2047,9 @@
             "assignments": "Ödevler",
             "dynamic": "Dinamik",
             "dynamic_page": "Dinamik Sayfa",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "Gömme"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",
@@ -2037,7 +2062,8 @@
             "create_success": "Aktivite başarıyla oluşturuldu",
             "uploading": "Dosya yükleniyor ve aktivite oluşturuluyor...",
             "upload_success": "Dosya başarıyla yüklendi",
-            "creating_uploading": "Aktivite oluşturuluyor ve dosya yükleniyor..."
+            "creating_uploading": "Aktivite oluşturuluyor ve dosya yükleniyor...",
+            "update_error": "Aktivite güncellenemedi"
           },
           "versioning": {
             "version_history": "Sürüm Geçmişi",
@@ -2081,6 +2107,9 @@
               "remote_detected": "Uzak değişiklikler tespit edildi",
               "editing_notice": "{{author}} siz düzenlerken değişiklik yaptı"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM uyumlu öğrenme paketi"
           }
         }
       },
@@ -2168,7 +2197,9 @@
           "other": "Diğer",
           "domains": "Alan Adları",
           "sso": "SSO",
-          "usage": "Kullanım"
+          "usage": "Kullanım",
+          "seo": "SEO",
+          "automations": "Otomasyonlar"
         },
         "pages": {
           "general": {
@@ -2230,9 +2261,12 @@
         "footer_text": "Alt Bilgi Metni",
         "footer_text_placeholder": "Alt bilgi metnini girin...",
         "footer_text_desc": "Kuruluş sayfalarınızın altında görüntülenen özel metin",
+        "default_language": "Varsayılan dil",
+        "default_language_desc": "Yeni ziyaretçilerin varsayılan olarak gördüğü ve bu kuruluş adına gönderilen e-postalarda kullanılan dil. Üyeler kendi arayüz dillerini değiştirmeye devam edebilir.",
         "watermark_desc": "Organizasyon sayfalarınızda LearnHouse marka filigranını gösterin",
         "watermark_free_plan": "Filigran ücretsiz planda her zaman gösterilir",
-        "watermark_label": "\"Made with LearnHouse\" filigranı"
+        "watermark_label": "\"Made with LearnHouse\" filigranı",
+        "watermark_ee": "Enterprise Edition lisansınız tarafından gizlendi"
       },
       "images": {
         "title": "Resimler ve Önizlemeler",
@@ -3114,6 +3148,34 @@
             "toasts": {
               "success": "Rol başarıyla kaydedildi",
               "error": "Rol kaydedilirken hata oluştu. Lütfen daha sonra tekrar deneyin."
+            },
+            "permissions": {
+              "actions": {
+                "access": "erişim",
+                "create": "oluştur",
+                "delete": "sil",
+                "delete_own": "kendini sil",
+                "read": "oku",
+                "read_own": "kendini oku",
+                "update": "güncelle",
+                "update_own": "kendini güncelle"
+              },
+              "deselect": "Seçimi Kaldır",
+              "deselect_all": "Tümünün Seçimini Kaldır",
+              "sections": {
+                "activities": "Aktiviteler",
+                "collections": "Koleksiyonlar",
+                "coursechapters": "Kurs Bölümleri",
+                "courses": "Kurslar",
+                "dashboard": "Panel",
+                "organizations": "Organizasyonlar",
+                "roles": "Roller",
+                "usergroups": "Kullanıcı Grupları",
+                "users": "Kullanıcılar"
+              },
+              "select": "Seç",
+              "select_all": "Tümünü Seç",
+              "title": "İzinler"
             }
           },
           "delete": {
@@ -3232,8 +3294,8 @@
             "description": "Öğrencilerin doldurması için form"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "Kod",
+            "description": "Otomatik test senaryosu notlandırmasına sahip kodlama mücadelesi"
           },
           "short_answer": {
             "title": "Kısa cevap",
@@ -3292,7 +3354,7 @@
             "prompt_label": "Soru metni",
             "prompt_placeholder": "Fas’ın başkenti nedir?",
             "answers_label": "Kabul edilen cevaplar",
-            "answer_placeholder": "Rabat",
+            "answer_placeholder": "İndirim",
             "add_answer": "Başka bir cevap ekle",
             "no_answers_error": "Kaydetmeden önce en az bir kabul edilen cevap ekleyin",
             "match_mode_label": "Cevaplar nasıl eşleştirilir",
@@ -3350,14 +3412,14 @@
           "reject": "Gönderimi Reddet",
           "set_final_grade": "Final Notunu Belirle",
           "mark_as_done": "Kullanıcı aktivitesini tamamlandı olarak işaretle",
-          "finalize": "Finalize & Complete",
+          "finalize": "Sonlandır ve Tamamla",
           "reject_description": "Gönderiyi siler ve öğrencinin tekrar göndermesine izin verir",
           "set_final_grade_description": "Aktiviteyi tamamlamadan notu hesaplar ve kaydeder",
           "finalize_description": "Son notu belirler ve öğrenci için aktiviteyi tamamlanmış olarak işaretler"
         },
         "toasts": {
           "reject_success": "Gönderim başarıyla reddedildi",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Ödev notlandırıldı ve aktivite tamamlandı olarak işaretlendi"
         },
         "filters": {
           "all": "Tümü"
@@ -3481,7 +3543,9 @@
             "anti_copy_paste_description": "Yapıştır olaylarını engelleyerek AI tarafından oluşturulan yanıtları yapıştırmayı caydırın. Not: bu caydırıcıdır.",
             "auto_grading_disabled_file": "Otomatik notlandırma kullanılamaz — bu ödevde insan incelemesi gerektiren bir dosya gönderim görevi var.",
             "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
-            "grading_options_hint": "Gönderimde davranış"
+            "grading_options_hint": "Gönderimde davranış",
+            "show_correct_answers_description": "Gönderim notlandırıldıktan sonra, öğrencilere kendi cevaplarının yanında doğru cevapları gösterin — hangi quiz seçeneklerinin doğru olduğunu, beklenen kısa veya sayısal cevabı ve doğru form boşluklarını.",
+            "show_correct_answers_label": "Notlandırmadan sonra doğru cevapları göster"
           },
           "toasts": {
             "updating": "Ödev güncelleniyor...",
@@ -3521,12 +3585,184 @@
             "anti_copy_paste_label": "Kopyala ve yapıştır engelle",
             "anti_copy_paste_description": "Yapıştır olaylarını engelleyerek AI tarafından oluşturulan yanıtları yapıştırmayı caydırın. Not: bu caydırıcıdır.",
             "grading_type_hint": "Notların öğrencilere nasıl gösterildiği",
-            "grading_options_hint": "Gönderimde davranış"
+            "grading_options_hint": "Gönderimde davranış",
+            "show_correct_answers_description": "Notlandırma yapıldıktan sonra, öğrenciler kendi cevaplarının yanında doğru cevapları görür.",
+            "show_correct_answers_label": "Notlandırmadan sonra doğru cevapları göster"
           },
           "toasts": {
             "creating": "Ödev oluşturuluyor...",
             "success": "Ödev başarıyla oluşturuldu"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Ara",
+      "placeholder": "Sayfa ve içeriklerde ara…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Sonuç bulunamadı",
+      "loading": "Aranıyor…",
+      "type_to_search": "İçerik aramak için en az 2 karakter girin",
+      "groups": {
+        "pages": "Sayfalar",
+        "courses": "Kurslar",
+        "collections": "Koleksiyonlar",
+        "users": "Kullanıcılar",
+        "communities": "Topluluklar",
+        "discussions": "Tartışmalar",
+        "playgrounds": "Oyun alanları",
+        "podcasts": "Podcastler"
+      },
+      "entries": {
+        "home": {
+          "description": "Pano genel bakışı",
+          "keywords": "ana sayfa, genel bakış, başlangıç, pano"
+        },
+        "courses": {
+          "description": "Kurslarınızı yönetin",
+          "keywords": "kurslar, dersler, öğrenme, eğitim, sınıflar"
+        },
+        "assignments": {
+          "description": "Ödevleri yönetin",
+          "keywords": "görevler, ev ödevleri, alıştırmalar"
+        },
+        "communities": {
+          "description": "Toplulukları yönetin",
+          "keywords": "forumlar, tartışmalar, üyeler, gönderiler"
+        },
+        "podcasts": {
+          "description": "Podcastleri yönetin",
+          "keywords": "ses, bölümler, programlar"
+        },
+        "boards": {
+          "description": "Panoları yönetin",
+          "keywords": "kanban, proje, görevler, listeler"
+        },
+        "playgrounds": {
+          "description": "Kod oyun alanları",
+          "keywords": "kod, sandbox, repl, programlama"
+        },
+        "analytics": {
+          "description": "Analitik panolarını görüntüleyin",
+          "keywords": "istatistikler, metrikler, grafikler, raporlar"
+        },
+        "users": {
+          "description": "Kuruluş kullanıcılarını yönetin",
+          "keywords": "üyeler, hesaplar, kişiler"
+        },
+        "usergroups": {
+          "description": "Kullanıcı gruplarını yönetin",
+          "keywords": "ekipler, kohortlar, gruplar"
+        },
+        "roles": {
+          "description": "Rolleri ve izinleri yönetin",
+          "keywords": "izinler, erişim, rbac, güvenlik"
+        },
+        "signups": {
+          "description": "Kayıtları inceleyin",
+          "keywords": "kayıtlar, başvurular, istekler"
+        },
+        "org_general": {
+          "description": "Kuruluş genel ayarları",
+          "keywords": "ad, marka, slug, profil"
+        },
+        "org_features": {
+          "description": "Kuruluş özelliklerini yönetin",
+          "keywords": "özellikler, modüller, anahtarlar"
+        },
+        "org_billing": {
+          "description": "Faturalandırma ve abonelik",
+          "keywords": "plan, ödemeler, fatura, abonelik"
+        },
+        "payments_overview": {
+          "description": "Ödeme genel bakışı ve gelir",
+          "keywords": "stripe, pano, gelir, satışlar",
+          "title": "Ödeme Genel Bakışı"
+        },
+        "payments_products": {
+          "description": "Ödeme ürünleri ve fiyatlandırma",
+          "keywords": "ürünler, fiyatlar, stripe, kademeler, planlar",
+          "title": "Ürünler"
+        },
+        "users_add": {
+          "description": "Yeni üyeler davet edin",
+          "keywords": "davet, ekle, üyeler, gönder"
+        },
+        "users_audit_logs": {
+          "description": "Kuruluş etkinlik günlüğü",
+          "keywords": "denetim, günlükler, geçmiş, güvenlik, etkinlik"
+        },
+        "org_branding": {
+          "description": "Logo, renkler ve görsel kimlik",
+          "keywords": "marka, logo, renkler, tema"
+        },
+        "org_landing": {
+          "description": "Açılış sayfanızı özelleştirin",
+          "keywords": "açılış, ana sayfa, hero, sayfa"
+        },
+        "org_seo": {
+          "description": "Arama motoru optimizasyonu",
+          "keywords": "seo, arama, meta, sıralama, google"
+        },
+        "org_ai": {
+          "description": "YZ özellikleri ve yapılandırması",
+          "keywords": "yz, llm, gpt, openai, üretim"
+        },
+        "org_domains": {
+          "description": "Özel etki alanları",
+          "keywords": "etki alanı, dns, özel, alt etki alanı, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks ve dış entegrasyonlar",
+          "keywords": "webhooks, otomasyonlar, zapier, entegrasyonlar, tetikleyiciler"
+        },
+        "org_api": {
+          "description": "API tokenları ve programatik erişim",
+          "keywords": "api, tokenlar, erişim, programatik, anahtarlar"
+        },
+        "org_sso": {
+          "description": "Tek oturum açma yapılandırması",
+          "keywords": "sso, saml, oauth, kurumsal, giriş"
+        },
+        "org_other": {
+          "description": "Diğer kuruluş ayarları",
+          "keywords": "diğer, gelişmiş, özel, ek"
+        },
+        "payments_groups": {
+          "description": "Ödeme grupları ve paketler",
+          "keywords": "gruplar, paketler, kümeler",
+          "title": "Ödeme Grupları"
+        },
+        "payments_configuration": {
+          "description": "Stripe ve ödeme yapılandırması",
+          "keywords": "yapılandırma, ayarlar, stripe, kurulum, connect",
+          "title": "Yapılandırma"
+        },
+        "payments_customers": {
+          "description": "Müşteriler ve aboneler",
+          "keywords": "müşteriler, aboneler, alıcılar, ödenmiş",
+          "title": "Müşteriler"
+        },
+        "courses_migrate": {
+          "description": "Başka bir LMS'den kursları içe aktar",
+          "keywords": "içe aktar, taşı, transfer, lms, moodle, canvas",
+          "title": "Kursları Taşı"
+        },
+        "account_general": {
+          "description": "Kişisel hesap genel ayarları",
+          "keywords": "hesap, ayarlar, email, ad, dil"
+        },
+        "account_profile": {
+          "description": "Profilini ve biyografini düzenle",
+          "keywords": "profil, bio, avatar, fotoğraf, halka açık"
+        },
+        "account_security": {
+          "description": "Şifre ve güvenlik ayarları",
+          "keywords": "şifre, güvenlik, 2fa, mfa, oturumlar"
+        },
+        "account_purchases": {
+          "description": "Satın alımlarınız ve abonelikleriniz",
+          "keywords": "satın alımlar, abonelikler, faturalandırma, geçmiş, makbuzlar"
         }
       }
     }
@@ -3648,7 +3884,7 @@
         "align_right": "Sağa hizala",
         "download": "İndir",
         "drop_or_browse": "Dosyanızı buraya bırakın veya göz atmak için tıklayın",
-        "expand": "Expand",
+        "expand": "Genişlet",
         "full_width": "Tam Genişlik",
         "large": "Büyük",
         "medium": "Orta",
@@ -3687,13 +3923,13 @@
         "edit_embed": "Yerleştirmeyi Düzenle",
         "add_embed_from": "Buradan Yerleştirme Ekle",
         "click_service": "Bir servisi tıklayın",
-        "add_embed": "Yerleştirme Ekle",
+        "add_embed": "{{name}} Yerleştirme Ekle",
         "add_embed_url": "Yerleştirme URL'si Ekle",
         "add_embed_code": "Yerleştirme Kodu Ekle",
-        "paste_url": "URL'yi Yapıştır",
+        "paste_url": "{{name}} yerleştirme URL'sini yapıştır",
         "paste_any_url": "Herhangi bir URL yapıştırın",
         "paste_directly": "Doğrudan Yapıştır",
-        "how_to_embed": "Nasıl Yerleştirilir",
+        "how_to_embed": "{{name}} nasıl yerleştirilir",
         "paste_code": "Kodu Yapıştır",
         "paste_iframe": "iframe Yapıştır"
       },
@@ -3797,7 +4033,7 @@
       "block_selected": "blok seçili",
       "clear_chat": "Sohbeti temizle",
       "clear_selection": "Seçimi temizle",
-      "expand": "Expand",
+      "expand": "Genişlet",
       "how_can_i_help": "İçeriğinizi iyileştirmenize nasıl yardımcı olabilirim?",
       "improve_writing": "Yazımı iyileştir",
       "input_placeholder": "İçeriğiniz için yapay zekadan yardım isteyin...",
@@ -3817,8 +4053,8 @@
       "advanced": "Gelişmiş"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Analitik yapılandırılmadı",
+      "description": "Analitik bir Tinybird bağlantısı gerektirir. Etkinleştirmek için <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> ve <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> ortam değişkenlerini ayarlayın."
     },
     "advanced_gate": {
       "requires": "Gerektirir",
@@ -3827,156 +4063,156 @@
     "common": {
       "loading": "Yükleniyor...",
       "no_data": "Henüz veri yok",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "Kullanıcılar",
+      "views": "Görüntülenmeler",
+      "enrollments": "Kayıtlar",
+      "completions": "Tamamlamalar",
+      "course": "Kurs",
+      "date": "Tarih",
+      "user": "Kullanıcı",
+      "type": "Tür",
+      "expand": "Genişlet",
+      "days": "Gün",
+      "score": "Puan",
+      "unique_users": "benzersiz kullanıcı"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
+      "live_now": "Şu Anda Canlı",
+      "last_5_minutes": "Son 5 dakika",
+      "signups": "Kayıtlar",
+      "submissions": "Gönderimler",
+      "daily_active_users": "Günlük Aktif Kullanıcılar",
+      "active_users": "Aktif Kullanıcılar",
+      "countries": "Ülkeler",
+      "top_countries": "En Çok Görülen Ülkeler",
+      "devices": "Cihazlar",
+      "desktop": "Masaüstü",
+      "mobile": "Mobil",
       "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "top_referrers": "En Çok Yönlendiren Kaynaklar",
+      "top_referrer": "En Çok Yönlendiren Kaynak",
+      "enrollment_funnel": "Kayıt Hunisi",
+      "page_views": "Sayfa Görüntülemeleri",
+      "course_views": "Kurs Görüntülemeleri",
+      "view_to_enroll": "Görüntüleme → Kayıt",
+      "enroll_to_complete": "Kayıt → Tamamlama",
+      "page_to_complete": "Sayfa → Tamamlama",
+      "conv_rate": "Dön. Oranı",
+      "top_courses": "En Çok Görülen Kurslar",
+      "activity_engagement": "Aktivite Etkileşimi",
+      "activity": "Aktivite",
+      "avg_time": "Ort. Süre",
+      "activities": "Aktiviteler",
+      "courses": "Kurslar",
       "enrollments": "Kayıtlar",
       "completions": "Tamamlananlar"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Canlı Kullanıcılar",
+        "description": "Son 5 dakikada aktif olan kullanıcılar"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Kayıtlar",
+        "description": "Son {{days}} gündeki yeni kullanıcı kayıtları"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Kayıtlar",
+        "description": "Son {{days}} gündeki kurs kayıtları"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Tamamlamalar",
+        "description": "Son {{days}} gündeki kurs tamamlamaları"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Mevcut Sayfa",
+        "device": "Cihaz",
+        "country": "Ülke",
+        "last_seen": "Son Görülme"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "E-posta",
+        "method": "Yöntem"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Organizasyon Büyüme Trendi",
+        "description": "Haftalık kayıtlar, kurs kayıtları, tamamlamalar"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Yeni vs Geri Dönen Kullanıcılar",
+        "description": "Büyüme vs elde tutma sağlığı"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "Kohort Elde Tutma",
+        "description": "Kayıt haftasından sonra aktif olan kullanıcı %",
+        "cohort": "Kohort",
+        "size": "Boyut"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Yoğun Kullanım Saatleri",
+        "description": "Gün ve saate göre olay hacmi",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "Pzt",
+          "tue": "Sal",
+          "wed": "Çar",
+          "thu": "Per",
+          "fri": "Cum",
+          "sat": "Cmt",
+          "sun": "Paz"
         },
-        "events": "events"
+        "events": "olay"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Kurs Bırakma",
+        "description": "Kullanıcıların her kursta nerede bıraktığı"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Tamamlama Süresi",
+        "description": "Her kursu tamamlamak için medyan gün sayısı"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Tamamlama Hızı",
+        "description": "Aktivite tamamlamaları arasındaki ortalama gün sayısı"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "İçerik Türü Etkinliği",
+        "description": "Aktivite türüne göre tamamlama oranı"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Kurs Etkinlik Matrisi",
+        "description": "Aktivite sayısı vs tamamlama oranı (kayıtlara göre boyutlandırılmış)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Topluluk Korelasyonu",
+        "description": "Tamamlama oranı: tartışanlar vs tartışmayanlar",
+        "discussion_users": "Tartışan Kullanıcılar",
+        "non_discussion_users": "Tartışmayan Kullanıcılar"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Öğrenci Etkileşim Puanı",
+        "description": "Bileşik etkileşime göre en iyi öğrenciler",
+        "user_id": "Kullanıcı ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Kullanıcı İlerleme Anlık Görüntüsü",
+        "description": "Her kursta tamamlama dilimindeki kullanıcılar"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Not Dağılımı",
+        "description": "Ödev not histogramı"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Arama Etkinliği",
+        "description": "En çok yapılan sorgular ve sıfır sonuç oranı",
+        "query": "Sorgu",
+        "searches": "Aramalar",
+        "zero_results": "Sıfır Sonuç %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Sertifikasyon Oranı",
+        "description": "Sertifika talep eden tamamlayanların %'si"
       }
     },
     "course_analytics": {
@@ -4430,7 +4666,8 @@
       "search_placeholder": "İsim veya e-posta ile ara...",
       "title": "Üyeler",
       "user": "Kullanıcı",
-      "viewer": "İzleyici"
+      "viewer": "İzleyici",
+      "all_groups": "Tüm gruplar"
     },
     "name": "Ad",
     "name_placeholder": "ör., Proje Planlaması",
@@ -4442,7 +4679,8 @@
       "delete": "Sil",
       "delete_multiple": "{{count}} öğeyi sil",
       "move_back": "Geri taşı",
-      "move_forward": "İleri taşı"
+      "move_forward": "İleri taşı",
+      "duplicate": "Çoğalt"
     },
     "open_board": "Panoyu Aç",
     "pagination": {
@@ -4517,14 +4755,14 @@
       "note": "Not",
       "pan": "Kaydır",
       "podcast": "Podcast",
-      "redo": "Redo",
+      "redo": "Yinele",
       "select": "Seç",
       "sticker": "Çıkartma",
       "sticky_note": "Yapışkan Not",
       "thick": "Kalın",
       "thin": "İnce",
       "todo": "Yapılacak",
-      "undo": "Undo",
+      "undo": "Geri Al",
       "webpage": "Web Sayfası",
       "youtube": "YouTube"
     },
@@ -4545,7 +4783,9 @@
     "zoom": {
       "zoom_in": "Yakınlaştır",
       "zoom_out": "Uzaklaştır"
-    }
+    },
+    "no_boards": "Henüz pano yok",
+    "no_search_results": "Pano bulunamadı"
   },
   "embed": {
     "not_supported_description": "Bu tür etkinlik kimlik doğrulama gerektirir ve yerleştirilemez.",
@@ -4665,6 +4905,15 @@
       "usergroups_add_a_group": "Grup ekle",
       "toast_add_error": "Grup eklenemedi",
       "toast_remove_error": "Grup kaldırılamadı"
-    }
+    },
+    "accessDenied": "Bu kursa erişilemiyor",
+    "backToCourses": "Kurslara Dön",
+    "loadError": "Bu kurs bulunamadı veya yüklenirken bir hata oluştu.",
+    "noPermission": "Bu kursu görüntüleme yetkiniz yok."
+  },
+  "pagination": {
+    "next": "Sonraki",
+    "previous": "Önceki",
+    "showing_page": "{{total}} sayfadan {{current}}. sayfa gösteriliyor"
   }
 }

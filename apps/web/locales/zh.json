@@ -180,7 +180,13 @@
     "boards": "面板",
     "close": "关闭",
     "optional": "可选",
-    "playgrounds": "游乐场"
+    "playgrounds": "游乐场",
+    "analytics": "分析",
+    "add": "添加",
+    "choose_an_organization_to_continue": "选择一个组织以继续",
+    "for": "用于",
+    "powered_by": "技术支持",
+    "results": "结果"
   },
   "banner": {
     "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
@@ -301,7 +307,9 @@
       "try_again": "重试"
     },
     "sso_error": "SSO 认证失败。请重试。",
-    "try_again_in": "{{minutes}}分钟后重试"
+    "try_again_in": "{{minutes}}分钟后重试",
+    "error_generic": "出现问题，请重试。",
+    "sign_in": "登录"
   },
   "verify_email": {
     "title": "邮箱验证",
@@ -594,14 +602,16 @@
       "from_existing_description": "从其他平台上传文件并将其组织成课程"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "所有课程",
+      "filter_by_group": "按组筛选",
+      "info_title": "用户组筛选",
+      "info_description": "按用户组筛选课程，仅显示分配给特定组的课程。适用于共享同一组织的家庭或团队。"
     },
     "copied": "已复制！",
     "quit_course_confirm": "确定要退出此课程吗？您将失去所有进度。",
-    "quit_course_title": "退出课程？"
+    "quit_course_title": "退出课程？",
+    "courses_load_error": "加载课程失败，请重试。",
+    "view_all_courses": "查看所有课程"
   },
   "communities": {
     "title": "社区",
@@ -649,7 +659,8 @@
       "clear_search": "清除搜索",
       "no_discussions": "暂无讨论",
       "no_discussions_description": "成为第一个在这个社区发起讨论的人！",
-      "start_discussion": "发起讨论"
+      "start_discussion": "发起讨论",
+      "delete_failed": "删除讨论失败"
     },
     "discussion_detail": {
       "edit": "编辑",
@@ -657,7 +668,8 @@
       "delete_title": "删除讨论？",
       "delete_confirm": "确定要删除此讨论吗？此操作无法撤消。",
       "delete_button": "删除讨论",
-      "no_details": "未提供额外详情。"
+      "no_details": "未提供额外详情。",
+      "delete_failed": "删除讨论失败"
     },
     "discussion_card": {
       "pin_discussion": "置顶讨论",
@@ -667,7 +679,10 @@
       "delete_discussion": "删除讨论",
       "delete_title": "删除讨论？",
       "delete_confirm": "确定要删除此讨论吗？此操作无法撤消。",
-      "votes": "票"
+      "votes": "票",
+      "delete_failed": "删除讨论失败",
+      "lock_failed": "更新锁定状态失败",
+      "pin_failed": "更新置顶状态失败"
     },
     "comments": {
       "no_replies": "暂无回复",
@@ -683,7 +698,8 @@
       "cancel": "取消",
       "failed_to_post": "发布回复失败，请重试。",
       "content_not_allowed": "您的回复包含不允许的内容。",
-      "failed_to_update": "更新失败，请重试。"
+      "failed_to_update": "更新失败，请重试。",
+      "failed_to_delete": "删除评论失败"
     },
     "label_filter": {
       "label": "标签：",
@@ -894,7 +910,7 @@
     "quiz": "测验",
     "file_submission": "文件提交",
     "form": "表单",
-    "code": "Code",
+    "code": "代码",
     "interactive": "互动",
     "activities": "活动",
     "current_activity": "当前活动",
@@ -953,13 +969,20 @@
     "points": "分",
     "current_points": "当前分数：{{points}}",
     "grade": "成绩",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "运行自动评分",
     "due_date": "截止日期",
     "task_breakdown": "任务明细",
     "no_grade_details": "暂无成绩详情。",
     "task_passed": "通过",
     "task_not_passed": "未通过",
-    "score": "得分"
+    "score": "得分",
+    "form": {
+      "expected_answer": "预期答案"
+    },
+    "quiz": {
+      "correct_answer": "正确",
+      "incorrect_answer": "错误"
+    }
   },
   "certificate": {
     "certificate": "证书",
@@ -1046,7 +1069,8 @@
     "subscription": "订阅",
     "benefits": "权益：",
     "min_price": "最低价格：",
-    "choose_price": "选择您的价格"
+    "choose_price": "选择您的价格",
+    "stripe_denied": "Stripe 连接已取消。"
   },
   "account": {
     "title": "账户",
@@ -1275,7 +1299,8 @@
           "loading_error": "加载个人资料数据失败",
           "save_success": "个人资料更新成功",
           "save_error": "更新个人资料时出错"
-        }
+        },
+        "unknown_section": "未知部分"
       }
     },
     "sign_out": "退出登录",
@@ -2024,7 +2049,8 @@
             "create_success": "活动创建成功",
             "uploading": "正在上传文件并创建活动...",
             "upload_success": "文件上传成功",
-            "creating_uploading": "正在创建活动并上传文件..."
+            "creating_uploading": "正在创建活动并上传文件...",
+            "update_error": "更新活动失败"
           },
           "versioning": {
             "version_history": "版本历史",
@@ -2068,6 +2094,9 @@
               "remote_detected": "检测到远程更改",
               "editing_notice": "{{author}}在您编辑时做了更改"
             }
+          },
+          "descriptions": {
+            "scorm": "符合 SCORM 标准的学习包"
           }
         }
       },
@@ -2155,7 +2184,9 @@
           "other": "其他",
           "domains": "域名",
           "sso": "SSO",
-          "usage": "用量"
+          "usage": "用量",
+          "seo": "SEO",
+          "automations": "自动化"
         },
         "pages": {
           "general": {
@@ -2217,9 +2248,12 @@
         "footer_text": "页脚文本",
         "footer_text_placeholder": "输入页脚文本...",
         "footer_text_desc": "显示在组织页面底部的自定义文本",
+        "default_language": "默认语言",
+        "default_language_desc": "新访客默认看到的语言，也是代表此组织发出的邮件所使用的语言。成员仍可切换自己的界面语言。",
         "watermark_desc": "在您的组织页面上显示 LearnHouse 品牌水印",
         "watermark_free_plan": "免费方案始终显示水印",
-        "watermark_label": "\"Made with LearnHouse\" 水印"
+        "watermark_label": "\"Made with LearnHouse\" 水印",
+        "watermark_ee": "已被您的企业版许可证隐藏"
       },
       "images": {
         "title": "图像与预览",
@@ -3101,6 +3135,34 @@
             "toasts": {
               "success": "角色已成功保存",
               "error": "保存角色出错，请稍后重试。"
+            },
+            "permissions": {
+              "actions": {
+                "access": "访问",
+                "create": "创建",
+                "delete": "删除",
+                "delete_own": "删除自己的",
+                "read": "读取",
+                "read_own": "读取自己的",
+                "update": "更新",
+                "update_own": "更新自己的"
+              },
+              "deselect": "取消选择",
+              "deselect_all": "取消全选",
+              "sections": {
+                "activities": "活动",
+                "collections": "合集",
+                "coursechapters": "课程章节",
+                "courses": "课程",
+                "dashboard": "仪表板",
+                "organizations": "组织",
+                "roles": "角色",
+                "usergroups": "用户组",
+                "users": "用户"
+              },
+              "select": "选择",
+              "select_all": "全选",
+              "title": "权限"
             }
           },
           "delete": {
@@ -3219,8 +3281,8 @@
             "description": "供学生填写的问卷"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "代码",
+            "description": "通过自动化测试用例评分的编程挑战"
           },
           "short_answer": {
             "title": "简答",
@@ -3337,14 +3399,14 @@
           "reject": "拒绝作业",
           "set_final_grade": "设置最终成绩",
           "mark_as_done": "将此活动标记为用户已完成",
-          "finalize": "Finalize & Complete",
+          "finalize": "最终确认并完成",
           "reject_description": "删除提交并允许学生重新提交",
           "set_final_grade_description": "计算并保存成绩，不完成活动",
           "finalize_description": "设置最终成绩并将活动标记为学生已完成"
         },
         "toasts": {
           "reject_success": "作业拒绝成功",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "作业已评分，活动已标记为完成"
         },
         "filters": {
           "all": "全部"
@@ -3468,7 +3530,9 @@
             "anti_copy_paste_description": "通过阻止粘贴事件来劝阻粘贴 AI 生成的答案。注意：这是一种威慑手段。",
             "auto_grading_disabled_file": "自动评分不可用 — 此作业包含需要人工审核的文件提交任务。",
             "grading_type_hint": "成绩如何向学生显示",
-            "grading_options_hint": "提交时的行为"
+            "grading_options_hint": "提交时的行为",
+            "show_correct_answers_description": "提交评分后，向学生显示其答案旁的正确答案——包括正确的测验选项、预期的简答或数字答案，以及正确的填空内容。",
+            "show_correct_answers_label": "评分后显示正确答案"
           },
           "toasts": {
             "updating": "正在更新作业...",
@@ -3508,12 +3572,184 @@
             "anti_copy_paste_label": "阻止复制和粘贴",
             "anti_copy_paste_description": "通过阻止粘贴事件来劝阻粘贴 AI 生成的答案。注意：这是一种威慑手段。",
             "grading_type_hint": "成绩如何向学生显示",
-            "grading_options_hint": "提交时的行为"
+            "grading_options_hint": "提交时的行为",
+            "show_correct_answers_description": "评分后，学生可以在自己的答案旁看到正确答案。",
+            "show_correct_answers_label": "评分后显示正确答案"
           },
           "toasts": {
             "creating": "正在创建作业...",
             "success": "作业创建成功"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "搜索",
+      "placeholder": "搜索页面和内容…",
+      "shortcut_hint": "⌘K",
+      "no_results": "未找到结果",
+      "loading": "搜索中…",
+      "type_to_search": "输入至少 2 个字符来搜索内容",
+      "groups": {
+        "pages": "页面",
+        "courses": "课程",
+        "collections": "合集",
+        "users": "用户",
+        "communities": "社区",
+        "discussions": "讨论",
+        "playgrounds": "演练场",
+        "podcasts": "播客"
+      },
+      "entries": {
+        "home": {
+          "description": "仪表板概览",
+          "keywords": "主页, 概览, 开始, 仪表板"
+        },
+        "courses": {
+          "description": "管理你的课程",
+          "keywords": "课程, 课时, 学习, 培训, 班级"
+        },
+        "assignments": {
+          "description": "管理作业",
+          "keywords": "任务, 作业, 练习, 提交"
+        },
+        "communities": {
+          "description": "管理社区",
+          "keywords": "论坛, 讨论, 成员, 帖子"
+        },
+        "podcasts": {
+          "description": "管理播客",
+          "keywords": "音频, 集数, 节目"
+        },
+        "boards": {
+          "description": "管理看板",
+          "keywords": "看板, 项目, 任务, 列表"
+        },
+        "playgrounds": {
+          "description": "代码演练场",
+          "keywords": "代码, 沙盒, repl, 编程"
+        },
+        "analytics": {
+          "description": "查看分析仪表板",
+          "keywords": "统计, 指标, 图表, 报告"
+        },
+        "users": {
+          "description": "管理组织用户",
+          "keywords": "成员, 账户, 人员"
+        },
+        "usergroups": {
+          "description": "管理用户组",
+          "keywords": "团队, 群组, 组别"
+        },
+        "roles": {
+          "description": "管理角色和权限",
+          "keywords": "权限, 访问, rbac, 安全"
+        },
+        "signups": {
+          "description": "审核注册",
+          "keywords": "注册, 申请, 请求"
+        },
+        "org_general": {
+          "description": "组织常规设置",
+          "keywords": "名称, 品牌, slug, 简介"
+        },
+        "org_features": {
+          "description": "管理组织功能",
+          "keywords": "功能, 模块, 开关"
+        },
+        "org_billing": {
+          "description": "账单与订阅",
+          "keywords": "计划, 付款, 发票, 订阅"
+        },
+        "payments_overview": {
+          "description": "付款概览和收入",
+          "keywords": "stripe, 仪表板, 收入, 销售",
+          "title": "付款概览"
+        },
+        "payments_products": {
+          "description": "付款产品和定价",
+          "keywords": "产品, 价格, stripe, 等级, 计划",
+          "title": "产品"
+        },
+        "users_add": {
+          "description": "邀请新成员",
+          "keywords": "邀请, 添加, 成员, 发送"
+        },
+        "users_audit_logs": {
+          "description": "组织活动日志",
+          "keywords": "审计, 日志, 历史, 安全, 活动"
+        },
+        "org_branding": {
+          "description": "标志、颜色和视觉标识",
+          "keywords": "品牌, 标志, 颜色, 主题"
+        },
+        "org_landing": {
+          "description": "自定义着陆页",
+          "keywords": "着陆页, 主页, hero, 页面"
+        },
+        "org_seo": {
+          "description": "搜索引擎优化",
+          "keywords": "seo, 搜索, 元, 排名, google"
+        },
+        "org_ai": {
+          "description": "AI 功能和配置",
+          "keywords": "ai, llm, gpt, openai, 生成"
+        },
+        "org_domains": {
+          "description": "自定义域名",
+          "keywords": "域名, dns, 自定义, 子域名, cname"
+        },
+        "org_automations": {
+          "description": "Webhook 和外部集成",
+          "keywords": "webhooks, 自动化, zapier, 集成, 触发器"
+        },
+        "org_api": {
+          "description": "API 令牌和程序化访问",
+          "keywords": "api, 令牌, 访问, 程序化, 密钥"
+        },
+        "org_sso": {
+          "description": "单点登录配置",
+          "keywords": "sso, saml, oauth, 企业, 登录"
+        },
+        "org_other": {
+          "description": "其他组织设置",
+          "keywords": "杂项, 高级, 自定义, 额外"
+        },
+        "payments_groups": {
+          "description": "付款组和捆绑",
+          "keywords": "组, 捆绑, 集合",
+          "title": "付款组"
+        },
+        "payments_configuration": {
+          "description": "Stripe 和付款配置",
+          "keywords": "配置, 设置, stripe, 安装, connect",
+          "title": "配置"
+        },
+        "payments_customers": {
+          "description": "客户和订阅者",
+          "keywords": "客户, 订阅者, 买家, 已付款",
+          "title": "客户"
+        },
+        "courses_migrate": {
+          "description": "从其他 LMS 导入课程",
+          "keywords": "导入, 迁移, 转移, lms, moodle, canvas",
+          "title": "迁移课程"
+        },
+        "account_general": {
+          "description": "个人账户常规设置",
+          "keywords": "账户, 设置, 电子邮件, 姓名, 语言"
+        },
+        "account_profile": {
+          "description": "编辑您的个人资料和简介",
+          "keywords": "个人资料, 简介, 头像, 照片, 公开"
+        },
+        "account_security": {
+          "description": "密码和安全设置",
+          "keywords": "密码, 安全, 2fa, mfa, 会话"
+        },
+        "account_purchases": {
+          "description": "您的购买和订阅",
+          "keywords": "购买, 订阅, 账单, 历史, 收据"
         }
       }
     }
@@ -3804,8 +4040,8 @@
       "advanced": "高级"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "分析未配置",
+      "description": "分析功能需要 Tinybird 连接。请设置 <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> 和 <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> 环境变量以启用此功能。"
     },
     "advanced_gate": {
       "requires": "需要",
@@ -3814,156 +4050,156 @@
     "common": {
       "loading": "加载中...",
       "no_data": "暂无数据",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "用户",
+      "views": "浏览量",
+      "enrollments": "注册",
+      "completions": "完成",
+      "course": "课程",
+      "date": "日期",
+      "user": "用户",
+      "type": "类型",
+      "expand": "展开",
+      "days": "天",
+      "score": "分数",
+      "unique_users": "独立用户"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "实时",
+      "last_5_minutes": "最近 5 分钟",
+      "signups": "注册",
+      "submissions": "提交",
+      "daily_active_users": "日活跃用户",
+      "active_users": "活跃用户",
+      "countries": "国家/地区",
+      "top_countries": "热门国家/地区",
+      "devices": "设备",
+      "desktop": "桌面",
+      "mobile": "移动",
+      "tablet": "平板",
+      "top_referrers": "热门来源",
+      "top_referrer": "首要来源",
+      "enrollment_funnel": "注册漏斗",
+      "page_views": "页面浏览量",
+      "course_views": "课程浏览量",
+      "view_to_enroll": "浏览 → 注册",
+      "enroll_to_complete": "注册 → 完成",
+      "page_to_complete": "页面 → 完成",
+      "conv_rate": "转化率",
+      "top_courses": "热门课程",
+      "activity_engagement": "活动参与度",
+      "activity": "活动",
+      "avg_time": "平均时长",
+      "activities": "活动",
+      "courses": "课程",
       "enrollments": "注册",
       "completions": "完成"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "实时用户",
+        "description": "最近 5 分钟内活跃的用户"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "注册",
+        "description": "最近 {{days}} 天内的新用户注册"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "注册",
+        "description": "最近 {{days}} 天内的课程注册"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "完成",
+        "description": "最近 {{days}} 天内的课程完成"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "当前页面",
+        "device": "设备",
+        "country": "国家/地区",
+        "last_seen": "最后在线"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "邮箱",
+        "method": "方式"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "组织增长趋势",
+        "description": "每周注册、报名、完成数据"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "新用户 vs 回访用户",
+        "description": "增长与留存健康状况"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "队列留存",
+        "description": "注册周后仍活跃的用户百分比",
+        "cohort": "队列",
+        "size": "规模"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "使用高峰时段",
+        "description": "按天和小时统计的事件量",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "周一",
+          "tue": "周二",
+          "wed": "周三",
+          "thu": "周四",
+          "fri": "周五",
+          "sat": "周六",
+          "sun": "周日"
         },
-        "events": "events"
+        "events": "事件"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "课程流失",
+        "description": "用户在每个课程中停止的位置"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "完成所需时间",
+        "description": "完成每门课程的中位天数"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "完成速度",
+        "description": "活动完成之间的平均天数"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "内容类型有效性",
+        "description": "按活动类型划分的完成率"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "课程有效性矩阵",
+        "description": "活动数量 vs 完成率（按注册数缩放）"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "社区相关性",
+        "description": "完成率：参与讨论者 vs 未参与讨论者",
+        "discussion_users": "参与讨论的用户",
+        "non_discussion_users": "未参与讨论的用户"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "学习者参与度评分",
+        "description": "综合参与度排名靠前的学习者",
+        "user_id": "用户 ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "用户进度快照",
+        "description": "每门课程中处于各完成区间的用户"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "成绩分布",
+        "description": "作业成绩直方图"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "搜索有效性",
+        "description": "热门查询和零结果率",
+        "query": "查询",
+        "searches": "搜索次数",
+        "zero_results": "零结果率 %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "认证率",
+        "description": "完成者中领取证书的百分比"
       }
     },
     "course_analytics": {
@@ -4417,7 +4653,8 @@
       "search_placeholder": "按姓名或邮箱搜索...",
       "title": "成员",
       "user": "用户",
-      "viewer": "查看者"
+      "viewer": "查看者",
+      "all_groups": "所有用户组"
     },
     "name": "名称",
     "name_placeholder": "例如：项目规划",
@@ -4429,7 +4666,8 @@
       "delete": "删除",
       "delete_multiple": "删除 {{count}} 个项目",
       "move_back": "向后移动",
-      "move_forward": "向前移动"
+      "move_forward": "向前移动",
+      "duplicate": "复制"
     },
     "open_board": "打开面板",
     "pagination": {
@@ -4532,7 +4770,9 @@
     "zoom": {
       "zoom_in": "放大",
       "zoom_out": "缩小"
-    }
+    },
+    "no_boards": "暂无面板",
+    "no_search_results": "未找到面板"
   },
   "embed": {
     "not_supported_description": "此类活动需要认证，无法嵌入。",
@@ -4652,6 +4892,15 @@
       "usergroups_add_a_group": "添加用户组",
       "toast_add_error": "无法添加用户组",
       "toast_remove_error": "无法移除用户组"
-    }
+    },
+    "accessDenied": "无法访问此课程",
+    "backToCourses": "返回课程列表",
+    "loadError": "找不到此课程或加载时出错。",
+    "noPermission": "您没有权限查看此课程。"
+  },
+  "pagination": {
+    "next": "下一页",
+    "previous": "上一页",
+    "showing_page": "第 {{current}} 页，共 {{total}} 页"
   }
 }

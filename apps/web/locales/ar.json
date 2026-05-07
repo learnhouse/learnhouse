@@ -180,7 +180,13 @@
     "creating": "جاري الإنشاء...",
     "view_details": "عرض التفاصيل",
     "close": "إغلاق",
-    "optional": "اختياري"
+    "optional": "اختياري",
+    "analytics": "التحليلات",
+    "add": "إضافة",
+    "choose_an_organization_to_continue": "اختر منظمة للمتابعة",
+    "for": "لـ",
+    "powered_by": "مدعوم بواسطة",
+    "results": "نتيجة"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -301,7 +307,9 @@
     "sso_error": "فشلت مصادقة SSO. يرجى المحاولة مرة أخرى.",
     "try_again_in": "حاول مرة أخرى خلال {{minutes}} دقيقة",
     "email_verification_required": "مطلوب التحقق من البريد الإلكتروني",
-    "email_verification_required_join": "يرجى التحقق من عنوان بريدك الإلكتروني قبل الانضمام إلى المنظمة. تحقق من صندوق الوارد للحصول على رسالة التحقق."
+    "email_verification_required_join": "يرجى التحقق من عنوان بريدك الإلكتروني قبل الانضمام إلى المنظمة. تحقق من صندوق الوارد للحصول على رسالة التحقق.",
+    "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "sign_in": "تسجيل الدخول"
   },
   "verify_email": {
     "title": "تأكيد البريد الإلكتروني",
@@ -597,11 +605,13 @@
     "quit_course_confirm": "هل أنت متأكد من رغبتك في مغادرة هذه الدورة؟ ستفقد كل تقدمك.",
     "quit_course_title": "مغادرة الدورة؟",
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
-    }
+      "all_courses": "جميع الدورات",
+      "filter_by_group": "تصفية حسب المجموعة",
+      "info_title": "تصفية حسب مجموعة المستخدمين",
+      "info_description": "قم بتصفية الدورات حسب مجموعة المستخدمين لعرض الدورات المخصصة لمجموعة معينة فقط. مفيد للعائلات أو الفرق التي تشترك في نفس المنظمة."
+    },
+    "courses_load_error": "فشل تحميل الدورات. يرجى المحاولة مرة أخرى.",
+    "view_all_courses": "عرض جميع الدورات"
   },
   "communities": {
     "title": "المجتمعات",
@@ -649,7 +659,8 @@
       "clear_search": "مسح البحث",
       "no_discussions": "لا توجد نقاشات بعد",
       "no_discussions_description": "كن أول من يبدأ نقاشًا في هذا المجتمع!",
-      "start_discussion": "بدء نقاش"
+      "start_discussion": "بدء نقاش",
+      "delete_failed": "فشل حذف النقاش"
     },
     "discussion_detail": {
       "edit": "تعديل",
@@ -657,7 +668,8 @@
       "delete_title": "حذف النقاش؟",
       "delete_confirm": "هل أنت متأكد أنك تريد حذف هذا النقاش؟ لا يمكن التراجع عن هذا الإجراء.",
       "delete_button": "حذف النقاش",
-      "no_details": "لم يتم تقديم تفاصيل إضافية."
+      "no_details": "لم يتم تقديم تفاصيل إضافية.",
+      "delete_failed": "فشل حذف النقاش"
     },
     "discussion_card": {
       "pin_discussion": "تثبيت النقاش",
@@ -667,7 +679,10 @@
       "delete_discussion": "حذف النقاش",
       "delete_title": "حذف النقاش؟",
       "delete_confirm": "هل أنت متأكد أنك تريد حذف هذا النقاش؟ لا يمكن التراجع عن هذا الإجراء.",
-      "votes": "أصوات"
+      "votes": "أصوات",
+      "delete_failed": "فشل حذف النقاش",
+      "lock_failed": "فشل تحديث حالة القفل",
+      "pin_failed": "فشل تحديث حالة التثبيت"
     },
     "comments": {
       "no_replies": "لا توجد ردود بعد",
@@ -683,7 +698,8 @@
       "cancel": "إلغاء",
       "failed_to_post": "فشل في نشر الرد. يرجى المحاولة مرة أخرى.",
       "content_not_allowed": "ردك يحتوي على محتوى غير مسموح به.",
-      "failed_to_update": "فشل في التحديث. يرجى المحاولة مرة أخرى."
+      "failed_to_update": "فشل في التحديث. يرجى المحاولة مرة أخرى.",
+      "failed_to_delete": "فشل حذف التعليق"
     },
     "label_filter": {
       "label": "التصنيف:",
@@ -894,7 +910,7 @@
     "quiz": "اختبار",
     "file_submission": "تسليم ملف",
     "form": "نموذج",
-    "code": "Code",
+    "code": "كود",
     "interactive": "تفاعلي",
     "activities": "الأنشطة",
     "current_activity": "النشاط الحالي",
@@ -953,13 +969,20 @@
     "points": "نقاط",
     "current_points": "النقاط الحالية: {{points}}",
     "grade": "الدرجة",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "تشغيل التصحيح التلقائي",
     "due_date": "تاريخ الاستحقاق",
     "task_breakdown": "تفصيل المهام",
     "no_grade_details": "لا توجد تفاصيل للدرجة بعد.",
     "task_passed": "ناجح",
     "task_not_passed": "غير ناجح",
-    "score": "النتيجة"
+    "score": "النتيجة",
+    "form": {
+      "expected_answer": "المتوقع"
+    },
+    "quiz": {
+      "correct_answer": "صحيح",
+      "incorrect_answer": "خطأ"
+    }
   },
   "certificate": {
     "certificate": "الشهادة",
@@ -1046,7 +1069,8 @@
     "subscription": "اشتراك",
     "benefits": "المزايا:",
     "min_price": "السعر الأدنى:",
-    "choose_price": "اختر سعرك"
+    "choose_price": "اختر سعرك",
+    "stripe_denied": "تم إلغاء اتصال Stripe."
   },
   "account": {
     "title": "الحساب",
@@ -1275,7 +1299,8 @@
           "loading_error": "فشل تحميل بيانات الملف الشخصي",
           "save_success": "تم تحديث الملف الشخصي بنجاح",
           "save_error": "خطأ في تحديث الملف الشخصي"
-        }
+        },
+        "unknown_section": "قسم غير معروف"
       }
     },
     "sign_out": "تسجيل الخروج",
@@ -2011,7 +2036,7 @@
             "dynamic_page": "صفحة ديناميكية",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "تضمين"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",
@@ -2024,7 +2049,8 @@
             "create_success": "تم إنشاء النشاط بنجاح",
             "uploading": "جاري رفع الملف وإنشاء النشاط...",
             "upload_success": "تم رفع الملف بنجاح",
-            "creating_uploading": "جاري إنشاء النشاط ورفع الملف..."
+            "creating_uploading": "جاري إنشاء النشاط ورفع الملف...",
+            "update_error": "فشل تحديث النشاط"
           },
           "versioning": {
             "version_history": "سجل الإصدارات",
@@ -2068,6 +2094,9 @@
               "remote_detected": "تم اكتشاف تغييرات عن بُعد",
               "editing_notice": "قام {{author}} بإجراء تغييرات أثناء التحرير"
             }
+          },
+          "descriptions": {
+            "scorm": "حزمة تعليمية متوافقة مع SCORM"
           }
         }
       },
@@ -2152,10 +2181,12 @@
           "ai": "الذكاء الاصطناعي",
           "api": "الوصول لـ API",
           "features": "الميزات",
-          "usage": "Usage",
+          "usage": "الاستخدام",
           "other": "أخرى",
           "sso": "SSO",
-          "domains": "النطاقات"
+          "domains": "النطاقات",
+          "seo": "تحسين محركات البحث",
+          "automations": "الأتمتة"
         },
         "pages": {
           "general": {
@@ -2191,8 +2222,8 @@
             "title": "تسجيل الدخول الموحد"
           },
           "usage": {
-            "title": "Usage",
-            "subtitle": "Monitor your organization's resource usage and plan limits"
+            "title": "الاستخدام",
+            "subtitle": "راقب استخدام موارد منظمتك وحدود خطتك"
           },
           "domains": {
             "subtitle": "تكوين النطاقات المخصصة لمنظمتك",
@@ -2215,9 +2246,12 @@
         "footer_text": "نص التذييل",
         "footer_text_placeholder": "أدخل نص التذييل...",
         "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك",
+        "default_language": "اللغة الافتراضية",
+        "default_language_desc": "اللغة التي يراها الزوار الجدد افتراضيًا واللغة المستخدمة للرسائل المُرسَلة باسم هذه المؤسسة. لا يزال بإمكان الأعضاء تغيير لغة واجهتهم.",
         "watermark_desc": "إظهار علامة LearnHouse المائية على صفحات منظمتك",
         "watermark_free_plan": "يتم عرض العلامة المائية دائمًا في الخطة المجانية",
-        "watermark_label": "علامة \"صنع بواسطة LearnHouse\" المائية"
+        "watermark_label": "علامة \"صنع بواسطة LearnHouse\" المائية",
+        "watermark_ee": "مخفي بترخيص الإصدار المؤسسي"
       },
       "images": {
         "title": "الصور والمعاينات",
@@ -3099,6 +3133,34 @@
             "toasts": {
               "success": "تم حفظ الدور بنجاح",
               "error": "خطأ أثناء حفظ الدور، يرجى المحاولة لاحقاً."
+            },
+            "permissions": {
+              "actions": {
+                "access": "وصول",
+                "create": "إنشاء",
+                "delete": "حذف",
+                "delete_own": "حذف الخاص",
+                "read": "قراءة",
+                "read_own": "قراءة الخاص",
+                "update": "تحديث",
+                "update_own": "تحديث الخاص"
+              },
+              "deselect": "إلغاء التحديد",
+              "deselect_all": "إلغاء تحديد الكل",
+              "sections": {
+                "activities": "الأنشطة",
+                "collections": "المجموعات",
+                "coursechapters": "فصول الدورة",
+                "courses": "الدورات",
+                "dashboard": "لوحة التحكم",
+                "organizations": "المنظمات",
+                "roles": "الأدوار",
+                "usergroups": "مجموعات المستخدمين",
+                "users": "المستخدمون"
+              },
+              "select": "تحديد",
+              "select_all": "تحديد الكل",
+              "title": "الأذونات"
             }
           },
           "delete": {
@@ -3217,8 +3279,8 @@
             "description": "استبيانات يملأها الطلاب"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "كود",
+            "description": "تحدي برمجي مع تصحيح تلقائي لحالات الاختبار"
           },
           "short_answer": {
             "title": "إجابة قصيرة",
@@ -3335,14 +3397,14 @@
           "reject": "رفض الواجب",
           "set_final_grade": "تحديد الدرجة النهائية",
           "mark_as_done": "تحديد النشاط كمكتمل للمستخدم",
-          "finalize": "Finalize & Complete",
+          "finalize": "إنهاء وإتمام",
           "reject_description": "يحذف التقديم ويسمح للطالب بإعادة التقديم",
           "set_final_grade_description": "يحسب ويحفظ الدرجة دون إكمال النشاط",
           "finalize_description": "يحدد الدرجة النهائية ويعلم النشاط كمكتمل للطالب"
         },
         "toasts": {
           "reject_success": "تم رفض الواجب بنجاح",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "تم تصحيح الواجب ووضع علامة على النشاط كمكتمل"
         },
         "filters": {
           "all": "الكل"
@@ -3466,7 +3528,9 @@
             "anti_copy_paste_description": "تثبيط لصق إجابات مولّدة بالذكاء الاصطناعي بحظر أحداث اللصق. ملاحظة: هذا رادع ويمكن تجاوزه.",
             "auto_grading_disabled_file": "التقييم التلقائي غير متاح لأن هذا الواجب يحتوي على مهمة تسليم ملف تحتاج إلى مراجعة بشرية.",
             "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
-            "grading_options_hint": "السلوك عند التسليم"
+            "grading_options_hint": "السلوك عند التسليم",
+            "show_correct_answers_description": "بمجرد تقييم الإرسال، أظهر للطلاب الإجابات الصحيحة بجانب إجاباتهم — أيّ خيارات الاختبار كانت صحيحة، والإجابة القصيرة أو الرقمية المتوقعة، وفراغات النموذج الصحيحة.",
+            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم"
           },
           "toasts": {
             "updating": "جاري تحديث الواجب...",
@@ -3506,12 +3570,184 @@
             "anti_copy_paste_label": "حظر النسخ واللصق",
             "anti_copy_paste_description": "تثبيط لصق إجابات مولّدة بالذكاء الاصطناعي بحظر أحداث اللصق. ملاحظة: هذا رادع ويمكن تجاوزه.",
             "grading_type_hint": "كيف تُعرض الدرجات على الطلاب",
-            "grading_options_hint": "السلوك عند التسليم"
+            "grading_options_hint": "السلوك عند التسليم",
+            "show_correct_answers_description": "بعد التقييم، يرى الطلاب الإجابات الصحيحة بجانب إجاباتهم.",
+            "show_correct_answers_label": "إظهار الإجابات الصحيحة بعد التقييم"
           },
           "toasts": {
             "creating": "جاري إنشاء الواجب...",
             "success": "تم إنشاء الواجب بنجاح"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "بحث",
+      "placeholder": "ابحث في الصفحات والمحتوى…",
+      "shortcut_hint": "⌘K",
+      "no_results": "لا توجد نتائج",
+      "loading": "جاري البحث…",
+      "type_to_search": "اكتب حرفين على الأقل للبحث في المحتوى",
+      "groups": {
+        "pages": "الصفحات",
+        "courses": "الدورات",
+        "collections": "المجموعات",
+        "users": "المستخدمون",
+        "communities": "المجتمعات",
+        "discussions": "المناقشات",
+        "playgrounds": "ساحات اللعب",
+        "podcasts": "البودكاست"
+      },
+      "entries": {
+        "home": {
+          "description": "نظرة عامة على لوحة التحكم",
+          "keywords": "الرئيسية, نظرة عامة, البدء, لوحة التحكم"
+        },
+        "courses": {
+          "description": "إدارة دوراتك",
+          "keywords": "دورات, دروس, تعلم, تدريب, فصول"
+        },
+        "assignments": {
+          "description": "إدارة الواجبات",
+          "keywords": "مهام, واجبات منزلية, تمارين, تسليمات"
+        },
+        "communities": {
+          "description": "إدارة المجتمعات",
+          "keywords": "منتديات, مناقشات, أعضاء, منشورات"
+        },
+        "podcasts": {
+          "description": "إدارة البودكاست",
+          "keywords": "صوت, حلقات, برامج"
+        },
+        "boards": {
+          "description": "إدارة اللوحات",
+          "keywords": "كانبان, مشروع, مهام, قوائم"
+        },
+        "playgrounds": {
+          "description": "ساحات لعب البرمجة",
+          "keywords": "كود, sandbox, repl, برمجة"
+        },
+        "analytics": {
+          "description": "عرض لوحات التحليلات",
+          "keywords": "إحصائيات, مقاييس, رسوم بيانية, تقارير"
+        },
+        "users": {
+          "description": "إدارة مستخدمي المؤسسة",
+          "keywords": "أعضاء, حسابات, أشخاص"
+        },
+        "usergroups": {
+          "description": "إدارة مجموعات المستخدمين",
+          "keywords": "فرق, مجموعات, أفواج"
+        },
+        "roles": {
+          "description": "إدارة الأدوار والصلاحيات",
+          "keywords": "صلاحيات, وصول, rbac, أمان"
+        },
+        "signups": {
+          "description": "مراجعة التسجيلات",
+          "keywords": "تسجيلات, طلبات, تطبيقات"
+        },
+        "org_general": {
+          "description": "الإعدادات العامة للمؤسسة",
+          "keywords": "الاسم, العلامة التجارية, slug, الملف الشخصي"
+        },
+        "org_features": {
+          "description": "إدارة ميزات المؤسسة",
+          "keywords": "ميزات, وحدات, مفاتيح"
+        },
+        "org_billing": {
+          "description": "الفوترة والاشتراك",
+          "keywords": "خطة, مدفوعات, فاتورة, اشتراك"
+        },
+        "payments_overview": {
+          "description": "نظرة عامة على المدفوعات والإيرادات",
+          "keywords": "stripe, لوحة, إيرادات, مبيعات",
+          "title": "نظرة عامة على المدفوعات"
+        },
+        "payments_products": {
+          "description": "منتجات وأسعار الدفع",
+          "keywords": "منتجات, أسعار, stripe, مستويات, خطط",
+          "title": "المنتجات"
+        },
+        "users_add": {
+          "description": "ادع أعضاء جدد",
+          "keywords": "دعوة, إضافة, أعضاء, إرسال"
+        },
+        "users_audit_logs": {
+          "description": "سجل نشاط المؤسسة",
+          "keywords": "تدقيق, سجلات, تاريخ, أمان, نشاط"
+        },
+        "org_branding": {
+          "description": "الشعار والألوان والهوية البصرية",
+          "keywords": "علامة تجارية, شعار, ألوان, موضوع"
+        },
+        "org_landing": {
+          "description": "تخصيص صفحتك المقصودة",
+          "keywords": "صفحة هبوط, الصفحة الرئيسية, hero, صفحة"
+        },
+        "org_seo": {
+          "description": "تحسين محركات البحث",
+          "keywords": "seo, بحث, ميتا, ترتيب, google"
+        },
+        "org_ai": {
+          "description": "ميزات وإعدادات الذكاء الاصطناعي",
+          "keywords": "ذكاء اصطناعي, llm, gpt, openai, توليد"
+        },
+        "org_domains": {
+          "description": "النطاقات المخصصة",
+          "keywords": "نطاق, dns, مخصص, نطاق فرعي, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks والتكاملات الخارجية",
+          "keywords": "webhooks, أتمتة, zapier, تكاملات, محفزات"
+        },
+        "org_api": {
+          "description": "رموز API والوصول البرمجي",
+          "keywords": "api, رموز, وصول, برمجي, مفاتيح"
+        },
+        "org_sso": {
+          "description": "إعداد الدخول الموحد",
+          "keywords": "sso, saml, oauth, مؤسسة, تسجيل الدخول"
+        },
+        "org_other": {
+          "description": "إعدادات أخرى للمؤسسة",
+          "keywords": "متنوع, متقدم, مخصص, إضافي"
+        },
+        "payments_groups": {
+          "description": "مجموعات وحزم الدفع",
+          "keywords": "مجموعات, حزم, مجموعات",
+          "title": "مجموعات الدفع"
+        },
+        "payments_configuration": {
+          "description": "إعدادات Stripe والمدفوعات",
+          "keywords": "إعدادات, إعداد, stripe, تثبيت, connect",
+          "title": "الإعدادات"
+        },
+        "payments_customers": {
+          "description": "العملاء والمشتركون",
+          "keywords": "عملاء, مشتركون, مشترون, مدفوعون",
+          "title": "العملاء"
+        },
+        "courses_migrate": {
+          "description": "استيراد الدورات من LMS آخر",
+          "keywords": "استيراد, ترحيل, نقل, lms, moodle, canvas",
+          "title": "ترحيل الدورات"
+        },
+        "account_general": {
+          "description": "الإعدادات العامة للحساب الشخصي",
+          "keywords": "حساب, إعدادات, بريد إلكتروني, اسم, لغة"
+        },
+        "account_profile": {
+          "description": "تعديل ملفك الشخصي وسيرتك الذاتية",
+          "keywords": "ملف شخصي, سيرة ذاتية, صورة رمزية, صورة, عام"
+        },
+        "account_security": {
+          "description": "إعدادات كلمة المرور والأمان",
+          "keywords": "كلمة المرور, أمان, 2fa, mfa, جلسات"
+        },
+        "account_purchases": {
+          "description": "مشترياتك واشتراكاتك",
+          "keywords": "مشتريات, اشتراكات, فواتير, تاريخ, إيصالات"
         }
       }
     }
@@ -4293,7 +4529,8 @@
       "member_added": "تمت إضافة العضو",
       "member_added_error": "فشل إضافة العضو (قد يكون عضواً بالفعل)",
       "member_removed": "تمت إزالة العضو",
-      "member_removed_error": "فشل إزالة العضو"
+      "member_removed_error": "فشل إزالة العضو",
+      "all_groups": "جميع المجموعات"
     },
     "toolbar": {
       "select": "تحديد",
@@ -4412,7 +4649,8 @@
       "move_back": "نقل للخلف",
       "move_forward": "نقل للأمام",
       "delete": "حذف",
-      "delete_multiple": "حذف {{count}} عناصر"
+      "delete_multiple": "حذف {{count}} عناصر",
+      "duplicate": "تكرار"
     },
     "pagination": {
       "previous": "السابق",
@@ -4442,7 +4680,9 @@
     "duplicating_board": "جارٍ تكرار اللوحة...",
     "open_board": "فتح اللوحة",
     "select_all": "تحديد الكل",
-    "selected_count": "{{count}} محدد"
+    "selected_count": "{{count}} محدد",
+    "no_boards": "لا توجد لوحات بعد",
+    "no_search_results": "لم يتم العثور على لوحات"
   },
   "onboarding": {
     "getting_started": "البدء",
@@ -4650,6 +4890,15 @@
       "usergroups_add_a_group": "إضافة مجموعة",
       "toast_add_error": "تعذّر إضافة المجموعة",
       "toast_remove_error": "تعذّر إزالة المجموعة"
-    }
+    },
+    "accessDenied": "تعذّر الوصول إلى هذه الدورة",
+    "backToCourses": "العودة إلى الدورات",
+    "loadError": "تعذّر العثور على هذه الدورة أو حدث خطأ أثناء تحميلها.",
+    "noPermission": "ليس لديك إذن لعرض هذه الدورة."
+  },
+  "pagination": {
+    "next": "التالي",
+    "previous": "السابق",
+    "showing_page": "عرض الصفحة {{current}} من {{total}}"
   }
 }
