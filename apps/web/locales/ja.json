@@ -180,8 +180,7 @@
     "creating": "作成中...",
     "view_details": "詳細を見る",
     "close": "閉じる",
-    "optional": "任意",
-    "analytics": "分析"
+    "optional": "任意"
   },
   "banner": {
     "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
@@ -2156,9 +2155,7 @@
           "usage": "Usage",
           "other": "その他",
           "domains": "ドメイン",
-          "sso": "SSO",
-          "seo": "SEO",
-          "automations": "自動化"
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -2218,8 +2215,6 @@
         "footer_text": "フッターテキスト",
         "footer_text_placeholder": "フッターテキストを入力...",
         "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト",
-        "default_language": "デフォルト言語",
-        "default_language_desc": "新しい訪問者にデフォルトで表示される言語であり、この組織を代表して送信されるメールに使用される言語です。メンバーは自分のUI言語を引き続き切り替えできます。",
         "watermark_desc": "組織ページにLearnHouseブランドの透かしを表示",
         "watermark_free_plan": "無料プランでは透かしが常に表示されます",
         "watermark_label": "\"Made with LearnHouse\"透かし"
@@ -3517,176 +3512,6 @@
             "creating": "課題を作成中...",
             "success": "課題を正常に作成しました"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "検索",
-      "placeholder": "ページとコンテンツを検索…",
-      "shortcut_hint": "⌘K",
-      "no_results": "結果が見つかりません",
-      "loading": "検索中…",
-      "type_to_search": "コンテンツを検索するには2文字以上入力してください",
-      "groups": {
-        "pages": "ページ",
-        "courses": "コース",
-        "collections": "コレクション",
-        "users": "ユーザー",
-        "communities": "コミュニティ",
-        "discussions": "ディスカッション",
-        "playgrounds": "プレイグラウンド",
-        "podcasts": "ポッドキャスト"
-      },
-      "entries": {
-        "home": {
-          "description": "ダッシュボード概要",
-          "keywords": "ホーム, 概要, 開始, ダッシュボード"
-        },
-        "courses": {
-          "description": "コースを管理",
-          "keywords": "コース, レッスン, 学習, トレーニング, クラス"
-        },
-        "assignments": {
-          "description": "課題を管理",
-          "keywords": "タスク, 宿題, 演習, 提出"
-        },
-        "communities": {
-          "description": "コミュニティを管理",
-          "keywords": "フォーラム, ディスカッション, メンバー, 投稿"
-        },
-        "podcasts": {
-          "description": "ポッドキャストを管理",
-          "keywords": "オーディオ, エピソード, 番組"
-        },
-        "boards": {
-          "description": "ボードを管理",
-          "keywords": "カンバン, プロジェクト, タスク, リスト"
-        },
-        "playgrounds": {
-          "description": "コードプレイグラウンド",
-          "keywords": "コード, サンドボックス, repl, プログラミング"
-        },
-        "analytics": {
-          "description": "分析ダッシュボードを表示",
-          "keywords": "統計, メトリクス, グラフ, レポート"
-        },
-        "users": {
-          "description": "組織のユーザーを管理",
-          "keywords": "メンバー, アカウント, 人"
-        },
-        "usergroups": {
-          "description": "ユーザーグループを管理",
-          "keywords": "チーム, コホート, グループ"
-        },
-        "roles": {
-          "description": "ロールと権限を管理",
-          "keywords": "権限, アクセス, rbac, セキュリティ"
-        },
-        "signups": {
-          "description": "サインアップを確認",
-          "keywords": "登録, 申請, リクエスト"
-        },
-        "org_general": {
-          "description": "組織の一般設定",
-          "keywords": "名前, ブランディング, slug, プロフィール"
-        },
-        "org_features": {
-          "description": "組織機能を管理",
-          "keywords": "機能, モジュール, トグル"
-        },
-        "org_billing": {
-          "description": "請求とサブスクリプション",
-          "keywords": "プラン, 支払い, 請求書, サブスクリプション"
-        },
-        "payments_overview": {
-          "description": "支払い概要と収益",
-          "keywords": "stripe, ダッシュボード, 収益, 売上",
-          "title": "支払い概要"
-        },
-        "payments_products": {
-          "description": "支払い商品と価格",
-          "keywords": "商品, 価格, stripe, ティア, プラン",
-          "title": "商品"
-        },
-        "users_add": {
-          "description": "新しいメンバーを招待",
-          "keywords": "招待, 追加, メンバー, 送信"
-        },
-        "users_audit_logs": {
-          "description": "組織のアクティビティログ",
-          "keywords": "監査, ログ, 履歴, セキュリティ, アクティビティ"
-        },
-        "org_branding": {
-          "description": "ロゴ、色、ビジュアルアイデンティティ",
-          "keywords": "ブランディング, ロゴ, 色, テーマ"
-        },
-        "org_landing": {
-          "description": "ランディングページのカスタマイズ",
-          "keywords": "ランディング, ホームページ, hero, ページ"
-        },
-        "org_seo": {
-          "description": "検索エンジン最適化",
-          "keywords": "seo, 検索, メタ, ランキング, google"
-        },
-        "org_ai": {
-          "description": "AI機能と設定",
-          "keywords": "ai, llm, gpt, openai, 生成"
-        },
-        "org_domains": {
-          "description": "カスタムドメイン",
-          "keywords": "ドメイン, dns, カスタム, サブドメイン, cname"
-        },
-        "org_automations": {
-          "description": "Webhookと外部連携",
-          "keywords": "webhooks, 自動化, zapier, 連携, トリガー"
-        },
-        "org_api": {
-          "description": "APIトークンとプログラマティックアクセス",
-          "keywords": "api, トークン, アクセス, プログラマティック, キー"
-        },
-        "org_sso": {
-          "description": "シングルサインオン設定",
-          "keywords": "sso, saml, oauth, エンタープライズ, ログイン"
-        },
-        "org_other": {
-          "description": "その他の組織設定",
-          "keywords": "その他, 高度, カスタム, 追加"
-        },
-        "payments_groups": {
-          "description": "支払いグループとバンドル",
-          "keywords": "グループ, バンドル, セット",
-          "title": "支払いグループ"
-        },
-        "payments_configuration": {
-          "description": "Stripeと支払いの設定",
-          "keywords": "設定, セットアップ, stripe, 構成, connect",
-          "title": "設定"
-        },
-        "payments_customers": {
-          "description": "顧客とサブスクライバー",
-          "keywords": "顧客, サブスクライバー, バイヤー, 支払い済み",
-          "title": "顧客"
-        },
-        "courses_migrate": {
-          "description": "他のLMSからコースをインポート",
-          "keywords": "インポート, 移行, 転送, lms, moodle, canvas",
-          "title": "コースの移行"
-        },
-        "account_general": {
-          "description": "個人アカウントの一般設定",
-          "keywords": "アカウント, 設定, メール, 名前, 言語"
-        },
-        "account_profile": {
-          "description": "プロフィールと自己紹介を編集",
-          "keywords": "プロフィール, 自己紹介, アバター, 写真, 公開"
-        },
-        "account_security": {
-          "description": "パスワードとセキュリティ設定",
-          "keywords": "パスワード, セキュリティ, 2fa, mfa, セッション"
-        },
-        "account_purchases": {
-          "description": "購入履歴とサブスクリプション",
-          "keywords": "購入, サブスクリプション, 請求, 履歴, レシート"
         }
       }
     }

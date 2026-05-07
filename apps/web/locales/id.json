@@ -180,8 +180,7 @@
     "creating": "Membuat...",
     "view_details": "Lihat Detail",
     "close": "Tutup",
-    "optional": "optional",
-    "analytics": "Analitik"
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
@@ -2169,9 +2168,7 @@
           "usage": "Usage",
           "other": "Lainnya",
           "domains": "Domains",
-          "sso": "SSO",
-          "seo": "SEO",
-          "automations": "Otomatisasi"
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -2231,8 +2228,6 @@
         "footer_text": "Teks Footer",
         "footer_text_placeholder": "Masukkan teks footer...",
         "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda",
-        "default_language": "Bahasa default",
-        "default_language_desc": "Bahasa yang dilihat pengunjung baru secara default dan bahasa yang digunakan untuk email yang dikirim atas nama organisasi ini. Anggota tetap dapat mengganti bahasa antarmuka mereka.",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"
@@ -3530,176 +3525,6 @@
             "creating": "Membuat tugas...",
             "success": "Tugas berhasil dibuat"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Cari",
-      "placeholder": "Cari halaman dan konten…",
-      "shortcut_hint": "⌘K",
-      "no_results": "Tidak ada hasil",
-      "loading": "Mencari…",
-      "type_to_search": "Ketik minimal 2 karakter untuk mencari konten",
-      "groups": {
-        "pages": "Halaman",
-        "courses": "Kursus",
-        "collections": "Koleksi",
-        "users": "Pengguna",
-        "communities": "Komunitas",
-        "discussions": "Diskusi",
-        "playgrounds": "Playground",
-        "podcasts": "Podcast"
-      },
-      "entries": {
-        "home": {
-          "description": "Ringkasan dasbor",
-          "keywords": "beranda, ringkasan, mulai, dasbor"
-        },
-        "courses": {
-          "description": "Kelola kursus Anda",
-          "keywords": "kursus, pelajaran, belajar, pelatihan, kelas"
-        },
-        "assignments": {
-          "description": "Kelola tugas",
-          "keywords": "tugas, pekerjaan rumah, latihan, pengumpulan"
-        },
-        "communities": {
-          "description": "Kelola komunitas",
-          "keywords": "forum, diskusi, anggota, postingan"
-        },
-        "podcasts": {
-          "description": "Kelola podcast",
-          "keywords": "audio, episode, acara"
-        },
-        "boards": {
-          "description": "Kelola papan",
-          "keywords": "kanban, proyek, tugas, daftar"
-        },
-        "playgrounds": {
-          "description": "Playground kode",
-          "keywords": "kode, sandbox, repl, pemrograman"
-        },
-        "analytics": {
-          "description": "Lihat dasbor analitik",
-          "keywords": "statistik, metrik, grafik, laporan"
-        },
-        "users": {
-          "description": "Kelola pengguna organisasi",
-          "keywords": "anggota, akun, orang"
-        },
-        "usergroups": {
-          "description": "Kelola grup pengguna",
-          "keywords": "tim, kohort, grup"
-        },
-        "roles": {
-          "description": "Kelola peran dan izin",
-          "keywords": "izin, akses, rbac, keamanan"
-        },
-        "signups": {
-          "description": "Tinjau pendaftaran",
-          "keywords": "registrasi, aplikasi, permintaan"
-        },
-        "org_general": {
-          "description": "Pengaturan umum organisasi",
-          "keywords": "nama, branding, slug, profil"
-        },
-        "org_features": {
-          "description": "Kelola fitur organisasi",
-          "keywords": "fitur, modul, sakelar"
-        },
-        "org_billing": {
-          "description": "Penagihan dan langganan",
-          "keywords": "paket, pembayaran, faktur, langganan"
-        },
-        "payments_overview": {
-          "description": "Ringkasan pembayaran dan pendapatan",
-          "keywords": "stripe, dasbor, pendapatan, penjualan",
-          "title": "Ringkasan Pembayaran"
-        },
-        "payments_products": {
-          "description": "Produk dan harga pembayaran",
-          "keywords": "produk, harga, stripe, tingkat, paket",
-          "title": "Produk"
-        },
-        "users_add": {
-          "description": "Undang anggota baru",
-          "keywords": "undang, tambah, anggota, kirim"
-        },
-        "users_audit_logs": {
-          "description": "Log aktivitas organisasi",
-          "keywords": "audit, log, riwayat, keamanan, aktivitas"
-        },
-        "org_branding": {
-          "description": "Logo, warna, dan identitas visual",
-          "keywords": "branding, logo, warna, tema"
-        },
-        "org_landing": {
-          "description": "Sesuaikan halaman landing Anda",
-          "keywords": "landing, beranda, hero, halaman"
-        },
-        "org_seo": {
-          "description": "Optimasi mesin pencari",
-          "keywords": "seo, pencarian, meta, peringkat, google"
-        },
-        "org_ai": {
-          "description": "Fitur dan konfigurasi AI",
-          "keywords": "ai, llm, gpt, openai, generasi"
-        },
-        "org_domains": {
-          "description": "Domain kustom",
-          "keywords": "domain, dns, kustom, subdomain, cname"
-        },
-        "org_automations": {
-          "description": "Webhook dan integrasi eksternal",
-          "keywords": "webhook, otomatisasi, zapier, integrasi, pemicu"
-        },
-        "org_api": {
-          "description": "Token API dan akses programatik",
-          "keywords": "api, token, akses, programatik, kunci"
-        },
-        "org_sso": {
-          "description": "Konfigurasi sign-on tunggal",
-          "keywords": "sso, saml, oauth, perusahaan, login"
-        },
-        "org_other": {
-          "description": "Pengaturan organisasi lainnya",
-          "keywords": "lain-lain, lanjutan, kustom, tambahan"
-        },
-        "payments_groups": {
-          "description": "Grup dan bundel pembayaran",
-          "keywords": "grup, bundel, set",
-          "title": "Grup Pembayaran"
-        },
-        "payments_configuration": {
-          "description": "Konfigurasi Stripe dan pembayaran",
-          "keywords": "konfigurasi, pengaturan, stripe, setup, connect",
-          "title": "Konfigurasi"
-        },
-        "payments_customers": {
-          "description": "Pelanggan dan pelanggan langganan",
-          "keywords": "pelanggan, pelanggan langganan, pembeli, dibayar",
-          "title": "Pelanggan"
-        },
-        "courses_migrate": {
-          "description": "Impor kursus dari LMS lain",
-          "keywords": "impor, migrasi, transfer, lms, moodle, canvas",
-          "title": "Migrasi Kursus"
-        },
-        "account_general": {
-          "description": "Pengaturan umum akun pribadi",
-          "keywords": "akun, pengaturan, email, nama, bahasa"
-        },
-        "account_profile": {
-          "description": "Edit profil dan bio Anda",
-          "keywords": "profil, bio, avatar, foto, publik"
-        },
-        "account_security": {
-          "description": "Kata sandi dan pengaturan keamanan",
-          "keywords": "kata sandi, keamanan, 2fa, mfa, sesi"
-        },
-        "account_purchases": {
-          "description": "Pembelian dan langganan Anda",
-          "keywords": "pembelian, langganan, tagihan, riwayat, tanda terima"
         }
       }
     }

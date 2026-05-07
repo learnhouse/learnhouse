@@ -180,8 +180,7 @@
     "boards": "บอร์ด",
     "close": "ปิด",
     "optional": "optional",
-    "playgrounds": "Playgrounds",
-    "analytics": "การวิเคราะห์"
+    "playgrounds": "Playgrounds"
   },
   "banner": {
     "viewing_as_guest": "คุณกำลังดู {{name}} ในฐานะแขก",
@@ -2169,9 +2168,7 @@
           "other": "อื่นๆ",
           "domains": "Domains",
           "sso": "SSO",
-          "usage": "Usage",
-          "seo": "SEO",
-          "automations": "การทำงานอัตโนมัติ"
+          "usage": "Usage"
         },
         "pages": {
           "general": {
@@ -2233,8 +2230,6 @@
         "footer_text": "ข้อความท้ายหน้า",
         "footer_text_placeholder": "ป้อนข้อความท้ายหน้า...",
         "footer_text_desc": "ข้อความที่กำหนดเองที่แสดงที่ด้านล่างของหน้าองค์กรของคุณ",
-        "default_language": "ภาษาเริ่มต้น",
-        "default_language_desc": "ภาษาที่ผู้เยี่ยมชมใหม่เห็นโดยค่าเริ่มต้นและภาษาที่ใช้สำหรับอีเมลที่ส่งในนามขององค์กรนี้ สมาชิกยังคงสามารถเปลี่ยนภาษาของอินเทอร์เฟซของตนได้",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"
@@ -3532,176 +3527,6 @@
             "creating": "กำลังสร้างงาน...",
             "success": "สร้างงานสำเร็จแล้ว"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "ค้นหา",
-      "placeholder": "ค้นหาหน้าและเนื้อหา…",
-      "shortcut_hint": "⌘K",
-      "no_results": "ไม่พบผลลัพธ์",
-      "loading": "กำลังค้นหา…",
-      "type_to_search": "พิมพ์อย่างน้อย 2 อักขระเพื่อค้นหาเนื้อหา",
-      "groups": {
-        "pages": "หน้า",
-        "courses": "คอร์ส",
-        "collections": "คอลเลกชัน",
-        "users": "ผู้ใช้",
-        "communities": "ชุมชน",
-        "discussions": "การสนทนา",
-        "playgrounds": "เพลย์กราวด์",
-        "podcasts": "พอดแคสต์"
-      },
-      "entries": {
-        "home": {
-          "description": "ภาพรวมแดชบอร์ด",
-          "keywords": "หน้าแรก, ภาพรวม, เริ่มต้น, แดชบอร์ด"
-        },
-        "courses": {
-          "description": "จัดการคอร์สของคุณ",
-          "keywords": "คอร์ส, บทเรียน, เรียนรู้, ฝึกอบรม, ชั้นเรียน"
-        },
-        "assignments": {
-          "description": "จัดการงานที่มอบหมาย",
-          "keywords": "งาน, การบ้าน, แบบฝึกหัด, การส่งงาน"
-        },
-        "communities": {
-          "description": "จัดการชุมชน",
-          "keywords": "ฟอรัม, การสนทนา, สมาชิก, โพสต์"
-        },
-        "podcasts": {
-          "description": "จัดการพอดแคสต์",
-          "keywords": "เสียง, ตอน, รายการ"
-        },
-        "boards": {
-          "description": "จัดการบอร์ด",
-          "keywords": "คันบัง, โปรเจกต์, งาน, รายการ"
-        },
-        "playgrounds": {
-          "description": "เพลย์กราวด์โค้ด",
-          "keywords": "โค้ด, แซนด์บ็อกซ์, repl, การเขียนโปรแกรม"
-        },
-        "analytics": {
-          "description": "ดูแดชบอร์ดการวิเคราะห์",
-          "keywords": "สถิติ, เมตริก, แผนภูมิ, รายงาน"
-        },
-        "users": {
-          "description": "จัดการผู้ใช้ขององค์กร",
-          "keywords": "สมาชิก, บัญชี, บุคคล"
-        },
-        "usergroups": {
-          "description": "จัดการกลุ่มผู้ใช้",
-          "keywords": "ทีม, กลุ่ม, รุ่น"
-        },
-        "roles": {
-          "description": "จัดการบทบาทและสิทธิ์",
-          "keywords": "สิทธิ์, การเข้าถึง, rbac, ความปลอดภัย"
-        },
-        "signups": {
-          "description": "ตรวจสอบการสมัคร",
-          "keywords": "การลงทะเบียน, ใบสมัคร, คำขอ"
-        },
-        "org_general": {
-          "description": "การตั้งค่าทั่วไปขององค์กร",
-          "keywords": "ชื่อ, แบรนด์, slug, โปรไฟล์"
-        },
-        "org_features": {
-          "description": "จัดการคุณสมบัติขององค์กร",
-          "keywords": "คุณสมบัติ, โมดูล, สวิตช์"
-        },
-        "org_billing": {
-          "description": "การเรียกเก็บเงินและการสมัครสมาชิก",
-          "keywords": "แผน, การชำระเงิน, ใบแจ้งหนี้, การสมัครสมาชิก"
-        },
-        "payments_overview": {
-          "description": "ภาพรวมการชำระเงินและรายได้",
-          "keywords": "stripe, แดชบอร์ด, รายได้, ยอดขาย",
-          "title": "ภาพรวมการชำระเงิน"
-        },
-        "payments_products": {
-          "description": "ผลิตภัณฑ์และราคาการชำระเงิน",
-          "keywords": "ผลิตภัณฑ์, ราคา, stripe, ระดับ, แผน",
-          "title": "ผลิตภัณฑ์"
-        },
-        "users_add": {
-          "description": "เชิญสมาชิกใหม่",
-          "keywords": "เชิญ, เพิ่ม, สมาชิก, ส่ง"
-        },
-        "users_audit_logs": {
-          "description": "บันทึกกิจกรรมขององค์กร",
-          "keywords": "ตรวจสอบ, บันทึก, ประวัติ, ความปลอดภัย, กิจกรรม"
-        },
-        "org_branding": {
-          "description": "โลโก้ สี และเอกลักษณ์ภาพ",
-          "keywords": "แบรนด์, โลโก้, สี, ธีม"
-        },
-        "org_landing": {
-          "description": "ปรับแต่งหน้า Landing ของคุณ",
-          "keywords": "landing, หน้าแรก, hero, หน้า"
-        },
-        "org_seo": {
-          "description": "การปรับแต่งเครื่องมือค้นหา",
-          "keywords": "seo, ค้นหา, meta, อันดับ, google"
-        },
-        "org_ai": {
-          "description": "คุณสมบัติและการกำหนดค่า AI",
-          "keywords": "ai, llm, gpt, openai, การสร้าง"
-        },
-        "org_domains": {
-          "description": "โดเมนที่กำหนดเอง",
-          "keywords": "โดเมน, dns, กำหนดเอง, โดเมนย่อย, cname"
-        },
-        "org_automations": {
-          "description": "Webhook และการผสานภายนอก",
-          "keywords": "webhook, การทำงานอัตโนมัติ, zapier, การผสาน, ทริกเกอร์"
-        },
-        "org_api": {
-          "description": "โทเค็น API และการเข้าถึงแบบโปรแกรม",
-          "keywords": "api, โทเค็น, การเข้าถึง, โปรแกรม, คีย์"
-        },
-        "org_sso": {
-          "description": "การกำหนดค่า Single Sign-On",
-          "keywords": "sso, saml, oauth, องค์กร, เข้าสู่ระบบ"
-        },
-        "org_other": {
-          "description": "การตั้งค่าองค์กรอื่นๆ",
-          "keywords": "อื่นๆ, ขั้นสูง, กำหนดเอง, เพิ่มเติม"
-        },
-        "payments_groups": {
-          "description": "กลุ่มและชุดการชำระเงิน",
-          "keywords": "กลุ่ม, ชุด, เซต",
-          "title": "กลุ่มการชำระเงิน"
-        },
-        "payments_configuration": {
-          "description": "การกำหนดค่า Stripe และการชำระเงิน",
-          "keywords": "การกำหนดค่า, การตั้งค่า, stripe, การติดตั้ง, connect",
-          "title": "การกำหนดค่า"
-        },
-        "payments_customers": {
-          "description": "ลูกค้าและสมาชิก",
-          "keywords": "ลูกค้า, สมาชิก, ผู้ซื้อ, ชำระแล้ว",
-          "title": "ลูกค้า"
-        },
-        "courses_migrate": {
-          "description": "นำเข้าคอร์สจาก LMS อื่น",
-          "keywords": "นำเข้า, ย้าย, ถ่ายโอน, lms, moodle, canvas",
-          "title": "ย้ายคอร์ส"
-        },
-        "account_general": {
-          "description": "การตั้งค่าทั่วไปของบัญชีส่วนตัว",
-          "keywords": "บัญชี, การตั้งค่า, อีเมล, ชื่อ, ภาษา"
-        },
-        "account_profile": {
-          "description": "แก้ไขโปรไฟล์และประวัติของคุณ",
-          "keywords": "โปรไฟล์, ประวัติ, อวตาร, รูป, สาธารณะ"
-        },
-        "account_security": {
-          "description": "การตั้งค่ารหัสผ่านและความปลอดภัย",
-          "keywords": "รหัสผ่าน, ความปลอดภัย, 2fa, mfa, เซสชัน"
-        },
-        "account_purchases": {
-          "description": "การซื้อและการสมัครสมาชิกของคุณ",
-          "keywords": "การซื้อ, การสมัครสมาชิก, การเรียกเก็บเงิน, ประวัติ, ใบเสร็จ"
         }
       }
     }

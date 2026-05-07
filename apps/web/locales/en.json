@@ -11,7 +11,6 @@
     "payments": "Payments",
     "playgrounds": "Playgrounds",
     "organization": "Organization",
-    "analytics": "Analytics",
     "dashboard": "Dashboard",
     "settings": "Settings",
     "language": "Language",
@@ -2423,9 +2422,7 @@
           "sso": "SSO",
           "features": "Features",
           "usage": "Usage",
-          "other": "Other",
-          "seo": "SEO",
-          "automations": "Automations"
+          "other": "Other"
         },
         "pages": {
           "general": {
@@ -2485,12 +2482,9 @@
         "footer_text": "Footer Text",
         "footer_text_placeholder": "Enter footer text...",
         "footer_text_desc": "Custom text displayed at the bottom of your organization pages",
-        "default_language": "Default Language",
-        "default_language_desc": "The language new visitors see by default and the language used for emails sent on behalf of this organization. Members can still switch their own UI language.",
         "watermark_label": "\"Made with LearnHouse\" watermark",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_ee": "Hidden by your Enterprise Edition license"
+        "watermark_free_plan": "Watermark is always shown on the free plan"
       },
       "images": {
         "title": "Images & Previews",
@@ -3817,176 +3811,6 @@
             "creating": "Creating assignment...",
             "success": "Assignment created successfully"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Search",
-      "placeholder": "Search pages and content…",
-      "shortcut_hint": "⌘K",
-      "no_results": "No results found",
-      "loading": "Searching…",
-      "type_to_search": "Type at least 2 characters to search content",
-      "groups": {
-        "pages": "Pages",
-        "courses": "Courses",
-        "collections": "Collections",
-        "users": "Users",
-        "communities": "Communities",
-        "discussions": "Discussions",
-        "playgrounds": "Playgrounds",
-        "podcasts": "Podcasts"
-      },
-      "entries": {
-        "home": {
-          "description": "Dashboard overview",
-          "keywords": "home, overview, start, dashboard"
-        },
-        "courses": {
-          "description": "Manage your courses",
-          "keywords": "courses, lessons, learn, training, classes"
-        },
-        "assignments": {
-          "description": "Manage assignments",
-          "keywords": "tasks, homework, exercises, submissions"
-        },
-        "communities": {
-          "description": "Manage communities",
-          "keywords": "forums, discussions, members, posts"
-        },
-        "podcasts": {
-          "description": "Manage podcasts",
-          "keywords": "audio, episodes, shows"
-        },
-        "boards": {
-          "description": "Manage boards",
-          "keywords": "kanban, project, tasks, lists"
-        },
-        "playgrounds": {
-          "description": "Coding playgrounds",
-          "keywords": "code, sandbox, repl, programming"
-        },
-        "analytics": {
-          "description": "View analytics dashboards",
-          "keywords": "stats, metrics, charts, reports, insights"
-        },
-        "users": {
-          "description": "Manage organization users",
-          "keywords": "members, accounts, people"
-        },
-        "usergroups": {
-          "description": "Manage user groups",
-          "keywords": "teams, cohorts, groups"
-        },
-        "roles": {
-          "description": "Manage roles & permissions",
-          "keywords": "permissions, access, rbac, security"
-        },
-        "signups": {
-          "description": "Review user signups",
-          "keywords": "registrations, applications, requests"
-        },
-        "org_general": {
-          "description": "Organization general settings",
-          "keywords": "name, branding, slug, profile"
-        },
-        "org_features": {
-          "description": "Manage organization features",
-          "keywords": "features, modules, toggles"
-        },
-        "org_billing": {
-          "description": "Billing & subscription",
-          "keywords": "plan, payments, invoice, subscription"
-        },
-        "payments_overview": {
-          "description": "Payments overview and revenue",
-          "keywords": "stripe, dashboard, revenue, sales",
-          "title": "Payments Overview"
-        },
-        "payments_products": {
-          "description": "Payment products and pricing",
-          "keywords": "products, prices, stripe, tiers, plans",
-          "title": "Products"
-        },
-        "users_add": {
-          "description": "Invite new members",
-          "keywords": "invite, add, members, send"
-        },
-        "users_audit_logs": {
-          "description": "Organization activity log",
-          "keywords": "audit, logs, history, security, activity"
-        },
-        "org_branding": {
-          "description": "Logo, colors, and visual identity",
-          "keywords": "branding, logo, colors, theme, look"
-        },
-        "org_landing": {
-          "description": "Customize your landing page",
-          "keywords": "landing, homepage, hero, page"
-        },
-        "org_seo": {
-          "description": "Search engine optimization",
-          "keywords": "seo, search, meta, ranking, google"
-        },
-        "org_ai": {
-          "description": "AI features and configuration",
-          "keywords": "ai, llm, gpt, openai, generation"
-        },
-        "org_domains": {
-          "description": "Custom domains",
-          "keywords": "domain, dns, custom, subdomain, cname"
-        },
-        "org_automations": {
-          "description": "Webhooks and external integrations",
-          "keywords": "webhooks, automations, zapier, integrations, triggers"
-        },
-        "org_api": {
-          "description": "API tokens and programmatic access",
-          "keywords": "api, tokens, access, programmatic, keys"
-        },
-        "org_sso": {
-          "description": "Single sign-on configuration",
-          "keywords": "sso, saml, oauth, enterprise, login"
-        },
-        "org_other": {
-          "description": "Other organization settings",
-          "keywords": "misc, advanced, custom, extra"
-        },
-        "payments_groups": {
-          "description": "Payment groups and bundles",
-          "keywords": "groups, bundles, sets",
-          "title": "Payment Groups"
-        },
-        "payments_configuration": {
-          "description": "Stripe and payment configuration",
-          "keywords": "configuration, settings, stripe, setup, connect",
-          "title": "Configuration"
-        },
-        "payments_customers": {
-          "description": "Customers and subscribers",
-          "keywords": "customers, subscribers, buyers, paid",
-          "title": "Customers"
-        },
-        "courses_migrate": {
-          "description": "Import courses from another LMS",
-          "keywords": "import, migrate, transfer, lms, moodle, canvas",
-          "title": "Migrate Courses"
-        },
-        "account_general": {
-          "description": "Personal account general settings",
-          "keywords": "account, settings, email, name, language"
-        },
-        "account_profile": {
-          "description": "Edit your profile and bio",
-          "keywords": "profile, bio, avatar, picture, public"
-        },
-        "account_security": {
-          "description": "Password and security settings",
-          "keywords": "password, security, 2fa, mfa, sessions"
-        },
-        "account_purchases": {
-          "description": "Your purchases and subscriptions",
-          "keywords": "purchases, subscriptions, billing, history, receipts"
         }
       }
     }

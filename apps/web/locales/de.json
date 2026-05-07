@@ -180,8 +180,7 @@
     "creating": "Wird erstellt...",
     "view_details": "Details anzeigen",
     "close": "Schließen",
-    "optional": "optional",
-    "analytics": "Analytik"
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -2146,9 +2145,7 @@
           "usage": "Usage",
           "other": "Sonstiges",
           "sso": "SSO",
-          "domains": "Domains",
-          "seo": "SEO",
-          "automations": "Automatisierungen"
+          "domains": "Domains"
         },
         "pages": {
           "general": {
@@ -2208,8 +2205,6 @@
         "footer_text": "Fußzeilentext",
         "footer_text_placeholder": "Fußzeilentext eingeben...",
         "footer_text_desc": "Benutzerdefinierter Text, der unten auf Ihren Organisationsseiten angezeigt wird",
-        "default_language": "Standardsprache",
-        "default_language_desc": "Die Sprache, die neue Besucher standardmäßig sehen und die für E-Mails im Namen dieser Organisation verwendet wird. Mitglieder können ihre eigene Oberflächensprache weiterhin ändern.",
         "watermark_desc": "LearnHouse-Wasserzeichen auf Ihren Organisationsseiten anzeigen",
         "watermark_free_plan": "Das Wasserzeichen wird im kostenlosen Plan immer angezeigt",
         "watermark_label": "\"Made with LearnHouse\"-Wasserzeichen"
@@ -3507,176 +3502,6 @@
             "creating": "Aufgabe wird erstellt...",
             "success": "Aufgabe erfolgreich erstellt"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Suchen",
-      "placeholder": "Seiten und Inhalte durchsuchen…",
-      "shortcut_hint": "⌘K",
-      "no_results": "Keine Ergebnisse gefunden",
-      "loading": "Suche läuft…",
-      "type_to_search": "Geben Sie mindestens 2 Zeichen ein, um Inhalte zu suchen",
-      "groups": {
-        "pages": "Seiten",
-        "courses": "Kurse",
-        "collections": "Sammlungen",
-        "users": "Benutzer",
-        "communities": "Communitys",
-        "discussions": "Diskussionen",
-        "playgrounds": "Spielwiesen",
-        "podcasts": "Podcasts"
-      },
-      "entries": {
-        "home": {
-          "description": "Dashboard-Übersicht",
-          "keywords": "startseite, übersicht, start, dashboard"
-        },
-        "courses": {
-          "description": "Verwalten Sie Ihre Kurse",
-          "keywords": "kurse, lektionen, lernen, schulung, klassen"
-        },
-        "assignments": {
-          "description": "Aufgaben verwalten",
-          "keywords": "aufgaben, hausaufgaben, übungen, abgaben"
-        },
-        "communities": {
-          "description": "Communitys verwalten",
-          "keywords": "foren, diskussionen, mitglieder, beiträge"
-        },
-        "podcasts": {
-          "description": "Podcasts verwalten",
-          "keywords": "audio, episoden, sendungen"
-        },
-        "boards": {
-          "description": "Boards verwalten",
-          "keywords": "kanban, projekt, aufgaben, listen"
-        },
-        "playgrounds": {
-          "description": "Code-Spielwiesen",
-          "keywords": "code, sandbox, repl, programmierung"
-        },
-        "analytics": {
-          "description": "Analyse-Dashboards anzeigen",
-          "keywords": "statistiken, metriken, diagramme, berichte"
-        },
-        "users": {
-          "description": "Organisationsbenutzer verwalten",
-          "keywords": "mitglieder, konten, personen"
-        },
-        "usergroups": {
-          "description": "Benutzergruppen verwalten",
-          "keywords": "teams, kohorten, gruppen"
-        },
-        "roles": {
-          "description": "Rollen und Berechtigungen verwalten",
-          "keywords": "berechtigungen, zugriff, rbac, sicherheit"
-        },
-        "signups": {
-          "description": "Anmeldungen prüfen",
-          "keywords": "registrierungen, anträge, anfragen"
-        },
-        "org_general": {
-          "description": "Allgemeine Organisationseinstellungen",
-          "keywords": "name, branding, slug, profil"
-        },
-        "org_features": {
-          "description": "Organisationsfunktionen verwalten",
-          "keywords": "funktionen, module, schalter"
-        },
-        "org_billing": {
-          "description": "Abrechnung und Abonnement",
-          "keywords": "plan, zahlungen, rechnung, abonnement"
-        },
-        "payments_overview": {
-          "description": "Zahlungsübersicht und Umsatz",
-          "keywords": "stripe, dashboard, umsatz, verkäufe",
-          "title": "Zahlungsübersicht"
-        },
-        "payments_products": {
-          "description": "Zahlungsprodukte und Preise",
-          "keywords": "produkte, preise, stripe, stufen, pläne",
-          "title": "Produkte"
-        },
-        "users_add": {
-          "description": "Neue Mitglieder einladen",
-          "keywords": "einladen, hinzufügen, mitglieder, senden"
-        },
-        "users_audit_logs": {
-          "description": "Aktivitätsprotokoll der Organisation",
-          "keywords": "audit, protokolle, verlauf, sicherheit, aktivität"
-        },
-        "org_branding": {
-          "description": "Logo, Farben und visuelle Identität",
-          "keywords": "branding, logo, farben, thema"
-        },
-        "org_landing": {
-          "description": "Landingpage anpassen",
-          "keywords": "landing, startseite, hero, seite"
-        },
-        "org_seo": {
-          "description": "Suchmaschinenoptimierung",
-          "keywords": "seo, suche, meta, ranking, google"
-        },
-        "org_ai": {
-          "description": "KI-Funktionen und Konfiguration",
-          "keywords": "ki, llm, gpt, openai, generierung"
-        },
-        "org_domains": {
-          "description": "Benutzerdefinierte Domains",
-          "keywords": "domain, dns, benutzerdefiniert, subdomain, cname"
-        },
-        "org_automations": {
-          "description": "Webhooks und externe Integrationen",
-          "keywords": "webhooks, automatisierungen, zapier, integrationen, trigger"
-        },
-        "org_api": {
-          "description": "API-Token und programmatischer Zugriff",
-          "keywords": "api, token, zugriff, programmatisch, schlüssel"
-        },
-        "org_sso": {
-          "description": "Single Sign-On Konfiguration",
-          "keywords": "sso, saml, oauth, unternehmen, login"
-        },
-        "org_other": {
-          "description": "Weitere Organisationseinstellungen",
-          "keywords": "sonstiges, erweitert, benutzerdefiniert, extra"
-        },
-        "payments_groups": {
-          "description": "Zahlungsgruppen und Bundles",
-          "keywords": "gruppen, bundles, sets",
-          "title": "Zahlungsgruppen"
-        },
-        "payments_configuration": {
-          "description": "Stripe- und Zahlungskonfiguration",
-          "keywords": "konfiguration, einstellungen, stripe, einrichtung, connect",
-          "title": "Konfiguration"
-        },
-        "payments_customers": {
-          "description": "Kunden und Abonnenten",
-          "keywords": "kunden, abonnenten, käufer, bezahlt",
-          "title": "Kunden"
-        },
-        "courses_migrate": {
-          "description": "Kurse von einem anderen LMS importieren",
-          "keywords": "import, migration, transfer, lms, moodle, canvas",
-          "title": "Kurse migrieren"
-        },
-        "account_general": {
-          "description": "Allgemeine Einstellungen des persönlichen Kontos",
-          "keywords": "konto, einstellungen, email, name, sprache"
-        },
-        "account_profile": {
-          "description": "Profil und Biografie bearbeiten",
-          "keywords": "profil, bio, avatar, bild, öffentlich"
-        },
-        "account_security": {
-          "description": "Passwort- und Sicherheitseinstellungen",
-          "keywords": "passwort, sicherheit, 2fa, mfa, sitzungen"
-        },
-        "account_purchases": {
-          "description": "Ihre Käufe und Abonnements",
-          "keywords": "käufe, abonnements, abrechnung, verlauf, belege"
         }
       }
     }
