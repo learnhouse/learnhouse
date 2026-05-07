@@ -180,8 +180,7 @@
     "creating": "बनाया जा रहा है...",
     "view_details": "विवरण देखें",
     "close": "बंद करें",
-    "optional": "optional",
-    "analytics": "विश्लेषण"
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "आप {{name}} को अतिथि के रूप में देख रहे हैं।",
@@ -2169,9 +2168,7 @@
           "usage": "Usage",
           "other": "अन्य",
           "domains": "Domains",
-          "sso": "SSO",
-          "seo": "SEO",
-          "automations": "स्वचालन"
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -2231,8 +2228,6 @@
         "footer_text": "फ़ुटर टेक्स्ट",
         "footer_text_placeholder": "फ़ुटर टेक्स्ट दर्ज करें...",
         "footer_text_desc": "आपके संगठन के पृष्ठों के नीचे प्रदर्शित कस्टम टेक्स्ट",
-        "default_language": "डिफ़ॉल्ट भाषा",
-        "default_language_desc": "नए विज़िटर को डिफ़ॉल्ट रूप से दिखाई देने वाली भाषा और इस संस्था की ओर से भेजे जाने वाले ईमेल में उपयोग की जाने वाली भाषा। सदस्य अब भी अपनी UI भाषा बदल सकते हैं।",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"
@@ -3530,176 +3525,6 @@
             "creating": "असाइनमेंट बनाया जा रहा है...",
             "success": "असाइनमेंट सफलतापूर्वक बनाया गया"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "खोजें",
-      "placeholder": "पृष्ठ और सामग्री खोजें…",
-      "shortcut_hint": "⌘K",
-      "no_results": "कोई परिणाम नहीं मिला",
-      "loading": "खोज रहे हैं…",
-      "type_to_search": "सामग्री खोजने के लिए कम से कम 2 अक्षर दर्ज करें",
-      "groups": {
-        "pages": "पृष्ठ",
-        "courses": "पाठ्यक्रम",
-        "collections": "संग्रह",
-        "users": "उपयोगकर्ता",
-        "communities": "समुदाय",
-        "discussions": "चर्चाएँ",
-        "playgrounds": "प्लेग्राउंड",
-        "podcasts": "पॉडकास्ट"
-      },
-      "entries": {
-        "home": {
-          "description": "डैशबोर्ड अवलोकन",
-          "keywords": "होम, अवलोकन, शुरू, डैशबोर्ड"
-        },
-        "courses": {
-          "description": "अपने पाठ्यक्रम प्रबंधित करें",
-          "keywords": "पाठ्यक्रम, पाठ, सीखें, प्रशिक्षण, कक्षाएँ"
-        },
-        "assignments": {
-          "description": "असाइनमेंट प्रबंधित करें",
-          "keywords": "कार्य, गृहकार्य, अभ्यास, सबमिशन"
-        },
-        "communities": {
-          "description": "समुदाय प्रबंधित करें",
-          "keywords": "फोरम, चर्चाएँ, सदस्य, पोस्ट"
-        },
-        "podcasts": {
-          "description": "पॉडकास्ट प्रबंधित करें",
-          "keywords": "ऑडियो, एपिसोड, शो"
-        },
-        "boards": {
-          "description": "बोर्ड प्रबंधित करें",
-          "keywords": "कानबन, प्रोजेक्ट, कार्य, सूचियाँ"
-        },
-        "playgrounds": {
-          "description": "कोड प्लेग्राउंड",
-          "keywords": "कोड, सैंडबॉक्स, repl, प्रोग्रामिंग"
-        },
-        "analytics": {
-          "description": "विश्लेषण डैशबोर्ड देखें",
-          "keywords": "आँकड़े, मेट्रिक्स, चार्ट, रिपोर्ट"
-        },
-        "users": {
-          "description": "संगठन के उपयोगकर्ताओं को प्रबंधित करें",
-          "keywords": "सदस्य, खाते, लोग"
-        },
-        "usergroups": {
-          "description": "उपयोगकर्ता समूह प्रबंधित करें",
-          "keywords": "टीमें, समूह"
-        },
-        "roles": {
-          "description": "भूमिकाएँ और अनुमतियाँ प्रबंधित करें",
-          "keywords": "अनुमतियाँ, पहुँच, rbac, सुरक्षा"
-        },
-        "signups": {
-          "description": "साइनअप की समीक्षा करें",
-          "keywords": "पंजीकरण, आवेदन, अनुरोध"
-        },
-        "org_general": {
-          "description": "संगठन सामान्य सेटिंग्स",
-          "keywords": "नाम, ब्रांडिंग, slug, प्रोफ़ाइल"
-        },
-        "org_features": {
-          "description": "संगठन सुविधाएँ प्रबंधित करें",
-          "keywords": "सुविधाएँ, मॉड्यूल, टॉगल"
-        },
-        "org_billing": {
-          "description": "बिलिंग और सदस्यता",
-          "keywords": "योजना, भुगतान, चालान, सदस्यता"
-        },
-        "payments_overview": {
-          "description": "भुगतान अवलोकन और राजस्व",
-          "keywords": "stripe, डैशबोर्ड, राजस्व, बिक्री",
-          "title": "भुगतान अवलोकन"
-        },
-        "payments_products": {
-          "description": "भुगतान उत्पाद और मूल्य निर्धारण",
-          "keywords": "उत्पाद, मूल्य, stripe, स्तर, योजनाएँ",
-          "title": "उत्पाद"
-        },
-        "users_add": {
-          "description": "नए सदस्यों को आमंत्रित करें",
-          "keywords": "आमंत्रित, जोड़ें, सदस्य, भेजें"
-        },
-        "users_audit_logs": {
-          "description": "संगठन गतिविधि लॉग",
-          "keywords": "ऑडिट, लॉग, इतिहास, सुरक्षा, गतिविधि"
-        },
-        "org_branding": {
-          "description": "लोगो, रंग और दृश्य पहचान",
-          "keywords": "ब्रांडिंग, लोगो, रंग, थीम"
-        },
-        "org_landing": {
-          "description": "अपना लैंडिंग पेज अनुकूलित करें",
-          "keywords": "लैंडिंग, होमपेज, hero, पेज"
-        },
-        "org_seo": {
-          "description": "खोज इंजन अनुकूलन",
-          "keywords": "seo, खोज, मेटा, रैंकिंग, google"
-        },
-        "org_ai": {
-          "description": "एआई सुविधाएँ और कॉन्फ़िगरेशन",
-          "keywords": "एआई, llm, gpt, openai, जेनरेशन"
-        },
-        "org_domains": {
-          "description": "कस्टम डोमेन",
-          "keywords": "डोमेन, dns, कस्टम, सबडोमेन, cname"
-        },
-        "org_automations": {
-          "description": "वेबहुक और बाहरी एकीकरण",
-          "keywords": "वेबहुक, स्वचालन, zapier, एकीकरण, ट्रिगर"
-        },
-        "org_api": {
-          "description": "एपीआई टोकन और प्रोग्रामेटिक पहुँच",
-          "keywords": "एपीआई, टोकन, पहुँच, प्रोग्रामेटिक, कुंजी"
-        },
-        "org_sso": {
-          "description": "सिंगल साइन-ऑन कॉन्फ़िगरेशन",
-          "keywords": "sso, saml, oauth, उद्यम, लॉगिन"
-        },
-        "org_other": {
-          "description": "अन्य संगठन सेटिंग्स",
-          "keywords": "विविध, उन्नत, कस्टम, अतिरिक्त"
-        },
-        "payments_groups": {
-          "description": "भुगतान समूह और बंडल",
-          "keywords": "समूह, बंडल, सेट",
-          "title": "भुगतान समूह"
-        },
-        "payments_configuration": {
-          "description": "Stripe और भुगतान कॉन्फ़िगरेशन",
-          "keywords": "कॉन्फ़िगरेशन, सेटिंग्स, stripe, सेटअप, connect",
-          "title": "कॉन्फ़िगरेशन"
-        },
-        "payments_customers": {
-          "description": "ग्राहक और सब्सक्राइबर",
-          "keywords": "ग्राहक, सब्सक्राइबर, खरीदार, भुगतान किया",
-          "title": "ग्राहक"
-        },
-        "courses_migrate": {
-          "description": "किसी अन्य LMS से पाठ्यक्रम आयात करें",
-          "keywords": "आयात, माइग्रेट, स्थानांतरण, lms, moodle, canvas",
-          "title": "पाठ्यक्रम माइग्रेट करें"
-        },
-        "account_general": {
-          "description": "व्यक्तिगत खाता सामान्य सेटिंग्स",
-          "keywords": "खाता, सेटिंग्स, ईमेल, नाम, भाषा"
-        },
-        "account_profile": {
-          "description": "अपनी प्रोफ़ाइल और बायो संपादित करें",
-          "keywords": "प्रोफ़ाइल, बायो, अवतार, फ़ोटो, सार्वजनिक"
-        },
-        "account_security": {
-          "description": "पासवर्ड और सुरक्षा सेटिंग्स",
-          "keywords": "पासवर्ड, सुरक्षा, 2fa, mfa, सत्र"
-        },
-        "account_purchases": {
-          "description": "आपकी खरीदारी और सदस्यताएं",
-          "keywords": "खरीदारी, सदस्यताएं, बिलिंग, इतिहास, रसीदें"
         }
       }
     }

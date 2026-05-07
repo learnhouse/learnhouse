@@ -180,8 +180,7 @@
     "boards": "Доски",
     "close": "Закрыть",
     "optional": "необязательно",
-    "playgrounds": "Площадки",
-    "analytics": "Аналитика"
+    "playgrounds": "Площадки"
   },
   "banner": {
     "viewing_as_guest": "Вы просматриваете {{name}} как гость.",
@@ -2169,9 +2168,7 @@
           "other": "Другое",
           "domains": "Домены",
           "sso": "SSO",
-          "usage": "Использование",
-          "seo": "SEO",
-          "automations": "Автоматизация"
+          "usage": "Использование"
         },
         "pages": {
           "general": {
@@ -2233,8 +2230,6 @@
         "footer_text": "Текст подвала",
         "footer_text_placeholder": "Введите текст подвала...",
         "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации",
-        "default_language": "Язык по умолчанию",
-        "default_language_desc": "Язык, который новые посетители видят по умолчанию и который используется в письмах, отправляемых от имени этой организации. Участники по-прежнему могут менять язык своего интерфейса.",
         "watermark_desc": "Показывать водяной знак LearnHouse на страницах организации",
         "watermark_free_plan": "Водяной знак всегда отображается на бесплатном плане",
         "watermark_label": "Водяной знак \"Made with LearnHouse\""
@@ -3532,176 +3527,6 @@
             "creating": "Создание задания...",
             "success": "Задание успешно создано"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Поиск",
-      "placeholder": "Поиск страниц и контента…",
-      "shortcut_hint": "⌘K",
-      "no_results": "Ничего не найдено",
-      "loading": "Поиск…",
-      "type_to_search": "Введите не менее 2 символов для поиска контента",
-      "groups": {
-        "pages": "Страницы",
-        "courses": "Курсы",
-        "collections": "Коллекции",
-        "users": "Пользователи",
-        "communities": "Сообщества",
-        "discussions": "Обсуждения",
-        "playgrounds": "Песочницы",
-        "podcasts": "Подкасты"
-      },
-      "entries": {
-        "home": {
-          "description": "Обзор панели",
-          "keywords": "главная, обзор, старт, панель"
-        },
-        "courses": {
-          "description": "Управление курсами",
-          "keywords": "курсы, уроки, обучение, тренинг, классы"
-        },
-        "assignments": {
-          "description": "Управление заданиями",
-          "keywords": "задачи, домашние задания, упражнения"
-        },
-        "communities": {
-          "description": "Управление сообществами",
-          "keywords": "форумы, обсуждения, участники, посты"
-        },
-        "podcasts": {
-          "description": "Управление подкастами",
-          "keywords": "аудио, эпизоды, передачи"
-        },
-        "boards": {
-          "description": "Управление досками",
-          "keywords": "канбан, проект, задачи, списки"
-        },
-        "playgrounds": {
-          "description": "Песочницы кода",
-          "keywords": "код, песочница, repl, программирование"
-        },
-        "analytics": {
-          "description": "Просмотр панелей аналитики",
-          "keywords": "статистика, метрики, графики, отчёты"
-        },
-        "users": {
-          "description": "Управление пользователями организации",
-          "keywords": "участники, аккаунты, люди"
-        },
-        "usergroups": {
-          "description": "Управление группами пользователей",
-          "keywords": "команды, когорты, группы"
-        },
-        "roles": {
-          "description": "Управление ролями и правами",
-          "keywords": "разрешения, доступ, rbac, безопасность"
-        },
-        "signups": {
-          "description": "Просмотр регистраций",
-          "keywords": "регистрации, заявки, запросы"
-        },
-        "org_general": {
-          "description": "Общие настройки организации",
-          "keywords": "название, бренд, slug, профиль"
-        },
-        "org_features": {
-          "description": "Управление функциями организации",
-          "keywords": "функции, модули, переключатели"
-        },
-        "org_billing": {
-          "description": "Биллинг и подписка",
-          "keywords": "план, платежи, счёт, подписка"
-        },
-        "payments_overview": {
-          "description": "Обзор платежей и доходов",
-          "keywords": "stripe, панель, доходы, продажи",
-          "title": "Обзор платежей"
-        },
-        "payments_products": {
-          "description": "Платёжные продукты и цены",
-          "keywords": "продукты, цены, stripe, уровни, планы",
-          "title": "Продукты"
-        },
-        "users_add": {
-          "description": "Пригласить новых участников",
-          "keywords": "пригласить, добавить, участники, отправить"
-        },
-        "users_audit_logs": {
-          "description": "Журнал активности организации",
-          "keywords": "аудит, журналы, история, безопасность, активность"
-        },
-        "org_branding": {
-          "description": "Логотип, цвета и визуальный стиль",
-          "keywords": "брендинг, логотип, цвета, тема"
-        },
-        "org_landing": {
-          "description": "Настройка лендинга",
-          "keywords": "лендинг, главная, hero, страница"
-        },
-        "org_seo": {
-          "description": "Поисковая оптимизация",
-          "keywords": "seo, поиск, мета, рейтинг, google"
-        },
-        "org_ai": {
-          "description": "Функции и настройки ИИ",
-          "keywords": "ии, llm, gpt, openai, генерация"
-        },
-        "org_domains": {
-          "description": "Свои домены",
-          "keywords": "домен, dns, свой, поддомен, cname"
-        },
-        "org_automations": {
-          "description": "Вебхуки и внешние интеграции",
-          "keywords": "вебхуки, автоматизация, zapier, интеграции, триггеры"
-        },
-        "org_api": {
-          "description": "API-токены и программный доступ",
-          "keywords": "api, токены, доступ, программный, ключи"
-        },
-        "org_sso": {
-          "description": "Настройка единого входа",
-          "keywords": "sso, saml, oauth, корпоративный, вход"
-        },
-        "org_other": {
-          "description": "Другие настройки организации",
-          "keywords": "разное, расширенные, свои, дополнительно"
-        },
-        "payments_groups": {
-          "description": "Группы и пакеты платежей",
-          "keywords": "группы, пакеты, наборы",
-          "title": "Группы платежей"
-        },
-        "payments_configuration": {
-          "description": "Настройка Stripe и платежей",
-          "keywords": "настройка, параметры, stripe, установка, connect",
-          "title": "Настройка"
-        },
-        "payments_customers": {
-          "description": "Клиенты и подписчики",
-          "keywords": "клиенты, подписчики, покупатели, оплаченные",
-          "title": "Клиенты"
-        },
-        "courses_migrate": {
-          "description": "Импорт курсов из другой LMS",
-          "keywords": "импорт, миграция, перенос, lms, moodle, canvas",
-          "title": "Перенос курсов"
-        },
-        "account_general": {
-          "description": "Общие настройки личного аккаунта",
-          "keywords": "аккаунт, настройки, email, имя, язык"
-        },
-        "account_profile": {
-          "description": "Редактирование профиля и биографии",
-          "keywords": "профиль, био, аватар, фото, публичный"
-        },
-        "account_security": {
-          "description": "Пароль и настройки безопасности",
-          "keywords": "пароль, безопасность, 2fa, mfa, сессии"
-        },
-        "account_purchases": {
-          "description": "Ваши покупки и подписки",
-          "keywords": "покупки, подписки, оплата, история, чеки"
         }
       }
     }

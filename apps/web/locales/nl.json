@@ -180,8 +180,7 @@
     "boards": "Borden",
     "close": "Sluiten",
     "optional": "optioneel",
-    "playgrounds": "Playgrounds",
-    "analytics": "Analyse"
+    "playgrounds": "Playgrounds"
   },
   "banner": {
     "viewing_as_guest": "Je bekijkt {{name}} als gast.",
@@ -2146,9 +2145,7 @@
           "other": "Overig",
           "domains": "Domeinen",
           "sso": "SSO",
-          "usage": "Gebruik",
-          "seo": "SEO",
-          "automations": "Automatiseringen"
+          "usage": "Gebruik"
         },
         "pages": {
           "general": {
@@ -2210,8 +2207,6 @@
         "footer_text": "Voettekst",
         "footer_text_placeholder": "Voer voettekst in...",
         "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven",
-        "default_language": "Standaardtaal",
-        "default_language_desc": "De taal die nieuwe bezoekers standaard zien en die wordt gebruikt voor e-mails namens deze organisatie. Leden kunnen hun eigen interfacetaal nog steeds wijzigen.",
         "watermark_desc": "LearnHouse-watermerk tonen op organisatiepagina's",
         "watermark_free_plan": "Watermerk wordt altijd getoond bij het gratis plan",
         "watermark_label": "\"Made with LearnHouse\"-watermerk"
@@ -3509,176 +3504,6 @@
             "creating": "Opdracht aanmaken...",
             "success": "Opdracht succesvol aangemaakt"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Zoeken",
-      "placeholder": "Zoek pagina's en inhoud…",
-      "shortcut_hint": "⌘K",
-      "no_results": "Geen resultaten gevonden",
-      "loading": "Bezig met zoeken…",
-      "type_to_search": "Typ ten minste 2 tekens om inhoud te zoeken",
-      "groups": {
-        "pages": "Pagina's",
-        "courses": "Cursussen",
-        "collections": "Collecties",
-        "users": "Gebruikers",
-        "communities": "Communities",
-        "discussions": "Discussies",
-        "playgrounds": "Speeltuinen",
-        "podcasts": "Podcasts"
-      },
-      "entries": {
-        "home": {
-          "description": "Dashboardoverzicht",
-          "keywords": "home, overzicht, start, dashboard"
-        },
-        "courses": {
-          "description": "Beheer je cursussen",
-          "keywords": "cursussen, lessen, leren, training, klassen"
-        },
-        "assignments": {
-          "description": "Beheer opdrachten",
-          "keywords": "taken, huiswerk, oefeningen, inzendingen"
-        },
-        "communities": {
-          "description": "Beheer communities",
-          "keywords": "forums, discussies, leden, berichten"
-        },
-        "podcasts": {
-          "description": "Beheer podcasts",
-          "keywords": "audio, afleveringen, shows"
-        },
-        "boards": {
-          "description": "Beheer borden",
-          "keywords": "kanban, project, taken, lijsten"
-        },
-        "playgrounds": {
-          "description": "Code-speeltuinen",
-          "keywords": "code, sandbox, repl, programmeren"
-        },
-        "analytics": {
-          "description": "Bekijk analysedashboards",
-          "keywords": "statistieken, metrieken, grafieken, rapporten"
-        },
-        "users": {
-          "description": "Beheer gebruikers van de organisatie",
-          "keywords": "leden, accounts, mensen"
-        },
-        "usergroups": {
-          "description": "Beheer gebruikersgroepen",
-          "keywords": "teams, cohorten, groepen"
-        },
-        "roles": {
-          "description": "Beheer rollen en machtigingen",
-          "keywords": "machtigingen, toegang, rbac, beveiliging"
-        },
-        "signups": {
-          "description": "Aanmeldingen bekijken",
-          "keywords": "registraties, aanvragen, verzoeken"
-        },
-        "org_general": {
-          "description": "Algemene organisatie-instellingen",
-          "keywords": "naam, branding, slug, profiel"
-        },
-        "org_features": {
-          "description": "Beheer organisatiefuncties",
-          "keywords": "functies, modules, schakelaars"
-        },
-        "org_billing": {
-          "description": "Facturering en abonnement",
-          "keywords": "abonnement, betalingen, factuur"
-        },
-        "payments_overview": {
-          "description": "Betalingsoverzicht en omzet",
-          "keywords": "stripe, dashboard, omzet, verkopen",
-          "title": "Betalingsoverzicht"
-        },
-        "payments_products": {
-          "description": "Betaalproducten en prijzen",
-          "keywords": "producten, prijzen, stripe, niveaus, plannen",
-          "title": "Producten"
-        },
-        "users_add": {
-          "description": "Nieuwe leden uitnodigen",
-          "keywords": "uitnodigen, toevoegen, leden, verzenden"
-        },
-        "users_audit_logs": {
-          "description": "Activiteitenlogboek van de organisatie",
-          "keywords": "audit, logs, geschiedenis, beveiliging, activiteit"
-        },
-        "org_branding": {
-          "description": "Logo, kleuren en visuele identiteit",
-          "keywords": "branding, logo, kleuren, thema"
-        },
-        "org_landing": {
-          "description": "Pas je landingspagina aan",
-          "keywords": "landing, startpagina, hero, pagina"
-        },
-        "org_seo": {
-          "description": "Zoekmachineoptimalisatie",
-          "keywords": "seo, zoeken, meta, ranking, google"
-        },
-        "org_ai": {
-          "description": "AI-functies en configuratie",
-          "keywords": "ai, llm, gpt, openai, generatie"
-        },
-        "org_domains": {
-          "description": "Aangepaste domeinen",
-          "keywords": "domein, dns, aangepast, subdomein, cname"
-        },
-        "org_automations": {
-          "description": "Webhooks en externe integraties",
-          "keywords": "webhooks, automatiseringen, zapier, integraties, triggers"
-        },
-        "org_api": {
-          "description": "API-tokens en programmatische toegang",
-          "keywords": "api, tokens, toegang, programmatisch, sleutels"
-        },
-        "org_sso": {
-          "description": "Single sign-on configuratie",
-          "keywords": "sso, saml, oauth, onderneming, login"
-        },
-        "org_other": {
-          "description": "Andere organisatie-instellingen",
-          "keywords": "diversen, geavanceerd, aangepast, extra"
-        },
-        "payments_groups": {
-          "description": "Betaalgroepen en bundels",
-          "keywords": "groepen, bundels, sets",
-          "title": "Betaalgroepen"
-        },
-        "payments_configuration": {
-          "description": "Stripe- en betalingsconfiguratie",
-          "keywords": "configuratie, instellingen, stripe, setup, connect",
-          "title": "Configuratie"
-        },
-        "payments_customers": {
-          "description": "Klanten en abonnees",
-          "keywords": "klanten, abonnees, kopers, betaald",
-          "title": "Klanten"
-        },
-        "courses_migrate": {
-          "description": "Importeer cursussen vanuit een ander LMS",
-          "keywords": "importeren, migreren, overdragen, lms, moodle, canvas",
-          "title": "Cursussen migreren"
-        },
-        "account_general": {
-          "description": "Algemene instellingen van persoonlijk account",
-          "keywords": "account, instellingen, email, naam, taal"
-        },
-        "account_profile": {
-          "description": "Profiel en biografie bewerken",
-          "keywords": "profiel, bio, avatar, foto, openbaar"
-        },
-        "account_security": {
-          "description": "Wachtwoord- en beveiligingsinstellingen",
-          "keywords": "wachtwoord, beveiliging, 2fa, mfa, sessies"
-        },
-        "account_purchases": {
-          "description": "Je aankopen en abonnementen",
-          "keywords": "aankopen, abonnementen, facturering, geschiedenis, bonnen"
         }
       }
     }

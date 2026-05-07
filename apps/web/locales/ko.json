@@ -180,8 +180,7 @@
     "boards": "보드",
     "close": "닫기",
     "optional": "선택사항",
-    "playgrounds": "플레이그라운드",
-    "analytics": "분석"
+    "playgrounds": "플레이그라운드"
   },
   "banner": {
     "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
@@ -2156,9 +2155,7 @@
           "other": "기타",
           "domains": "도메인",
           "sso": "SSO",
-          "usage": "사용량",
-          "seo": "SEO",
-          "automations": "자동화"
+          "usage": "사용량"
         },
         "pages": {
           "general": {
@@ -2220,8 +2217,6 @@
         "footer_text": "푸터 텍스트",
         "footer_text_placeholder": "푸터 텍스트 입력...",
         "footer_text_desc": "조직 페이지 하단에 표시되는 사용자 지정 텍스트",
-        "default_language": "기본 언어",
-        "default_language_desc": "새 방문자에게 기본으로 표시되는 언어이며, 이 조직을 대신해 발송되는 이메일에 사용되는 언어입니다. 구성원은 자신의 UI 언어를 계속 전환할 수 있습니다.",
         "watermark_desc": "조직 페이지에 LearnHouse 브랜드 워터마크 표시",
         "watermark_free_plan": "무료 플랜에서는 워터마크가 항상 표시됩니다",
         "watermark_label": "\"Made with LearnHouse\" 워터마크"
@@ -3519,176 +3514,6 @@
             "creating": "과제 생성 중...",
             "success": "과제가 성공적으로 생성되었습니다"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "검색",
-      "placeholder": "페이지 및 콘텐츠 검색…",
-      "shortcut_hint": "⌘K",
-      "no_results": "결과를 찾을 수 없습니다",
-      "loading": "검색 중…",
-      "type_to_search": "콘텐츠를 검색하려면 2자 이상 입력하세요",
-      "groups": {
-        "pages": "페이지",
-        "courses": "강좌",
-        "collections": "컬렉션",
-        "users": "사용자",
-        "communities": "커뮤니티",
-        "discussions": "토론",
-        "playgrounds": "플레이그라운드",
-        "podcasts": "팟캐스트"
-      },
-      "entries": {
-        "home": {
-          "description": "대시보드 개요",
-          "keywords": "홈, 개요, 시작, 대시보드"
-        },
-        "courses": {
-          "description": "강좌 관리",
-          "keywords": "강좌, 수업, 학습, 교육, 클래스"
-        },
-        "assignments": {
-          "description": "과제 관리",
-          "keywords": "작업, 숙제, 연습, 제출"
-        },
-        "communities": {
-          "description": "커뮤니티 관리",
-          "keywords": "포럼, 토론, 회원, 게시물"
-        },
-        "podcasts": {
-          "description": "팟캐스트 관리",
-          "keywords": "오디오, 에피소드, 프로그램"
-        },
-        "boards": {
-          "description": "보드 관리",
-          "keywords": "칸반, 프로젝트, 작업, 목록"
-        },
-        "playgrounds": {
-          "description": "코드 플레이그라운드",
-          "keywords": "코드, 샌드박스, repl, 프로그래밍"
-        },
-        "analytics": {
-          "description": "분석 대시보드 보기",
-          "keywords": "통계, 메트릭, 차트, 보고서"
-        },
-        "users": {
-          "description": "조직 사용자 관리",
-          "keywords": "회원, 계정, 사람"
-        },
-        "usergroups": {
-          "description": "사용자 그룹 관리",
-          "keywords": "팀, 코호트, 그룹"
-        },
-        "roles": {
-          "description": "역할 및 권한 관리",
-          "keywords": "권한, 접근, rbac, 보안"
-        },
-        "signups": {
-          "description": "가입 검토",
-          "keywords": "등록, 신청, 요청"
-        },
-        "org_general": {
-          "description": "조직 일반 설정",
-          "keywords": "이름, 브랜딩, slug, 프로필"
-        },
-        "org_features": {
-          "description": "조직 기능 관리",
-          "keywords": "기능, 모듈, 토글"
-        },
-        "org_billing": {
-          "description": "결제 및 구독",
-          "keywords": "플랜, 결제, 청구서, 구독"
-        },
-        "payments_overview": {
-          "description": "결제 개요 및 수익",
-          "keywords": "stripe, 대시보드, 수익, 판매",
-          "title": "결제 개요"
-        },
-        "payments_products": {
-          "description": "결제 상품 및 가격",
-          "keywords": "상품, 가격, stripe, 등급, 플랜",
-          "title": "상품"
-        },
-        "users_add": {
-          "description": "새 회원 초대",
-          "keywords": "초대, 추가, 회원, 보내기"
-        },
-        "users_audit_logs": {
-          "description": "조직 활동 로그",
-          "keywords": "감사, 로그, 기록, 보안, 활동"
-        },
-        "org_branding": {
-          "description": "로고, 색상 및 시각적 정체성",
-          "keywords": "브랜딩, 로고, 색상, 테마"
-        },
-        "org_landing": {
-          "description": "랜딩 페이지 사용자 정의",
-          "keywords": "랜딩, 홈페이지, hero, 페이지"
-        },
-        "org_seo": {
-          "description": "검색 엔진 최적화",
-          "keywords": "seo, 검색, 메타, 순위, google"
-        },
-        "org_ai": {
-          "description": "AI 기능 및 구성",
-          "keywords": "ai, llm, gpt, openai, 생성"
-        },
-        "org_domains": {
-          "description": "사용자 정의 도메인",
-          "keywords": "도메인, dns, 사용자 정의, 하위 도메인, cname"
-        },
-        "org_automations": {
-          "description": "웹훅 및 외부 통합",
-          "keywords": "웹훅, 자동화, zapier, 통합, 트리거"
-        },
-        "org_api": {
-          "description": "API 토큰 및 프로그래밍 액세스",
-          "keywords": "api, 토큰, 액세스, 프로그래밍, 키"
-        },
-        "org_sso": {
-          "description": "싱글 사인온 구성",
-          "keywords": "sso, saml, oauth, 엔터프라이즈, 로그인"
-        },
-        "org_other": {
-          "description": "기타 조직 설정",
-          "keywords": "기타, 고급, 사용자 정의, 추가"
-        },
-        "payments_groups": {
-          "description": "결제 그룹 및 번들",
-          "keywords": "그룹, 번들, 세트",
-          "title": "결제 그룹"
-        },
-        "payments_configuration": {
-          "description": "Stripe 및 결제 구성",
-          "keywords": "구성, 설정, stripe, 셋업, connect",
-          "title": "구성"
-        },
-        "payments_customers": {
-          "description": "고객 및 구독자",
-          "keywords": "고객, 구독자, 구매자, 지불됨",
-          "title": "고객"
-        },
-        "courses_migrate": {
-          "description": "다른 LMS에서 강좌 가져오기",
-          "keywords": "가져오기, 마이그레이션, 전송, lms, moodle, canvas",
-          "title": "강좌 마이그레이션"
-        },
-        "account_general": {
-          "description": "개인 계정 일반 설정",
-          "keywords": "계정, 설정, 이메일, 이름, 언어"
-        },
-        "account_profile": {
-          "description": "프로필 및 소개 편집",
-          "keywords": "프로필, 소개, 아바타, 사진, 공개"
-        },
-        "account_security": {
-          "description": "비밀번호 및 보안 설정",
-          "keywords": "비밀번호, 보안, 2fa, mfa, 세션"
-        },
-        "account_purchases": {
-          "description": "내 구매 및 구독",
-          "keywords": "구매, 구독, 결제, 기록, 영수증"
         }
       }
     }

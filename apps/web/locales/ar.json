@@ -180,8 +180,7 @@
     "creating": "جاري الإنشاء...",
     "view_details": "عرض التفاصيل",
     "close": "إغلاق",
-    "optional": "اختياري",
-    "analytics": "التحليلات"
+    "optional": "اختياري"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -2156,9 +2155,7 @@
           "usage": "Usage",
           "other": "أخرى",
           "sso": "SSO",
-          "domains": "النطاقات",
-          "seo": "تحسين محركات البحث",
-          "automations": "الأتمتة"
+          "domains": "النطاقات"
         },
         "pages": {
           "general": {
@@ -2218,8 +2215,6 @@
         "footer_text": "نص التذييل",
         "footer_text_placeholder": "أدخل نص التذييل...",
         "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك",
-        "default_language": "اللغة الافتراضية",
-        "default_language_desc": "اللغة التي يراها الزوار الجدد افتراضيًا واللغة المستخدمة للرسائل المُرسَلة باسم هذه المؤسسة. لا يزال بإمكان الأعضاء تغيير لغة واجهتهم.",
         "watermark_desc": "إظهار علامة LearnHouse المائية على صفحات منظمتك",
         "watermark_free_plan": "يتم عرض العلامة المائية دائمًا في الخطة المجانية",
         "watermark_label": "علامة \"صنع بواسطة LearnHouse\" المائية"
@@ -3517,176 +3512,6 @@
             "creating": "جاري إنشاء الواجب...",
             "success": "تم إنشاء الواجب بنجاح"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "بحث",
-      "placeholder": "ابحث في الصفحات والمحتوى…",
-      "shortcut_hint": "⌘K",
-      "no_results": "لا توجد نتائج",
-      "loading": "جاري البحث…",
-      "type_to_search": "اكتب حرفين على الأقل للبحث في المحتوى",
-      "groups": {
-        "pages": "الصفحات",
-        "courses": "الدورات",
-        "collections": "المجموعات",
-        "users": "المستخدمون",
-        "communities": "المجتمعات",
-        "discussions": "المناقشات",
-        "playgrounds": "ساحات اللعب",
-        "podcasts": "البودكاست"
-      },
-      "entries": {
-        "home": {
-          "description": "نظرة عامة على لوحة التحكم",
-          "keywords": "الرئيسية, نظرة عامة, البدء, لوحة التحكم"
-        },
-        "courses": {
-          "description": "إدارة دوراتك",
-          "keywords": "دورات, دروس, تعلم, تدريب, فصول"
-        },
-        "assignments": {
-          "description": "إدارة الواجبات",
-          "keywords": "مهام, واجبات منزلية, تمارين, تسليمات"
-        },
-        "communities": {
-          "description": "إدارة المجتمعات",
-          "keywords": "منتديات, مناقشات, أعضاء, منشورات"
-        },
-        "podcasts": {
-          "description": "إدارة البودكاست",
-          "keywords": "صوت, حلقات, برامج"
-        },
-        "boards": {
-          "description": "إدارة اللوحات",
-          "keywords": "كانبان, مشروع, مهام, قوائم"
-        },
-        "playgrounds": {
-          "description": "ساحات لعب البرمجة",
-          "keywords": "كود, sandbox, repl, برمجة"
-        },
-        "analytics": {
-          "description": "عرض لوحات التحليلات",
-          "keywords": "إحصائيات, مقاييس, رسوم بيانية, تقارير"
-        },
-        "users": {
-          "description": "إدارة مستخدمي المؤسسة",
-          "keywords": "أعضاء, حسابات, أشخاص"
-        },
-        "usergroups": {
-          "description": "إدارة مجموعات المستخدمين",
-          "keywords": "فرق, مجموعات, أفواج"
-        },
-        "roles": {
-          "description": "إدارة الأدوار والصلاحيات",
-          "keywords": "صلاحيات, وصول, rbac, أمان"
-        },
-        "signups": {
-          "description": "مراجعة التسجيلات",
-          "keywords": "تسجيلات, طلبات, تطبيقات"
-        },
-        "org_general": {
-          "description": "الإعدادات العامة للمؤسسة",
-          "keywords": "الاسم, العلامة التجارية, slug, الملف الشخصي"
-        },
-        "org_features": {
-          "description": "إدارة ميزات المؤسسة",
-          "keywords": "ميزات, وحدات, مفاتيح"
-        },
-        "org_billing": {
-          "description": "الفوترة والاشتراك",
-          "keywords": "خطة, مدفوعات, فاتورة, اشتراك"
-        },
-        "payments_overview": {
-          "description": "نظرة عامة على المدفوعات والإيرادات",
-          "keywords": "stripe, لوحة, إيرادات, مبيعات",
-          "title": "نظرة عامة على المدفوعات"
-        },
-        "payments_products": {
-          "description": "منتجات وأسعار الدفع",
-          "keywords": "منتجات, أسعار, stripe, مستويات, خطط",
-          "title": "المنتجات"
-        },
-        "users_add": {
-          "description": "ادع أعضاء جدد",
-          "keywords": "دعوة, إضافة, أعضاء, إرسال"
-        },
-        "users_audit_logs": {
-          "description": "سجل نشاط المؤسسة",
-          "keywords": "تدقيق, سجلات, تاريخ, أمان, نشاط"
-        },
-        "org_branding": {
-          "description": "الشعار والألوان والهوية البصرية",
-          "keywords": "علامة تجارية, شعار, ألوان, موضوع"
-        },
-        "org_landing": {
-          "description": "تخصيص صفحتك المقصودة",
-          "keywords": "صفحة هبوط, الصفحة الرئيسية, hero, صفحة"
-        },
-        "org_seo": {
-          "description": "تحسين محركات البحث",
-          "keywords": "seo, بحث, ميتا, ترتيب, google"
-        },
-        "org_ai": {
-          "description": "ميزات وإعدادات الذكاء الاصطناعي",
-          "keywords": "ذكاء اصطناعي, llm, gpt, openai, توليد"
-        },
-        "org_domains": {
-          "description": "النطاقات المخصصة",
-          "keywords": "نطاق, dns, مخصص, نطاق فرعي, cname"
-        },
-        "org_automations": {
-          "description": "Webhooks والتكاملات الخارجية",
-          "keywords": "webhooks, أتمتة, zapier, تكاملات, محفزات"
-        },
-        "org_api": {
-          "description": "رموز API والوصول البرمجي",
-          "keywords": "api, رموز, وصول, برمجي, مفاتيح"
-        },
-        "org_sso": {
-          "description": "إعداد الدخول الموحد",
-          "keywords": "sso, saml, oauth, مؤسسة, تسجيل الدخول"
-        },
-        "org_other": {
-          "description": "إعدادات أخرى للمؤسسة",
-          "keywords": "متنوع, متقدم, مخصص, إضافي"
-        },
-        "payments_groups": {
-          "description": "مجموعات وحزم الدفع",
-          "keywords": "مجموعات, حزم, مجموعات",
-          "title": "مجموعات الدفع"
-        },
-        "payments_configuration": {
-          "description": "إعدادات Stripe والمدفوعات",
-          "keywords": "إعدادات, إعداد, stripe, تثبيت, connect",
-          "title": "الإعدادات"
-        },
-        "payments_customers": {
-          "description": "العملاء والمشتركون",
-          "keywords": "عملاء, مشتركون, مشترون, مدفوعون",
-          "title": "العملاء"
-        },
-        "courses_migrate": {
-          "description": "استيراد الدورات من LMS آخر",
-          "keywords": "استيراد, ترحيل, نقل, lms, moodle, canvas",
-          "title": "ترحيل الدورات"
-        },
-        "account_general": {
-          "description": "الإعدادات العامة للحساب الشخصي",
-          "keywords": "حساب, إعدادات, بريد إلكتروني, اسم, لغة"
-        },
-        "account_profile": {
-          "description": "تعديل ملفك الشخصي وسيرتك الذاتية",
-          "keywords": "ملف شخصي, سيرة ذاتية, صورة رمزية, صورة, عام"
-        },
-        "account_security": {
-          "description": "إعدادات كلمة المرور والأمان",
-          "keywords": "كلمة المرور, أمان, 2fa, mfa, جلسات"
-        },
-        "account_purchases": {
-          "description": "مشترياتك واشتراكاتك",
-          "keywords": "مشتريات, اشتراكات, فواتير, تاريخ, إيصالات"
         }
       }
     }

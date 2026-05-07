@@ -180,8 +180,7 @@
     "creating": "তৈরি হচ্ছে...",
     "view_details": "বিস্তারিত দেখুন",
     "close": "বন্ধ",
-    "optional": "optional",
-    "analytics": "বিশ্লেষণ"
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "আপনি {{name}} অতিথি হিসেবে দেখছেন।",
@@ -2169,9 +2168,7 @@
           "usage": "Usage",
           "other": "অন্যান্য",
           "domains": "Domains",
-          "sso": "SSO",
-          "seo": "SEO",
-          "automations": "অটোমেশন"
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -2231,8 +2228,6 @@
         "footer_text": "ফুটার টেক্সট",
         "footer_text_placeholder": "ফুটার টেক্সট লিখুন...",
         "footer_text_desc": "আপনার সংস্থার পৃষ্ঠাগুলির নীচে প্রদর্শিত কাস্টম টেক্সট",
-        "default_language": "ডিফল্ট ভাষা",
-        "default_language_desc": "নতুন ভিজিটররা ডিফল্টভাবে যে ভাষায় সাইটটি দেখেন এবং এই সংস্থার পক্ষ থেকে পাঠানো ইমেইলে যে ভাষা ব্যবহৃত হয়। সদস্যরা এখনও নিজেদের UI ভাষা পরিবর্তন করতে পারেন।",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"
@@ -3530,176 +3525,6 @@
             "creating": "অ্যাসাইনমেন্ট তৈরি হচ্ছে...",
             "success": "অ্যাসাইনমেন্ট সফলভাবে তৈরি হয়েছে"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "অনুসন্ধান",
-      "placeholder": "পৃষ্ঠা এবং বিষয়বস্তু অনুসন্ধান করুন…",
-      "shortcut_hint": "⌘K",
-      "no_results": "কোনো ফলাফল পাওয়া যায়নি",
-      "loading": "অনুসন্ধান করা হচ্ছে…",
-      "type_to_search": "বিষয়বস্তু অনুসন্ধান করতে কমপক্ষে ২টি অক্ষর লিখুন",
-      "groups": {
-        "pages": "পৃষ্ঠা",
-        "courses": "কোর্স",
-        "collections": "সংগ্রহ",
-        "users": "ব্যবহারকারী",
-        "communities": "কমিউনিটি",
-        "discussions": "আলোচনা",
-        "playgrounds": "প্লেগ্রাউন্ড",
-        "podcasts": "পডকাস্ট"
-      },
-      "entries": {
-        "home": {
-          "description": "ড্যাশবোর্ড সংক্ষিপ্ত বিবরণ",
-          "keywords": "হোম, সংক্ষিপ্ত বিবরণ, শুরু, ড্যাশবোর্ড"
-        },
-        "courses": {
-          "description": "আপনার কোর্স পরিচালনা করুন",
-          "keywords": "কোর্স, পাঠ, শিখুন, প্রশিক্ষণ, ক্লাস"
-        },
-        "assignments": {
-          "description": "অ্যাসাইনমেন্ট পরিচালনা করুন",
-          "keywords": "কাজ, হোমওয়ার্ক, অনুশীলন, জমা"
-        },
-        "communities": {
-          "description": "কমিউনিটি পরিচালনা করুন",
-          "keywords": "ফোরাম, আলোচনা, সদস্য, পোস্ট"
-        },
-        "podcasts": {
-          "description": "পডকাস্ট পরিচালনা করুন",
-          "keywords": "অডিও, পর্ব, শো"
-        },
-        "boards": {
-          "description": "বোর্ড পরিচালনা করুন",
-          "keywords": "কানবান, প্রকল্প, কাজ, তালিকা"
-        },
-        "playgrounds": {
-          "description": "কোড প্লেগ্রাউন্ড",
-          "keywords": "কোড, স্যান্ডবক্স, repl, প্রোগ্রামিং"
-        },
-        "analytics": {
-          "description": "বিশ্লেষণ ড্যাশবোর্ড দেখুন",
-          "keywords": "পরিসংখ্যান, মেট্রিক, চার্ট, প্রতিবেদন"
-        },
-        "users": {
-          "description": "সংস্থার ব্যবহারকারী পরিচালনা করুন",
-          "keywords": "সদস্য, অ্যাকাউন্ট, ব্যক্তি"
-        },
-        "usergroups": {
-          "description": "ব্যবহারকারী গোষ্ঠী পরিচালনা করুন",
-          "keywords": "দল, গ্রুপ"
-        },
-        "roles": {
-          "description": "ভূমিকা এবং অনুমতি পরিচালনা করুন",
-          "keywords": "অনুমতি, অ্যাক্সেস, rbac, নিরাপত্তা"
-        },
-        "signups": {
-          "description": "সাইনআপ পর্যালোচনা করুন",
-          "keywords": "নিবন্ধন, আবেদন, অনুরোধ"
-        },
-        "org_general": {
-          "description": "সংস্থার সাধারণ সেটিংস",
-          "keywords": "নাম, ব্র্যান্ডিং, slug, প্রোফাইল"
-        },
-        "org_features": {
-          "description": "সংস্থার বৈশিষ্ট্য পরিচালনা করুন",
-          "keywords": "বৈশিষ্ট্য, মডিউল, টগল"
-        },
-        "org_billing": {
-          "description": "বিলিং এবং সাবস্ক্রিপশন",
-          "keywords": "প্ল্যান, অর্থপ্রদান, চালান, সাবস্ক্রিপশন"
-        },
-        "payments_overview": {
-          "description": "পেমেন্ট সংক্ষিপ্ত বিবরণ এবং রাজস্ব",
-          "keywords": "stripe, ড্যাশবোর্ড, রাজস্ব, বিক্রয়",
-          "title": "পেমেন্ট সংক্ষিপ্ত বিবরণ"
-        },
-        "payments_products": {
-          "description": "পেমেন্ট পণ্য এবং মূল্য",
-          "keywords": "পণ্য, মূল্য, stripe, স্তর, প্ল্যান",
-          "title": "পণ্য"
-        },
-        "users_add": {
-          "description": "নতুন সদস্যদের আমন্ত্রণ জানান",
-          "keywords": "আমন্ত্রণ, যোগ, সদস্য, পাঠান"
-        },
-        "users_audit_logs": {
-          "description": "সংস্থার কার্যকলাপ লগ",
-          "keywords": "অডিট, লগ, ইতিহাস, নিরাপত্তা, কার্যকলাপ"
-        },
-        "org_branding": {
-          "description": "লোগো, রং এবং ভিজ্যুয়াল পরিচয়",
-          "keywords": "ব্র্যান্ডিং, লোগো, রং, থিম"
-        },
-        "org_landing": {
-          "description": "আপনার ল্যান্ডিং পৃষ্ঠা কাস্টমাইজ করুন",
-          "keywords": "ল্যান্ডিং, হোমপেজ, hero, পৃষ্ঠা"
-        },
-        "org_seo": {
-          "description": "সার্চ ইঞ্জিন অপ্টিমাইজেশন",
-          "keywords": "seo, অনুসন্ধান, মেটা, র‌্যাঙ্কিং, google"
-        },
-        "org_ai": {
-          "description": "AI বৈশিষ্ট্য এবং কনফিগারেশন",
-          "keywords": "ai, llm, gpt, openai, প্রজন্ম"
-        },
-        "org_domains": {
-          "description": "কাস্টম ডোমেন",
-          "keywords": "ডোমেন, dns, কাস্টম, সাবডোমেন, cname"
-        },
-        "org_automations": {
-          "description": "ওয়েবহুক এবং বাহ্যিক ইন্টিগ্রেশন",
-          "keywords": "ওয়েবহুক, অটোমেশন, zapier, ইন্টিগ্রেশন, ট্রিগার"
-        },
-        "org_api": {
-          "description": "API টোকেন এবং প্রোগ্রামেটিক অ্যাক্সেস",
-          "keywords": "api, টোকেন, অ্যাক্সেস, প্রোগ্রামেটিক, কী"
-        },
-        "org_sso": {
-          "description": "সিঙ্গেল সাইন-অন কনফিগারেশন",
-          "keywords": "sso, saml, oauth, এন্টারপ্রাইজ, লগইন"
-        },
-        "org_other": {
-          "description": "অন্যান্য সংস্থা সেটিংস",
-          "keywords": "বিবিধ, উন্নত, কাস্টম, অতিরিক্ত"
-        },
-        "payments_groups": {
-          "description": "পেমেন্ট গ্রুপ এবং বান্ডেল",
-          "keywords": "গ্রুপ, বান্ডেল, সেট",
-          "title": "পেমেন্ট গ্রুপ"
-        },
-        "payments_configuration": {
-          "description": "Stripe এবং পেমেন্ট কনফিগারেশন",
-          "keywords": "কনফিগারেশন, সেটিংস, stripe, সেটআপ, connect",
-          "title": "কনফিগারেশন"
-        },
-        "payments_customers": {
-          "description": "গ্রাহক এবং সাবস্ক্রাইবার",
-          "keywords": "গ্রাহক, সাবস্ক্রাইবার, ক্রেতা, প্রদত্ত",
-          "title": "গ্রাহক"
-        },
-        "courses_migrate": {
-          "description": "অন্য LMS থেকে কোর্স আমদানি করুন",
-          "keywords": "আমদানি, স্থানান্তর, ট্রান্সফার, lms, moodle, canvas",
-          "title": "কোর্স স্থানান্তর"
-        },
-        "account_general": {
-          "description": "ব্যক্তিগত অ্যাকাউন্ট সাধারণ সেটিংস",
-          "keywords": "অ্যাকাউন্ট, সেটিংস, ইমেল, নাম, ভাষা"
-        },
-        "account_profile": {
-          "description": "আপনার প্রোফাইল এবং জীবনী সম্পাদনা করুন",
-          "keywords": "প্রোফাইল, জীবনী, অবতার, ছবি, সর্বজনীন"
-        },
-        "account_security": {
-          "description": "পাসওয়ার্ড এবং সুরক্ষা সেটিংস",
-          "keywords": "পাসওয়ার্ড, সুরক্ষা, 2fa, mfa, সেশন"
-        },
-        "account_purchases": {
-          "description": "আপনার কেনাকাটা এবং সাবস্ক্রিপশন",
-          "keywords": "কেনাকাটা, সাবস্ক্রিপশন, বিলিং, ইতিহাস, রসিদ"
         }
       }
     }

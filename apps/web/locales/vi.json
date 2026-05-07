@@ -180,8 +180,7 @@
     "boards": "Bảng",
     "close": "Đóng",
     "optional": "optional",
-    "playgrounds": "Playgrounds",
-    "analytics": "Phân tích"
+    "playgrounds": "Playgrounds"
   },
   "banner": {
     "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
@@ -2169,9 +2168,7 @@
           "other": "Khác",
           "domains": "Domains",
           "sso": "SSO",
-          "usage": "Usage",
-          "seo": "SEO",
-          "automations": "Tự động hóa"
+          "usage": "Usage"
         },
         "pages": {
           "general": {
@@ -2233,8 +2230,6 @@
         "footer_text": "Văn bản chân trang",
         "footer_text_placeholder": "Nhập văn bản chân trang...",
         "footer_text_desc": "Văn bản tùy chỉnh hiển thị ở cuối các trang của tổ chức",
-        "default_language": "Ngôn ngữ mặc định",
-        "default_language_desc": "Ngôn ngữ mà khách truy cập mới sẽ thấy theo mặc định và được dùng cho các email gửi thay mặt tổ chức này. Thành viên vẫn có thể thay đổi ngôn ngữ giao diện của mình.",
         "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
         "watermark_free_plan": "Watermark is always shown on the free plan",
         "watermark_label": "\"Made with LearnHouse\" watermark"
@@ -3532,176 +3527,6 @@
             "creating": "Đang tạo bài tập...",
             "success": "Đã tạo bài tập thành công"
           }
-        }
-      }
-    },
-    "search": {
-      "trigger": "Tìm kiếm",
-      "placeholder": "Tìm kiếm trang và nội dung…",
-      "shortcut_hint": "⌘K",
-      "no_results": "Không tìm thấy kết quả",
-      "loading": "Đang tìm kiếm…",
-      "type_to_search": "Nhập ít nhất 2 ký tự để tìm kiếm nội dung",
-      "groups": {
-        "pages": "Trang",
-        "courses": "Khóa học",
-        "collections": "Bộ sưu tập",
-        "users": "Người dùng",
-        "communities": "Cộng đồng",
-        "discussions": "Thảo luận",
-        "playgrounds": "Sân chơi",
-        "podcasts": "Podcast"
-      },
-      "entries": {
-        "home": {
-          "description": "Tổng quan bảng điều khiển",
-          "keywords": "trang chủ, tổng quan, bắt đầu, bảng điều khiển"
-        },
-        "courses": {
-          "description": "Quản lý khóa học của bạn",
-          "keywords": "khóa học, bài học, học tập, đào tạo, lớp học"
-        },
-        "assignments": {
-          "description": "Quản lý bài tập",
-          "keywords": "nhiệm vụ, bài tập về nhà, bài luyện, nộp bài"
-        },
-        "communities": {
-          "description": "Quản lý cộng đồng",
-          "keywords": "diễn đàn, thảo luận, thành viên, bài đăng"
-        },
-        "podcasts": {
-          "description": "Quản lý podcast",
-          "keywords": "âm thanh, tập, chương trình"
-        },
-        "boards": {
-          "description": "Quản lý bảng",
-          "keywords": "kanban, dự án, nhiệm vụ, danh sách"
-        },
-        "playgrounds": {
-          "description": "Sân chơi mã",
-          "keywords": "mã, sandbox, repl, lập trình"
-        },
-        "analytics": {
-          "description": "Xem bảng điều khiển phân tích",
-          "keywords": "thống kê, chỉ số, biểu đồ, báo cáo"
-        },
-        "users": {
-          "description": "Quản lý người dùng của tổ chức",
-          "keywords": "thành viên, tài khoản, mọi người"
-        },
-        "usergroups": {
-          "description": "Quản lý nhóm người dùng",
-          "keywords": "đội, nhóm, lớp"
-        },
-        "roles": {
-          "description": "Quản lý vai trò và quyền",
-          "keywords": "quyền, truy cập, rbac, bảo mật"
-        },
-        "signups": {
-          "description": "Xem đăng ký",
-          "keywords": "đăng ký, đơn đăng ký, yêu cầu"
-        },
-        "org_general": {
-          "description": "Cài đặt chung của tổ chức",
-          "keywords": "tên, thương hiệu, slug, hồ sơ"
-        },
-        "org_features": {
-          "description": "Quản lý tính năng của tổ chức",
-          "keywords": "tính năng, mô-đun, công tắc"
-        },
-        "org_billing": {
-          "description": "Thanh toán và đăng ký",
-          "keywords": "gói, thanh toán, hóa đơn, đăng ký"
-        },
-        "payments_overview": {
-          "description": "Tổng quan thanh toán và doanh thu",
-          "keywords": "stripe, bảng điều khiển, doanh thu, bán hàng",
-          "title": "Tổng quan thanh toán"
-        },
-        "payments_products": {
-          "description": "Sản phẩm và giá thanh toán",
-          "keywords": "sản phẩm, giá, stripe, cấp độ, gói",
-          "title": "Sản phẩm"
-        },
-        "users_add": {
-          "description": "Mời thành viên mới",
-          "keywords": "mời, thêm, thành viên, gửi"
-        },
-        "users_audit_logs": {
-          "description": "Nhật ký hoạt động của tổ chức",
-          "keywords": "kiểm toán, nhật ký, lịch sử, bảo mật, hoạt động"
-        },
-        "org_branding": {
-          "description": "Logo, màu sắc và bản sắc trực quan",
-          "keywords": "thương hiệu, logo, màu sắc, chủ đề"
-        },
-        "org_landing": {
-          "description": "Tùy chỉnh trang đích của bạn",
-          "keywords": "trang đích, trang chủ, hero, trang"
-        },
-        "org_seo": {
-          "description": "Tối ưu hóa công cụ tìm kiếm",
-          "keywords": "seo, tìm kiếm, meta, xếp hạng, google"
-        },
-        "org_ai": {
-          "description": "Tính năng và cấu hình AI",
-          "keywords": "ai, llm, gpt, openai, tạo"
-        },
-        "org_domains": {
-          "description": "Tên miền tùy chỉnh",
-          "keywords": "tên miền, dns, tùy chỉnh, tên miền phụ, cname"
-        },
-        "org_automations": {
-          "description": "Webhook và tích hợp bên ngoài",
-          "keywords": "webhook, tự động hóa, zapier, tích hợp, kích hoạt"
-        },
-        "org_api": {
-          "description": "Mã API và truy cập lập trình",
-          "keywords": "api, mã, truy cập, lập trình, khóa"
-        },
-        "org_sso": {
-          "description": "Cấu hình đăng nhập một lần",
-          "keywords": "sso, saml, oauth, doanh nghiệp, đăng nhập"
-        },
-        "org_other": {
-          "description": "Các cài đặt tổ chức khác",
-          "keywords": "khác, nâng cao, tùy chỉnh, bổ sung"
-        },
-        "payments_groups": {
-          "description": "Nhóm và gói thanh toán",
-          "keywords": "nhóm, gói, bộ",
-          "title": "Nhóm thanh toán"
-        },
-        "payments_configuration": {
-          "description": "Cấu hình Stripe và thanh toán",
-          "keywords": "cấu hình, cài đặt, stripe, thiết lập, connect",
-          "title": "Cấu hình"
-        },
-        "payments_customers": {
-          "description": "Khách hàng và người đăng ký",
-          "keywords": "khách hàng, người đăng ký, người mua, đã trả",
-          "title": "Khách hàng"
-        },
-        "courses_migrate": {
-          "description": "Nhập khóa học từ LMS khác",
-          "keywords": "nhập, di chuyển, chuyển giao, lms, moodle, canvas",
-          "title": "Di chuyển khóa học"
-        },
-        "account_general": {
-          "description": "Cài đặt chung tài khoản cá nhân",
-          "keywords": "tài khoản, cài đặt, email, tên, ngôn ngữ"
-        },
-        "account_profile": {
-          "description": "Chỉnh sửa hồ sơ và tiểu sử của bạn",
-          "keywords": "hồ sơ, tiểu sử, ảnh đại diện, ảnh, công khai"
-        },
-        "account_security": {
-          "description": "Mật khẩu và cài đặt bảo mật",
-          "keywords": "mật khẩu, bảo mật, 2fa, mfa, phiên"
-        },
-        "account_purchases": {
-          "description": "Giao dịch mua và đăng ký của bạn",
-          "keywords": "giao dịch mua, đăng ký, thanh toán, lịch sử, biên lai"
         }
       }
     }
