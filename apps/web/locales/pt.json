@@ -180,7 +180,13 @@
     "boards": "Quadros",
     "close": "Fechar",
     "optional": "opcional",
-    "playgrounds": "Playgrounds"
+    "playgrounds": "Playgrounds",
+    "analytics": "Análise",
+    "add": "Adicionar",
+    "choose_an_organization_to_continue": "Escolha uma organização para continuar",
+    "for": "para",
+    "powered_by": "Desenvolvido com",
+    "results": "resultado"
   },
   "banner": {
     "viewing_as_guest": "Você está visualizando {{name}} como convidado.",
@@ -301,7 +307,9 @@
       "try_again": "Tentar novamente"
     },
     "sso_error": "Falha na autenticação SSO. Tente novamente.",
-    "try_again_in": "tente novamente em {{minutes}} min"
+    "try_again_in": "tente novamente em {{minutes}} min",
+    "error_generic": "Algo deu errado. Por favor, tente novamente.",
+    "sign_in": "Entrar"
   },
   "validation": {
     "required": "Obrigatório",
@@ -584,14 +592,16 @@
       "from_existing_description": "Faça upload de arquivos de outra plataforma e organize-os em um curso"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Todos os Cursos",
+      "filter_by_group": "Filtrar por grupo",
+      "info_title": "Filtro de Grupo de Usuários",
+      "info_description": "Filtre cursos por grupo de usuários para ver apenas os cursos atribuídos a um grupo específico. Útil para famílias ou equipes que compartilham a mesma organização."
     },
     "copied": "Copiado!",
     "quit_course_confirm": "Tem certeza que deseja sair deste curso? Você perderá todo o seu progresso.",
-    "quit_course_title": "Sair do curso?"
+    "quit_course_title": "Sair do curso?",
+    "courses_load_error": "Falha ao carregar os cursos. Por favor, tente novamente.",
+    "view_all_courses": "Ver todos os cursos"
   },
   "communities": {
     "title": "Comunidades",
@@ -639,7 +649,8 @@
       "clear_search": "Limpar pesquisa",
       "no_discussions": "Nenhuma discussão ainda",
       "no_discussions_description": "Seja o primeiro a iniciar uma discussão nesta comunidade!",
-      "start_discussion": "Iniciar discussão"
+      "start_discussion": "Iniciar discussão",
+      "delete_failed": "Falha ao excluir a discussão"
     },
     "discussion_detail": {
       "edit": "Editar",
@@ -647,7 +658,8 @@
       "delete_title": "Excluir discussão?",
       "delete_confirm": "Tem certeza de que deseja excluir esta discussão? Esta ação não pode ser desfeita.",
       "delete_button": "Excluir discussão",
-      "no_details": "Nenhum detalhe adicional fornecido."
+      "no_details": "Nenhum detalhe adicional fornecido.",
+      "delete_failed": "Falha ao excluir a discussão"
     },
     "discussion_card": {
       "pin_discussion": "Fixar discussão",
@@ -657,7 +669,10 @@
       "delete_discussion": "Excluir discussão",
       "delete_title": "Excluir discussão?",
       "delete_confirm": "Tem certeza de que deseja excluir esta discussão? Esta ação não pode ser desfeita.",
-      "votes": "votos"
+      "votes": "votos",
+      "delete_failed": "Falha ao excluir a discussão",
+      "lock_failed": "Falha ao atualizar o estado de bloqueio",
+      "pin_failed": "Falha ao atualizar o estado de fixação"
     },
     "comments": {
       "no_replies": "Nenhuma resposta ainda",
@@ -673,7 +688,8 @@
       "cancel": "Cancelar",
       "failed_to_post": "Falha ao publicar resposta. Por favor, tente novamente.",
       "content_not_allowed": "Sua resposta contém conteúdo não permitido.",
-      "failed_to_update": "Falha ao atualizar. Por favor, tente novamente."
+      "failed_to_update": "Falha ao atualizar. Por favor, tente novamente.",
+      "failed_to_delete": "Falha ao excluir o comentário"
     },
     "label_filter": {
       "label": "Rótulo:",
@@ -884,7 +900,7 @@
     "quiz": "Questionário",
     "file_submission": "Envio de Arquivo",
     "form": "Formulário",
-    "code": "Code",
+    "code": "Código",
     "interactive": "Interativo",
     "activities": "Atividades",
     "current_activity": "Atividade Atual",
@@ -943,13 +959,20 @@
     "points": "pontos",
     "current_points": "Pontos atuais: {{points}}",
     "grade": "Nota",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Executar Correção Automática",
     "due_date": "Data de Entrega",
     "task_breakdown": "Detalhamento das tarefas",
     "no_grade_details": "Ainda não há detalhes da nota disponíveis.",
     "task_passed": "Aprovado",
     "task_not_passed": "Não aprovado",
-    "score": "pontuação"
+    "score": "pontuação",
+    "form": {
+      "expected_answer": "Esperada"
+    },
+    "quiz": {
+      "correct_answer": "Correta",
+      "incorrect_answer": "Incorreta"
+    }
   },
   "certificate": {
     "certificate": "Certificado",
@@ -1036,7 +1059,8 @@
     "subscription": "Assinatura",
     "benefits": "Benefícios:",
     "min_price": "Preço Mínimo:",
-    "choose_price": "Escolha seu preço"
+    "choose_price": "Escolha seu preço",
+    "stripe_denied": "A conexão com o Stripe foi cancelada."
   },
   "account": {
     "title": "Conta",
@@ -1265,7 +1289,8 @@
           "loading_error": "Falha ao carregar dados do perfil",
           "save_success": "Perfil atualizado com sucesso",
           "save_error": "Erro ao atualizar o perfil"
-        }
+        },
+        "unknown_section": "Seção desconhecida"
       }
     },
     "sign_out": "Sair",
@@ -1999,7 +2024,7 @@
             "assignments": "Tarefas",
             "dynamic": "Dinâmico",
             "dynamic_page": "Página Dinâmica",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Embed"
           },
@@ -2014,7 +2039,8 @@
             "create_success": "Atividade criada com sucesso",
             "uploading": "Enviando arquivo e criando atividade...",
             "upload_success": "Arquivo enviado com sucesso",
-            "creating_uploading": "Criando atividade e enviando arquivo..."
+            "creating_uploading": "Criando atividade e enviando arquivo...",
+            "update_error": "Falha ao atualizar a atividade"
           },
           "versioning": {
             "version_history": "Histórico de versões",
@@ -2058,6 +2084,9 @@
               "remote_detected": "Alterações remotas detectadas",
               "editing_notice": "{{author}} fez alterações enquanto você editava"
             }
+          },
+          "descriptions": {
+            "scorm": "Pacote de aprendizado compatível com SCORM"
           }
         }
       },
@@ -2082,7 +2111,7 @@
           "og_description_placeholder": "Descrição personalizada para compartilhamento social",
           "og_image_hint": "URL de imagem personalizada para compartilhamento social",
           "og_image_label": "URL da imagem OG",
-          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_image_placeholder": "https://exemplo.com/imagem.jpg",
           "og_title_label": "Título OG",
           "og_title_placeholder": "Título personalizado para compartilhamento social",
           "robots_nofollow_hint": "Quando habilitado, mecanismos de busca não seguirão links nesta página",
@@ -2138,14 +2167,16 @@
         "tabs": {
           "general": "Geral",
           "landing": "Página de Destino",
-          "branding": "Branding",
+          "branding": "Identidade Visual",
           "ai": "IA",
           "api": "Acesso API",
           "features": "Funcionalidades",
           "other": "Outro",
           "domains": "Domínios",
           "sso": "SSO",
-          "usage": "Uso"
+          "usage": "Uso",
+          "seo": "SEO",
+          "automations": "Automações"
         },
         "pages": {
           "general": {
@@ -2153,7 +2184,7 @@
             "subtitle": "Gerencie as configurações da sua organização"
           },
           "branding": {
-            "title": "Branding",
+            "title": "Identidade Visual",
             "subtitle": "Gerencie a identidade visual e presença social da sua organização"
           },
           "landing": {
@@ -2182,7 +2213,7 @@
           },
           "sso": {
             "subtitle": "Configure SSO para sua organização",
-            "title": "Single Sign-On"
+            "title": "Login Único"
           },
           "usage": {
             "subtitle": "Monitore o uso de recursos e limites do plano",
@@ -2207,9 +2238,12 @@
         "footer_text": "Texto do rodapé",
         "footer_text_placeholder": "Digite o texto do rodapé...",
         "footer_text_desc": "Texto personalizado exibido na parte inferior das páginas da sua organização",
+        "default_language": "Idioma padrão",
+        "default_language_desc": "O idioma que novos visitantes veem por padrão e o idioma usado nos e-mails enviados em nome desta organização. Os membros ainda podem alterar o seu próprio idioma de interface.",
         "watermark_desc": "Mostrar marca d'água LearnHouse nas páginas da organização",
         "watermark_free_plan": "A marca d'água é sempre exibida no plano gratuito",
-        "watermark_label": "Marca d'água \"Made with LearnHouse\""
+        "watermark_label": "Marca d'água \"Made with LearnHouse\"",
+        "watermark_ee": "Oculto pela sua licença Enterprise Edition"
       },
       "images": {
         "title": "Imagens e Visualizações",
@@ -2263,13 +2297,13 @@
         }
       },
       "branding": {
-        "title": "Branding",
+        "title": "Identidade Visual",
         "subtitle": "Gerencie a identidade visual e presença social da sua organização",
         "tabs": {
           "images": "Imagens e Visualizações",
           "social": "Links Sociais",
           "theme": "Tema",
-          "auth": "Auth"
+          "auth": "Autenticação"
         }
       },
       "auth_branding": {
@@ -2412,7 +2446,7 @@
           "custom": "Intervalo Personalizado"
         },
         "table": {
-          "timestamp": "Timestamp",
+          "timestamp": "Data e Hora",
           "user": "Usuário",
           "resource": "Recurso",
           "path_method": "Caminho & Método",
@@ -2635,7 +2669,7 @@
         "status_disabled": "Desabilitado",
         "status_enabled": "Habilitado",
         "subtitle": "Configure SSO empresarial para sua organização",
-        "title": "Single Sign-On (SSO)",
+        "title": "Login Único (SSO)",
         "workos_info": "WorkOS fornece SSO empresarial com suporte a SAML e OIDC.",
         "workos_org_id": "ID da organização WorkOS",
         "workos_org_id_help": "Este ID é gerado automaticamente ao configurar SSO pelo portal."
@@ -3091,6 +3125,34 @@
             "toasts": {
               "success": "Função salva com sucesso",
               "error": "Erro ao salvar função, tente novamente mais tarde."
+            },
+            "permissions": {
+              "actions": {
+                "access": "acessar",
+                "create": "criar",
+                "delete": "excluir",
+                "delete_own": "excluir os próprios",
+                "read": "ler",
+                "read_own": "ler os próprios",
+                "update": "atualizar",
+                "update_own": "atualizar os próprios"
+              },
+              "deselect": "Desmarcar",
+              "deselect_all": "Desmarcar Todos",
+              "sections": {
+                "activities": "Atividades",
+                "collections": "Coleções",
+                "coursechapters": "Capítulos do Curso",
+                "courses": "Cursos",
+                "dashboard": "Painel",
+                "organizations": "Organizações",
+                "roles": "Funções",
+                "usergroups": "Grupos de Usuários",
+                "users": "Usuários"
+              },
+              "select": "Selecionar",
+              "select_all": "Selecionar Todos",
+              "title": "Permissões"
             }
           },
           "delete": {
@@ -3209,8 +3271,8 @@
             "description": "Formulários de preenchimento para estudantes"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "Código",
+            "description": "Desafio de código com correção automática por casos de teste"
           },
           "short_answer": {
             "title": "Resposta curta",
@@ -3327,14 +3389,14 @@
           "reject": "Rejeitar Tarefa",
           "set_final_grade": "Definir nota final",
           "mark_as_done": "Marcar Atividade como Concluída para o Usuário",
-          "finalize": "Finalize & Complete",
+          "finalize": "Finalizar e Concluir",
           "reject_description": "Exclui a submissão e permite ao aluno reenviar",
           "set_final_grade_description": "Calcula e salva a nota sem concluir a atividade",
           "finalize_description": "Define a nota final e marca a atividade como concluída para o aluno"
         },
         "toasts": {
           "reject_success": "Tarefa rejeitada com sucesso",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Tarefa avaliada e atividade marcada como concluída"
         },
         "filters": {
           "all": "Todos"
@@ -3458,7 +3520,9 @@
             "anti_copy_paste_description": "Desencoraje colar respostas geradas por IA bloqueando eventos de colar. Nota: é um dissuasor.",
             "auto_grading_disabled_file": "A avaliação automática não está disponível porque esta tarefa tem uma entrega de arquivo que precisa de revisão humana.",
             "grading_type_hint": "Como as notas são mostradas aos alunos",
-            "grading_options_hint": "Comportamento ao enviar"
+            "grading_options_hint": "Comportamento ao enviar",
+            "show_correct_answers_description": "Após a correção da entrega, mostre aos alunos as respostas corretas ao lado das suas: quais opções do quiz estavam corretas, a resposta curta ou numérica esperada e os espaços em branco corretos do formulário.",
+            "show_correct_answers_label": "Mostrar respostas corretas após a correção"
           },
           "toasts": {
             "updating": "Atualizando tarefa...",
@@ -3498,12 +3562,184 @@
             "anti_copy_paste_label": "Bloquear copiar e colar",
             "anti_copy_paste_description": "Desencoraje colar respostas geradas por IA bloqueando eventos de colar. Nota: é um dissuasor.",
             "grading_type_hint": "Como as notas são mostradas aos alunos",
-            "grading_options_hint": "Comportamento ao enviar"
+            "grading_options_hint": "Comportamento ao enviar",
+            "show_correct_answers_description": "Após a correção, os alunos veem as respostas corretas ao lado das suas.",
+            "show_correct_answers_label": "Mostrar respostas corretas após a correção"
           },
           "toasts": {
             "creating": "Criando tarefa...",
             "success": "Tarefa criada com sucesso"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Pesquisar",
+      "placeholder": "Pesquisar páginas e conteúdo…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Nenhum resultado encontrado",
+      "loading": "Pesquisando…",
+      "type_to_search": "Digite pelo menos 2 caracteres para pesquisar conteúdo",
+      "groups": {
+        "pages": "Páginas",
+        "courses": "Cursos",
+        "collections": "Coleções",
+        "users": "Usuários",
+        "communities": "Comunidades",
+        "discussions": "Discussões",
+        "playgrounds": "Playgrounds",
+        "podcasts": "Podcasts"
+      },
+      "entries": {
+        "home": {
+          "description": "Visão geral do painel",
+          "keywords": "início, visão geral, começar, painel"
+        },
+        "courses": {
+          "description": "Gerencie seus cursos",
+          "keywords": "cursos, aulas, aprender, treinamento, turmas"
+        },
+        "assignments": {
+          "description": "Gerencie tarefas",
+          "keywords": "tarefas, deveres, exercícios, entregas"
+        },
+        "communities": {
+          "description": "Gerencie comunidades",
+          "keywords": "fóruns, discussões, membros, postagens"
+        },
+        "podcasts": {
+          "description": "Gerencie podcasts",
+          "keywords": "áudio, episódios, programas"
+        },
+        "boards": {
+          "description": "Gerencie quadros",
+          "keywords": "kanban, projeto, tarefas, listas"
+        },
+        "playgrounds": {
+          "description": "Playgrounds de código",
+          "keywords": "código, sandbox, repl, programação"
+        },
+        "analytics": {
+          "description": "Ver painéis de análise",
+          "keywords": "estatísticas, métricas, gráficos, relatórios"
+        },
+        "users": {
+          "description": "Gerencie usuários da organização",
+          "keywords": "membros, contas, pessoas"
+        },
+        "usergroups": {
+          "description": "Gerencie grupos de usuários",
+          "keywords": "equipes, coortes, grupos"
+        },
+        "roles": {
+          "description": "Gerencie funções e permissões",
+          "keywords": "permissões, acesso, rbac, segurança"
+        },
+        "signups": {
+          "description": "Revisar inscrições",
+          "keywords": "registros, candidaturas, solicitações"
+        },
+        "org_general": {
+          "description": "Configurações gerais da organização",
+          "keywords": "nome, marca, slug, perfil"
+        },
+        "org_features": {
+          "description": "Gerencie funcionalidades da organização",
+          "keywords": "funcionalidades, módulos, interruptores"
+        },
+        "org_billing": {
+          "description": "Faturamento e assinatura",
+          "keywords": "plano, pagamentos, fatura, assinatura"
+        },
+        "payments_overview": {
+          "description": "Visão geral de pagamentos e receita",
+          "keywords": "stripe, painel, receita, vendas",
+          "title": "Visão geral de pagamentos"
+        },
+        "payments_products": {
+          "description": "Produtos e preços de pagamento",
+          "keywords": "produtos, preços, stripe, níveis, planos",
+          "title": "Produtos"
+        },
+        "users_add": {
+          "description": "Convide novos membros",
+          "keywords": "convidar, adicionar, membros, enviar"
+        },
+        "users_audit_logs": {
+          "description": "Registro de atividades da organização",
+          "keywords": "auditoria, registros, histórico, segurança, atividade"
+        },
+        "org_branding": {
+          "description": "Logo, cores e identidade visual",
+          "keywords": "marca, logo, cores, tema"
+        },
+        "org_landing": {
+          "description": "Personalize sua landing page",
+          "keywords": "landing, página inicial, hero, página"
+        },
+        "org_seo": {
+          "description": "Otimização para motores de busca",
+          "keywords": "seo, busca, meta, ranking, google"
+        },
+        "org_ai": {
+          "description": "Funcionalidades e configuração de IA",
+          "keywords": "ia, llm, gpt, openai, geração"
+        },
+        "org_domains": {
+          "description": "Domínios personalizados",
+          "keywords": "domínio, dns, personalizado, subdomínio, cname"
+        },
+        "org_automations": {
+          "description": "Webhooks e integrações externas",
+          "keywords": "webhooks, automações, zapier, integrações, gatilhos"
+        },
+        "org_api": {
+          "description": "Tokens de API e acesso programático",
+          "keywords": "api, tokens, acesso, programático, chaves"
+        },
+        "org_sso": {
+          "description": "Configuração de logon único",
+          "keywords": "sso, saml, oauth, empresa, login"
+        },
+        "org_other": {
+          "description": "Outras configurações da organização",
+          "keywords": "diversos, avançado, personalizado, extra"
+        },
+        "payments_groups": {
+          "description": "Grupos e pacotes de pagamento",
+          "keywords": "grupos, pacotes, conjuntos",
+          "title": "Grupos de pagamento"
+        },
+        "payments_configuration": {
+          "description": "Configuração de Stripe e pagamentos",
+          "keywords": "configuração, ajustes, stripe, instalação, connect",
+          "title": "Configuração"
+        },
+        "payments_customers": {
+          "description": "Clientes e assinantes",
+          "keywords": "clientes, assinantes, compradores, pagos",
+          "title": "Clientes"
+        },
+        "courses_migrate": {
+          "description": "Importar cursos de outro LMS",
+          "keywords": "importar, migrar, transferir, lms, moodle, canvas",
+          "title": "Migrar cursos"
+        },
+        "account_general": {
+          "description": "Configurações gerais da conta pessoal",
+          "keywords": "conta, configurações, email, nome, idioma"
+        },
+        "account_profile": {
+          "description": "Edite seu perfil e biografia",
+          "keywords": "perfil, bio, avatar, foto, público"
+        },
+        "account_security": {
+          "description": "Senha e configurações de segurança",
+          "keywords": "senha, segurança, 2fa, mfa, sessões"
+        },
+        "account_purchases": {
+          "description": "Suas compras e assinaturas",
+          "keywords": "compras, assinaturas, faturamento, histórico, recibos"
         }
       }
     }
@@ -3794,8 +4030,8 @@
       "advanced": "Avançado"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Análises não configuradas",
+      "description": "As análises requerem uma conexão com o Tinybird. Defina as variáveis de ambiente <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> e <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> para habilitá-las."
     },
     "advanced_gate": {
       "requires": "Requer",
@@ -3804,156 +4040,156 @@
     "common": {
       "loading": "Carregando...",
       "no_data": "Sem dados ainda",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "Usuários",
+      "views": "Visualizações",
+      "enrollments": "Matrículas",
+      "completions": "Conclusões",
+      "course": "Curso",
+      "date": "Data",
+      "user": "Usuário",
+      "type": "Tipo",
+      "expand": "Expandir",
+      "days": "Dias",
+      "score": "Pontuação",
+      "unique_users": "usuários únicos"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
+      "live_now": "Ao Vivo Agora",
+      "last_5_minutes": "Últimos 5 minutos",
+      "signups": "Cadastros",
+      "submissions": "Envios",
+      "daily_active_users": "Usuários Ativos Diários",
+      "active_users": "Usuários Ativos",
+      "countries": "Países",
+      "top_countries": "Principais Países",
+      "devices": "Dispositivos",
       "desktop": "Desktop",
-      "mobile": "Mobile",
+      "mobile": "Celular",
       "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "top_referrers": "Principais Origens",
+      "top_referrer": "Principal Origem",
+      "enrollment_funnel": "Funil de Matrículas",
+      "page_views": "Visualizações de Página",
+      "course_views": "Visualizações de Curso",
+      "view_to_enroll": "Visualização → Matrícula",
+      "enroll_to_complete": "Matrícula → Conclusão",
+      "page_to_complete": "Página → Conclusão",
+      "conv_rate": "Taxa de Conv.",
+      "top_courses": "Principais Cursos",
+      "activity_engagement": "Engajamento por Atividade",
+      "activity": "Atividade",
+      "avg_time": "Tempo Médio",
+      "activities": "Atividades",
+      "courses": "Cursos",
       "enrollments": "Inscrições",
       "completions": "Conclusões"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Usuários Ao Vivo",
+        "description": "Usuários ativos nos últimos 5 minutos"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Cadastros",
+        "description": "Novos cadastros de usuários nos últimos {{days}} dias"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Matrículas",
+        "description": "Matrículas em cursos nos últimos {{days}} dias"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Conclusões",
+        "description": "Conclusões de cursos nos últimos {{days}} dias"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Página Atual",
+        "device": "Dispositivo",
+        "country": "País",
+        "last_seen": "Visto Por Último"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "E-mail",
+        "method": "Método"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Tendência de Crescimento da Org.",
+        "description": "Cadastros, matrículas e conclusões semanais"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Novos vs. Recorrentes",
+        "description": "Saúde do crescimento vs. retenção"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "Retenção por Coorte",
+        "description": "% de usuários ativos após a semana de cadastro",
+        "cohort": "Coorte",
+        "size": "Tamanho"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Horários de Pico",
+        "description": "Volume de eventos por dia e hora",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "Seg",
+          "tue": "Ter",
+          "wed": "Qua",
+          "thu": "Qui",
+          "fri": "Sex",
+          "sat": "Sáb",
+          "sun": "Dom"
         },
-        "events": "events"
+        "events": "eventos"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Abandono de Curso",
+        "description": "Onde os usuários param em cada curso"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Tempo até a Conclusão",
+        "description": "Mediana de dias para concluir cada curso"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Velocidade de Conclusão",
+        "description": "Média de dias entre conclusões de atividades"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "Eficácia por Tipo de Conteúdo",
+        "description": "Taxa de conclusão por tipo de atividade"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Matriz de Eficácia de Cursos",
+        "description": "Quantidade de atividades vs. taxa de conclusão (dimensionado por matrículas)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Correlação com Comunidade",
+        "description": "Taxa de conclusão: participantes vs. não participantes de discussões",
+        "discussion_users": "Usuários em Discussões",
+        "non_discussion_users": "Usuários sem Discussões"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Pontuação de Engajamento do Aluno",
+        "description": "Principais alunos por engajamento composto",
+        "user_id": "ID do Usuário"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Resumo de Progresso do Usuário",
+        "description": "Usuários em cada faixa de conclusão por curso"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Distribuição de Notas",
+        "description": "Histograma de notas das tarefas"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Eficácia da Busca",
+        "description": "Principais consultas e taxa de zero resultados",
+        "query": "Consulta",
+        "searches": "Buscas",
+        "zero_results": "% Zero Resultados"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Taxa de Certificação",
+        "description": "% de concluintes que solicitam certificados"
       }
     },
     "course_analytics": {
@@ -4407,7 +4643,8 @@
       "search_placeholder": "Pesquisar por nome ou e-mail...",
       "title": "Membros",
       "user": "Usuário",
-      "viewer": "Visualizador"
+      "viewer": "Visualizador",
+      "all_groups": "Todos os grupos"
     },
     "name": "Nome",
     "name_placeholder": "ex.: Planejamento de Projeto",
@@ -4419,7 +4656,8 @@
       "delete": "Excluir",
       "delete_multiple": "Excluir {{count}} itens",
       "move_back": "Mover para trás",
-      "move_forward": "Mover para frente"
+      "move_forward": "Mover para frente",
+      "duplicate": "Duplicar"
     },
     "open_board": "Abrir quadro",
     "pagination": {
@@ -4512,7 +4750,7 @@
       "embed_webpage": "Incorporar uma página web",
       "open_in_new_tab": "Abrir em nova aba",
       "reload": "Recarregar",
-      "url_placeholder": "https://example.com"
+      "url_placeholder": "https://exemplo.com"
     },
     "youtube_block": {
       "add": "Adicionar",
@@ -4522,12 +4760,14 @@
     "zoom": {
       "zoom_in": "Ampliar",
       "zoom_out": "Reduzir"
-    }
+    },
+    "no_boards": "Ainda não há quadros",
+    "no_search_results": "Nenhum quadro encontrado"
   },
   "embed": {
     "not_supported_description": "Este tipo de atividade requer autenticação e não pode ser incorporado.",
     "not_supported_title": "Esta atividade não é suportada",
-    "powered_by": "Powered by LearnHouse",
+    "powered_by": "Desenvolvido com LearnHouse",
     "visit_activity": "Visitar página da atividade"
   },
   "migration": {
@@ -4642,6 +4882,15 @@
       "usergroups_add_a_group": "Adicionar um grupo",
       "toast_add_error": "Não foi possível adicionar o grupo",
       "toast_remove_error": "Não foi possível remover o grupo"
-    }
+    },
+    "accessDenied": "Não é possível acessar este curso",
+    "backToCourses": "Voltar aos Cursos",
+    "loadError": "Não foi possível encontrar este curso ou ocorreu um erro ao carregá-lo.",
+    "noPermission": "Você não tem permissão para visualizar este curso."
+  },
+  "pagination": {
+    "next": "Próxima",
+    "previous": "Anterior",
+    "showing_page": "Mostrando página {{current}} de {{total}}"
   }
 }

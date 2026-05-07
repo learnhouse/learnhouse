@@ -95,32 +95,32 @@
           "description": "Komunitas adalah fitur premium yang hanya tersedia untuk organisasi pada paket Standar kami atau lebih tinggi. Tingkatkan untuk membuka komunitas diskusi untuk anggota Anda."
         },
         "analytics": {
-          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
-          "title": "Standard Feature"
+          "description": "Analitik adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk membuka wawasan tentang pelajar dan konten Anda.",
+          "title": "Fitur Standard"
         },
         "course_analytics": {
-          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
-          "title": "Pro Feature"
+          "description": "Analitik Kursus adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuka data keterlibatan terperinci, tren pendaftaran, dan kemajuan pelajar untuk masing-masing kursus.",
+          "title": "Fitur Pro"
         },
         "custom_domains": {
-          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
-          "title": "Standard Feature"
+          "description": "Domain Kustom adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk menggunakan domain Anda sendiri demi pengalaman bermerek.",
+          "title": "Fitur Standard"
         },
         "podcasts": {
-          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
-          "title": "Standard Feature"
+          "description": "Podcast adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk membuat dan membagikan podcast dengan anggota Anda.",
+          "title": "Fitur Standard"
         },
         "seo": {
-          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
-          "title": "Standard Feature"
+          "description": "Alat optimasi SEO hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk menyesuaikan tampilan mesin pencari, pratinjau berbagi sosial, dan data terstruktur untuk kursus Anda.",
+          "title": "Fitur Standard"
         },
         "sso": {
-          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
-          "title": "Enterprise Feature"
+          "description": "Single Sign-On (SSO) adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Enterprise. Upgrade untuk mengaktifkan autentikasi aman melalui penyedia identitas organisasi Anda.",
+          "title": "Fitur Enterprise"
         }
       },
-      "current_plan": "Current plan",
-      "upgrade_to": "Upgrade to"
+      "current_plan": "Paket saat ini",
+      "upgrade_to": "Upgrade ke"
     },
     "features": {
       "disabled": {
@@ -180,7 +180,13 @@
     "creating": "Membuat...",
     "view_details": "Lihat Detail",
     "close": "Tutup",
-    "optional": "optional"
+    "optional": "opsional",
+    "analytics": "Analitik",
+    "add": "Tambah",
+    "choose_an_organization_to_continue": "Pilih organisasi untuk melanjutkan",
+    "for": "untuk",
+    "powered_by": "Didukung oleh",
+    "results": "hasil"
   },
   "banner": {
     "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
@@ -267,64 +273,66 @@
     "invite_required_desc": "Kode undangan diperlukan untuk bergabung dengan {{org}}",
     "invite_code": "Kode undangan",
     "validate_invite": "Validasi undangan",
-    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
-    "back_to_login": "Back to Login",
-    "check_email_for_verification": "Check Your Email",
-    "check_inbox_message": "Please check your inbox and click the verification link.",
-    "create_your_account": "Create your account",
-    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
-    "email_verification_required": "Email Verification Required",
-    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
-    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
-    "email_verified_success": "Email Verified!",
-    "login_failed": "Login Failed",
-    "password_req_lowercase": "At least one lowercase letter (a-z)",
-    "password_req_min_length": "At least 8 characters",
-    "password_req_number": "At least one number (0-9)",
-    "password_req_special": "At least one special character (!@#$%...)",
-    "password_req_uppercase": "At least one uppercase letter (A-Z)",
-    "password_requirements_not_met": "Password does not meet requirements",
-    "password_strength": "Password strength",
-    "password_strength_fair": "Fair",
-    "password_strength_good": "Good",
-    "password_strength_strong": "Strong",
-    "password_strength_weak": "Weak",
-    "proceed_to_login": "Proceed to Login",
-    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
-    "resend_verification_email": "Resend verification email",
-    "resend_verification_failed": "Failed to resend verification email. Please try again.",
-    "sign_in_with_sso": "Sign in with SSO",
+    "account_locked_message": "Akun Anda telah dikunci sementara karena terlalu banyak percobaan masuk yang gagal. Silakan coba lagi nanti.",
+    "back_to_login": "Kembali ke Halaman Masuk",
+    "check_email_for_verification": "Periksa Email Anda",
+    "check_inbox_message": "Silakan periksa kotak masuk Anda dan klik tautan verifikasi.",
+    "create_your_account": "Buat akun Anda",
+    "email_not_verified_message": "Harap verifikasi alamat email Anda sebelum masuk. Periksa kotak masuk Anda untuk email verifikasi.",
+    "email_verification_required": "Verifikasi Email Diperlukan",
+    "email_verification_required_join": "Harap verifikasi alamat email Anda sebelum bergabung dengan organisasi. Periksa kotak masuk Anda untuk email verifikasi.",
+    "email_verified_message": "Email Anda telah berhasil diverifikasi. Anda sekarang dapat masuk ke akun Anda.",
+    "email_verified_success": "Email Diverifikasi!",
+    "login_failed": "Gagal Masuk",
+    "password_req_lowercase": "Setidaknya satu huruf kecil (a-z)",
+    "password_req_min_length": "Minimal 8 karakter",
+    "password_req_number": "Setidaknya satu angka (0-9)",
+    "password_req_special": "Setidaknya satu karakter khusus (!@#$%...)",
+    "password_req_uppercase": "Setidaknya satu huruf besar (A-Z)",
+    "password_requirements_not_met": "Kata sandi tidak memenuhi persyaratan",
+    "password_strength": "Kekuatan kata sandi",
+    "password_strength_fair": "Cukup",
+    "password_strength_good": "Baik",
+    "password_strength_strong": "Kuat",
+    "password_strength_weak": "Lemah",
+    "proceed_to_login": "Lanjutkan ke Halaman Masuk",
+    "rate_limited_message": "Anda telah melakukan terlalu banyak percobaan masuk. Silakan tunggu beberapa menit sebelum mencoba lagi.",
+    "resend_verification_email": "Kirim ulang email verifikasi",
+    "resend_verification_failed": "Gagal mengirim ulang email verifikasi. Silakan coba lagi.",
+    "sign_in_with_sso": "Masuk dengan SSO",
     "sso_callback": {
-      "auth_failed": "Authentication Failed",
-      "authenticating": "Authenticating...",
-      "copied": "Copied!",
-      "copy_details": "Copy to clipboard",
-      "error": "SSO authentication failed. Please try again.",
-      "error_code": "Error code",
-      "go_home": "Go to Home",
-      "hide_details": "Hide technical details",
-      "missing_params": "Invalid SSO callback. Missing required parameters.",
-      "please_wait": "Please wait while we verify your identity",
-      "provider": "Provider",
-      "redirecting": "Redirecting you to the application...",
-      "show_details": "Show technical details",
-      "success": "Authentication Successful",
+      "auth_failed": "Autentikasi Gagal",
+      "authenticating": "Mengautentikasi...",
+      "copied": "Tersalin!",
+      "copy_details": "Salin ke papan klip",
+      "error": "Autentikasi SSO gagal. Silakan coba lagi.",
+      "error_code": "Kode kesalahan",
+      "go_home": "Pergi ke Beranda",
+      "hide_details": "Sembunyikan detail teknis",
+      "missing_params": "Callback SSO tidak valid. Parameter yang diperlukan tidak ada.",
+      "please_wait": "Harap tunggu sementara kami memverifikasi identitas Anda",
+      "provider": "Penyedia",
+      "redirecting": "Mengalihkan Anda ke aplikasi...",
+      "show_details": "Tampilkan detail teknis",
+      "success": "Autentikasi Berhasil",
       "tips": {
-        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
-        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
-        "invalid_state": "Your session may have expired. Please try logging in again.",
-        "server_error": "The identity provider is experiencing issues. Please try again later."
+        "access_denied": "Jika Anda menolak permintaan masuk secara tidak sengaja, coba lagi dan terima izinnya.",
+        "domain_not_allowed": "Hubungi administrator organisasi Anda untuk memverifikasi bahwa domain email Anda diizinkan.",
+        "invalid_state": "Sesi Anda mungkin telah kedaluwarsa. Silakan coba masuk lagi.",
+        "server_error": "Penyedia identitas sedang mengalami masalah. Silakan coba lagi nanti."
       },
-      "try_again": "Try Again"
+      "try_again": "Coba Lagi"
     },
-    "sso_error": "SSO authentication failed. Please try again.",
-    "verification_email_resent": "Verification Email Sent",
-    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
-    "verification_failed": "Verification Failed",
-    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
-    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
-    "verify_email_title": "Verify Your Email",
-    "verifying_email": "Verifying your email address..."
+    "sso_error": "Autentikasi SSO gagal. Silakan coba lagi.",
+    "verification_email_resent": "Email Verifikasi Terkirim",
+    "verification_email_sent_message": "Kami telah mengirim email verifikasi ke kotak masuk Anda. Silakan klik tautan di email untuk memverifikasi akun Anda.",
+    "verification_failed": "Verifikasi Gagal",
+    "verification_missing_params": "Parameter verifikasi tidak ada. Silakan periksa tautan verifikasi Anda.",
+    "verification_trouble": "Mengalami masalah? Coba minta email verifikasi baru dari halaman masuk.",
+    "verify_email_title": "Verifikasi Email Anda",
+    "verifying_email": "Memverifikasi alamat email Anda...",
+    "error_generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "sign_in": "Masuk"
   },
   "validation": {
     "required": "Wajib isi",
@@ -603,18 +611,20 @@
         "video_takes_time": "Analisis video bisa memakan waktu 1-2 menit",
         "video_hint": "Video mungkin memerlukan 1-2 menit untuk diproses"
       },
-      "from_existing": "From Existing Content",
-      "from_existing_description": "Upload files from another platform and organize them into a course"
+      "from_existing": "Dari Konten yang Ada",
+      "from_existing_description": "Unggah file dari platform lain dan organisasikan menjadi sebuah kursus"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "Semua Kursus",
+      "filter_by_group": "Filter berdasarkan grup",
+      "info_title": "Filter Grup Pengguna",
+      "info_description": "Filter kursus berdasarkan grup pengguna untuk melihat hanya kursus yang ditugaskan ke grup tertentu. Berguna untuk keluarga atau tim yang berbagi organisasi yang sama."
     },
-    "copied": "Copied!",
-    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
-    "quit_course_title": "Quit Course?"
+    "copied": "Tersalin!",
+    "quit_course_confirm": "Apakah Anda yakin ingin meninggalkan kursus ini? Anda akan kehilangan semua kemajuan Anda.",
+    "quit_course_title": "Tinggalkan Kursus?",
+    "courses_load_error": "Gagal memuat kursus. Silakan coba lagi.",
+    "view_all_courses": "Lihat semua kursus"
   },
   "communities": {
     "title": "Komunitas",
@@ -662,7 +672,8 @@
       "clear_search": "Hapus pencarian",
       "no_discussions": "Belum ada diskusi",
       "no_discussions_description": "Jadilah yang pertama memulai diskusi di komunitas ini!",
-      "start_discussion": "Mulai Diskusi"
+      "start_discussion": "Mulai Diskusi",
+      "delete_failed": "Gagal menghapus diskusi"
     },
     "discussion_detail": {
       "edit": "Edit",
@@ -670,7 +681,8 @@
       "delete_title": "Hapus diskusi?",
       "delete_confirm": "Apakah Anda yakin ingin menghapus diskusi ini? Tindakan ini tidak dapat dibatalkan.",
       "delete_button": "Hapus Diskusi",
-      "no_details": "Tidak ada detail tambahan."
+      "no_details": "Tidak ada detail tambahan.",
+      "delete_failed": "Gagal menghapus diskusi"
     },
     "discussion_card": {
       "pin_discussion": "Sematkan diskusi",
@@ -680,7 +692,10 @@
       "delete_discussion": "Hapus diskusi",
       "delete_title": "Hapus diskusi?",
       "delete_confirm": "Apakah Anda yakin ingin menghapus diskusi ini? Tindakan ini tidak dapat dibatalkan.",
-      "votes": "suara"
+      "votes": "suara",
+      "delete_failed": "Gagal menghapus diskusi",
+      "lock_failed": "Gagal memperbarui status kunci",
+      "pin_failed": "Gagal memperbarui status sematan"
     },
     "comments": {
       "no_replies": "Belum ada balasan",
@@ -696,7 +711,8 @@
       "cancel": "Batal",
       "failed_to_post": "Gagal memposting balasan. Silakan coba lagi.",
       "content_not_allowed": "Balasan Anda berisi konten yang tidak diizinkan.",
-      "failed_to_update": "Gagal memperbarui. Silakan coba lagi."
+      "failed_to_update": "Gagal memperbarui. Silakan coba lagi.",
+      "failed_to_delete": "Gagal menghapus komentar"
     },
     "label_filter": {
       "label": "Label:",
@@ -709,7 +725,7 @@
       "question": "Pertanyaan",
       "idea": "Ide",
       "announcement": "Pengumuman",
-      "showcase": "Showcase"
+      "showcase": "Pamer"
     },
     "create_discussion": {
       "title": "Mulai Diskusi",
@@ -775,98 +791,98 @@
     "podcast_deleted_success": "Podcast berhasil dihapus",
     "podcast_deleted_error": "Gagal menghapus podcast",
     "edit_content": "Edit Konten",
-    "create_new_podcast": "Create a new podcast for your organization",
-    "create_podcast": "Create Podcast",
-    "create_podcast_btn": "Create Podcast",
-    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
-    "creating_podcast": "Creating podcast...",
+    "create_new_podcast": "Buat podcast baru untuk organisasi Anda",
+    "create_podcast": "Buat Podcast",
+    "create_podcast_btn": "Buat Podcast",
+    "create_podcasts_placeholder": "Buat podcast untuk berbagi konten audio dengan audiens Anda",
+    "creating_podcast": "Membuat podcast...",
     "dashboard": {
       "episodes": {
-        "audio_hint": "MP3, WAV, or M4A files supported",
-        "audio_label": "Audio File",
-        "create": "Create Episode",
-        "create_error": "Failed to create episode",
-        "create_first": "Create First Episode",
-        "created": "Episode created",
-        "creating": "Creating episode...",
+        "audio_hint": "File MP3, WAV, atau M4A didukung",
+        "audio_label": "File Audio",
+        "create": "Buat Episode",
+        "create_error": "Gagal membuat episode",
+        "create_first": "Buat Episode Pertama",
+        "created": "Episode dibuat",
+        "creating": "Membuat episode...",
         "delete": "Hapus",
-        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
-        "delete_error": "Failed to delete episode",
-        "delete_title": "Delete Episode?",
-        "deleted": "Episode deleted",
-        "deleting": "Deleting episode...",
+        "delete_confirm": "Apakah Anda yakin ingin menghapus episode ini? Tindakan ini tidak dapat dibatalkan.",
+        "delete_error": "Gagal menghapus episode",
+        "delete_title": "Hapus Episode?",
+        "deleted": "Episode dihapus",
+        "deleting": "Menghapus episode...",
         "description_label": "Deskripsi",
-        "description_placeholder": "Enter episode description",
+        "description_placeholder": "Masukkan deskripsi episode",
         "edit": "Edit",
         "edit_episode": "Edit Episode",
-        "edit_episode_description": "Update episode details",
-        "new_episode": "New Episode",
-        "new_episode_description": "Add a new episode to this podcast",
-        "no_audio": "No audio file",
-        "no_episodes_description": "Start by adding your first episode",
+        "edit_episode_description": "Perbarui detail episode",
+        "new_episode": "Episode Baru",
+        "new_episode_description": "Tambahkan episode baru ke podcast ini",
+        "no_audio": "Tidak ada file audio",
+        "no_episodes_description": "Mulailah dengan menambahkan episode pertama Anda",
         "publish": "Terbitkan",
-        "replace_audio": "Replace Audio File",
-        "save": "Save Changes",
+        "replace_audio": "Ganti File Audio",
+        "save": "Simpan Perubahan",
         "title_label": "Judul",
-        "title_placeholder": "Enter episode title",
+        "title_placeholder": "Masukkan judul episode",
         "unpublish": "Batalkan Terbit",
-        "update_error": "Failed to update episode",
-        "updated": "Episode updated",
-        "updating": "Updating episode...",
-        "upload_audio": "Upload Audio File"
+        "update_error": "Gagal memperbarui episode",
+        "updated": "Episode diperbarui",
+        "updating": "Memperbarui episode...",
+        "upload_audio": "Unggah File Audio"
       },
       "form": {
-        "about": "About",
-        "about_max_length": "About must be at most 2000 characters",
-        "about_placeholder": "Tell listeners more about this podcast...",
-        "public_hint": "Anyone can find and listen to this podcast",
-        "published_hint": "Make this podcast visible on your organization page",
-        "tags_hint": "Separate tags with commas",
-        "tags_placeholder": "music, education, tech",
+        "about": "Tentang",
+        "about_max_length": "Tentang harus maksimal 2000 karakter",
+        "about_placeholder": "Beritahu pendengar lebih banyak tentang podcast ini...",
+        "public_hint": "Siapa pun dapat menemukan dan mendengarkan podcast ini",
+        "published_hint": "Tampilkan podcast ini di halaman organisasi Anda",
+        "tags_hint": "Pisahkan tag dengan koma",
+        "tags_placeholder": "musik, edukasi, teknologi",
         "thumbnail": "Thumbnail",
-        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
-        "upload_thumbnail": "Upload Thumbnail",
-        "visibility": "Visibility Settings"
+        "thumbnail_hint": "Ukuran yang disarankan: 1400x1400px. JPG atau PNG.",
+        "upload_thumbnail": "Unggah Thumbnail",
+        "visibility": "Pengaturan Visibilitas"
       },
-      "save_changes": "Save Changes",
-      "save_error": "Failed to save changes",
-      "saved": "Changes saved",
-      "saving": "Saving...",
+      "save_changes": "Simpan Perubahan",
+      "save_error": "Gagal menyimpan perubahan",
+      "saved": "Perubahan disimpan",
+      "saving": "Menyimpan...",
       "tabs": {
-        "episodes": "Episodes",
+        "episodes": "Episode",
         "general": "Umum"
       },
-      "view_podcast": "View Podcast"
+      "view_podcast": "Lihat Podcast"
     },
-    "failed_to_create_podcast": "Failed to create podcast",
+    "failed_to_create_podcast": "Gagal membuat podcast",
     "form": {
-      "description_max_length": "Description must be at most 500 characters",
-      "name_max_length": "Name must be at most 100 characters",
-      "name_min_length": "Name must be at least 3 characters",
-      "name_required": "Podcast name is required"
+      "description_max_length": "Deskripsi harus maksimal 500 karakter",
+      "name_max_length": "Nama harus maksimal 100 karakter",
+      "name_min_length": "Nama harus minimal 3 karakter",
+      "name_required": "Nama podcast wajib diisi"
     },
     "modals": {
       "create": {
         "cancel": "Batal",
-        "description": "Fill in the details to create a new podcast",
+        "description": "Isi detail untuk membuat podcast baru",
         "form": {
           "description_label": "Deskripsi",
-          "description_placeholder": "Enter podcast description",
-          "name_label": "Podcast Name",
-          "name_placeholder": "Enter podcast name",
-          "public_label": "Make this podcast public"
+          "description_placeholder": "Masukkan deskripsi podcast",
+          "name_label": "Nama Podcast",
+          "name_placeholder": "Masukkan nama podcast",
+          "public_label": "Jadikan podcast ini publik"
         },
-        "submit": "Create Podcast",
-        "title": "Create New Podcast"
+        "submit": "Buat Podcast",
+        "title": "Buat Podcast Baru"
       }
     },
-    "podcast_created_success": "Podcast created successfully",
-    "podcast_name": "Podcast Name",
-    "podcast_name_required": "Podcast name is required",
+    "podcast_created_success": "Podcast berhasil dibuat",
+    "podcast_name": "Nama Podcast",
+    "podcast_name_required": "Nama podcast wajib diisi",
     "podcast_tags": "Tag",
-    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_thumbnail": "Thumbnail Podcast",
     "podcast_visibility": "Visibilitas",
-    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
+    "search_results": "Ditemukan {{count}} podcast untuk \"{{query}}\""
   },
   "collections": {
     "collections": "Koleksi",
@@ -946,8 +962,8 @@
     "activities_count": "{{count}} aktivitas",
     "copy_link": "Salin Tautan",
     "embed": "Sematkan",
-    "embed_code_copied": "Embed code copied!",
-    "link_copied": "Link copied!",
+    "embed_code_copied": "Kode embed tersalin!",
+    "link_copied": "Tautan tersalin!",
     "share": "Bagikan"
   },
   "assignments": {
@@ -966,13 +982,20 @@
     "points": "poin",
     "current_points": "Poin saat ini: {{points}}",
     "grade": "Nilai",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "Jalankan Penilaian Otomatis",
     "due_date": "Tenggat Waktu",
     "task_breakdown": "Rincian tugas",
     "no_grade_details": "Belum ada detail nilai.",
     "task_passed": "Lulus",
     "task_not_passed": "Tidak lulus",
-    "score": "skor"
+    "score": "skor",
+    "form": {
+      "expected_answer": "Diharapkan"
+    },
+    "quiz": {
+      "correct_answer": "Benar",
+      "incorrect_answer": "Salah"
+    }
   },
   "certificate": {
     "certificate": "Sertifikat",
@@ -1059,7 +1082,8 @@
     "subscription": "Langganan",
     "benefits": "Manfaat:",
     "min_price": "Harga minimum:",
-    "choose_price": "Pilih harga Anda"
+    "choose_price": "Pilih harga Anda",
+    "stripe_denied": "Koneksi Stripe dibatalkan."
   },
   "account": {
     "title": "Akun",
@@ -1288,7 +1312,8 @@
           "loading_error": "Gagal memuat data profil",
           "save_success": "Profil berhasil diperbarui",
           "save_error": "Kesalahan memperbarui profil"
-        }
+        },
+        "unknown_section": "Bagian tidak dikenal"
       }
     },
     "sign_out": "Keluar",
@@ -1300,7 +1325,7 @@
     "my_progress": "Kemajuan Saya",
     "no_courses_in_progress": "Tidak ada kursus yang sedang berjalan",
     "start_course_to_see_progress": "Mulai kursus untuk melihat kemajuan Anda di sini",
-    "bio_placeholder": "Tell us a bit about yourself..."
+    "bio_placeholder": "Ceritakan sedikit tentang diri Anda..."
   },
   "roles": {
     "custom_role": "Peran Kustom",
@@ -1733,7 +1758,7 @@
             "thumbnail": "Gambar Mini",
             "course": "Kursus Terkait",
             "moderation": "Moderasi",
-            "access": "Access"
+            "access": "Akses"
           },
           "general": {
             "title": "Pengaturan Umum",
@@ -1752,8 +1777,8 @@
             "subtitle": "Konfigurasi pengaturan moderasi konten"
           },
           "access": {
-            "subtitle": "Control who can access this community",
-            "title": "Access Settings"
+            "subtitle": "Kontrol siapa yang dapat mengakses komunitas ini",
+            "title": "Pengaturan Akses"
           }
         },
         "course": {
@@ -1892,54 +1917,54 @@
         "access": {
           "public": {
             "active": "Aktif",
-            "confirmation_button": "Change to Public",
-            "confirmation_message": "Are you sure you want this community to be publicly available?",
-            "confirmation_title": "Change to Public?",
-            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "confirmation_button": "Ubah ke Publik",
+            "confirmation_message": "Apakah Anda yakin ingin komunitas ini tersedia secara publik?",
+            "confirmation_title": "Ubah ke Publik?",
+            "description": "Komunitas ini tersedia secara publik. Siapa pun dapat melihat dan berpartisipasi dalam diskusi.",
             "title": "Publik"
           },
           "restricted": {
             "active": "Aktif",
-            "confirmation_button": "Change to Restricted",
-            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
-            "confirmation_title": "Change to Restricted?",
-            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
-            "title": "Restricted"
+            "confirmation_button": "Ubah ke Terbatas",
+            "confirmation_message": "Apakah Anda yakin ingin komunitas ini dibatasi? Hanya anggota Grup Pengguna yang ditautkan yang akan memiliki akses.",
+            "confirmation_title": "Ubah ke Terbatas?",
+            "description": "Komunitas hanya dapat diakses oleh anggota Grup Pengguna yang dipilih. Tautkan Grup Pengguna untuk memberikan akses.",
+            "title": "Terbatas"
           },
-          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
-          "title": "Access Settings",
+          "subtitle": "Pilih apakah Anda ingin komunitas Anda tersedia secara publik atau hanya dapat diakses oleh grup pengguna tertentu",
+          "title": "Pengaturan Akses",
           "toasts": {
-            "update_error": "Failed to update access settings",
-            "update_success": "Access settings updated successfully"
+            "update_error": "Gagal memperbarui pengaturan akses",
+            "update_success": "Pengaturan akses berhasil diperbarui"
           },
           "usergroups": {
             "actions": {
               "delete_link": "Hapus",
-              "link_to_usergroup": "Link to User Group"
+              "link_to_usergroup": "Tautkan ke Grup Pengguna"
             },
             "modals": {
-              "create_usergroup": "Create a User Group",
+              "create_usergroup": "Buat Grup Pengguna",
               "link_button": "Tautkan",
-              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
-              "link_title": "Link Community to User Group",
-              "no_usergroups": "No User Groups available",
-              "unlink_button": "Remove Access",
-              "unlink_message": "Users from this User Group will no longer have access to this community.",
-              "unlink_title": "Remove User Group Access?",
-              "usergroup_name": "User Group Name",
-              "warning": "Users not in linked User Groups will lose access to this community"
+              "link_description": "Pilih Grup Pengguna untuk menautkan komunitas ini. Pengguna dari Grup Pengguna ini akan memiliki akses.",
+              "link_title": "Tautkan Komunitas ke Grup Pengguna",
+              "no_usergroups": "Tidak ada Grup Pengguna yang tersedia",
+              "unlink_button": "Hapus Akses",
+              "unlink_message": "Pengguna dari Grup Pengguna ini tidak akan lagi memiliki akses ke komunitas ini.",
+              "unlink_title": "Hapus Akses Grup Pengguna?",
+              "usergroup_name": "Nama Grup Pengguna",
+              "warning": "Pengguna yang tidak berada dalam Grup Pengguna yang ditautkan akan kehilangan akses ke komunitas ini"
             },
-            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "subtitle": "Berikan akses ke komunitas ini dengan menautkannya ke Grup Pengguna. Pengguna dalam grup ini akan dapat melihat dan berpartisipasi.",
             "table": {
               "actions": "Tindakan",
               "name": "Nama"
             },
-            "title": "User Groups",
+            "title": "Grup Pengguna",
             "toasts": {
-              "link_error": "Error {{status}}: {{detail}}",
-              "link_success": "Successfully linked User Group",
-              "unlink_error": "An error occurred while removing User Group access",
-              "unlink_success": "Successfully removed User Group access"
+              "link_error": "Kesalahan {{status}}: {{detail}}",
+              "link_success": "Berhasil menautkan Grup Pengguna",
+              "unlink_error": "Terjadi kesalahan saat menghapus akses Grup Pengguna",
+              "unlink_success": "Berhasil menghapus akses Grup Pengguna"
             }
           }
         }
@@ -2022,7 +2047,7 @@
             "assignments": "Tugas",
             "dynamic": "Dinamis",
             "dynamic_page": "Halaman Dinamis",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
             "embed": "Embed"
           },
@@ -2037,7 +2062,8 @@
             "create_success": "Aktivitas berhasil dibuat",
             "uploading": "Mengunggah file dan membuat aktivitas...",
             "upload_success": "File berhasil diunggah",
-            "creating_uploading": "Membuat aktivitas dan mengunggah file..."
+            "creating_uploading": "Membuat aktivitas dan mengunggah file...",
+            "update_error": "Gagal memperbarui aktivitas"
           },
           "versioning": {
             "version_history": "Riwayat Versi",
@@ -2081,76 +2107,79 @@
               "remote_detected": "Perubahan jarak jauh terdeteksi",
               "editing_notice": "{{author}} telah membuat perubahan saat Anda mengedit"
             }
+          },
+          "descriptions": {
+            "scorm": "Paket pembelajaran yang sesuai dengan SCORM"
           }
         }
       },
-      "limit_reached": "Course limit reached ({{limit}})",
+      "limit_reached": "Batas kursus tercapai ({{limit}})",
       "seo": {
         "errors": {
-          "save_failed": "Failed to save SEO settings"
+          "save_failed": "Gagal menyimpan pengaturan SEO"
         },
         "form": {
-          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
-          "canonical_url_label": "Canonical URL",
+          "canonical_url_hint": "Gunakan jika kursus ini diduplikasi di tempat lain. Kosongkan untuk URL default",
+          "canonical_url_label": "URL Kanonik",
           "canonical_url_placeholder": "https://example.com/course/your-course",
-          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "description_hint": "Kosongkan untuk menggunakan deskripsi kursus. Disarankan: 150-160 karakter",
           "description_label": "Meta Description",
-          "description_placeholder": "Enter a compelling description for search results",
-          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
-          "enable_jsonld_label": "Enable JSON-LD Structured Data",
-          "keywords_hint": "Comma-separated list of keywords related to your course",
-          "keywords_label": "Keywords",
-          "keywords_placeholder": "keyword1, keyword2, keyword3",
-          "og_description_label": "OG Description",
-          "og_description_placeholder": "Custom description for social media sharing",
-          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
-          "og_image_label": "OG Image URL",
+          "description_placeholder": "Masukkan deskripsi yang menarik untuk hasil pencarian",
+          "enable_jsonld_hint": "Menambahkan markup schema.org Course untuk rich snippet di hasil pencarian",
+          "enable_jsonld_label": "Aktifkan Data Terstruktur JSON-LD",
+          "keywords_hint": "Daftar kata kunci yang dipisahkan koma terkait kursus Anda",
+          "keywords_label": "Kata Kunci",
+          "keywords_placeholder": "kata-kunci-1, kata-kunci-2, kata-kunci-3",
+          "og_description_label": "Deskripsi OG",
+          "og_description_placeholder": "Deskripsi kustom untuk berbagi di media sosial",
+          "og_image_hint": "URL gambar kustom untuk berbagi sosial. Kosongkan untuk menggunakan thumbnail kursus",
+          "og_image_label": "URL Gambar OG",
           "og_image_placeholder": "https://example.com/image.jpg",
-          "og_title_label": "OG Title",
-          "og_title_placeholder": "Custom title for social media sharing",
-          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
-          "robots_nofollow_label": "Prevent following links (nofollow)",
-          "robots_noindex_hint": "When enabled, search engines will not index this course",
-          "robots_noindex_label": "Prevent search engine indexing (noindex)",
-          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
-          "title_label": "SEO Title",
-          "title_placeholder": "Enter a custom title for search engines",
-          "twitter_card_label": "Card Type",
-          "twitter_card_summary": "Summary",
-          "twitter_card_summary_large": "Summary with Large Image",
-          "twitter_description_label": "Twitter Description",
-          "twitter_description_placeholder": "Custom description for Twitter sharing",
-          "twitter_title_label": "Twitter Title",
-          "twitter_title_placeholder": "Custom title for Twitter sharing"
+          "og_title_label": "Judul OG",
+          "og_title_placeholder": "Judul kustom untuk berbagi di media sosial",
+          "robots_nofollow_hint": "Saat diaktifkan, mesin pencari tidak akan mengikuti tautan di halaman ini",
+          "robots_nofollow_label": "Cegah pengikutan tautan (nofollow)",
+          "robots_noindex_hint": "Saat diaktifkan, mesin pencari tidak akan mengindeks kursus ini",
+          "robots_noindex_label": "Cegah pengindeksan mesin pencari (noindex)",
+          "title_hint": "Kosongkan untuk menggunakan nama kursus. Disarankan: 50-60 karakter",
+          "title_label": "Judul SEO",
+          "title_placeholder": "Masukkan judul kustom untuk mesin pencari",
+          "twitter_card_label": "Tipe Kartu",
+          "twitter_card_summary": "Ringkasan",
+          "twitter_card_summary_large": "Ringkasan dengan Gambar Besar",
+          "twitter_description_label": "Deskripsi Twitter",
+          "twitter_description_placeholder": "Deskripsi kustom untuk berbagi di Twitter",
+          "twitter_title_label": "Judul Twitter",
+          "twitter_title_placeholder": "Judul kustom untuk berbagi di Twitter"
         },
         "sections": {
           "basic": {
-            "subtitle": "Configure how your course appears in search engine results",
-            "title": "Basic SEO"
+            "subtitle": "Konfigurasikan tampilan kursus Anda di hasil mesin pencari",
+            "title": "SEO Dasar"
           },
           "opengraph": {
-            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "subtitle": "Sesuaikan tampilan kursus Anda saat dibagikan di media sosial (Facebook, LinkedIn, dll.)",
             "title": "Open Graph"
           },
           "robots": {
-            "subtitle": "Control search engine indexing and enable rich snippets",
-            "title": "Robots & Structured Data"
+            "subtitle": "Kontrol pengindeksan mesin pencari dan aktifkan rich snippet",
+            "title": "Robots & Data Terstruktur"
           },
           "twitter": {
-            "subtitle": "Customize how your course appears when shared on Twitter/X",
-            "title": "Twitter Card"
+            "subtitle": "Sesuaikan tampilan kursus Anda saat dibagikan di Twitter/X",
+            "title": "Kartu Twitter"
           }
         },
-        "subtitle": "Optimize your course for search engines and social media sharing",
-        "title": "SEO Settings",
+        "subtitle": "Optimalkan kursus Anda untuk mesin pencari dan berbagi media sosial",
+        "title": "Pengaturan SEO",
         "validation": {
-          "description_max_length": "Meta description must be 160 characters or less",
-          "invalid_url": "Please enter a valid URL",
-          "og_description_max_length": "OG description must be 200 characters or less",
-          "og_title_max_length": "OG title must be 70 characters or less",
-          "title_max_length": "SEO title must be 70 characters or less",
-          "twitter_description_max_length": "Twitter description must be 200 characters or less",
-          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+          "description_max_length": "Meta description harus 160 karakter atau kurang",
+          "invalid_url": "Silakan masukkan URL yang valid",
+          "og_description_max_length": "Deskripsi OG harus 200 karakter atau kurang",
+          "og_title_max_length": "Judul OG harus 70 karakter atau kurang",
+          "title_max_length": "Judul SEO harus 70 karakter atau kurang",
+          "twitter_description_max_length": "Deskripsi Twitter harus 200 karakter atau kurang",
+          "twitter_title_max_length": "Judul Twitter harus 70 karakter atau kurang"
         }
       }
     },
@@ -2165,10 +2194,12 @@
           "ai": "AI",
           "api": "Akses API",
           "features": "Fitur",
-          "usage": "Usage",
+          "usage": "Penggunaan",
           "other": "Lainnya",
-          "domains": "Domains",
-          "sso": "SSO"
+          "domains": "Domain",
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "Otomatisasi"
         },
         "pages": {
           "general": {
@@ -2200,15 +2231,15 @@
             "subtitle": "Aktifkan atau nonaktifkan fitur untuk organisasi Anda"
           },
           "usage": {
-            "title": "Usage",
-            "subtitle": "Monitor your organization's resource usage and plan limits"
+            "title": "Penggunaan",
+            "subtitle": "Pantau penggunaan sumber daya organisasi Anda dan batas paket"
           },
           "domains": {
-            "subtitle": "Configure custom domains for your organization",
-            "title": "Custom Domains"
+            "subtitle": "Konfigurasikan domain kustom untuk organisasi Anda",
+            "title": "Domain Kustom"
           },
           "sso": {
-            "subtitle": "Configure SSO for your organization",
+            "subtitle": "Konfigurasikan SSO untuk organisasi Anda",
             "title": "Single Sign-On"
           }
         },
@@ -2228,9 +2259,12 @@
         "footer_text": "Teks Footer",
         "footer_text_placeholder": "Masukkan teks footer...",
         "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda",
-        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_label": "\"Made with LearnHouse\" watermark"
+        "default_language": "Bahasa default",
+        "default_language_desc": "Bahasa yang dilihat pengunjung baru secara default dan bahasa yang digunakan untuk email yang dikirim atas nama organisasi ini. Anggota tetap dapat mengganti bahasa antarmuka mereka.",
+        "watermark_desc": "Tampilkan watermark branding LearnHouse di halaman organisasi Anda",
+        "watermark_free_plan": "Watermark selalu ditampilkan pada paket gratis",
+        "watermark_label": "Watermark \"Made with LearnHouse\"",
+        "watermark_ee": "Disembunyikan oleh lisensi Enterprise Edition Anda"
       },
       "images": {
         "title": "Gambar & Pratinjau",
@@ -2364,11 +2398,11 @@
             "description": "Izinkan pengorganisasian kursus ke dalam koleksi"
           },
           "courses": {
-            "description": "Enable courses and progress tracking for your organization",
+            "description": "Aktifkan kursus dan pelacakan kemajuan untuk organisasi Anda",
             "title": "Kursus"
           },
           "podcasts": {
-            "description": "Enable podcast creation and audio content for your organization",
+            "description": "Aktifkan pembuatan podcast dan konten audio untuk organisasi Anda",
             "title": "Podcast"
           }
         },
@@ -2378,7 +2412,7 @@
           "enabled": "{{feature}} diaktifkan",
           "disabled": "{{feature}} dinonaktifkan",
           "error": "Gagal memperbarui konfigurasi {{feature}}",
-          "admin_only": "Only organization admins can enable or disable features"
+          "admin_only": "Hanya admin organisasi yang dapat mengaktifkan atau menonaktifkan fitur"
         }
       },
       "audit_logs": {
@@ -2623,43 +2657,43 @@
         "upload_error": "Gagal mengunggah gambar"
       },
       "sso": {
-        "allowed_domains": "Allowed Email Domains",
-        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
-        "auto_provision": "Auto-provision Users",
-        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
-        "delete": "Delete SSO Configuration",
-        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
-        "delete_error": "Failed to delete SSO configuration",
-        "delete_success": "SSO configuration deleted",
-        "deleting": "Deleting...",
-        "enable_sso": "Enable SSO",
-        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
-        "load_error": "Failed to load SSO configuration",
-        "not_configured": "Not configured",
+        "allowed_domains": "Domain Email yang Diizinkan",
+        "allowed_domains_help": "Daftar domain email yang dipisahkan koma yang diizinkan untuk masuk via SSO (mis., example.com, company.org). Kosongkan untuk mengizinkan semua domain.",
+        "auto_provision": "Provisioning Otomatis Pengguna",
+        "auto_provision_desc": "Buat akun pengguna secara otomatis untuk login SSO pertama kali.",
+        "delete": "Hapus Konfigurasi SSO",
+        "delete_confirm": "Apakah Anda yakin ingin menghapus konfigurasi SSO ini? Pengguna tidak akan dapat lagi masuk via SSO.",
+        "delete_error": "Gagal menghapus konfigurasi SSO",
+        "delete_success": "Konfigurasi SSO dihapus",
+        "deleting": "Menghapus...",
+        "enable_sso": "Aktifkan SSO",
+        "enable_sso_desc": "Izinkan pengguna untuk mengautentikasi menggunakan penyedia identitas organisasi Anda.",
+        "load_error": "Gagal memuat konfigurasi SSO",
+        "not_configured": "Belum dikonfigurasi",
         "oidc_client_id": "Client ID",
         "oidc_client_secret": "Client Secret",
-        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
-        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
-        "oidc_issuer_url": "Issuer URL",
-        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
-        "oidc_scopes": "Scopes",
-        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
-        "open_setup_portal": "Configure Identity Provider",
-        "provider": "SSO Provider",
-        "save": "Save Configuration",
-        "save_error": "Failed to save SSO configuration",
-        "save_success": "SSO configuration saved successfully",
-        "saving": "Saving...",
-        "select_provider": "Select a provider",
-        "setup_error": "Failed to get setup portal URL",
-        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "oidc_client_secret_help": "Jaga kerahasiaan secret ini. Digunakan untuk mengautentikasi dengan penyedia identitas Anda.",
+        "oidc_info": "Hubungkan langsung ke penyedia identitas yang kompatibel dengan OpenID Connect (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "URL Issuer",
+        "oidc_issuer_url_help": "URL issuer OIDC. Endpoint akan ditemukan secara otomatis dari /.well-known/openid-configuration.",
+        "oidc_scopes": "Scope",
+        "oidc_scopes_help": "Scope OAuth yang akan diminta (dipisahkan spasi). Default: openid email profile",
+        "open_setup_portal": "Konfigurasikan Penyedia Identitas",
+        "provider": "Penyedia SSO",
+        "save": "Simpan Konfigurasi",
+        "save_error": "Gagal menyimpan konfigurasi SSO",
+        "save_success": "Konfigurasi SSO berhasil disimpan",
+        "saving": "Menyimpan...",
+        "select_provider": "Pilih penyedia",
+        "setup_error": "Gagal mendapatkan URL portal pengaturan",
+        "setup_not_available": "Portal pengaturan tidak tersedia. Silakan konfigurasikan penyedia terlebih dahulu.",
         "status_disabled": "Nonaktif",
         "status_enabled": "Aktif",
-        "subtitle": "Configure enterprise SSO for your organization",
+        "subtitle": "Konfigurasikan SSO enterprise untuk organisasi Anda",
         "title": "Single Sign-On (SSO)",
-        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
-        "workos_org_id": "WorkOS Organization ID",
-        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
+        "workos_info": "WorkOS menyediakan SSO enterprise dengan dukungan untuk penyedia identitas SAML dan OIDC.",
+        "workos_org_id": "ID Organisasi WorkOS",
+        "workos_org_id_help": "ID ini dibuat secara otomatis saat Anda mengonfigurasi SSO melalui portal pengaturan."
       }
     },
     "users": {
@@ -2829,29 +2863,29 @@
             "sent": "Terkirim",
             "no": "Tidak"
           },
-          "no_invites": "No pending invitations",
-          "no_results": "No invitations found matching your search",
+          "no_invites": "Tidak ada undangan tertunda",
+          "no_results": "Tidak ada undangan yang cocok dengan pencarian Anda",
           "remove_button": "Hapus",
-          "remove_error": "Error removing invitation",
-          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
-          "remove_success": "Invitation removed",
-          "remove_title": "Remove invitation",
-          "removing": "Removing invitation...",
-          "search_placeholder": "Search by email..."
+          "remove_error": "Kesalahan saat menghapus undangan",
+          "remove_message": "Apakah Anda yakin ingin menghapus undangan untuk {{email}}?",
+          "remove_success": "Undangan dihapus",
+          "remove_title": "Hapus undangan",
+          "removing": "Menghapus undangan...",
+          "search_placeholder": "Cari berdasarkan email..."
         },
         "toasts": {
           "sending": "Mengirim undangan...",
           "success": "Undangan terkirim",
           "error": "Kesalahan mengirim undangan",
-          "partial": "{{sent}} sent, {{failed}} failed"
+          "partial": "{{sent}} terkirim, {{failed}} gagal"
         },
         "no_invite_code": "Tidak ada",
         "results": {
-          "failed_count": "{{count}} failed",
-          "sent_count": "{{count}} sent",
-          "skipped_count": "{{count}} already invited",
+          "failed_count": "{{count}} gagal",
+          "sent_count": "{{count}} terkirim",
+          "skipped_count": "{{count}} sudah diundang",
           "status": {
-            "already_invited": "Already invited",
+            "already_invited": "Sudah diundang",
             "email_failed": "Gagal",
             "sent": "Terkirim"
           },
@@ -2885,8 +2919,8 @@
             "status": {
               "linked": "Terhubung",
               "not_linked": "Tidak terhubung",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "in_group": "Dalam Grup",
+              "not_in_group": "Tidak dalam Grup"
             },
             "actions": {
               "link": "Hubungkan",
@@ -2896,30 +2930,30 @@
               "link_success": "Pengguna berhasil terhubung",
               "unlink_success": "Pengguna berhasil diputuskan",
               "error": "Kesalahan {{status}}: {{detail}}",
-              "bulk_add_success": "Successfully added {{count}} users to group",
-              "bulk_adding": "Adding users to group...",
-              "bulk_error": "An error occurred during the operation",
-              "bulk_remove_success": "Successfully removed {{count}} users from group",
-              "bulk_removing": "Removing users from group..."
+              "bulk_add_success": "Berhasil menambahkan {{count}} pengguna ke grup",
+              "bulk_adding": "Menambahkan pengguna ke grup...",
+              "bulk_error": "Terjadi kesalahan selama operasi",
+              "bulk_remove_success": "Berhasil menghapus {{count}} pengguna dari grup",
+              "bulk_removing": "Menghapus pengguna dari grup..."
             },
-            "no_results": "No users found matching your search",
-            "no_users": "No users in this organization yet",
+            "no_results": "Tidak ada pengguna yang cocok dengan pencarian Anda",
+            "no_users": "Belum ada pengguna di organisasi ini",
             "pagination": {
-              "page": "Page {{current}} of {{total}}",
-              "showing": "Showing {{start}}-{{end}} of {{total}}"
+              "page": "Halaman {{current}} dari {{total}}",
+              "showing": "Menampilkan {{start}}-{{end}} dari {{total}}"
             },
-            "search_placeholder": "Search users by name or username...",
+            "search_placeholder": "Cari pengguna berdasarkan nama atau nama pengguna...",
             "selection": {
-              "add_selected": "Add {{count}} to Group",
+              "add_selected": "Tambahkan {{count}} ke Grup",
               "clear": "Hapus",
-              "count": "{{count}} users selected",
-              "remove_selected": "Remove {{count}} from Group",
-              "select_all_visible": "Select all visible"
+              "count": "{{count}} pengguna dipilih",
+              "remove_selected": "Hapus {{count}} dari Grup",
+              "select_all_visible": "Pilih semua yang terlihat"
             },
             "tabs": {
-              "all": "All Users",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "all": "Semua Pengguna",
+              "in_group": "Dalam Grup",
+              "not_in_group": "Tidak dalam Grup"
             }
           },
           "create": {
@@ -2964,16 +2998,16 @@
           "delete_error": "Kesalahan menghapus grup pengguna"
         },
         "count": {
-          "plural": "groups",
-          "singular": "group"
+          "plural": "grup",
+          "singular": "grup"
         },
         "member_count": {
-          "plural": "members",
-          "singular": "member"
+          "plural": "anggota",
+          "singular": "anggota"
         },
-        "no_groups": "No user groups yet",
-        "no_results": "No groups found matching your search",
-        "search_placeholder": "Search groups..."
+        "no_groups": "Belum ada grup pengguna",
+        "no_results": "Tidak ada grup yang cocok dengan pencarian Anda",
+        "search_placeholder": "Cari grup..."
       },
       "roles": {
         "title": "Kelola Peran & Izin",
@@ -2992,7 +3026,7 @@
           "edit": "Edit",
           "delete": "Hapus",
           "create": "Buat Peran",
-          "view_rights": "View Rights"
+          "view_rights": "Lihat Hak"
         },
         "modals": {
           "create": {
@@ -3112,6 +3146,34 @@
             "toasts": {
               "success": "Peran berhasil disimpan",
               "error": "Kesalahan menyimpan peran, silakan coba lagi nanti."
+            },
+            "permissions": {
+              "actions": {
+                "access": "akses",
+                "create": "buat",
+                "delete": "hapus",
+                "delete_own": "hapus milik sendiri",
+                "read": "baca",
+                "read_own": "baca milik sendiri",
+                "update": "perbarui",
+                "update_own": "perbarui milik sendiri"
+              },
+              "deselect": "Hapus Pilihan",
+              "deselect_all": "Hapus Semua Pilihan",
+              "sections": {
+                "activities": "Aktivitas",
+                "collections": "Koleksi",
+                "coursechapters": "Bab Kursus",
+                "courses": "Kursus",
+                "dashboard": "Dasbor",
+                "organizations": "Organisasi",
+                "roles": "Peran",
+                "usergroups": "Grup Pengguna",
+                "users": "Pengguna"
+              },
+              "select": "Pilih",
+              "select_all": "Pilih Semua",
+              "title": "Izin"
             }
           },
           "delete": {
@@ -3120,8 +3182,8 @@
             "button": "Hapus Peran"
           },
           "view_rights": {
-            "description": "View all permissions assigned to this role",
-            "title": "{{roleName}} - Permissions"
+            "description": "Lihat semua izin yang ditetapkan untuk peran ini",
+            "title": "{{roleName}} - Izin"
           }
         },
         "toasts": {
@@ -3131,15 +3193,15 @@
         },
         "rights": {
           "resources": {
-            "activities": "Activities",
-            "collections": "Collections",
-            "coursechapters": "Course Chapters",
+            "activities": "Aktivitas",
+            "collections": "Koleksi",
+            "coursechapters": "Bab Kursus",
             "courses": "Kursus",
-            "dashboard": "Dashboard",
-            "organizations": "Organizations",
-            "roles": "Roles",
-            "usergroups": "User Groups",
-            "users": "Users"
+            "dashboard": "Dasbor",
+            "organizations": "Organisasi",
+            "roles": "Peran",
+            "usergroups": "Grup Pengguna",
+            "users": "Pengguna"
           }
         }
       }
@@ -3231,7 +3293,7 @@
           },
           "code": {
             "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "description": "Tantangan kode dengan penilaian kasus uji otomatis"
           },
           "short_answer": {
             "title": "Jawaban singkat",
@@ -3290,7 +3352,7 @@
             "prompt_label": "Teks pertanyaan",
             "prompt_placeholder": "Apa ibu kota Maroko?",
             "answers_label": "Jawaban yang diterima",
-            "answer_placeholder": "Rabat",
+            "answer_placeholder": "Jakarta",
             "add_answer": "Tambah jawaban lain",
             "no_answers_error": "Tambah setidaknya satu jawaban yang diterima sebelum menyimpan",
             "match_mode_label": "Cara mencocokkan jawaban",
@@ -3348,14 +3410,14 @@
           "reject": "Tolak Tugas",
           "set_final_grade": "Tetapkan nilai akhir",
           "mark_as_done": "Tandai Aktivitas sebagai Selesai untuk Pengguna",
-          "finalize": "Finalize & Complete",
+          "finalize": "Finalisasi & Selesai",
           "reject_description": "Menghapus pengumpulan dan mengizinkan siswa mengumpulkan ulang",
           "set_final_grade_description": "Menghitung dan menyimpan nilai tanpa menyelesaikan aktivitas",
           "finalize_description": "Menetapkan nilai akhir dan menandai aktivitas sebagai selesai untuk siswa"
         },
         "toasts": {
           "reject_success": "Tugas berhasil ditolak",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "Tugas dinilai dan aktivitas ditandai selesai"
         },
         "filters": {
           "all": "Semua"
@@ -3479,7 +3541,9 @@
             "anti_copy_paste_description": "Cegah menempel jawaban buatan AI dengan memblokir event paste. Catatan: ini hanya pencegah.",
             "auto_grading_disabled_file": "Penilaian otomatis tidak tersedia karena tugas ini memiliki pengumpulan file yang memerlukan tinjauan manusia.",
             "grading_type_hint": "Bagaimana nilai ditampilkan kepada siswa",
-            "grading_options_hint": "Perilaku saat pengiriman"
+            "grading_options_hint": "Perilaku saat pengiriman",
+            "show_correct_answers_description": "Setelah pengumpulan dinilai, tampilkan kepada siswa jawaban yang benar di samping jawaban mereka — opsi kuis mana yang benar, jawaban singkat atau angka yang diharapkan, dan isian formulir yang benar.",
+            "show_correct_answers_label": "Tampilkan jawaban yang benar setelah dinilai"
           },
           "toasts": {
             "updating": "Memperbarui tugas...",
@@ -3519,12 +3583,184 @@
             "anti_copy_paste_label": "Blokir salin & tempel",
             "anti_copy_paste_description": "Cegah menempel jawaban buatan AI dengan memblokir event paste. Catatan: ini hanya pencegah.",
             "grading_type_hint": "Bagaimana nilai ditampilkan kepada siswa",
-            "grading_options_hint": "Perilaku saat pengiriman"
+            "grading_options_hint": "Perilaku saat pengiriman",
+            "show_correct_answers_description": "Setelah dinilai, siswa melihat jawaban yang benar di samping jawaban mereka.",
+            "show_correct_answers_label": "Tampilkan jawaban yang benar setelah dinilai"
           },
           "toasts": {
             "creating": "Membuat tugas...",
             "success": "Tugas berhasil dibuat"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "Cari",
+      "placeholder": "Cari halaman dan konten…",
+      "shortcut_hint": "⌘K",
+      "no_results": "Tidak ada hasil",
+      "loading": "Mencari…",
+      "type_to_search": "Ketik minimal 2 karakter untuk mencari konten",
+      "groups": {
+        "pages": "Halaman",
+        "courses": "Kursus",
+        "collections": "Koleksi",
+        "users": "Pengguna",
+        "communities": "Komunitas",
+        "discussions": "Diskusi",
+        "playgrounds": "Playground",
+        "podcasts": "Podcast"
+      },
+      "entries": {
+        "home": {
+          "description": "Ringkasan dasbor",
+          "keywords": "beranda, ringkasan, mulai, dasbor"
+        },
+        "courses": {
+          "description": "Kelola kursus Anda",
+          "keywords": "kursus, pelajaran, belajar, pelatihan, kelas"
+        },
+        "assignments": {
+          "description": "Kelola tugas",
+          "keywords": "tugas, pekerjaan rumah, latihan, pengumpulan"
+        },
+        "communities": {
+          "description": "Kelola komunitas",
+          "keywords": "forum, diskusi, anggota, postingan"
+        },
+        "podcasts": {
+          "description": "Kelola podcast",
+          "keywords": "audio, episode, acara"
+        },
+        "boards": {
+          "description": "Kelola papan",
+          "keywords": "kanban, proyek, tugas, daftar"
+        },
+        "playgrounds": {
+          "description": "Playground kode",
+          "keywords": "kode, sandbox, repl, pemrograman"
+        },
+        "analytics": {
+          "description": "Lihat dasbor analitik",
+          "keywords": "statistik, metrik, grafik, laporan"
+        },
+        "users": {
+          "description": "Kelola pengguna organisasi",
+          "keywords": "anggota, akun, orang"
+        },
+        "usergroups": {
+          "description": "Kelola grup pengguna",
+          "keywords": "tim, kohort, grup"
+        },
+        "roles": {
+          "description": "Kelola peran dan izin",
+          "keywords": "izin, akses, rbac, keamanan"
+        },
+        "signups": {
+          "description": "Tinjau pendaftaran",
+          "keywords": "registrasi, aplikasi, permintaan"
+        },
+        "org_general": {
+          "description": "Pengaturan umum organisasi",
+          "keywords": "nama, branding, slug, profil"
+        },
+        "org_features": {
+          "description": "Kelola fitur organisasi",
+          "keywords": "fitur, modul, sakelar"
+        },
+        "org_billing": {
+          "description": "Penagihan dan langganan",
+          "keywords": "paket, pembayaran, faktur, langganan"
+        },
+        "payments_overview": {
+          "description": "Ringkasan pembayaran dan pendapatan",
+          "keywords": "stripe, dasbor, pendapatan, penjualan",
+          "title": "Ringkasan Pembayaran"
+        },
+        "payments_products": {
+          "description": "Produk dan harga pembayaran",
+          "keywords": "produk, harga, stripe, tingkat, paket",
+          "title": "Produk"
+        },
+        "users_add": {
+          "description": "Undang anggota baru",
+          "keywords": "undang, tambah, anggota, kirim"
+        },
+        "users_audit_logs": {
+          "description": "Log aktivitas organisasi",
+          "keywords": "audit, log, riwayat, keamanan, aktivitas"
+        },
+        "org_branding": {
+          "description": "Logo, warna, dan identitas visual",
+          "keywords": "branding, logo, warna, tema"
+        },
+        "org_landing": {
+          "description": "Sesuaikan halaman landing Anda",
+          "keywords": "landing, beranda, hero, halaman"
+        },
+        "org_seo": {
+          "description": "Optimasi mesin pencari",
+          "keywords": "seo, pencarian, meta, peringkat, google"
+        },
+        "org_ai": {
+          "description": "Fitur dan konfigurasi AI",
+          "keywords": "ai, llm, gpt, openai, generasi"
+        },
+        "org_domains": {
+          "description": "Domain kustom",
+          "keywords": "domain, dns, kustom, subdomain, cname"
+        },
+        "org_automations": {
+          "description": "Webhook dan integrasi eksternal",
+          "keywords": "webhook, otomatisasi, zapier, integrasi, pemicu"
+        },
+        "org_api": {
+          "description": "Token API dan akses programatik",
+          "keywords": "api, token, akses, programatik, kunci"
+        },
+        "org_sso": {
+          "description": "Konfigurasi sign-on tunggal",
+          "keywords": "sso, saml, oauth, perusahaan, login"
+        },
+        "org_other": {
+          "description": "Pengaturan organisasi lainnya",
+          "keywords": "lain-lain, lanjutan, kustom, tambahan"
+        },
+        "payments_groups": {
+          "description": "Grup dan bundel pembayaran",
+          "keywords": "grup, bundel, set",
+          "title": "Grup Pembayaran"
+        },
+        "payments_configuration": {
+          "description": "Konfigurasi Stripe dan pembayaran",
+          "keywords": "konfigurasi, pengaturan, stripe, setup, connect",
+          "title": "Konfigurasi"
+        },
+        "payments_customers": {
+          "description": "Pelanggan dan pelanggan langganan",
+          "keywords": "pelanggan, pelanggan langganan, pembeli, dibayar",
+          "title": "Pelanggan"
+        },
+        "courses_migrate": {
+          "description": "Impor kursus dari LMS lain",
+          "keywords": "impor, migrasi, transfer, lms, moodle, canvas",
+          "title": "Migrasi Kursus"
+        },
+        "account_general": {
+          "description": "Pengaturan umum akun pribadi",
+          "keywords": "akun, pengaturan, email, nama, bahasa"
+        },
+        "account_profile": {
+          "description": "Edit profil dan bio Anda",
+          "keywords": "profil, bio, avatar, foto, publik"
+        },
+        "account_security": {
+          "description": "Kata sandi dan pengaturan keamanan",
+          "keywords": "kata sandi, keamanan, 2fa, mfa, sesi"
+        },
+        "account_purchases": {
+          "description": "Pembelian dan langganan Anda",
+          "keywords": "pembelian, langganan, tagihan, riwayat, tanda terima"
         }
       }
     }
@@ -3685,13 +3921,13 @@
         "edit_embed": "Edit Penyematan",
         "add_embed_from": "Tambahkan Penyematan dari",
         "click_service": "Pilih Layanan",
-        "add_embed": "Tambahkan Penyematan",
+        "add_embed": "Tambahkan Sematan {{name}}",
         "add_embed_url": "Tambahkan Penyematan dari URL",
         "add_embed_code": "Tambahkan Penyematan dari Kode",
-        "paste_url": "Tempel URL",
+        "paste_url": "Tempel URL sematan {{name}}",
         "paste_any_url": "Tempel URL apa pun",
         "paste_directly": "Tempel Langsung",
-        "how_to_embed": "Cara Menyematkan",
+        "how_to_embed": "Cara menyematkan {{name}}",
         "paste_code": "Tempel Kode",
         "paste_iframe": "Tempel Kode iframe"
       },
@@ -3783,28 +4019,28 @@
         "uploading": "Mengunggah video..."
       },
       "button_block": {
-        "enter_link_url": "Enter link URL"
+        "enter_link_url": "Masukkan URL tautan"
       }
     },
     "ai_panel": {
-      "add_definition": "Add definition",
-      "add_examples": "Add examples",
-      "add_quiz": "Add quiz",
-      "add_summary": "Add summary",
-      "add_tip": "Add tip",
-      "block_selected": "block selected",
-      "clear_chat": "Clear chat",
-      "clear_selection": "Clear selection",
-      "expand": "Expand",
-      "how_can_i_help": "How can I help improve your content?",
-      "improve_writing": "Improve writing",
-      "input_placeholder": "Ask AI to help with your content...",
-      "question_add_quiz": "Add a quiz",
-      "question_improve": "How can I improve this?",
-      "question_summary": "Add a summary",
-      "simplify": "Simplify",
+      "add_definition": "Tambah definisi",
+      "add_examples": "Tambah contoh",
+      "add_quiz": "Tambah kuis",
+      "add_summary": "Tambah ringkasan",
+      "add_tip": "Tambah tip",
+      "block_selected": "blok dipilih",
+      "clear_chat": "Bersihkan obrolan",
+      "clear_selection": "Bersihkan pilihan",
+      "expand": "Perluas",
+      "how_can_i_help": "Bagaimana saya dapat membantu meningkatkan konten Anda?",
+      "improve_writing": "Tingkatkan tulisan",
+      "input_placeholder": "Minta AI untuk membantu konten Anda...",
+      "question_add_quiz": "Tambah kuis",
+      "question_improve": "Bagaimana saya bisa meningkatkan ini?",
+      "question_summary": "Tambah ringkasan",
+      "simplify": "Sederhanakan",
       "title": "AI Editor",
-      "translate": "Translate"
+      "translate": "Terjemahkan"
     }
   },
   "analytics": {
@@ -3815,8 +4051,8 @@
       "advanced": "Lanjutan"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Analitik belum dikonfigurasi",
+      "description": "Analitik memerlukan koneksi Tinybird. Setel variabel lingkungan <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> dan <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> untuk mengaktifkannya."
     },
     "advanced_gate": {
       "requires": "Memerlukan",
@@ -3825,156 +4061,156 @@
     "common": {
       "loading": "Memuat...",
       "no_data": "Belum ada data",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "Pengguna",
+      "views": "Tampilan",
+      "enrollments": "Pendaftaran",
+      "completions": "Penyelesaian",
+      "course": "Kursus",
+      "date": "Tanggal",
+      "user": "Pengguna",
+      "type": "Tipe",
+      "expand": "Perluas",
+      "days": "Hari",
+      "score": "Skor",
+      "unique_users": "pengguna unik"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
+      "live_now": "Sedang Aktif",
+      "last_5_minutes": "5 menit terakhir",
+      "signups": "Pendaftaran",
+      "submissions": "Pengiriman",
+      "daily_active_users": "Pengguna Aktif Harian",
+      "active_users": "Pengguna Aktif",
+      "countries": "Negara",
+      "top_countries": "Negara Teratas",
+      "devices": "Perangkat",
       "desktop": "Desktop",
-      "mobile": "Mobile",
+      "mobile": "Seluler",
       "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "top_referrers": "Referrer Teratas",
+      "top_referrer": "Referrer Teratas",
+      "enrollment_funnel": "Funnel Pendaftaran",
+      "page_views": "Tampilan Halaman",
+      "course_views": "Tampilan Kursus",
+      "view_to_enroll": "Lihat → Daftar",
+      "enroll_to_complete": "Daftar → Selesai",
+      "page_to_complete": "Halaman → Selesai",
+      "conv_rate": "Tingkat Konv.",
+      "top_courses": "Kursus Teratas",
+      "activity_engagement": "Keterlibatan Aktivitas",
+      "activity": "Aktivitas",
+      "avg_time": "Waktu Rata-rata",
+      "activities": "Aktivitas",
+      "courses": "Kursus",
       "enrollments": "Pendaftaran",
       "completions": "Penyelesaian"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "Pengguna Aktif",
+        "description": "Pengguna yang aktif dalam 5 menit terakhir"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "Pendaftaran",
+        "description": "Pendaftaran pengguna baru dalam {{days}} hari terakhir"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "Pendaftaran",
+        "description": "Pendaftaran kursus dalam {{days}} hari terakhir"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "Penyelesaian",
+        "description": "Penyelesaian kursus dalam {{days}} hari terakhir"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "Halaman Saat Ini",
+        "device": "Perangkat",
+        "country": "Negara",
+        "last_seen": "Terakhir Dilihat"
       },
       "signups_table": {
         "email": "Email",
-        "method": "Method"
+        "method": "Metode"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "Tren Pertumbuhan Organisasi",
+        "description": "Pendaftaran, pendaftaran kursus, penyelesaian mingguan"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "Pengguna Baru vs Kembali",
+        "description": "Pertumbuhan vs kesehatan retensi"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "Retensi Kohort",
+        "description": "% pengguna aktif setelah minggu pendaftaran",
+        "cohort": "Kohort",
+        "size": "Ukuran"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "Jam Penggunaan Puncak",
+        "description": "Volume kejadian berdasarkan hari dan jam",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "Sen",
+          "tue": "Sel",
+          "wed": "Rab",
+          "thu": "Kam",
+          "fri": "Jum",
+          "sat": "Sab",
+          "sun": "Min"
         },
-        "events": "events"
+        "events": "kejadian"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "Dropoff Kursus",
+        "description": "Di mana pengguna berhenti per kursus"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "Waktu untuk Penyelesaian",
+        "description": "Median hari untuk menyelesaikan setiap kursus"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "Kecepatan Penyelesaian",
+        "description": "Rata-rata hari antara penyelesaian aktivitas"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "Efektivitas Tipe Konten",
+        "description": "Tingkat penyelesaian berdasarkan tipe aktivitas"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "Matriks Efektivitas Kursus",
+        "description": "Jumlah aktivitas vs tingkat penyelesaian (diukur berdasarkan pendaftaran)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "Korelasi Komunitas",
+        "description": "Tingkat penyelesaian: pendiskusi vs non-pendiskusi",
+        "discussion_users": "Pengguna Diskusi",
+        "non_discussion_users": "Pengguna Non-Diskusi"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
-        "user_id": "User ID"
+        "title": "Skor Keterlibatan Pelajar",
+        "description": "Pelajar teratas berdasarkan keterlibatan komposit",
+        "user_id": "ID Pengguna"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "Cuplikan Kemajuan Pengguna",
+        "description": "Pengguna pada setiap rentang penyelesaian per kursus"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "Distribusi Nilai",
+        "description": "Histogram nilai tugas"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "Efektivitas Pencarian",
+        "description": "Kueri teratas dan tingkat hasil-nol",
+        "query": "Kueri",
+        "searches": "Pencarian",
+        "zero_results": "% Hasil Nol"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "Tingkat Sertifikasi",
+        "description": "% penyelesai yang mengklaim sertifikat"
       }
     },
     "course_analytics": {
@@ -4194,9 +4430,9 @@
     },
     "export": {
       "button": "Ekspor",
-      "csv": "Download CSV",
-      "downloading": "Exporting...",
-      "json": "Download JSON"
+      "csv": "Unduh CSV",
+      "downloading": "Mengekspor...",
+      "json": "Unduh JSON"
     }
   },
   "boards": {
@@ -4300,7 +4536,8 @@
       "member_added": "Anggota ditambahkan",
       "member_added_error": "Gagal menambahkan anggota (mungkin sudah menjadi anggota)",
       "member_removed": "Anggota dihapus",
-      "member_removed_error": "Gagal menghapus anggota"
+      "member_removed_error": "Gagal menghapus anggota",
+      "all_groups": "Semua grup"
     },
     "toolbar": {
       "select": "Pilih",
@@ -4419,7 +4656,8 @@
       "move_back": "Pindah ke belakang",
       "move_forward": "Pindah ke depan",
       "delete": "Hapus",
-      "delete_multiple": "Hapus {{count}} item"
+      "delete_multiple": "Hapus {{count}} item",
+      "duplicate": "Duplikat"
     },
     "pagination": {
       "previous": "Sebelumnya",
@@ -4428,28 +4666,30 @@
       "results": "{{count}} hasil untuk \"{{query}}\"",
       "results_plural": "{{count}} hasil untuk \"{{query}}\""
     },
-    "board_deleted_error": "Failed to delete board",
-    "board_deleted_success": "Board deleted",
-    "board_duplicated_error": "Failed to duplicate board",
-    "board_duplicated_success": "Board duplicated",
-    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
-    "boards_deleted_success": "{{count}} board(s) deleted",
+    "board_deleted_error": "Gagal menghapus papan",
+    "board_deleted_success": "Papan dihapus",
+    "board_duplicated_error": "Gagal menduplikasi papan",
+    "board_duplicated_success": "Papan diduplikasi",
+    "boards_deleted_partial": "{{success}} dihapus, {{error}} gagal",
+    "boards_deleted_success": "{{count}} papan dihapus",
     "clear_selection": "Hapus",
-    "delete_board": "Delete Board",
-    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
-    "delete_board_title": "Delete \"{{name}}\"",
-    "delete_boards_title": "Delete Boards",
-    "delete_selected": "Delete Selected",
-    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
-    "deleting_board": "Deleting board...",
-    "deleting_boards": "Deleting {{count}} board(s)...",
-    "duplicate_board": "Duplicate Board",
-    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
-    "duplicate_board_title": "Duplicate \"{{name}}\"",
-    "duplicating_board": "Duplicating board...",
-    "open_board": "Open Board",
-    "select_all": "Select All",
-    "selected_count": "{{count}} selected"
+    "delete_board": "Hapus Papan",
+    "delete_board_confirm": "Apakah Anda yakin ingin menghapus papan ini? Tindakan ini tidak dapat dibatalkan.",
+    "delete_board_title": "Hapus \"{{name}}\"",
+    "delete_boards_title": "Hapus Papan",
+    "delete_selected": "Hapus yang Dipilih",
+    "delete_selected_confirm": "Apakah Anda yakin ingin menghapus {{count}} papan? Tindakan ini tidak dapat dibatalkan.",
+    "deleting_board": "Menghapus papan...",
+    "deleting_boards": "Menghapus {{count}} papan...",
+    "duplicate_board": "Duplikasi Papan",
+    "duplicate_board_confirm": "Ini akan membuat salinan papan dengan pengaturan yang sama.",
+    "duplicate_board_title": "Duplikasi \"{{name}}\"",
+    "duplicating_board": "Menduplikasi papan...",
+    "open_board": "Buka Papan",
+    "select_all": "Pilih Semua",
+    "selected_count": "{{count}} dipilih",
+    "no_boards": "Belum ada papan",
+    "no_search_results": "Papan tidak ditemukan"
   },
   "onboarding": {
     "getting_started": "Memulai",
@@ -4546,46 +4786,46 @@
     }
   },
   "embed": {
-    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
-    "not_supported_title": "This activity is not supported",
-    "powered_by": "Powered by LearnHouse",
-    "visit_activity": "Visit Activity Page"
+    "not_supported_description": "Tipe aktivitas ini memerlukan autentikasi dan tidak dapat disematkan.",
+    "not_supported_title": "Aktivitas ini tidak didukung",
+    "powered_by": "Didukung oleh LearnHouse",
+    "visit_activity": "Kunjungi Halaman Aktivitas"
   },
   "migration": {
-    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
-    "add_activity": "Add Activity",
-    "add_chapter": "Add Chapter",
-    "ai_failed": "AI suggestion failed, falling back to manual organization",
-    "all_files_assigned": "All files assigned",
-    "click_to_add_more": "Click to add more files",
-    "course_created": "Course created successfully!",
-    "course_name": "Course Name",
-    "course_name_placeholder": "e.g. Python Basics for Beginners",
-    "course_structure": "Course Structure",
-    "create_course": "Create Course",
-    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
-    "creating_course": "Creating your course...",
-    "creating_description": "Uploading files and setting up chapters and activities",
-    "creation_error_generic": "Something went wrong. Please try again.",
-    "creation_failed": "Course creation failed",
-    "description": "One-liner Description",
-    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
-    "drop_file_here": "Drop a file here",
-    "drop_files": "Drop your files here or click to browse",
-    "go_to_course": "Go to Course",
-    "new_activity": "New Activity",
-    "new_chapter": "New Chapter",
-    "organize_manually": "Organize Manually",
-    "organize_with_ai": "Organize with AI",
-    "step_complete": "Complete",
-    "step_organize": "Organize",
+    "accepted_formats": "Video (MP4, WebM, MOV), Dokumen (PDF), Gambar (PNG, JPG, WebP), Audio (MP3, WAV)",
+    "add_activity": "Tambah Aktivitas",
+    "add_chapter": "Tambah Bab",
+    "ai_failed": "Saran AI gagal, kembali ke organisasi manual",
+    "all_files_assigned": "Semua file telah ditugaskan",
+    "click_to_add_more": "Klik untuk menambah file lagi",
+    "course_created": "Kursus berhasil dibuat!",
+    "course_name": "Nama Kursus",
+    "course_name_placeholder": "mis. Dasar-dasar Python untuk Pemula",
+    "course_structure": "Struktur Kursus",
+    "create_course": "Buat Kursus",
+    "created_summary": "{{chapters}} bab dan {{activities}} aktivitas dibuat",
+    "creating_course": "Membuat kursus Anda...",
+    "creating_description": "Mengunggah file dan menyiapkan bab serta aktivitas",
+    "creation_error_generic": "Terjadi kesalahan. Silakan coba lagi.",
+    "creation_failed": "Pembuatan kursus gagal",
+    "description": "Deskripsi Singkat",
+    "description_placeholder": "mis. 3 modul yang mencakup dasar-dasar, tipe data, dan fungsi",
+    "drop_file_here": "Letakkan file di sini",
+    "drop_files": "Letakkan file Anda di sini atau klik untuk menelusuri",
+    "go_to_course": "Pergi ke Kursus",
+    "new_activity": "Aktivitas Baru",
+    "new_chapter": "Bab Baru",
+    "organize_manually": "Organisasikan Secara Manual",
+    "organize_with_ai": "Organisasikan dengan AI",
+    "step_complete": "Selesai",
+    "step_organize": "Organisasikan",
     "step_upload": "Unggah",
-    "subtitle": "Upload your files and organize them into a course",
-    "title": "Migrate Content",
-    "try_again": "Try Again",
-    "unassigned_files": "Unassigned Files",
-    "upload_failed": "File upload failed",
-    "uploading_files": "Uploading files"
+    "subtitle": "Unggah file Anda dan organisasikan menjadi sebuah kursus",
+    "title": "Migrasi Konten",
+    "try_again": "Coba Lagi",
+    "unassigned_files": "File Belum Ditugaskan",
+    "upload_failed": "Unggah file gagal",
+    "uploading_files": "Mengunggah file"
   },
   "upgrade_modal": {
     "title": "Buka potensi penuh Anda",
@@ -4663,6 +4903,15 @@
       "usergroups_add_a_group": "Tambahkan grup",
       "toast_add_error": "Tidak dapat menambahkan grup",
       "toast_remove_error": "Tidak dapat menghapus grup"
-    }
+    },
+    "accessDenied": "Tidak dapat mengakses kursus ini",
+    "backToCourses": "Kembali ke Kursus",
+    "loadError": "Kursus ini tidak dapat ditemukan atau terjadi kesalahan saat memuatnya.",
+    "noPermission": "Anda tidak memiliki izin untuk melihat kursus ini."
+  },
+  "pagination": {
+    "next": "Berikutnya",
+    "previous": "Sebelumnya",
+    "showing_page": "Menampilkan halaman {{current}} dari {{total}}"
   }
 }

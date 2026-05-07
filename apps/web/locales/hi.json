@@ -95,32 +95,32 @@
           "description": "कम्युनिटीज़ एक प्रीमियम फीचर है जो केवल हमारे स्टैंडर्ड प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। अपने सदस्यों के लिए डिस्कशन कम्युनिटीज़ अनलॉक करने के लिए अपग्रेड करें।"
         },
         "analytics": {
-          "description": "Analytics is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock insights about your learners and content.",
-          "title": "Standard Feature"
+          "description": "Analytics एक प्रीमियम सुविधा है जो केवल हमारे Standard प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। अपने शिक्षार्थियों और सामग्री के बारे में अंतर्दृष्टि अनलॉक करने के लिए अपग्रेड करें।",
+          "title": "Standard सुविधा"
         },
         "course_analytics": {
-          "description": "Course Analytics is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock detailed engagement data, enrollment trends, and learner progress for individual courses.",
-          "title": "Pro Feature"
+          "description": "Course Analytics एक प्रीमियम सुविधा है जो केवल हमारे Pro प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। व्यक्तिगत कोर्स के लिए विस्तृत एंगेजमेंट डेटा, नामांकन रुझान और शिक्षार्थी प्रगति अनलॉक करने के लिए अपग्रेड करें।",
+          "title": "Pro सुविधा"
         },
         "custom_domains": {
-          "description": "Custom Domains is a premium feature available only to organizations on our Standard plan or higher. Upgrade to use your own domain for a branded experience.",
-          "title": "Standard Feature"
+          "description": "Custom Domains एक प्रीमियम सुविधा है जो केवल हमारे Standard प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। ब्रांडेड अनुभव के लिए अपने स्वयं के डोमेन का उपयोग करने हेतु अपग्रेड करें।",
+          "title": "Standard सुविधा"
         },
         "podcasts": {
-          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members.",
-          "title": "Standard Feature"
+          "description": "Podcasts एक प्रीमियम सुविधा है जो केवल हमारे Standard प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध है। अपने सदस्यों के साथ पॉडकास्ट बनाने और साझा करने के लिए अपग्रेड करें।",
+          "title": "Standard सुविधा"
         },
         "seo": {
-          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses.",
-          "title": "Standard Feature"
+          "description": "SEO ऑप्टिमाइज़ेशन टूल केवल हमारे Standard प्लान या उससे ऊपर के संगठनों के लिए उपलब्ध हैं। अपने कोर्स के लिए सर्च इंजन उपस्थिति, सोशल शेयरिंग पूर्वावलोकन और संरचित डेटा को कस्टमाइज़ करने हेतु अपग्रेड करें।",
+          "title": "Standard सुविधा"
         },
         "sso": {
-          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider.",
-          "title": "Enterprise Feature"
+          "description": "Single Sign-On (SSO) एक प्रीमियम सुविधा है जो केवल हमारे Enterprise प्लान के संगठनों के लिए उपलब्ध है। अपने संगठन के पहचान प्रदाता के माध्यम से सुरक्षित प्रमाणीकरण सक्षम करने हेतु अपग्रेड करें।",
+          "title": "Enterprise सुविधा"
         }
       },
-      "current_plan": "Current plan",
-      "upgrade_to": "Upgrade to"
+      "current_plan": "वर्तमान प्लान",
+      "upgrade_to": "अपग्रेड करें"
     },
     "features": {
       "disabled": {
@@ -180,7 +180,13 @@
     "creating": "बनाया जा रहा है...",
     "view_details": "विवरण देखें",
     "close": "बंद करें",
-    "optional": "optional"
+    "optional": "वैकल्पिक",
+    "analytics": "विश्लेषण",
+    "add": "जोड़ें",
+    "choose_an_organization_to_continue": "जारी रखने के लिए एक संगठन चुनें",
+    "for": "के लिए",
+    "powered_by": "द्वारा संचालित",
+    "results": "परिणाम"
   },
   "banner": {
     "viewing_as_guest": "आप {{name}} को अतिथि के रूप में देख रहे हैं।",
@@ -266,65 +272,67 @@
     "invite_required_desc": "{{org}} से जुड़ने के लिए आमंत्रण कोड आवश्यक है",
     "invite_code": "आमंत्रण कोड",
     "validate_invite": "आमंत्रण सत्यापित करें",
-    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
-    "back_to_login": "Back to Login",
-    "check_email_for_verification": "Check Your Email",
-    "check_inbox_message": "Please check your inbox and click the verification link.",
-    "create_your_account": "Create your account",
-    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
-    "email_verification_required": "Email Verification Required",
-    "email_verification_required_join": "Please verify your email address before joining an organization. Check your inbox for the verification email.",
-    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
-    "email_verified_success": "Email Verified!",
-    "login_failed": "Login Failed",
-    "password_req_lowercase": "At least one lowercase letter (a-z)",
-    "password_req_min_length": "At least 8 characters",
-    "password_req_number": "At least one number (0-9)",
-    "password_req_special": "At least one special character (!@#$%...)",
-    "password_req_uppercase": "At least one uppercase letter (A-Z)",
-    "password_requirements_not_met": "Password does not meet requirements",
-    "password_strength": "Password strength",
-    "password_strength_fair": "Fair",
-    "password_strength_good": "Good",
-    "password_strength_strong": "Strong",
-    "password_strength_weak": "Weak",
-    "proceed_to_login": "Proceed to Login",
-    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
-    "resend_verification_email": "Resend verification email",
-    "resend_verification_failed": "Failed to resend verification email. Please try again.",
-    "sign_in_with_sso": "Sign in with SSO",
+    "account_locked_message": "बहुत अधिक असफल लॉगिन प्रयासों के कारण आपका खाता अस्थायी रूप से लॉक कर दिया गया है। कृपया बाद में पुनः प्रयास करें।",
+    "back_to_login": "लॉगिन पर वापस जाएं",
+    "check_email_for_verification": "अपना ईमेल जांचें",
+    "check_inbox_message": "कृपया अपना इनबॉक्स देखें और सत्यापन लिंक पर क्लिक करें।",
+    "create_your_account": "अपना खाता बनाएं",
+    "email_not_verified_message": "लॉगिन करने से पहले कृपया अपना ईमेल पता सत्यापित करें। सत्यापन ईमेल के लिए अपना इनबॉक्स देखें।",
+    "email_verification_required": "ईमेल सत्यापन आवश्यक",
+    "email_verification_required_join": "किसी संगठन में शामिल होने से पहले कृपया अपना ईमेल पता सत्यापित करें। सत्यापन ईमेल के लिए अपना इनबॉक्स देखें।",
+    "email_verified_message": "आपका ईमेल सफलतापूर्वक सत्यापित कर दिया गया है। अब आप अपने खाते में लॉगिन कर सकते हैं।",
+    "email_verified_success": "ईमेल सत्यापित!",
+    "login_failed": "लॉगिन विफल",
+    "password_req_lowercase": "कम से कम एक छोटा अक्षर (a-z)",
+    "password_req_min_length": "कम से कम 8 अक्षर",
+    "password_req_number": "कम से कम एक अंक (0-9)",
+    "password_req_special": "कम से कम एक विशेष अक्षर (!@#$%...)",
+    "password_req_uppercase": "कम से कम एक बड़ा अक्षर (A-Z)",
+    "password_requirements_not_met": "पासवर्ड आवश्यकताओं को पूरा नहीं करता",
+    "password_strength": "पासवर्ड की मजबूती",
+    "password_strength_fair": "ठीक-ठाक",
+    "password_strength_good": "अच्छा",
+    "password_strength_strong": "मजबूत",
+    "password_strength_weak": "कमजोर",
+    "proceed_to_login": "लॉगिन पर आगे बढ़ें",
+    "rate_limited_message": "आपने बहुत अधिक लॉगिन प्रयास किए हैं। पुनः प्रयास करने से पहले कृपया कुछ मिनट प्रतीक्षा करें।",
+    "resend_verification_email": "सत्यापन ईमेल पुनः भेजें",
+    "resend_verification_failed": "सत्यापन ईमेल पुनः भेजने में विफल। कृपया पुनः प्रयास करें।",
+    "sign_in_with_sso": "SSO के साथ साइन इन करें",
     "sso_callback": {
-      "auth_failed": "Authentication Failed",
-      "authenticating": "Authenticating...",
-      "copied": "Copied!",
-      "copy_details": "Copy to clipboard",
-      "error": "SSO authentication failed. Please try again.",
-      "error_code": "Error code",
-      "go_home": "Go to Home",
-      "hide_details": "Hide technical details",
-      "missing_params": "Invalid SSO callback. Missing required parameters.",
-      "please_wait": "Please wait while we verify your identity",
-      "provider": "Provider",
-      "redirecting": "Redirecting you to the application...",
-      "show_details": "Show technical details",
-      "success": "Authentication Successful",
+      "auth_failed": "प्रमाणीकरण विफल",
+      "authenticating": "प्रमाणीकरण हो रहा है...",
+      "copied": "कॉपी हो गया!",
+      "copy_details": "क्लिपबोर्ड पर कॉपी करें",
+      "error": "SSO प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।",
+      "error_code": "त्रुटि कोड",
+      "go_home": "होम पर जाएं",
+      "hide_details": "तकनीकी विवरण छिपाएं",
+      "missing_params": "अमान्य SSO कॉलबैक। आवश्यक पैरामीटर गायब हैं।",
+      "please_wait": "जब हम आपकी पहचान सत्यापित कर रहे हैं, कृपया प्रतीक्षा करें",
+      "provider": "प्रदाता",
+      "redirecting": "आपको एप्लिकेशन पर रीडायरेक्ट किया जा रहा है...",
+      "show_details": "तकनीकी विवरण दिखाएं",
+      "success": "प्रमाणीकरण सफल",
       "tips": {
-        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
-        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
-        "invalid_state": "Your session may have expired. Please try logging in again.",
-        "server_error": "The identity provider is experiencing issues. Please try again later."
+        "access_denied": "यदि आपने गलती से लॉगिन अनुरोध अस्वीकार कर दिया है, तो पुनः प्रयास करें और अनुमतियां स्वीकार करें।",
+        "domain_not_allowed": "यह सत्यापित करने के लिए कि आपका ईमेल डोमेन अनुमत है, अपने संगठन के व्यवस्थापक से संपर्क करें।",
+        "invalid_state": "आपका सत्र समाप्त हो गया होगा। कृपया फिर से लॉगिन करने का प्रयास करें।",
+        "server_error": "पहचान प्रदाता को समस्याओं का सामना करना पड़ रहा है। कृपया बाद में पुनः प्रयास करें।"
       },
-      "try_again": "Try Again"
+      "try_again": "पुनः प्रयास करें"
     },
-    "sso_error": "SSO authentication failed. Please try again.",
-    "try_again_in": "try again in {{minutes}} min",
-    "verification_email_resent": "Verification Email Sent",
-    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
-    "verification_failed": "Verification Failed",
-    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
-    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
-    "verify_email_title": "Verify Your Email",
-    "verifying_email": "Verifying your email address..."
+    "sso_error": "SSO प्रमाणीकरण विफल। कृपया पुनः प्रयास करें।",
+    "try_again_in": "{{minutes}} मिनट में पुनः प्रयास करें",
+    "verification_email_resent": "सत्यापन ईमेल भेजा गया",
+    "verification_email_sent_message": "हमने आपके इनबॉक्स में एक सत्यापन ईमेल भेजा है। अपने खाते को सत्यापित करने के लिए कृपया ईमेल में दिए गए लिंक पर क्लिक करें।",
+    "verification_failed": "सत्यापन विफल",
+    "verification_missing_params": "सत्यापन पैरामीटर गायब हैं। कृपया अपना सत्यापन लिंक जांचें।",
+    "verification_trouble": "समस्या आ रही है? लॉगिन पेज से नया सत्यापन ईमेल अनुरोध करने का प्रयास करें।",
+    "verify_email_title": "अपना ईमेल सत्यापित करें",
+    "verifying_email": "आपका ईमेल पता सत्यापित किया जा रहा है...",
+    "error_generic": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "sign_in": "साइन इन करें"
   },
   "validation": {
     "required": "आवश्यक",
@@ -603,18 +611,20 @@
         "video_takes_time": "वीडियो विश्लेषण में 1-2 मिनट लग सकते हैं",
         "video_hint": "वीडियो प्रोसेसिंग में 1-2 मिनट लग सकते हैं"
       },
-      "from_existing": "From Existing Content",
-      "from_existing_description": "Upload files from another platform and organize them into a course"
+      "from_existing": "मौजूदा सामग्री से",
+      "from_existing_description": "किसी अन्य प्लेटफ़ॉर्म से फ़ाइलें अपलोड करें और उन्हें कोर्स में व्यवस्थित करें"
     },
     "usergroup_filter": {
-      "all_courses": "All Courses",
-      "filter_by_group": "Filter by group",
-      "info_title": "User Group Filter",
-      "info_description": "Filter courses by user group to see only courses assigned to a specific group. Useful for families or teams sharing the same organization."
+      "all_courses": "सभी कोर्स",
+      "filter_by_group": "समूह के अनुसार फ़िल्टर करें",
+      "info_title": "उपयोगकर्ता समूह फ़िल्टर",
+      "info_description": "किसी विशिष्ट समूह को सौंपे गए कोर्स देखने के लिए कोर्स को उपयोगकर्ता समूह के अनुसार फ़िल्टर करें। एक ही संगठन को साझा करने वाले परिवारों या टीमों के लिए उपयोगी।"
     },
-    "copied": "Copied!",
-    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
-    "quit_course_title": "Quit Course?"
+    "copied": "कॉपी हो गया!",
+    "quit_course_confirm": "क्या आप वाकई इस कोर्स को छोड़ना चाहते हैं? आप अपनी सारी प्रगति खो देंगे।",
+    "quit_course_title": "कोर्स छोड़ें?",
+    "courses_load_error": "पाठ्यक्रम लोड करने में विफल। कृपया पुनः प्रयास करें।",
+    "view_all_courses": "सभी पाठ्यक्रम देखें"
   },
   "communities": {
     "title": "समुदाय",
@@ -662,7 +672,8 @@
       "clear_search": "खोज साफ़ करें",
       "no_discussions": "अभी तक कोई चर्चा नहीं",
       "no_discussions_description": "इस समुदाय में पहली चर्चा शुरू करने वाले बनें!",
-      "start_discussion": "चर्चा शुरू करें"
+      "start_discussion": "चर्चा शुरू करें",
+      "delete_failed": "चर्चा हटाने में विफल"
     },
     "discussion_detail": {
       "edit": "संपादित करें",
@@ -670,7 +681,8 @@
       "delete_title": "चर्चा हटाएं?",
       "delete_confirm": "क्या आप वाकई इस चर्चा को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
       "delete_button": "चर्चा हटाएं",
-      "no_details": "कोई अतिरिक्त विवरण प्रदान नहीं किया गया।"
+      "no_details": "कोई अतिरिक्त विवरण प्रदान नहीं किया गया।",
+      "delete_failed": "चर्चा हटाने में विफल"
     },
     "discussion_card": {
       "pin_discussion": "चर्चा पिन करें",
@@ -680,7 +692,10 @@
       "delete_discussion": "चर्चा हटाएं",
       "delete_title": "चर्चा हटाएं?",
       "delete_confirm": "क्या आप वाकई इस चर्चा को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
-      "votes": "वोट"
+      "votes": "वोट",
+      "delete_failed": "चर्चा हटाने में विफल",
+      "lock_failed": "लॉक स्थिति अपडेट करने में विफल",
+      "pin_failed": "पिन स्थिति अपडेट करने में विफल"
     },
     "comments": {
       "no_replies": "अभी तक कोई जवाब नहीं",
@@ -696,7 +711,8 @@
       "cancel": "रद्द करें",
       "failed_to_post": "जवाब पोस्ट करने में विफल। कृपया पुनः प्रयास करें।",
       "content_not_allowed": "आपके जवाब में अनुमत नहीं सामग्री है।",
-      "failed_to_update": "अपडेट करने में विफल। कृपया पुनः प्रयास करें।"
+      "failed_to_update": "अपडेट करने में विफल। कृपया पुनः प्रयास करें।",
+      "failed_to_delete": "टिप्पणी हटाने में विफल"
     },
     "label_filter": {
       "label": "लेबल:",
@@ -775,98 +791,98 @@
     "podcast_deleted_success": "पॉडकास्ट सफलतापूर्वक हटाया गया",
     "podcast_deleted_error": "पॉडकास्ट हटाने में विफल",
     "edit_content": "सामग्री संपादित करें",
-    "create_new_podcast": "Create a new podcast for your organization",
-    "create_podcast": "Create Podcast",
-    "create_podcast_btn": "Create Podcast",
-    "create_podcasts_placeholder": "Create podcasts to share audio content with your audience",
-    "creating_podcast": "Creating podcast...",
+    "create_new_podcast": "अपने संगठन के लिए एक नया पॉडकास्ट बनाएं",
+    "create_podcast": "पॉडकास्ट बनाएं",
+    "create_podcast_btn": "पॉडकास्ट बनाएं",
+    "create_podcasts_placeholder": "अपने दर्शकों के साथ ऑडियो सामग्री साझा करने के लिए पॉडकास्ट बनाएं",
+    "creating_podcast": "पॉडकास्ट बनाया जा रहा है...",
     "dashboard": {
       "episodes": {
-        "audio_hint": "MP3, WAV, or M4A files supported",
-        "audio_label": "Audio File",
-        "create": "Create Episode",
-        "create_error": "Failed to create episode",
-        "create_first": "Create First Episode",
-        "created": "Episode created",
-        "creating": "Creating episode...",
+        "audio_hint": "MP3, WAV, या M4A फ़ाइलें समर्थित हैं",
+        "audio_label": "ऑडियो फ़ाइल",
+        "create": "एपिसोड बनाएं",
+        "create_error": "एपिसोड बनाने में विफल",
+        "create_first": "पहला एपिसोड बनाएं",
+        "created": "एपिसोड बनाया गया",
+        "creating": "एपिसोड बनाया जा रहा है...",
         "delete": "हटाएं",
-        "delete_confirm": "Are you sure you want to delete this episode? This action cannot be undone.",
-        "delete_error": "Failed to delete episode",
-        "delete_title": "Delete Episode?",
-        "deleted": "Episode deleted",
-        "deleting": "Deleting episode...",
+        "delete_confirm": "क्या आप वाकई इस एपिसोड को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।",
+        "delete_error": "एपिसोड हटाने में विफल",
+        "delete_title": "एपिसोड हटाएं?",
+        "deleted": "एपिसोड हटाया गया",
+        "deleting": "एपिसोड हटाया जा रहा है...",
         "description_label": "विवरण",
-        "description_placeholder": "Enter episode description",
+        "description_placeholder": "एपिसोड विवरण दर्ज करें",
         "edit": "संपादित करें",
-        "edit_episode": "Edit Episode",
-        "edit_episode_description": "Update episode details",
-        "new_episode": "New Episode",
-        "new_episode_description": "Add a new episode to this podcast",
-        "no_audio": "No audio file",
-        "no_episodes_description": "Start by adding your first episode",
+        "edit_episode": "एपिसोड संपादित करें",
+        "edit_episode_description": "एपिसोड विवरण अपडेट करें",
+        "new_episode": "नया एपिसोड",
+        "new_episode_description": "इस पॉडकास्ट में एक नया एपिसोड जोड़ें",
+        "no_audio": "कोई ऑडियो फ़ाइल नहीं",
+        "no_episodes_description": "अपना पहला एपिसोड जोड़कर शुरुआत करें",
         "publish": "प्रकाशित करें",
-        "replace_audio": "Replace Audio File",
-        "save": "Save Changes",
+        "replace_audio": "ऑडियो फ़ाइल बदलें",
+        "save": "परिवर्तन सहेजें",
         "title_label": "शीर्षक",
-        "title_placeholder": "Enter episode title",
+        "title_placeholder": "एपिसोड का शीर्षक दर्ज करें",
         "unpublish": "अप्रकाशित करें",
-        "update_error": "Failed to update episode",
-        "updated": "Episode updated",
-        "updating": "Updating episode...",
-        "upload_audio": "Upload Audio File"
+        "update_error": "एपिसोड अपडेट करने में विफल",
+        "updated": "एपिसोड अपडेट किया गया",
+        "updating": "एपिसोड अपडेट किया जा रहा है...",
+        "upload_audio": "ऑडियो फ़ाइल अपलोड करें"
       },
       "form": {
-        "about": "About",
-        "about_max_length": "About must be at most 2000 characters",
-        "about_placeholder": "Tell listeners more about this podcast...",
-        "public_hint": "Anyone can find and listen to this podcast",
-        "published_hint": "Make this podcast visible on your organization page",
-        "tags_hint": "Separate tags with commas",
-        "tags_placeholder": "music, education, tech",
-        "thumbnail": "Thumbnail",
-        "thumbnail_hint": "Recommended size: 1400x1400px. JPG or PNG.",
-        "upload_thumbnail": "Upload Thumbnail",
-        "visibility": "Visibility Settings"
+        "about": "बारे में",
+        "about_max_length": "विवरण अधिकतम 2000 अक्षरों का होना चाहिए",
+        "about_placeholder": "श्रोताओं को इस पॉडकास्ट के बारे में और बताएं...",
+        "public_hint": "कोई भी इस पॉडकास्ट को ढूंढ और सुन सकता है",
+        "published_hint": "इस पॉडकास्ट को अपने संगठन पेज पर दृश्यमान बनाएं",
+        "tags_hint": "टैग को कॉमा से अलग करें",
+        "tags_placeholder": "संगीत, शिक्षा, टेक",
+        "thumbnail": "थंबनेल",
+        "thumbnail_hint": "अनुशंसित आकार: 1400x1400px। JPG या PNG।",
+        "upload_thumbnail": "थंबनेल अपलोड करें",
+        "visibility": "दृश्यता सेटिंग्स"
       },
-      "save_changes": "Save Changes",
-      "save_error": "Failed to save changes",
-      "saved": "Changes saved",
-      "saving": "Saving...",
+      "save_changes": "परिवर्तन सहेजें",
+      "save_error": "परिवर्तन सहेजने में विफल",
+      "saved": "परिवर्तन सहेजे गए",
+      "saving": "सहेजा जा रहा है...",
       "tabs": {
-        "episodes": "Episodes",
+        "episodes": "एपिसोड",
         "general": "सामान्य"
       },
-      "view_podcast": "View Podcast"
+      "view_podcast": "पॉडकास्ट देखें"
     },
-    "failed_to_create_podcast": "Failed to create podcast",
+    "failed_to_create_podcast": "पॉडकास्ट बनाने में विफल",
     "form": {
-      "description_max_length": "Description must be at most 500 characters",
-      "name_max_length": "Name must be at most 100 characters",
-      "name_min_length": "Name must be at least 3 characters",
-      "name_required": "Podcast name is required"
+      "description_max_length": "विवरण अधिकतम 500 अक्षरों का होना चाहिए",
+      "name_max_length": "नाम अधिकतम 100 अक्षरों का होना चाहिए",
+      "name_min_length": "नाम कम से कम 3 अक्षरों का होना चाहिए",
+      "name_required": "पॉडकास्ट का नाम आवश्यक है"
     },
     "modals": {
       "create": {
         "cancel": "रद्द करें",
-        "description": "Fill in the details to create a new podcast",
+        "description": "नया पॉडकास्ट बनाने के लिए विवरण भरें",
         "form": {
           "description_label": "विवरण",
-          "description_placeholder": "Enter podcast description",
-          "name_label": "Podcast Name",
-          "name_placeholder": "Enter podcast name",
-          "public_label": "Make this podcast public"
+          "description_placeholder": "पॉडकास्ट विवरण दर्ज करें",
+          "name_label": "पॉडकास्ट का नाम",
+          "name_placeholder": "पॉडकास्ट का नाम दर्ज करें",
+          "public_label": "इस पॉडकास्ट को सार्वजनिक बनाएं"
         },
-        "submit": "Create Podcast",
-        "title": "Create New Podcast"
+        "submit": "पॉडकास्ट बनाएं",
+        "title": "नया पॉडकास्ट बनाएं"
       }
     },
-    "podcast_created_success": "Podcast created successfully",
-    "podcast_name": "Podcast Name",
-    "podcast_name_required": "Podcast name is required",
+    "podcast_created_success": "पॉडकास्ट सफलतापूर्वक बनाया गया",
+    "podcast_name": "पॉडकास्ट का नाम",
+    "podcast_name_required": "पॉडकास्ट का नाम आवश्यक है",
     "podcast_tags": "टैग",
-    "podcast_thumbnail": "Podcast Thumbnail",
+    "podcast_thumbnail": "पॉडकास्ट थंबनेल",
     "podcast_visibility": "दृश्यता",
-    "search_results": "Found {{count}} podcast(s) for \"{{query}}\""
+    "search_results": "\"{{query}}\" के लिए {{count}} पॉडकास्ट मिले"
   },
   "collections": {
     "collections": "संग्रह",
@@ -907,7 +923,7 @@
     "quiz": "प्रश्नोत्तरी",
     "file_submission": "फ़ाइल सबमिशन",
     "form": "फॉर्म",
-    "code": "Code",
+    "code": "कोड",
     "interactive": "इंटरएक्टिव",
     "activities": "गतिविधियां",
     "current_activity": "वर्तमान गतिविधि",
@@ -946,8 +962,8 @@
     "activities_count": "{{count}} गतिविधियां",
     "copy_link": "लिंक कॉपी करें",
     "embed": "एम्बेड",
-    "embed_code_copied": "Embed code copied!",
-    "link_copied": "Link copied!",
+    "embed_code_copied": "एम्बेड कोड कॉपी हो गया!",
+    "link_copied": "लिंक कॉपी हो गया!",
     "share": "साझा करें"
   },
   "assignments": {
@@ -966,13 +982,20 @@
     "points": "अंक",
     "current_points": "वर्तमान अंक: {{points}}",
     "grade": "ग्रेड",
-    "run_autograde": "Run Auto-grade",
+    "run_autograde": "ऑटो-ग्रेड चलाएं",
     "due_date": "नियत तारीख",
     "task_breakdown": "कार्य विवरण",
     "no_grade_details": "अभी तक कोई ग्रेड विवरण उपलब्ध नहीं।",
     "task_passed": "उत्तीर्ण",
     "task_not_passed": "अनुत्तीर्ण",
-    "score": "स्कोर"
+    "score": "स्कोर",
+    "form": {
+      "expected_answer": "अपेक्षित"
+    },
+    "quiz": {
+      "correct_answer": "सही",
+      "incorrect_answer": "गलत"
+    }
   },
   "certificate": {
     "certificate": "प्रमाणपत्र",
@@ -1059,7 +1082,8 @@
     "subscription": "सब्सक्रिप्शन",
     "benefits": "लाभ:",
     "min_price": "न्यूनतम मूल्य:",
-    "choose_price": "अपनी कीमत चुनें"
+    "choose_price": "अपनी कीमत चुनें",
+    "stripe_denied": "Stripe कनेक्शन रद्द कर दिया गया था।"
   },
   "account": {
     "title": "खाता",
@@ -1288,7 +1312,8 @@
           "loading_error": "प्रोफ़ाइल डेटा लोड करने में विफल",
           "save_success": "प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया",
           "save_error": "प्रोफ़ाइल अपडेट करने में त्रुटि"
-        }
+        },
+        "unknown_section": "अज्ञात अनुभाग"
       }
     },
     "sign_out": "साइन आउट",
@@ -1300,7 +1325,7 @@
     "my_progress": "मेरी प्रगति",
     "no_courses_in_progress": "कोई कोर्स प्रगति पर नहीं है",
     "start_course_to_see_progress": "अपनी प्रगति यहां देखने के लिए एक कोर्स शुरू करें",
-    "bio_placeholder": "Tell us a bit about yourself..."
+    "bio_placeholder": "अपने बारे में थोड़ा बताएं..."
   },
   "roles": {
     "custom_role": "कस्टम भूमिका",
@@ -1733,7 +1758,7 @@
             "thumbnail": "थंबनेल",
             "course": "लिंक्ड कोर्स",
             "moderation": "मॉडरेशन",
-            "access": "Access"
+            "access": "पहुंच"
           },
           "general": {
             "title": "सामान्य सेटिंग्स",
@@ -1752,8 +1777,8 @@
             "subtitle": "सामग्री मॉडरेशन सेटिंग्स कॉन्फ़िगर करें"
           },
           "access": {
-            "subtitle": "Control who can access this community",
-            "title": "Access Settings"
+            "subtitle": "नियंत्रित करें कि इस समुदाय तक कौन पहुंच सकता है",
+            "title": "पहुंच सेटिंग्स"
           }
         },
         "course": {
@@ -1892,54 +1917,54 @@
         "access": {
           "public": {
             "active": "सक्रिय",
-            "confirmation_button": "Change to Public",
-            "confirmation_message": "Are you sure you want this community to be publicly available?",
-            "confirmation_title": "Change to Public?",
-            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "confirmation_button": "सार्वजनिक में बदलें",
+            "confirmation_message": "क्या आप वाकई चाहते हैं कि यह समुदाय सार्वजनिक रूप से उपलब्ध हो?",
+            "confirmation_title": "सार्वजनिक में बदलें?",
+            "description": "समुदाय सार्वजनिक रूप से उपलब्ध है। कोई भी चर्चाओं को देख और उनमें भाग ले सकता है।",
             "title": "सार्वजनिक"
           },
           "restricted": {
             "active": "सक्रिय",
-            "confirmation_button": "Change to Restricted",
-            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
-            "confirmation_title": "Change to Restricted?",
-            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
-            "title": "Restricted"
+            "confirmation_button": "प्रतिबंधित में बदलें",
+            "confirmation_message": "क्या आप वाकई चाहते हैं कि यह समुदाय प्रतिबंधित हो? केवल लिंक किए गए उपयोगकर्ता समूहों के सदस्यों के पास पहुंच होगी।",
+            "confirmation_title": "प्रतिबंधित में बदलें?",
+            "description": "समुदाय केवल चयनित उपयोगकर्ता समूहों के सदस्यों के लिए सुलभ है। पहुंच प्रदान करने के लिए उपयोगकर्ता समूहों को लिंक करें।",
+            "title": "प्रतिबंधित"
           },
-          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
-          "title": "Access Settings",
+          "subtitle": "चुनें कि क्या आप अपना समुदाय सार्वजनिक रूप से उपलब्ध रखना चाहते हैं या केवल विशिष्ट उपयोगकर्ता समूहों के लिए सुलभ",
+          "title": "पहुंच सेटिंग्स",
           "toasts": {
-            "update_error": "Failed to update access settings",
-            "update_success": "Access settings updated successfully"
+            "update_error": "पहुंच सेटिंग्स अपडेट करने में विफल",
+            "update_success": "पहुंच सेटिंग्स सफलतापूर्वक अपडेट की गईं"
           },
           "usergroups": {
             "actions": {
               "delete_link": "हटाएं",
-              "link_to_usergroup": "Link to User Group"
+              "link_to_usergroup": "उपयोगकर्ता समूह से लिंक करें"
             },
             "modals": {
-              "create_usergroup": "Create a User Group",
+              "create_usergroup": "उपयोगकर्ता समूह बनाएं",
               "link_button": "लिंक",
-              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
-              "link_title": "Link Community to User Group",
-              "no_usergroups": "No User Groups available",
-              "unlink_button": "Remove Access",
-              "unlink_message": "Users from this User Group will no longer have access to this community.",
-              "unlink_title": "Remove User Group Access?",
-              "usergroup_name": "User Group Name",
-              "warning": "Users not in linked User Groups will lose access to this community"
+              "link_description": "इस समुदाय को लिंक करने के लिए एक उपयोगकर्ता समूह चुनें। इस उपयोगकर्ता समूह के उपयोगकर्ताओं के पास पहुंच होगी।",
+              "link_title": "समुदाय को उपयोगकर्ता समूह से लिंक करें",
+              "no_usergroups": "कोई उपयोगकर्ता समूह उपलब्ध नहीं",
+              "unlink_button": "पहुंच हटाएं",
+              "unlink_message": "इस उपयोगकर्ता समूह के उपयोगकर्ताओं की अब इस समुदाय तक पहुंच नहीं होगी।",
+              "unlink_title": "उपयोगकर्ता समूह की पहुंच हटाएं?",
+              "usergroup_name": "उपयोगकर्ता समूह का नाम",
+              "warning": "लिंक किए गए उपयोगकर्ता समूहों में नहीं रहने वाले उपयोगकर्ता इस समुदाय तक पहुंच खो देंगे"
             },
-            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "subtitle": "उपयोगकर्ता समूहों को लिंक करके इस समुदाय तक पहुंच प्रदान करें। इन समूहों के उपयोगकर्ता देखने और भाग लेने में सक्षम होंगे।",
             "table": {
               "actions": "क्रियाएं",
               "name": "नाम"
             },
-            "title": "User Groups",
+            "title": "उपयोगकर्ता समूह",
             "toasts": {
-              "link_error": "Error {{status}}: {{detail}}",
-              "link_success": "Successfully linked User Group",
-              "unlink_error": "An error occurred while removing User Group access",
-              "unlink_success": "Successfully removed User Group access"
+              "link_error": "त्रुटि {{status}}: {{detail}}",
+              "link_success": "उपयोगकर्ता समूह सफलतापूर्वक लिंक किया गया",
+              "unlink_error": "उपयोगकर्ता समूह की पहुंच हटाते समय एक त्रुटि हुई",
+              "unlink_success": "उपयोगकर्ता समूह की पहुंच सफलतापूर्वक हटा दी गई"
             }
           }
         }
@@ -2022,9 +2047,9 @@
             "assignments": "असाइनमेंट",
             "dynamic": "डायनेमिक",
             "dynamic_page": "डायनेमिक पेज",
-            "scorm": "Scorm",
+            "scorm": "SCORM",
             "markdown": "Markdown",
-            "embed": "Embed"
+            "embed": "एम्बेड"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",
@@ -2037,7 +2062,8 @@
             "create_success": "गतिविधि सफलतापूर्वक बनाई गई",
             "uploading": "फ़ाइल अपलोड की जा रही है और गतिविधि बनाई जा रही है...",
             "upload_success": "फ़ाइल सफलतापूर्वक अपलोड की गई",
-            "creating_uploading": "गतिविधि बनाई जा रही है और फ़ाइल अपलोड की जा रही है..."
+            "creating_uploading": "गतिविधि बनाई जा रही है और फ़ाइल अपलोड की जा रही है...",
+            "update_error": "गतिविधि अपडेट करने में विफल"
           },
           "versioning": {
             "version_history": "संस्करण इतिहास",
@@ -2081,76 +2107,79 @@
               "remote_detected": "दूरस्थ बदलाव पाए गए",
               "editing_notice": "{{author}} ने संपादन के दौरान बदलाव किए"
             }
+          },
+          "descriptions": {
+            "scorm": "SCORM-संगत लर्निंग पैकेज"
           }
         }
       },
-      "limit_reached": "Course limit reached ({{limit}})",
+      "limit_reached": "कोर्स की सीमा पूरी हो गई ({{limit}})",
       "seo": {
         "errors": {
-          "save_failed": "Failed to save SEO settings"
+          "save_failed": "SEO सेटिंग्स सहेजने में विफल"
         },
         "form": {
-          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "canonical_url_hint": "उपयोग करें यदि यह कोर्स कहीं और डुप्लिकेट किया गया है। डिफ़ॉल्ट URL के लिए खाली छोड़ें",
           "canonical_url_label": "Canonical URL",
           "canonical_url_placeholder": "https://example.com/course/your-course",
-          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
-          "description_label": "Meta Description",
-          "description_placeholder": "Enter a compelling description for search results",
-          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results",
-          "enable_jsonld_label": "Enable JSON-LD Structured Data",
-          "keywords_hint": "Comma-separated list of keywords related to your course",
-          "keywords_label": "Keywords",
-          "keywords_placeholder": "keyword1, keyword2, keyword3",
-          "og_description_label": "OG Description",
-          "og_description_placeholder": "Custom description for social media sharing",
-          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
-          "og_image_label": "OG Image URL",
+          "description_hint": "कोर्स विवरण का उपयोग करने के लिए खाली छोड़ें। अनुशंसित: 150-160 अक्षर",
+          "description_label": "Meta विवरण",
+          "description_placeholder": "खोज परिणामों के लिए एक आकर्षक विवरण दर्ज करें",
+          "enable_jsonld_hint": "खोज परिणामों में रिच स्निपेट के लिए Course schema.org मार्कअप जोड़ता है",
+          "enable_jsonld_label": "JSON-LD संरचित डेटा सक्षम करें",
+          "keywords_hint": "आपके कोर्स से संबंधित कीवर्ड की कॉमा-विभाजित सूची",
+          "keywords_label": "कीवर्ड",
+          "keywords_placeholder": "कीवर्ड1, कीवर्ड2, कीवर्ड3",
+          "og_description_label": "OG विवरण",
+          "og_description_placeholder": "सोशल मीडिया साझाकरण के लिए कस्टम विवरण",
+          "og_image_hint": "सोशल साझाकरण के लिए कस्टम छवि URL। कोर्स थंबनेल का उपयोग करने के लिए खाली छोड़ें",
+          "og_image_label": "OG छवि URL",
           "og_image_placeholder": "https://example.com/image.jpg",
-          "og_title_label": "OG Title",
-          "og_title_placeholder": "Custom title for social media sharing",
-          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
-          "robots_nofollow_label": "Prevent following links (nofollow)",
-          "robots_noindex_hint": "When enabled, search engines will not index this course",
-          "robots_noindex_label": "Prevent search engine indexing (noindex)",
-          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
-          "title_label": "SEO Title",
-          "title_placeholder": "Enter a custom title for search engines",
-          "twitter_card_label": "Card Type",
-          "twitter_card_summary": "Summary",
-          "twitter_card_summary_large": "Summary with Large Image",
-          "twitter_description_label": "Twitter Description",
-          "twitter_description_placeholder": "Custom description for Twitter sharing",
-          "twitter_title_label": "Twitter Title",
-          "twitter_title_placeholder": "Custom title for Twitter sharing"
+          "og_title_label": "OG शीर्षक",
+          "og_title_placeholder": "सोशल मीडिया साझाकरण के लिए कस्टम शीर्षक",
+          "robots_nofollow_hint": "सक्षम होने पर, सर्च इंजन इस पेज पर लिंक का अनुसरण नहीं करेंगे",
+          "robots_nofollow_label": "लिंक का अनुसरण रोकें (nofollow)",
+          "robots_noindex_hint": "सक्षम होने पर, सर्च इंजन इस कोर्स को इंडेक्स नहीं करेंगे",
+          "robots_noindex_label": "सर्च इंजन इंडेक्सिंग रोकें (noindex)",
+          "title_hint": "कोर्स के नाम का उपयोग करने के लिए खाली छोड़ें। अनुशंसित: 50-60 अक्षर",
+          "title_label": "SEO शीर्षक",
+          "title_placeholder": "सर्च इंजनों के लिए एक कस्टम शीर्षक दर्ज करें",
+          "twitter_card_label": "कार्ड प्रकार",
+          "twitter_card_summary": "सारांश",
+          "twitter_card_summary_large": "बड़ी छवि के साथ सारांश",
+          "twitter_description_label": "Twitter विवरण",
+          "twitter_description_placeholder": "Twitter साझाकरण के लिए कस्टम विवरण",
+          "twitter_title_label": "Twitter शीर्षक",
+          "twitter_title_placeholder": "Twitter साझाकरण के लिए कस्टम शीर्षक"
         },
         "sections": {
           "basic": {
-            "subtitle": "Configure how your course appears in search engine results",
-            "title": "Basic SEO"
+            "subtitle": "कॉन्फ़िगर करें कि आपका कोर्स सर्च इंजन परिणामों में कैसे दिखाई देता है",
+            "title": "बेसिक SEO"
           },
           "opengraph": {
-            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)",
+            "subtitle": "कस्टमाइज़ करें कि सोशल मीडिया (Facebook, LinkedIn, आदि) पर साझा करते समय आपका कोर्स कैसा दिखाई देता है",
             "title": "Open Graph"
           },
           "robots": {
-            "subtitle": "Control search engine indexing and enable rich snippets",
-            "title": "Robots & Structured Data"
+            "subtitle": "सर्च इंजन इंडेक्सिंग को नियंत्रित करें और रिच स्निपेट सक्षम करें",
+            "title": "Robots और संरचित डेटा"
           },
           "twitter": {
-            "subtitle": "Customize how your course appears when shared on Twitter/X",
+            "subtitle": "कस्टमाइज़ करें कि Twitter/X पर साझा करते समय आपका कोर्स कैसा दिखाई देता है",
             "title": "Twitter Card"
           }
         },
-        "subtitle": "Optimize your course for search engines and social media sharing",
-        "title": "SEO Settings",
+        "subtitle": "सर्च इंजनों और सोशल मीडिया साझाकरण के लिए अपना कोर्स ऑप्टिमाइज़ करें",
+        "title": "SEO सेटिंग्स",
         "validation": {
-          "description_max_length": "Meta description must be 160 characters or less",
-          "invalid_url": "Please enter a valid URL",
-          "og_description_max_length": "OG description must be 200 characters or less",
-          "og_title_max_length": "OG title must be 70 characters or less",
-          "title_max_length": "SEO title must be 70 characters or less",
-          "twitter_description_max_length": "Twitter description must be 200 characters or less",
-          "twitter_title_max_length": "Twitter title must be 70 characters or less"
+          "description_max_length": "Meta विवरण 160 अक्षर या उससे कम होना चाहिए",
+          "invalid_url": "कृपया एक मान्य URL दर्ज करें",
+          "og_description_max_length": "OG विवरण 200 अक्षर या उससे कम होना चाहिए",
+          "og_title_max_length": "OG शीर्षक 70 अक्षर या उससे कम होना चाहिए",
+          "title_max_length": "SEO शीर्षक 70 अक्षर या उससे कम होना चाहिए",
+          "twitter_description_max_length": "Twitter विवरण 200 अक्षर या उससे कम होना चाहिए",
+          "twitter_title_max_length": "Twitter शीर्षक 70 अक्षर या उससे कम होना चाहिए"
         }
       }
     },
@@ -2165,10 +2194,12 @@
           "ai": "AI",
           "api": "API एक्सेस",
           "features": "सुविधाएं",
-          "usage": "Usage",
+          "usage": "उपयोग",
           "other": "अन्य",
-          "domains": "Domains",
-          "sso": "SSO"
+          "domains": "डोमेन",
+          "sso": "SSO",
+          "seo": "SEO",
+          "automations": "स्वचालन"
         },
         "pages": {
           "general": {
@@ -2200,15 +2231,15 @@
             "subtitle": "अपने संगठन के लिए सुविधाएं सक्षम या अक्षम करें"
           },
           "usage": {
-            "title": "Usage",
-            "subtitle": "Monitor your organization's resource usage and plan limits"
+            "title": "उपयोग",
+            "subtitle": "अपने संगठन के संसाधन उपयोग और प्लान सीमाओं की निगरानी करें"
           },
           "domains": {
-            "subtitle": "Configure custom domains for your organization",
-            "title": "Custom Domains"
+            "subtitle": "अपने संगठन के लिए कस्टम डोमेन कॉन्फ़िगर करें",
+            "title": "कस्टम डोमेन"
           },
           "sso": {
-            "subtitle": "Configure SSO for your organization",
+            "subtitle": "अपने संगठन के लिए SSO कॉन्फ़िगर करें",
             "title": "Single Sign-On"
           }
         },
@@ -2228,9 +2259,12 @@
         "footer_text": "फ़ुटर टेक्स्ट",
         "footer_text_placeholder": "फ़ुटर टेक्स्ट दर्ज करें...",
         "footer_text_desc": "आपके संगठन के पृष्ठों के नीचे प्रदर्शित कस्टम टेक्स्ट",
-        "watermark_desc": "Show the LearnHouse branding watermark on your organization pages",
-        "watermark_free_plan": "Watermark is always shown on the free plan",
-        "watermark_label": "\"Made with LearnHouse\" watermark"
+        "default_language": "डिफ़ॉल्ट भाषा",
+        "default_language_desc": "नए विज़िटर को डिफ़ॉल्ट रूप से दिखाई देने वाली भाषा और इस संस्था की ओर से भेजे जाने वाले ईमेल में उपयोग की जाने वाली भाषा। सदस्य अब भी अपनी UI भाषा बदल सकते हैं।",
+        "watermark_desc": "अपने संगठन के पेजों पर LearnHouse ब्रांडिंग वॉटरमार्क दिखाएं",
+        "watermark_free_plan": "फ्री प्लान पर वॉटरमार्क हमेशा दिखाया जाता है",
+        "watermark_label": "\"Made with LearnHouse\" वॉटरमार्क",
+        "watermark_ee": "आपके एंटरप्राइज़ संस्करण लाइसेंस द्वारा छिपाया गया"
       },
       "images": {
         "title": "छवियां और पूर्वावलोकन",
@@ -2364,11 +2398,11 @@
             "description": "कोर्स को संग्रहों में व्यवस्थित करने की अनुमति दें"
           },
           "courses": {
-            "description": "Enable courses and progress tracking for your organization",
+            "description": "अपने संगठन के लिए कोर्स और प्रगति ट्रैकिंग सक्षम करें",
             "title": "पाठ्यक्रम"
           },
           "podcasts": {
-            "description": "Enable podcast creation and audio content for your organization",
+            "description": "अपने संगठन के लिए पॉडकास्ट निर्माण और ऑडियो सामग्री सक्षम करें",
             "title": "पॉडकास्ट"
           }
         },
@@ -2378,7 +2412,7 @@
           "enabled": "{{feature}} सक्षम किया गया",
           "disabled": "{{feature}} अक्षम किया गया",
           "error": "{{feature}} कॉन्फ़िगरेशन अपडेट करने में विफल",
-          "admin_only": "Only organization admins can enable or disable features"
+          "admin_only": "केवल संगठन व्यवस्थापक सुविधाओं को सक्षम या अक्षम कर सकते हैं"
         }
       },
       "audit_logs": {
@@ -2623,43 +2657,43 @@
         "upload_error": "छवि अपलोड करने में विफल"
       },
       "sso": {
-        "allowed_domains": "Allowed Email Domains",
-        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
-        "auto_provision": "Auto-provision Users",
-        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
-        "delete": "Delete SSO Configuration",
-        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
-        "delete_error": "Failed to delete SSO configuration",
-        "delete_success": "SSO configuration deleted",
-        "deleting": "Deleting...",
-        "enable_sso": "Enable SSO",
-        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
-        "load_error": "Failed to load SSO configuration",
-        "not_configured": "Not configured",
+        "allowed_domains": "अनुमत ईमेल डोमेन",
+        "allowed_domains_help": "SSO के माध्यम से लॉगिन करने की अनुमति वाले ईमेल डोमेन की कॉमा-विभाजित सूची (जैसे, example.com, company.org)। सभी डोमेन की अनुमति देने के लिए खाली छोड़ें।",
+        "auto_provision": "उपयोगकर्ताओं को ऑटो-प्रोविजन करें",
+        "auto_provision_desc": "पहली बार SSO लॉगिन के लिए स्वचालित रूप से उपयोगकर्ता खाते बनाएं।",
+        "delete": "SSO कॉन्फ़िगरेशन हटाएं",
+        "delete_confirm": "क्या आप वाकई इस SSO कॉन्फ़िगरेशन को हटाना चाहते हैं? उपयोगकर्ता अब SSO के माध्यम से लॉगिन नहीं कर पाएंगे।",
+        "delete_error": "SSO कॉन्फ़िगरेशन हटाने में विफल",
+        "delete_success": "SSO कॉन्फ़िगरेशन हटाया गया",
+        "deleting": "हटाया जा रहा है...",
+        "enable_sso": "SSO सक्षम करें",
+        "enable_sso_desc": "उपयोगकर्ताओं को आपके संगठन के पहचान प्रदाता का उपयोग करके प्रमाणित करने की अनुमति दें।",
+        "load_error": "SSO कॉन्फ़िगरेशन लोड करने में विफल",
+        "not_configured": "कॉन्फ़िगर नहीं किया गया",
         "oidc_client_id": "Client ID",
         "oidc_client_secret": "Client Secret",
-        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
-        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_client_secret_help": "इस सीक्रेट को सुरक्षित रखें। इसका उपयोग आपके पहचान प्रदाता के साथ प्रमाणीकरण के लिए किया जाता है।",
+        "oidc_info": "किसी भी OpenID Connect संगत पहचान प्रदाता (Azure AD, Okta, Google Workspace, Keycloak) से सीधे कनेक्ट करें।",
         "oidc_issuer_url": "Issuer URL",
-        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_issuer_url_help": "OIDC issuer URL। एंडपॉइंट /.well-known/openid-configuration से ऑटो-डिस्कवर किए जाएंगे।",
         "oidc_scopes": "Scopes",
-        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
-        "open_setup_portal": "Configure Identity Provider",
-        "provider": "SSO Provider",
-        "save": "Save Configuration",
-        "save_error": "Failed to save SSO configuration",
-        "save_success": "SSO configuration saved successfully",
-        "saving": "Saving...",
-        "select_provider": "Select a provider",
-        "setup_error": "Failed to get setup portal URL",
-        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "oidc_scopes_help": "अनुरोध करने के लिए OAuth scopes (स्पेस-विभाजित)। डिफ़ॉल्ट: openid email profile",
+        "open_setup_portal": "पहचान प्रदाता कॉन्फ़िगर करें",
+        "provider": "SSO प्रदाता",
+        "save": "कॉन्फ़िगरेशन सहेजें",
+        "save_error": "SSO कॉन्फ़िगरेशन सहेजने में विफल",
+        "save_success": "SSO कॉन्फ़िगरेशन सफलतापूर्वक सहेजा गया",
+        "saving": "सहेजा जा रहा है...",
+        "select_provider": "एक प्रदाता चुनें",
+        "setup_error": "सेटअप पोर्टल URL प्राप्त करने में विफल",
+        "setup_not_available": "सेटअप पोर्टल उपलब्ध नहीं है। कृपया पहले प्रदाता को कॉन्फ़िगर करें।",
         "status_disabled": "अक्षम",
         "status_enabled": "सक्षम",
-        "subtitle": "Configure enterprise SSO for your organization",
+        "subtitle": "अपने संगठन के लिए एंटरप्राइज़ SSO कॉन्फ़िगर करें",
         "title": "Single Sign-On (SSO)",
-        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_info": "WorkOS, SAML और OIDC पहचान प्रदाताओं के समर्थन के साथ एंटरप्राइज़ SSO प्रदान करता है।",
         "workos_org_id": "WorkOS Organization ID",
-        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal."
+        "workos_org_id_help": "जब आप सेटअप पोर्टल के माध्यम से SSO कॉन्फ़िगर करते हैं तो यह ID स्वचालित रूप से उत्पन्न होती है।"
       }
     },
     "users": {
@@ -2829,29 +2863,29 @@
             "sent": "भेजा गया",
             "no": "नहीं"
           },
-          "no_invites": "No pending invitations",
-          "no_results": "No invitations found matching your search",
+          "no_invites": "कोई लंबित आमंत्रण नहीं",
+          "no_results": "आपकी खोज से मेल खाते कोई आमंत्रण नहीं मिले",
           "remove_button": "हटाएं",
-          "remove_error": "Error removing invitation",
-          "remove_message": "Are you sure you want to remove the invitation for {{email}}?",
-          "remove_success": "Invitation removed",
-          "remove_title": "Remove invitation",
-          "removing": "Removing invitation...",
-          "search_placeholder": "Search by email..."
+          "remove_error": "आमंत्रण हटाने में त्रुटि",
+          "remove_message": "क्या आप वाकई {{email}} के लिए आमंत्रण हटाना चाहते हैं?",
+          "remove_success": "आमंत्रण हटा दिया गया",
+          "remove_title": "आमंत्रण हटाएं",
+          "removing": "आमंत्रण हटाया जा रहा है...",
+          "search_placeholder": "ईमेल से खोजें..."
         },
         "toasts": {
           "sending": "आमंत्रण भेजा जा रहा है...",
           "success": "आमंत्रण भेजा गया",
           "error": "आमंत्रण भेजने में त्रुटि",
-          "partial": "{{sent}} sent, {{failed}} failed"
+          "partial": "{{sent}} भेजे गए, {{failed}} विफल"
         },
         "no_invite_code": "कोई नहीं",
         "results": {
-          "failed_count": "{{count}} failed",
-          "sent_count": "{{count}} sent",
-          "skipped_count": "{{count}} already invited",
+          "failed_count": "{{count}} विफल",
+          "sent_count": "{{count}} भेजे गए",
+          "skipped_count": "{{count}} पहले से आमंत्रित",
           "status": {
-            "already_invited": "Already invited",
+            "already_invited": "पहले से आमंत्रित",
             "email_failed": "विफल",
             "sent": "भेजा गया"
           },
@@ -2885,8 +2919,8 @@
             "status": {
               "linked": "जुड़ा हुआ",
               "not_linked": "नहीं जुड़ा हुआ",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "in_group": "समूह में",
+              "not_in_group": "समूह में नहीं"
             },
             "actions": {
               "link": "लिंक करें",
@@ -2896,30 +2930,30 @@
               "link_success": "उपयोगकर्ता सफलतापूर्वक जुड़ गया",
               "unlink_success": "उपयोगकर्ता सफलतापूर्वक हट गया",
               "error": "त्रुटि {{status}}: {{detail}}",
-              "bulk_add_success": "Successfully added {{count}} users to group",
-              "bulk_adding": "Adding users to group...",
-              "bulk_error": "An error occurred during the operation",
-              "bulk_remove_success": "Successfully removed {{count}} users from group",
-              "bulk_removing": "Removing users from group..."
+              "bulk_add_success": "{{count}} उपयोगकर्ताओं को समूह में सफलतापूर्वक जोड़ा गया",
+              "bulk_adding": "उपयोगकर्ताओं को समूह में जोड़ा जा रहा है...",
+              "bulk_error": "ऑपरेशन के दौरान एक त्रुटि हुई",
+              "bulk_remove_success": "{{count}} उपयोगकर्ताओं को समूह से सफलतापूर्वक हटाया गया",
+              "bulk_removing": "उपयोगकर्ताओं को समूह से हटाया जा रहा है..."
             },
-            "no_results": "No users found matching your search",
-            "no_users": "No users in this organization yet",
+            "no_results": "आपकी खोज से मेल खाते कोई उपयोगकर्ता नहीं मिले",
+            "no_users": "इस संगठन में अभी तक कोई उपयोगकर्ता नहीं",
             "pagination": {
-              "page": "Page {{current}} of {{total}}",
-              "showing": "Showing {{start}}-{{end}} of {{total}}"
+              "page": "{{total}} में से {{current}} पेज",
+              "showing": "{{total}} में से {{start}}-{{end}} दिखा रहा है"
             },
-            "search_placeholder": "Search users by name or username...",
+            "search_placeholder": "नाम या उपयोगकर्ता नाम से उपयोगकर्ता खोजें...",
             "selection": {
-              "add_selected": "Add {{count}} to Group",
+              "add_selected": "{{count}} को समूह में जोड़ें",
               "clear": "साफ़ करें",
-              "count": "{{count}} users selected",
-              "remove_selected": "Remove {{count}} from Group",
-              "select_all_visible": "Select all visible"
+              "count": "{{count}} उपयोगकर्ता चयनित",
+              "remove_selected": "{{count}} को समूह से हटाएं",
+              "select_all_visible": "सभी दृश्यमान चुनें"
             },
             "tabs": {
-              "all": "All Users",
-              "in_group": "In Group",
-              "not_in_group": "Not in Group"
+              "all": "सभी उपयोगकर्ता",
+              "in_group": "समूह में",
+              "not_in_group": "समूह में नहीं"
             }
           },
           "create": {
@@ -2964,16 +2998,16 @@
           "delete_error": "उपयोगकर्ता समूह हटाने में त्रुटि"
         },
         "count": {
-          "plural": "groups",
-          "singular": "group"
+          "plural": "समूह",
+          "singular": "समूह"
         },
         "member_count": {
-          "plural": "members",
-          "singular": "member"
+          "plural": "सदस्य",
+          "singular": "सदस्य"
         },
-        "no_groups": "No user groups yet",
-        "no_results": "No groups found matching your search",
-        "search_placeholder": "Search groups..."
+        "no_groups": "अभी तक कोई उपयोगकर्ता समूह नहीं",
+        "no_results": "आपकी खोज से मेल खाते कोई समूह नहीं मिले",
+        "search_placeholder": "समूह खोजें..."
       },
       "roles": {
         "title": "भूमिकाएं और अनुमतियां प्रबंधित करें",
@@ -2992,7 +3026,7 @@
           "edit": "संपादित करें",
           "delete": "हटाएं",
           "create": "एक भूमिका बनाएं",
-          "view_rights": "View Rights"
+          "view_rights": "अधिकार देखें"
         },
         "modals": {
           "create": {
@@ -3112,6 +3146,34 @@
             "toasts": {
               "success": "भूमिका सफलतापूर्वक सहेजी गई",
               "error": "भूमिका सहेजने में त्रुटि, कृपया बाद में पुनः प्रयास करें।"
+            },
+            "permissions": {
+              "actions": {
+                "access": "पहुंच",
+                "create": "बनाएं",
+                "delete": "हटाएं",
+                "delete_own": "अपना हटाएं",
+                "read": "पढ़ें",
+                "read_own": "अपना पढ़ें",
+                "update": "अपडेट करें",
+                "update_own": "अपना अपडेट करें"
+              },
+              "deselect": "अचयन करें",
+              "deselect_all": "सभी अचयन करें",
+              "sections": {
+                "activities": "गतिविधियां",
+                "collections": "संग्रह",
+                "coursechapters": "पाठ्यक्रम अध्याय",
+                "courses": "पाठ्यक्रम",
+                "dashboard": "डैशबोर्ड",
+                "organizations": "संगठन",
+                "roles": "भूमिकाएं",
+                "usergroups": "उपयोगकर्ता समूह",
+                "users": "उपयोगकर्ता"
+              },
+              "select": "चयन करें",
+              "select_all": "सभी चुनें",
+              "title": "अनुमतियां"
             }
           },
           "delete": {
@@ -3120,8 +3182,8 @@
             "button": "भूमिका हटाएं"
           },
           "view_rights": {
-            "description": "View all permissions assigned to this role",
-            "title": "{{roleName}} - Permissions"
+            "description": "इस भूमिका को सौंपी गई सभी अनुमतियां देखें",
+            "title": "{{roleName}} - अनुमतियां"
           }
         },
         "toasts": {
@@ -3131,15 +3193,15 @@
         },
         "rights": {
           "resources": {
-            "activities": "Activities",
-            "collections": "Collections",
-            "coursechapters": "Course Chapters",
+            "activities": "गतिविधियां",
+            "collections": "संग्रह",
+            "coursechapters": "कोर्स अध्याय",
             "courses": "पाठ्यक्रम",
-            "dashboard": "Dashboard",
-            "organizations": "Organizations",
-            "roles": "Roles",
-            "usergroups": "User Groups",
-            "users": "Users"
+            "dashboard": "डैशबोर्ड",
+            "organizations": "संगठन",
+            "roles": "भूमिकाएं",
+            "usergroups": "उपयोगकर्ता समूह",
+            "users": "उपयोगकर्ता"
           }
         }
       }
@@ -3230,8 +3292,8 @@
             "description": "छात्रों के लिए खाली स्थान भरें फॉर्म"
           },
           "code": {
-            "title": "Code",
-            "description": "Code challenge with automated test case grading"
+            "title": "कोड",
+            "description": "स्वचालित टेस्ट केस ग्रेडिंग के साथ कोड चुनौती"
           },
           "short_answer": {
             "title": "संक्षिप्त उत्तर",
@@ -3348,14 +3410,14 @@
           "reject": "असाइनमेंट अस्वीकार करें",
           "set_final_grade": "अंतिम ग्रेड सेट करें",
           "mark_as_done": "उपयोगकर्ता के लिए गतिविधि को पूर्ण के रूप में चिह्नित करें",
-          "finalize": "Finalize & Complete",
+          "finalize": "अंतिम रूप दें और पूरा करें",
           "reject_description": "सबमिशन हटाता है और छात्र को दोबारा सबमिट करने देता है",
           "set_final_grade_description": "गतिविधि पूरी किए बिना ग्रेड की गणना और सहेजता है",
           "finalize_description": "अंतिम ग्रेड सेट करता है और छात्र के लिए गतिविधि को पूर्ण के रूप में चिह्नित करता है"
         },
         "toasts": {
           "reject_success": "असाइनमेंट सफलतापूर्वक अस्वीकार कर दिया गया",
-          "finalize_success": "Assignment graded and activity marked as complete"
+          "finalize_success": "असाइनमेंट को ग्रेड किया गया और गतिविधि को पूर्ण के रूप में चिह्नित किया गया"
         },
         "filters": {
           "all": "सभी"
@@ -3479,7 +3541,9 @@
             "anti_copy_paste_description": "पेस्ट इवेंट को ब्लॉक करके AI-जनित उत्तरों को पेस्ट करने से हतोत्साहित करें। नोट: यह एक निवारक है।",
             "auto_grading_disabled_file": "स्वचालित ग्रेडिंग उपलब्ध नहीं है क्योंकि इस असाइनमेंट में फ़ाइल सबमिशन कार्य है जिसे मानव समीक्षा की आवश्यकता है।",
             "grading_type_hint": "छात्रों को ग्रेड कैसे दिखाए जाते हैं",
-            "grading_options_hint": "सबमिशन पर व्यवहार"
+            "grading_options_hint": "सबमिशन पर व्यवहार",
+            "show_correct_answers_description": "सबमिशन ग्रेड होने के बाद, छात्रों को उनके उत्तरों के साथ सही उत्तर दिखाएं — कौन से क्विज़ विकल्प सही थे, अपेक्षित संक्षिप्त या संख्यात्मक उत्तर, और सही फॉर्म रिक्त स्थान।",
+            "show_correct_answers_label": "ग्रेडिंग के बाद सही उत्तर दिखाएं"
           },
           "toasts": {
             "updating": "असाइनमेंट अपडेट किया जा रहा है...",
@@ -3519,12 +3583,184 @@
             "anti_copy_paste_label": "कॉपी और पेस्ट ब्लॉक करें",
             "anti_copy_paste_description": "पेस्ट इवेंट को ब्लॉक करके AI-जनित उत्तरों को पेस्ट करने से हतोत्साहित करें। नोट: यह एक निवारक है।",
             "grading_type_hint": "छात्रों को ग्रेड कैसे दिखाए जाते हैं",
-            "grading_options_hint": "सबमिशन पर व्यवहार"
+            "grading_options_hint": "सबमिशन पर व्यवहार",
+            "show_correct_answers_description": "ग्रेडिंग के बाद, छात्र अपने उत्तरों के साथ-साथ सही उत्तर भी देख सकते हैं।",
+            "show_correct_answers_label": "ग्रेडिंग के बाद सही उत्तर दिखाएं"
           },
           "toasts": {
             "creating": "असाइनमेंट बनाया जा रहा है...",
             "success": "असाइनमेंट सफलतापूर्वक बनाया गया"
           }
+        }
+      }
+    },
+    "search": {
+      "trigger": "खोजें",
+      "placeholder": "पृष्ठ और सामग्री खोजें…",
+      "shortcut_hint": "⌘K",
+      "no_results": "कोई परिणाम नहीं मिला",
+      "loading": "खोज रहे हैं…",
+      "type_to_search": "सामग्री खोजने के लिए कम से कम 2 अक्षर दर्ज करें",
+      "groups": {
+        "pages": "पृष्ठ",
+        "courses": "पाठ्यक्रम",
+        "collections": "संग्रह",
+        "users": "उपयोगकर्ता",
+        "communities": "समुदाय",
+        "discussions": "चर्चाएँ",
+        "playgrounds": "प्लेग्राउंड",
+        "podcasts": "पॉडकास्ट"
+      },
+      "entries": {
+        "home": {
+          "description": "डैशबोर्ड अवलोकन",
+          "keywords": "होम, अवलोकन, शुरू, डैशबोर्ड"
+        },
+        "courses": {
+          "description": "अपने पाठ्यक्रम प्रबंधित करें",
+          "keywords": "पाठ्यक्रम, पाठ, सीखें, प्रशिक्षण, कक्षाएँ"
+        },
+        "assignments": {
+          "description": "असाइनमेंट प्रबंधित करें",
+          "keywords": "कार्य, गृहकार्य, अभ्यास, सबमिशन"
+        },
+        "communities": {
+          "description": "समुदाय प्रबंधित करें",
+          "keywords": "फोरम, चर्चाएँ, सदस्य, पोस्ट"
+        },
+        "podcasts": {
+          "description": "पॉडकास्ट प्रबंधित करें",
+          "keywords": "ऑडियो, एपिसोड, शो"
+        },
+        "boards": {
+          "description": "बोर्ड प्रबंधित करें",
+          "keywords": "कानबन, प्रोजेक्ट, कार्य, सूचियाँ"
+        },
+        "playgrounds": {
+          "description": "कोड प्लेग्राउंड",
+          "keywords": "कोड, सैंडबॉक्स, repl, प्रोग्रामिंग"
+        },
+        "analytics": {
+          "description": "विश्लेषण डैशबोर्ड देखें",
+          "keywords": "आँकड़े, मेट्रिक्स, चार्ट, रिपोर्ट"
+        },
+        "users": {
+          "description": "संगठन के उपयोगकर्ताओं को प्रबंधित करें",
+          "keywords": "सदस्य, खाते, लोग"
+        },
+        "usergroups": {
+          "description": "उपयोगकर्ता समूह प्रबंधित करें",
+          "keywords": "टीमें, समूह"
+        },
+        "roles": {
+          "description": "भूमिकाएँ और अनुमतियाँ प्रबंधित करें",
+          "keywords": "अनुमतियाँ, पहुँच, rbac, सुरक्षा"
+        },
+        "signups": {
+          "description": "साइनअप की समीक्षा करें",
+          "keywords": "पंजीकरण, आवेदन, अनुरोध"
+        },
+        "org_general": {
+          "description": "संगठन सामान्य सेटिंग्स",
+          "keywords": "नाम, ब्रांडिंग, slug, प्रोफ़ाइल"
+        },
+        "org_features": {
+          "description": "संगठन सुविधाएँ प्रबंधित करें",
+          "keywords": "सुविधाएँ, मॉड्यूल, टॉगल"
+        },
+        "org_billing": {
+          "description": "बिलिंग और सदस्यता",
+          "keywords": "योजना, भुगतान, चालान, सदस्यता"
+        },
+        "payments_overview": {
+          "description": "भुगतान अवलोकन और राजस्व",
+          "keywords": "stripe, डैशबोर्ड, राजस्व, बिक्री",
+          "title": "भुगतान अवलोकन"
+        },
+        "payments_products": {
+          "description": "भुगतान उत्पाद और मूल्य निर्धारण",
+          "keywords": "उत्पाद, मूल्य, stripe, स्तर, योजनाएँ",
+          "title": "उत्पाद"
+        },
+        "users_add": {
+          "description": "नए सदस्यों को आमंत्रित करें",
+          "keywords": "आमंत्रित, जोड़ें, सदस्य, भेजें"
+        },
+        "users_audit_logs": {
+          "description": "संगठन गतिविधि लॉग",
+          "keywords": "ऑडिट, लॉग, इतिहास, सुरक्षा, गतिविधि"
+        },
+        "org_branding": {
+          "description": "लोगो, रंग और दृश्य पहचान",
+          "keywords": "ब्रांडिंग, लोगो, रंग, थीम"
+        },
+        "org_landing": {
+          "description": "अपना लैंडिंग पेज अनुकूलित करें",
+          "keywords": "लैंडिंग, होमपेज, hero, पेज"
+        },
+        "org_seo": {
+          "description": "खोज इंजन अनुकूलन",
+          "keywords": "seo, खोज, मेटा, रैंकिंग, google"
+        },
+        "org_ai": {
+          "description": "एआई सुविधाएँ और कॉन्फ़िगरेशन",
+          "keywords": "एआई, llm, gpt, openai, जेनरेशन"
+        },
+        "org_domains": {
+          "description": "कस्टम डोमेन",
+          "keywords": "डोमेन, dns, कस्टम, सबडोमेन, cname"
+        },
+        "org_automations": {
+          "description": "वेबहुक और बाहरी एकीकरण",
+          "keywords": "वेबहुक, स्वचालन, zapier, एकीकरण, ट्रिगर"
+        },
+        "org_api": {
+          "description": "एपीआई टोकन और प्रोग्रामेटिक पहुँच",
+          "keywords": "एपीआई, टोकन, पहुँच, प्रोग्रामेटिक, कुंजी"
+        },
+        "org_sso": {
+          "description": "सिंगल साइन-ऑन कॉन्फ़िगरेशन",
+          "keywords": "sso, saml, oauth, उद्यम, लॉगिन"
+        },
+        "org_other": {
+          "description": "अन्य संगठन सेटिंग्स",
+          "keywords": "विविध, उन्नत, कस्टम, अतिरिक्त"
+        },
+        "payments_groups": {
+          "description": "भुगतान समूह और बंडल",
+          "keywords": "समूह, बंडल, सेट",
+          "title": "भुगतान समूह"
+        },
+        "payments_configuration": {
+          "description": "Stripe और भुगतान कॉन्फ़िगरेशन",
+          "keywords": "कॉन्फ़िगरेशन, सेटिंग्स, stripe, सेटअप, connect",
+          "title": "कॉन्फ़िगरेशन"
+        },
+        "payments_customers": {
+          "description": "ग्राहक और सब्सक्राइबर",
+          "keywords": "ग्राहक, सब्सक्राइबर, खरीदार, भुगतान किया",
+          "title": "ग्राहक"
+        },
+        "courses_migrate": {
+          "description": "किसी अन्य LMS से पाठ्यक्रम आयात करें",
+          "keywords": "आयात, माइग्रेट, स्थानांतरण, lms, moodle, canvas",
+          "title": "पाठ्यक्रम माइग्रेट करें"
+        },
+        "account_general": {
+          "description": "व्यक्तिगत खाता सामान्य सेटिंग्स",
+          "keywords": "खाता, सेटिंग्स, ईमेल, नाम, भाषा"
+        },
+        "account_profile": {
+          "description": "अपनी प्रोफ़ाइल और बायो संपादित करें",
+          "keywords": "प्रोफ़ाइल, बायो, अवतार, फ़ोटो, सार्वजनिक"
+        },
+        "account_security": {
+          "description": "पासवर्ड और सुरक्षा सेटिंग्स",
+          "keywords": "पासवर्ड, सुरक्षा, 2fa, mfa, सत्र"
+        },
+        "account_purchases": {
+          "description": "आपकी खरीदारी और सदस्यताएं",
+          "keywords": "खरीदारी, सदस्यताएं, बिलिंग, इतिहास, रसीदें"
         }
       }
     }
@@ -3685,13 +3921,13 @@
         "edit_embed": "एम्बेड संपादित करें",
         "add_embed_from": "से एम्बेड जोड़ें",
         "click_service": "सेवा चुनें",
-        "add_embed": "एम्बेड जोड़ें",
+        "add_embed": "{{name}} एम्बेड जोड़ें",
         "add_embed_url": "URL से एम्बेड जोड़ें",
         "add_embed_code": "कोड से एम्बेड जोड़ें",
-        "paste_url": "URL पेस्ट करें",
+        "paste_url": "{{name}} एम्बेड URL पेस्ट करें",
         "paste_any_url": "कोई भी URL पेस्ट करें",
         "paste_directly": "सीधे पेस्ट करें",
-        "how_to_embed": "कैसे एम्बेड करें",
+        "how_to_embed": "{{name}} को कैसे एम्बेड करें",
         "paste_code": "कोड पेस्ट करें",
         "paste_iframe": "iframe कोड पेस्ट करें"
       },
@@ -3783,28 +4019,28 @@
         "uploading": "वीडियो अपलोड हो रहा है..."
       },
       "button_block": {
-        "enter_link_url": "Enter link URL"
+        "enter_link_url": "लिंक URL दर्ज करें"
       }
     },
     "ai_panel": {
-      "add_definition": "Add definition",
-      "add_examples": "Add examples",
-      "add_quiz": "Add quiz",
-      "add_summary": "Add summary",
-      "add_tip": "Add tip",
-      "block_selected": "block selected",
-      "clear_chat": "Clear chat",
-      "clear_selection": "Clear selection",
-      "expand": "Expand",
-      "how_can_i_help": "How can I help improve your content?",
-      "improve_writing": "Improve writing",
-      "input_placeholder": "Ask AI to help with your content...",
-      "question_add_quiz": "Add a quiz",
-      "question_improve": "How can I improve this?",
-      "question_summary": "Add a summary",
-      "simplify": "Simplify",
-      "title": "AI Editor",
-      "translate": "Translate"
+      "add_definition": "परिभाषा जोड़ें",
+      "add_examples": "उदाहरण जोड़ें",
+      "add_quiz": "क्विज़ जोड़ें",
+      "add_summary": "सारांश जोड़ें",
+      "add_tip": "सुझाव जोड़ें",
+      "block_selected": "ब्लॉक चयनित",
+      "clear_chat": "चैट साफ़ करें",
+      "clear_selection": "चयन साफ़ करें",
+      "expand": "विस्तृत करें",
+      "how_can_i_help": "मैं आपकी सामग्री को बेहतर बनाने में कैसे मदद कर सकता हूं?",
+      "improve_writing": "लेखन सुधारें",
+      "input_placeholder": "अपनी सामग्री में मदद के लिए AI से पूछें...",
+      "question_add_quiz": "एक क्विज़ जोड़ें",
+      "question_improve": "मैं इसे कैसे सुधार सकता हूं?",
+      "question_summary": "एक सारांश जोड़ें",
+      "simplify": "सरल बनाएं",
+      "title": "AI संपादक",
+      "translate": "अनुवाद करें"
     }
   },
   "analytics": {
@@ -3815,8 +4051,8 @@
       "advanced": "उन्नत"
     },
     "not_configured": {
-      "title": "Analytics not configured",
-      "description": "Analytics requires a Tinybird connection. Set the <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> and <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> environment variables to enable it."
+      "title": "Analytics कॉन्फ़िगर नहीं किया गया",
+      "description": "Analytics के लिए Tinybird कनेक्शन की आवश्यकता है। इसे सक्षम करने के लिए <code>LEARNHOUSE_TINYBIRD_INGEST_TOKEN</code> और <code>LEARNHOUSE_TINYBIRD_READ_TOKEN</code> एनवायरनमेंट वेरिएबल सेट करें।"
     },
     "advanced_gate": {
       "requires": "आवश्यक",
@@ -3825,156 +4061,156 @@
     "common": {
       "loading": "लोड हो रहा है...",
       "no_data": "अभी तक कोई डेटा नहीं",
-      "users": "Users",
-      "views": "Views",
-      "enrollments": "Enrollments",
-      "completions": "Completions",
-      "course": "Course",
-      "date": "Date",
-      "user": "User",
-      "type": "Type",
-      "expand": "Expand",
-      "days": "Days",
-      "score": "Score",
-      "unique_users": "unique users"
+      "users": "उपयोगकर्ता",
+      "views": "व्यू",
+      "enrollments": "नामांकन",
+      "completions": "पूर्णताएं",
+      "course": "कोर्स",
+      "date": "तारीख",
+      "user": "उपयोगकर्ता",
+      "type": "प्रकार",
+      "expand": "विस्तृत करें",
+      "days": "दिन",
+      "score": "स्कोर",
+      "unique_users": "अद्वितीय उपयोगकर्ता"
     },
     "overview": {
-      "live_now": "Live Now",
-      "last_5_minutes": "Last 5 minutes",
-      "signups": "Signups",
-      "submissions": "Submissions",
-      "daily_active_users": "Daily Active Users",
-      "active_users": "Active Users",
-      "countries": "Countries",
-      "top_countries": "Top Countries",
-      "devices": "Devices",
-      "desktop": "Desktop",
-      "mobile": "Mobile",
-      "tablet": "Tablet",
-      "top_referrers": "Top Referrers",
-      "top_referrer": "Top Referrer",
-      "enrollment_funnel": "Enrollment Funnel",
-      "page_views": "Page Views",
-      "course_views": "Course Views",
-      "view_to_enroll": "View → Enroll",
-      "enroll_to_complete": "Enroll → Complete",
-      "page_to_complete": "Page → Complete",
-      "conv_rate": "Conv. Rate",
-      "top_courses": "Top Courses",
-      "activity_engagement": "Activity Engagement",
-      "activity": "Activity",
-      "avg_time": "Avg Time",
-      "activities": "Activities",
-      "courses": "Courses",
+      "live_now": "अभी लाइव",
+      "last_5_minutes": "पिछले 5 मिनट",
+      "signups": "साइनअप",
+      "submissions": "सबमिशन",
+      "daily_active_users": "दैनिक सक्रिय उपयोगकर्ता",
+      "active_users": "सक्रिय उपयोगकर्ता",
+      "countries": "देश",
+      "top_countries": "शीर्ष देश",
+      "devices": "डिवाइस",
+      "desktop": "डेस्कटॉप",
+      "mobile": "मोबाइल",
+      "tablet": "टैबलेट",
+      "top_referrers": "शीर्ष रेफरर",
+      "top_referrer": "शीर्ष रेफरर",
+      "enrollment_funnel": "नामांकन फ़नल",
+      "page_views": "पेज व्यू",
+      "course_views": "कोर्स व्यू",
+      "view_to_enroll": "व्यू → नामांकन",
+      "enroll_to_complete": "नामांकन → पूर्ण",
+      "page_to_complete": "पेज → पूर्ण",
+      "conv_rate": "कन्व. दर",
+      "top_courses": "शीर्ष कोर्स",
+      "activity_engagement": "गतिविधि एंगेजमेंट",
+      "activity": "गतिविधि",
+      "avg_time": "औसत समय",
+      "activities": "गतिविधियां",
+      "courses": "कोर्स",
       "enrollments": "नामांकन",
       "completions": "पूर्णता"
     },
     "modals": {
       "live_users": {
-        "title": "Live Users",
-        "description": "Users active in the last 5 minutes"
+        "title": "लाइव उपयोगकर्ता",
+        "description": "पिछले 5 मिनट में सक्रिय उपयोगकर्ता"
       },
       "signups": {
-        "title": "Signups",
-        "description": "New user registrations in the last {{days}} days"
+        "title": "साइनअप",
+        "description": "पिछले {{days}} दिनों में नए उपयोगकर्ता पंजीकरण"
       },
       "enrollments": {
-        "title": "Enrollments",
-        "description": "Course enrollments in the last {{days}} days"
+        "title": "नामांकन",
+        "description": "पिछले {{days}} दिनों में कोर्स नामांकन"
       },
       "completions": {
-        "title": "Completions",
-        "description": "Course completions in the last {{days}} days"
+        "title": "पूर्णताएं",
+        "description": "पिछले {{days}} दिनों में कोर्स पूर्णताएं"
       },
       "live_users_table": {
-        "current_page": "Current Page",
-        "device": "Device",
-        "country": "Country",
-        "last_seen": "Last Seen"
+        "current_page": "वर्तमान पेज",
+        "device": "डिवाइस",
+        "country": "देश",
+        "last_seen": "अंतिम बार देखा गया"
       },
       "signups_table": {
-        "email": "Email",
-        "method": "Method"
+        "email": "ईमेल",
+        "method": "तरीका"
       }
     },
     "advanced_widgets": {
       "org_growth_trend": {
-        "title": "Org Growth Trend",
-        "description": "Weekly signups, enrollments, completions"
+        "title": "संगठन वृद्धि रुझान",
+        "description": "साप्ताहिक साइनअप, नामांकन, पूर्णताएं"
       },
       "new_vs_returning": {
-        "title": "New vs Returning Users",
-        "description": "Growth vs retention health"
+        "title": "नए बनाम लौटने वाले उपयोगकर्ता",
+        "description": "वृद्धि बनाम रिटेंशन स्वास्थ्य"
       },
       "cohort_retention": {
-        "title": "Cohort Retention",
-        "description": "% users active after signup week",
-        "cohort": "Cohort",
-        "size": "Size"
+        "title": "कोहोर्ट रिटेंशन",
+        "description": "साइनअप सप्ताह के बाद % सक्रिय उपयोगकर्ता",
+        "cohort": "कोहोर्ट",
+        "size": "आकार"
       },
       "peak_usage": {
-        "title": "Peak Usage Hours",
-        "description": "Event volume by day and hour",
+        "title": "पीक उपयोग के घंटे",
+        "description": "दिन और घंटे के अनुसार इवेंट वॉल्यूम",
         "days": {
-          "mon": "Mon",
-          "tue": "Tue",
-          "wed": "Wed",
-          "thu": "Thu",
-          "fri": "Fri",
-          "sat": "Sat",
-          "sun": "Sun"
+          "mon": "सोम",
+          "tue": "मंगल",
+          "wed": "बुध",
+          "thu": "गुरु",
+          "fri": "शुक्र",
+          "sat": "शनि",
+          "sun": "रवि"
         },
-        "events": "events"
+        "events": "इवेंट"
       },
       "course_dropoff": {
-        "title": "Course Dropoff",
-        "description": "Where users stop per course"
+        "title": "कोर्स ड्रॉपऑफ़",
+        "description": "उपयोगकर्ता प्रति कोर्स कहां रुकते हैं"
       },
       "time_to_completion": {
-        "title": "Time to Completion",
-        "description": "Median days to complete each course"
+        "title": "पूर्ण होने में समय",
+        "description": "प्रत्येक कोर्स को पूरा करने के लिए मीडियन दिन"
       },
       "completion_velocity": {
-        "title": "Completion Velocity",
-        "description": "Avg days between activity completions"
+        "title": "पूर्णता गति",
+        "description": "गतिविधि पूर्णताओं के बीच औसत दिन"
       },
       "content_type_effectiveness": {
-        "title": "Content Type Effectiveness",
-        "description": "Completion rate by activity type"
+        "title": "सामग्री प्रकार प्रभावशीलता",
+        "description": "गतिविधि प्रकार के अनुसार पूर्णता दर"
       },
       "course_effectiveness_matrix": {
-        "title": "Course Effectiveness Matrix",
-        "description": "Activity count vs completion rate (sized by enrollments)"
+        "title": "कोर्स प्रभावशीलता मैट्रिक्स",
+        "description": "गतिविधि गणना बनाम पूर्णता दर (नामांकन के अनुसार आकार)"
       },
       "community_correlation": {
-        "title": "Community Correlation",
-        "description": "Completion rate: discussors vs non-discussors",
-        "discussion_users": "Discussion Users",
-        "non_discussion_users": "Non-Discussion Users"
+        "title": "समुदाय सहसंबंध",
+        "description": "पूर्णता दर: चर्चा करने वाले बनाम न करने वाले",
+        "discussion_users": "चर्चा उपयोगकर्ता",
+        "non_discussion_users": "गैर-चर्चा उपयोगकर्ता"
       },
       "learner_engagement_score": {
-        "title": "Learner Engagement Score",
-        "description": "Top learners by composite engagement",
+        "title": "शिक्षार्थी एंगेजमेंट स्कोर",
+        "description": "समग्र एंगेजमेंट के अनुसार शीर्ष शिक्षार्थी",
         "user_id": "User ID"
       },
       "user_progress_snapshot": {
-        "title": "User Progress Snapshot",
-        "description": "Users at each completion bracket per course"
+        "title": "उपयोगकर्ता प्रगति स्नैपशॉट",
+        "description": "प्रति कोर्स प्रत्येक पूर्णता ब्रैकेट पर उपयोगकर्ता"
       },
       "grade_distribution": {
-        "title": "Grade Distribution",
-        "description": "Assignment grade histogram"
+        "title": "ग्रेड वितरण",
+        "description": "असाइनमेंट ग्रेड हिस्टोग्राम"
       },
       "search_effectiveness": {
-        "title": "Search Effectiveness",
-        "description": "Top queries and zero-result rate",
-        "query": "Query",
-        "searches": "Searches",
-        "zero_results": "Zero Results %"
+        "title": "खोज प्रभावशीलता",
+        "description": "शीर्ष क्वेरी और शून्य-परिणाम दर",
+        "query": "क्वेरी",
+        "searches": "खोजें",
+        "zero_results": "शून्य परिणाम %"
       },
       "certification_rate": {
-        "title": "Certification Rate",
-        "description": "% of completers who claim certificates"
+        "title": "प्रमाणन दर",
+        "description": "% पूर्णकर्ता जो प्रमाणपत्र दावा करते हैं"
       }
     },
     "course_analytics": {
@@ -4194,9 +4430,9 @@
     },
     "export": {
       "button": "निर्यात",
-      "csv": "Download CSV",
-      "downloading": "Exporting...",
-      "json": "Download JSON"
+      "csv": "CSV डाउनलोड करें",
+      "downloading": "एक्सपोर्ट हो रहा है...",
+      "json": "JSON डाउनलोड करें"
     }
   },
   "boards": {
@@ -4300,7 +4536,8 @@
       "member_added": "सदस्य जोड़ा गया",
       "member_added_error": "सदस्य जोड़ने में विफल (पहले से सदस्य हो सकता है)",
       "member_removed": "सदस्य हटाया गया",
-      "member_removed_error": "सदस्य हटाने में विफल"
+      "member_removed_error": "सदस्य हटाने में विफल",
+      "all_groups": "सभी समूह"
     },
     "toolbar": {
       "select": "चुनें",
@@ -4322,7 +4559,7 @@
       "undo": "पूर्ववत करें",
       "redo": "फिर से करें",
       "podcast": "पॉडकास्ट",
-      "todo": "To-do"
+      "todo": "टू-डू"
     },
     "zoom": {
       "zoom_in": "ज़ूम इन",
@@ -4335,14 +4572,14 @@
       "title": "प्रभाव",
       "inferno": "इन्फर्नो",
       "blizzard": "बर्फीला तूफान",
-      "matrix": "Matrix",
+      "matrix": "मैट्रिक्स",
       "fireworks": "आतिशबाजी",
       "earthquake": "भूकंप",
       "black_hole": "ब्लैक होल",
       "aurora": "ऑरोरा",
       "lightning": "बिजली",
-      "glitch": "Glitch",
-      "nuke": "Nuke"
+      "glitch": "ग्लिच",
+      "nuke": "न्यूक"
     },
     "timer": {
       "set_timer": "टाइमर सेट करें",
@@ -4419,7 +4656,8 @@
       "move_back": "पीछे ले जाएं",
       "move_forward": "आगे ले जाएं",
       "delete": "हटाएं",
-      "delete_multiple": "{{count}} आइटम हटाएं"
+      "delete_multiple": "{{count}} आइटम हटाएं",
+      "duplicate": "डुप्लिकेट करें"
     },
     "pagination": {
       "previous": "पिछला",
@@ -4428,28 +4666,30 @@
       "results": "\"{{query}}\" के लिए {{count}} परिणाम",
       "results_plural": "\"{{query}}\" के लिए {{count}} परिणाम"
     },
-    "board_deleted_error": "Failed to delete board",
-    "board_deleted_success": "Board deleted",
-    "board_duplicated_error": "Failed to duplicate board",
-    "board_duplicated_success": "Board duplicated",
-    "boards_deleted_partial": "{{success}} deleted, {{error}} failed",
-    "boards_deleted_success": "{{count}} board(s) deleted",
+    "board_deleted_error": "बोर्ड हटाने में विफल",
+    "board_deleted_success": "बोर्ड हटाया गया",
+    "board_duplicated_error": "बोर्ड डुप्लिकेट करने में विफल",
+    "board_duplicated_success": "बोर्ड डुप्लिकेट किया गया",
+    "boards_deleted_partial": "{{success}} हटाए गए, {{error}} विफल",
+    "boards_deleted_success": "{{count}} बोर्ड हटाए गए",
     "clear_selection": "साफ़ करें",
-    "delete_board": "Delete Board",
-    "delete_board_confirm": "Are you sure you want to delete this board? This action cannot be undone.",
-    "delete_board_title": "Delete \"{{name}}\"",
-    "delete_boards_title": "Delete Boards",
-    "delete_selected": "Delete Selected",
-    "delete_selected_confirm": "Are you sure you want to delete {{count}} board(s)? This action cannot be undone.",
-    "deleting_board": "Deleting board...",
-    "deleting_boards": "Deleting {{count}} board(s)...",
-    "duplicate_board": "Duplicate Board",
-    "duplicate_board_confirm": "This will create a copy of the board with the same settings.",
-    "duplicate_board_title": "Duplicate \"{{name}}\"",
-    "duplicating_board": "Duplicating board...",
-    "open_board": "Open Board",
-    "select_all": "Select All",
-    "selected_count": "{{count}} selected"
+    "delete_board": "बोर्ड हटाएं",
+    "delete_board_confirm": "क्या आप वाकई इस बोर्ड को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।",
+    "delete_board_title": "\"{{name}}\" हटाएं",
+    "delete_boards_title": "बोर्ड हटाएं",
+    "delete_selected": "चयनित हटाएं",
+    "delete_selected_confirm": "क्या आप वाकई {{count}} बोर्ड हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।",
+    "deleting_board": "बोर्ड हटाया जा रहा है...",
+    "deleting_boards": "{{count}} बोर्ड हटाए जा रहे हैं...",
+    "duplicate_board": "बोर्ड डुप्लिकेट करें",
+    "duplicate_board_confirm": "यह बोर्ड की एक प्रतिलिपि उन्हीं सेटिंग्स के साथ बनाएगा।",
+    "duplicate_board_title": "\"{{name}}\" डुप्लिकेट करें",
+    "duplicating_board": "बोर्ड डुप्लिकेट किया जा रहा है...",
+    "open_board": "बोर्ड खोलें",
+    "select_all": "सभी चुनें",
+    "selected_count": "{{count}} चयनित",
+    "no_boards": "अभी तक कोई बोर्ड नहीं",
+    "no_search_results": "कोई बोर्ड नहीं मिला"
   },
   "onboarding": {
     "getting_started": "शुरू करें",
@@ -4546,46 +4786,46 @@
     }
   },
   "embed": {
-    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
-    "not_supported_title": "This activity is not supported",
+    "not_supported_description": "इस प्रकार की गतिविधि के लिए प्रमाणीकरण आवश्यक है और इसे एम्बेड नहीं किया जा सकता।",
+    "not_supported_title": "यह गतिविधि समर्थित नहीं है",
     "powered_by": "Powered by LearnHouse",
-    "visit_activity": "Visit Activity Page"
+    "visit_activity": "गतिविधि पेज पर जाएं"
   },
   "migration": {
-    "accepted_formats": "Videos (MP4, WebM, MOV), Documents (PDF), Images (PNG, JPG, WebP), Audio (MP3, WAV)",
-    "add_activity": "Add Activity",
-    "add_chapter": "Add Chapter",
-    "ai_failed": "AI suggestion failed, falling back to manual organization",
-    "all_files_assigned": "All files assigned",
-    "click_to_add_more": "Click to add more files",
-    "course_created": "Course created successfully!",
-    "course_name": "Course Name",
-    "course_name_placeholder": "e.g. Python Basics for Beginners",
-    "course_structure": "Course Structure",
-    "create_course": "Create Course",
-    "created_summary": "{{chapters}} chapters and {{activities}} activities created",
-    "creating_course": "Creating your course...",
-    "creating_description": "Uploading files and setting up chapters and activities",
-    "creation_error_generic": "Something went wrong. Please try again.",
-    "creation_failed": "Course creation failed",
-    "description": "One-liner Description",
-    "description_placeholder": "e.g. 3 modules covering fundamentals, data types, and functions",
-    "drop_file_here": "Drop a file here",
-    "drop_files": "Drop your files here or click to browse",
-    "go_to_course": "Go to Course",
-    "new_activity": "New Activity",
-    "new_chapter": "New Chapter",
-    "organize_manually": "Organize Manually",
-    "organize_with_ai": "Organize with AI",
-    "step_complete": "Complete",
-    "step_organize": "Organize",
+    "accepted_formats": "वीडियो (MP4, WebM, MOV), डॉक्यूमेंट (PDF), छवियां (PNG, JPG, WebP), ऑडियो (MP3, WAV)",
+    "add_activity": "गतिविधि जोड़ें",
+    "add_chapter": "अध्याय जोड़ें",
+    "ai_failed": "AI सुझाव विफल हुआ, मैनुअल संगठन पर वापस जा रहे हैं",
+    "all_files_assigned": "सभी फ़ाइलें असाइन की गईं",
+    "click_to_add_more": "अधिक फ़ाइलें जोड़ने के लिए क्लिक करें",
+    "course_created": "कोर्स सफलतापूर्वक बनाया गया!",
+    "course_name": "कोर्स का नाम",
+    "course_name_placeholder": "जैसे, शुरुआती लोगों के लिए Python बेसिक्स",
+    "course_structure": "कोर्स संरचना",
+    "create_course": "कोर्स बनाएं",
+    "created_summary": "{{chapters}} अध्याय और {{activities}} गतिविधियां बनाई गईं",
+    "creating_course": "आपका कोर्स बनाया जा रहा है...",
+    "creating_description": "फ़ाइलें अपलोड की जा रही हैं और अध्याय एवं गतिविधियां सेट की जा रही हैं",
+    "creation_error_generic": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+    "creation_failed": "कोर्स निर्माण विफल",
+    "description": "एक-पंक्ति विवरण",
+    "description_placeholder": "जैसे, बुनियादी बातों, डेटा प्रकारों और फ़ंक्शनों को कवर करने वाले 3 मॉड्यूल",
+    "drop_file_here": "यहां फ़ाइल छोड़ें",
+    "drop_files": "अपनी फ़ाइलें यहां छोड़ें या ब्राउज़ करने के लिए क्लिक करें",
+    "go_to_course": "कोर्स पर जाएं",
+    "new_activity": "नई गतिविधि",
+    "new_chapter": "नया अध्याय",
+    "organize_manually": "मैन्युअल रूप से व्यवस्थित करें",
+    "organize_with_ai": "AI के साथ व्यवस्थित करें",
+    "step_complete": "पूर्ण",
+    "step_organize": "व्यवस्थित करें",
     "step_upload": "अपलोड",
-    "subtitle": "Upload your files and organize them into a course",
-    "title": "Migrate Content",
-    "try_again": "Try Again",
-    "unassigned_files": "Unassigned Files",
-    "upload_failed": "File upload failed",
-    "uploading_files": "Uploading files"
+    "subtitle": "अपनी फ़ाइलें अपलोड करें और उन्हें कोर्स में व्यवस्थित करें",
+    "title": "सामग्री माइग्रेट करें",
+    "try_again": "पुनः प्रयास करें",
+    "unassigned_files": "असाइन नहीं की गई फ़ाइलें",
+    "upload_failed": "फ़ाइल अपलोड विफल",
+    "uploading_files": "फ़ाइलें अपलोड हो रही हैं"
   },
   "upgrade_modal": {
     "title": "अपनी पूरी क्षमता अनलॉक करें",
@@ -4663,6 +4903,15 @@
       "usergroups_add_a_group": "समूह जोड़ें",
       "toast_add_error": "समूह जोड़ा नहीं जा सका",
       "toast_remove_error": "समूह हटाया नहीं जा सका"
-    }
+    },
+    "accessDenied": "इस पाठ्यक्रम तक पहुंचने में असमर्थ",
+    "backToCourses": "पाठ्यक्रमों पर वापस जाएं",
+    "loadError": "यह पाठ्यक्रम नहीं मिल सका या इसे लोड करने में कोई त्रुटि हुई।",
+    "noPermission": "आपके पास इस पाठ्यक्रम को देखने की अनुमति नहीं है।"
+  },
+  "pagination": {
+    "next": "अगला",
+    "previous": "पिछला",
+    "showing_page": "{{total}} में से पृष्ठ {{current}} दिखाया जा रहा है"
   }
 }
