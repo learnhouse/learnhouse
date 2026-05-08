@@ -25,7 +25,7 @@
         "@emoji-mart/data": "^1.2.1",
         "@emoji-mart/react": "^1.1.1",
         "@hello-pangea/dnd": "^18.0.1",
-        "@hocuspocus/provider": "^3.0.0",
+        "@hocuspocus/provider": "^4.0.0",
         "@icons-pack/react-simple-icons": "^13.8.0",
         "@phosphor-icons/react": "^2.1.10",
         "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -269,9 +269,9 @@
 
     "@hello-pangea/dnd": ["@hello-pangea/dnd@18.0.1", "", { "dependencies": { "@babel/runtime": "^7.26.7", "css-box-model": "^1.2.1", "raf-schd": "^4.0.3", "react-redux": "^9.2.0", "redux": "^5.0.1" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "sha512-xojVWG8s/TGrKT1fC8K2tIWeejJYTAeJuj36zM//yEm/ZrnZUSFGS15BpO+jGZT1ybWvyXmeDJwPYb4dhWlbZQ=="],
 
-    "@hocuspocus/common": ["@hocuspocus/common@3.4.4", "", { "dependencies": { "lib0": "^0.2.87" } }, "sha512-RykIJ0tsHHMP4Xk+4UCbc7SO5LgGxGUSTdbh6anJEsaALAyqinf1Nn5HYuMjLPolAmsar1v++m9zufR09NLpXA=="],
+    "@hocuspocus/common": ["@hocuspocus/common@4.0.0", "", { "dependencies": { "lib0": "^0.2.87" } }, "sha512-7BE8TsKBkdiOZO6tfm3ny6bIHPbxkIZb3hsYdVn/X5xbXI8n8w9pnE6pXgEMKQhJm6zsWsa9IDRJIp/c9u+DmA=="],
 
-    "@hocuspocus/provider": ["@hocuspocus/provider@3.4.4", "", { "dependencies": { "@hocuspocus/common": "^3.4.4", "@lifeomic/attempt": "^3.0.2", "lib0": "^0.2.87", "ws": "^8.17.1" }, "peerDependencies": { "y-protocols": "^1.0.6", "yjs": "^13.6.8" } }, "sha512-KbsMAfdYcIJD8eMU/5QnpXcSOvIWAcCNI33FSRSaKCIpYBFtAwkYIwWnZJmPZ8a1BMAtqQc+uvy9+UQf7GHnGQ=="],
+    "@hocuspocus/provider": ["@hocuspocus/provider@4.0.0", "", { "dependencies": { "@hocuspocus/common": "^4.0.0", "@lifeomic/attempt": "^3.0.2", "lib0": "^0.2.87", "ws": "^8.17.1" }, "peerDependencies": { "y-protocols": "^1.0.6", "yjs": "^13.6.8" } }, "sha512-08gpeNZ6x2pmRD6m4XwRD52yQKnTl32a0HS9VSXZ5A1dIBVqxMz/x8Z06XbkKM2X8sp6vWEUCZCtzAGFSsofgg=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
