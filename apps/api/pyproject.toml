@@ -7,8 +7,8 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3==1.43.4",
-    "botocore==1.43.4",
+    "boto3==1.43.5",
+    "botocore==1.43.5",
     "faker==40.15.0",
     "fastapi==0.136.1",
     "httpx==0.28.1",
