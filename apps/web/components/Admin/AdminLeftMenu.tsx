@@ -16,7 +16,7 @@ function AdminTopMenu() {
   const session = useLHSession() as any
 
   async function logOutUI() {
-    await signOut({ redirect: true, callbackUrl: '/login' })
+    await signOut({ redirect: true, callbackUrl: '/admin/login' })
   }
 
   if (!session) return null
@@ -38,7 +38,7 @@ function AdminTopMenu() {
         style={{ zIndex: 'var(--z-overlay)' }}
       >
         {/* Logo */}
-        <Link className="flex items-center gap-2 transition-opacity hover:opacity-70 shrink-0" href="/">
+        <Link className="flex items-center gap-2 transition-opacity hover:opacity-70 shrink-0" href="/admin">
           <img src="/lrn-dash.svg" alt="Learnhouse logo" className="h-7 w-7" />
           <span className="font-semibold text-sm text-white">Admin</span>
           <span className="text-[9px] font-medium uppercase tracking-wider text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
@@ -49,17 +49,17 @@ function AdminTopMenu() {
         {/* Navigation */}
         <nav className="flex items-center gap-1">
           <NavLink
-            href="/organizations"
+            href="/admin/organizations"
             icon={<Buildings size={16} weight="fill" />}
             label="Organizations"
           />
           <NavLink
-            href="/users"
+            href="/admin/users"
             icon={<Users size={16} weight="fill" />}
             label="Users"
           />
           <NavLink
-            href="/analytics"
+            href="/admin/analytics"
             icon={<ChartBar size={16} weight="fill" />}
             label="Analytics"
           />

@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError('Invalid email or password')
       } else {
-        window.location.href = '/'
+        window.location.href = '/admin'
       }
     } catch {
       setError('An error occurred. Please try again.')
