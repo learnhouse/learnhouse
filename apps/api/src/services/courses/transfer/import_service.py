@@ -494,6 +494,7 @@ async def _import_single_course(
         open_to_contributors=False,
         course_uuid=new_course_uuid,
         seo=course_data.get("seo"),
+        extra_metadata=course_data.get("extra_metadata"),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -600,6 +601,7 @@ async def _import_chapter(
         course_id=new_course.id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=chapter_data.get("extra_metadata"),
     )
 
     db_session.add(new_chapter)
@@ -692,6 +694,7 @@ async def _import_activity(
         activity_uuid=new_activity_uuid,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=activity_data.get("extra_metadata"),
     )
 
     db_session.add(new_activity)

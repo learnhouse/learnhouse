@@ -728,6 +728,7 @@ async def provision_user(
     role_id: int,
     request: Request,
     db_session: Session,
+    extra_metadata: Optional[dict] = None,
 ) -> UserRead:
     """Create a user and attach them to the token's org in one call.
 
@@ -828,6 +829,7 @@ async def provision_user(
         signup_method="admin_api",
         creation_date=str(now),
         update_date=str(now),
+        extra_metadata=extra_metadata,
     )
     db_session.add(user)
     db_session.commit()

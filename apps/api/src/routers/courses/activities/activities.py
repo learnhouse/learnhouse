@@ -1,5 +1,6 @@
-from typing import List
-from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query
+from typing import List, Optional
+import json
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.courses.activity_versions import ActivityVersionRead, ActivityStateRead
 from src.db.users import PublicUser
@@ -34,6 +35,18 @@ from src.services.courses.lock_usergroups import (
 )
 
 router = APIRouter()
+
+
+def _parse_extra_metadata(raw: Optional[str]) -> Optional[dict]:
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+    if not isinstance(parsed, dict):
+        raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+    return parsed
 
 
 @router.post(
@@ -339,6 +352,7 @@ async def api_create_video_activity(
     name: str = Form(),
     chapter_id: str = Form(),
     details: str = Form(default="{}"),
+    extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
     video_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
@@ -354,6 +368,7 @@ async def api_create_video_activity(
         db_session,
         video_file,
         details,
+        extra_metadata=_parse_extra_metadata(extra_metadata),
     )
 
 
@@ -399,6 +414,7 @@ async def api_create_documentpdf_activity(
     request: Request,
     name: str = Form(),
     chapter_id: str = Form(),
+    extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
     pdf_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
@@ -407,7 +423,13 @@ async def api_create_documentpdf_activity(
     Create new activity
     """
     return await create_documentpdf_activity(
-        request, name, chapter_id, current_user, db_session, pdf_file
+        request,
+        name,
+        chapter_id,
+        current_user,
+        db_session,
+        pdf_file,
+        extra_metadata=_parse_extra_metadata(extra_metadata),
     )
 
 

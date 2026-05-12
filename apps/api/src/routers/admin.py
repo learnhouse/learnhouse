@@ -159,6 +159,7 @@ class ProvisionUserRequest(BaseModel):
     last_name: str = Field(default="", max_length=150)
     password: Optional[str] = Field(default=None, max_length=256, description="Optional — if omitted, treated as SSO user with empty password")
     role_id: int = Field(default=4, ge=1, description="Role id for the org membership (default 4 = student)")
+    extra_metadata: Optional[dict] = Field(default=None, description="Optional arbitrary JSON metadata attached to the user for headless integrations")
 
 
 class RemoveUserResponse(BaseModel):
@@ -703,6 +704,7 @@ async def api_admin_provision_user(
         role_id=body.role_id,
         request=request,
         db_session=db_session,
+        extra_metadata=body.extra_metadata,
     )
 
 

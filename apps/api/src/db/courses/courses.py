@@ -72,6 +72,7 @@ class Course(CourseBase, table=True):
     creation_date: str = ""
     update_date: str = ""
     seo: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
+    extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
 
 class CourseCreate(CourseBase):
@@ -79,6 +80,7 @@ class CourseCreate(CourseBase):
     thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
+    extra_metadata: Optional[dict] = None
     pass
 
 
@@ -95,6 +97,7 @@ class CourseUpdate(SQLModel):
     published: Optional[bool] = None
     open_to_contributors: Optional[bool] = None
     seo: Optional[dict] = None
+    extra_metadata: Optional[dict] = None
 
 
 class CourseRead(CourseBase):
@@ -108,6 +111,7 @@ class CourseRead(CourseBase):
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
     seo: Optional[dict] = None
+    extra_metadata: Optional[dict] = None
 
 
 class FullCourseRead(CourseBase):
@@ -121,6 +125,7 @@ class FullCourseRead(CourseBase):
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
     seo: Optional[dict] = None
+    extra_metadata: Optional[dict] = None
     # Chapters, Activities
     chapters: List[ChapterRead]
     authors: List[AuthorWithRole]
@@ -134,6 +139,7 @@ class FullCourseReadWithTrail(CourseBase):
     update_date: Optional[str] = None
     org_id: int = Field(default=None, foreign_key="organization.id")
     seo: Optional[dict] = None
+    extra_metadata: Optional[dict] = None
     authors: List[AuthorWithRole]
     # Chapters, Activities
     chapters: List[ChapterRead]
