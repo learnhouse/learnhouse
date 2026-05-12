@@ -379,21 +379,9 @@ async def get_courses_orgslug(
     course_reads = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,  # Ensure id is never None
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         course_reads.append(course_read)
 
@@ -574,21 +562,9 @@ async def search_courses(
     course_reads = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         course_reads.append(course_read)
 
@@ -1027,21 +1003,9 @@ async def get_user_courses(
     result = []
     for course in courses:
         course_read = CourseRead.model_validate({
+            **course.model_dump(),
             "id": course.id or 0,
-            "org_id": course.org_id,
-            "name": course.name,
-            "description": course.description or "",
-            "about": course.about or "",
-            "learnings": course.learnings or "",
-            "tags": course.tags or "",
-            "thumbnail_image": course.thumbnail_image or "",
-            "public": course.public,
-            "published": course.published,
-            "open_to_contributors": course.open_to_contributors,
-            "course_uuid": course.course_uuid,
-            "creation_date": course.creation_date,
-            "update_date": course.update_date,
-            "authors": course_authors.get(course.course_uuid, [])
+            "authors": course_authors.get(course.course_uuid, []),
         })
         result.append(course_read)
 
@@ -1202,6 +1166,7 @@ async def clone_course(
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
         seo=original_course.seo,
+        extra_metadata=original_course.extra_metadata,
     )
 
     # Copy thumbnail files if they exist
@@ -1304,6 +1269,7 @@ async def clone_course(
             course_id=new_course.id,
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
+            extra_metadata=original_chapter.extra_metadata,
         )
 
         db_session.add(new_chapter)
@@ -1344,6 +1310,7 @@ async def clone_course(
                 activity_uuid=new_activity_uuid,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
+                extra_metadata=original_activity.extra_metadata,
             )
 
             db_session.add(new_activity)

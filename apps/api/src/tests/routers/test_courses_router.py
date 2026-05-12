@@ -300,6 +300,70 @@ class TestCreateCourse:
         assert response.status_code == 200
         assert response.json()["course_uuid"] == "course_test"
 
+    async def test_create_course_with_extra_metadata(self, client):
+        captured = {}
+
+        async def fake_create_course(request, org_id, course, *args, **kwargs):
+            captured["extra_metadata"] = course.extra_metadata
+            return _mock_course_read()
+
+        with patch(
+            "src.routers.courses.courses.create_course",
+            new=fake_create_course,
+        ):
+            response = await client.post(
+                "/api/v1/courses/?org_id=1",
+                data={
+                    "name": "Test Course",
+                    "description": "A test course",
+                    "public": "true",
+                    "about": "About",
+                    "learnings": "Things",
+                    "tags": "python",
+                    "thumbnail_type": "image",
+                    "extra_metadata": '{"foo": "bar", "n": 1}',
+                },
+            )
+
+        assert response.status_code == 200
+        assert captured["extra_metadata"] == {"foo": "bar", "n": 1}
+
+    async def test_create_course_invalid_extra_metadata_json(self, client):
+        response = await client.post(
+            "/api/v1/courses/?org_id=1",
+            data={
+                "name": "Test Course",
+                "description": "A test course",
+                "public": "true",
+                "about": "About",
+                "learnings": "Things",
+                "tags": "python",
+                "thumbnail_type": "image",
+                "extra_metadata": "not-json",
+            },
+        )
+
+        assert response.status_code == 422
+        assert response.json()["detail"] == "extra_metadata must be a JSON object"
+
+    async def test_create_course_extra_metadata_not_object(self, client):
+        response = await client.post(
+            "/api/v1/courses/?org_id=1",
+            data={
+                "name": "Test Course",
+                "description": "A test course",
+                "public": "true",
+                "about": "About",
+                "learnings": "Things",
+                "tags": "python",
+                "thumbnail_type": "image",
+                "extra_metadata": "[1, 2, 3]",
+            },
+        )
+
+        assert response.status_code == 422
+        assert response.json()["detail"] == "extra_metadata must be a JSON object"
+
 
 class TestCourseDetailEndpoints:
     async def test_get_course_by_id(self, client):
