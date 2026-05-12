@@ -153,12 +153,12 @@ class IssueTokenRequest(BaseModel):
 
 class ProvisionUserRequest(BaseModel):
     """Request body for provisioning a new user."""
-    email: EmailStr
-    username: str = Field(min_length=1)
-    first_name: str = ""
-    last_name: str = ""
-    password: Optional[str] = Field(default=None, description="Optional — if omitted, treated as SSO user with empty password")
-    role_id: int = Field(default=4, description="Role id for the org membership (default 4 = student)")
+    email: EmailStr = Field(max_length=320)
+    username: str = Field(min_length=1, max_length=150)
+    first_name: str = Field(default="", max_length=150)
+    last_name: str = Field(default="", max_length=150)
+    password: Optional[str] = Field(default=None, max_length=256, description="Optional — if omitted, treated as SSO user with empty password")
+    role_id: int = Field(default=4, ge=1, description="Role id for the org membership (default 4 = student)")
 
 
 class RemoveUserResponse(BaseModel):
@@ -662,12 +662,16 @@ async def api_admin_get_user_certificates(
     description=(
         "Create a user and attach them to the organization in one call. Designed "
         "for SSO/JIT provisioning — the user's email is auto-verified and the "
-        "normal email-verification flow is skipped."
+        "normal email-verification flow is skipped. If a user with the given "
+        "email already exists in another organization, they are attached to this "
+        "org (idempotent); the password/username/name fields in the request are "
+        "ignored in that case."
     ),
     responses={
-        200: {"description": "User created and attached to the org. Returns the provisioned user.", "model": UserRead},
-        400: {"description": "Duplicate email/username or weak password"},
-        403: {"description": "Member limit reached or feature disabled"},
+        200: {"description": "User created or attached to the org. Returns the user.", "model": UserRead},
+        400: {"description": "Email already in this org, duplicate username, weak password, or invalid role_id"},
+        403: {"description": "Member limit reached, feature disabled, or role belongs to another org"},
+        429: {"description": "Too many provisioning requests for this token"},
     },
 )
 async def api_admin_provision_user(
@@ -679,6 +683,16 @@ async def api_admin_provision_user(
 ) -> UserRead:
     token_user = _require_api_token(current_user)
     _resolve_org_slug(org_slug, token_user, db_session)
+
+    from src.services.security.rate_limiting import check_admin_user_provision_rate_limit
+    is_allowed, retry_after = check_admin_user_provision_rate_limit(token_user.id)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many user provisioning requests. Please slow down.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
     return await provision_user(
         token_user=token_user,
         email=body.email,

@@ -1003,7 +1003,7 @@ class TestIssueUserToken:
 
 class TestProvisionUser:
 
-    async def test_creates_user_and_membership(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_creates_user_and_membership(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         result = await provision_user(
             token_user=token_user,
             email="new@example.com",
@@ -1029,7 +1029,8 @@ class TestProvisionUser:
         mock_admin_side_effects["check_limits_with_usage"].assert_called_once()
         mock_admin_side_effects["increase_feature_usage"].assert_called_once()
 
-    async def test_duplicate_email_rejected(self, token_user, user, mock_request, db, mock_admin_side_effects):
+    async def test_duplicate_email_in_org_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # `user` is already a member of token_user's org via the fixture
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1039,8 +1040,81 @@ class TestProvisionUser:
                 request=mock_request, db_session=db,
             )
         assert exc.value.status_code == 400
+        assert "in this organization" in exc.value.detail
 
-    async def test_duplicate_username_rejected(self, token_user, user, mock_request, db, mock_admin_side_effects):
+    async def test_existing_user_in_other_org_is_attached(self, token_user, other_org, student_role, mock_request, db, mock_admin_side_effects):
+        # Seed a user that exists ONLY in another org → simulates the orphan case
+        # the original bug created. provision_user should attach them to the
+        # caller's org instead of failing.
+        foreign = User(
+            id=42,
+            username="foreign",
+            first_name="Foreign",
+            last_name="Person",
+            email="foreign@example.com",
+            password="hashed",
+            user_uuid="user_foreign",
+        )
+        db.add(foreign)
+        db.commit()
+        db.add(UserOrganization(
+            user_id=foreign.id, org_id=other_org.id, role_id=4,
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        ))
+        db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="foreign@example.com",
+            username="ignored_username",
+            first_name="ignored", last_name="ignored",
+            password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        # Same underlying user, now linked to the caller's org
+        assert result.id == foreign.id
+        membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == foreign.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert membership is not None
+        assert membership.role_id == 4
+        mock_admin_side_effects["increase_feature_usage"].assert_called_once()
+
+    async def test_orphan_user_is_attached(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
+        # An orphan user (in users table, no UserOrganization anywhere)
+        # — created by the pre-fix bug — should be recoverable by re-calling
+        # provision_user with the same email.
+        orphan = User(
+            id=99,
+            username="orphan",
+            first_name="Orph", last_name="An",
+            email="orphan@example.com",
+            password="hashed",
+            user_uuid="user_orphan",
+        )
+        db.add(orphan)
+        db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="orphan@example.com",
+            username="newname",
+            first_name="", last_name="", password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        assert result.id == orphan.id
+        membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == orphan.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert membership is not None
+
+    async def test_duplicate_username_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1051,7 +1125,7 @@ class TestProvisionUser:
             )
         assert exc.value.status_code == 400
 
-    async def test_weak_password_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_weak_password_rejected(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         with pytest.raises(HTTPException) as exc:
             await provision_user(
                 token_user=token_user,
@@ -1064,7 +1138,7 @@ class TestProvisionUser:
             )
         assert exc.value.status_code == 400
 
-    async def test_member_limit_enforced(self, token_user, mock_request, db, mock_admin_side_effects):
+    async def test_member_limit_enforced(self, token_user, student_role, mock_request, db, mock_admin_side_effects):
         mock_admin_side_effects["check_limits_with_usage"].side_effect = HTTPException(
             status_code=403, detail="Usage Limit has been reached for Members"
         )
@@ -1077,6 +1151,70 @@ class TestProvisionUser:
                 request=mock_request, db_session=db,
             )
         assert exc.value.status_code == 403
+
+    async def test_unknown_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # No role with id=999 exists — must 400 before any user record is created.
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="norole@example.com",
+                username="noroleuser",
+                first_name="", last_name="", password=None, role_id=999,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 400
+        assert "Role" in str(exc.value.detail)
+        # No user should have been created
+        assert db.exec(select(User).where(User.email == "norole@example.com")).first() is None
+
+    async def test_foreign_org_role_rejected(self, token_user, other_org, mock_request, db, mock_admin_side_effects):
+        # A role belonging to a different org must not be grantable.
+        foreign_role = Role(
+            id=77, name="ForeignRole", description="", rights={},
+            org_id=other_org.id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_foreign_77",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(foreign_role)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="x@example.com",
+                username="xuser",
+                first_name="", last_name="", password=None, role_id=77,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "organization" in str(exc.value.detail).lower()
+        assert db.exec(select(User).where(User.email == "x@example.com")).first() is None
+
+    async def test_global_role_accepted(self, token_user, mock_request, db, mock_admin_side_effects):
+        # A global role (org_id=None) must be grantable by any org's token.
+        global_role = Role(
+            id=55, name="GlobalRole", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_global_55",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(global_role)
+        db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="global@example.com",
+            username="globaluser",
+            first_name="", last_name="", password=None, role_id=55,
+            request=mock_request, db_session=db,
+        )
+        membership = db.exec(
+            select(UserOrganization).where(UserOrganization.user_id == result.id)
+        ).first()
+        assert membership is not None
+        assert membership.role_id == 55
 
 
 # ── Remove user from org tests ──────────────────────────────────────────────
