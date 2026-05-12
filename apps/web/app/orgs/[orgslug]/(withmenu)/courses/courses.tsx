@@ -14,6 +14,7 @@ import { BookCopy, ChevronLeft, ChevronRight, Search, X, Users, Info } from 'luc
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { searchMatchesAny } from '@/lib/search/normalize'
 import { PlanLevel } from '@services/plans/plans'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -101,11 +102,8 @@ function Courses(props: CourseProps) {
 
     // Search filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
       courses = courses.filter((course: any) =>
-        course.name?.toLowerCase().includes(query) ||
-        course.description?.toLowerCase().includes(query) ||
-        course.tags?.toLowerCase().includes(query)
+        searchMatchesAny([course.name, course.description, course.tags], searchQuery)
       )
     }
 

@@ -1,7 +1,7 @@
 from typing import List
 from uuid import uuid4
 import logging
-from sqlmodel import Session, select, or_, and_, text, func
+from sqlmodel import Session, select, or_, and_, func
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -36,6 +36,7 @@ from src.security.rbac import (
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.security.superadmin import is_user_superadmin
 from src.services.courses.thumbnails import upload_thumbnail
+from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.webhooks.dispatch import dispatch_webhooks
 from fastapi import HTTPException, Request, UploadFile, status
 from datetime import datetime
@@ -469,11 +470,8 @@ async def search_courses(
     limit = min(limit, 100)
     offset = (page - 1) * limit
 
-    # SECURITY FIX: Use parameterized queries to prevent SQL injection
-    # The search pattern is passed as a parameter, not interpolated into SQL
-    search_pattern = f"%{search_query}%"
+    pattern = build_like_pattern(search_query)
 
-    # Base query with parameterized search
     needs_distinct = False
     query = (
         select(Course)
@@ -481,14 +479,13 @@ async def search_courses(
         .where(Organization.slug == org_slug)
         .where(
             or_(
-                text('LOWER(course.name) LIKE LOWER(:pattern)'),
-                text('LOWER(course.description) LIKE LOWER(:pattern)'),
-                text('LOWER(course.about) LIKE LOWER(:pattern)'),
-                text('LOWER(course.learnings) LIKE LOWER(:pattern)'),
-                text('LOWER(course.tags) LIKE LOWER(:pattern)')
+                Course.name.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.description.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.about.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.learnings.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
+                Course.tags.ilike(pattern, escape=LIKE_ESCAPE_CHAR),  # type: ignore[attr-defined]
             )
         )
-        .params(pattern=search_pattern)
     )
 
     search_acting_user_id = resolve_acting_user_id(current_user)

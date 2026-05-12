@@ -54,6 +54,7 @@ from src.services.admin.admin import (
     get_user_enrollments,
     get_user_groups,
     get_user_progress,
+    get_user_trail_detail,
     issue_magic_link,
     complete_activity,
     uncomplete_activity,
@@ -864,6 +865,100 @@ class TestGetAllUserProgress:
         assert result == []
 
 
+class TestGetUserTrailDetail:
+
+    @pytest.fixture
+    def course_chapter(self, db, org, course, chapter):
+        from src.db.courses.course_chapters import CourseChapter
+        cc = CourseChapter(
+            order=1,
+            course_id=course.id,
+            chapter_id=chapter.id,
+            org_id=org.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(cc)
+        db.commit()
+        db.refresh(cc)
+        return cc
+
+    async def test_no_trail_returns_empty_shell(self, token_user, user, db):
+        result = await get_user_trail_detail(token_user, user.id, db)
+        assert result["trail_uuid"] is None
+        assert result["user_id"] == user.id
+        assert result["org_id"] == token_user.org_id
+        assert result["courses"] == []
+
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_full_breakdown_with_enrollment(
+        self, mock_track, token_user, user, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await enroll_user(mock_request, token_user, user.id, "course_test123", db)
+        result = await get_user_trail_detail(token_user, user.id, db)
+
+        assert result["trail_uuid"] is not None
+        assert len(result["courses"]) == 1
+        course_block = result["courses"][0]
+        assert course_block["course_uuid"] == "course_test123"
+        assert course_block["status"] == "STATUS_IN_PROGRESS"
+        assert course_block["total_activities"] == 1
+        assert course_block["completed_activities"] == 0
+        assert course_block["completion_percentage"] == 0
+        assert len(course_block["chapters"]) == 1
+        chap = course_block["chapters"][0]
+        assert chap["chapter_uuid"] == "chapter_test123"
+        assert len(chap["activities"]) == 1
+        act = chap["activities"][0]
+        assert act["activity_uuid"] == "activity_test123"
+        assert act["completed"] is False
+        assert act["completed_at"] is None
+
+    @patch("src.services.admin.admin.check_course_completion_and_create_certificate", new_callable=AsyncMock, return_value=False)
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_reflects_activity_completion(
+        self, mock_track, mock_cert, token_user, user, activity, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await complete_activity(mock_request, token_user, user.id, "activity_test123", db)
+        result = await get_user_trail_detail(token_user, user.id, db)
+
+        course_block = result["courses"][0]
+        assert course_block["completed_activities"] == 1
+        assert course_block["completion_percentage"] == 100.0
+        act = course_block["chapters"][0]["activities"][0]
+        assert act["completed"] is True
+        assert act["completed_at"] is not None
+
+    @patch("src.services.admin.admin.track", new_callable=AsyncMock)
+    async def test_filter_by_course_uuid(
+        self, mock_track, token_user, user, course, course_chapter, chapter_activity, db, mock_request,
+    ):
+        await enroll_user(mock_request, token_user, user.id, "course_test123", db)
+        result = await get_user_trail_detail(
+            token_user, user.id, db, course_uuid="course_test123",
+        )
+        assert len(result["courses"]) == 1
+        assert result["courses"][0]["course_uuid"] == "course_test123"
+
+    async def test_filter_by_course_uuid_without_enrollment(
+        self, token_user, user, course, course_chapter, chapter_activity, db,
+    ):
+        # No enrollment row, but admin can still see the breakdown for that course.
+        result = await get_user_trail_detail(
+            token_user, user.id, db, course_uuid="course_test123",
+        )
+        assert len(result["courses"]) == 1
+        course_block = result["courses"][0]
+        assert course_block["status"] is None
+        assert course_block["enrolled_at"] is None
+        assert course_block["total_activities"] == 1
+
+    async def test_filter_by_course_uuid_not_found(self, token_user, user, db):
+        with pytest.raises(HTTPException) as exc:
+            await get_user_trail_detail(token_user, user.id, db, course_uuid="nonexistent")
+        assert exc.value.status_code == 404
+
+
 class TestGetUserCertificates:
 
     async def test_no_certificates(self, token_user, user, db):
@@ -1215,6 +1310,184 @@ class TestProvisionUser:
         ).first()
         assert membership is not None
         assert membership.role_id == 55
+
+    async def test_admin_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # API tokens must never grant Admin (role_id=1), even when the creator is admin.
+        admin_role = Role(
+            id=1, name="Admin", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_admin_1",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(admin_role)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="elev@example.com",
+                username="elevuser",
+                first_name="", last_name="", password=None, role_id=1,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "Admin" in str(exc.value.detail) or "Maintainer" in str(exc.value.detail)
+        assert db.exec(select(User).where(User.email == "elev@example.com")).first() is None
+
+    async def test_maintainer_role_rejected(self, token_user, mock_request, db, mock_admin_side_effects):
+        # Same guard for Maintainer (role_id=2).
+        maintainer_role = Role(
+            id=2, name="Maintainer", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_maintainer_2",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(maintainer_role)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="mnt@example.com",
+                username="mntuser",
+                first_name="", last_name="", password=None, role_id=2,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "Admin" in str(exc.value.detail) or "Maintainer" in str(exc.value.detail)
+        assert db.exec(select(User).where(User.email == "mnt@example.com")).first() is None
+
+    async def test_creator_no_longer_member_rejected(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # If the user who created the token is no longer a member of the org,
+        # the token can't be used to provision anyone — even into a low-priv role.
+        creator_membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert creator_membership is not None
+        db.delete(creator_membership)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="orphan@example.com",
+                username="orphanuser",
+                first_name="", last_name="", password=None, role_id=4,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "creator" in str(exc.value.detail).lower()
+        assert db.exec(select(User).where(User.email == "orphan@example.com")).first() is None
+
+    async def test_creator_privilege_cap_rejects_higher_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
+        # Demote the token creator to role 4 (User), then attempt to grant role 3
+        # (Instructor — higher privilege). Must be rejected by the creator-cap layer.
+        creator_membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert creator_membership is not None
+        creator_membership.role_id = 4
+        db.add(creator_membership)
+        db.commit()
+
+        instructor_role = Role(
+            id=3, name="Instructor", description="", rights={},
+            org_id=None,
+            role_type=RoleTypeEnum.TYPE_GLOBAL,
+            role_uuid="role_instructor_3",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(instructor_role)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="escal@example.com",
+                username="escaluser",
+                first_name="", last_name="", password=None, role_id=3,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "higher privilege" in str(exc.value.detail).lower()
+        assert db.exec(select(User).where(User.email == "escal@example.com")).first() is None
+
+    async def test_creator_can_grant_same_or_lower_role(self, token_user, user, student_role, mock_request, db, mock_admin_side_effects):
+        # Creator at Instructor (role 3) granting role 4 (User) must succeed.
+        creator_membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert creator_membership is not None
+        creator_membership.role_id = 3
+        db.add(creator_membership)
+        db.commit()
+
+        result = await provision_user(
+            token_user=token_user,
+            email="ok@example.com",
+            username="okuser",
+            first_name="", last_name="", password=None, role_id=4,
+            request=mock_request, db_session=db,
+        )
+        assert result.email == "ok@example.com"
+        membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == result.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert membership is not None
+        assert membership.role_id == 4
+
+    async def test_creator_user_role_cannot_grant_custom_role(self, token_user, user, mock_request, db, mock_admin_side_effects):
+        # Creator demoted to User (role 4, priority 3) tries to grant a custom
+        # role with id outside _ROLE_PRIORITY (e.g. id=99). Custom role gets the
+        # default priority (2), which is *higher* privilege than the creator's
+        # priority (3), so the cap layer must deny. Exercises the
+        # _role_priority default-branch on the cap-deny path.
+        creator_membership = db.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == token_user.created_by_user_id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        assert creator_membership is not None
+        creator_membership.role_id = 4
+        db.add(creator_membership)
+        db.commit()
+
+        custom_role = Role(
+            id=99, name="CustomRole", description="", rights={},
+            org_id=token_user.org_id,
+            role_type=RoleTypeEnum.TYPE_ORGANIZATION,
+            role_uuid="role_custom_99",
+            creation_date=str(datetime.now()), update_date=str(datetime.now()),
+        )
+        db.add(custom_role)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            await provision_user(
+                token_user=token_user,
+                email="custcap@example.com",
+                username="custcapuser",
+                first_name="", last_name="", password=None, role_id=99,
+                request=mock_request, db_session=db,
+            )
+        assert exc.value.status_code == 403
+        assert "higher privilege" in str(exc.value.detail).lower()
+        assert db.exec(select(User).where(User.email == "custcap@example.com")).first() is None
 
 
 # ── Remove user from org tests ──────────────────────────────────────────────

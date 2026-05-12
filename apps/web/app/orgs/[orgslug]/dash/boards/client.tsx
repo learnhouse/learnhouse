@@ -27,6 +27,7 @@ import {
 import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { usePlan } from '@components/Hooks/usePlan'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface BoardListClientProps {
   org_id: number
@@ -118,10 +119,8 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   const filteredBoards = useMemo(() => {
     if (!searchQuery.trim()) return allBoards
-    const query = searchQuery.toLowerCase()
     return allBoards.filter((board: any) =>
-      board.name?.toLowerCase().includes(query) ||
-      board.description?.toLowerCase().includes(query)
+      searchMatchesAny([board.name, board.description], searchQuery)
     )
   }, [allBoards, searchQuery])
 

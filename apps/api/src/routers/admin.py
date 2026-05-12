@@ -41,6 +41,7 @@ from src.services.admin.admin import (
     get_user_enrollments,
     get_user_groups,
     get_user_progress,
+    get_user_trail_detail,
     issue_magic_link,
     issue_user_token,
     list_course_enrollments,
@@ -316,6 +317,55 @@ class UserDataExportResponse(BaseModel):
     certificates: List[Dict[str, Any]] = Field(description="Certificates awarded in the caller's org")
     user_groups: List[Dict[str, Any]] = Field(description="Cohort memberships in the caller's org")
     exported_at: str = Field(description="ISO8601 timestamp when the export was generated")
+
+
+class TrailActivityProgress(BaseModel):
+    """A single activity within a chapter, annotated with the user's completion state."""
+    activity_uuid: str
+    activity_id: int
+    name: str
+    activity_type: str
+    activity_sub_type: str
+    order: int = Field(description="Order of this activity within its chapter")
+    published: bool
+    completed: bool
+    teacher_verified: bool = Field(default=False, description="Whether a teacher has verified the completion (assignments)")
+    grade: str = Field(default="", description="Grade/feedback recorded on the trail step, when set")
+    completed_at: Optional[str] = Field(default=None, description="ISO timestamp when the activity was marked complete; null if not completed")
+
+
+class TrailChapterProgress(BaseModel):
+    """A chapter inside a course with its activities and per-chapter counts."""
+    chapter_uuid: str
+    chapter_id: int
+    name: str
+    order: int
+    total_activities: int
+    completed_activities: int
+    activities: List[TrailActivityProgress]
+
+
+class TrailCourseProgress(BaseModel):
+    """A course the user is enrolled in (or has touched), with the full chapter/activity breakdown."""
+    course_uuid: str
+    course_id: int
+    course_name: str
+    status: Optional[str] = Field(default=None, description="TrailRun status (STATUS_IN_PROGRESS, STATUS_COMPLETED, …); null when there is no enrollment row")
+    enrolled_at: Optional[str] = Field(default=None, description="ISO timestamp the user was enrolled; null when there is no enrollment row")
+    total_activities: int
+    completed_activities: int
+    completion_percentage: float
+    chapters: List[TrailChapterProgress]
+
+
+class UserTrailDetail(BaseModel):
+    """Full breakdown of a user's trail across courses in the org."""
+    trail_uuid: Optional[str] = Field(default=None, description="Null if the user has never started a trail in this org")
+    user_id: int
+    org_id: int
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
+    courses: List[TrailCourseProgress]
 
 
 # ── Auth endpoints ───────────────────────────────────────────────────────────
@@ -624,6 +674,69 @@ async def api_admin_get_all_user_progress(
     return [ProgressSummaryItem(**r) for r in results]
 
 
+# ── Trail breakdown endpoints (read-only) ────────────────────────────────────
+
+
+@router.get(
+    "/{org_slug}/trails/{user_id}",
+    response_model=UserTrailDetail,
+    summary="Get user trail with full progress breakdown",
+    description=(
+        "Return the user's trail in the organization with a full chapter-by-chapter "
+        "and activity-by-activity progress breakdown for every course they are "
+        "enrolled in. Each activity carries its completion state, teacher "
+        "verification flag, grade, and completion timestamp. Requires "
+        "`courses.action_read` permission."
+    ),
+    responses={
+        200: {"description": "Full trail breakdown grouped by course → chapter → activity.", "model": UserTrailDetail},
+        403: {"description": "API token lacks access to this organization"},
+        404: {"description": "User not found or not a member of this organization"},
+    },
+)
+async def api_admin_get_user_trail_detail(
+    org_slug: str,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserTrailDetail:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await get_user_trail_detail(token_user, user_id, db_session)
+    return UserTrailDetail(**result)
+
+
+@router.get(
+    "/{org_slug}/trails/{user_id}/courses/{course_uuid}",
+    response_model=UserTrailDetail,
+    summary="Get user trail breakdown for a single course",
+    description=(
+        "Return the user's full chapter-by-chapter and activity-by-activity "
+        "progress breakdown for a single course. Surfaces progress even when the "
+        "user has no explicit enrollment row (status will be null in that case). "
+        "Requires `courses.action_read` permission."
+    ),
+    responses={
+        200: {"description": "Full breakdown for the requested course only.", "model": UserTrailDetail},
+        403: {"description": "API token lacks access to this organization"},
+        404: {"description": "Course or user not found"},
+    },
+)
+async def api_admin_get_user_course_trail_detail(
+    org_slug: str,
+    user_id: int,
+    course_uuid: str,
+    current_user=Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> UserTrailDetail:
+    token_user = _require_api_token(current_user)
+    _resolve_org_slug(org_slug, token_user, db_session)
+    result = await get_user_trail_detail(
+        token_user, user_id, db_session, course_uuid=course_uuid
+    )
+    return UserTrailDetail(**result)
+
+
 # ── Certification endpoints (read-only) ──────────────────────────────────────
 
 
@@ -671,7 +784,7 @@ async def api_admin_get_user_certificates(
     responses={
         200: {"description": "User created or attached to the org. Returns the user.", "model": UserRead},
         400: {"description": "Email already in this org, duplicate username, weak password, or invalid role_id"},
-        403: {"description": "Member limit reached, feature disabled, or role belongs to another org"},
+        403: {"description": "Member limit reached, feature disabled, role belongs to another org, role is elevated (Admin/Maintainer), or token creator lacks privilege"},
         429: {"description": "Too many provisioning requests for this token"},
     },
 )

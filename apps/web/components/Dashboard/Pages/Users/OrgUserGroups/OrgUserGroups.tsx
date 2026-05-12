@@ -9,6 +9,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import { getAPIUrl } from '@services/config/config'
+import { searchMatchesAny } from '@/lib/search/normalize'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { PlanLevel } from '@services/plans/plans'
@@ -43,10 +44,8 @@ function OrgUserGroups() {
     const filteredUsergroups = useMemo(() => {
         if (!usergroups) return []
         if (!searchValue.trim()) return usergroups
-        const search = searchValue.toLowerCase()
         return usergroups.filter((group: any) =>
-            group.name?.toLowerCase().includes(search) ||
-            group.description?.toLowerCase().includes(search)
+            searchMatchesAny([group.name, group.description], searchValue)
         )
     }, [usergroups, searchValue])
 

@@ -12,6 +12,8 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select, func
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
+from src.db.courses.chapters import Chapter
+from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.courses import Course
 from src.db.courses.certifications import (
     CertificateUser,
@@ -48,7 +50,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.security.security import security_hash_password
-from src.security.rbac.constants import ADMIN_ROLE_ID
+from src.security.rbac.constants import ADMIN_ROLE_ID, MAINTAINER_ROLE_ID
 from src.services.security.password_validation import validate_password_complexity
 
 
@@ -104,6 +106,58 @@ def _get_user_in_org(user_id: int, org_id: int, db_session: Session) -> User:
             detail="User does not belong to this organization",
         )
     return user
+
+
+_ROLE_PRIORITY = {
+    ADMIN_ROLE_ID: 0,
+    MAINTAINER_ROLE_ID: 1,
+    3: 2,
+    4: 3,
+}
+_DEFAULT_ROLE_PRIORITY = 2
+
+
+def _role_priority(role_id: int) -> int:
+    return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
+
+
+def _check_token_can_assign_role(
+    token_user: APITokenUser,
+    role: Role,
+    db_session: Session,
+) -> None:
+    """Defense-in-depth guard for role assignment via API tokens.
+
+    Layer 3 — API tokens never grant Admin or Maintainer. Elevated roles must
+    be assigned through interactive admin flows so a leaked token cannot mint
+    org admins.
+
+    Layer 2 — The token's creator must still be a member of the org and must
+    hold privilege at least as high as the role being granted. Stops a
+    demoted/removed user's still-valid token from being used to escalate.
+    """
+    if role.id in {ADMIN_ROLE_ID, MAINTAINER_ROLE_ID}:
+        raise HTTPException(
+            status_code=403,
+            detail="API tokens cannot grant Admin or Maintainer roles",
+        )
+
+    membership_q = select(UserOrganization).where(
+        UserOrganization.user_id == token_user.created_by_user_id,
+        UserOrganization.org_id == token_user.org_id,
+    )
+    creator_membership = db_session.exec(membership_q).first()
+    if creator_membership is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Token creator is no longer a member of this organization",
+        )
+
+    if _role_priority(role.id) < _role_priority(creator_membership.role_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Token cannot grant a role with higher privilege than its creator",
+        )
 
 
 # -- Auth Token endpoints -----------------------------------------------------
@@ -715,6 +769,192 @@ async def get_all_user_progress(
     return result
 
 
+def _enum_value(value) -> str:
+    return value.value if hasattr(value, "value") else str(value)
+
+
+async def get_user_trail_detail(
+    token_user: APITokenUser,
+    user_id: int,
+    db_session: Session,
+    course_uuid: Optional[str] = None,
+) -> dict:
+    """Build a full trail breakdown for a user — every chapter + every activity
+    with per-activity completion status. Optionally filtered to a single course."""
+
+    _get_user_in_org(user_id, token_user.org_id, db_session)
+
+    target_course: Optional[Course] = None
+    if course_uuid is not None:
+        target_course = db_session.exec(
+            select(Course).where(
+                Course.course_uuid == course_uuid,
+                Course.org_id == token_user.org_id,
+            )
+        ).first()
+        if not target_course:
+            raise HTTPException(status_code=404, detail="Course not found")
+
+    trail = db_session.exec(
+        select(Trail).where(
+            Trail.org_id == token_user.org_id,
+            Trail.user_id == user_id,
+        )
+    ).first()
+
+    empty_shell = {
+        "trail_uuid": trail.trail_uuid if trail else None,
+        "user_id": user_id,
+        "org_id": token_user.org_id,
+        "creation_date": trail.creation_date if trail else None,
+        "update_date": trail.update_date if trail else None,
+        "courses": [],
+    }
+
+    tr_statement = select(TrailRun).where(
+        TrailRun.user_id == user_id,
+        TrailRun.org_id == token_user.org_id,
+    )
+    if trail:
+        tr_statement = tr_statement.where(TrailRun.trail_id == trail.id)
+    if target_course is not None:
+        tr_statement = tr_statement.where(TrailRun.course_id == target_course.id)
+    trail_runs = list(db_session.exec(tr_statement).all())
+
+    course_ids: list[int] = [tr.course_id for tr in trail_runs]
+    if target_course is not None and target_course.id not in course_ids:
+        course_ids.append(target_course.id)
+
+    if not course_ids:
+        return empty_shell
+
+    courses = db_session.exec(
+        select(Course).where(Course.id.in_(course_ids))  # type: ignore
+    ).all()
+    course_map = {c.id: c for c in courses if c.org_id == token_user.org_id}
+
+    trail_runs = [tr for tr in trail_runs if tr.course_id in course_map]
+    run_by_course: dict[int, TrailRun] = {tr.course_id: tr for tr in trail_runs}
+
+    course_chapters = db_session.exec(
+        select(CourseChapter).where(CourseChapter.course_id.in_(course_map.keys()))  # type: ignore
+    ).all()
+    chapters_by_course: dict[int, list[tuple[int, int]]] = {}
+    for cc in course_chapters:
+        chapters_by_course.setdefault(cc.course_id, []).append((cc.chapter_id, cc.order))
+    for cid in chapters_by_course:
+        chapters_by_course[cid].sort(key=lambda t: t[1])
+
+    chapter_ids = [cc.chapter_id for cc in course_chapters]
+    chapter_map: dict[int, Chapter] = {}
+    if chapter_ids:
+        chapters = db_session.exec(
+            select(Chapter).where(Chapter.id.in_(chapter_ids))  # type: ignore
+        ).all()
+        chapter_map = {c.id: c for c in chapters}
+
+    chapter_activities = db_session.exec(
+        select(ChapterActivity).where(ChapterActivity.course_id.in_(course_map.keys()))  # type: ignore
+    ).all()
+    chapter_activities_by_chapter: dict[int, list[ChapterActivity]] = {}
+    for ca in chapter_activities:
+        chapter_activities_by_chapter.setdefault(ca.chapter_id, []).append(ca)
+    for cid in chapter_activities_by_chapter:
+        chapter_activities_by_chapter[cid].sort(key=lambda a: a.order)
+
+    activity_ids = list({ca.activity_id for ca in chapter_activities})
+    activity_map: dict[int, Activity] = {}
+    if activity_ids:
+        activities = db_session.exec(
+            select(Activity).where(Activity.id.in_(activity_ids))  # type: ignore
+        ).all()
+        activity_map = {a.id: a for a in activities}
+
+    trail_steps = db_session.exec(
+        select(TrailStep).where(
+            TrailStep.user_id == user_id,
+            TrailStep.course_id.in_(course_map.keys()),  # type: ignore
+        )
+    ).all()
+    step_by_activity: dict[int, TrailStep] = {s.activity_id: s for s in trail_steps}
+
+    course_blocks: list[dict] = []
+    for course_id, course in course_map.items():
+        run = run_by_course.get(course_id)
+
+        chapter_blocks: list[dict] = []
+        course_total = 0
+        course_completed = 0
+
+        for chapter_id, chapter_order in chapters_by_course.get(course_id, []):
+            chapter = chapter_map.get(chapter_id)
+            if not chapter:
+                continue
+
+            activity_blocks: list[dict] = []
+            chap_total = 0
+            chap_completed = 0
+
+            for ca in chapter_activities_by_chapter.get(chapter_id, []):
+                act = activity_map.get(ca.activity_id)
+                if not act:
+                    continue
+                step = step_by_activity.get(act.id)
+                completed = bool(step and step.complete)
+                chap_total += 1
+                if completed:
+                    chap_completed += 1
+                activity_blocks.append({
+                    "activity_uuid": act.activity_uuid,
+                    "activity_id": act.id,
+                    "name": act.name,
+                    "activity_type": _enum_value(act.activity_type),
+                    "activity_sub_type": _enum_value(act.activity_sub_type),
+                    "order": ca.order,
+                    "published": act.published,
+                    "completed": completed,
+                    "teacher_verified": bool(step.teacher_verified) if step else False,
+                    "grade": step.grade if step else "",
+                    "completed_at": step.update_date if step and step.complete else None,
+                })
+
+            chapter_blocks.append({
+                "chapter_uuid": chapter.chapter_uuid,
+                "chapter_id": chapter.id,
+                "name": chapter.name,
+                "order": chapter_order,
+                "total_activities": chap_total,
+                "completed_activities": chap_completed,
+                "activities": activity_blocks,
+            })
+
+            course_total += chap_total
+            course_completed += chap_completed
+
+        course_blocks.append({
+            "course_uuid": course.course_uuid,
+            "course_id": course.id,
+            "course_name": course.name,
+            "status": _enum_value(run.status) if run else None,
+            "enrolled_at": run.creation_date if run else None,
+            "total_activities": course_total,
+            "completed_activities": course_completed,
+            "completion_percentage": (
+                round(course_completed / course_total * 100, 1) if course_total > 0 else 0
+            ),
+            "chapters": chapter_blocks,
+        })
+
+    return {
+        "trail_uuid": trail.trail_uuid if trail else None,
+        "user_id": user_id,
+        "org_id": token_user.org_id,
+        "creation_date": trail.creation_date if trail else None,
+        "update_date": trail.update_date if trail else None,
+        "courses": course_blocks,
+    }
+
+
 # -- User provisioning --------------------------------------------------------
 
 
@@ -756,6 +996,8 @@ async def provision_user(
             status_code=403,
             detail="Role does not belong to this organization",
         )
+
+    _check_token_can_assign_role(token_user, role, db_session)
 
     check_limits_with_usage("members", token_user.org_id, db_session)
 
