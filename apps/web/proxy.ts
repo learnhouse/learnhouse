@@ -257,6 +257,17 @@ export default async function proxy(req: NextRequest) {
   }
 
   // -------------------------------------------------------------------------
+  // 1b. Admin path — direct /admin access works in any tenancy mode.
+  //     In single mode this is the only way to reach the admin panel; in
+  //     multi mode it's an alternative to the admin.{domain} subdomain.
+  // -------------------------------------------------------------------------
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    const response = NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
+    setInstanceCookies(response, instance)
+    return response
+  }
+
+  // -------------------------------------------------------------------------
   // 2. Standard out-of-org paths
   // -------------------------------------------------------------------------
   if (pathname === '/home') {
