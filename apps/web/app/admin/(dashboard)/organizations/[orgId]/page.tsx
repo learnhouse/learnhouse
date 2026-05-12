@@ -135,7 +135,7 @@ export default function OrgDetailPage() {
       {/* Header */}
       <div className="mb-6">
         <Link
-          href="/organizations"
+          href="/admin/organizations"
           className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/60 transition-colors mb-3"
         >
           <ArrowLeft size={14} weight="bold" />

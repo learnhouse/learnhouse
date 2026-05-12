@@ -231,10 +231,16 @@ export default async function proxy(req: NextRequest) {
   const fullhost = req.headers.get('host')
 
   // -------------------------------------------------------------------------
-  // 1. Admin subdomain (multi only) → rewrite to /admin route group
+  // 1. Admin subdomain (multi only) → rewrite to /admin route group.
+  //    Idempotent: if the path already starts with /admin (e.g. internal nav
+  //    uses /admin/organizations so it works in both subdomain and path mode),
+  //    don't double-prefix.
   // -------------------------------------------------------------------------
   if (await isAdminSubdomain(fullhost, instance)) {
-    const response = NextResponse.rewrite(new URL(`/admin${pathname}${search}`, req.url))
+    const target = pathname === '/admin' || pathname.startsWith('/admin/')
+      ? pathname
+      : `/admin${pathname}`
+    const response = NextResponse.rewrite(new URL(`${target}${search}`, req.url))
     setInstanceCookies(response, instance)
     return response
   }

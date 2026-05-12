@@ -427,7 +427,7 @@ export default function OrganizationList() {
             return (
               <tr key={org.id} className="border-b border-white/[0.05] hover:bg-white/[0.03] transition-colors">
                 <td className="px-4 py-3">
-                  <Link href={`/organizations/${org.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <Link href={`/admin/organizations/${org.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     {org.logo_image ? (
                       <ImgWithFallback
                         src={getLogoUrl(org.org_uuid, org.logo_image)}
