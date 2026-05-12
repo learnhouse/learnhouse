@@ -41,6 +41,7 @@ from src.services.courses.activities.assignments import (
     read_user_assignment_task_submissions,
     read_user_assignment_task_submissions_me,
     read_user_assignment_task_submissions_me_batch,
+    retry_assignment_submission,
     update_assignment,
     update_assignment_submission,
     update_assignment_task,
@@ -777,6 +778,41 @@ async def api_final_grade_submission(
         current_user,
         db_session,
         overall_feedback=body.overall_feedback if body else None,
+    )
+
+
+@router.post(
+    "/{assignment_uuid}/submissions/me/retry",
+    summary="Retry assignment for current user",
+    description=(
+        "Reset the current user's submission so they can attempt the "
+        "assignment again. Only allowed when the assignment has "
+        "allow_retries=true, the existing submission is in GRADED state, "
+        "and the attempt counter is still below max_retries (0 means "
+        "unlimited). Wipes per-task submissions, resets the trail step, "
+        "and revokes any course certificate."
+    ),
+    responses={
+        200: {"description": "Submission reset; returns the new attempt info."},
+        400: {"description": "Submission is not in a retryable state"},
+        401: {"description": "Authentication required"},
+        403: {"description": "Retries disabled or attempt limit reached"},
+        404: {"description": "Assignment or submission not found"},
+    },
+)
+async def api_retry_assignment_submission(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Reset the current user's submission so they can re-attempt the
+    assignment. Strictly self-service — instructors who want to force a
+    retry should reject the submission via the existing delete endpoint.
+    """
+    return await retry_assignment_submission(
+        request, assignment_uuid, current_user, db_session
     )
 
 
