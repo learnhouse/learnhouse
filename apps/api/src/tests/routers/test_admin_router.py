@@ -116,6 +116,10 @@ def _admin_context(api_user):
             "src.services.security.rate_limiting.check_admin_user_lookup_rate_limit",
             return_value=(True, 0),
         ),
+        patch(
+            "src.services.security.rate_limiting.check_admin_user_provision_rate_limit",
+            return_value=(True, 0),
+        ),
     ):
         yield
 
