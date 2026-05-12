@@ -14,6 +14,7 @@ import { PodcastWithEpisodeCount } from '@services/podcasts/podcasts'
 import { Headphones, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PodcastsClientProps {
   orgslug: string
@@ -39,11 +40,8 @@ export default function PodcastsClient({
   // Filter podcasts based on search
   const filteredPodcasts = useMemo(() => {
     if (!searchQuery.trim()) return allPodcasts
-    const query = searchQuery.toLowerCase()
     return allPodcasts.filter((podcast: PodcastWithEpisodeCount) =>
-      podcast.name?.toLowerCase().includes(query) ||
-      podcast.description?.toLowerCase().includes(query) ||
-      podcast.tags?.toLowerCase().includes(query)
+      searchMatchesAny([podcast.name, podcast.description, podcast.tags], searchQuery)
     )
   }, [allPodcasts, searchQuery])
 

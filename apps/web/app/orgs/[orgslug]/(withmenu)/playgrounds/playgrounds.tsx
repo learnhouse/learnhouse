@@ -12,6 +12,7 @@ import { Playground, createPlayground } from '@services/playgrounds/playgrounds'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PlaygroundsClientProps {
   orgslug: string
@@ -39,11 +40,8 @@ export default function PlaygroundsClient({
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return playgrounds
-    const q = searchQuery.toLowerCase()
-    return playgrounds.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
+    return playgrounds.filter((p) =>
+      searchMatchesAny([p.name, p.description], searchQuery)
     )
   }, [playgrounds, searchQuery])
 

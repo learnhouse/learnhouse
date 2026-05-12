@@ -1432,6 +1432,158 @@ class TestSearchCourses:
 
         assert any(c.course_uuid == "course_test" for c in result)
 
+    @pytest.mark.asyncio
+    async def test_search_courses_finds_emoji_in_name(
+        self, db, org, anonymous_user, mock_request
+    ):
+        _make_course(
+            db, org, id=40,
+            name="Rocket Course \U0001f680",
+            course_uuid="course_emoji",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", "\U0001f680", db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_emoji" in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_matches_nfd_query_to_nfc_stored(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # Stored name is NFC; query is NFD ("cafe" + combining acute).
+        _make_course(
+            db, org, id=41,
+            name="café Brewing",
+            course_uuid="course_cafe",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", "café", db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_cafe" in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_escapes_percent_wildcard(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # A literal "%" in the query must not act as a wildcard. Only the row
+        # whose name actually contains "%" should match.
+        _make_course(
+            db, org, id=42,
+            name="100% Practical",
+            course_uuid="course_percent",
+            public=True, published=True,
+        )
+        _make_course(
+            db, org, id=43,
+            name="Theoretical Course",
+            course_uuid="course_theory",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", "100%", db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_percent" in uuids
+        assert "course_theory" not in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_escapes_underscore_wildcard(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # `_` in LIKE matches a single character. The escape must make it
+        # literal so "a_b" only matches names that actually contain "a_b",
+        # not "aXb".
+        _make_course(
+            db, org, id=44,
+            name="snake_case Module",
+            course_uuid="course_snake",
+            public=True, published=True,
+        )
+        _make_course(
+            db, org, id=45,
+            name="snakeXcase Module",
+            course_uuid="course_snakeX",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", "snake_case", db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_snake" in uuids
+        assert "course_snakeX" not in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_handles_backslash_in_query(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # User typing a backslash should not break the query or trigger
+        # SQL errors. The course with a backslash in its name should match.
+        _make_course(
+            db, org, id=46,
+            name="C:\\path course",
+            course_uuid="course_backslash",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", "C:\\path", db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_backslash" in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_finds_zwj_family_emoji(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # ZWJ family sequence: 👨‍👩‍👧  (U+1F468 U+200D U+1F469 U+200D U+1F467).
+        family = "\U0001f468‍\U0001f469‍\U0001f467"
+        _make_course(
+            db, org, id=47,
+            name=f"Parenting {family} 101",
+            course_uuid="course_zwj_family",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", family, db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_zwj_family" in uuids
+
+    @pytest.mark.asyncio
+    async def test_search_courses_finds_emoji_with_skin_tone_modifier(
+        self, db, org, anonymous_user, mock_request
+    ):
+        # Waving hand + medium-light skin tone modifier.
+        waving = "\U0001f44b\U0001f3fb"
+        _make_course(
+            db, org, id=48,
+            name=f"Welcome {waving} aboard",
+            course_uuid="course_skin_tone",
+            public=True, published=True,
+        )
+
+        result = await search_courses(
+            mock_request, anonymous_user, "test-org", waving, db
+        )
+
+        uuids = [c.course_uuid for c in result]
+        assert "course_skin_tone" in uuids
+
 
 class TestGetUserCoursesAndRights:
     """Additional tests for get_user_courses() and get_course_user_rights()."""

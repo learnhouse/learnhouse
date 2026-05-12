@@ -31,6 +31,7 @@ import useSWR from 'swr'
 import toast from 'react-hot-toast'
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { usePlan } from '@components/Hooks/usePlan'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 type CourseProps = {
   orgslug: string
@@ -142,11 +143,8 @@ function CoursesHome(params: CourseProps) {
 
     // Search filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
       courses = courses.filter((course: any) =>
-        course.name?.toLowerCase().includes(query) ||
-        course.description?.toLowerCase().includes(query) ||
-        course.tags?.toLowerCase().includes(query)
+        searchMatchesAny([course.name, course.description, course.tags], searchQuery)
       )
     }
 
