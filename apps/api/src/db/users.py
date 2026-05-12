@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Column, Index
+from sqlalchemy.dialects.postgresql import JSONB
 from src.db.roles import RoleRead
 
 if TYPE_CHECKING:
@@ -19,6 +20,7 @@ class UserBase(SQLModel):
     bio: Optional[str] = ""
     details: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSON))
     profile: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSON))
+    extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
 class UserCreate(UserBase):
     first_name: str = ""
@@ -38,6 +40,7 @@ class UserUpdate(UserBase):
     bio: Optional[str] = ""
     details: Optional[dict] = Field(default_factory=dict)
     profile: Optional[dict] = Field(default_factory=dict)
+    extra_metadata: Optional[dict] = None
 
 
 class UserUpdatePassword(SQLModel):

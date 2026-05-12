@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 import json
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
@@ -30,6 +30,7 @@ async def create_video_activity(
     db_session: Session,
     video_file: UploadFile | None = None,
     details: str = "{}",
+    extra_metadata: Optional[dict] = None,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
@@ -115,6 +116,7 @@ async def create_video_activity(
         details=details if isinstance(details, dict) else json.loads(details),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=extra_metadata,
     )
 
     # create activity
@@ -158,6 +160,7 @@ class ExternalVideo(BaseModel):
     type: Literal["youtube", "vimeo"]
     chapter_id: str
     details: str = "{}"
+    extra_metadata: Optional[dict] = None
 
 
 class ExternalVideoInDB(BaseModel):
@@ -223,6 +226,7 @@ async def create_external_video_activity(
         details=details,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=data.extra_metadata,
     )
 
     # create activity

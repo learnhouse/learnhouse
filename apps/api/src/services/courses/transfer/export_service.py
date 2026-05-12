@@ -146,6 +146,7 @@ def _load_course_export_data(
         "published": course.published,
         "open_to_contributors": course.open_to_contributors,
         "seo": copy.deepcopy(course.seo),
+        "extra_metadata": copy.deepcopy(course.extra_metadata),
         "creation_date": course.creation_date,
         "update_date": course.update_date,
     }
@@ -194,6 +195,7 @@ def _load_course_export_data(
             "order": course_chapter.order,
             "creation_date": chapter.creation_date,
             "update_date": chapter.update_date,
+            "extra_metadata": copy.deepcopy(chapter.extra_metadata),
             "_id": chapter.id,
         }
         activities = []
@@ -209,6 +211,7 @@ def _load_course_export_data(
                 "order": ca.order,
                 "creation_date": activity.creation_date,
                 "update_date": activity.update_date,
+                "extra_metadata": copy.deepcopy(activity.extra_metadata),
                 "_id": activity.id,
             }
             blocks = []

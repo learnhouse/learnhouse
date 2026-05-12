@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from src.db.courses.activities import ActivityRead
 
@@ -30,11 +31,13 @@ class Chapter(ChapterBase, table=True):
     chapter_uuid: str = Field(default="", index=True)
     creation_date: str = ""
     update_date: str = ""
+    extra_metadata: Optional[dict] = Field(default=None, sa_column=Column(JSONB))
 
 
 class ChapterCreate(ChapterBase):
     # referenced order here will be ignored and just used for validation
     # used order will be the next available.
+    extra_metadata: Optional[dict] = None
     pass
 
 
@@ -45,6 +48,7 @@ class ChapterUpdate(SQLModel):
     lock_type: Optional[LockType] = None
     course_id: Optional[int] = None
     org_id: Optional[int] = None
+    extra_metadata: Optional[dict] = None
 
 
 class ChapterRead(ChapterBase):
@@ -53,6 +57,7 @@ class ChapterRead(ChapterBase):
     chapter_uuid: str
     creation_date: str
     update_date: str
+    extra_metadata: Optional[dict] = None
     # Computed per-request: whether current user is denied access to this chapter's
     # content (and, by cascade, its activities). Metadata (name, thumbnail) is still
     # returned so TOC navigation still renders a lock placeholder.
