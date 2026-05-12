@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
+import json
 import os
-from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from sqlmodel import Session
@@ -286,6 +287,7 @@ async def api_create_course(
     tags: str = Form(None),
     about: str = Form(),
     thumbnail_type: ThumbnailType = Form(default=ThumbnailType.IMAGE),
+    extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
     thumbnail: UploadFile | None = None,
@@ -293,6 +295,15 @@ async def api_create_course(
     """
     Create new Course
     """
+    parsed_metadata: Optional[dict] = None
+    if extra_metadata:
+        try:
+            parsed_metadata = json.loads(extra_metadata)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+        if not isinstance(parsed_metadata, dict):
+            raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+
     course = CourseCreate(
         name=name,
         description=description,
@@ -305,6 +316,7 @@ async def api_create_course(
         learnings=learnings,
         tags=tags,
         open_to_contributors=False,
+        extra_metadata=parsed_metadata,
     )
     return await create_course(
         request, org_id, course, current_user, db_session, thumbnail, thumbnail_type

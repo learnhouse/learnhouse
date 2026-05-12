@@ -1,3 +1,4 @@
+from typing import Optional
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from sqlmodel import Session, select
@@ -25,6 +26,7 @@ async def create_documentpdf_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
     pdf_file: UploadFile | None = None,
+    extra_metadata: Optional[dict] = None,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
@@ -108,6 +110,7 @@ async def create_documentpdf_activity(
         activity_uuid=activity_uuid,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
+        extra_metadata=extra_metadata,
     )
 
     # Insert Activity in DB
