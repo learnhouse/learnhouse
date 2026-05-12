@@ -9,6 +9,7 @@ import { linkCommunityToCourse, unlinkCommunityFromCourse } from '@services/comm
 import { getOrgCourses } from '@services/courses/courses'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
+import { searchMatches } from '@/lib/search/normalize'
 import { getAPIUrl } from '@services/config/config'
 import { Loader2, Link2, Unlink, Search, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -59,7 +60,7 @@ const CommunityEditCourse: React.FC = () => {
   if (!community) return null
 
   const filteredCourses = courses.filter((course) =>
-    course.name.toLowerCase().includes(searchQuery.toLowerCase())
+    searchMatches(course.name, searchQuery)
   )
 
   const linkedCourse = courses.find((c) => c.id === community.course_id)

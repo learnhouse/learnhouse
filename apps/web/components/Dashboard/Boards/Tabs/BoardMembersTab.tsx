@@ -8,6 +8,7 @@ import { getAPIUrl } from '@services/config/config'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { addBoardMembersBatch, removeBoardMember } from '@services/boards/boards'
+import { searchMatchesAny } from '@/lib/search/normalize'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -205,13 +206,10 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
   // Filter by search query
   const searchFiltered = allUsers.filter((entry: any) => {
     if (!searchQuery.trim()) return true
-    const query = searchQuery.toLowerCase()
     const u = entry.user
-    return (
-      u.username?.toLowerCase().includes(query) ||
-      u.email?.toLowerCase().includes(query) ||
-      u.first_name?.toLowerCase().includes(query) ||
-      u.last_name?.toLowerCase().includes(query)
+    return searchMatchesAny(
+      [u.username, u.email, u.first_name, u.last_name],
+      searchQuery,
     )
   })
 

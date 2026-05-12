@@ -25,6 +25,7 @@ from src.security.org_auth import is_org_member
 from src.security.rbac.constants import ADMIN_ROLE_ID
 from src.services.orgs.invites import send_invite_email
 from src.services.orgs.orgs import get_org_default_language, rbac_check
+from src.services.search.normalization import LIKE_ESCAPE_CHAR, build_like_pattern
 from src.services.users.emails import send_role_changed_email
 from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -105,12 +106,12 @@ async def get_organization_users(
 
     # Apply search filter if provided
     if search:
-        search_pattern = f"%{search}%"
+        search_pattern = build_like_pattern(search)
         base_statement = base_statement.where(
-            (User.first_name.ilike(search_pattern))
-            | (User.last_name.ilike(search_pattern))
-            | (User.username.ilike(search_pattern))
-            | (User.email.ilike(search_pattern))
+            (User.first_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.last_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.username.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.email.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
         )
 
     # Apply role filter
@@ -140,12 +141,12 @@ async def get_organization_users(
             .join(UserGroupUser, (UserGroupUser.user_id == User.id) & (UserGroupUser.usergroup_id == usergroup_id))
         )
         if search:
-            search_pattern = f"%{search}%"
+            search_pattern = build_like_pattern(search)
             in_group_count_stmt = in_group_count_stmt.where(
-                (User.first_name.ilike(search_pattern))
-                | (User.last_name.ilike(search_pattern))
-                | (User.username.ilike(search_pattern))
-                | (User.email.ilike(search_pattern))
+                (User.first_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+                | (User.last_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+                | (User.username.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+                | (User.email.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
             )
         in_group_total = db_session.exec(in_group_count_stmt).one()
 
@@ -304,12 +305,12 @@ async def export_organization_users_csv(
     )
 
     if search:
-        search_pattern = f"%{search}%"
+        search_pattern = build_like_pattern(search)
         base_statement = base_statement.where(
-            (User.first_name.ilike(search_pattern))
-            | (User.last_name.ilike(search_pattern))
-            | (User.username.ilike(search_pattern))
-            | (User.email.ilike(search_pattern))
+            (User.first_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.last_name.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.username.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
+            | (User.email.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
         )
 
     if role_id is not None:

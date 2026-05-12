@@ -24,6 +24,7 @@ import {
 } from '@/lib/dashboard-search/useContentSearch'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { isFeatureAvailable } from '@services/plans/plans'
+import { normalizeForSearch } from '@/lib/search/normalize'
 
 const CONTENT_TYPE_ICON: Record<ContentResultType, SearchMeta['icon']> = {
   course: BookOpen,
@@ -202,11 +203,11 @@ export default function CommandPalette() {
             label={t('dashboard.search.placeholder')}
             shouldFilter={true}
             filter={(value: string, search: string) => {
-              const haystack = value.toLowerCase()
-              const needle = search.toLowerCase().trim()
+              const haystack = normalizeForSearch(value)
+              const needle = normalizeForSearch(search)
               if (!needle) return 1
               if (haystack.includes(needle)) return 1
-              const tokens = needle.split(/\s+/).filter(Boolean)
+              const tokens = needle.split(/\s+/u).filter(Boolean)
               return tokens.every((tok: string) => haystack.includes(tok)) ? 0.8 : 0
             }}
             className="flex flex-col [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-[10.5px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:text-white/35"

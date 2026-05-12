@@ -6,6 +6,7 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { inviteBatchUsers, removeInvitedUser } from '@services/organizations/invites'
 import { swrFetcher } from '@services/utils/ts/requests'
+import { searchMatches } from '@/lib/search/normalize'
 import {
   Info,
   UserPlus,
@@ -69,8 +70,7 @@ function OrgUsersAdd() {
   const filteredUsers = useMemo(() => {
     if (!invited_users) return []
     if (!searchValue) return invited_users
-    const q = searchValue.toLowerCase()
-    return invited_users.filter((u: any) => u.email?.toLowerCase().includes(q))
+    return invited_users.filter((u: any) => searchMatches(u.email, searchValue))
   }, [invited_users, searchValue])
 
   const totalFiltered = filteredUsers.length

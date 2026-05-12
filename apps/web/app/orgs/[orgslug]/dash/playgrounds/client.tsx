@@ -36,6 +36,7 @@ import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/P
 import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import { usePlan } from '@components/Hooks/usePlan'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PlaygroundsListClientProps {
   org_id: number
@@ -70,10 +71,8 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return allPlaygrounds
-    const q = searchQuery.toLowerCase()
-    return allPlaygrounds.filter(
-      (pg: any) =>
-        pg.name?.toLowerCase().includes(q) || pg.description?.toLowerCase().includes(q)
+    return allPlaygrounds.filter((pg: any) =>
+      searchMatchesAny([pg.name, pg.description], searchQuery)
     )
   }, [allPlaygrounds, searchQuery])
 

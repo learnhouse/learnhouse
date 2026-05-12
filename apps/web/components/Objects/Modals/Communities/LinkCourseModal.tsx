@@ -9,6 +9,7 @@ import { getOrgCourses } from '@services/courses/courses'
 import { revalidateTags } from '@services/utils/ts/requests'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2, Link2, Unlink, Search } from 'lucide-react'
+import { searchMatches } from '@/lib/search/normalize'
 
 interface LinkCourseModalProps {
   isOpen: boolean
@@ -60,7 +61,7 @@ export function LinkCourseModal({
   }, [isOpen, orgSlug, accessToken])
 
   const filteredCourses = courses.filter(course =>
-    course.name.toLowerCase().includes(searchQuery.toLowerCase())
+    searchMatches(course.name, searchQuery)
   )
 
   const handleLink = async () => {
