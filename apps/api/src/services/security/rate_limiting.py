@@ -295,6 +295,26 @@ def check_search_rate_limit(user_id: int) -> Tuple[bool, int]:
     return is_allowed, retry_after
 
 
+def check_admin_user_provision_rate_limit(api_token_id: int) -> Tuple[bool, int]:
+    """
+    Rate limit admin-API user provisioning at 30/min per API token.
+
+    Provisioning creates DB rows, increments member usage (billing-relevant),
+    and fires webhooks/analytics. Without a cap, a leaked or buggy integration
+    can fan out resource creation and exhaust limits for the org.
+
+    Returns:
+        Tuple of (is_allowed, retry_after_seconds)
+    """
+    key = f"admin_user_provision:{api_token_id}"
+    is_allowed, _count, retry_after = check_rate_limit(
+        key=key,
+        max_attempts=30,
+        window_seconds=60,
+    )
+    return is_allowed, retry_after
+
+
 def check_admin_user_lookup_rate_limit(api_token_id: int) -> Tuple[bool, int]:
     """
     Rate limit admin-API user lookups by email at 60/min per API token.

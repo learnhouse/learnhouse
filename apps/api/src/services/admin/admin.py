@@ -747,14 +747,75 @@ async def provision_user(
                 },
             )
 
+    role = db_session.exec(select(Role).where(Role.id == role_id)).first()
+    if not role:
+        raise HTTPException(status_code=400, detail="Role not found")
+    if role.org_id is not None and role.org_id != token_user.org_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Role does not belong to this organization",
+        )
+
     check_limits_with_usage("members", token_user.org_id, db_session)
 
-    if db_session.exec(select(User).where(User.email == email)).first():
-        raise HTTPException(status_code=400, detail="Email already exists")
+    now = datetime.now()
+
+    existing_user = db_session.exec(select(User).where(User.email == email)).first()
+    if existing_user:
+        # Email matches an existing account — treat this as "attach to org"
+        # rather than "create new user". Previously this raised 400 and left
+        # any user that had been created in a prior aborted call as an orphan
+        # (in the users table but with no UserOrganization row).
+        existing_membership = db_session.exec(
+            select(UserOrganization).where(
+                UserOrganization.user_id == existing_user.id,
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).first()
+        if existing_membership:
+            raise HTTPException(
+                status_code=400,
+                detail="Email already exists in this organization",
+            )
+
+        membership = UserOrganization(
+            user_id=existing_user.id if existing_user.id else 0,
+            org_id=token_user.org_id,
+            role_id=role_id,
+            creation_date=str(now),
+            update_date=str(now),
+        )
+        db_session.add(membership)
+        db_session.commit()
+
+        increase_feature_usage("members", token_user.org_id, db_session)
+
+        await track(
+            event_name=analytics_events.USER_SIGNED_UP,
+            org_id=token_user.org_id,
+            user_id=existing_user.id if existing_user.id else 0,
+            properties={"signup_method": "admin_api_attach"},
+        )
+        await dispatch_webhooks(
+            event_name=analytics_events.USER_SIGNED_UP,
+            org_id=token_user.org_id,
+            data={
+                "user": {
+                    "user_uuid": existing_user.user_uuid,
+                    "email": existing_user.email,
+                    "username": existing_user.username,
+                    "first_name": existing_user.first_name,
+                    "last_name": existing_user.last_name,
+                },
+                "signup_method": "admin_api_attach",
+            },
+        )
+
+        return UserRead.model_validate(existing_user)
+
     if db_session.exec(select(User).where(User.username == username)).first():
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    now = datetime.now()
     user = User(
         username=username,
         email=email,
