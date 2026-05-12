@@ -7,6 +7,11 @@ from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import User, UserRead
 from src.db.resource_authors import ResourceAuthor
+from src.services.search.normalization import (
+    LIKE_ESCAPE_CHAR,
+    build_like_pattern,
+    normalize_search_term,
+)
 
 
 def _get_sort_expression(salt: str):
@@ -138,17 +143,18 @@ async def search_orgs_for_explore(
     limit: int = 10,
     salt: str = "",
 ) -> list[OrganizationRead]:
-    # Create a combined search vector
-    search_terms = search_query.split()
+    # Tokenize on unicode whitespace after NFC-normalizing so emoji + diacritics
+    # in the query don't drop terms or split mid-grapheme.
+    search_terms = normalize_search_term(search_query).split()
     search_conditions = []
-    
+
     for term in search_terms:
-        term_pattern = f"%{term}%"
+        term_pattern = build_like_pattern(term)
         search_conditions.append(
-            (Organization.name.ilike(term_pattern)) | #type: ignore
-            (Organization.about.ilike(term_pattern)) | #type: ignore
-            (Organization.description.ilike(term_pattern)) | #type: ignore
-            (Organization.label.ilike(term_pattern)) #type: ignore
+            (Organization.name.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) | #type: ignore
+            (Organization.about.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) | #type: ignore
+            (Organization.description.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) | #type: ignore
+            (Organization.label.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) #type: ignore
         )
     
     statement = (

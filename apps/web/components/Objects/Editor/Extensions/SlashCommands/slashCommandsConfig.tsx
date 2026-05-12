@@ -32,6 +32,7 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import { SlashCommandItem, SlashCommandCategory } from './types'
 import React from 'react'
+import { searchMatchesAny, normalizeForSearch } from '@/lib/search/normalize'
 
 export const categoryLabels: Record<SlashCommandCategory, string> = {
   text: 'Text',
@@ -448,12 +449,10 @@ export const slashCommands: SlashCommandItem[] = [
 export function filterCommands(query: string): SlashCommandItem[] {
   if (!query) return slashCommands
 
-  const lowerQuery = query.toLowerCase()
   return slashCommands.filter(
     (item) =>
-      item.title.toLowerCase().includes(lowerQuery) ||
-      item.description.toLowerCase().includes(lowerQuery) ||
-      item.keywords.some((keyword) => keyword.toLowerCase().includes(lowerQuery))
+      searchMatchesAny([item.title, item.description], query) ||
+      item.keywords.some((keyword) => normalizeForSearch(keyword).includes(normalizeForSearch(query)))
   )
 }
 

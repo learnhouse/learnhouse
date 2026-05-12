@@ -14,6 +14,11 @@ from src.db.communities.discussions import Discussion, DiscussionRead
 from src.db.playgrounds import Playground, PlaygroundRead, PlaygroundAccessType
 from src.db.podcasts.podcasts import Podcast, PodcastRead
 from src.services.courses.courses import search_courses
+from src.services.search.normalization import (
+    LIKE_ESCAPE_CHAR,
+    build_like_pattern,
+    escape_like_wildcards,
+)
 from src.security.auth import resolve_acting_user_id
 from src.security.org_auth import is_org_member
 
@@ -63,9 +68,7 @@ def _empty_result() -> SearchResult:
     )
 
 
-def _escape_like_wildcards(query: str) -> str:
-    """Escape SQL LIKE wildcards to prevent enumeration via pattern matching."""
-    return query.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+_escape_like_wildcards = escape_like_wildcards  # back-compat alias for existing tests
 
 
 def _ilike_any(columns: Sequence[ColumnElement[Any]], pattern: str) -> ColumnElement[bool]:
@@ -74,7 +77,7 @@ def _ilike_any(columns: Sequence[ColumnElement[Any]], pattern: str) -> ColumnEle
     Uses SQLAlchemy's `ilike`, which is parameterized and keeps the driver
     responsible for escaping — no string interpolation on user input.
     """
-    return or_(*(column.ilike(pattern) for column in columns))
+    return or_(*(column.ilike(pattern, escape=LIKE_ESCAPE_CHAR) for column in columns))
 
 
 def _paginate_and_count(
@@ -117,7 +120,7 @@ async def search_across_org(
 
     limit = min(limit, 50)
 
-    pattern = f"%{_escape_like_wildcards(search_query)}%"
+    pattern = build_like_pattern(search_query)
 
     org = db_session.exec(
         select(Organization).where(Organization.slug == org_slug)

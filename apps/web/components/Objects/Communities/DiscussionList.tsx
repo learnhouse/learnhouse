@@ -17,6 +17,7 @@ import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useDiscussions, mutateDiscussions } from '@components/Hooks/useDiscussions'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface DiscussionListProps {
   communityUuid: string
@@ -107,12 +108,11 @@ export function DiscussionList({
   // Filter discussions based on search query
   const filteredDiscussions = useMemo(() => {
     if (!searchQuery.trim()) return discussions
-    const query = searchQuery.toLowerCase()
     return discussions.filter(d =>
-      d.title.toLowerCase().includes(query) ||
-      (d.author?.username?.toLowerCase().includes(query)) ||
-      (d.author?.first_name?.toLowerCase().includes(query)) ||
-      (d.author?.last_name?.toLowerCase().includes(query))
+      searchMatchesAny(
+        [d.title, d.author?.username, d.author?.first_name, d.author?.last_name],
+        searchQuery,
+      )
     )
   }, [discussions, searchQuery])
 
