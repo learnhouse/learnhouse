@@ -11,6 +11,7 @@ import {
     ChevronDown,
     Clock,
     Inbox,
+    RotateCcw,
     Search,
     SendHorizonal,
     Users,
@@ -463,6 +464,16 @@ function SubmissionRow({
                 {status.icon}
                 <span>{status.label}</span>
             </div>
+
+            {/* Attempt indicator — only shown when the student is past the
+                first attempt so the row stays uncluttered for the common
+                case of a single submission. */}
+            {submission.attempt_number && submission.attempt_number > 1 && (
+                <div className="flex items-center space-x-1 px-2.5 py-1 rounded-full mr-4 text-xs font-semibold bg-fuchsia-50 text-fuchsia-700">
+                    <RotateCcw size={11} />
+                    <span>{t('assignments.attempt_label')} {submission.attempt_number}</span>
+                </div>
+            )}
 
             {/* Evaluate button */}
             <Modal

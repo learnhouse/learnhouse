@@ -20,6 +20,8 @@ import {
   Zap,
   Shield,
   Eye,
+  RotateCcw,
+  Infinity as InfinityIcon,
 } from 'lucide-react'
 
 function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
@@ -37,6 +39,8 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const [autoGrading, setAutoGrading] = React.useState(false)
   const [antiCopyPaste, setAntiCopyPaste] = React.useState(false)
   const [showCorrectAnswers, setShowCorrectAnswers] = React.useState(false)
+  const [allowRetries, setAllowRetries] = React.useState(false)
+  const [maxRetries, setMaxRetries] = React.useState(0)
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -65,6 +69,8 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
         auto_grading: autoGrading,
         anti_copy_paste: antiCopyPaste,
         show_correct_answers: showCorrectAnswers,
+        allow_retries: allowRetries,
+        max_retries: allowRetries ? maxRetries : 0,
         course_id: course?.courseStructure.id,
         org_id: org?.id,
         chapter_id: chapterId,
@@ -228,6 +234,85 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
             checked={showCorrectAnswers}
             onChange={setShowCorrectAnswers}
           />
+          <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+            <div className="flex items-start justify-between gap-3 p-3">
+              <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                <div className="mt-0.5 flex-none">
+                  <RotateCcw size={16} className="text-fuchsia-500" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <p className="text-xs font-bold text-gray-900">
+                    {t('dashboard.assignments.modals.edit.form.allow_retries_label')}
+                  </p>
+                  <p className="text-[10px] text-gray-500 leading-snug mt-0.5">
+                    {t('dashboard.assignments.modals.edit.form.allow_retries_description')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAllowRetries(!allowRetries)}
+                aria-pressed={allowRetries}
+                className={`relative flex-none inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  allowRetries ? 'bg-gray-900' : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                    allowRetries ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            {allowRetries && (
+              <div className="border-t border-gray-100 px-3 py-3 bg-gray-50/50">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col min-w-0">
+                    <p className="text-[11px] font-semibold text-gray-700">
+                      {t('dashboard.assignments.modals.edit.form.max_retries_label')}
+                    </p>
+                    <p className="text-[10px] text-gray-500 leading-snug mt-0.5 flex items-center gap-1">
+                      {maxRetries === 0 ? (
+                        <>
+                          <InfinityIcon size={11} className="text-fuchsia-500" />
+                          <span>{t('dashboard.assignments.modals.edit.form.max_retries_unlimited')}</span>
+                        </>
+                      ) : (
+                        <span>{t('dashboard.assignments.modals.edit.form.max_retries_bounded')}</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex-none flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMaxRetries(Math.max(0, maxRetries - 1))}
+                      className="h-7 w-7 rounded-md bg-white border border-gray-200 nice-shadow text-gray-600 hover:bg-gray-50 text-sm font-bold"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={maxRetries}
+                      onChange={(e) => {
+                        const raw = parseInt(e.target.value, 10)
+                        setMaxRetries(isNaN(raw) ? 0 : Math.max(0, Math.min(20, raw)))
+                      }}
+                      className="w-12 h-7 text-center text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:ring-1 focus:ring-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMaxRetries(Math.min(20, maxRetries + 1))}
+                      className="h-7 w-7 rounded-md bg-white border border-gray-200 nice-shadow text-gray-600 hover:bg-gray-50 text-sm font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

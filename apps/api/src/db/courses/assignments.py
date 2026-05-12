@@ -35,6 +35,16 @@ class AssignmentBase(SQLModel):
     # so existing assignments don't start leaking answer keys automatically —
     # the teacher must explicitly opt in.
     show_correct_answers: Optional[bool] = False
+    # When True, after a submission is GRADED the student may reset their work
+    # and try the assignment again. The retry wipes per-task submissions and
+    # the user submission row back to a fresh state — only the attempt
+    # counter on AssignmentUserSubmission survives, so a future grade
+    # replaces the previous one (no submission history is kept).
+    allow_retries: Optional[bool] = False
+    # Upper bound on the number of attempts. 0 means unlimited. The first
+    # submission is attempt 1, so a teacher who sets max_retries=3 gives the
+    # student up to 3 graded attempts total (initial + 2 retries).
+    max_retries: Optional[int] = 0
 
     org_id: int
     course_id: int
@@ -72,6 +82,8 @@ class AssignmentUpdate(SQLModel):
     auto_grading: Optional[bool] = None
     anti_copy_paste: Optional[bool] = None
     show_correct_answers: Optional[bool] = None
+    allow_retries: Optional[bool] = None
+    max_retries: Optional[int] = None
     org_id: Optional[int] = None
     course_id: Optional[int] = None
     chapter_id: Optional[int] = None
@@ -292,6 +304,12 @@ class AssignmentUserSubmissionBase(SQLModel):
     # Optional overall note left by the instructor on the assignment as a whole
     # (separate from task_submission_grade_feedback which is per-task).
     overall_feedback: Optional[str] = None
+    # Which attempt produced this row. The first submission is attempt 1.
+    # When retries are enabled, the retry endpoint resets the row in place
+    # (status -> PENDING, grade -> 0, attempt_number incremented) so a single
+    # AssignmentUserSubmission row tracks the student's latest attempt while
+    # still bounding how many times they can resubmit.
+    attempt_number: int = 1
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )
@@ -323,6 +341,7 @@ class AssignmentUserSubmissionUpdate(SQLModel):
     submission_status: Optional[AssignmentUserSubmissionStatus] = None
     grade: Optional[str] = None
     overall_feedback: Optional[str] = None
+    attempt_number: Optional[int] = None
     user_id: Optional[int] = None
     assignment_id: Optional[int] = None
 
@@ -340,6 +359,7 @@ class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
     )
     grade: int
     overall_feedback: Optional[str] = None
+    attempt_number: int = 1
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )

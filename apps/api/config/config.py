@@ -546,7 +546,12 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Surface missing internal-service keys at boot rather than at first
     # request — the per-endpoint handlers fail closed either way, but a
     # 403 from a cron job is harder to diagnose than a startup log line.
-    if not development_mode:
+    #
+    # These keys are SaaS-only — they secure RPC calls from the platform
+    # control plane (custom domains, plans, internal cron) to the per-tenant
+    # backend. Self-hosted EE / OSS deployments don't run that control plane
+    # and don't need them, so suppress the warning in those modes.
+    if not development_mode and saas_mode:
         import logging as _cfg_log
         _log = _cfg_log.getLogger(__name__)
         if not os.environ.get("CLOUD_INTERNAL_KEY"):

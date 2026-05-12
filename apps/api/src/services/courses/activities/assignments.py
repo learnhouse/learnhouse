@@ -1774,7 +1774,12 @@ async def create_assignment_submission(
             detail="Assignment not found",
         )
 
-    # Check if the submission has already been made
+    # Check if the submission has already been made. A row in PENDING /
+    # NOT_SUBMITTED state means the student previously hit "Try again":
+    # retry_assignment_submission left the row in place so the attempt
+    # counter survives, but cleared everything else. Treat that as a
+    # fresh-submission slot — flip status to SUBMITTED and reuse the row
+    # — instead of erroring out on the existing row.
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
         AssignmentUserSubmission.user_id == current_user.id,
@@ -1783,10 +1788,15 @@ async def create_assignment_submission(
     assignment_user_submission = db_session.exec(statement).first()
 
     if assignment_user_submission:
-        raise HTTPException(
-            status_code=400,
-            detail="Assignment User Submission already exists",
+        reusable_states = (
+            AssignmentUserSubmissionStatus.PENDING,
+            AssignmentUserSubmissionStatus.NOT_SUBMITTED,
         )
+        if assignment_user_submission.submission_status not in reusable_states:
+            raise HTTPException(
+                status_code=400,
+                detail="Assignment User Submission already exists",
+            )
 
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
@@ -1801,22 +1811,40 @@ async def create_assignment_submission(
     # RBAC check
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
-    # Create Assignment User Submission
-    assignment_user_submission = AssignmentUserSubmission(
-        user_id=current_user.id,
-        assignment_id=assignment.id,  # type: ignore
-        grade=0,
-        assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
-        submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
+    # Either reuse the existing PENDING row (retry path) or create a fresh
+    # submission. On the retry path we keep the original
+    # assignmentusersubmission_uuid so external systems that already store a
+    # reference don't break. The creation_date IS refreshed to the time of
+    # this new attempt — the teacher's submissions list sorts by submitted-at
+    # and a stale original date would put a brand-new retry at the bottom
+    # next to old submissions.
+    if assignment_user_submission:
+        assignment_user_submission.submission_status = (
+            AssignmentUserSubmissionStatus.SUBMITTED
+        )
+        assignment_user_submission.grade = 0
+        assignment_user_submission.creation_date = str(datetime.now())
+        assignment_user_submission.update_date = str(datetime.now())
+    else:
+        assignment_user_submission = AssignmentUserSubmission(
+            user_id=current_user.id,
+            assignment_id=assignment.id,  # type: ignore
+            grade=0,
+            assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
+            submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
+            attempt_number=1,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
 
     # Insert Assignment User Submission in DB
     db_session.add(assignment_user_submission)
     db_session.commit()
 
-    # Track assignment submission
+    # Track assignment submission. attempt_number lets downstream consumers
+    # (analytics, webhooks) tell a retry resubmit from the original — without
+    # it, retries would silently double-count.
+    submitted_attempt_number = int(assignment_user_submission.attempt_number or 1)
     await track(
         event_name=analytics_events.ASSIGNMENT_SUBMITTED,
         org_id=course.org_id,
@@ -1824,6 +1852,7 @@ async def create_assignment_submission(
         properties={
             "assignment_uuid": assignment_uuid,
             "course_uuid": course.course_uuid,
+            "attempt_number": submitted_attempt_number,
         },
     )
     await dispatch_webhooks(
@@ -1833,6 +1862,7 @@ async def create_assignment_submission(
             "user": {"user_uuid": current_user.user_uuid, "email": current_user.email, "username": current_user.username},
             "assignment": {"assignment_uuid": assignment_uuid},
             "course": {"course_uuid": course.course_uuid, "name": course.name},
+            "attempt_number": submitted_attempt_number,
         },
     )
 
@@ -1906,6 +1936,17 @@ async def create_assignment_submission(
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
+        db_session.add(trailstep)
+        db_session.commit()
+        db_session.refresh(trailstep)
+    else:
+        # Existing trail step — either from prior progress saves, or because
+        # the student just hit "Try again" (the retry endpoint flipped it to
+        # incomplete). Re-flip it to complete now that the assignment is
+        # back in SUBMITTED state. The first-submission branch above sets
+        # complete=True; this keeps the reuse path consistent.
+        trailstep.complete = True
+        trailstep.update_date = str(datetime.now())
         db_session.add(trailstep)
         db_session.commit()
         db_session.refresh(trailstep)
@@ -2260,6 +2301,167 @@ async def delete_assignment_submission(
     db_session.commit()
 
     return {"message": "Assignment User Submission deleted"}
+
+
+async def retry_assignment_submission(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+):
+    """
+    Reset the current user's submission for ``assignment_uuid`` so they can
+    attempt it again. The teacher must have opted in via ``allow_retries``;
+    we additionally bound the number of retries with ``max_retries`` (0
+    means unlimited).
+
+    On retry we keep the AssignmentUserSubmission row in place so the
+    attempt counter survives. Everything else is wiped: per-task
+    submissions are deleted, the row is flipped to PENDING with grade=0,
+    the matching TrailStep is reset to incomplete, and any issued course
+    certificate is revoked. The student then re-fills the tasks and
+    submits again, at which point ``create_assignment_submission``
+    transitions the existing PENDING row to SUBMITTED.
+    """
+    _block_api_tokens(current_user)
+
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    if not assignment.allow_retries:
+        raise HTTPException(
+            status_code=403,
+            detail="Retries are not enabled for this assignment",
+        )
+
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # Only READ permission is required: the student is rescheduling their
+    # own work, not editing the assignment configuration.
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
+
+    # Row-level lock on the user's submission so two concurrent retries can't
+    # both read attempt_number=N, pass the cap check, and increment to N+1 —
+    # which would let students sneak past max_retries on a double-click. The
+    # lock is released on commit/rollback at the end of the function.
+    # SQLite (used in tests) ignores FOR UPDATE and falls back to its own
+    # locking, which is single-writer anyway.
+    statement = (
+        select(AssignmentUserSubmission)
+        .where(
+            AssignmentUserSubmission.user_id == current_user.id,
+            AssignmentUserSubmission.assignment_id == assignment.id,
+        )
+        .with_for_update()
+    )
+    assignment_user_submission = db_session.exec(statement).first()
+    if not assignment_user_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment User Submission not found",
+        )
+
+    # Only graded submissions are eligible to be retried. Retrying a row
+    # that is still SUBMITTED would silently throw away the student's
+    # pending work before the teacher even sees it.
+    if assignment_user_submission.submission_status != AssignmentUserSubmissionStatus.GRADED:
+        raise HTTPException(
+            status_code=400,
+            detail="Only graded submissions can be retried",
+        )
+
+    # Enforce the attempt cap. max_retries=0 means unlimited; otherwise the
+    # current attempt_number must be strictly less than max_retries so the
+    # increment below stays within bounds.
+    current_attempt = int(assignment_user_submission.attempt_number or 1)
+    max_attempts = int(assignment.max_retries or 0)
+    if max_attempts and current_attempt >= max_attempts:
+        raise HTTPException(
+            status_code=403,
+            detail="No retry attempts remaining",
+        )
+
+    # Wipe per-task submissions so the student starts the next attempt with
+    # an empty slate. Without this the prior answers stay on screen and the
+    # auto-grader would just re-grade the existing work.
+    task_ids_statement = select(AssignmentTask.id).where(
+        AssignmentTask.assignment_id == assignment.id
+    )
+    task_ids = [tid for tid in db_session.exec(task_ids_statement).all() if tid is not None]
+    if task_ids:
+        existing_submissions = db_session.exec(
+            select(AssignmentTaskSubmission).where(
+                AssignmentTaskSubmission.user_id == current_user.id,
+                AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
+            )
+        ).all()
+        for ts in existing_submissions:
+            db_session.delete(ts)
+
+    # Mark the activity incomplete again so the student's progress bar
+    # reflects the in-flight retry rather than the (now stale) previous
+    # completion.
+    trailstep_statement = select(TrailStep).where(
+        TrailStep.activity_id == assignment.activity_id,
+        TrailStep.user_id == int(current_user.id),
+    )
+    trailstep = db_session.exec(trailstep_statement).first()
+    if trailstep:
+        trailstep.complete = False
+        trailstep.teacher_verified = False
+        trailstep.grade = ""
+        trailstep.update_date = str(datetime.now())
+        db_session.add(trailstep)
+
+    # Revoke any course certificate previously issued. If this assignment
+    # was the final activity, a new certificate will be re-issued once the
+    # retry attempt is graded and the course is again fully complete.
+    cert_statement = select(Certifications).where(
+        Certifications.course_id == course.id
+    )
+    certification = db_session.exec(cert_statement).first()
+    if certification:
+        cert_user_statement = select(CertificateUser).where(
+            CertificateUser.user_id == int(current_user.id),
+            CertificateUser.certification_id == certification.id,
+        )
+        cert_user = db_session.exec(cert_user_statement).first()
+        if cert_user:
+            db_session.delete(cert_user)
+
+    # Reset the submission row in place. Keeping the same uuid means
+    # downstream consumers (analytics, webhooks) don't see a "new"
+    # submission appear; the attempt_number is the canonical signal that
+    # this is the next attempt.
+    assignment_user_submission.submission_status = AssignmentUserSubmissionStatus.PENDING
+    assignment_user_submission.grade = 0
+    assignment_user_submission.overall_feedback = None
+    assignment_user_submission.attempt_number = current_attempt + 1
+    assignment_user_submission.update_date = str(datetime.now())
+    db_session.add(assignment_user_submission)
+
+    db_session.commit()
+    db_session.refresh(assignment_user_submission)
+
+    return {
+        "message": "Assignment User Submission reset for retry",
+        "attempt_number": assignment_user_submission.attempt_number,
+        "max_retries": max_attempts,
+        "submission": AssignmentUserSubmissionRead.model_validate(
+            assignment_user_submission
+        ).model_dump(),
+    }
 
 
 ## > Assignments Submissions Grading
