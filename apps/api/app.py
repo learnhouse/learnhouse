@@ -9,8 +9,11 @@
 #  ↳ learnhouse.app · github.com/learnhouse/learnhouse
 #  ↳ Created and maintained by @swve © 2022–present
 
+import logging
+
 import uvicorn
 import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
 from fastapi import FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -31,9 +34,15 @@ if learnhouse_config.general_config.sentry_config.dsn:
         environment=learnhouse_config.general_config.env,
         send_default_pii=False,
         enable_logs=True,
-        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.3,
         profile_session_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
         profile_lifecycle="trace",
+        integrations=[
+            LoggingIntegration(
+                level=logging.INFO,
+                event_level=logging.ERROR,
+            ),
+        ],
     )
 
 app = FastAPI(
