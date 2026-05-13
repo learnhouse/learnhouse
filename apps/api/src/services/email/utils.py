@@ -182,17 +182,29 @@ def get_base_url_from_request(request: Request) -> str:
 
 
 def send_email(to: EmailStr, subject: str, body: str):
+    from fastapi import HTTPException
+
     lh_config = get_learnhouse_config()
     mailing = lh_config.mailing_config
     sender = f"LearnHouse <{mailing.system_email_address}>"
 
+    # Resend (and most providers) require a plain `email@example.com` string.
+    # Pydantic's EmailStr is a str subclass, but third-party JSON serializers
+    # can mis-handle it — coerce to a stripped plain str and validate shape
+    # so a malformed stored email surfaces here rather than as an opaque
+    # provider 4xx.
+    to_addr = str(to).strip()
+    if not to_addr or "@" not in to_addr:
+        logger.error("Refusing to send email: invalid recipient %r", to)
+        raise HTTPException(status_code=400, detail="Invalid recipient email address")
+
     if mailing.email_provider == "smtp":
-        return _send_email_smtp(sender, to, subject, body, mailing)
+        return _send_email_smtp(sender, to_addr, subject, body, mailing)
     else:
-        return _send_email_resend(sender, to, subject, body, mailing)
+        return _send_email_resend(sender, to_addr, subject, body, mailing)
 
 
-def _send_email_resend(sender: str, to: EmailStr, subject: str, body: str, mailing):
+def _send_email_resend(sender: str, to: str, subject: str, body: str, mailing):
     from fastapi import HTTPException
     resend.api_key = mailing.resend_api_key
     try:
@@ -210,11 +222,11 @@ def _send_email_resend(sender: str, to: EmailStr, subject: str, body: str, maili
 _SMTP_TIMEOUT = 15
 
 
-def _send_email_smtp(sender: str, to: EmailStr, subject: str, body: str, mailing):
+def _send_email_smtp(sender: str, to: str, subject: str, body: str, mailing):
     from fastapi import HTTPException
     msg = MIMEMultipart("alternative")
     msg["From"] = sender
-    msg["To"] = str(to)
+    msg["To"] = to
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "html"))
 
@@ -229,8 +241,8 @@ def _send_email_smtp(sender: str, to: EmailStr, subject: str, body: str, mailing
         if mailing.smtp_username and mailing.smtp_password:
             server.login(mailing.smtp_username, mailing.smtp_password)
 
-        server.sendmail(mailing.system_email_address, str(to), msg.as_string())
-        return {"id": None, "to": str(to)}
+        server.sendmail(mailing.system_email_address, to, msg.as_string())
+        return {"id": None, "to": to}
     except smtplib.SMTPException as e:
         logger.error("SMTP error sending to %s: %s", to, e, exc_info=True)
         raise HTTPException(status_code=503, detail="Email service error")
