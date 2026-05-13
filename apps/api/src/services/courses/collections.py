@@ -261,11 +261,26 @@ async def get_collections(
     limit: int = 10,
 ) -> List[CollectionRead]:
 
+    # Path param is typed as str but Collection.org_id is bigint. Accept
+    # either numeric id or org slug — resolving slug here keeps older
+    # callers working and avoids Postgres choking on a non-integer value.
+    try:
+        numeric_org_id = int(org_id)
+    except (TypeError, ValueError):
+        from src.db.organizations import Organization
+
+        org_row = db_session.exec(
+            select(Organization).where(Organization.slug == org_id)
+        ).first()
+        if not org_row:
+            return []
+        numeric_org_id = org_row.id
+
     statement_public = select(Collection).where(
-        Collection.org_id == org_id, Collection.public == True
+        Collection.org_id == numeric_org_id, Collection.public == True
     )
     statement_all = (
-        select(Collection).where(Collection.org_id == org_id).distinct(Collection.id) # type: ignore
+        select(Collection).where(Collection.org_id == numeric_org_id).distinct(Collection.id) # type: ignore
     )
 
     acting_user_id = resolve_acting_user_id(current_user)
@@ -287,7 +302,7 @@ async def get_collections(
         .join(Course, CollectionCourse.course_id == Course.id)  # type: ignore
         .where(
             CollectionCourse.collection_id.in_(collection_ids),  # type: ignore
-            CollectionCourse.org_id == org_id
+            CollectionCourse.org_id == numeric_org_id
         )
     )
     if acting_user_id == 0:
