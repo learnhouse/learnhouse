@@ -1,7 +1,7 @@
 """API endpoints for content migration from other LMS platforms."""
 
 from typing import Optional
-from fastapi import APIRouter, Request, UploadFile, File, Depends, Query
+from fastapi import APIRouter, Request, UploadFile, File, Depends, Query, HTTPException
 from sqlmodel import Session
 
 from src.db.users import PublicUser, AnonymousUser
@@ -21,6 +21,21 @@ from src.services.courses.migration.migration_service import (
 )
 
 router = APIRouter()
+
+
+def _migration_value_error_to_http(err: ValueError) -> HTTPException:
+    """
+    Translate the migration service's user-input ValueErrors into proper HTTP
+    responses. The service raises bare ValueError so it stays usable outside an
+    HTTP context (and for test backwards-compatibility); the router maps the
+    well-known messages to 400/404 instead of letting them bubble to a 500.
+    """
+    msg = str(err)
+    if "not found" in msg.lower():
+        return HTTPException(status_code=404, detail=msg)
+    if msg.startswith("Invalid"):
+        return HTTPException(status_code=400, detail=msg)
+    return HTTPException(status_code=400, detail=msg)
 
 
 @router.post(
@@ -44,7 +59,10 @@ async def api_upload_migration_files(
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """Upload files for content migration. Pass temp_id to append to existing upload."""
-    return await upload_migration_files(files, existing_temp_id=temp_id)
+    try:
+        return await upload_migration_files(files, existing_temp_id=temp_id)
+    except ValueError as e:
+        raise _migration_value_error_to_http(e) from e
 
 
 @router.post(
@@ -64,11 +82,14 @@ async def api_suggest_structure(
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """Use AI to suggest a course structure from uploaded files."""
-    return await suggest_structure(
-        temp_id=body.temp_id,
-        course_name=body.course_name,
-        description=body.description,
-    )
+    try:
+        return await suggest_structure(
+            temp_id=body.temp_id,
+            course_name=body.course_name,
+            description=body.description,
+        )
+    except ValueError as e:
+        raise _migration_value_error_to_http(e) from e
 
 
 @router.post(
@@ -91,10 +112,13 @@ async def api_create_from_migration(
     db_session: Session = Depends(get_db_session),
 ):
     """Create a course from the finalized migration tree structure."""
-    return await create_course_from_migration(
-        org_id=org_id,
-        current_user=current_user,
-        db_session=db_session,
-        temp_id=body.temp_id,
-        structure=body.structure,
-    )
+    try:
+        return await create_course_from_migration(
+            org_id=org_id,
+            current_user=current_user,
+            db_session=db_session,
+            temp_id=body.temp_id,
+            structure=body.structure,
+        )
+    except ValueError as e:
+        raise _migration_value_error_to_http(e) from e
