@@ -109,7 +109,7 @@ def record_failed_login(
     Returns:
         Tuple of (is_now_locked, lockout_duration_seconds)
     """
-    from sqlalchemy import update, case, func
+    from sqlalchemy import update, case
 
     distinct_ips = _record_failed_ip(user.id, ip_address)
     MIN_DISTINCT_IPS_FOR_LOCK = 2
@@ -120,16 +120,17 @@ def record_failed_login(
         else False
     )
 
+    lock_until_iso = (
+        datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+    ).isoformat()
+
     stmt = (
         update(User)
         .where(User.id == user.id)
         .values(
             failed_login_attempts=User.failed_login_attempts + 1,
             locked_until=case(
-                (
-                    lock_trigger,
-                    func.now() + timedelta(minutes=LOCKOUT_DURATION_MINUTES),
-                ),
+                (lock_trigger, lock_until_iso),
                 else_=User.locked_until,
             ),
         )
