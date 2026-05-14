@@ -19,9 +19,7 @@ import {
   SelectValue,
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const ITEMS_PER_PAGE = 20
 
@@ -95,7 +93,6 @@ const OrgAuditLogs = () => {
 
   const logs = data?.items || []
   const total = data?.total || 0
-  const currentPlan = usePlan()
   const rf = org?.config?.config?.resolved_features
 
   const handleRefresh = () => {
@@ -169,13 +166,7 @@ const OrgAuditLogs = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan={(rf?.audit_logs?.required_plan || 'enterprise') as PlanLevel}
-      icon={ShieldCheck}
-      titleKey="common.plans.feature_restricted.audit_logs.title"
-      descriptionKey="common.plans.feature_restricted.audit_logs.description"
-    >
+    <FeatureGate feature="audit_logs">
       <>
         <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
@@ -480,7 +471,7 @@ const OrgAuditLogs = () => {
         )}
         </div>
       </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

@@ -53,16 +53,12 @@ import {
   CustomDomainVerificationInfo,
   CustomDomainSSLStatus,
 } from '@services/custom_domains/custom_domains'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
-
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -323,13 +319,7 @@ const OrgEditDomains: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="standard"
-      icon={Globe}
-      titleKey="common.plans.feature_restricted.custom_domains.title"
-      descriptionKey="common.plans.feature_restricted.custom_domains.description"
-    >
+    <FeatureGate feature="custom_domains">
       <>
         <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
           <div className="flex flex-col gap-0">
@@ -713,7 +703,7 @@ const OrgEditDomains: React.FC = () => {
           </DialogContent>
         </Dialog>
       </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

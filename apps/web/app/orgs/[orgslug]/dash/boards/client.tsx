@@ -15,8 +15,7 @@ import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import {
   DropdownMenu,
@@ -24,9 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
-import { PlanLevel } from '@services/plans/plans'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface BoardListClientProps {
@@ -98,7 +95,6 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const plan = usePlan()
 
   const isBoardsEnabled = org?.config?.config?.resolved_features?.boards?.enabled ?? org?.config?.config?.features?.boards?.enabled !== false
 
@@ -241,17 +237,8 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     return pages
   }
 
-  const boardsRequiredPlan =
-    (org?.config?.config?.resolved_features?.boards?.required_plan as PlanLevel | undefined) ?? 'personal'
-
   return (
-    <PlanRestrictedFeature
-      currentPlan={plan}
-      requiredPlan={boardsRequiredPlan}
-      titleKey="Boards"
-      descriptionKey="Create collaborative boards for real-time brainstorming and planning."
-    >
-    <FeatureDisabledView featureName="boards" orgslug={orgslug} context="dashboard">
+    <FeatureGate feature="boards" orgslug={orgslug} context="dashboard">
       <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
         <div className="mb-6 pt-6">
           <Breadcrumbs items={[
@@ -472,8 +459,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
           </div>
         )}
       </div>
-    </FeatureDisabledView>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

@@ -117,6 +117,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) एक प्रीमियम सुविधा है जो केवल हमारे Enterprise प्लान के संगठनों के लिए उपलब्ध है। अपने संगठन के पहचान प्रदाता के माध्यम से सुरक्षित प्रमाणीकरण सक्षम करने हेतु अपग्रेड करें।",
           "title": "Enterprise सुविधा"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "वर्तमान प्लान",
@@ -133,7 +149,8 @@
           "podcasts": "पॉडकास्ट",
           "payments": "भुगतान",
           "trail": "प्रगति ट्रैकिंग",
-          "boards": "बोर्ड"
+          "boards": "बोर्ड",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} उपलब्ध नहीं",

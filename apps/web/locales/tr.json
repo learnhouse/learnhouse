@@ -115,6 +115,22 @@
         "sso": {
           "description": "Tek Oturum Açma (SSO), yalnızca Kurumsal plan organizasyonları için kullanılabilen premium bir özelliktir. Organizasyonunuzun kimlik sağlayıcısı ile güvenli kimlik doğrulamayı etkinleştirmek için yükseltin.",
           "title": "Kurumsal Özellik"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "Mevcut plan",
@@ -131,7 +147,8 @@
           "podcasts": "Podcastler",
           "payments": "Ödemeler",
           "trail": "İlerleme Takibi",
-          "boards": "Panolar"
+          "boards": "Panolar",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} mevcut değil",

@@ -74,8 +74,7 @@ import {
   sendTestEvent,
   getWebhookDeliveryLogs,
 } from '@services/webhooks/webhooks'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 // Types for API-driven event registry
 interface EventInfo {
@@ -110,8 +109,6 @@ const OrgEditAutomations: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
-
   // Fetch event registry from API
   const eventsUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/webhooks/events` : null
   const { data: eventsData } = useSWR<{ events: Record<string, EventInfo> }>(
@@ -337,13 +334,7 @@ const OrgEditAutomations: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="pro"
-      icon={Zap}
-      titleKey="common.plans.feature_restricted.webhooks.title"
-      descriptionKey="common.plans.feature_restricted.webhooks.description"
-    >
+    <FeatureGate feature="webhooks">
       <>
         {/* ── Zapier hero card (hidden until the LearnHouse Zapier app is live) ────────────────────── */}
         {false && (
@@ -759,7 +750,7 @@ const OrgEditAutomations: React.FC = () => {
           </DialogContent>
         </Dialog>
       </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

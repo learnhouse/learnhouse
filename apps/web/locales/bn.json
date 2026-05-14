@@ -117,6 +117,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) একটি প্রিমিয়াম ফিচার যা শুধুমাত্র এন্টারপ্রাইজ প্ল্যানের সংস্থাগুলির জন্য উপলব্ধ। আপনার সংস্থার আইডেন্টিটি প্রোভাইডারের মাধ্যমে নিরাপদ অথেন্টিকেশন সক্রিয় করতে আপগ্রেড করুন।",
           "title": "এন্টারপ্রাইজ ফিচার"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "বর্তমান প্ল্যান",
@@ -133,7 +149,8 @@
           "podcasts": "পডকাস্ট",
           "payments": "পেমেন্ট",
           "trail": "অগ্রগতি ট্র্যাকিং",
-          "boards": "বোর্ড"
+          "boards": "বোর্ড",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} উপলব্ধ নেই",

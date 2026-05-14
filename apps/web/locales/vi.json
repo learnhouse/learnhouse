@@ -115,6 +115,22 @@
         "sso": {
           "description": "Đăng nhập một lần (SSO) là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Enterprise. Nâng cấp để bật xác thực an toàn thông qua nhà cung cấp danh tính của tổ chức bạn.",
           "title": "Tính năng Enterprise"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "Gói hiện tại",
@@ -131,7 +147,8 @@
           "podcasts": "Podcast",
           "payments": "Thanh toán",
           "trail": "Theo dõi tiến độ",
-          "boards": "Bảng"
+          "boards": "Bảng",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} không khả dụng",

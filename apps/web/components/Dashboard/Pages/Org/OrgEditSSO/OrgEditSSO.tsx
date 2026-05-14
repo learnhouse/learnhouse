@@ -16,8 +16,7 @@ import {
   SelectValue,
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import {
   getSSOConfig,
   createSSOConfig,
@@ -29,7 +28,6 @@ import {
   SSOProviderInfo,
   SSOProvider,
 } from '@services/auth/sso'
-import { usePlan } from '@components/Hooks/usePlan'
 import {
   Shield,
   Settings2,
@@ -67,8 +65,6 @@ const OrgEditSSO: React.FC = () => {
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
   const [scopes, setScopes] = useState('openid email profile')
-
-  const currentPlan = usePlan()
   const rf = org?.config?.config?.resolved_features
   const ssoEnabled = rf?.sso?.enabled === true
 
@@ -229,13 +225,7 @@ const OrgEditSSO: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan={(rf?.sso?.required_plan || 'enterprise') as PlanLevel}
-      icon={Shield}
-      titleKey="common.plans.feature_restricted.sso.title"
-      descriptionKey="common.plans.feature_restricted.sso.description"
-    >
+    <FeatureGate feature="sso">
       <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
         <div className="flex flex-col gap-0">
           {/* Header */}
@@ -495,7 +485,7 @@ const OrgEditSSO: React.FC = () => {
           </div>
         </div>
       </div>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

@@ -115,6 +115,22 @@
         "sso": {
           "description": "싱글 사인온(SSO)은 Enterprise 플랜의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 조직의 ID 제공자를 통한 보안 인증을 활성화하려면 업그레이드하세요.",
           "title": "Enterprise 기능"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "현재 플랜",
@@ -131,7 +147,8 @@
           "podcasts": "팟캐스트",
           "payments": "결제",
           "trail": "진행 상황 추적",
-          "boards": "보드"
+          "boards": "보드",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} 사용 불가",

@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { BookOpen, Signpost } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 function Trail(params: any) {
   const { t } = useTranslation()
@@ -65,12 +65,7 @@ function Trail(params: any) {
   useEffect(() => { }, [trail, org])
 
   return (
-    <FeatureDisabledView
-      featureName="courses"
-      orgslug={orgslug}
-      icon={Signpost}
-      context="public"
-    >
+    <FeatureGate feature="courses" orgslug={orgslug} context="public">
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
@@ -131,7 +126,7 @@ function Trail(params: any) {
 
       <UserCertificates orgslug={orgslug} />
     </GeneralWrapperStyled>
-    </FeatureDisabledView>
+    </FeatureGate>
   )
 }
 

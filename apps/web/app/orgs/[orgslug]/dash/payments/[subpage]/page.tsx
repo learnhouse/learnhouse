@@ -12,12 +12,9 @@ import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/Paym
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
 import PaymentsOffersPage from '@components/Dashboard/Pages/Payments/PaymentsOffersPage'
 import PaymentsGroupsPage from '@components/Dashboard/Pages/Payments/PaymentsGroupsPage'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
-import { PlanLevel } from '@services/plans/plans'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { BadgeDollarSign } from 'lucide-react'
 import { isOSSMode } from '@services/config/config'
-import { usePlan } from '@components/Hooks/usePlan'
 
 export type PaymentsParams = {
   subpage: string
@@ -29,8 +26,6 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const subpage = params.subpage || 'overview'
-  const currentPlan = usePlan()
-
   const getPageTitle = () => {
     switch (subpage) {
       case 'overview':
@@ -67,30 +62,15 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   // Gate 1: OSS deployment → payments is EE-only, blocked entirely
   if (isOSSMode()) {
     return (
-      <PlanRestrictedFeature
-        currentPlan={currentPlan}
-        requiredPlan="enterprise"
-        icon={BadgeDollarSign}
-        titleKey="common.plans.feature_restricted.payments.title"
-        descriptionKey="common.plans.feature_restricted.payments.description"
-        fullScreen
-      >
+      <FeatureGate feature="payments">
         <></>
-      </PlanRestrictedFeature>
+      </FeatureGate>
     )
   }
 
   // Gate 2: plan-based restriction for cloud users (standard required)
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="standard"
-      icon={BadgeDollarSign}
-      titleKey="common.plans.feature_restricted.payments.title"
-      descriptionKey="common.plans.feature_restricted.payments.description"
-      fullScreen
-    >
-    <FeatureDisabledView featureName="payments" orgslug={params.orgslug} context="dashboard">
+    <FeatureGate feature="payments">
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
@@ -172,8 +152,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         {(subpage === 'overview' || subpage === 'customers') && <PaymentsCustomersPage />}
       </motion.div>
     </div>
-    </FeatureDisabledView>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 
