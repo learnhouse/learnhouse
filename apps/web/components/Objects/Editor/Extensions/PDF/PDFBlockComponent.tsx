@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import { FileText, Download, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { FileText, DownloadSimple, ArrowsOut, UploadSimple, CircleNotch, WarningCircle } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -109,7 +109,7 @@ function PDFBlockComponent(props: any) {
       <NodeViewWrapper className="block-pdf">
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
-            <FileText className="text-neutral-300" size={32} />
+            <FileText weight="duotone" className="text-neutral-300" size={32} />
             <p className="text-neutral-500">{t('editor.blocks.pdf_block.no_pdf')}</p>
           </div>
         </div>
@@ -134,14 +134,14 @@ function PDFBlockComponent(props: any) {
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                 title={t('editor.blocks.pdf_block.expand_pdf')}
               >
-                <Expand className="w-4 h-4 text-white" />
+                <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
               </button>
               <button
                 onClick={handleDownload}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                 title={t('editor.blocks.pdf_block.download_pdf')}
               >
-                <Download className="w-4 h-4 text-white" />
+                <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
               </button>
             </div>
           </div>
@@ -174,7 +174,7 @@ function PDFBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
-            <FileText className="text-neutral-400" size={16} />
+            <FileText weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.pdf')}
             </span>
@@ -196,12 +196,12 @@ function PDFBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                    <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-blue-500" />
                     <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+                    <UploadSimple weight="duotone" className="w-8 h-8 mx-auto text-neutral-400" />
                     <div>
                       <p className="text-sm font-medium text-neutral-700">
                         {pdf ? pdf.name : t('editor.blocks.pdf_block.drop_or_browse')}
@@ -220,14 +220,14 @@ function PDFBlockComponent(props: any) {
                     disabled={isLoading}
                     className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
                   >
-                    <Upload size={14} />
+                    <UploadSimple weight="duotone" size={14} />
                     {t('editor.blocks.pdf_block.upload_pdf')}
                   </button>
                 </div>
               )}
               {error && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                  <AlertCircle size={16} />
+                  <WarningCircle weight="duotone" size={16} />
                   {error}
                 </div>
               )}
@@ -248,14 +248,14 @@ function PDFBlockComponent(props: any) {
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.pdf_block.expand_pdf')}
                 >
-                  <Expand className="w-4 h-4 text-white" />
+                  <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                 </button>
                 <button
                   onClick={handleDownload}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.pdf_block.download_pdf')}
                 >
-                  <Download className="w-4 h-4 text-white" />
+                  <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
                 </button>
               </div>
             </div>

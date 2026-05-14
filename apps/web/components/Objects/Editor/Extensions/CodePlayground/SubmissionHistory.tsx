@@ -1,15 +1,15 @@
 'use client'
 import React, { useState, useEffect, useCallback } from 'react'
 import {
-  CheckCircle2,
+  CheckCircle,
   XCircle,
-  ChevronDown,
-  ChevronRight,
+  CaretDown,
+  CaretRight,
   Clock,
-  RotateCcw,
-  Loader2,
-  ChevronLeft,
-} from 'lucide-react'
+  ArrowCounterClockwise,
+  CircleNotch,
+  CaretLeft,
+} from '@phosphor-icons/react'
 import { getAPIUrl } from '@services/config/config'
 
 interface Submission {
@@ -84,7 +84,7 @@ export default function SubmissionHistory({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-neutral-400" size={20} />
+        <CircleNotch weight="duotone" className="animate-spin text-neutral-400" size={20} />
       </div>
     )
   }
@@ -137,15 +137,15 @@ export default function SubmissionHistory({
               className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-neutral-100/60 transition-colors"
             >
               {isExpanded ? (
-                <ChevronDown size={14} className="text-neutral-400 shrink-0" />
+                <CaretDown weight="duotone" size={14} className="text-neutral-400 shrink-0" />
               ) : (
-                <ChevronRight size={14} className="text-neutral-400 shrink-0" />
+                <CaretRight weight="duotone" size={14} className="text-neutral-400 shrink-0" />
               )}
 
               {sub.passed ? (
-                <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                <CheckCircle weight="duotone" size={15} className="text-emerald-500 shrink-0" />
               ) : (
-                <XCircle size={15} className="text-red-400 shrink-0" />
+                <XCircle weight="duotone" size={15} className="text-red-400 shrink-0" />
               )}
 
               <span className="text-xs font-semibold text-neutral-700">
@@ -154,7 +154,7 @@ export default function SubmissionHistory({
 
               {sub.execution_time_ms !== null && (
                 <span className="flex items-center gap-0.5 text-[10px] text-neutral-400 ml-auto">
-                  <Clock size={10} />
+                  <Clock weight="duotone" size={10} />
                   {sub.execution_time_ms}ms
                 </span>
               )}
@@ -175,7 +175,7 @@ export default function SubmissionHistory({
                     onClick={() => onRestoreCode(sub.source_code)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-md transition-colors"
                   >
-                    <RotateCcw size={12} />
+                    <ArrowCounterClockwise weight="duotone" size={12} />
                     Restore this code
                   </button>
                 </div>
@@ -195,7 +195,7 @@ export default function SubmissionHistory({
               onClick={() => setPage((p) => p - 1)}
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronLeft size={14} />
+              <CaretLeft weight="duotone" size={14} />
               Previous
             </button>
             <span className="text-[11px] text-neutral-400">
@@ -207,7 +207,7 @@ export default function SubmissionHistory({
               className="flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Next
-              <ChevronRight size={14} />
+              <CaretRight weight="duotone" size={14} />
             </button>
           </div>
         )

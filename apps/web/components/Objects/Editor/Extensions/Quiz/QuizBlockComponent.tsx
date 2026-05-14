@@ -3,14 +3,14 @@ import { v4 as uuidv4 } from 'uuid'
 import { cn } from '@/lib/utils'
 import React from 'react'
 import {
-  BadgeHelp,
+  Question,
   Check,
-  CheckCircle2,
+  CheckCircle,
   Plus,
-  RefreshCcw,
-  Trash2,
+  ArrowCounterClockwise,
+  Trash,
   X,
-} from 'lucide-react'
+} from '@phosphor-icons/react'
 import dynamic from 'next/dynamic'
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -221,7 +221,7 @@ function QuizBlockComponent(props: any) {
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <BadgeHelp className="text-neutral-400" size={15} />
+            <Question weight="duotone" className="text-neutral-400" size={15} />
             <span className="uppercase tracking-widest text-[11px] font-bold text-neutral-400">
               {t('editor.blocks.quiz')}
             </span>
@@ -232,7 +232,7 @@ function QuizBlockComponent(props: any) {
               onClick={addSampleQuestion}
               className="flex items-center gap-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 text-xs font-medium px-2.5 py-1 rounded-md transition-colors outline-none"
             >
-              <Plus size={12} />
+              <Plus weight="duotone" size={12} />
               {t('editor.blocks.quiz_block.add_question')}
             </button>
           ) : (
@@ -243,7 +243,7 @@ function QuizBlockComponent(props: any) {
                 className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200 transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-400 disabled:cursor-not-allowed outline-none"
                 title={t('editor.blocks.quiz_block.reset_answers')}
               >
-                <RefreshCcw size={13} />
+                <ArrowCounterClockwise weight="duotone" size={13} />
               </button>
               <button
                 onClick={handleUserSubmission}
@@ -264,7 +264,7 @@ function QuizBlockComponent(props: any) {
         {/* Empty state */}
         {totalQuestions === 0 && (
           <div className="bg-white rounded-lg nice-shadow flex items-center justify-center gap-2 py-6">
-            <BadgeHelp className="text-neutral-300" size={20} />
+            <Question weight="duotone" className="text-neutral-300" size={20} />
             <p className="text-xs text-neutral-500">
               {isEditable
                 ? t('editor.blocks.quiz_block.empty_editable', {
@@ -326,7 +326,7 @@ function QuizBlockComponent(props: any) {
                         defaultValue: 'Delete question',
                       })}
                     >
-                      <Trash2 size={12} />
+                      <Trash weight="duotone" size={12} />
                     </button>
                   )}
                 </div>
@@ -433,7 +433,7 @@ function QuizBlockComponent(props: any) {
                                 : t('editor.blocks.quiz_block.mark_correct')
                             }
                           >
-                            {answer.correct ? <Check size={12} /> : letter}
+                            {answer.correct ? <Check weight="duotone" size={12} /> : letter}
                           </button>
                         ) : (
                           <div className={chip}>{letter}</div>
@@ -492,15 +492,16 @@ function QuizBlockComponent(props: any) {
                             className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-neutral-400 hover:text-red-500 hover:bg-neutral-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 outline-none"
                             title={t('editor.blocks.quiz_block.delete_answer')}
                           >
-                            <Trash2 size={12} />
+                            <Trash weight="duotone" size={12} />
                           </button>
                         ) : isCorrectReveal ? (
-                          <CheckCircle2
+                          <CheckCircle
+                            weight="duotone"
                             className="shrink-0 text-emerald-500"
                             size={14}
                           />
                         ) : isWrongSelection ? (
-                          <X className="shrink-0 text-red-500" size={14} />
+                          <X weight="duotone" className="shrink-0 text-red-500" size={14} />
                         ) : null}
                       </div>
                     )
@@ -512,7 +513,7 @@ function QuizBlockComponent(props: any) {
                       onClick={() => addAnswer(question.question_id)}
                       className="w-full flex items-center justify-center gap-1 h-7 rounded-lg text-[11px] font-medium text-neutral-500 hover:text-neutral-700 border border-dashed border-neutral-200 hover:border-neutral-300 hover:bg-white transition-colors outline-none"
                     >
-                      <Plus size={11} />
+                      <Plus weight="duotone" size={11} />
                       {t('editor.blocks.quiz_block.add_answer')}
                     </button>
                   )}
@@ -534,9 +535,9 @@ function QuizBlockComponent(props: any) {
               )}
             >
               {submissionMessage === 'correct' ? (
-                <CheckCircle2 size={12} />
+                <CheckCircle weight="duotone" size={12} />
               ) : (
-                <X size={12} />
+                <X weight="duotone" size={12} />
               )}
               {submissionMessage === 'correct'
                 ? t('editor.blocks.quiz_block.all_correct')

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, Save, GitBranch, Image } from 'lucide-react'
+import { Plus, Trash, Gear, Play, ArrowCounterClockwise, ArrowRight, CheckCircle, FloppyDisk, GitBranch, Image } from '@phosphor-icons/react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { ButtonBlack } from '@components/Objects/StyledElements/Form/Form'
 
@@ -182,7 +182,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Play size={16} className="text-blue-600" />
+                <Play weight="duotone" size={16} className="text-blue-600" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">{title}</h3>
@@ -194,14 +194,14 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 onClick={resetPreview}
                 className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg transition-all text-sm font-medium shadow-sm"
               >
-                <RotateCcw size={14} />
+                <ArrowCounterClockwise weight="duotone" size={14} />
                 Reset
               </button>
               <button
                 onClick={() => setShowPreview(false)}
                 className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all text-sm font-medium shadow-sm"
               >
-                <Settings size={14} />
+                <Gear weight="duotone" size={14} />
                 Back to Edit
               </button>
             </div>
@@ -213,7 +213,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
           {previewCurrentId === 'end' ? (
             <div className="text-center py-8 max-w-md mx-auto">
               <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle size={24} className="text-emerald-600" />
+                <CheckCircle weight="duotone" size={24} className="text-emerald-600" />
               </div>
               <h4 className="text-xl font-bold text-slate-900 mb-2">Scenario Complete!</h4>
               <p className="text-slate-600 mb-6 leading-relaxed">
@@ -223,7 +223,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 onClick={resetPreview}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
               >
-                <RotateCcw size={16} />
+                <ArrowCounterClockwise weight="duotone" size={16} />
                 Start Over
               </button>
             </div>
@@ -265,7 +265,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                       <div className="flex-1 text-slate-800 font-medium group-hover:text-blue-900 transition-colors">
                         {option.text}
                       </div>
-                      <ArrowRight size={16} className="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight weight="duotone" size={16} className="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
                   </button>
                 ))}
@@ -274,7 +274,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
           ) : (
             <div className="text-center py-8 max-w-md mx-auto">
               <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <GitBranch size={20} className="text-slate-400" />
+                <GitBranch weight="duotone" size={20} className="text-slate-400" />
               </div>
               <h3 className="text-base font-medium text-slate-900 mb-2">Scenario Not Found</h3>
               <p className="text-slate-500 text-sm">Please check your scenario configuration and try again.</p>
@@ -313,7 +313,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               onClick={() => setShowPreview(true)}
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md"
             >
-              <Play size={14} />
+              <Play weight="duotone" size={14} />
               Preview
             </button>
             <button
@@ -321,7 +321,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               disabled={scenarios.length >= 40}
               className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-900"
             >
-              <Plus size={14} />
+              <Plus weight="duotone" size={14} />
               Add
             </button>
           </div>
@@ -369,7 +369,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                         title="Delete scenario"
                       >
-                        <Trash2 size={14} />
+                        <Trash weight="duotone" size={14} />
                       </button>
                     </div>
                   </div>
@@ -394,7 +394,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         }`}
                         title={scenario.imageUrl && scenario.imageUrl.trim() !== '' ? "Edit image" : "Add image"}
                       >
-                        <Image size={14} />
+                        <Image weight="duotone" size={14} />
                         <span>
                           {scenario.imageUrl && scenario.imageUrl.trim() !== '' ? 'Image' : 'Add Image'}
                         </span>
@@ -454,7 +454,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-all text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-100"
                         title="Add response option"
                       >
-                        <Plus size={12} />
+                        <Plus weight="duotone" size={12} />
                         Add
                       </button>
                     </div>
@@ -500,7 +500,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                               className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 disabled:cursor-not-allowed flex-shrink-0"
                               title="Delete option"
                             >
-                              <Trash2 size={12} />
+                              <Trash weight="duotone" size={12} />
                             </button>
                           </div>
                         </div>
@@ -514,7 +514,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
             {scenarios.length === 0 && (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <GitBranch size={20} className="text-slate-400" />
+                  <GitBranch weight="duotone" size={20} className="text-slate-400" />
                 </div>
                 <h3 className="text-base font-medium text-slate-900 mb-2">No scenarios yet</h3>
                 <p className="text-slate-500 text-sm mb-4">Create your first scenario to get started.</p>
@@ -522,7 +522,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                   onClick={addNewScenario}
                   className="flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition-all font-medium text-sm shadow-sm hover:shadow-md mx-auto"
                 >
-                  <Plus size={14} />
+                  <Plus weight="duotone" size={14} />
                   Create First Scenario
                 </button>
               </div>
@@ -553,7 +553,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
           {!showPreview && (
             <ButtonBlack onClick={handleSave}>
               <div className="flex items-center gap-2">
-                <Save size={16} />
+                <FloppyDisk weight="duotone" size={16} />
                 Save Changes
               </div>
             </ButtonBlack>

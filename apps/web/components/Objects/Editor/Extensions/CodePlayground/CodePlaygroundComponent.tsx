@@ -4,30 +4,30 @@ import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Play,
   Plus,
-  Trash2,
-  CheckCircle2,
+  Trash,
+  CheckCircle,
   XCircle,
-  Loader2,
-  ChevronDown,
-  ChevronRight,
+  CircleNotch,
+  CaretDown,
+  CaretRight,
   Terminal,
   Clock,
-  MemoryStick,
-  CircleDot,
-  RotateCcw,
+  Memory,
+  Circle,
+  ArrowCounterClockwise,
   Lightbulb,
-  Code2,
-  FlaskConical,
+  Code,
+  Flask,
   FileText,
   Copy,
-  ClipboardCheck,
+  ClipboardText,
   Lock,
   Eye,
-  Settings2,
+  GearSix,
   Database,
-  Upload,
-  History,
-} from 'lucide-react'
+  UploadSimple,
+  ClockCounterClockwise,
+} from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -961,11 +961,11 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
   const diff = DIFFICULTY_CONFIG[difficulty]
 
   const tabs: { id: RightTab; label: string; icon: React.ReactNode; badge?: React.ReactNode }[] = [
-    { id: 'description', label: 'Description', icon: <FileText size={13} /> },
+    { id: 'description', label: 'Description', icon: <FileText weight="duotone" size={13} /> },
     {
       id: 'tests',
       label: 'Test Cases',
-      icon: <FlaskConical size={13} />,
+      icon: <Flask weight="duotone" size={13} />,
       badge:
         results && testCases.length > 0 ? (
           <span
@@ -982,12 +982,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
     {
       id: 'output',
       label: 'Output',
-      icon: <Terminal size={13} />,
+      icon: <Terminal weight="duotone" size={13} />,
       badge: results ? (
         <span className="w-2 h-2 rounded-full bg-neutral-400 animate-pulse" />
       ) : null,
     },
-    { id: 'history' as RightTab, icon: <History size={13} />, label: 'History' },
+    { id: 'history' as RightTab, icon: <ClockCounterClockwise weight="duotone" size={13} />, label: 'History' },
   ]
 
   const visibleTabs = isEditable ? tabs.filter(t => t.id !== 'history') : tabs
@@ -1001,7 +1001,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         className={`p-1 rounded-md transition-colors ${copied ? 'text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'} ${className}`}
         title="Copy to clipboard"
       >
-        {copied ? <ClipboardCheck size={12} /> : <Copy size={12} />}
+        {copied ? <ClipboardText weight="duotone" size={12} /> : <Copy weight="duotone" size={12} />}
       </button>
     )
   }
@@ -1051,7 +1051,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Hints</label>
               <button onClick={addHint} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-                <Plus size={11} /> Add
+                <Plus weight="duotone" size={11} /> Add
               </button>
             </div>
             {hints.map((hint, i) => (
@@ -1063,7 +1063,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   placeholder={`Hint ${i + 1}...`}
                 />
                 <button onClick={() => removeHint(i)} className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
-                  <Trash2 size={12} className="text-red-400" />
+                  <Trash weight="duotone" size={12} className="text-red-400" />
                 </button>
               </div>
             ))}
@@ -1077,13 +1077,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               </label>
               {sqliteDbPath ? (
                 <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2.5 nice-shadow">
-                  <Database size={14} className="text-neutral-500 shrink-0" />
+                  <Database weight="duotone" size={14} className="text-neutral-500 shrink-0" />
                   <span className="text-[12px] text-neutral-700 truncate flex-1">{sqliteDbName || 'database.sqlite'}</span>
                   <button
                     onClick={removeSqliteDb}
                     className="p-1 hover:bg-red-50 rounded transition-colors shrink-0"
                   >
-                    <Trash2 size={12} className="text-red-400" />
+                    <Trash weight="duotone" size={12} className="text-red-400" />
                   </button>
                 </div>
               ) : (
@@ -1092,9 +1092,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   className="flex flex-col items-center gap-2 bg-neutral-50 border-2 border-dashed border-neutral-200 rounded-lg px-3 py-4 cursor-pointer hover:border-neutral-300 hover:bg-neutral-100 transition-all"
                 >
                   {isUploadingSqlite ? (
-                    <Loader2 size={16} className="text-neutral-400 animate-spin" />
+                    <CircleNotch weight="duotone" size={16} className="text-neutral-400 animate-spin" />
                   ) : (
-                    <Upload size={16} className="text-neutral-400" />
+                    <UploadSimple weight="duotone" size={16} className="text-neutral-400" />
                   )}
                   <span className="text-[11px] text-neutral-400">
                     {isUploadingSqlite ? 'Uploading...' : 'Upload .sqlite / .db file'}
@@ -1120,9 +1120,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="flex items-center gap-2 text-[11px] font-semibold text-neutral-400 uppercase tracking-wider hover:text-neutral-600 transition-colors w-full"
             >
-              <Settings2 size={12} />
+              <GearSix weight="duotone" size={12} />
               Advanced
-              <ChevronRight size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+              <CaretRight weight="duotone" size={12} className={`ml-auto transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
             </button>
             {showAdvanced && (
               <div className="mt-3 space-y-3">
@@ -1193,7 +1193,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">Additional Files</label>
                     <button onClick={addAdditionalFile} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-                      <Plus size={11} /> Add File
+                      <Plus weight="duotone" size={11} /> Add File
                     </button>
                   </div>
                   <p className="text-[10px] text-neutral-400 mb-2">Files available to the student's code (e.g., data.txt, utils.py).</p>
@@ -1207,7 +1207,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                           placeholder="filename.ext"
                         />
                         <button onClick={() => removeAdditionalFile(i)} className="p-1 hover:bg-red-50 rounded transition-colors">
-                          <Trash2 size={11} className="text-red-400" />
+                          <Trash weight="duotone" size={11} className="text-red-400" />
                         </button>
                       </div>
                       <textarea
@@ -1238,7 +1238,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
 
           {isSqlLanguage && sqliteDbPath && (
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
-              <Database size={10} className="text-neutral-400" />
+              <Database weight="duotone" size={10} className="text-neutral-400" />
               Runs against: {sqliteDbName || 'database.sqlite'}
             </div>
           )}
@@ -1247,13 +1247,13 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             <div className="flex flex-wrap items-center gap-2">
               {timeComplexity && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 border border-neutral-100 nice-shadow">
-                  <Clock size={10} className="text-neutral-400" />
+                  <Clock weight="duotone" size={10} className="text-neutral-400" />
                   Speed: {getComplexityLabel(timeComplexity)}
                 </span>
               )}
               {spaceComplexity && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 border border-neutral-100 nice-shadow">
-                  <MemoryStick size={10} className="text-neutral-400" />
+                  <Memory weight="duotone" size={10} className="text-neutral-400" />
                   Memory: {getComplexityLabel(spaceComplexity)}
                 </span>
               )}
@@ -1265,7 +1265,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Available Files</span>
               {additionalFiles.map((f, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg text-neutral-500 bg-neutral-50 border border-neutral-100 nice-shadow w-fit">
-                  <FileText size={10} className="text-neutral-400" />
+                  <FileText weight="duotone" size={10} className="text-neutral-400" />
                   {f.name}
                 </div>
               ))}
@@ -1279,12 +1279,12 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   onClick={() => setShowSolution(!showSolution)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-neutral-700 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors nice-shadow"
                 >
-                  <Eye size={13} />
+                  <Eye weight="duotone" size={13} />
                   {showSolution ? 'Hide Solution' : 'View Solution'}
                 </button>
               ) : (
                 <div className="flex items-center gap-2 text-[11px] text-neutral-400">
-                  <Lock size={11} />
+                  <Lock weight="duotone" size={11} />
                   <span>Solution available after {maxAttemptsBeforeReveal - attemptCount} more {maxAttemptsBeforeReveal - attemptCount === 1 ? 'attempt' : 'attempts'}</span>
                 </div>
               )}
@@ -1321,14 +1321,14 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {hints.length > 0 && (
             <div className="space-y-2">
               <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Lightbulb size={12} className="text-amber-400" /> Hints
+                <Lightbulb weight="duotone" size={12} className="text-amber-400" /> Hints
               </span>
               {hints.map((hint, i) => (
                 <button key={i} onClick={() => toggleHint(i)} className="w-full text-left">
                   <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/60 border border-amber-100 hover:bg-amber-50 transition-colors nice-shadow">
-                    <Lightbulb size={12} className="text-amber-400 flex-shrink-0" />
+                    <Lightbulb weight="duotone" size={12} className="text-amber-400 flex-shrink-0" />
                     <span className="text-[12px] font-medium text-amber-700 flex-1">Hint {i + 1}</span>
-                    <ChevronRight size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} />
+                    <CaretRight weight="duotone" size={12} className={`text-amber-300 transition-transform ${expandedHints.has(i) ? 'rotate-90' : ''}`} />
                   </div>
                   {expandedHints.has(i) && (
                     <div className="mt-1.5 ml-8 mr-3 text-[12px] text-neutral-600 leading-relaxed pb-1">{hint}</div>
@@ -1348,7 +1348,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       {isEditable && (
         <div className="flex justify-end mb-1">
           <button onClick={addTestCase} className="flex items-center gap-1 text-[11px] font-medium text-neutral-400 hover:text-neutral-600 transition-colors">
-            <Plus size={12} /> Add Test Case
+            <Plus weight="duotone" size={12} /> Add Test Case
           </button>
         </div>
       )}
@@ -1369,9 +1369,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               >
                 <div className="flex items-center gap-3 px-3.5 py-2.5">
                   {r ? (
-                    r.passed ? <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" /> : <XCircle size={15} className="text-red-500 flex-shrink-0" />
+                    r.passed ? <CheckCircle weight="duotone" size={15} className="text-emerald-500 flex-shrink-0" /> : <XCircle weight="duotone" size={15} className="text-red-500 flex-shrink-0" />
                   ) : (
-                    <CircleDot size={15} className="text-neutral-300 flex-shrink-0" />
+                    <Circle weight="duotone" size={15} className="text-neutral-300 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     {isEditable ? (
@@ -1384,7 +1384,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     {r?.time && <span className="text-[10px] text-neutral-400 font-mono">{r.time}s</span>}
                     {isEditable && (
                       <button onClick={() => removeTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={12} className="text-red-400" />
+                        <Trash weight="duotone" size={12} className="text-red-400" />
                       </button>
                     )}
                   </div>
@@ -1428,7 +1428,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
               onClick={addStudentTestCase}
               className="flex items-center gap-1 text-[11px] font-medium text-blue-500 hover:text-blue-600 transition-colors"
             >
-              <Plus size={11} /> Add
+              <Plus weight="duotone" size={11} /> Add
             </button>
           </div>
           {studentTestCases.length === 0 && (
@@ -1443,7 +1443,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   className="flex-1 text-[12px] font-medium text-neutral-700 bg-white border border-neutral-200 rounded px-2 py-1 outline-none focus:border-blue-300"
                 />
                 <button onClick={() => removeStudentTestCase(tc.id)} className="p-1 hover:bg-red-50 rounded transition-colors">
-                  <Trash2 size={11} className="text-red-400" />
+                  <Trash weight="duotone" size={11} className="text-red-400" />
                 </button>
               </div>
               <div className="space-y-1.5">
@@ -1532,7 +1532,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
           {!stdout && !stderr && !compileOut && <pre className="text-[12px] font-mono text-neutral-500 italic">(no output)</pre>}
           {time && (
             <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/5">
-              <Clock size={10} className="text-neutral-500" />
+              <Clock weight="duotone" size={10} className="text-neutral-500" />
               <span className="text-[10px] font-mono text-neutral-500">{(parseFloat(time) * 1000).toFixed(0)}ms</span>
             </div>
           )}
@@ -1544,7 +1544,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
       <div className="p-5 space-y-3 overflow-y-auto h-full">
         {!results ? (
           <div className="flex flex-col items-center justify-center py-14 text-neutral-300">
-            <Terminal size={24} className="mb-2" strokeWidth={1.5} />
+            <Terminal weight="duotone" size={24} className="mb-2" />
             <span className="text-[13px] text-neutral-400">Run your code to see output</span>
           </div>
         ) : (
@@ -1562,7 +1562,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   <div className={`h-full rounded-full transition-all duration-500 ${allPassed ? 'bg-emerald-400' : 'bg-amber-400'}`} style={{ width: `${(passedCount / totalCount) * 100}%` }} />
                 </div>
                 <div className="flex items-center gap-1.5 mt-2">
-                  <CheckCircle2 size={11} className={allPassed ? 'text-emerald-500' : 'text-amber-500'} />
+                  <CheckCircle weight="duotone" size={11} className={allPassed ? 'text-emerald-500' : 'text-amber-500'} />
                   <span className={`text-[11px] font-medium ${allPassed ? 'text-emerald-600' : 'text-amber-600'}`}>
                     {allPassed ? 'All test cases passed' : `${passedCount} of ${totalCount} passed`}
                   </span>
@@ -1574,7 +1574,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             {results?.map((r) => (
               <div key={r.id} className={`rounded-lg border overflow-hidden nice-shadow ${r.passed ? 'border-emerald-100 bg-emerald-50/20' : 'border-red-100 bg-red-50/20'}`}>
                 <div className="flex items-center gap-2 px-3.5 py-2">
-                  {r.passed ? <CheckCircle2 size={13} className="text-emerald-500" /> : <XCircle size={13} className="text-red-500" />}
+                  {r.passed ? <CheckCircle weight="duotone" size={13} className="text-emerald-500" /> : <XCircle weight="duotone" size={13} className="text-red-500" />}
                   <span className="text-[12px] font-semibold text-neutral-700">{r.label}</span>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${r.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                     {r.status?.description || (r.passed ? 'Accepted' : 'Failed')}
@@ -1666,7 +1666,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
         <div className="flex relative" style={{ height: 560 }}>
           {timedMode && !isEditable && !challengeStarted && (
             <div className="absolute inset-0 z-20 bg-[#1a1b26]/95 flex flex-col items-center justify-center gap-4">
-              <Clock size={32} className="text-neutral-400" />
+              <Clock weight="duotone" size={32} className="text-neutral-400" />
               <span className="text-[14px] font-semibold text-neutral-200">Timed Challenge</span>
               <span className="text-[12px] text-neutral-400">
                 You have {Math.floor(timedDurationMs / 60000)} minutes to complete this challenge.
@@ -1701,7 +1701,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
             {/* Header bar — dark */}
             <div className="flex items-center justify-between px-4 border-b border-white/[0.06] shrink-0">
               <div className="flex items-center gap-2.5 py-3">
-                <Code2 size={14} className="text-neutral-500" />
+                <Code weight="duotone" size={14} className="text-neutral-500" />
                 <span className="text-[12px] font-semibold text-neutral-300 tracking-tight">
                   Code Playground
                 </span>
@@ -1718,7 +1718,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       className="flex items-center gap-1.5 text-neutral-500 hover:text-neutral-300 font-medium py-1.5 px-1 text-[12px] transition-colors outline-none"
                     >
                       {languageName}
-                      <ChevronDown size={11} className="text-neutral-500" />
+                      <CaretDown weight="duotone" size={11} className="text-neutral-500" />
                     </button>
                     {showLangDropdown && (
                       <div className="absolute right-0 top-full mt-1 bg-[#24283b] rounded-lg py-1 z-50 max-h-60 overflow-y-auto w-44 border border-white/[0.08] shadow-xl">
@@ -1749,7 +1749,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                     className="flex items-center text-neutral-500 hover:text-neutral-300 py-1.5 px-1 text-[12px] transition-colors outline-none"
                     title="Reset code"
                   >
-                    <RotateCcw size={13} />
+                    <ArrowCounterClockwise weight="duotone" size={13} />
                   </button>
                 )}
               </div>
@@ -1765,7 +1765,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                       : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
                   }`}
                 >
-                  <Code2 size={12} />
+                  <Code weight="duotone" size={12} />
                   main
                 </button>
                 {additionalFiles.map((file, i) => (
@@ -1778,7 +1778,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                         : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.03]'
                     }`}
                   >
-                    <FileText size={12} />
+                    <FileText weight="duotone" size={12} />
                     {file.name || `file-${i + 1}`}
                   </button>
                 ))}
@@ -1844,9 +1844,9 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                   }`}
                 >
                   {isRunning ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <CircleNotch weight="duotone" size={14} className="animate-spin" />
                   ) : (
-                    <Play size={14} />
+                    <Play weight="duotone" size={14} />
                   )}
                   {isEditable ? 'Test Run' : 'Run Code'}
                 </button>
@@ -1860,7 +1860,7 @@ const CodePlaygroundComponent: React.FC = (props: any) => {
                 )}
                 {allPassed && !isEditable && !isRunning && (
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 size={13} className="text-emerald-400" />
+                    <CheckCircle weight="duotone" size={13} className="text-emerald-400" />
                     <span className="text-[12px] font-semibold text-emerald-400">All passed</span>
                   </div>
                 )}

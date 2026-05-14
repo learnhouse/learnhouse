@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { Image, DownloadSimple, TextAlignLeft, TextAlignCenter, TextAlignRight, ArrowsOut, UploadSimple, CircleNotch, WarningCircle } from '@phosphor-icons/react'
 import toast from 'react-hot-toast'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
@@ -231,7 +231,7 @@ function ImageBlockComponent(props: any) {
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title={t('editor.blocks.image_block.expand_image')}
                 >
-                  <Expand className="w-4 h-4 text-white" />
+                  <ArrowsOut weight="duotone" className="w-4 h-4 text-white" />
                 </button>
                 {blockObject && (
                   <button
@@ -239,7 +239,7 @@ function ImageBlockComponent(props: any) {
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title={t('editor.blocks.image_block.download_image')}
                   >
-                    <Download className="w-4 h-4 text-white" />
+                    <DownloadSimple weight="duotone" className="w-4 h-4 text-white" />
                   </button>
                 )}
               </div>
@@ -284,7 +284,7 @@ function ImageBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
-            <Image className="text-neutral-400" size={16} />
+            <Image weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               {t('editor.blocks.image')}
             </span>
@@ -313,12 +313,12 @@ function ImageBlockComponent(props: any) {
                 />
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+                    <CircleNotch weight="duotone" className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
                     <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Upload className="w-7 h-7 mx-auto text-neutral-400" />
+                    <UploadSimple weight="duotone" className="w-7 h-7 mx-auto text-neutral-400" />
                     <div>
                       <p className="text-sm font-medium text-neutral-700">
                         {t('editor.blocks.image_block.drop_or_browse')}
@@ -356,7 +356,7 @@ function ImageBlockComponent(props: any) {
           {/* Error display */}
           {error && (
             <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-              <AlertCircle size={16} />
+              <WarningCircle weight="duotone" size={16} />
               {error}
             </div>
           )}
@@ -413,21 +413,21 @@ function ImageBlockComponent(props: any) {
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_left')}
                     >
-                      <AlignLeft size={14} />
+                      <TextAlignLeft weight="duotone" size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('center')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_center')}
                     >
-                      <AlignCenter size={14} />
+                      <TextAlignCenter weight="duotone" size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('right')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title={t('editor.blocks.common.align_right')}
                     >
-                      <AlignRight size={14} />
+                      <TextAlignRight weight="duotone" size={14} />
                     </button>
                     <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
                     <button
@@ -435,7 +435,7 @@ function ImageBlockComponent(props: any) {
                       className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
                       title={t('editor.blocks.image_block.expand_image')}
                     >
-                      <Expand size={14} />
+                      <ArrowsOut weight="duotone" size={14} />
                     </button>
                   </div>
                 </div>

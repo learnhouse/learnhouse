@@ -1,7 +1,7 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react'
 const Picker = lazy(() => import('@emoji-mart/react'))
-import { ArrowRight, ChevronDown, Link, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react'
+import { ArrowRight, CaretDown, Link, TextAlignLeft, TextAlignCenter, TextAlignRight, Palette } from '@phosphor-icons/react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
@@ -110,27 +110,27 @@ const ButtonsExtension: React.FC = (props: any) => {
         >
           <span>{emoji}</span>
           <NodeViewContent className="content" />
-          <ArrowRight size={14} />
+          <ArrowRight weight="duotone" size={14} />
         </button>
         {isEditable && (
           <div className="flex mt-2 space-x-2">
             <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-1 bg-gray-200 rounded-md">
-              <ChevronDown size={14} />
+              <CaretDown weight="duotone" size={14} />
             </button>
             <button onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 bg-gray-200 rounded-md">
-              <Link size={14} />
+              <Link weight="duotone" size={14} />
             </button>
             <button onClick={() => handleAlignmentChange('left')} className="p-1 bg-gray-200 rounded-md">
-              <AlignLeft size={14} />
+              <TextAlignLeft weight="duotone" size={14} />
             </button>
             <button onClick={() => handleAlignmentChange('center')} className="p-1 bg-gray-200 rounded-md">
-              <AlignCenter size={14} />
+              <TextAlignCenter weight="duotone" size={14} />
             </button>
             <button onClick={() => handleAlignmentChange('right')} className="p-1 bg-gray-200 rounded-md">
-              <AlignRight size={14} />
+              <TextAlignRight weight="duotone" size={14} />
             </button>
             <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-1 bg-gray-200 rounded-md">
-              <Palette size={14} />
+              <Palette weight="duotone" size={14} />
             </button>
           </div>
         )}

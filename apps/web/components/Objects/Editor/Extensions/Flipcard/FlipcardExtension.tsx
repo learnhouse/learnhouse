@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect } from 'react'
-import { RotateCw, Edit, AlignLeft, AlignCenter, AlignRight, Palette, Maximize2, Minimize2, Square } from 'lucide-react'
+import { ArrowClockwise, PencilSimple, TextAlignLeft, TextAlignCenter, TextAlignRight, Palette, ArrowsOutSimple, ArrowsInSimple, Square } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useTranslation } from 'react-i18next'
@@ -164,7 +164,7 @@ const FlipcardExtension: React.FC = (props: any) => {
             )}
           >
             <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
-              <RotateCw size={getIconSizeClass()} className="opacity-70" />
+              <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70" />
             </div>
             <div className="flex-1 flex items-center justify-center">
               {isEditable && isEditingQuestion ? (
@@ -187,7 +187,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                       }}
                       className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
-                      <Edit size={14} />
+                      <PencilSimple weight="duotone" size={14} />
                     </button>
                   )}
                 </div>
@@ -206,7 +206,7 @@ const FlipcardExtension: React.FC = (props: any) => {
             )}
           >
             <div className="flex items-center justify-center mb-3 select-none pointer-events-none">
-              <RotateCw size={getIconSizeClass()} className="opacity-70 rotate-180" />
+              <ArrowClockwise weight="duotone" size={getIconSizeClass()} className="opacity-70 rotate-180" />
             </div>
             <div className="flex-1 flex items-center justify-center">
               {isEditable && isEditingAnswer ? (
@@ -229,7 +229,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                       }}
                       className="ml-2 opacity-60 hover:opacity-100 flex-shrink-0 pointer-events-auto"
                     >
-                      <Edit size={14} />
+                      <PencilSimple weight="duotone" size={14} />
                     </button>
                   )}
                 </div>
@@ -256,7 +256,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_left')}
             >
-              <AlignLeft size={12} />
+              <TextAlignLeft weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -269,7 +269,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_center')}
             >
-              <AlignCenter size={12} />
+              <TextAlignCenter weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -282,7 +282,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.align_right')}
             >
-              <AlignRight size={12} />
+              <TextAlignRight weight="duotone" size={12} />
             </button>
 
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
@@ -299,7 +299,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_small')}
             >
-              <Minimize2 size={12} />
+              <ArrowsInSimple weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -312,7 +312,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_medium')}
             >
-              <Square size={12} />
+              <Square weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -325,7 +325,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
               title={t('activities.size_large')}
             >
-              <Maximize2 size={12} />
+              <ArrowsOutSimple weight="duotone" size={12} />
             </button>
 
             <div className="w-px h-4 bg-neutral-300 self-center mx-1"></div>
@@ -339,7 +339,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               className="p-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 rounded-md transition-colors text-xs"
               title={t('activities.change_color')}
             >
-              <Palette size={12} />
+              <Palette weight="duotone" size={12} />
             </button>
             <button
               onClick={(e) => {
@@ -349,7 +349,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               className="p-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-600 rounded-md transition-colors text-xs"
               title={t('activities.preview_flip')}
             >
-              <RotateCw size={12} />
+              <ArrowClockwise weight="duotone" size={12} />
             </button>
           </div>
         )}

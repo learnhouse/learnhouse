@@ -1,32 +1,31 @@
 import {
-  AlertCircle,
-  AlertTriangle,
-  BadgeHelp,
+  WarningCircle,
+  Question,
   Code,
-  CodeSquare,
-  Cuboid,
+  CodeBlock,
+  Cube,
   FileText,
   Globe,
   GitBranch,
   Headphones,
-  Heading1,
-  Heading2,
-  Heading3,
-  Heading4,
-  Heading5,
-  Heading6,
-  ImagePlus,
+  TextHOne,
+  TextHTwo,
+  TextHThree,
+  TextHFour,
+  TextHFive,
+  TextHSix,
+  ImageSquare,
   List,
-  ListOrdered,
-  MousePointerClick,
-  Pilcrow,
-  RotateCw,
+  ListNumbers,
+  CursorClick,
+  Paragraph,
+  ArrowClockwise,
   Sigma,
   Table,
-  Tags,
+  Tag,
   User,
-  Video,
-} from 'lucide-react'
+  VideoCamera,
+} from '@phosphor-icons/react'
 import Image from 'next/image'
 import lrnaiIcon from 'public/lrnai_icon.png'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
@@ -58,7 +57,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'paragraph',
     title: 'Paragraph',
     description: 'Plain text paragraph',
-    icon: <Pilcrow size={18} />,
+    icon: <Paragraph weight="duotone" size={18} />,
     category: 'text',
     keywords: ['paragraph', 'text', 'plain', 'normal'],
     command: (editor) => {
@@ -69,7 +68,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading1',
     title: 'Heading 1',
     description: 'Large section heading',
-    icon: <Heading1 size={18} />,
+    icon: <TextHOne weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h1', 'title', 'large'],
     command: (editor) => {
@@ -80,7 +79,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading2',
     title: 'Heading 2',
     description: 'Medium section heading',
-    icon: <Heading2 size={18} />,
+    icon: <TextHTwo weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h2', 'subtitle', 'medium'],
     command: (editor) => {
@@ -91,7 +90,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading3',
     title: 'Heading 3',
     description: 'Small section heading',
-    icon: <Heading3 size={18} />,
+    icon: <TextHThree weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h3', 'small'],
     command: (editor) => {
@@ -102,7 +101,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading4',
     title: 'Heading 4',
     description: 'Section heading level 4',
-    icon: <Heading4 size={18} />,
+    icon: <TextHFour weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h4'],
     command: (editor) => {
@@ -113,7 +112,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading5',
     title: 'Heading 5',
     description: 'Section heading level 5',
-    icon: <Heading5 size={18} />,
+    icon: <TextHFive weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h5'],
     command: (editor) => {
@@ -124,7 +123,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'heading6',
     title: 'Heading 6',
     description: 'Section heading level 6',
-    icon: <Heading6 size={18} />,
+    icon: <TextHSix weight="duotone" size={18} />,
     category: 'text',
     keywords: ['heading', 'h6'],
     command: (editor) => {
@@ -135,7 +134,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'bulletList',
     title: 'Bullet List',
     description: 'Unordered list with bullet points',
-    icon: <List size={18} />,
+    icon: <List weight="duotone" size={18} />,
     category: 'text',
     keywords: ['bullet', 'list', 'unordered', 'ul'],
     command: (editor) => {
@@ -146,7 +145,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'orderedList',
     title: 'Ordered List',
     description: 'Numbered list',
-    icon: <ListOrdered size={18} />,
+    icon: <ListNumbers weight="duotone" size={18} />,
     category: 'text',
     keywords: ['ordered', 'list', 'numbered', 'ol'],
     command: (editor) => {
@@ -157,7 +156,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'codeBlock',
     title: 'Code Block',
     description: 'Code snippet with syntax highlighting',
-    icon: <Code size={18} />,
+    icon: <Code weight="duotone" size={18} />,
     category: 'text',
     keywords: ['code', 'snippet', 'programming', 'syntax'],
     command: (editor) => {
@@ -170,7 +169,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'image',
     title: 'Image',
     description: 'Upload or embed an image',
-    icon: <ImagePlus size={18} />,
+    icon: <ImageSquare weight="duotone" size={18} />,
     category: 'media',
     keywords: ['image', 'picture', 'photo', 'upload'],
     command: (editor) => {
@@ -181,7 +180,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'video',
     title: 'Video',
     description: 'Upload or embed a video',
-    icon: <Video size={18} />,
+    icon: <VideoCamera weight="duotone" size={18} />,
     category: 'media',
     keywords: ['video', 'movie', 'upload', 'embed'],
     command: (editor) => {
@@ -203,7 +202,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'pdf',
     title: 'PDF',
     description: 'Embed a PDF document',
-    icon: <FileText size={18} />,
+    icon: <FileText weight="duotone" size={18} />,
     category: 'media',
     keywords: ['pdf', 'document', 'file', 'embed'],
     command: (editor) => {
@@ -214,7 +213,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'audio',
     title: 'Audio',
     description: 'Upload audio or embed a podcast',
-    icon: <Headphones size={18} />,
+    icon: <Headphones weight="duotone" size={18} />,
     category: 'media',
     keywords: ['audio', 'music', 'sound', 'podcast', 'mp3', 'episode'],
     command: (editor) => {
@@ -239,7 +238,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'quiz',
     title: 'Quiz',
     description: 'Add an interactive quiz',
-    icon: <BadgeHelp size={18} />,
+    icon: <Question weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['quiz', 'question', 'test', 'interactive'],
     command: (editor) => {
@@ -250,7 +249,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'mathEquation',
     title: 'Math Equation',
     description: 'Add a LaTeX math equation',
-    icon: <Sigma size={18} />,
+    icon: <Sigma weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['math', 'equation', 'latex', 'formula'],
     command: (editor) => {
@@ -261,7 +260,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'webPreview',
     title: 'Web Preview',
     description: 'Preview a web page',
-    icon: <Globe size={18} />,
+    icon: <Globe weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['web', 'preview', 'link', 'website', 'url'],
     command: (editor) => {
@@ -272,7 +271,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'flipcard',
     title: 'Flipcard',
     description: 'Add a flashcard for learning',
-    icon: <RotateCw size={18} />,
+    icon: <ArrowClockwise weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['flipcard', 'flashcard', 'card', 'memory', 'learning'],
     command: (editor) => {
@@ -292,7 +291,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'codePlayground',
     title: 'Code Playground',
     description: 'Add a coding challenge with test cases',
-    icon: <CodeSquare size={18} />,
+    icon: <CodeBlock weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['code', 'playground', 'coding', 'challenge', 'judge', 'execute', 'run', 'programming'],
     command: (editor) => {
@@ -320,7 +319,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'scenarios',
     title: 'Scenarios',
     description: 'Add interactive branching scenarios',
-    icon: <GitBranch size={18} />,
+    icon: <GitBranch weight="duotone" size={18} />,
     category: 'interactive',
     keywords: ['scenarios', 'branching', 'interactive', 'choice', 'story'],
     command: (editor) => {
@@ -368,7 +367,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'callout',
     title: 'Callout',
     description: 'Info, warning, tip, success or error block',
-    icon: <AlertCircle size={18} />,
+    icon: <WarningCircle weight="duotone" size={18} />,
     category: 'callouts',
     keywords: ['callout', 'info', 'warning', 'tip', 'success', 'error', 'note', 'alert'],
     command: (editor) => {
@@ -385,7 +384,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'badge',
     title: 'Badge',
     description: 'Add a badge element',
-    icon: <Tags size={18} />,
+    icon: <Tag weight="duotone" size={18} />,
     category: 'ui',
     keywords: ['badge', 'tag', 'label', 'chip'],
     command: (editor) => {
@@ -399,7 +398,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'button',
     title: 'Button',
     description: 'Add a clickable button',
-    icon: <MousePointerClick size={18} />,
+    icon: <CursorClick weight="duotone" size={18} />,
     category: 'ui',
     keywords: ['button', 'click', 'action', 'cta'],
     command: (editor) => {
@@ -413,7 +412,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'user',
     title: 'User',
     description: 'Reference a user',
-    icon: <User size={18} />,
+    icon: <User weight="duotone" size={18} />,
     category: 'ui',
     keywords: ['user', 'mention', 'person', 'profile'],
     command: (editor) => {
@@ -424,7 +423,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'embed',
     title: 'Embed',
     description: 'Embed external content',
-    icon: <Cuboid size={18} />,
+    icon: <Cube weight="duotone" size={18} />,
     category: 'ui',
     keywords: ['embed', 'external', 'iframe', 'widget'],
     command: (editor) => {
@@ -437,7 +436,7 @@ export const slashCommands: SlashCommandItem[] = [
     id: 'table',
     title: 'Table',
     description: 'Insert a 3x3 table',
-    icon: <Table size={18} />,
+    icon: <Table weight="duotone" size={18} />,
     category: 'tables',
     keywords: ['table', 'grid', 'rows', 'columns', 'data'],
     command: (editor) => {

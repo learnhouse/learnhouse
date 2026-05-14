@@ -1,6 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState } from 'react'
-import { RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw } from 'lucide-react'
+import { ArrowCounterClockwise, ArrowRight, CheckCircle, GitBranch } from '@phosphor-icons/react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import ScenariosModal from './ScenariosModal'
 
@@ -66,7 +66,7 @@ const ScenariosExtension: React.FC = (props: any) => {
         {/* Header section */}
         <div className="flex flex-wrap gap-2 items-center text-sm mb-3">
           <div className="flex items-center gap-2">
-            <GitBranch className="text-neutral-400" size={16} />
+            <GitBranch weight="duotone" className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
               Interactive Scenario
             </span>
@@ -95,7 +95,7 @@ const ScenariosExtension: React.FC = (props: any) => {
               className="p-1.5 rounded-md hover:bg-neutral-200 transition-colors"
               title="Reset scenario"
             >
-              <RefreshCcw className="text-neutral-500" size={15} />
+              <ArrowCounterClockwise weight="duotone" className="text-neutral-500" size={15} />
             </button>
           )}
         </div>
@@ -125,7 +125,7 @@ const ScenariosExtension: React.FC = (props: any) => {
         ) : scenarioComplete ? (
           <div className="bg-white rounded-lg p-6 nice-shadow text-center">
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={28} className="text-emerald-600" />
+              <CheckCircle weight="duotone" size={28} className="text-emerald-600" />
             </div>
             <h4 className="text-xl font-bold text-neutral-900 mb-2">Scenario Complete!</h4>
             <p className="text-neutral-600 mb-6 leading-relaxed max-w-md mx-auto">
@@ -135,7 +135,7 @@ const ScenariosExtension: React.FC = (props: any) => {
               onClick={resetScenario}
               className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg transition-colors font-medium text-sm"
             >
-              <RotateCcw size={16} />
+              <ArrowCounterClockwise weight="duotone" size={16} />
               Start Over
             </button>
           </div>
@@ -147,7 +147,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                 return (
                   <div className="bg-white rounded-lg p-6 nice-shadow text-center">
                     <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <GitBranch size={20} className="text-neutral-400" />
+                      <GitBranch weight="duotone" size={20} className="text-neutral-400" />
                     </div>
                     <h3 className="text-base font-medium text-neutral-900 mb-2">Scenario Not Found</h3>
                     <p className="text-neutral-500 text-sm">Please check your scenario configuration and try again.</p>
@@ -193,7 +193,7 @@ const ScenariosExtension: React.FC = (props: any) => {
                           <div className="flex-1 text-neutral-700 font-medium group-hover:text-blue-900 transition-colors">
                             {option.text}
                           </div>
-                          <ArrowRight size={16} className="text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                          <ArrowRight weight="duotone" size={16} className="text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                         </div>
                       </button>
                     ))}
