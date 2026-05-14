@@ -30,7 +30,7 @@ PLAN_DEPENDENCIES = [
     ("Usergroups", require_plan_for_usergroups("pro", "Usergroups")),
     ("Certificates", require_plan_for_certifications("pro", "Certificates")),
     ("Boards", require_plan_for_boards("pro", "Boards")),
-    ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds")),
+    ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds")),
     ("Communities", require_plan_for_community("standard", "Communities")),
 ]
 
@@ -177,8 +177,8 @@ class TestPlanCheck:
             ("Certificates", require_plan_for_certifications("pro", "Certificates"), {"query_params": {"org_id": "abc"}}, 200),
             ("Boards", require_plan_for_boards("pro", "Boards"), {"path_params": {"org_id": "abc"}}, 200),
             ("Boards", require_plan_for_boards("pro", "Boards"), {"query_params": {"org_id": "abc"}}, 200),
-            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"path_params": {"org_id": "abc"}}, 200),
-            ("Playgrounds", require_plan_for_playgrounds("pro", "Playgrounds"), {"query_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds"), {"path_params": {"org_id": "abc"}}, 200),
+            ("Playgrounds", require_plan_for_playgrounds("personal", "Playgrounds"), {"query_params": {"org_id": "abc"}}, 200),
             ("Communities", require_plan_for_community("standard", "Communities"), {"path_params": {"org_id": "abc"}}, 200),
             ("Communities", require_plan_for_community("standard", "Communities"), {"query_params": {"org_id": "abc"}}, 200),
         ],
@@ -336,7 +336,7 @@ class TestPlanCheck:
         db.commit()
 
         board_dependency = require_plan_for_boards("pro", "Boards")
-        playground_dependency = require_plan_for_playgrounds("pro", "Playgrounds")
+        playground_dependency = require_plan_for_playgrounds("personal", "Playgrounds")
         community_dependency = require_plan_for_community("free", "Communities")
 
         with patch(

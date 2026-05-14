@@ -30,7 +30,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "boards": "pro",
     "certifications": "pro",
     "custom_domains": "pro",
-    "playgrounds": "pro",
+    "playgrounds": "personal",
     "roles": "pro",
     "versioning": "pro",
     "analytics_advanced": "pro",

@@ -337,7 +337,8 @@ async def require_playgrounds_feature(
 ) -> bool:
     """
     Router-level dependency that auto-detects the parameter type and checks
-    if the playgrounds feature is enabled AND the org plan is Pro or higher.
+    if the playgrounds feature is enabled AND the org plan is Personal or higher
+    (Standard is gated by the feature flag instead).
 
     Checks in order: playground_uuid (path), org_id (path), org_id (query)
     """
@@ -381,10 +382,10 @@ async def require_playgrounds_feature(
         return True
 
     current_plan = get_org_plan(org_id, db_session)
-    if not plan_meets_requirement(current_plan, "pro"):
+    if not plan_meets_requirement(current_plan, "personal"):
         raise HTTPException(
             status_code=403,
-            detail="Playgrounds requires a Pro plan or higher. "
+            detail="Playgrounds requires a Personal plan or higher. "
             f"Your organization is currently on the {current_plan.capitalize()} plan.",
         )
 
