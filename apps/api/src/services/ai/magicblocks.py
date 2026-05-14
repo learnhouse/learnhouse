@@ -4,6 +4,7 @@ import logging
 import redis
 import json
 import asyncio
+import time
 
 from config.config import get_learnhouse_config
 from src.services.ai.base import get_gemini_client
@@ -11,6 +12,7 @@ from src.services.ai.schemas.magicblocks import (
     MagicBlockContext,
     MagicBlockSessionData,
     MagicBlockMessage,
+    MagicBlockRevision,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,8 @@ MAGICBLOCK_SESSION_KEY = "magicblock_session:{session_uuid}"
 SESSION_TTL = 2160000
 # Maximum iterations per session
 MAX_ITERATIONS = 6
+# Maximum revisions to keep per session (caps Redis payload size)
+MAX_REVISIONS = 20
 
 
 def get_redis_connection():
@@ -73,7 +77,8 @@ def create_magicblock_session(
         max_iterations=MAX_ITERATIONS,
         message_history=[],
         current_html=None,
-        context=context
+        context=context,
+        revisions=[],
     )
 
     save_magicblock_session(session)
@@ -198,7 +203,8 @@ async def generate_magicblock_stream(
     prompt: str,
     session: MagicBlockSessionData,
     gemini_model_name: str = "gemini-2.0-flash",
-    current_html: Optional[str] = None
+    current_html: Optional[str] = None,
+    style_reference: Optional[str] = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate MagicBlock HTML content with streaming.
@@ -209,6 +215,9 @@ async def generate_magicblock_stream(
         session: The current session data
         gemini_model_name: The Gemini model to use
         current_html: The current HTML content to iterate on (for modifications)
+        style_reference: Optional HTML of another block whose visual design language
+            should be matched (palette, typography, spacing, libraries) without
+            copying its content.
     """
     try:
         client = get_gemini_client()
@@ -221,6 +230,34 @@ async def generate_magicblock_stream(
         contents.append({"role": "user", "parts": [{"text": system_prompt}]})
         contents.append({"role": "model", "parts": [{"text": "I understand. I'll create interactive HTML content for educational purposes. I'll output only valid HTML code that's self-contained and ready to render."}]})
 
+        # If the user pasted a style reference, prime the model with it as a design
+        # exemplar BEFORE the actual request so the new block inherits its look.
+        if style_reference:
+            style_prompt = f"""STYLE REFERENCE — DESIGN LANGUAGE EXEMPLAR:
+
+The user has provided this existing block as a visual design reference. Your next generation MUST match its design language so blocks feel consistent across the course.
+
+MATCH these aspects:
+- Color palette (background, accents, text colors)
+- Typography (font families, sizes, weights, hierarchy)
+- Spacing, padding, border radii, shadows
+- Component shapes (cards, pills, buttons, etc.)
+- Library choices (e.g. Tailwind config, Chart.js theming, KaTeX usage)
+- Overall aesthetic (minimal/playful/data-heavy/etc.)
+
+DO NOT match:
+- The actual content, topic, or interaction logic
+- Specific text, labels, or example values
+
+REFERENCE BLOCK:
+```html
+{style_reference}
+```
+
+Acknowledge the style and wait for the user's actual request."""
+            contents.append({"role": "user", "parts": [{"text": style_prompt}]})
+            contents.append({"role": "model", "parts": [{"text": "Understood. I'll match the design language of the reference block — palette, typography, spacing, component shapes, and library choices — while generating entirely new content for the user's request."}]})
+
         # Add message history
         for msg in session.message_history:
             contents.append({
@@ -230,7 +267,7 @@ async def generate_magicblock_stream(
 
         # Build the iteration prompt with current HTML context
         if current_html and session.iteration_count > 0:
-            iteration_prompt = f"""The user wants to modify the existing interactive element.
+            iteration_prompt = f"""You are editing an existing interactive element. The user wants a SURGICAL CHANGE, not a redesign.
 
 CURRENT HTML CODE:
 ```html
@@ -240,7 +277,17 @@ CURRENT HTML CODE:
 USER REQUEST:
 {prompt}
 
-Please modify the HTML code above according to the user's request. Output ONLY the complete updated HTML code, starting with <!DOCTYPE html> and ending with </html>. Do not include any explanations."""
+STRICT EDIT RULES — follow these exactly:
+1. Treat the CURRENT HTML CODE as the source of truth. Keep it byte-for-byte identical EXCEPT for the parts the user explicitly asked to change.
+2. Do NOT redesign, restyle, refactor, rename, reorganize, or "improve" code that the user did not mention. Resist the urge to clean up.
+3. Preserve all existing: layout structure, class names, IDs, color palette, typography, spacing, animations, library choices, comments, and JavaScript logic that is unrelated to the request.
+4. If the request is ambiguous, make the SMALLEST possible interpretation. When in doubt, change less.
+5. If the user asks to add something, add it without altering the rest. If the user asks to change one element, change ONLY that element.
+6. Do not introduce new libraries or CDN scripts unless the request specifically requires capabilities not present in the current code.
+7. Keep the same <!DOCTYPE html>, <head>, and <body> structure.
+
+OUTPUT FORMAT:
+Output ONLY the complete updated HTML code, starting with <!DOCTYPE html> and ending with </html>. No explanations, no markdown fences, no commentary."""
             contents.append({"role": "user", "parts": [{"text": iteration_prompt}]})
         else:
             # First generation - just use the prompt
@@ -287,8 +334,19 @@ Please modify the HTML code above according to the user's request. Output ONLY t
         # Update session after generation completes
         session.message_history.append(MagicBlockMessage(role="user", content=prompt))
         session.message_history.append(MagicBlockMessage(role="model", content=full_response))
-        session.current_html = extract_html_from_response(full_response)
+        clean_html = extract_html_from_response(full_response)
+        session.current_html = clean_html
         session.iteration_count += 1
+
+        # Snapshot this generation as a revision
+        session.revisions.append(MagicBlockRevision(
+            revision_uuid=f"rev_{uuid4()}",
+            prompt=prompt,
+            html=clean_html,
+            created_at=time.time(),
+        ))
+        if len(session.revisions) > MAX_REVISIONS:
+            session.revisions = session.revisions[-MAX_REVISIONS:]
 
         # Keep only last 12 messages (6 exchanges)
         if len(session.message_history) > 12:
