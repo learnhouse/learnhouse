@@ -932,6 +932,13 @@ def add_ai_credits(org_id: int, amount: int) -> int:
     return r.incrby(f"ai_credits_purchased:{org_id}", amount)
 
 
+def set_ai_credits(org_id: int, amount: int) -> int:
+    """Set purchased AI credits to an absolute value (superadmin-only operation)."""
+    r = _get_redis_client()
+    r.set(f"ai_credits_purchased:{org_id}", amount)
+    return amount
+
+
 def reset_ai_credits_usage(org_id: int) -> bool:
     """Reset AI credit usage for the organization (for new billing period)."""
     r = _get_redis_client()

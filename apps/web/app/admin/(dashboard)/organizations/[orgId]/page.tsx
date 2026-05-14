@@ -29,6 +29,8 @@ import {
   User,
   Check,
   ArrowSquareOut,
+  Robot,
+  ArrowClockwise,
 } from '@phosphor-icons/react'
 
 function getLogoUrl(orgUuid: string, logoImage: string): string {
@@ -990,6 +992,9 @@ function PlanTab({
         )}
       </div>
 
+      {/* AI Credits */}
+      <AICreditsSection orgId={orgId} accessToken={accessToken} />
+
       {/* Feature limits overview */}
       <div>
         <h3 className="text-sm font-medium text-white/60 mb-4">Feature Limits</h3>
@@ -1013,6 +1018,163 @@ function PlanTab({
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: string }) {
+  const summaryUrl = `${getAPIUrl()}orgs/${orgId}/ai-credits`
+  const { data: summary, isLoading } = useSWR(
+    accessToken ? summaryUrl : null,
+    (url: string) => swrFetcher(url, accessToken),
+    { revalidateOnFocus: false }
+  )
+
+  const [amount, setAmount] = useState<string>('')
+  const [saving, setSaving] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [error, setError] = useState('')
+  const [saved, setSaved] = useState('')
+
+  const initial = summary?.purchased_credits
+  React.useEffect(() => {
+    if (typeof initial === 'number') setAmount(String(initial))
+  }, [initial])
+
+  const parsed = amount === '' ? NaN : Number(amount)
+  const isValid = Number.isInteger(parsed) && parsed >= 0
+  const isDirty = isValid && parsed !== summary?.purchased_credits
+
+  const setPurchased = async () => {
+    if (!isValid) {
+      setError('Enter a non-negative integer')
+      return
+    }
+    setSaving(true)
+    setError('')
+    setSaved('')
+    try {
+      const res = await fetch(`${getAPIUrl()}orgs/${orgId}/ai-credits/set`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ amount: parsed }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.detail || `Failed to set credits (${res.status})`)
+        return
+      }
+      setSaved(`Purchased credits set to ${parsed.toLocaleString()}`)
+      mutate(summaryUrl)
+      setTimeout(() => setSaved(''), 2500)
+    } catch {
+      setError('Network error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const resetUsage = async () => {
+    if (!confirm('Reset used AI credits to 0 for this org?')) return
+    setResetting(true)
+    setError('')
+    setSaved('')
+    try {
+      const res = await fetch(`${getAPIUrl()}orgs/${orgId}/ai-credits/reset`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.detail || `Failed to reset usage (${res.status})`)
+        return
+      }
+      setSaved('Used credits reset to 0')
+      mutate(summaryUrl)
+      setTimeout(() => setSaved(''), 2500)
+    } catch {
+      setError('Network error')
+    } finally {
+      setResetting(false)
+    }
+  }
+
+  const fmt = (v: number | string | undefined) =>
+    v === undefined ? '—' : typeof v === 'number' ? v.toLocaleString() : v
+
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-white/60 mb-4 flex items-center gap-2">
+        <Robot size={14} weight="fill" className="text-violet-400" />
+        AI Credits
+      </h3>
+      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 space-y-5">
+        {isLoading ? (
+          <p className="text-sm text-white/40">Loading…</p>
+        ) : !summary ? (
+          <p className="text-sm text-red-400">Failed to load credits summary</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[
+                { label: 'Plan base', value: fmt(summary.base_credits) },
+                { label: 'Purchased', value: fmt(summary.purchased_credits) },
+                { label: 'Total', value: fmt(summary.total_credits) },
+                { label: 'Used', value: fmt(summary.used_credits) },
+                { label: 'Remaining', value: fmt(summary.remaining_credits) },
+              ].map((s) => (
+                <div key={s.label} className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5">
+                  <p className="text-[10px] text-white/40 uppercase tracking-wider">{s.label}</p>
+                  <p className="text-lg font-semibold text-white mt-1">{s.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-xs text-white/40 uppercase tracking-wider block mb-1.5">
+                  Purchased credits
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                  placeholder="e.g. 5000"
+                />
+              </div>
+              <button
+                onClick={setPurchased}
+                disabled={saving || !isDirty}
+                className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Saving…' : 'Set purchased'}
+              </button>
+              <button
+                onClick={resetUsage}
+                disabled={resetting}
+                className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-white/70 text-sm rounded-lg transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                title="Reset the org's used AI credits to 0"
+              >
+                <ArrowClockwise size={14} weight="bold" />
+                {resetting ? 'Resetting…' : 'Reset usage'}
+              </button>
+            </div>
+
+            <p className="text-[11px] text-white/30 leading-snug">
+              Overwrites the org's purchased credit balance. Total available = plan base + purchased. Resetting usage zeroes out consumed credits for the period.
+            </p>
+
+            {saved && <p className="text-sm text-emerald-400">{saved}</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
+          </>
+        )}
       </div>
     </div>
   )
