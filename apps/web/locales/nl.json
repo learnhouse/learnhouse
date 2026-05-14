@@ -4828,7 +4828,9 @@
           "ai": "1.000 AI-credits",
           "ai_desc": "Versnel het maken van content met AI-schrijftools.",
           "analytics": "Leerlingenanalyses",
-          "analytics_desc": "Volg voortgang en betrokkenheid om uw cursussen te verbeteren."
+          "analytics_desc": "Volg voortgang en betrokkenheid om uw cursussen te verbeteren.",
+          "playgrounds": "Interactieve playgrounds",
+          "playgrounds_desc": "Laat leerlingen experimenteren en oefenen met praktische interactieve oefeningen."
         }
       },
       "pro": {
@@ -4845,8 +4847,6 @@
           "custom_domain_desc": "Gebruik uw eigen domein voor een academie met uw merk.",
           "roles": "Aangepaste rollen & machtigingen",
           "roles_desc": "Bepaal precies wie wat kan doen in uw organisatie.",
-          "playgrounds": "Interactieve playgrounds",
-          "playgrounds_desc": "Laat leerlingen experimenteren en oefenen met praktische interactieve oefeningen.",
           "api": "API-toegang & webhooks",
           "api_desc": "Integreer met bestaande tools en automatiseer workflows."
         }

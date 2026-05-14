@@ -4826,7 +4826,9 @@
           "ai": "1.000 crediti IA",
           "ai_desc": "Accelera la creazione di contenuti con strumenti di scrittura IA.",
           "analytics": "Analisi degli studenti",
-          "analytics_desc": "Monitora progressi e coinvolgimento per migliorare i tuoi corsi."
+          "analytics_desc": "Monitora progressi e coinvolgimento per migliorare i tuoi corsi.",
+          "playgrounds": "Playground interattivi",
+          "playgrounds_desc": "Lascia che gli studenti sperimentino e pratichino con esercizi interattivi pratici."
         }
       },
       "pro": {
@@ -4843,8 +4845,6 @@
           "custom_domain_desc": "Usa il tuo dominio per un'accademia con il tuo brand.",
           "roles": "Ruoli e permessi personalizzati",
           "roles_desc": "Controlla esattamente chi può fare cosa nella tua organizzazione.",
-          "playgrounds": "Playground interattivi",
-          "playgrounds_desc": "Lascia che gli studenti sperimentino e pratichino con esercizi interattivi pratici.",
           "api": "Accesso API e webhooks",
           "api_desc": "Integra con i tuoi strumenti esistenti e automatizza i flussi di lavoro."
         }

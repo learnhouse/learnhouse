@@ -4826,7 +4826,9 @@
           "ai": "1.000 AI-Credits",
           "ai_desc": "Beschleunigen Sie die Inhaltserstellung mit KI-Schreibtools.",
           "analytics": "Lernenden-Analysen",
-          "analytics_desc": "Verfolgen Sie Fortschritte und Engagement, um Kurse zu verbessern."
+          "analytics_desc": "Verfolgen Sie Fortschritte und Engagement, um Kurse zu verbessern.",
+          "playgrounds": "Interaktive Playgrounds",
+          "playgrounds_desc": "Lassen Sie Lernende mit praktischen interaktiven Übungen experimentieren und üben."
         }
       },
       "pro": {
@@ -4843,8 +4845,6 @@
           "custom_domain_desc": "Nutzen Sie Ihre eigene Domain für eine gebrandete Akademie.",
           "roles": "Rollen & Berechtigungen",
           "roles_desc": "Kontrollieren Sie genau, wer was in Ihrer Organisation tun kann.",
-          "playgrounds": "Interaktive Playgrounds",
-          "playgrounds_desc": "Lassen Sie Lernende mit praktischen interaktiven Übungen experimentieren und üben.",
           "api": "API-Zugang & Webhooks",
           "api_desc": "Integrieren Sie mit bestehenden Tools und automatisieren Sie Workflows."
         }

@@ -4851,7 +4851,9 @@
           "ai": "1.000 AI kredisi",
           "ai_desc": "AI yazma araçlarıyla içerik oluşturmayı hızlandırın.",
           "analytics": "Öğrenci analitiği",
-          "analytics_desc": "İlerlemeyi ve katılımı izleyerek kurslarınızı geliştirin."
+          "analytics_desc": "İlerlemeyi ve katılımı izleyerek kurslarınızı geliştirin.",
+          "playgrounds": "İnteraktif playground'lar",
+          "playgrounds_desc": "Öğrencilerin uygulamalı interaktif alıştırmalarla deney yapmasını ve pratik yapmasını sağlayın."
         }
       },
       "pro": {
@@ -4868,8 +4870,6 @@
           "custom_domain_desc": "Markalı bir akademi için kendi alan adınızı kullanın.",
           "roles": "Özel roller ve izinler",
           "roles_desc": "Organizasyonunuzda kimin ne yapabileceğini tam olarak kontrol edin.",
-          "playgrounds": "İnteraktif playground'lar",
-          "playgrounds_desc": "Öğrencilerin uygulamalı interaktif alıştırmalarla deney yapmasını ve pratik yapmasını sağlayın.",
           "api": "API erişimi ve webhook'lar",
           "api_desc": "Mevcut araçlarınızla entegre olun ve iş akışlarını otomatikleştirin."
         }

@@ -4849,7 +4849,9 @@
           "ai": "1.000 kredit AI",
           "ai_desc": "Percepat pembuatan konten dengan alat tulis bertenaga AI.",
           "analytics": "Analitik pelajar",
-          "analytics_desc": "Lacak kemajuan dan keterlibatan untuk meningkatkan kursus Anda."
+          "analytics_desc": "Lacak kemajuan dan keterlibatan untuk meningkatkan kursus Anda.",
+          "playgrounds": "Playground interaktif",
+          "playgrounds_desc": "Biarkan pelajar bereksperimen dan berlatih dengan latihan interaktif langsung."
         }
       },
       "pro": {
@@ -4866,8 +4868,6 @@
           "custom_domain_desc": "Gunakan domain Anda sendiri untuk akademi bermerek.",
           "roles": "Peran & izin kustom",
           "roles_desc": "Kontrol dengan tepat siapa yang bisa melakukan apa di organisasi Anda.",
-          "playgrounds": "Playground interaktif",
-          "playgrounds_desc": "Biarkan pelajar bereksperimen dan berlatih dengan latihan interaktif langsung.",
           "api": "Akses API & webhooks",
           "api_desc": "Integrasikan dengan alat yang ada dan otomatisasi alur kerja."
         }

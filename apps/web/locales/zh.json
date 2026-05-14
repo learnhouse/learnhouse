@@ -4838,7 +4838,9 @@
           "ai": "1,000 AI 积分",
           "ai_desc": "借助 AI 写作工具加速内容创建。",
           "analytics": "学习者分析",
-          "analytics_desc": "跟踪进度和参与度以改进课程。"
+          "analytics_desc": "跟踪进度和参与度以改进课程。",
+          "playgrounds": "互动练习场",
+          "playgrounds_desc": "让学习者通过动手交互式练习进行实验和实践。"
         }
       },
       "pro": {
@@ -4855,8 +4857,6 @@
           "custom_domain_desc": "使用您自己的域名打造品牌学院。",
           "roles": "自定义角色和权限",
           "roles_desc": "精确控制组织中谁可以做什么。",
-          "playgrounds": "互动练习场",
-          "playgrounds_desc": "让学习者通过动手交互式练习进行实验和实践。",
           "api": "API 访问和 Webhooks",
           "api_desc": "与现有工具集成并自动化工作流程。"
         }
