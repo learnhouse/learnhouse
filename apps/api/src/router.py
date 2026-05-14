@@ -8,6 +8,7 @@ from src.routers import instance
 from src.routers import plans
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
+from src.routers import monitoring
 from src.routers import stream
 from src.routers import api_tokens
 from src.routers import webhooks
@@ -281,6 +282,15 @@ v1_router.include_router(
 
 # Instance info (public, no auth)
 v1_router.include_router(instance.router, prefix="/instance", tags=["instance"])
+
+# Sentry feedback relay (rejects API tokens; works for both anonymous and
+# authenticated callers so the in-app feedback modal keeps working everywhere)
+v1_router.include_router(
+    monitoring.router,
+    prefix="/monitoring",
+    tags=["monitoring"],
+    dependencies=[Depends(get_non_api_token_user)],
+)
 
 # Plan limits (public, no auth — used by frontend pricing pages)
 v1_router.include_router(plans.router, prefix="/plans", tags=["plans"])
