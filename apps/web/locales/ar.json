@@ -951,7 +951,10 @@
     "embed": "تضمين",
     "embed_code_copied": "تم نسخ كود التضمين!",
     "link_copied": "تم نسخ الرابط!",
-    "share": "مشاركة"
+    "share": "مشاركة",
+    "markdown": "ماركداون",
+    "custom": "مخصص",
+    "scorm": "سكورم"
   },
   "assignments": {
     "submit_assignment": "تسليم الواجب",
@@ -2036,7 +2039,8 @@
             "dynamic_page": "صفحة ديناميكية",
             "scorm": "Scorm",
             "markdown": "Markdown",
-            "embed": "تضمين"
+            "embed": "Embed",
+            "custom": "مخصص"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",
