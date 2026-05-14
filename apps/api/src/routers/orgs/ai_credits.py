@@ -19,8 +19,10 @@ from src.security.features_utils.usage import (
     add_ai_credits,
     get_ai_credits_summary,
     reset_ai_credits_usage,
+    set_ai_credits,
 )
 from src.security.org_auth import is_org_member, is_org_admin
+from src.security.superadmin import is_user_superadmin
 
 
 router = APIRouter()
@@ -35,6 +37,18 @@ class AddCreditsResponse(BaseModel):
     """Response for adding AI credits."""
     success: bool
     new_purchased_total: int
+    message: str
+
+
+class SetCreditsRequest(BaseModel):
+    """Request body for setting purchased AI credits to an absolute value."""
+    amount: int
+
+
+class SetCreditsResponse(BaseModel):
+    """Response for setting purchased AI credits."""
+    success: bool
+    purchased_total: int
     message: str
 
 
@@ -236,4 +250,47 @@ async def reset_org_ai_credits(
     return ResetCreditsResponse(
         success=True,
         message="AI credits usage has been reset to 0",
+    )
+
+
+@router.post(
+    "/{org_id}/ai-credits/set",
+    response_model=SetCreditsResponse,
+    summary="Set purchased AI credits (superadmin only)",
+    description=(
+        "Overwrite the org's purchased AI credit balance to an absolute value. "
+        "Restricted to superadmins; bypasses the additive /add flow so it can "
+        "grant, correct, or zero out credits in one call."
+    ),
+    responses={
+        200: {"description": "Credits set; returns the new purchased total.", "model": SetCreditsResponse},
+        400: {"description": "Credit amount must be non-negative"},
+        403: {"description": "Superadmin access required"},
+        404: {"description": "Organization not found"},
+    },
+)
+async def set_org_ai_credits(
+    org_id: int,
+    request: SetCreditsRequest,
+    current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> SetCreditsResponse:
+    statement = select(Organization).where(Organization.id == org_id)
+    org = db_session.exec(statement).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    user_id = resolve_acting_user_id(current_user)
+    if not user_id or not is_user_superadmin(user_id, db_session):
+        raise HTTPException(status_code=403, detail="Superadmin access required")
+
+    if request.amount < 0:
+        raise HTTPException(status_code=400, detail="Credit amount must be non-negative")
+
+    new_total = set_ai_credits(org_id, request.amount)
+
+    return SetCreditsResponse(
+        success=True,
+        purchased_total=new_total,
+        message=f"Purchased AI credits set to {new_total}",
     )
