@@ -380,7 +380,7 @@ def require_plan_for_playgrounds(required_plan: PlanLevel, feature_name: str):
     for playground routes. Resolves org_id from playground_uuid, path params, or query params.
 
     Usage in router:
-        dependencies=[Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+        dependencies=[Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
     """
 
     async def plan_dependency(

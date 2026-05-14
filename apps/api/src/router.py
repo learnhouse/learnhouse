@@ -250,13 +250,13 @@ v1_router.include_router(
     playgrounds_router_module.router,
     prefix="/playgrounds",
     tags=["playgrounds"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
 )
 v1_router.include_router(
     playgrounds_generator_router.router,
     prefix="/playgrounds",
     tags=["playgrounds", "playgrounds-generator"],
-    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("pro", "Playgrounds"))]
+    dependencies=[Depends(require_authenticated_user), Depends(require_plan_for_playgrounds("personal", "Playgrounds"))]
 )
 
 v1_router.include_router(
