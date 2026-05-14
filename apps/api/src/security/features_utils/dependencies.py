@@ -376,7 +376,7 @@ async def require_playgrounds_feature(
     # Check feature flag
     _check_feature_enabled("playgrounds", org_id, db_session)
 
-    # Check plan (Pro+ or non-SaaS mode)
+    # Check plan (Personal+ or non-SaaS mode)
     from src.core.deployment_mode import get_deployment_mode
     if get_deployment_mode() != 'saas':
         return True

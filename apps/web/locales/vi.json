@@ -4851,7 +4851,9 @@
           "ai": "1.000 tín dụng AI",
           "ai_desc": "Tăng tốc tạo nội dung với công cụ viết hỗ trợ AI.",
           "analytics": "Phân tích người học",
-          "analytics_desc": "Theo dõi tiến độ và mức độ tương tác để cải thiện khóa học."
+          "analytics_desc": "Theo dõi tiến độ và mức độ tương tác để cải thiện khóa học.",
+          "playgrounds": "Playground tương tác",
+          "playgrounds_desc": "Cho người học thử nghiệm và thực hành với các bài tập tương tác thực tế."
         }
       },
       "pro": {
@@ -4868,8 +4870,6 @@
           "custom_domain_desc": "Sử dụng tên miền riêng cho học viện mang thương hiệu của bạn.",
           "roles": "Vai trò và quyền tùy chỉnh",
           "roles_desc": "Kiểm soát chính xác ai có thể làm gì trong tổ chức của bạn.",
-          "playgrounds": "Playground tương tác",
-          "playgrounds_desc": "Cho người học thử nghiệm và thực hành với các bài tập tương tác thực tế.",
           "api": "Truy cập API và webhooks",
           "api_desc": "Tích hợp với các công cụ hiện có và tự động hóa quy trình làm việc."
         }

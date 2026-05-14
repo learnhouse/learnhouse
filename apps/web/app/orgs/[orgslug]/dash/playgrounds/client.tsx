@@ -187,10 +187,13 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
 
   const hasSelection = selectedUuids.size > 0
 
+  const playgroundsRequiredPlan =
+    (org?.config?.config?.resolved_features?.playgrounds?.required_plan as PlanLevel | undefined) ?? 'personal'
+
   return (
     <PlanRestrictedFeature
       currentPlan={plan}
-      requiredPlan="pro"
+      requiredPlan={playgroundsRequiredPlan}
       titleKey="Playgrounds"
       descriptionKey="Create interactive AI-generated experiences for your learners."
     >

@@ -4851,7 +4851,9 @@
           "ai": "1000 kredytów AI",
           "ai_desc": "Przyspiesz tworzenie treści za pomocą narzędzi do pisania AI.",
           "analytics": "Analityka uczniów",
-          "analytics_desc": "Śledź postępy i zaangażowanie, aby ulepszać kursy."
+          "analytics_desc": "Śledź postępy i zaangażowanie, aby ulepszać kursy.",
+          "playgrounds": "Interaktywne playgroundy",
+          "playgrounds_desc": "Pozwól uczniom eksperymentować i ćwiczyć z interaktywnymi ćwiczeniami praktycznymi."
         }
       },
       "pro": {
@@ -4868,8 +4870,6 @@
           "custom_domain_desc": "Użyj własnej domeny dla akademii z Twoją marką.",
           "roles": "Niestandardowe role i uprawnienia",
           "roles_desc": "Kontroluj dokładnie, kto co może robić w Twojej organizacji.",
-          "playgrounds": "Interaktywne playgroundy",
-          "playgrounds_desc": "Pozwól uczniom eksperymentować i ćwiczyć z interaktywnymi ćwiczeniami praktycznymi.",
           "api": "Dostęp do API i webhooków",
           "api_desc": "Integruj z istniejącymi narzędziami i automatyzuj przepływy pracy."
         }

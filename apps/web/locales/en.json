@@ -4839,6 +4839,8 @@
           "communities_desc": "Let learners connect, ask questions, and share ideas.",
           "podcasts": "Create podcasts",
           "podcasts_desc": "Deliver audio content and reach learners on the go.",
+          "playgrounds": "Interactive playgrounds",
+          "playgrounds_desc": "Let learners experiment and practice with hands-on interactive exercises.",
           "ai": "1,000 AI credits",
           "ai_desc": "Speed up content creation with AI-powered writing tools.",
           "analytics": "Learner analytics",
@@ -4859,8 +4861,6 @@
           "custom_domain_desc": "Use your own domain for a fully branded academy.",
           "roles": "Custom roles & permissions",
           "roles_desc": "Control exactly who can do what across your organization.",
-          "playgrounds": "Interactive playgrounds",
-          "playgrounds_desc": "Let learners experiment and practice with hands-on interactive exercises.",
           "api": "API access & webhooks",
           "api_desc": "Integrate with your existing tools and automate workflows."
         }
