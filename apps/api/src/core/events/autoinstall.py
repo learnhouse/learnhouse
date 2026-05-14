@@ -20,19 +20,20 @@ def auto_install():
 
     db_session = Session(engine)
 
-    default_org = db_session.exec(
-        select(Organization).where(Organization.slug == 'default')
-    ).first()
+    # Bootstrap only when the DB has zero orgs. Multi-tenant SaaS installs
+    # don't necessarily own an org with slug=='default', so gating on that
+    # slug previously skipped the role refresh on every restart.
+    any_org = db_session.exec(select(Organization)).first()
 
-    if not default_org:
-        logger.info("No default organization found. Starting auto-installation 🏗️")
+    if not any_org:
+        logger.info("No organizations found. Starting auto-installation 🏗️")
         install(short=True)
-    else:
-        # Re-run the default-role upsert so existing installs pick up rights
-        # for resources added since the last install (e.g. playgrounds, boards).
-        # install_default_elements is idempotent and only touches global role IDs 1-4.
-        try:
-            install_default_elements(db_session)
-        except Exception as e:
-            logger.warning("Default-role refresh skipped (non-fatal): %s", e)
-        logger.info("Organizations found. Skipping auto-installation 🚀")
+        return
+
+    # Refresh global default roles (IDs 1-4) so this release's new permission
+    # keys (e.g. playgrounds, boards) land in the DB. Idempotent.
+    try:
+        install_default_elements(db_session)
+    except Exception as e:
+        logger.warning("Default-role refresh skipped (non-fatal): %s", e)
+    logger.info("Organizations found. Skipping auto-installation 🚀")

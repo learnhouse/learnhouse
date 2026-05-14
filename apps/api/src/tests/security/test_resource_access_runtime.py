@@ -46,6 +46,7 @@ class TestResourceAccessRuntime:
         user = Mock(spec=PublicUser)
         user.id = 7
         user.user_uuid = "user_7"
+        user.is_superadmin = False
         return user
 
     @pytest.fixture

@@ -35,10 +35,11 @@ class _FakeSession:
         self.closed = True
 
 
-def test_auto_install_triggers_install_when_default_org_missing(monkeypatch):
+def test_auto_install_triggers_install_when_no_orgs_exist(monkeypatch):
     created_engines = []
     created_tables = []
     installs = []
+    refreshes = []
 
     config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///test.db"))
 
@@ -47,17 +48,21 @@ def test_auto_install_triggers_install_when_default_org_missing(monkeypatch):
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=None))
     monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+    monkeypatch.setattr(autoinstall, "install_default_elements", lambda db: refreshes.append(db))
 
     autoinstall.auto_install()
 
     assert created_engines
     assert created_tables
     assert installs == [True]
+    # Fresh bootstrap path returns before the refresh helper runs.
+    assert refreshes == []
 
 
-def test_auto_install_skips_install_when_default_org_exists(monkeypatch):
+def test_auto_install_refreshes_default_roles_when_any_org_exists(monkeypatch):
     created_tables = []
     installs = []
+    refreshes = []
 
     config = SimpleNamespace(database_config=SimpleNamespace(sql_connection_string="sqlite:///test.db"))
 
@@ -66,11 +71,14 @@ def test_auto_install_skips_install_when_default_org_exists(monkeypatch):
     monkeypatch.setattr(autoinstall.SQLModel.metadata, "create_all", lambda engine: created_tables.append(engine))
     monkeypatch.setattr(autoinstall, "Session", lambda engine: _FakeSession(engine, row=object()))
     monkeypatch.setattr(autoinstall, "install", lambda short: installs.append(short))
+    monkeypatch.setattr(autoinstall, "install_default_elements", lambda db: refreshes.append(db))
 
     autoinstall.auto_install()
 
     assert created_tables
     assert installs == []
+    # Existing install: role refresh always runs so new permission keys land.
+    assert len(refreshes) == 1
 
 
 @pytest.mark.asyncio

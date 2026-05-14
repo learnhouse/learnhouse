@@ -173,11 +173,12 @@ class TestResourceAccessChecker:
 
     @pytest.fixture
     def mock_public_user(self):
-        """Create a mock authenticated user."""
+        """Create a mock authenticated user (non-superadmin)."""
         user = Mock(spec=PublicUser)
         user.id = 1
         user.user_uuid = "user_123"
         user.username = "testuser"
+        user.is_superadmin = False
         return user
 
     @pytest.fixture
@@ -194,6 +195,24 @@ class TestResourceAccessChecker:
             "courses": {"action_read": True, "action_create": True},
         }
         return user
+
+    @pytest.mark.asyncio
+    async def test_check_access_superadmin_bypasses_all_checks(
+        self, mock_request, mock_db_session, mock_public_user
+    ):
+        """Superadmin gets allowed=True via_admin on any resource, any action."""
+        mock_public_user.is_superadmin = True
+        checker = ResourceAccessChecker(mock_request, mock_db_session, mock_public_user)
+
+        decision = await checker.check_access(
+            "board_xyz", AccessAction.CREATE, AccessContext.DASHBOARD
+        )
+
+        assert decision.allowed is True
+        assert decision.via_admin is True
+        assert decision.user_id == mock_public_user.id
+        # Bypass reads the flag off the user object — no DB calls.
+        mock_db_session.exec.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_check_access_empty_uuid(self, mock_request, mock_db_session, mock_public_user):
@@ -298,9 +317,10 @@ class TestCheckResourceAccessFunction:
 
     @pytest.fixture
     def mock_public_user(self):
-        """Create a mock authenticated user."""
+        """Create a mock authenticated user (non-superadmin)."""
         user = Mock(spec=PublicUser)
         user.id = 1
+        user.is_superadmin = False
         return user
 
     @pytest.mark.asyncio
@@ -433,6 +453,7 @@ class TestDashboardContext:
     def mock_public_user(self):
         user = Mock(spec=PublicUser)
         user.id = 42
+        user.is_superadmin = False
         return user
 
     def _make_checker(self, request, session, user, **overrides):
@@ -577,6 +598,7 @@ class TestRequestScopedChecker:
     def mock_public_user(self):
         user = Mock(spec=PublicUser)
         user.id = 7
+        user.is_superadmin = False
         return user
 
     def _make_request(self):
