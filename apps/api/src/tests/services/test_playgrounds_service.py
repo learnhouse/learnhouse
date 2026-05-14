@@ -100,6 +100,17 @@ class TestPlaygroundsService:
         assert _is_org_admin(admin_user.id, org.id, db) is True
         assert _user_in_playground_usergroup(admin_user.id, "missing", db) is False
 
+    def test_rights_helper_superadmin_bypasses_org_membership(self, db, org, regular_user, monkeypatch):
+        # Superadmin without an org-membership row still gets full playground rights.
+        monkeypatch.setattr(
+            "src.services.playgrounds.playgrounds.is_user_superadmin",
+            lambda user_id, _db: user_id == regular_user.id,
+        )
+        rights = _get_user_rights(regular_user.id, org.id + 999, db)
+        assert rights["playgrounds"]["action_create"] is True
+        assert rights["playgrounds"]["action_update"] is True
+        assert rights["playgrounds"]["action_delete"] is True
+
     def test_rights_helper_empty_and_model_dump_branches(self, db, org, regular_user, monkeypatch):
         # Missing user-org link.
         assert _get_user_rights(9999, org.id, db) == {}

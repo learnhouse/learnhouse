@@ -109,6 +109,21 @@ class ResourceAccessChecker:
                 context=context.value,
             )
 
+        # Superadmin bypass — platform admins act on any tenant without an org
+        # membership row. The flag is loaded onto PublicUser by get_current_user
+        # so this is a free attribute read, no DB hit. API tokens and anonymous
+        # users carry no superadmin flag and continue through the normal path.
+        if isinstance(self.current_user, PublicUser) and self.current_user.is_superadmin:
+            return AccessDecision(
+                allowed=True,
+                reason="Superadmin access",
+                via_admin=True,
+                resource_uuid=resource_uuid,
+                user_id=self.current_user.id,
+                action=action.value,
+                context=context.value,
+            )
+
         # For child resources, delegate access check to the parent resource
         # This handles chapters -> courses, episodes -> podcasts, etc.
         if config.parent_resource_type:

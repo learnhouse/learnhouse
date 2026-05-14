@@ -19,8 +19,20 @@ from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
+from src.security.superadmin import is_user_superadmin
 from src.services.utils.upload_content import upload_file
 from src.services.webhooks.dispatch import dispatch_webhooks
+
+
+_SUPERADMIN_PLAYGROUND_RIGHTS = {
+    "action_create": True,
+    "action_read": True,
+    "action_read_own": True,
+    "action_update": True,
+    "action_update_own": True,
+    "action_delete": True,
+    "action_delete_own": True,
+}
 
 
 def _playground_to_read(playground: Playground, db_session: Session) -> PlaygroundRead:
@@ -46,7 +58,11 @@ def _get_user_rights(
     org_id: int,
     db_session: Session,
 ) -> dict:
-    """Return the first role's rights for the user in the org, or empty dict."""
+    # Superadmins administer every tenant from the platform panel; they don't
+    # need an org membership row.
+    if is_user_superadmin(user_id, db_session):
+        return {"playgrounds": dict(_SUPERADMIN_PLAYGROUND_RIGHTS)}
+
     statement = (
         select(UserOrganization)
         .where(UserOrganization.user_id == user_id)

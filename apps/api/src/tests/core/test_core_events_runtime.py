@@ -37,6 +37,7 @@ class _FakeSession:
 def test_auto_install_branches(monkeypatch):
     create_all_calls = []
     installs = []
+    refreshes = []
 
     fake_config = SimpleNamespace(
         database_config=SimpleNamespace(sql_connection_string="sqlite:///fake.db")
@@ -49,6 +50,7 @@ def test_auto_install_branches(monkeypatch):
         "create_all",
         lambda engine: create_all_calls.append(engine),
     )
+    monkeypatch.setattr(autoinstall, "install_default_elements", lambda db: refreshes.append(db))
 
     monkeypatch.setattr(
         autoinstall,
@@ -61,15 +63,17 @@ def test_auto_install_branches(monkeypatch):
 
     assert create_all_calls and len(create_all_calls) == 1
     assert installs == [True]
+    assert refreshes == []  # bootstrap path returns before refresh
 
     monkeypatch.setattr(
         autoinstall,
         "Session",
-        lambda engine: _FakeSession(SimpleNamespace(slug="default")),
+        lambda engine: _FakeSession(SimpleNamespace(slug="anything")),
     )
     autoinstall.auto_install()
 
     assert installs == [True]
+    assert len(refreshes) == 1  # existing-install path always refreshes
 
 
 @pytest.mark.asyncio
