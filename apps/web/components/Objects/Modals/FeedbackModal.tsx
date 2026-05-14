@@ -21,7 +21,7 @@ import {
 } from '@components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
-import * as Sentry from '@sentry/nextjs'
+import { getAPIUrl } from '@services/config/config'
 
 interface FeedbackModalProps {
   open: boolean
@@ -91,24 +91,24 @@ export function FeedbackModal({
       const reactionEmoji = feedbackReaction === 'happy' ? '😊' : feedbackReaction === 'neutral' ? '😐' : feedbackReaction === 'sad' ? '😞' : ''
       const fullMessage = `${reactionEmoji ? `[${reactionEmoji}] ` : ''}${feedbackMessage}`
 
-      const attachments: { filename: string; data: Uint8Array; contentType: string }[] = []
+      // Routed through the backend so adblockers can't drop the Sentry call.
+      const formData = new FormData()
+      formData.append('message', fullMessage)
+      formData.append('name', userName || 'Anonymous')
+      if (userEmail) formData.append('email', userEmail)
       for (const img of feedbackImages) {
-        const arrayBuffer = await img.file.arrayBuffer()
-        attachments.push({
-          filename: img.file.name,
-          data: new Uint8Array(arrayBuffer),
-          contentType: img.file.type,
-        })
+        formData.append('attachments', img.file, img.file.name)
       }
 
-      Sentry.captureFeedback({
-        message: fullMessage,
-        name: userName || 'Anonymous',
-        email: userEmail || undefined,
-      }, {
-        includeReplay: true,
-        attachments: attachments.length > 0 ? attachments : undefined,
+      const response = await fetch(`${getAPIUrl()}monitoring/feedback`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
       })
+
+      if (!response.ok) {
+        throw new Error(`Feedback submission failed: ${response.status}`)
+      }
 
       setFeedbackSubmitted(true)
       resetForm()
