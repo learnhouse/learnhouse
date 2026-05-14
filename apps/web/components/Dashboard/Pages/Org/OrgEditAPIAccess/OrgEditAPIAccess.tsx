@@ -57,17 +57,13 @@ import {
 } from '@services/api_tokens/api_tokens'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import APIDocumentation from './APIDocumentation'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 const OrgEditAPIAccess: React.FC = () => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
-
   const [activeTab, setActiveTab] = useState('tokens')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -202,13 +198,7 @@ const OrgEditAPIAccess: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="pro"
-      icon={Key}
-      titleKey="common.plans.feature_restricted.api_access.title"
-      descriptionKey="common.plans.feature_restricted.api_access.description"
-    >
+    <FeatureGate feature="api_access">
     <>
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
       <div className="flex flex-col gap-0">
@@ -692,7 +682,7 @@ const OrgEditAPIAccess: React.FC = () => {
         </DialogContent>
       </Dialog>
     </>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

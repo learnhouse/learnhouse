@@ -115,6 +115,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) เป็นฟีเจอร์พรีเมียมที่มีให้บริการเฉพาะองค์กรที่ใช้แผน Enterprise อัปเกรดเพื่อเปิดใช้การยืนยันตัวตนที่ปลอดภัยผ่านผู้ให้บริการระบุตัวตนขององค์กรคุณ",
           "title": "ฟีเจอร์ Enterprise"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "แผนปัจจุบัน",
@@ -131,7 +147,8 @@
           "podcasts": "พอดแคสต์",
           "payments": "การชำระเงิน",
           "trail": "การติดตามความคืบหน้า",
-          "boards": "บอร์ด"
+          "boards": "บอร์ด",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} ไม่พร้อมใช้งาน",

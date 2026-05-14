@@ -9,10 +9,7 @@ import { CreatePodcastModal } from '@components/Objects/Modals/Podcasts/CreatePo
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import PodcastThumbnail from '@components/Objects/Thumbnails/PodcastThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 
 interface PodcastsDashClientProps {
   org_id: number
@@ -27,20 +24,11 @@ const PodcastsDashClient = ({
 }: PodcastsDashClientProps) => {
   const { t } = useTranslation()
   const org = useOrg() as any
-  const currentPlan = usePlan()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="standard"
-      icon={Headphones}
-      titleKey="common.plans.feature_restricted.podcasts.title"
-      descriptionKey="common.plans.feature_restricted.podcasts.description"
-      fullScreen
-    >
-    <FeatureDisabledView featureName="podcasts" orgslug={orgslug} context="dashboard">
+    <FeatureGate feature="podcasts" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
         <Breadcrumbs items={[
@@ -119,8 +107,7 @@ const PodcastsDashClient = ({
         orgSlug={orgslug}
       />
     </div>
-    </FeatureDisabledView>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

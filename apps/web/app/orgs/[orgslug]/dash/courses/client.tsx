@@ -29,7 +29,7 @@ import { getUserGroups, getUserGroupResources } from '@services/usergroups/userg
 import { mutate } from 'swr'
 import useSWR from 'swr'
 import toast from 'react-hot-toast'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import { searchMatchesAny } from '@/lib/search/normalize'
 
@@ -418,7 +418,7 @@ function CoursesHome(params: CourseProps) {
   }
 
   return (
-    <FeatureDisabledView featureName="courses" orgslug={orgslug} context="dashboard">
+    <FeatureGate feature="courses" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
         <Breadcrumbs items={[
@@ -742,7 +742,7 @@ function CoursesHome(params: CourseProps) {
         </div>
       )}
     </div>
-    </FeatureDisabledView>
+    </FeatureGate>
   )
 }
 

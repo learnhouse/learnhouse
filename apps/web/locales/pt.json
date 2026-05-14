@@ -115,6 +115,22 @@
         "sso": {
           "description": "Single Sign-On (SSO) é um recurso premium disponível apenas para organizações com plano Enterprise. Atualize para habilitar autenticação segura pelo provedor de identidade da sua organização.",
           "title": "Recurso Enterprise"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "Plano atual",
@@ -131,7 +147,8 @@
           "podcasts": "Podcasts",
           "payments": "Pagamentos",
           "trail": "Acompanhamento de progresso",
-          "boards": "Quadros"
+          "boards": "Quadros",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}} não disponível",

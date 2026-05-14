@@ -20,9 +20,9 @@ import { useTranslation } from 'react-i18next';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature';
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
+import { usePlan } from '@components/Hooks/usePlan';
 import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
-import { usePlan } from '@components/Hooks/usePlan'
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -222,41 +222,23 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
             {params.subpage == 'seo' && hasPermission('update') ? (
               <>
                 <div className="h-6" />
-                <PlanRestrictedFeature
-                  currentPlan={currentPlan}
-                  requiredPlan="standard"
-                  icon={Search}
-                  titleKey="common.plans.feature_restricted.seo.title"
-                  descriptionKey="common.plans.feature_restricted.seo.description"
-                >
+                <FeatureGate feature="seo">
                   <EditCourseSEO orgslug={params.orgslug} />
-                </PlanRestrictedFeature>
+                </FeatureGate>
               </>
             ) : null}
             {params.subpage == 'certification' && hasPermission('create_certifications') ? (
               <div className="h-6" />
             ) : null}
             {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <PlanRestrictedFeature
-                currentPlan={currentPlan}
-                requiredPlan="pro"
-                icon={Award}
-                titleKey="common.plans.feature_restricted.certifications.title"
-                descriptionKey="common.plans.feature_restricted.certifications.description"
-              >
+              <FeatureGate feature="certifications">
                 <EditCourseCertification orgslug={params.orgslug} />
-              </PlanRestrictedFeature>
+              </FeatureGate>
             ) : null}
             {params.subpage == 'analytics' && hasPermission('update') ? (
-              <PlanRestrictedFeature
-                currentPlan={currentPlan}
-                requiredPlan="pro"
-                icon={ChartBar}
-                titleKey="common.plans.feature_restricted.course_analytics.title"
-                descriptionKey="common.plans.feature_restricted.course_analytics.description"
-              >
+              <FeatureGate feature="course_analytics">
                 <CourseAnalyticsTab courseUUID={courseuuid} />
-              </PlanRestrictedFeature>
+              </FeatureGate>
             ) : null}
           </div>
         </motion.div>

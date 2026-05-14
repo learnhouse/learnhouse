@@ -115,6 +115,22 @@
         "sso": {
           "description": "单点登录 (SSO) 是仅限企业方案组织使用的高级功能。升级以通过组织的身份提供商启用安全认证。",
           "title": "企业功能"
+        },
+        "boards": {
+          "title": "Standard Feature",
+          "description": "Boards is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock collaborative boards for real-time brainstorming and planning."
+        },
+        "playgrounds": {
+          "title": "Standard Feature",
+          "description": "Playgrounds is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create interactive AI-generated experiences for your learners."
+        },
+        "scorm": {
+          "title": "Enterprise Feature",
+          "description": "SCORM support is a premium feature available only to organizations on our Enterprise plan. Upgrade to import and deliver SCORM packages alongside your courses."
+        },
+        "webhooks": {
+          "title": "Pro Feature",
+          "description": "Automations is a premium feature available only to organizations on our Pro plan or higher. Upgrade to wire your courses up to webhooks and external integrations."
         }
       },
       "current_plan": "当前方案",
@@ -131,7 +147,8 @@
           "podcasts": "播客",
           "payments": "支付",
           "trail": "进度跟踪",
-          "boards": "面板"
+          "boards": "面板",
+          "playgrounds": "Playgrounds"
         },
         "public": {
           "title": "{{feature}}不可用",

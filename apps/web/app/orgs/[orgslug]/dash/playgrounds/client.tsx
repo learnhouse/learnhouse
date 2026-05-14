@@ -32,10 +32,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { searchMatchesAny } from '@/lib/search/normalize'
 
 interface PlaygroundsListClientProps {
@@ -47,7 +44,6 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const plan = usePlan()
   const router = useRouter()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -187,17 +183,8 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
 
   const hasSelection = selectedUuids.size > 0
 
-  const playgroundsRequiredPlan =
-    (org?.config?.config?.resolved_features?.playgrounds?.required_plan as PlanLevel | undefined) ?? 'personal'
-
   return (
-    <PlanRestrictedFeature
-      currentPlan={plan}
-      requiredPlan={playgroundsRequiredPlan}
-      titleKey="Playgrounds"
-      descriptionKey="Create interactive AI-generated experiences for your learners."
-    >
-      <FeatureDisabledView featureName="playgrounds" orgslug={orgslug} context="dashboard">
+    <FeatureGate feature="playgrounds" orgslug={orgslug} context="dashboard">
         <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
 
           {/* Header */}
@@ -385,7 +372,6 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
             </>
           )}
         </div>
-      </FeatureDisabledView>
 
       {/* Create modal */}
       {showNameModal && (
@@ -463,7 +449,7 @@ export default function PlaygroundsListClient({ org_id, orgslug }: PlaygroundsLi
           </div>
         </div>
       )}
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

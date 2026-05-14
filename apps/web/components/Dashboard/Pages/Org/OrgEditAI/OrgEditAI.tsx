@@ -7,20 +7,17 @@ import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
-import { PlanLevel } from '@services/plans/plans'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
 import { ShieldAlert, BrainCircuit, MessageCircle, Pencil, Sparkles } from 'lucide-react'
 import Image from 'next/image'
-import { usePlan } from '@components/Hooks/usePlan'
 
 const OrgEditAI: React.FC = () => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const currentPlan = usePlan()
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
 
@@ -88,20 +85,7 @@ const OrgEditAI: React.FC = () => {
   }
 
   return (
-    <PlanRestrictedFeature
-      currentPlan={currentPlan}
-      requiredPlan="standard"
-      customIcon={
-        <Image
-          src="/learnhouse_ai_simple_colored.png"
-          alt="LearnHouse AI"
-          width={32}
-          height={32}
-        />
-      }
-      titleKey="common.plans.feature_restricted.ai.title"
-      descriptionKey="common.plans.feature_restricted.ai.description"
-    >
+    <FeatureGate feature="ai">
       <div className="sm:mx-10 mx-0 space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -179,7 +163,7 @@ const OrgEditAI: React.FC = () => {
           </div>
         )}
       </div>
-    </PlanRestrictedFeature>
+    </FeatureGate>
   )
 }
 

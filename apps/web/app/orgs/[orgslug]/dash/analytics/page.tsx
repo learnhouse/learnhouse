@@ -7,9 +7,9 @@ import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { usePlanInfo, useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
 import { isFeatureAvailable } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
+import { usePlan } from '@components/Hooks/usePlan'
 import ExportAnalyticsButton from '@components/Dashboard/Analytics/AnalyticsExport'
 
 // Core widgets — dynamic to code-split recharts
@@ -69,16 +69,9 @@ export default function AnalyticsDashboard() {
 
   if (!isAnalyticsAvailable) {
     return (
-      <PlanRestrictedFeature
-        currentPlan={plan}
-        requiredPlan="standard"
-        icon={ChartBar}
-        titleKey="common.plans.feature_restricted.analytics.title"
-        descriptionKey="common.plans.feature_restricted.analytics.description"
-        fullScreen
-      >
+      <FeatureGate feature="analytics">
         <></>
-      </PlanRestrictedFeature>
+      </FeatureGate>
     )
   }
 

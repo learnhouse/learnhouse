@@ -7,26 +7,23 @@ import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUse
 import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { getAPIUrl } from '@services/config/config'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { PlanLevel } from '@services/plans/plans'
 import { Pencil, SquareUserRound, Users, X, Search, Calendar } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@components/ui/badge'
-import { usePlan } from '@components/Hooks/usePlan'
 
 function OrgUserGroups() {
     const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
-    const currentPlan = usePlan()
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
@@ -68,13 +65,7 @@ function OrgUserGroups() {
     }
 
     return (
-        <PlanRestrictedFeature
-            currentPlan={currentPlan}
-            requiredPlan="standard"
-            icon={SquareUserRound}
-            titleKey="common.plans.feature_restricted.usergroups.title"
-            descriptionKey="common.plans.feature_restricted.usergroups.description"
-        >
+        <FeatureGate feature="usergroups">
             <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
@@ -252,7 +243,7 @@ function OrgUserGroups() {
                     </div>
                 </div>
             </div>
-        </PlanRestrictedFeature>
+        </FeatureGate>
     )
 }
 

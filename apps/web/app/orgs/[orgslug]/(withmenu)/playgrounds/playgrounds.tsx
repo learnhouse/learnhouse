@@ -10,7 +10,7 @@ import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOf
 import PlaygroundCard from '@components/Playground/PlaygroundCard'
 import { Playground, createPlayground } from '@services/playgrounds/playgrounds'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
+import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { searchMatchesAny } from '@/lib/search/normalize'
 
@@ -108,12 +108,7 @@ export default function PlaygroundsClient({
 
   return (
     <>
-    <FeatureDisabledView
-      featureName="playgrounds"
-      orgslug={orgslug}
-      icon={Cube}
-      context="public"
-    >
+    <FeatureGate feature="playgrounds" orgslug={orgslug} context="public">
       <div className="w-full">
         <GeneralWrapperStyled>
           <div className="flex flex-col space-y-2 mb-2">
@@ -257,7 +252,7 @@ export default function PlaygroundsClient({
           </div>
         </GeneralWrapperStyled>
       </div>
-    </FeatureDisabledView>
+    </FeatureGate>
 
     {/* Create name modal */}
     {showNameModal && (
