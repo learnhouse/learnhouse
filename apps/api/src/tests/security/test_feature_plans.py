@@ -35,7 +35,7 @@ class TestFeaturePlans:
             "pro",
             "enterprise",
         ]
-        assert FEATURE_PLAN_REQUIREMENTS["boards"] == "pro"
+        assert FEATURE_PLAN_REQUIREMENTS["boards"] == "personal"
         assert PLAN_LIMITS["standard"]["members"] == 500
         assert AI_CREDIT_LIMITS["enterprise"] == -1
         assert PLAN_FEATURE_CONFIGS["free"]["cloud"]["plan"] == "free"
@@ -127,5 +127,5 @@ class TestFeaturePlans:
             assert plan_meets_requirement("free", "pro") is True
 
     def test_get_required_plan_for_feature(self):
-        assert get_required_plan_for_feature("boards") == "pro"
+        assert get_required_plan_for_feature("boards") == "personal"
         assert get_required_plan_for_feature("unknown") is None

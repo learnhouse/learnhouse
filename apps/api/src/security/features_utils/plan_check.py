@@ -311,7 +311,7 @@ def require_plan_for_boards(required_plan: PlanLevel, feature_name: str):
     for board routes. Resolves org_id from board_uuid, path params, or query params.
 
     Usage in router:
-        dependencies=[Depends(require_plan_for_boards("pro", "Boards"))]
+        dependencies=[Depends(require_plan_for_boards("personal", "Boards"))]
     """
 
     async def plan_dependency(
