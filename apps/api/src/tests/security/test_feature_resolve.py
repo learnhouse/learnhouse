@@ -117,7 +117,7 @@ class TestFeatureResolve:
         assert boards == {
             "enabled": False,
             "limit": 0,
-            "required_plan": "pro",
+            "required_plan": "personal",
         }
         assert ai == {
             "enabled": False,

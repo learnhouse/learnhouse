@@ -241,10 +241,13 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     return pages
   }
 
+  const boardsRequiredPlan =
+    (org?.config?.config?.resolved_features?.boards?.required_plan as PlanLevel | undefined) ?? 'personal'
+
   return (
     <PlanRestrictedFeature
       currentPlan={plan}
-      requiredPlan="pro"
+      requiredPlan={boardsRequiredPlan}
       titleKey="Boards"
       descriptionKey="Create collaborative boards for real-time brainstorming and planning."
     >

@@ -280,7 +280,8 @@ async def require_boards_feature(
 ) -> bool:
     """
     Router-level dependency that auto-detects the parameter type and checks
-    if the boards feature is enabled AND the org plan is Pro or higher.
+    if the boards feature is enabled AND the org plan is Personal or higher
+    (Standard is gated by the feature flag instead).
 
     Checks in order: board_uuid (path), org_id (path), org_id (query)
     """
@@ -319,12 +320,12 @@ async def require_boards_feature(
     # Check feature flag
     _check_feature_enabled("boards", org_id, db_session)
 
-    # Check plan (Pro+ or OSS)
+    # Check plan (Personal+ or OSS)
     current_plan = get_org_plan(org_id, db_session)
-    if not plan_meets_requirement(current_plan, "pro"):
+    if not plan_meets_requirement(current_plan, "personal"):
         raise HTTPException(
             status_code=403,
-            detail="Boards requires a Pro plan or higher. "
+            detail="Boards requires a Personal plan or higher. "
             f"Your organization is currently on the {current_plan.capitalize()} plan.",
         )
 

@@ -380,20 +380,20 @@ class TestFeatureDependencies:
         mock_check.assert_called_once_with("boards", 42, db_session)
 
     @pytest.mark.asyncio
-    async def test_require_boards_feature_rejects_non_pro_plan(self):
+    async def test_require_boards_feature_rejects_below_personal_plan(self):
         db_session = Mock(spec=Session)
-        _exec_sequence(db_session, SimpleNamespace(org_id=21), SimpleNamespace(config={"config_version": "2.0", "plan": "standard"}))
+        _exec_sequence(db_session, SimpleNamespace(org_id=21), SimpleNamespace(config={"config_version": "2.0", "plan": "free"}))
         request = _request({"board_uuid": "board-1"})
 
         with patch("src.security.features_utils.dependencies._check_feature_enabled", return_value=True) as mock_check, \
-             patch("src.security.features_utils.plan_check.get_org_plan", return_value="standard"), \
+             patch("src.security.features_utils.plan_check.get_org_plan", return_value="free"), \
              patch("src.security.features_utils.plans.plan_meets_requirement", return_value=False):
             with pytest.raises(HTTPException) as exc_info:
                 await require_boards_feature(request, db_session)
 
         mock_check.assert_called_once_with("boards", 21, db_session)
         assert exc_info.value.status_code == 403
-        assert "Boards requires a Pro plan or higher" in exc_info.value.detail
+        assert "Boards requires a Personal plan or higher" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_require_boards_feature_allows_pro_plan(self):

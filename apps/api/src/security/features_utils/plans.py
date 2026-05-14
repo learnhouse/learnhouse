@@ -27,7 +27,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "usergroups": "standard",
     "api_tokens": "pro",
     "webhooks": "pro",
-    "boards": "pro",
+    "boards": "personal",
     "certifications": "pro",
     "custom_domains": "pro",
     "playgrounds": "personal",
