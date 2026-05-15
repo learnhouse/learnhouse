@@ -42,6 +42,7 @@ import {
   Cube,
   ShoppingBag,
 } from '@phosphor-icons/react'
+import { useAtlasMini } from '@components/Dashboard/Atlas/AtlasMiniContext'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import CommandPaletteTrigger from '@components/Dashboard/CommandPalette/CommandPaletteTrigger'
 import Link from 'next/link'
@@ -84,6 +85,7 @@ function DashLeftMenu() {
   const { t, i18n } = useTranslation()
   const pathname = usePathname() || ''
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { open: atlasOpen, toggle: toggleAtlas } = useAtlasMini()
 
   const isActivePath = (path: string) => {
     if (path === '/dash') {
@@ -262,13 +264,68 @@ function DashLeftMenu() {
               active={isActivePath('/dash')}
             />
 
-            <MenuLink
-              href="/dash/atlas"
-              icon={<GlobeStand size={20} weight="duotone" />}
-              label="Atlas"
-              isCollapsed={isCollapsed}
-              active={isActivePath('/dash/atlas')}
-            />
+            {(() => {
+              const active = isActivePath('/dash/atlas')
+              return (
+                <div
+                  className={cn(
+                    "relative flex items-center w-full rounded-lg transition-all",
+                    active
+                      ? "text-white bg-white/[0.08]"
+                      : "text-white/50 hover:bg-white/[0.08]"
+                  )}
+                >
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0.5 top-1/2 -translate-y-1/2 h-5 w-[3px] bg-white rounded-full"
+                    />
+                  )}
+                  <Link
+                    href="/dash/atlas"
+                    aria-label="Open Atlas"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      "flex items-center flex-1 min-w-0 rounded-lg transition-colors",
+                      active ? "text-white" : "hover:text-white",
+                      isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                    )}
+                  >
+                    <span className="relative flex items-center justify-center">
+                      <GlobeStand size={20} weight="duotone" />
+                    </span>
+                    {!isCollapsed && (
+                      <span className="text-sm font-medium flex-1 text-left">Atlas</span>
+                    )}
+                  </Link>
+                  {!isCollapsed && (
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={toggleAtlas}
+                            aria-label="Open Atlas in side panel"
+                            aria-pressed={atlasOpen}
+                            className={cn(
+                              "mr-1.5 p-1.5 rounded-md transition-colors flex-none",
+                              atlasOpen
+                                ? "text-white bg-white/[0.12]"
+                                : "text-white/40 hover:text-white hover:bg-white/[0.10]"
+                            )}
+                          >
+                            <SidebarSimple size={14} weight="duotone" mirrored />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">
+                          Open Atlas in side panel
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Courses with hover menu */}
             <HoverMenu

@@ -1,24 +1,51 @@
-import json
-import logging
-from typing import Any, Optional
+"""Atlas chat router — HTTP/SSE plumbing only.
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
+The agent logic, tier enforcement, and tool dispatch all live in
+``services/ai/atlas/pipeline.py``. This module owns:
+
+  - Session token mint/revoke (unchanged from v1)
+  - Sessions list/messages/patch/delete (unchanged from v1)
+  - ``POST /chat`` SSE: builds AtlasDeps, runs ``pipeline.run_turn``,
+    serializes events through ``sse-starlette``
+  - ``POST /pending/{id}/apply``: confirms a pending edit and streams
+    the apply via the same SSE shape
+  - ``POST /pending/{id}/cancel``, ``POST /pending/{id}/refine``
+
+All session-management endpoints from v1 are kept verbatim — only the
+chat/streaming surface changed.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sse_starlette.sse import EventSourceResponse
 
 from src.core.events.database import get_db_session
 from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.security.api_token_utils import get_authenticated_non_api_token_user
 from src.security.org_auth import require_org_membership
-from src.services.ai.atlas.agent import run_atlas_turn
+from src.services.ai.atlas.deps import AtlasDeps
+from src.services.ai.atlas.events import serialize as serialize_event
 from src.services.ai.atlas.history import (
     ATLAS_MODE,
     new_session_uuid,
     save_atlas_turn,
 )
+from src.services.ai.atlas.pending import PendingStore
+from src.services.ai.atlas.pipeline import (
+    AtlasTurnRequest,
+    apply_flow,
+    run_turn,
+)
+from src.services.ai.atlas.resolver import PageContextDTO, ReferenceDTO
+from src.services.ai.atlas.snapshots import SnapshotCache
 from src.services.ai.base import (
     delete_chat_session,
     get_chat_messages,
@@ -36,14 +63,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# ─── models ────────────────────────────────────────────────────────────────
-
-
-class AtlasMessage(BaseModel):
-    role: str = Field(description="Either 'user' or 'model'.")
-    content: str
-
-
 class AtlasSessionResponse(BaseModel):
     token: str
     token_uuid: str
@@ -51,25 +70,41 @@ class AtlasSessionResponse(BaseModel):
     ttl_seconds: int
 
 
+class AtlasReference(BaseModel):
+    """Chat-panel chip a user attached to the next message."""
+
+    type: str = Field(description="'activity' or 'chapter'")
+    uuid: str
+    name: str
+    parent_course_uuid: str
+    parent_chapter_id: Optional[int] = None
+    parent_chapter_name: Optional[str] = None
+    activity_type: Optional[str] = None
+
+
+class AtlasPageContext(BaseModel):
+    """What the user is currently looking at in the dashboard."""
+
+    course_uuid: Optional[str] = None
+    course_name: Optional[str] = None
+    chapter_id: Optional[int] = None
+    chapter_uuid: Optional[str] = None
+    chapter_name: Optional[str] = None
+    activity_uuid: Optional[str] = None
+    activity_name: Optional[str] = None
+    references: Optional[list[AtlasReference]] = None
+
+
 class AtlasChatRequest(BaseModel):
     org_id: int
     session_token: str
     message: str
-    # Optional continuation: if present, the turn is appended to that
-    # session's Redis history. If absent, a fresh session is minted and
-    # returned to the client via the SSE `session` event.
     aichat_uuid: Optional[str] = None
+    page_context: Optional[AtlasPageContext] = None
 
 
 class AtlasRevokeRequest(BaseModel):
     token_uuid: str
-
-
-class AtlasSessionListItem(BaseModel):
-    aichat_uuid: str
-    title: str
-    created_at: Optional[str] = None
-    favorite: bool = False
 
 
 class AtlasSessionUpdateRequest(BaseModel):
@@ -77,36 +112,70 @@ class AtlasSessionUpdateRequest(BaseModel):
     favorite: Optional[bool] = None
 
 
-# ─── shared helpers ────────────────────────────────────────────────────────
+class PendingApplyRequest(BaseModel):
+    org_id: int
+    session_token: str
+    confirmation_phrase: Optional[str] = None
+
+
+class PendingCancelRequest(BaseModel):
+    org_id: int
+
+
+class PendingRefineRequest(BaseModel):
+    org_id: int
+    session_token: str
+    instruction: str
+    page_context: Optional[AtlasPageContext] = None
 
 
 async def _ensure_org_access(user_id: int, org_id: int, db_session: AsyncSession) -> Organization:
     org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     if not org:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
     await require_org_membership(user_id, org_id, db_session)
     return org
 
 
-# ─── auth / token endpoints ────────────────────────────────────────────────
+def _validate_session_token(token: str) -> None:
+    if not token or not token.startswith("lh_"):
+        raise HTTPException(
+            status_code=400,
+            detail="session_token must be a LearnHouse API token (starts with 'lh_').",
+        )
 
 
-@router.post(
-    "/session",
-    response_model=AtlasSessionResponse,
-    summary="Mint an Atlas session token",
-    description=(
-        "Mint a short-lived API token for the Atlas in-product agent, scoped to "
-        "the caller's user + org. The frontend should auto-refresh by calling "
-        "this endpoint a minute or two before expiry."
-    ),
-    responses={
-        200: {"description": "Session token minted.", "model": AtlasSessionResponse},
-        401: {"description": "Authentication required"},
-        403: {"description": "User is not a member of this organization"},
-        404: {"description": "Organization not found"},
-    },
-)
+def _page_context_dto(pc: Optional[AtlasPageContext]) -> PageContextDTO:
+    if pc is None:
+        return PageContextDTO()
+    return PageContextDTO(
+        course_uuid=pc.course_uuid,
+        chapter_id=pc.chapter_id,
+        chapter_uuid=pc.chapter_uuid,
+        activity_uuid=pc.activity_uuid,
+    )
+
+
+def _references_dtos(pc: Optional[AtlasPageContext]) -> list[ReferenceDTO]:
+    if pc is None or not pc.references:
+        return []
+    out: list[ReferenceDTO] = []
+    for r in pc.references[:5]:
+        if r.type not in ("activity", "chapter"):
+            continue
+        out.append(
+            ReferenceDTO(
+                kind=r.type,
+                uuid=r.uuid,
+                name=r.name,
+                parent_course_uuid=r.parent_course_uuid,
+                parent_chapter_id=r.parent_chapter_id,
+            )
+        )
+    return out
+
+
+@router.post("/session", response_model=AtlasSessionResponse, summary="Mint Atlas session token")
 async def api_atlas_session(
     request: Request,
     org_id: int,
@@ -123,14 +192,7 @@ async def api_atlas_session(
     )
 
 
-@router.post(
-    "/session/revoke",
-    summary="Revoke an Atlas session token",
-    responses={
-        200: {"description": "Token revoked (or no-op if it wasn't active)."},
-        401: {"description": "Authentication required"},
-    },
-)
+@router.post("/session/revoke", summary="Revoke Atlas session token")
 async def api_atlas_revoke(
     request: Request,
     body: AtlasRevokeRequest,
@@ -141,29 +203,16 @@ async def api_atlas_revoke(
     return {"ok": True}
 
 
-# ─── chat (streaming) ──────────────────────────────────────────────────────
-
-
 @router.post(
     "/chat",
-    summary="Stream an Atlas chat turn",
+    summary="Stream one Atlas turn",
     description=(
-        "Send one user message and stream back the agent's response as "
-        "Server-Sent Events. If `aichat_uuid` is present the turn is "
-        "appended to that session's Redis history; otherwise a new session "
-        "is minted and its uuid surfaced via the first SSE event "
-        "(`type='session'`). Emitted events: session, start, chunk, "
-        "tool_call, tool_result, done, error."
+        "Send one user message and stream back typed events as Server-Sent "
+        "Events. Event types: session, message.delta, tool.start, tool.end, "
+        "entity.resolved, entity.ambiguous, entity.not_found, preview.activity/"
+        "chapter/course, results.list, structure.proposal, confirm.required, "
+        "applied, pending.dropped, error, done."
     ),
-    responses={
-        200: {
-            "description": "SSE stream of chat events.",
-            "content": {"text/event-stream": {}},
-        },
-        401: {"description": "Authentication required"},
-        403: {"description": "User is not a member of this organization"},
-        404: {"description": "Organization not found, or session not owned by this user"},
-    },
 )
 async def api_atlas_chat(
     request: Request,
@@ -175,124 +224,232 @@ async def api_atlas_chat(
 
     if not body.message or not body.message.strip():
         raise HTTPException(status_code=400, detail="message must be non-empty")
-    if not body.session_token or not body.session_token.startswith("lh_"):
-        raise HTTPException(
-            status_code=400,
-            detail="session_token must be a LearnHouse API token (starts with 'lh_').",
-        )
+    _validate_session_token(body.session_token)
 
-    # Resolve the chat session uuid + load its history from Redis. If the
-    # caller supplied one, we verify ownership by calling get_chat_messages
-    # which does the check for us (returns None for non-owned sessions).
     aichat_uuid = body.aichat_uuid
-    history_messages: list[dict[str, Any]] = []
     if aichat_uuid:
         loaded = get_chat_messages(aichat_uuid, current_user.id)
         if loaded is None:
             raise HTTPException(
-                status_code=404,
-                detail="Chat session not found or not owned by this user.",
+                status_code=404, detail="Chat session not found or not owned by this user."
             )
-        history_messages = loaded
     else:
         aichat_uuid = new_session_uuid()
 
-    # Strip Atlas-specific tool_calls fields before handing history to the
-    # Gemini agent — the model only cares about text. Tool results from
-    # past turns are already baked into the next user message.
-    agent_history = [
-        {"role": m.get("role"), "content": m.get("content", "")}
-        for m in history_messages
-        if m.get("role") in ("user", "model") and m.get("content")
-    ]
-
-    user_id = current_user.id
-    org_id = body.org_id
-
-    async def event_generator():
-        full_text_parts: list[str] = []
-        tool_log: dict[str, dict[str, Any]] = {}  # call_id -> {name, args, summary, is_error, guidance}
-
-        # Emit the session uuid up front so the frontend can pin state to it
-        # (URL param, sidebar highlight) before any tokens stream in.
-        yield f"data: {json.dumps({'type': 'session', 'aichat_uuid': aichat_uuid})}\n\n"
-
-        try:
-            async for event in run_atlas_turn(
-                user_message=body.message,
-                history=agent_history,
-                session_token=body.session_token,
-            ):
-                kind = event.get("type")
-                if kind == "chunk" and isinstance(event.get("content"), str):
-                    full_text_parts.append(event["content"])
-                elif kind == "tool_call":
-                    tool_log[event["call_id"]] = {
-                        "name": event.get("name"),
-                        "args": event.get("args") or {},
-                    }
-                elif kind == "tool_result":
-                    entry = tool_log.setdefault(event["call_id"], {})
-                    entry["summary"] = event.get("summary")
-                    entry["is_error"] = bool(event.get("is_error"))
-                    if event.get("guidance"):
-                        entry["guidance"] = event["guidance"]
-                yield f"data: {json.dumps(event)}\n\n"
-        except Exception:
-            logger.exception("Atlas SSE generator blew up")
-            yield f"data: {json.dumps({'type': 'error', 'message': 'Atlas stream terminated unexpectedly.'})}\n\n"
-            return
-
-        # Persist the turn only if we actually produced something — a
-        # zero-output turn (e.g. stream aborted mid-flight) would polute
-        # the session with an empty model message.
-        final_text = "".join(full_text_parts).strip()
-        tool_calls_list = [
-            {
-                "name": info.get("name"),
-                "args": info.get("args") or {},
-                "summary": info.get("summary"),
-                "is_error": info.get("is_error"),
-                "guidance": info.get("guidance"),
-            }
-            for info in tool_log.values()
-        ]
-        if final_text or tool_calls_list:
-            try:
-                save_atlas_turn(
-                    aichat_uuid=aichat_uuid,
-                    user_message=body.message,
-                    ai_response=final_text,
-                    tool_calls=tool_calls_list or None,
-                    user_id=user_id,
-                    org_id=org_id,
-                )
-            except Exception:
-                logger.exception("Failed to persist Atlas turn %s", aichat_uuid)
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
+    return EventSourceResponse(
+        _chat_event_stream(
+            request=request,
+            db_session=db_session,
+            current_user=current_user,
+            org_id=body.org_id,
+            session_token=body.session_token,
+            aichat_uuid=aichat_uuid,
+            message=body.message,
+            page_context=body.page_context,
+        ),
         headers={
             "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
         },
     )
 
 
-# ─── session management ────────────────────────────────────────────────────
+async def _chat_event_stream(
+    *,
+    request: Request,
+    db_session: AsyncSession,
+    current_user: PublicUser,
+    org_id: int,
+    session_token: str,
+    aichat_uuid: str,
+    message: str,
+    page_context: Optional[AtlasPageContext],
+):
+    """SSE generator. Persists turn to Redis after stream ends."""
+    pending_store = PendingStore()
+    snapshot_cache = SnapshotCache()
+    deps = AtlasDeps(
+        db=db_session,
+        request=request,
+        current_user=current_user,
+        org_id=org_id,
+        aichat_uuid=aichat_uuid,
+        session_token=session_token,
+        pending_store=pending_store,
+        snapshot_cache=snapshot_cache,
+    )
+    req = AtlasTurnRequest(
+        aichat_uuid=aichat_uuid,
+        message=message,
+        page_context=_page_context_dto(page_context),
+        references=_references_dtos(page_context),
+    )
+
+    text_chunks: list[str] = []
+    structured_events: list[dict] = []
+    try:
+        async for event in run_turn(req, deps):
+            payload = serialize_event(event)
+            if event.type == "message.delta":
+                text_chunks.append(getattr(event, "delta", "") or "")
+            elif event.type not in ("session", "tool.start", "tool.end", "message.delta"):
+                structured_events.append(event.model_dump(exclude_none=True))
+            yield payload
+    except Exception:
+        logger.exception("Atlas SSE generator failed")
+        yield {
+            "event": "error",
+            "data": '{"code":"stream_failed","message":"Atlas stream terminated unexpectedly.","retriable":true}',
+        }
+    finally:
+        try:
+            await pending_store.close()
+            await snapshot_cache.close()
+        except Exception:
+            pass
+
+    final_text = "".join(text_chunks).strip()
+    if final_text or structured_events:
+        try:
+            save_atlas_turn(
+                aichat_uuid=aichat_uuid,
+                user_message=message,
+                ai_response=final_text,
+                tool_calls=structured_events or None,
+                user_id=current_user.id,
+                org_id=org_id,
+            )
+        except Exception:
+            logger.exception("Failed to persist Atlas turn %s", aichat_uuid)
 
 
-@router.get(
-    "/sessions",
-    summary="List the caller's Atlas chat sessions",
+@router.post(
+    "/pending/{pending_id}/apply",
+    summary="Apply a pending Atlas edit",
+)
+async def api_pending_apply(
+    request: Request,
+    pending_id: str,
+    body: PendingApplyRequest,
+    current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    await _ensure_org_access(current_user.id, body.org_id, db_session)
+    _validate_session_token(body.session_token)
+
+    pending_store = PendingStore()
+    snapshot_cache = SnapshotCache()
+    pe = await pending_store.get(pending_id, user_id=current_user.id, org_id=body.org_id)
+    if pe is None:
+        await pending_store.close()
+        await snapshot_cache.close()
+        raise HTTPException(status_code=404, detail="Pending edit not found.")
+    deps = AtlasDeps(
+        db=db_session,
+        request=request,
+        current_user=current_user,
+        org_id=body.org_id,
+        aichat_uuid=pe.aichat_uuid,
+        session_token=body.session_token,
+        pending_store=pending_store,
+        snapshot_cache=snapshot_cache,
+    )
+
+    async def stream():
+        try:
+            async for event in apply_flow(pe, deps, confirmation_phrase=body.confirmation_phrase):
+                yield serialize_event(event)
+        finally:
+            try:
+                await pending_store.close()
+                await snapshot_cache.close()
+            except Exception:
+                pass
+
+    return EventSourceResponse(
+        stream(),
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post(
+    "/pending/{pending_id}/cancel",
+    summary="Cancel a pending Atlas edit",
+)
+async def api_pending_cancel(
+    pending_id: str,
+    body: PendingCancelRequest,
+    current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    await _ensure_org_access(current_user.id, body.org_id, db_session)
+    pending_store = PendingStore()
+    try:
+        ok = await pending_store.cancel(pending_id, user_id=current_user.id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Pending edit not found.")
+        return {"ok": True, "pending_id": pending_id}
+    finally:
+        await pending_store.close()
+
+
+@router.post(
+    "/pending/{pending_id}/refine",
+    summary="Refine a pending Atlas edit",
     description=(
-        "Returns the caller's Atlas sessions, newest first. Sessions are "
-        "filtered to `mode='atlas'` so Copilot/RAG sessions don't appear in "
-        "the Atlas sidebar."
+        "Re-runs the pipeline with ``instruction`` as a fresh user "
+        "message, scoped to the same target as the existing pending. "
+        "On success the prior pending is superseded and a new preview "
+        "is emitted via the SSE stream."
     ),
 )
+async def api_pending_refine(
+    request: Request,
+    pending_id: str,
+    body: PendingRefineRequest,
+    current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    await _ensure_org_access(current_user.id, body.org_id, db_session)
+    _validate_session_token(body.session_token)
+    if not body.instruction or not body.instruction.strip():
+        raise HTTPException(status_code=400, detail="instruction must be non-empty")
+
+    pending_store = PendingStore()
+    snapshot_cache = SnapshotCache()
+    pe = await pending_store.get(pending_id, user_id=current_user.id, org_id=body.org_id)
+    if pe is None:
+        await pending_store.close()
+        await snapshot_cache.close()
+        raise HTTPException(status_code=404, detail="Pending edit not found.")
+
+    refine_message = (
+        f"Refine the pending edit on '{pe.target_resource.name}' "
+        f"(originally: \"{pe.summary}\"). Refinement: {body.instruction.strip()}"
+    )
+
+    return EventSourceResponse(
+        _chat_event_stream(
+            request=request,
+            db_session=db_session,
+            current_user=current_user,
+            org_id=body.org_id,
+            session_token=body.session_token,
+            aichat_uuid=pe.aichat_uuid,
+            message=refine_message,
+            page_context=body.page_context,
+        ),
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get("/sessions", summary="List Atlas chat sessions")
 async def api_atlas_sessions_list(
     org_id: int,
     current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
@@ -301,8 +458,6 @@ async def api_atlas_sessions_list(
     await _ensure_org_access(current_user.id, org_id, db_session)
     sessions = get_user_chat_sessions(current_user.id, org_id=org_id)
     atlas_sessions = [s for s in sessions if s.get("mode") == ATLAS_MODE]
-    # Keep only the fields the sidebar needs, so we don't leak e.g.
-    # unrelated course_uuid fields that belong to the Copilot shape.
     return {
         "sessions": [
             {
@@ -317,44 +472,29 @@ async def api_atlas_sessions_list(
     }
 
 
-@router.get(
-    "/sessions/{aichat_uuid}/messages",
-    summary="Load the messages in an Atlas chat session",
-)
+@router.get("/sessions/{aichat_uuid}/messages", summary="Load Atlas session messages")
 async def api_atlas_session_messages(
     aichat_uuid: str,
     current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
 ):
     messages = get_chat_messages(aichat_uuid, current_user.id)
     if messages is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Chat session not found or not owned by this user.",
-        )
+        raise HTTPException(status_code=404, detail="Chat session not found or not owned by this user.")
     return {"messages": messages}
 
 
-@router.delete(
-    "/sessions/{aichat_uuid}",
-    summary="Delete an Atlas chat session",
-)
+@router.delete("/sessions/{aichat_uuid}", summary="Delete an Atlas chat session")
 async def api_atlas_session_delete(
     aichat_uuid: str,
     current_user: PublicUser = Depends(get_authenticated_non_api_token_user),
 ):
     ok = delete_chat_session(aichat_uuid, current_user.id)
     if not ok:
-        raise HTTPException(
-            status_code=404,
-            detail="Chat session not found or not owned by this user.",
-        )
+        raise HTTPException(status_code=404, detail="Chat session not found or not owned by this user.")
     return {"status": "deleted"}
 
 
-@router.patch(
-    "/sessions/{aichat_uuid}",
-    summary="Rename or favorite an Atlas chat session",
-)
+@router.patch("/sessions/{aichat_uuid}", summary="Rename or favorite an Atlas chat session")
 async def api_atlas_session_patch(
     aichat_uuid: str,
     body: AtlasSessionUpdateRequest,
@@ -367,8 +507,5 @@ async def api_atlas_session_patch(
         favorite=body.favorite,
     )
     if updated is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Chat session not found or not owned by this user.",
-        )
+        raise HTTPException(status_code=404, detail="Chat session not found or not owned by this user.")
     return {"session": updated}

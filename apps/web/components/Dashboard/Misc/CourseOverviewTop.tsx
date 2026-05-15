@@ -10,6 +10,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 import { BookCopy, BrainCircuit, Eye, Globe, GlobeLock, Loader2, Check, Info } from 'lucide-react'
+import { GlobeStand } from '@phosphor-icons/react'
+import { useAtlasMini, useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
 import { updateCourse } from '@services/courses/courses'
@@ -35,9 +37,29 @@ export function CourseOverviewTop({
   const [isPublishing, setIsPublishing] = useState(false)
   const [isIndexing, setIsIndexing] = useState(false)
   const [isIndexed, setIsIndexed] = useState(false)
+  const { open: atlasOpen, toggle: toggleAtlas } = useAtlasMini()
 
   const courseStructure = course?.courseStructure
   const isPublished = courseStructure?.published
+  const withUnpublishedActivities = course?.withUnpublishedActivities ?? false
+
+  // Tell Atlas which course the user is viewing so the agent can pre-focus
+  // it and skip the "which course?" round-trip on terse messages like
+  // "fill this please". Cleared automatically on unmount.
+  useRegisterAtlasPageContext(
+    courseStructure?.course_uuid
+      ? {
+          course_uuid: courseStructure.course_uuid,
+          course_name: courseStructure.name,
+        }
+      : null,
+  )
+
+  // Use unified cache key
+  const cacheKey = courseStructure?.course_uuid
+    ? getCourseMetaCacheKey(courseStructure.course_uuid, withUnpublishedActivities)
+    : null
+
   const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 
   const indexCourseForAI = useCallback(async () => {
@@ -184,6 +206,8 @@ export function CourseOverviewTop({
           <button
             onClick={togglePublishStatus}
             disabled={isPublishing}
+            aria-label={isPublished ? 'Unpublish course' : 'Publish course'}
+            title={isPublished ? 'Click to unpublish' : 'Click to publish'}
             className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
               isPublished
                 ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70'
@@ -191,11 +215,11 @@ export function CourseOverviewTop({
             } ${isPublishing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             {isPublishing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin flex-none" />
             ) : isPublished ? (
-              <Globe className="w-4 h-4" />
+              <Globe className="w-4 h-4 flex-none" />
             ) : (
-              <GlobeLock className="w-4 h-4" />
+              <GlobeLock className="w-4 h-4 flex-none" />
             )}
             <span className="hidden sm:inline">
               {isPublishing
@@ -226,6 +250,7 @@ export function CourseOverviewTop({
                     <button
                       onClick={indexCourseForAI}
                       disabled={isIndexing}
+                      aria-label={isIndexing ? 'Indexing course' : isIndexed ? 'Course indexed' : 'Index course for AI'}
                       className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
                         isIndexed
                           ? 'bg-blue-50/70 text-blue-700'
@@ -233,11 +258,11 @@ export function CourseOverviewTop({
                       } ${isIndexing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {isIndexing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin flex-none" />
                       ) : isIndexed ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4 flex-none" />
                       ) : (
-                        <BrainCircuit className="w-4 h-4" />
+                        <BrainCircuit className="w-4 h-4 flex-none" />
                       )}
                       <span className="hidden sm:inline">
                         {isIndexing ? 'Indexing...' : isIndexed ? 'Indexed' : 'Index for AI'}
@@ -255,11 +280,33 @@ export function CourseOverviewTop({
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
             target="_blank"
+            aria-label={t('dashboard.courses.preview')}
+            title={t('dashboard.courses.preview')}
             className="px-2.5 sm:px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-1.5"
           >
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">{t('dashboard.courses.preview')}</span>
           </Link>
+          {isAIEnabled && (
+            <>
+              <div className="w-px self-stretch bg-neutral-200/80" />
+              <button
+                type="button"
+                onClick={toggleAtlas}
+                aria-pressed={atlasOpen}
+                aria-label="Toggle Atlas quick assist"
+                title="Atlas"
+                className={`px-3.5 py-2 text-sm font-semibold flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                  atlasOpen
+                    ? 'bg-violet-100 text-violet-700'
+                    : 'bg-violet-50/70 text-violet-700 hover:bg-violet-100/70'
+                }`}
+              >
+                <GlobeStand size={16} weight="duotone" className="flex-none" />
+                <span className="hidden md:inline">Atlas</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

@@ -110,25 +110,30 @@ CONTEXT:
 - Current Lesson: {context.activity_name}
 - Lesson Content Summary: {context.activity_content_summary}
 
-IMPORTANT - THIS IS NOT A PAGE:
-You are creating an INTERACTIVE ELEMENT that lives inside a content box, NOT a landing page or website.
-- Do NOT design it like a page or landing page
-- Do NOT use dark backgrounds - use light/white backgrounds
-- Do NOT add headers, footers, or page-like navigation
-- The element should look like an embedded widget/component
-- Keep it focused on a single interactive purpose
+WHAT YOU ARE BUILDING — AN INTERACTIVE EXPERIENCE:
+You are creating a self-contained INTERACTIVE EXPERIENCE that lives inside an embedded content box. Think of it as a playable widget, a manipulable diagram, a mini-simulation, a hands-on exercise — something the learner DOES, not something they read.
+
+It is NOT:
+- A website, landing page, or SaaS dashboard
+- A marketing card or feature tile
+- A document, article, or static slide
+- A generic light-gray rounded card with a shadow (the default "AI-looking" output — avoid this)
+
+Do NOT include page chrome: no headers, footers, navigation bars, hero sections, CTAs, branding, or "Learn more" links. The user is already inside a lesson — the experience starts immediately.
+
+Keep it focused on ONE interactive idea, executed well.
 
 REQUIREMENTS:
 1. Generate a COMPLETE, self-contained HTML document
-2. The content must be interactive and educational, relevant to the course context
-3. Make it responsive and fit well within a container/box
-4. Include clear instructions for the user on how to interact
-5. The content should enhance understanding of the lesson material
-6. ALWAYS use Tailwind CSS for styling - create beautiful, clean, modern UI designs
-7. Use LIGHT backgrounds (white, gray-50, gray-100) - NO dark backgrounds
-8. Use proper spacing, rounded corners, shadows, and pleasant color schemes
-9. Ensure excellent visual hierarchy and user experience
-10. Design it as a self-contained widget/component, not a full page
+2. Interactivity is the point — the learner should manipulate, drag, click, drag sliders, play, experiment, or otherwise DO something. Passive read-only content fails this brief.
+3. Educationally relevant to the course context above
+4. Responsive — fits well inside a container of variable width
+5. Include short, clear instructions for how to interact (one line, not a tutorial)
+6. The visual design should match the SUBJECT, not a default template. A physics simulation can be dark with neon trails. A chemistry titration can have lab-style precision. A music exercise can be playful and colorful. A data visualization can be minimal and analytic. Let the topic drive the palette, typography, and motion.
+7. Styling: Tailwind via CDN is available and a fine default for layout, but you may ALSO use a `<style>` block with raw CSS — keyframes, gradients, filters, transforms, clip-path, mix-blend-mode, ::before/::after, custom fonts — whenever it makes the experience better. Don't restrict yourself to utility classes if custom CSS serves the design.
+8. Dark, light, or themed backgrounds are all allowed — choose what serves the content. Avoid the generic white/gray-50 card aesthetic unless the topic genuinely calls for it.
+9. Strong visual hierarchy and tactile feedback (hover states, transitions, sounds via Tone.js if useful, micro-animations on interaction)
+10. Self-contained — no external assets beyond the CDN libraries listed below
 
 AVAILABLE LIBRARIES (use via CDN):
 You CAN and SHOULD use these libraries when appropriate:
@@ -168,6 +173,12 @@ UI Components:
 - SortableJS (drag & drop): <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 - Interact.js (drag, resize, gestures): <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 - Confetti.js (celebrations): <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
+
+Icons (USE THESE — do not invent SVG icons, do not use emoji as UI icons, do not use other icon libraries):
+- Phosphor Icons: <script src="https://cdn.jsdelivr.net/npm/phosphor-icons"></script>
+  Usage: <i class="ph-house"></i>, <i class="ph-play"></i>, <i class="ph-arrow-right"></i>
+  Weights: ph-thin, ph-light, ph-bold, ph-fill, ph-duotone (e.g. <i class="ph-fill ph-heart"></i>)
+  Whenever the experience needs an icon (buttons, controls, indicators, decorative accents), pull it from Phosphor. Browse names at https://phosphoricons.com if unsure — common ones include ph-play, ph-pause, ph-arrow-clockwise, ph-check, ph-x, ph-info, ph-question, ph-lightbulb, ph-target, ph-trophy, ph-sparkle.
 
 Code & Syntax:
 - Highlight.js: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"> and <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>

@@ -624,6 +624,16 @@
   color: #f59e0b;
 }
 
+.editor-drag-handle .copy-btn:hover {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.editor-drag-handle .copy-btn:active {
+  background: #bfdbfe;
+  color: #2563eb;
+}
+
 .editor-drag-handle .delete-btn:hover {
   background: #fee2e2;
   color: #dc2626;
@@ -2234,5 +2244,87 @@
   height: 300px;
   min-height: 200px;
   display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Atlas chat: glowing border while a response is streaming.
+ *
+ * A thin violet ring traces the chat container's perimeter and pulses
+ * opacity (glow only — no rotation / sweep). Uses the standard
+ * "gradient-border via mask" trick so it follows whatever border-radius
+ * the host has; pairs with an outer box-shadow for a soft halo.
+ *
+ * No `position` rule on the parent — the class is added to elements that
+ * are already positioned (the mini panel is `fixed`, the full chat column
+ * carries `relative` on its own className). Adding `position: relative`
+ * here would silently override `position: fixed` on the side panel.
+ * ───────────────────────────────────────────────────────────────────────── */
+.atlas-loading-border {
+  box-shadow: 0 0 24px -6px rgba(167, 139, 250, 0.35);
+  animation: atlas-loading-shadow-pulse 2.6s ease-in-out infinite;
+}
+
+.atlas-loading-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(167, 139, 250, 0.45),
+    rgba(196, 181, 253, 0.85),
+    rgba(167, 139, 250, 0.45)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: atlas-loading-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes atlas-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes atlas-loading-shadow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 18px -8px rgba(167, 139, 250, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 28px -4px rgba(167, 139, 250, 0.55);
+  }
+}
+
+/* Atlas action dock: floats over the prompt area while tools run.
+ * Frosted-glass card that fades + unblurs + slides up on mount. */
+@keyframes atlas-dock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.atlas-dock-enter {
+  animation: atlas-dock-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 

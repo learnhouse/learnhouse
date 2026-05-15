@@ -40,12 +40,15 @@ def build_server(settings: Settings | None = None) -> tuple[FastMCP, LearnHouseC
     from .tools import (
         activities as activities_tools,
         assignments as assignments_tools,
+        atlas_activity as atlas_activity_tools,
+        atlas_chapter as atlas_chapter_tools,
+        atlas_course as atlas_course_tools,
+        atlas_read as atlas_read_tools,
         certifications as certifications_tools,
         chapters as chapters_tools,
         collections as collections_tools,
         compose as compose_tools,
         courses as courses_tools,
-        focus as focus_tools,
         instance as instance_tools,
         magicblocks as magicblocks_tools,
         podcasts as podcasts_tools,
@@ -64,7 +67,11 @@ def build_server(settings: Settings | None = None) -> tuple[FastMCP, LearnHouseC
         certifications_tools,
         magicblocks_tools,
         compose_tools,
-        focus_tools,
+        # Atlas-specific tier-tagged tools (replaces the old focus.py).
+        atlas_read_tools,
+        atlas_course_tools,
+        atlas_chapter_tools,
+        atlas_activity_tools,
     ):
         module.register(mcp, client)
 

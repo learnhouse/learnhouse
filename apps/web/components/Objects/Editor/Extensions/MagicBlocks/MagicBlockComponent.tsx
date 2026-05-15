@@ -198,7 +198,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
       <>
         <NodeViewWrapper className="block-magic w-full">
           <div className="relative group">
-            <div className="rounded-xl overflow-hidden nice-shadow" style={{ height: `${height}px` }}>
+            <div className="rounded-xl overflow-hidden" style={{ height: `${height}px` }}>
               <MagicBlockPreview htmlContent={htmlContent} />
             </div>
             <button

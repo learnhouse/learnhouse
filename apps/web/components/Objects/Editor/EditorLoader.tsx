@@ -10,6 +10,7 @@ import EditorWrapper from './EditorWrapper'
 import MarkdownActivity from '@components/Objects/Activities/Markdown/MarkdownActivity'
 import EmbedActivity from '@components/Objects/Activities/Embed/EmbedActivity'
 import OnboardingBar from '@components/Dashboard/Onboarding/OnboardingBar'
+import { useRegisterAtlasPageContext } from '@components/Dashboard/Atlas/AtlasMiniContext'
 
 interface EditorLoaderProps {
   courseid: string
@@ -40,6 +41,22 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   const activity = bootstrap?.activity
   const org = bootstrap?.org
   const dataReady = Boolean(bootstrap)
+
+  // Tell Atlas the user is editing this specific activity. Both course
+  // AND activity context flow to the backend, so terse messages like
+  // "translate this" / "make it shorter" resolve to the focused activity
+  // without the agent having to ask which one. Cleared automatically on
+  // unmount (navigating away drops both).
+  useRegisterAtlasPageContext(
+    activity?.activity_uuid && courseInfo?.course_uuid
+      ? {
+          course_uuid: courseInfo.course_uuid,
+          course_name: courseInfo.name,
+          activity_uuid: activity.activity_uuid,
+          activity_name: activity.name,
+        }
+      : null,
+  )
 
   if (bootstrapError) {
     return (
