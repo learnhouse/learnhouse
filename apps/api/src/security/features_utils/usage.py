@@ -1,4 +1,3 @@
-import redis
 from datetime import datetime
 from src.db.organization_config import OrganizationConfig
 from src.db.billing_usage import UsageEvent
@@ -6,8 +5,8 @@ from src.db.user_organizations import UserOrganization
 from src.db.courses.courses import Course
 from src.db.roles import Role, RoleTypeEnum
 from sqlalchemy import or_
-from config.config import get_learnhouse_config
 from src.core.deployment_mode import get_deployment_mode
+from src.core.redis import get_redis_client as _get_redis_pool_client
 from typing import Literal, TypeAlias
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
@@ -47,21 +46,14 @@ def _is_non_saas() -> bool:
 
 
 def _get_redis_client():
-    """Get a Redis client instance."""
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
+    """Get a Redis client from the shared pool. Raises HTTP 500 if unavailable."""
+    r = _get_redis_pool_client()
+    if r is None:
         raise HTTPException(
             status_code=500,
             detail="Redis connection string not found",
         )
-
-    return redis.Redis.from_url(
-        redis_conn_string,
-        socket_connect_timeout=5,
-        socket_timeout=5,
-    )
+    return r
 
 
 def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
@@ -181,6 +173,12 @@ def log_usage_event(
 # Main Usage Check Functions
 # ============================================================================
 
+def _get_org_config(org_id: int, db_session: Session) -> Optional[OrganizationConfig]:
+    """Return OrganizationConfig using the cache-first helper."""
+    from src.services.orgs.orgs import _get_org_config_cached
+    return _get_org_config_cached(org_id, db_session)
+
+
 def check_feature_enabled(
     feature: FeatureSet,
     org_id: int,
@@ -199,8 +197,7 @@ def check_feature_enabled(
     """
     from src.security.features_utils.resolve import resolve_feature
 
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(
@@ -228,8 +225,7 @@ def check_limits_with_usage(
     Uses resolve_feature() for unified 4-layer resolution."""
     from src.security.features_utils.resolve import resolve_feature
 
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(
@@ -374,9 +370,7 @@ def check_feature_access(
     if required_plan is None:
         return True
 
-    # Get the organization's plan
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, delete as sql_delete
 from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from src.db.courses.activities import Activity
@@ -498,13 +498,14 @@ async def remove_course_from_trail(
         db_session.delete(trail_run)
         db_session.commit()
 
-    # Delete all trail steps for this course
-    statement = select(TrailStep).where(TrailStep.course_id == course.id, TrailStep.user_id == user.id)
-    trail_steps = db_session.exec(statement).all()
-
-    for trail_step in trail_steps:
-        db_session.delete(trail_step)
-        db_session.commit()
+    # Delete all trail steps for this course in a single statement
+    db_session.execute(
+        sql_delete(TrailStep).where(
+            TrailStep.course_id == course.id,
+            TrailStep.user_id == user.id,
+        )
+    )
+    db_session.commit()
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs_raw = db_session.exec(statement).all()
