@@ -192,12 +192,8 @@ def _get_revocation_redis_client():
     defense-in-depth timer, not the only wall.
     """
     try:
-        import redis  # local import keeps auth module importable in Redis-less tests
-        lh_config = get_learnhouse_config()
-        url = lh_config.redis_config.redis_connection_string
-        if not url:
-            return None
-        return redis.Redis.from_url(url, socket_connect_timeout=2, socket_timeout=2)
+        from src.core.redis import get_redis_client
+        return get_redis_client()
     except Exception:
         return None
 

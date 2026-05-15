@@ -3,7 +3,7 @@ import secrets
 from typing import List
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from fastapi import HTTPException, Request
 from src.db.courses.certifications import (
     Certifications,
@@ -416,25 +416,24 @@ def is_course_fully_completed(
     a completed TrailStep for the given user. No side effects, no certificate
     involvement.
 
-    Use this for firing completion-related events (webhooks, analytics). The
-    older ``check_course_completion_and_create_certificate`` returns True only
-    when a new certificate row is created, which is False for courses without
-    a configured certification even when the course is actually complete —
-    use it only for its certificate side effect.
+    Uses COUNT aggregates instead of fetching all rows so this stays fast
+    even on large courses.
     """
-    act_query = select(ChapterActivity).where(ChapterActivity.course_id == course_id)
-    course_activities = db_session.scalars(act_query).all()
-    if not course_activities:
+    total_activities = db_session.execute(
+        select(func.count(ChapterActivity.id)).where(ChapterActivity.course_id == course_id)
+    ).scalar_one()
+    if not total_activities:
         return False
 
-    step_query = select(TrailStep).where(
-        TrailStep.user_id == user_id,
-        TrailStep.course_id == course_id,
-        TrailStep.complete == True,
-    )
-    completed_activities = db_session.scalars(step_query).all()
+    completed_activities = db_session.execute(
+        select(func.count(TrailStep.id)).where(
+            TrailStep.user_id == user_id,
+            TrailStep.course_id == course_id,
+            TrailStep.complete == True,
+        )
+    ).scalar_one()
 
-    return len(completed_activities) >= len(course_activities)
+    return completed_activities >= total_activities
 
 
 async def check_course_completion_and_create_certificate(
@@ -458,23 +457,22 @@ async def check_course_completion_and_create_certificate(
     - The function is called from mark_activity_as_done_for_user which already has RBAC checks
     """
     
-    # Get all activities in the course
-    statement = select(ChapterActivity).where(ChapterActivity.course_id == course_id)
-    course_activities = db_session.exec(statement).all()
-    
-    if not course_activities:
+    total_activities = db_session.execute(
+        select(func.count(ChapterActivity.id)).where(ChapterActivity.course_id == course_id)
+    ).scalar_one()
+
+    if not total_activities:
         return False  # No activities in course
-    
-    # Get all completed activities for this user in this course
-    statement = select(TrailStep).where(
-        TrailStep.user_id == user_id,
-        TrailStep.course_id == course_id,
-        TrailStep.complete == True
-    )
-    completed_activities = db_session.exec(statement).all()
-    
-    # Check if all activities are completed
-    if len(completed_activities) >= len(course_activities):
+
+    completed_count = db_session.execute(
+        select(func.count(TrailStep.id)).where(
+            TrailStep.user_id == user_id,
+            TrailStep.course_id == course_id,
+            TrailStep.complete == True,
+        )
+    ).scalar_one()
+
+    if completed_count >= total_activities:
         # All activities completed, check if certification exists for this course
         statement = select(Certifications).where(Certifications.course_id == course_id)
         certification = db_session.exec(statement).first()

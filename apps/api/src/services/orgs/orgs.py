@@ -29,6 +29,29 @@ from src.core.ee_hooks import is_multi_org_allowed
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
+def _get_org_config_cached(org_id: int, db_session: Session) -> Optional[OrganizationConfig]:
+    """Fetch OrganizationConfig with a Redis read-aside cache."""
+    from src.services.orgs.cache import get_cached_org_config, set_cached_org_config
+
+    raw = get_cached_org_config(org_id)
+    if raw is not None:
+        try:
+            return OrganizationConfig(**raw)
+        except Exception:
+            pass
+
+    stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = db_session.execute(stmt).scalar_one_or_none()
+
+    if org_config is not None:
+        try:
+            set_cached_org_config(org_id, org_config.model_dump(mode="json"))
+        except Exception:
+            pass
+
+    return org_config
+
+
 def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
     """Build OrganizationRead with resolved_features attached."""
     from src.security.features_utils.resolve import resolve_all_features
@@ -111,10 +134,7 @@ async def get_organization_by_slug(
 
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = _get_org_config_cached(org.id, db_session)  # type: ignore[arg-type]
 
     if org_config is None:
         logging.error(f"Organization {org_slug} has no config")

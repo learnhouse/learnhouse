@@ -9,8 +9,7 @@ import json
 import logging
 from typing import Optional
 
-import redis
-from config.config import get_learnhouse_config
+from src.core.redis import get_redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,20 +18,9 @@ CACHE_TTL_COURSES_LIST = 60  # 1 min — public course list
 _KEY_PREFIX = "courses_cache"
 
 
-def _get_redis_client() -> Optional[redis.Redis]:
-    try:
-        config = get_learnhouse_config()
-        conn_string = config.redis_config.redis_connection_string
-        if not conn_string:
-            return None
-        return redis.Redis.from_url(conn_string, socket_connect_timeout=2)
-    except Exception:
-        return None
-
-
 def get_cached_courses_list(org_slug: str, page: int, limit: int) -> Optional[list]:
     """Return cached public course list for an org, or None."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return None
     try:
@@ -47,7 +35,7 @@ def get_cached_courses_list(org_slug: str, page: int, limit: int) -> Optional[li
 
 def set_cached_courses_list(org_slug: str, page: int, limit: int, data: list) -> None:
     """Cache public course list for an org."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return
     try:
@@ -59,7 +47,7 @@ def set_cached_courses_list(org_slug: str, page: int, limit: int, data: list) ->
 
 def invalidate_courses_cache(org_slug: str) -> None:
     """Remove all cached course lists for an org."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return
     try:
@@ -78,7 +66,7 @@ CACHE_TTL_COURSE_META = 60  # 1 min
 
 def get_cached_course_meta(course_uuid: str, slim: bool) -> Optional[dict]:
     """Return cached course meta, or None."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return None
     try:
@@ -93,7 +81,7 @@ def get_cached_course_meta(course_uuid: str, slim: bool) -> Optional[dict]:
 
 def set_cached_course_meta(course_uuid: str, slim: bool, data: dict) -> None:
     """Cache course meta (shared across all users who have access)."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return
     try:
@@ -109,7 +97,7 @@ def set_cached_course_meta(course_uuid: str, slim: bool, data: dict) -> None:
 
 def invalidate_course_meta_cache(course_uuid: str) -> None:
     """Remove cached course meta when course is updated."""
-    r = _get_redis_client()
+    r = get_redis_client()
     if r is None:
         return
     try:

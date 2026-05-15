@@ -4,8 +4,7 @@ from typing import Literal, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
-import redis
-from config.config import get_learnhouse_config
+from src.core.redis import get_redis_client as _get_redis_pool_client
 from src.services.users.password_reset import (
     change_password_with_reset_code,
     change_password_with_reset_code_platform,
@@ -55,21 +54,9 @@ router = APIRouter()
 SESSION_CACHE_TTL = 600  # 10 minutes
 
 
-def _get_redis_client() -> Optional[redis.Redis]:
-    """Return a Redis client or None if unavailable."""
-    try:
-        config = get_learnhouse_config()
-        conn_string = config.redis_config.redis_connection_string
-        if not conn_string:
-            return None
-        return redis.Redis.from_url(conn_string, socket_connect_timeout=2)
-    except Exception:
-        return None
-
-
 def _get_session_cache(user_id: int) -> Optional[dict]:
     """Get cached session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return None
     try:
@@ -83,7 +70,7 @@ def _get_session_cache(user_id: int) -> Optional[dict]:
 
 def _set_session_cache(user_id: int, session_data: dict) -> None:
     """Cache session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return
     try:
@@ -94,7 +81,7 @@ def _set_session_cache(user_id: int, session_data: dict) -> None:
 
 def _invalidate_session_cache(user_id: int) -> None:
     """Invalidate cached session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return
     try:

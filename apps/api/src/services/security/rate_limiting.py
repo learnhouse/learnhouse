@@ -8,9 +8,8 @@ Rate limits:
 """
 import ipaddress
 from typing import Optional, Tuple
-import redis
 from fastapi import HTTPException, Request
-from config.config import get_learnhouse_config
+from src.core.redis import get_redis_client as _get_redis_pool_client
 
 
 class RateLimitExceeded(Exception):
@@ -21,18 +20,15 @@ class RateLimitExceeded(Exception):
         super().__init__(self.message)
 
 
-def get_redis_connection() -> redis.Redis:
-    """Get Redis connection from config."""
-    LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
-
-    if not redis_conn_string:
+def get_redis_connection():
+    """Get Redis connection from shared pool."""
+    r = _get_redis_pool_client()
+    if r is None:
         raise HTTPException(
             status_code=500,
             detail="Redis connection string not found",
         )
-
-    return redis.Redis.from_url(redis_conn_string)
+    return r
 
 
 def _is_trusted_proxy(ip: str) -> bool:

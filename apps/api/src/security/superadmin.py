@@ -9,8 +9,16 @@ logger = logging.getLogger(__name__)
 
 def is_user_superadmin(user_id: int, db_session: Session) -> bool:
     """Check if a user is a superadmin by querying the database directly."""
-    result = db_session.exec(select(User.is_superadmin).where(User.id == user_id)).first()
-    return bool(result)
+    _cache = getattr(db_session, '_superadmin_cache', None)
+    if _cache is None:
+        db_session._superadmin_cache = {}
+        _cache = db_session._superadmin_cache
+    if user_id in _cache:
+        return _cache[user_id]
+    result = db_session.scalars(select(User.is_superadmin).where(User.id == user_id)).first()
+    value = bool(result)
+    _cache[user_id] = value
+    return value
 
 
 async def _get_current_user_lazy(request: Request, db_session: Session = Depends(get_db_session)):

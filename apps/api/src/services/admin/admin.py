@@ -89,23 +89,26 @@ def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: Sessi
 
 
 def _get_user_in_org(user_id: int, org_id: int, db_session: Session) -> User:
-    """Get a user and verify they belong to the token's organization."""
-    user = db_session.exec(select(User).where(User.id == user_id)).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    membership = db_session.exec(
-        select(UserOrganization).where(
-            UserOrganization.user_id == user_id,
-            UserOrganization.org_id == org_id,
+    """Get a user and verify they belong to the token's organization (single JOIN)."""
+    result = db_session.execute(
+        select(User)
+        .join(
+            UserOrganization,
+            (UserOrganization.user_id == User.id) & (UserOrganization.org_id == org_id),
         )
-    ).first()
-    if not membership:
+        .where(User.id == user_id)
+    ).scalar_one_or_none()
+
+    if result is None:
+        # Distinguish "user not found" from "not a member" for a better error
+        exists = db_session.execute(select(User.id).where(User.id == user_id)).scalar_one_or_none()
+        if not exists:
+            raise HTTPException(status_code=404, detail="User not found")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not belong to this organization",
         )
-    return user
+    return result
 
 
 _ROLE_PRIORITY = {
@@ -1361,7 +1364,7 @@ async def bulk_enroll_users(
 ) -> dict:
     """Enroll a batch of users in a course. Returns summary of results."""
 
-    course = db_session.exec(
+    course = db_session.scalars(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
@@ -1370,61 +1373,81 @@ async def bulk_enroll_users(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
+    # Pre-fetch memberships, existing enrollments, and trails in 3 queries total
+    member_ids = set(
+        db_session.scalars(
+            select(UserOrganization.user_id).where(
+                UserOrganization.user_id.in_(user_ids),
+                UserOrganization.org_id == token_user.org_id,
+            )
+        ).all()
+    )
+    already_enrolled_ids = set(
+        db_session.scalars(
+            select(TrailRun.user_id).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id.in_(user_ids),
+                TrailRun.org_id == token_user.org_id,
+            )
+        ).all()
+    )
+
     enrolled: List[int] = []
     already_enrolled: List[int] = []
     skipped: List[int] = []
-
-    now = datetime.now()
+    to_enroll: List[int] = []
 
     for user_id in user_ids:
-        membership = db_session.exec(
-            select(UserOrganization).where(
-                UserOrganization.user_id == user_id,
-                UserOrganization.org_id == token_user.org_id,
-            )
-        ).first()
-        if not membership:
+        if user_id not in member_ids:
             skipped.append(user_id)
-            continue
-
-        existing = db_session.exec(
-            select(TrailRun).where(
-                TrailRun.course_id == course.id,
-                TrailRun.user_id == user_id,
-                TrailRun.org_id == token_user.org_id,
-            )
-        ).first()
-        if existing:
+        elif user_id in already_enrolled_ids:
             already_enrolled.append(user_id)
-            continue
+        else:
+            to_enroll.append(user_id)
 
-        trail = db_session.exec(
+    if not to_enroll:
+        return {"enrolled": enrolled, "already_enrolled": already_enrolled, "skipped": skipped}
+
+    now = datetime.now()
+    trails_by_user: dict[int, Trail] = {
+        t.user_id: t
+        for t in db_session.scalars(
             select(Trail).where(
                 Trail.org_id == token_user.org_id,
-                Trail.user_id == user_id,
+                Trail.user_id.in_(to_enroll),
             )
-        ).first()
-        if not trail:
-            trail = Trail(
+        ).all()
+    }
+
+    # Create missing trails in one flush
+    new_trails = []
+    for user_id in to_enroll:
+        if user_id not in trails_by_user:
+            t = Trail(
                 org_id=token_user.org_id,
                 user_id=user_id,
                 trail_uuid=f"trail_{uuid4()}",
                 creation_date=str(now),
                 update_date=str(now),
             )
-            db_session.add(trail)
-            db_session.commit()
-            db_session.refresh(trail)
+            new_trails.append(t)
+            db_session.add(t)
+    if new_trails:
+        db_session.flush()
+        for t in new_trails:
+            trails_by_user[t.user_id] = t
 
-        trail_run = TrailRun(
+    # Batch-insert all trail runs
+    for user_id in to_enroll:
+        trail = trails_by_user[user_id]
+        db_session.add(TrailRun(
             trail_id=trail.id if trail.id is not None else 0,
             course_id=course.id if course.id is not None else 0,
             org_id=token_user.org_id,
             user_id=user_id,
             creation_date=str(now),
             update_date=str(now),
-        )
-        db_session.add(trail_run)
+        ))
         enrolled.append(user_id)
 
     db_session.commit()
@@ -2138,8 +2161,9 @@ async def bulk_unenroll_users(
     db_session: Session,
 ) -> dict:
     """Unenroll a batch of users from a course. Returns summary."""
+    from sqlmodel import delete as sql_delete
 
-    course = db_session.exec(
+    course = db_session.scalars(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
@@ -2148,35 +2172,35 @@ async def bulk_unenroll_users(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    unenrolled: List[int] = []
-    not_enrolled: List[int] = []
-
-    for user_id in user_ids:
-        trail_run = db_session.exec(
-            select(TrailRun).where(
+    enrolled_ids = set(
+        db_session.scalars(
+            select(TrailRun.user_id).where(
                 TrailRun.course_id == course.id,
-                TrailRun.user_id == user_id,
+                TrailRun.user_id.in_(user_ids),
                 TrailRun.org_id == token_user.org_id,
             )
-        ).first()
-        if not trail_run:
-            not_enrolled.append(user_id)
-            continue
+        ).all()
+    )
 
-        steps = db_session.exec(
-            select(TrailStep).where(
+    unenrolled = [uid for uid in user_ids if uid in enrolled_ids]
+    not_enrolled = [uid for uid in user_ids if uid not in enrolled_ids]
+
+    if unenrolled:
+        db_session.execute(
+            sql_delete(TrailStep).where(
                 TrailStep.course_id == course.id,
-                TrailStep.user_id == user_id,
+                TrailStep.user_id.in_(unenrolled),
                 TrailStep.org_id == token_user.org_id,
             )
-        ).all()
-        for step in steps:
-            db_session.delete(step)
-
-        db_session.delete(trail_run)
-        unenrolled.append(user_id)
-
-    db_session.commit()
+        )
+        db_session.execute(
+            sql_delete(TrailRun).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id.in_(unenrolled),
+                TrailRun.org_id == token_user.org_id,
+            )
+        )
+        db_session.commit()
 
     return {
         "unenrolled": unenrolled,
@@ -2375,18 +2399,22 @@ async def get_course_analytics(
 
     average_completion_percentage = 0.0
     if trail_runs and total_activities:
-        percentages = []
-        for tr in trail_runs:
-            completed_steps = db_session.exec(
-                select(func.count(TrailStep.id)).where(  # type: ignore
-                    TrailStep.user_id == tr.user_id,
-                    TrailStep.course_id == course.id,
-                    TrailStep.complete == True,
-                )
-            ).one()
-            percentages.append(completed_steps / total_activities * 100)
-        if percentages:
-            average_completion_percentage = round(sum(percentages) / len(percentages), 1)
+        # Single GROUP BY query replaces one query per enrolled user
+        completion_rows = db_session.execute(
+            select(TrailStep.user_id, func.count(TrailStep.id))  # type: ignore
+            .where(
+                TrailStep.course_id == course.id,
+                TrailStep.complete == True,
+            )
+            .group_by(TrailStep.user_id)
+        ).all()
+        completed_by_user = {row[0]: row[1] for row in completion_rows}
+        if trail_runs:
+            total_pct = sum(
+                completed_by_user.get(tr.user_id, 0) / total_activities * 100
+                for tr in trail_runs
+            )
+            average_completion_percentage = round(total_pct / len(trail_runs), 1)
 
     certificate_count = 0
     certification = db_session.exec(

@@ -138,6 +138,11 @@ def _register_cache_invalidation_hooks():
             session._org_slugs_to_invalidate = set()
         return session._org_slugs_to_invalidate
 
+    def _ensure_org_config_ids(session):
+        if not hasattr(session, '_org_config_ids_to_invalidate'):
+            session._org_config_ids_to_invalidate = set()
+        return session._org_config_ids_to_invalidate
+
     # ── Mapper-level events: fire per-object during flush ──
 
     @sa_event.listens_for(Organization, "after_insert")
@@ -171,6 +176,7 @@ def _register_cache_invalidation_hooks():
         session = Session.object_session(target)
         if not session or not target.org_id:
             return
+        _ensure_org_config_ids(session).add(target.org_id)
         # Use the identity map key to look up the org without issuing SQL.
         # session.get() is unsafe here because it can emit a SELECT mid-flush
         # if the org isn't already loaded, causing reentrancy issues.
@@ -283,6 +289,7 @@ def _register_cache_invalidation_hooks():
     def _on_after_commit(session):
         slugs = getattr(session, '_org_slugs_to_invalidate', None)
         course_uuids = getattr(session, '_course_uuids_to_invalidate', None)
+        org_config_ids = getattr(session, '_org_config_ids_to_invalidate', None)
         try:
             if slugs:
                 from src.services.orgs.cache import invalidate_org_cache
@@ -290,6 +297,10 @@ def _register_cache_invalidation_hooks():
                 for slug in slugs:
                     invalidate_org_cache(slug)
                     invalidate_courses_cache(slug)
+            if org_config_ids:
+                from src.services.orgs.cache import invalidate_org_config_cache
+                for org_id in org_config_ids:
+                    invalidate_org_config_cache(org_id)
             if course_uuids:
                 from src.services.courses.cache import invalidate_course_meta_cache
                 for uuid in course_uuids:
@@ -299,11 +310,13 @@ def _register_cache_invalidation_hooks():
         finally:
             session._org_slugs_to_invalidate = set()
             session._course_uuids_to_invalidate = set()
+            session._org_config_ids_to_invalidate = set()
 
     @sa_event.listens_for(Session, "after_rollback")
     def _on_after_rollback(session):
         session._org_slugs_to_invalidate = set()
         session._course_uuids_to_invalidate = set()
+        session._org_config_ids_to_invalidate = set()
 
 if not is_testing:
     try:

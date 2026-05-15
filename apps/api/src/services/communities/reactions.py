@@ -62,17 +62,19 @@ async def get_reactions(
             emoji_groups[reaction.emoji] = []
         emoji_groups[reaction.emoji].append(reaction)
 
+    # Batch-fetch all users referenced by any reaction in a single query,
+    # then look them up by id in the per-emoji loop — eliminates N+1.
+    all_user_ids = list({r.user_id for r in reactions})
+    user_map: dict[int, User] = {}
+    if all_user_ids:
+        fetched = db_session.scalars(select(User).where(User.id.in_(all_user_ids))).all()  # type: ignore
+        user_map = {u.id: u for u in fetched}
+
     # Build summary with user info
     summaries = []
     for emoji, emoji_reactions in emoji_groups.items():
-        # Get user IDs
         user_ids = [r.user_id for r in emoji_reactions]
 
-        # Fetch users
-        users_statement = select(User).where(User.id.in_(user_ids))  # type: ignore
-        users = db_session.exec(users_statement).all()
-
-        # Build user list
         user_list = [
             ReactionUser(
                 id=u.id,
@@ -82,10 +84,10 @@ async def get_reactions(
                 last_name=u.last_name,
                 avatar_image=u.avatar_image,
             )
-            for u in users
+            for uid in user_ids
+            if (u := user_map.get(uid)) is not None
         ]
 
-        # Check if current user has reacted with this emoji
         has_reacted = current_user.id in user_ids if current_user.id != 0 else False
 
         summaries.append(

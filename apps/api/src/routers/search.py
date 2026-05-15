@@ -24,7 +24,7 @@ router = APIRouter()
 async def api_search_across_org(
     request: Request,
     org_slug: str,
-    query: str = Query(..., min_length=1, max_length=200, description="Search query"),
+    query: str = Query(..., min_length=3, max_length=200, description="Search query"),
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=10, ge=1, le=50, description="Items per page (max 50)"),
     db_session: Session = Depends(get_db_session),
