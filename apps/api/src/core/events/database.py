@@ -57,16 +57,33 @@ if is_testing:
         connect_args={"check_same_thread": False}
     )
 else:
-    # Use configured database for production/development
-    engine = create_engine(
-        learnhouse_config.database_config.sql_connection_string,  # type: ignore
-        echo=False, 
-        pool_pre_ping=True,  # type: ignore
-        pool_size=20,  # Increased from 5 to handle more concurrent requests
-        max_overflow=10,  # Allow 10 additional connections beyond pool_size
-        pool_recycle=300,  # Recycle connections after 5 minutes
-        pool_timeout=30
-    )
+    sql_url = str(learnhouse_config.database_config.sql_connection_string)  # type: ignore
+
+    # Supavisor (Supabase connection pooler) multiplexes many client requests
+    # over a small set of upstream backends, so the app-side pool should be
+    # small. The pooler hostname is "*.pooler.supabase.*" and transaction-mode
+    # listens on :6543; either signal switches us to pooler-friendly settings.
+    is_pooled = "pooler.supabase" in sql_url or ":6543/" in sql_url
+
+    if is_pooled:
+        engine_kwargs = dict(
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=1800,
+            pool_timeout=30,
+        )
+        logging.info("DB engine: detected Supavisor pooler URL — using small client-side pool.")
+    else:
+        engine_kwargs = dict(
+            pool_pre_ping=True,
+            pool_size=20,
+            max_overflow=10,
+            pool_recycle=300,
+            pool_timeout=30,
+        )
+
+    engine = create_engine(sql_url, echo=False, **engine_kwargs)  # type: ignore
     
     # Add connection pool monitoring for debugging
     @event.listens_for(engine, "connect")
