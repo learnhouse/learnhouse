@@ -1,6 +1,8 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import EditVideoActivityModal from '@components/Objects/Modals/Activities/Edit/EditVideoActivityModal'
+import EditDocumentActivityModal from '@components/Objects/Modals/Activities/Edit/EditDocumentActivityModal'
+import EditScormActivityModal from '@components/Objects/Modals/Activities/Edit/EditScormActivityModal'
 import { getUriWithOrg } from '@services/config/config'
 import {
   addUserGroupToActivity,
@@ -80,6 +82,8 @@ function ActivityElement(props: ActivitiyElementProps) {
   const [isPublishing, setIsPublishing] = React.useState<boolean>(false)
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
   const [editVideoModalOpen, setEditVideoModalOpen] = React.useState(false)
+  const [editDocumentModalOpen, setEditDocumentModalOpen] = React.useState(false)
+  const [editScormModalOpen, setEditScormModalOpen] = React.useState(false)
   const activityUUID = props.activity.activity_uuid
   const isMobile = useMediaQuery('(max-width: 767px)')
   const org = useOrg() as any;
@@ -340,32 +344,80 @@ function ActivityElement(props: ActivitiyElementProps) {
               <div className="w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
               {props.activity.activity_type === 'TYPE_VIDEO' ? (
-                <>
-                  <Modal
-                    isDialogOpen={editVideoModalOpen}
-                    onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
-                    minHeight="no-min"
-                    minWidth="md"
-                    dialogTitle="Edit Video Activity"
-                    dialogDescription="Update the video source, URL, or playback settings."
-                    dialogContent={
-                      <EditVideoActivityModal
-                        activity={props.activity}
-                        courseUuid={props.course_uuid}
-                        orgSlug={props.orgslug}
-                        onClose={() => setEditVideoModalOpen(false)}
-                      />
-                    }
-                    dialogTrigger={
-                      <button
-                        className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                        title="Edit video"
-                      >
-                        <FilePenLine size={15} />
-                      </button>
-                    }
-                  />
-                </>
+                <Modal
+                  isDialogOpen={editVideoModalOpen}
+                  onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit Video Activity"
+                  dialogDescription="Update the video source, URL, or playback settings."
+                  dialogContent={
+                    <EditVideoActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditVideoModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit video"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
+              ) : props.activity.activity_type === 'TYPE_DOCUMENT' ? (
+                <Modal
+                  isDialogOpen={editDocumentModalOpen}
+                  onOpenChange={() => setEditDocumentModalOpen(!editDocumentModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit Document Activity"
+                  dialogDescription="Update the document name or replace the PDF file."
+                  dialogContent={
+                    <EditDocumentActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditDocumentModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit document"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
+              ) : props.activity.activity_type === 'TYPE_SCORM' ? (
+                <Modal
+                  isDialogOpen={editScormModalOpen}
+                  onOpenChange={() => setEditScormModalOpen(!editScormModalOpen)}
+                  minHeight="no-min"
+                  minWidth="md"
+                  dialogTitle="Edit SCORM Activity"
+                  dialogDescription="Update the SCORM activity name."
+                  dialogContent={
+                    <EditScormActivityModal
+                      activity={props.activity}
+                      courseUuid={props.course_uuid}
+                      orgSlug={props.orgslug}
+                      onClose={() => setEditScormModalOpen(false)}
+                    />
+                  }
+                  dialogTrigger={
+                    <button
+                      className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Edit SCORM activity"
+                    >
+                      <FilePenLine size={15} />
+                    </button>
+                  }
+                />
               ) : editHref ? (
                 <Link
                   href={editHref}
