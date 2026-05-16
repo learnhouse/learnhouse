@@ -24,13 +24,10 @@ function ClientAdminLayout({
         <SessionGate>
             <AdminAuthorization authorizationMode="page">
                 <CommandPaletteProvider>
+                    {isMobile && <DashMobileMenu />}
                     <div className="flex flex-col md:flex-row">
-                        {isMobile ? (
-                            <DashMobileMenu />
-                        ) : (
-                            <DashLeftMenu />
-                        )}
-                        <div className="flex flex-col w-full relative isolate">
+                        {!isMobile && <DashLeftMenu />}
+                        <div className="flex flex-col w-full relative isolate pb-24 md:pb-0">
                             <FreePlanUpgradeBanner />
                             {children}
                             <OnboardingBar />

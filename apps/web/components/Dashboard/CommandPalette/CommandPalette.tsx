@@ -213,7 +213,7 @@ export default function CommandPalette() {
             className="flex flex-col [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-[10.5px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.08em] [&_[cmdk-group-heading]]:text-white/35"
           >
             {/* Header */}
-            <div className="flex items-start gap-4 px-7 pt-6 pb-5">
+            <div className="flex items-start gap-4 px-4 sm:px-7 pt-5 sm:pt-6 pb-4 sm:pb-5">
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[12px] font-medium text-white/45">
@@ -239,7 +239,7 @@ export default function CommandPalette() {
                       openSelectedInNewTab(root)
                     }
                   }}
-                  className="w-full bg-transparent text-[22px] font-medium leading-tight tracking-tight text-white outline-none placeholder:font-medium placeholder:text-white/35"
+                  className="w-full bg-transparent text-[18px] sm:text-[22px] font-medium leading-tight tracking-tight text-white outline-none placeholder:font-medium placeholder:text-white/35"
                 />
               </div>
               <img
@@ -247,7 +247,7 @@ export default function CommandPalette() {
                 alt=""
                 aria-hidden="true"
                 draggable={false}
-                className="h-9 w-9 shrink-0 select-none opacity-90"
+                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 select-none opacity-90"
               />
             </div>
 
@@ -281,11 +281,13 @@ export default function CommandPalette() {
             </Command.List>
 
             {/* Footer */}
-            <div className="flex items-center gap-5 border-t border-white/[0.06] bg-black/20 px-7 py-3 text-[12px] text-white/40">
+            <div className="flex items-center gap-3 sm:gap-5 border-t border-white/[0.06] bg-black/20 px-4 sm:px-7 py-3 text-[12px] text-white/40">
               <FooterHint label="Navigate" keys={['↑', '↓']} />
               <FooterHint label="Open" keys={['↵']} />
-              <FooterHint label="New tab" keys={['⌘', '↵']} />
-              <FooterHint label="Close" keys={['esc']} />
+              <span className="hidden sm:contents">
+                <FooterHint label="New tab" keys={['⌘', '↵']} />
+                <FooterHint label="Close" keys={['esc']} />
+              </span>
             </div>
           </Command>
         </DialogPrimitive.Content>

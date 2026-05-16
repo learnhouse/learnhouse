@@ -4,6 +4,7 @@ import { PodcastProvider, usePodcast } from '@components/Contexts/PodcastContext
 import Link from 'next/link'
 import { motion } from 'motion/react'
 import { Info, ListMusic, Headphones, ArrowLeft, Rss } from 'lucide-react'
+import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import EditPodcastGeneral from '@components/Dashboard/Pages/Podcast/EditPodcastGeneral/EditPodcastGeneral'
 import EditPodcastEpisodes from '@components/Dashboard/Pages/Podcast/EditPodcastEpisodes/EditPodcastEpisodes'
 import PodcastDistribution from '@components/Dashboard/Pages/Podcast/PodcastDistribution/PodcastDistribution'
@@ -49,7 +50,7 @@ function PodcastOverviewPage(props: { params: Promise<PodcastOverviewParams> }) 
   ]
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
       <PodcastProvider podcastuuid={podcastuuid}>
         <PodcastOverviewHeader params={params} tabs={tabs} />
         <motion.div
@@ -87,7 +88,7 @@ function PodcastOverviewHeader({
   const { podcast, isLoading } = usePodcast()
 
   return (
-    <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+    <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
       <div className="pt-6 pb-4">
         <Breadcrumbs
           items={[
@@ -136,27 +137,16 @@ function PodcastOverviewHeader({
           )}
         </div>
       </div>
-      <div className="flex space-x-3 font-black text-sm">
-        {tabs.map((tab) => {
-          const IconComponent = tab.icon
-          const isActive = params.subpage === tab.key
-
-          return (
-            <Link key={tab.key} href={getUriWithOrg(params.orgslug, '') + tab.href}>
-              <div
-                className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
-                  isActive ? 'border-b-4' : 'opacity-50 hover:opacity-75'
-                } cursor-pointer`}
-              >
-                <div className="flex items-center space-x-2.5 mx-2">
-                  <IconComponent size={16} />
-                  <div>{tab.label}</div>
-                </div>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      <DashTabBar tabs={tabs.map((tab) => {
+        const IconComponent = tab.icon
+        return {
+          key: tab.key,
+          label: tab.label,
+          icon: <IconComponent size={16} />,
+          href: getUriWithOrg(params.orgslug, '') + tab.href,
+          active: params.subpage === tab.key,
+        } as DashTabItem
+      })} />
     </div>
   )
 }

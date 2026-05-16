@@ -7,7 +7,7 @@ import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { usePlanInfo, useAnalyticsStatus } from '@components/Dashboard/Analytics/useAnalyticsDashboard'
 import { isFeatureAvailable } from '@services/plans/plans'
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { DashTabBar } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
 import ExportAnalyticsButton from '@components/Dashboard/Analytics/AnalyticsExport'
@@ -78,7 +78,7 @@ export default function AnalyticsDashboard() {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       {/* Sticky header box */}
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+      <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('analytics.title'), href: '/dash/analytics', icon: <ChartBar size={14} /> }
@@ -119,37 +119,23 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         </div>
-        <div className="flex space-x-5 font-black text-sm">
-          <button onClick={() => setTab('overview')}>
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                tab === 'overview' ? 'border-b-4' : 'opacity-50'
-              } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <ChartLine size={16} />
-                <div>{t('analytics.tabs.overview')}</div>
-              </div>
-            </div>
-          </button>
-          <button onClick={() => setTab('advanced')}>
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                tab === 'advanced' ? 'border-b-4' : 'opacity-50'
-              } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <SquaresFour size={16} />
-                <div className="flex items-center">
-                  {t('analytics.tabs.advanced')}
-                  {!isAdvanced && (
-                    <PlanBadge currentPlan={plan} requiredPlan="enterprise" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </button>
-        </div>
+        <DashTabBar tabs={[
+          {
+            key: 'overview',
+            label: t('analytics.tabs.overview'),
+            icon: <ChartLine size={16} />,
+            onClick: () => setTab('overview'),
+            active: tab === 'overview',
+          },
+          {
+            key: 'advanced',
+            label: t('analytics.tabs.advanced'),
+            icon: <SquaresFour size={16} />,
+            onClick: () => setTab('advanced'),
+            active: tab === 'advanced',
+            requiresPlan: !isAdvanced ? 'enterprise' : undefined,
+          },
+        ]} />
       </div>
 
       {/* Content */}
@@ -160,7 +146,7 @@ export default function AnalyticsDashboard() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="flex-1 overflow-y-auto overflow-x-hidden px-10 pb-10"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-10 pb-10"
       >
         {analyticsStatus && !isConfigured ? (
           <div className="flex flex-col items-center justify-center h-96 text-center">

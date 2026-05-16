@@ -419,7 +419,7 @@ function CoursesHome(params: CourseProps) {
 
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="dashboard">
-    <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+    <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
       <div className="mb-6 pt-6">
         <Breadcrumbs items={[
           { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> }

@@ -165,8 +165,8 @@ function OrgUsersAdd() {
       <div className="h-6"></div>
 
       {/* Send Invites Section */}
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
+        <div className="flex flex-wrap gap-3 items-start justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
           <div className="flex-1">
             <h1 className="font-bold text-xl text-gray-800">
               {t('dashboard.users.invite_members.title')}
@@ -185,7 +185,7 @@ function OrgUsersAdd() {
             className="w-full h-[140px] rounded-lg border border-gray-200 px-4 py-3 bg-gray-50/50 placeholder:italic placeholder:text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all resize-none"
             placeholder={t('dashboard.users.invite_members.email_placeholder')}
           />
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600 font-medium">
                 {t('dashboard.users.invite_members.invite_code_label')}
@@ -287,10 +287,10 @@ function OrgUsersAdd() {
 
       {/* Invited Users Table */}
       <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div className="flex-1">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+          <div className="flex-1 min-w-0">
             <h1 className="font-bold text-xl text-gray-800">
               {t('dashboard.users.invite_members.invited_users.title')}
             </h1>
@@ -298,20 +298,20 @@ function OrgUsersAdd() {
               {t('dashboard.users.invite_members.invited_users.subtitle')}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {totalFiltered > 0 && (
               <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                 {totalFiltered} {totalFiltered === 1 ? 'invite' : 'invites'}
               </div>
             )}
-            <div className="relative">
+            <div className="relative flex-1 lg:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 placeholder={
                   t('dashboard.users.invite_members.invited_users.search_placeholder') ||
                   'Search by email...'
                 }
-                className="pl-10 pr-4 py-2 w-[240px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                className="pl-10 pr-4 py-2 w-full sm:w-[200px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                 value={searchValue}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
@@ -320,7 +320,7 @@ function OrgUsersAdd() {
         </div>
 
         {/* Table */}
-        <div className="px-0">
+        <div className="overflow-x-auto">
           {!invited_users ? (
             <div className="py-16 text-center">
               <p className="text-gray-400 text-sm font-medium">Loading...</p>
