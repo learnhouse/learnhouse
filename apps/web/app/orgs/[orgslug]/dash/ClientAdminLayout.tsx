@@ -18,16 +18,16 @@ function ClientAdminLayout({
     children: React.ReactNode
     params: any
 }) {
-    const isMobile = useMediaQuery('(max-width: 768px)')
+    const isMobile = useMediaQuery('(max-width: 1024px)')
 
     return (
         <SessionGate>
             <AdminAuthorization authorizationMode="page">
                 <CommandPaletteProvider>
                     {isMobile && <DashMobileMenu />}
-                    <div className="flex flex-col md:flex-row">
+                    <div className="flex flex-col lg:flex-row">
                         {!isMobile && <DashLeftMenu />}
-                        <div className="flex flex-col w-full relative isolate pb-24 md:pb-0">
+                        <div className="flex flex-col w-full relative isolate pb-24 lg:pb-0">
                             <FreePlanUpgradeBanner />
                             {children}
                             <OnboardingBar />

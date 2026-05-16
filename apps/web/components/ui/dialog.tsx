@@ -60,7 +60,7 @@ const DialogContent = React.forwardRef<
         }
       }}
       className={cn(
-        "lh-modal-content fixed left-[50%] top-[50%] grid w-full max-w-lg gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 sm:rounded-2xl",
+        "lh-modal-content fixed left-[50%] top-[50%] grid w-full max-w-lg gap-0 border border-gray-200/80 bg-white shadow-2xl shadow-black/10 rounded-2xl",
         className
       )}
       {...props}
