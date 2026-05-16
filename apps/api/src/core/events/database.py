@@ -68,11 +68,27 @@ else:
     elif sql_url.startswith("postgres://"):
         sql_url = sql_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
-    # Supavisor (Supabase connection pooler) multiplexes many client requests
-    # over a small set of upstream backends, so the app-side pool should be
-    # small. The pooler hostname is "*.pooler.supabase.*" and transaction-mode
-    # listens on :6543; either signal switches us to pooler-friendly settings.
-    is_pooled = "pooler.supabase" in sql_url or ":6543/" in sql_url
+    # prepared_statement_cache_size=0: asyncpg uses named prepared statements by
+    # default, which break under PgBouncer/Supavisor in transaction or statement
+    # pool mode because prepared statements don't survive connection hand-offs.
+    # Setting this to 0 makes asyncpg use the unnamed prepared statement slot,
+    # which works correctly with any pooler and has negligible performance impact.
+    # prepared_statement_cache_size=0: disables SQLAlchemy's asyncpg adapter LRU cache.
+    # statement_cache_size=0: disables asyncpg's own internal named-statement cache
+    # (controls Connection.__execute__ → _get_statement path). Both are required when
+    # running behind Supavisor/PgBouncer in transaction pool mode — named prepared
+    # statements don't survive connection hand-offs across pooler backends.
+    _connect_args = {"prepared_statement_cache_size": 0, "statement_cache_size": 0}
+
+    # Detect connection poolers (Supavisor, PgBouncer) to use a smaller
+    # client-side pool so we don't overwhelm the pooler's upstream limit.
+    is_pooled = (
+        "pooler.supabase" in sql_url
+        or ":6543/" in sql_url
+        or ":6432/" in sql_url
+        or "pgbouncer" in sql_url.lower()
+        or os.getenv("LEARNHOUSE_PGBOUNCER", "").lower() in ("1", "true", "yes")
+    )
 
     if is_pooled:
         engine_kwargs = dict(
@@ -81,8 +97,9 @@ else:
             max_overflow=10,
             pool_recycle=1800,
             pool_timeout=30,
+            connect_args=_connect_args,
         )
-        logging.info("DB engine: detected Supavisor pooler URL — using small client-side pool.")
+        logging.info("DB engine: detected connection pooler — using small client-side pool.")
     else:
         engine_kwargs = dict(
             pool_pre_ping=True,
@@ -90,6 +107,7 @@ else:
             max_overflow=10,
             pool_recycle=300,
             pool_timeout=30,
+            connect_args=_connect_args,
         )
 
     engine = create_async_engine(sql_url, echo=False, **engine_kwargs)  # type: ignore
