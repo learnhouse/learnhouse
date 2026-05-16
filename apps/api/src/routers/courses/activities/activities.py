@@ -1,6 +1,7 @@
 from typing import List, Optional
 import json
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request, Query
+from pydantic import BaseModel
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.courses.activity_versions import ActivityVersionRead, ActivityStateRead
 from src.db.users import PublicUser
@@ -22,12 +23,16 @@ from src.services.courses.activities.versioning import (
     restore_activity_version,
 )
 from src.security.auth import get_current_user
-from src.services.courses.activities.pdf import create_documentpdf_activity
+from src.services.courses.activities.pdf import (
+    create_documentpdf_activity,
+    update_documentpdf_activity,
+)
 from src.services.courses.activities.video import (
     ExternalVideo,
     create_external_video_activity,
     create_video_activity,
     update_video_activity,
+    update_external_video_activity,
 )
 from src.services.courses.lock_usergroups import (
     add_usergroup_to_activity,
@@ -36,6 +41,15 @@ from src.services.courses.lock_usergroups import (
 )
 
 router = APIRouter()
+
+
+class ExternalVideoUpdateBody(BaseModel):
+    name: Optional[str] = None
+    uri: Optional[str] = None
+    startTime: Optional[int] = None
+    endTime: Optional[int] = None
+    autoplay: Optional[bool] = None
+    muted: Optional[bool] = None
 
 
 def _parse_extra_metadata(raw: Optional[str]) -> Optional[dict]:
@@ -458,6 +472,83 @@ async def api_create_documentpdf_activity(
         db_session,
         pdf_file,
         extra_metadata=_parse_extra_metadata(extra_metadata),
+    )
+
+
+@router.put(
+    "/video/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Update hosted video activity",
+)
+async def api_update_video_activity(
+    request: Request,
+    activity_uuid: str,
+    name: Optional[str] = Form(default=None),
+    start_time: Optional[int] = Form(default=None),
+    end_time: Optional[int] = Form(default=None),
+    autoplay: Optional[str] = Form(default=None),
+    muted: Optional[str] = Form(default=None),
+    current_user: PublicUser = Depends(get_current_user),
+    video_file: UploadFile | None = None,
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    details_dict: dict = {}
+    if start_time is not None:
+        details_dict["startTime"] = start_time
+    if end_time is not None:
+        details_dict["endTime"] = end_time
+    if autoplay is not None:
+        details_dict["autoplay"] = autoplay.lower() == "true"
+    if muted is not None:
+        details_dict["muted"] = muted.lower() == "true"
+    details_str = json.dumps(details_dict) if details_dict else None
+    return await update_video_activity(
+        request, activity_uuid, current_user, db_session, name, video_file, details_str
+    )
+
+
+@router.put(
+    "/external_video/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Update external video activity",
+)
+async def api_update_external_video_activity(
+    request: Request,
+    activity_uuid: str,
+    body: ExternalVideoUpdateBody,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:  # noqa: F811
+    details_dict = {}
+    if body.startTime is not None:
+        details_dict["startTime"] = body.startTime
+    if body.endTime is not None:
+        details_dict["endTime"] = body.endTime
+    if body.autoplay is not None:
+        details_dict["autoplay"] = body.autoplay
+    if body.muted is not None:
+        details_dict["muted"] = body.muted
+    details_str = json.dumps(details_dict) if details_dict else None
+    return await update_external_video_activity(
+        request, activity_uuid, current_user, db_session, body.uri, body.name, details_str
+    )
+
+
+@router.put(
+    "/documentpdf/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Update PDF document activity",
+)
+async def api_update_documentpdf_activity(
+    request: Request,
+    activity_uuid: str,
+    name: Optional[str] = Form(default=None),
+    current_user: PublicUser = Depends(get_current_user),
+    pdf_file: UploadFile | None = None,
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    return await update_documentpdf_activity(
+        request, activity_uuid, current_user, db_session, name, pdf_file
     )
 
 

@@ -145,3 +145,54 @@ async def create_documentpdf_activity(
     db_session.refresh(activity_chapter)
 
     return ActivityRead.model_validate(activity)
+
+
+async def update_documentpdf_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+    name: Optional[str] = None,
+    pdf_file: UploadFile | None = None,
+) -> ActivityRead:
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+
+    if name:
+        activity.name = name
+
+    if pdf_file and pdf_file.filename:
+        if pdf_file.content_type not in ["application/pdf"]:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pdf : Wrong pdf format")
+
+        statement = select(Organization).where(Organization.id == activity.org_id)
+        organization = db_session.exec(statement).first()
+
+        if organization and course:
+            saved_filename = await upload_pdf(
+                pdf_file,
+                activity_uuid,
+                organization.org_uuid,
+                course.course_uuid,
+            )
+            content = dict(activity.content) if activity.content else {}
+            content["filename"] = saved_filename
+            activity.content = content
+
+    activity.update_date = str(datetime.now())
+    db_session.add(activity)
+    db_session.commit()
+    db_session.refresh(activity)
+
+    return ActivityRead.model_validate(activity)

@@ -266,11 +266,11 @@ async def create_external_video_activity(
 async def update_video_activity(
     request: Request,
     activity_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
     name: Optional[str] = None,
-    details: str = "{}",
-    video_file: Optional[UploadFile] = None,
+    video_file: UploadFile | None = None,
+    details: Optional[str] = None,
 ) -> ActivityRead:
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
@@ -286,31 +286,77 @@ async def update_video_activity(
 
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
-    parsed_details = json.loads(details)
+    if name is not None:
+        activity.name = name
 
-    if video_file is not None:
+    if details:
+        activity.details = json.loads(details)
+
+    if video_file and video_file.filename:
         if video_file.content_type not in ["video/mp4", "video/webm"]:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Video: Wrong video format")
-        if not video_file.filename:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Video: No video file provided")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Video : Wrong video format")
 
         statement = select(Organization).where(Organization.id == activity.org_id)
         organization = db_session.exec(statement).first()
 
         if organization and course:
-            saved_filename = await upload_video(video_file, activity_uuid, organization.org_uuid, course.course_uuid)
+            saved_filename = await upload_video(
+                video_file,
+                activity_uuid,
+                organization.org_uuid,
+                course.course_uuid,
+            )
             new_content = dict(activity.content) if activity.content else {}
             new_content["filename"] = saved_filename
             activity.content = new_content
             from sqlalchemy.orm.attributes import flag_modified
             flag_modified(activity, "content")
 
+    activity.update_date = str(datetime.now())
+    db_session.add(activity)
+    db_session.commit()
+    db_session.refresh(activity)
+
+    return ActivityRead.model_validate(activity)
+
+
+async def update_external_video_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+    uri: Optional[str] = None,
+    name: Optional[str] = None,
+    details: Optional[str] = None,
+) -> ActivityRead:
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+
     if name is not None:
         activity.name = name
 
-    activity.details = parsed_details
-    activity.update_date = str(datetime.now())
+    if uri:
+        content = dict(activity.content) if activity.content else {}
+        content["uri"] = uri
+        activity.content = content
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(activity, "content")
 
+    if details:
+        activity.details = json.loads(details)
+
+    activity.update_date = str(datetime.now())
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
