@@ -12,7 +12,7 @@ from src.db.communities.discussions import Discussion
 from src.services.communities.reactions import get_reactions, toggle_reaction
 
 
-def _make_community(db, org, **overrides):
+async def _make_community(db, org, **overrides):
     community = Community(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -27,12 +27,12 @@ def _make_community(db, org, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(community)
-    db.commit()
-    db.refresh(community)
+    await db.commit()
+    await db.refresh(community)
     return community
 
 
-def _make_discussion(db, community, org, author_id, **overrides):
+async def _make_discussion(db, community, org, author_id, **overrides):
     discussion = Discussion(
         id=overrides.pop("id", None),
         title=overrides.pop("title", "Title"),
@@ -51,8 +51,8 @@ def _make_discussion(db, community, org, author_id, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01T00:00:00+00:00"),
     )
     db.add(discussion)
-    db.commit()
-    db.refresh(discussion)
+    await db.commit()
+    await db.refresh(discussion)
     return discussion
 
 
@@ -61,8 +61,8 @@ class TestCommunityReactionsService:
     async def test_get_reactions_groups_users_and_sorts(
         self, db, org, admin_user, regular_user, anonymous_user, mock_request
     ):
-        community = _make_community(db, org)
-        discussion = _make_discussion(
+        community = await _make_community(db, org)
+        discussion = await _make_discussion(
             db, community, org, author_id=admin_user.id, discussion_uuid="discussion_a"
         )
 
@@ -93,7 +93,7 @@ class TestCommunityReactionsService:
                 creation_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.reactions.check_resource_access",
@@ -116,8 +116,8 @@ class TestCommunityReactionsService:
 
     @pytest.mark.asyncio
     async def test_get_reactions_missing_records(self, db, org, admin_user, mock_request):
-        community = _make_community(db, org)
-        _make_discussion(
+        community = await _make_community(db, org)
+        await _make_discussion(
             db, community, org, author_id=admin_user.id, discussion_uuid="discussion_b"
         )
         orphan_discussion = Discussion(
@@ -138,7 +138,7 @@ class TestCommunityReactionsService:
             update_date="2024-01-01T00:00:00+00:00",
         )
         db.add(orphan_discussion)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.reactions.check_resource_access",
@@ -159,8 +159,8 @@ class TestCommunityReactionsService:
     async def test_toggle_reaction_add_remove_and_auth_guard(
         self, db, org, admin_user, regular_user, anonymous_user, mock_request
     ):
-        community = _make_community(db, org)
-        discussion = _make_discussion(
+        community = await _make_community(db, org)
+        discussion = await _make_discussion(
             db, community, org, author_id=admin_user.id, discussion_uuid="discussion_c"
         )
 
@@ -178,9 +178,9 @@ class TestCommunityReactionsService:
                 mock_request, discussion.discussion_uuid, "🔥", regular_user, db
             )
 
-        reaction_count = db.exec(
+        reaction_count = (await db.execute(
             DiscussionReaction.__table__.select()
-        ).all()  # type: ignore[attr-defined]
+        )).all()  # type: ignore[attr-defined]
 
         assert added == {"action": "added", "emoji": "🔥"}
         assert removed == {"action": "removed", "emoji": "🔥"}
@@ -235,7 +235,7 @@ class TestCommunityReactionsService:
             creation_date="2024-01-01", update_date="2024-01-01",
         )
         db.add(orphan_disc)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.reactions.authorization_verify_if_user_is_anon",
@@ -265,9 +265,9 @@ class TestCommunityReactionsService:
             update_date="2024-01-01",
         )
         db.add(community)
-        db.commit()
-        db.refresh(community)
-        disc_with_locked_reactions = _make_discussion(
+        await db.commit()
+        await db.refresh(community)
+        disc_with_locked_reactions = await _make_discussion(
             db, community, org, author_id=admin_user.id,
             discussion_uuid="discussion_noreact"
         )

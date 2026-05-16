@@ -49,7 +49,7 @@ class TestFeatureResolve:
         redis_client.get.side_effect = [b"9", b"4", None]
 
         with patch(
-            "src.security.features_utils.usage._get_redis_client",
+            "src.core.redis.get_redis_client",
             return_value=redis_client,
         ):
             assert _get_purchased_extra(1, "ai") == 9
@@ -57,7 +57,7 @@ class TestFeatureResolve:
             assert _get_purchased_extra(3, "unknown") == 0
 
         with patch(
-            "src.security.features_utils.usage._get_redis_client",
+            "src.core.redis.get_redis_client",
             side_effect=RuntimeError("boom"),
         ):
             assert _get_purchased_extra(4, "ai") == 0
@@ -193,7 +193,7 @@ class TestFeatureResolve:
     def test_resolve_all_features_uses_resolve_feature_for_every_entry(self):
         calls = []
 
-        def _fake_resolve(feature: str, config: dict, org_id: int = 0):
+        def _fake_resolve(feature: str, config: dict, org_id: int = 0, _extras=None):
             calls.append((feature, config, org_id))
             return {"enabled": True, "limit": 1, "required_plan": None}
 

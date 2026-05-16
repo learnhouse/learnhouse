@@ -16,9 +16,10 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse, Response
 from pathlib import Path
-from sqlmodel import Session, select
+from sqlmodel import select
 from botocore.exceptions import ClientError
 
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
 from src.db.podcasts.podcasts import Podcast
@@ -96,10 +97,10 @@ def _validate_content_path(file_path: str) -> str | None:
     return os.path.relpath(full_real, base_real)
 
 
-def _check_content_access(
+async def _check_content_access(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Check if the user has access to the requested content.
@@ -120,9 +121,9 @@ def _check_content_access(
         and parts[4] == 'activities'
     ):
         course_uuid = parts[3]
-        course = db_session.exec(
+        course = (await db_session.execute(
             select(Course).where(Course.course_uuid == course_uuid)
-        ).first()
+        )).scalars().first()
         if not course:
             raise HTTPException(status_code=403, detail="Access denied")
         if course.public:
@@ -135,12 +136,12 @@ def _check_content_access(
                 raise HTTPException(status_code=403, detail="Access denied")
             return
         # Verify user belongs to the org that owns this course
-        membership = db_session.exec(
+        membership = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == current_user.id,
                 UserOrganization.org_id == course.org_id,
             )
-        ).first()
+        )).scalars().first()
         if not membership:
             raise HTTPException(status_code=403, detail="Access denied")
         return
@@ -153,9 +154,9 @@ def _check_content_access(
         and parts[4] == 'episodes'
     ):
         podcast_uuid = parts[3]
-        podcast = db_session.exec(
+        podcast = (await db_session.execute(
             select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-        ).first()
+        )).scalars().first()
         if not podcast:
             raise HTTPException(status_code=403, detail="Access denied")
         if podcast.public:
@@ -168,12 +169,12 @@ def _check_content_access(
                 raise HTTPException(status_code=403, detail="Access denied")
             return
         # Verify user belongs to the org that owns this podcast
-        membership = db_session.exec(
+        membership = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == current_user.id,
                 UserOrganization.org_id == podcast.org_id,
             )
-        ).first()
+        )).scalars().first()
         if not membership:
             raise HTTPException(status_code=403, detail="Access denied")
         return
@@ -209,7 +210,7 @@ async def serve_content_file(
     request: Request,
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Serve content files from S3 storage.
@@ -220,7 +221,7 @@ async def serve_content_file(
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(safe_path, current_user, db_session)
+    await _check_content_access(safe_path, current_user, db_session)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()
@@ -351,14 +352,14 @@ async def serve_content_file(
 async def head_content_file(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """HEAD request for content files - returns metadata without body."""
     safe_path = _validate_content_path(file_path)
     if safe_path is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(safe_path, current_user, db_session)
+    await _check_content_access(safe_path, current_user, db_session)
 
     s3_key = f"content/{safe_path}"
     s3_client = get_storage_client()

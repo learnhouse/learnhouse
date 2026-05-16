@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
+from sqlmodel import select
 import json
 import logging
 
 from src.db.organizations import Organization
 from src.db.boards import Board
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
@@ -43,9 +44,9 @@ async def event_generator(generator, session_uuid: str):
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred.'})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: Session) -> str:
+async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     try:
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
         if plan_meets_requirement(current_plan, "pro"):
             return "gemini-3-flash-preview"
         return "gemini-2.5-flash-lite"
@@ -67,20 +68,20 @@ async def start_boards_playground_session(
     request: Request,
     session_request: StartBoardsPlaygroundSession,
     current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Start a new Boards Playground AI generation session with streaming response."""
     # Validate board exists
     statement = select(Board).where(
         Board.board_uuid == session_request.board_uuid
     )
-    board = db_session.exec(statement).first()
+    board = (await db_session.execute(statement)).scalars().first()
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
     # Get the organization
     statement = select(Organization).where(Organization.id == board.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -88,7 +89,7 @@ async def start_boards_playground_session(
     # board's org before reserving credits. Otherwise a user in org A can
     # drain org B's AI credit bucket by supplying any board_uuid from org B.
     start_acting_user_id = resolve_acting_user_id(current_user)
-    if not is_org_member(start_acting_user_id, org.id, db_session):
+    if not await is_org_member(start_acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
@@ -99,7 +100,7 @@ async def start_boards_playground_session(
     enforce_ai_rate_limit(start_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     session = create_boards_playground_session(
         block_uuid=session_request.block_uuid,
@@ -140,7 +141,7 @@ async def iterate_boards_playground_session(
     request: Request,
     message_request: SendBoardsPlaygroundMessage,
     current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Continue an existing Boards Playground session with a new message."""
     session = get_boards_playground_session(message_request.session_uuid)
@@ -162,18 +163,18 @@ async def iterate_boards_playground_session(
     statement = select(Board).where(
         Board.board_uuid == message_request.board_uuid
     )
-    board = db_session.exec(statement).first()
+    board = (await db_session.execute(statement)).scalars().first()
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
     statement = select(Organization).where(Organization.id == board.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # SECURITY (F-5): same cross-org drain protection as /playground/start.
     iterate_acting_user_id = resolve_acting_user_id(current_user)
-    if not is_org_member(iterate_acting_user_id, org.id, db_session):
+    if not await is_org_member(iterate_acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You are not a member of this organization",
@@ -184,7 +185,7 @@ async def iterate_boards_playground_session(
     enforce_ai_rate_limit(iterate_acting_user_id, org.id)
     reserve_ai_credit(org.id, db_session, amount=3)
 
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     html_to_iterate = message_request.current_html or session.current_html
 
@@ -220,7 +221,7 @@ async def iterate_boards_playground_session(
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> BoardsPlaygroundSessionResponse:
     """Get the current state of a Boards Playground session."""
     session = get_boards_playground_session(session_uuid)

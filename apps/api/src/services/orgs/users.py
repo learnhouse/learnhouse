@@ -9,7 +9,8 @@ import redis
 from fastapi import HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import aliased
-from sqlmodel import Session, select, func
+from sqlmodel import select, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config.config import get_learnhouse_config
 from src.db.organization_config import OrganizationConfig
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 async def get_organization_users(
     request: Request,
     org_id: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     page: int = 1,
     limit: int = 20,
@@ -59,9 +60,7 @@ async def get_organization_users(
     page = max(page, 1)
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -80,7 +79,7 @@ async def get_organization_users(
     acting_user_id = resolve_acting_user_id(current_user)
 
     # Membership check (superadmins bypass)
-    if not is_org_member(acting_user_id, org.id, db_session):
+    if not await is_org_member(acting_user_id, org.id, db_session):
         raise HTTPException(
             status_code=403,
             detail="You must be a member of this organization to view its members",
@@ -88,9 +87,9 @@ async def get_organization_users(
 
     # Only admins/maintainers can list organization members
     from src.security.superadmin import is_user_superadmin
-    if not is_user_superadmin(acting_user_id, db_session):
+    if not await is_user_superadmin(acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
-        if not is_org_admin(acting_user_id, org.id, db_session):
+        if not await is_org_admin(acting_user_id, org.id, db_session):
             raise HTTPException(
                 status_code=403,
                 detail="Only administrators and maintainers can view organization members",
@@ -130,7 +129,7 @@ async def get_organization_users(
     if usergroup_id is not None:
         # Count all org users matching search (unfiltered) using SQL COUNT
         all_count_stmt = select(func.count()).select_from(base_statement.subquery())
-        all_total = db_session.exec(all_count_stmt).one()
+        all_total = (await db_session.execute(all_count_stmt)).scalar_one()
 
         # Count in-group users matching search using SQL COUNT
         in_group_count_stmt = (
@@ -148,7 +147,7 @@ async def get_organization_users(
                 | (User.username.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
                 | (User.email.ilike(search_pattern, escape=LIKE_ESCAPE_CHAR))
             )
-        in_group_total = db_session.exec(in_group_count_stmt).one()
+        in_group_total = (await db_session.execute(in_group_count_stmt)).scalar_one()
 
     # Apply usergroup membership filter
     if usergroup_id is not None and usergroup_filter:
@@ -165,7 +164,7 @@ async def get_organization_users(
             ).where(ugu_alias.id == None)  # noqa: E711
 
     # Get total count using SQL COUNT
-    total = db_session.exec(select(func.count()).select_from(base_statement.subquery())).one()
+    total = (await db_session.execute(select(func.count()).select_from(base_statement.subquery()))).scalar_one()
 
     # Sort by join date — use UserOrganization.id as it's auto-increment
     # and directly correlates with join order (creation_date is a str, unreliable for sorting)
@@ -177,7 +176,7 @@ async def get_organization_users(
     # Apply pagination
     offset = (page - 1) * limit
     paginated_statement = base_statement.offset(offset).limit(limit)
-    users = db_session.exec(paginated_statement).all()
+    users = (await db_session.execute(paginated_statement)).scalars().all()
 
     org_users_list = []
 
@@ -191,14 +190,14 @@ async def get_organization_users(
             UserOrganization.user_id.in_(user_ids),  # type: ignore
             UserOrganization.org_id == org_id
         )
-        user_orgs = db_session.exec(user_orgs_statement).all()
+        user_orgs = (await db_session.execute(user_orgs_statement)).scalars().all()
         user_org_map = {uo.user_id: uo for uo in user_orgs}
 
         # Batch fetch all roles needed
         role_ids = list({uo.role_id for uo in user_orgs if uo.role_id is not None})
         if role_ids:
             roles_statement = select(Role).where(Role.id.in_(role_ids))  # type: ignore
-            roles = db_session.exec(roles_statement).all()
+            roles = (await db_session.execute(roles_statement)).scalars().all()
             role_map = {role.id: role for role in roles}
         else:
             role_map = {}
@@ -212,7 +211,7 @@ async def get_organization_users(
                 UserGroupUser.org_id == org_id
             )
         )
-        usergroup_results = db_session.exec(usergroups_statement).all()
+        usergroup_results = (await db_session.execute(usergroups_statement)).all()
         user_usergroups_map: dict[int, list[UserGroupRead]] = {}
         for ugu, ug in usergroup_results:
             user_usergroups_map.setdefault(ugu.user_id, []).append(
@@ -261,7 +260,7 @@ async def get_organization_users(
 async def export_organization_users_csv(
     request: Request,
     org_id: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     search: str = "",
     usergroup_id: int | None = None,
@@ -278,20 +277,20 @@ async def export_organization_users_csv(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     export_acting_user_id = resolve_acting_user_id(current_user)
-    if not is_org_member(export_acting_user_id, org.id, db_session):
+    if not await is_org_member(export_acting_user_id, org.id, db_session):
         raise HTTPException(status_code=403, detail="You must be a member of this organization")
 
     # Only admins/maintainers can export organization members
     from src.security.superadmin import is_user_superadmin
-    if not is_user_superadmin(export_acting_user_id, db_session):
+    if not await is_user_superadmin(export_acting_user_id, db_session):
         from src.security.org_auth import is_org_admin
-        if not is_org_admin(export_acting_user_id, org.id, db_session):
+        if not await is_org_admin(export_acting_user_id, org.id, db_session):
             raise HTTPException(
                 status_code=403,
                 detail="Only administrators and maintainers can export organization members",
@@ -339,7 +338,7 @@ async def export_organization_users_csv(
     else:
         base_statement = base_statement.order_by(UserOrganization.id.desc())
 
-    users = db_session.exec(base_statement).all()
+    users = (await db_session.execute(base_statement)).scalars().all()
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -348,28 +347,28 @@ async def export_organization_users_csv(
     if users:
         user_ids = [user.id for user in users]
 
-        user_orgs = db_session.exec(
+        user_orgs = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id.in_(user_ids),  # type: ignore
                 UserOrganization.org_id == org_id,
             )
-        ).all()
+        )).scalars().all()
         user_org_map = {uo.user_id: uo for uo in user_orgs}
 
         role_ids = list({uo.role_id for uo in user_orgs if uo.role_id is not None})
         role_map = {}
         if role_ids:
-            roles = db_session.exec(select(Role).where(Role.id.in_(role_ids))).all()  # type: ignore
+            roles = (await db_session.execute(select(Role).where(Role.id.in_(role_ids)))).scalars().all()  # type: ignore
             role_map = {role.id: role for role in roles}
 
-        usergroup_results = db_session.exec(
+        usergroup_results = (await db_session.execute(
             select(UserGroupUser, UserGroup)
             .join(UserGroup, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
             .where(
                 UserGroupUser.user_id.in_(user_ids),  # type: ignore
                 UserGroupUser.org_id == org_id,
             )
-        ).all()
+        )).all()
         user_usergroups_map: dict[int, list[str]] = {}
         for ugu, ug in usergroup_results:
             user_usergroups_map.setdefault(ugu.user_id, []).append(ug.name)
@@ -414,13 +413,11 @@ async def remove_user_from_org(
     request: Request,
     org_id: int,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -434,9 +431,7 @@ async def remove_user_from_org(
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user_id, UserOrganization.org_id == org.id
     )
-    result = db_session.exec(statement)
-
-    user_org = result.first()
+    user_org = (await db_session.execute(statement)).scalars().first()
 
     if not user_org:
         raise HTTPException(
@@ -448,8 +443,7 @@ async def remove_user_from_org(
     statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
     )
-    result = db_session.exec(statement)
-    admins = result.all()
+    admins = (await db_session.execute(statement)).scalars().all()
 
     if len(admins) == 1 and admins[0].user_id == user_id:
         raise HTTPException(
@@ -457,8 +451,8 @@ async def remove_user_from_org(
             detail="You can't remove the last admin of the organization",
         )
 
-    db_session.delete(user_org)
-    db_session.commit()
+    await db_session.delete(user_org)
+    await db_session.commit()
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
@@ -478,13 +472,11 @@ async def remove_batch_users_from_org(
     request: Request,
     org_id: int,
     user_ids: list[int],
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -499,7 +491,7 @@ async def remove_batch_users_from_org(
     admin_statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
     )
-    admins = db_session.exec(admin_statement).all()
+    admins = (await db_session.execute(admin_statement)).scalars().all()
     admin_ids = {a.user_id for a in admins}
 
     # Check if removing these users would remove all admins
@@ -515,15 +507,15 @@ async def remove_batch_users_from_org(
             UserOrganization.user_id.in_(user_ids),
             UserOrganization.org_id == org.id,
         )
-        user_orgs_to_remove = db_session.exec(remove_stmt).all()
+        user_orgs_to_remove = (await db_session.execute(remove_stmt)).scalars().all()
     else:
         user_orgs_to_remove = []
 
     removed_count = len(user_orgs_to_remove)
     for user_org in user_orgs_to_remove:
-        db_session.delete(user_org)
+        await db_session.delete(user_org)
 
-    db_session.commit()
+    await db_session.commit()
 
     from src.routers.users import _invalidate_session_cache
     for uid in user_ids:
@@ -540,14 +532,12 @@ async def update_user_role(
     org_id: str,
     user_id: str,
     role_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     # find role
     statement = select(Role).where(Role.role_uuid == role_uuid)
-    result = db_session.exec(statement)
-
-    role = result.first()
+    role = (await db_session.execute(statement)).scalars().first()
 
     if not role:
         raise HTTPException(
@@ -558,9 +548,7 @@ async def update_user_role(
     role_id = role.id
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -575,8 +563,7 @@ async def update_user_role(
     statement = select(UserOrganization).where(
         UserOrganization.org_id == org.id, UserOrganization.role_id == ADMIN_ROLE_ID
     )
-    result = db_session.exec(statement)
-    admins = result.all()
+    admins = (await db_session.execute(statement)).scalars().all()
 
     if not admins:
         raise HTTPException(
@@ -597,9 +584,7 @@ async def update_user_role(
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user_id, UserOrganization.org_id == org.id
     )
-    result = db_session.exec(statement)
-
-    user_org = result.first()
+    user_org = (await db_session.execute(statement)).scalars().first()
 
     if not user_org:
         raise HTTPException(
@@ -611,8 +596,8 @@ async def update_user_role(
         user_org.role_id = role_id
 
     db_session.add(user_org)
-    db_session.commit()
-    db_session.refresh(user_org)
+    await db_session.commit()
+    await db_session.refresh(user_org)
 
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_org.user_id)
@@ -630,10 +615,10 @@ async def update_user_role(
     # Send role change notification email
     try:
         user_stmt = select(User).where(User.id == int(user_id))
-        user = db_session.exec(user_stmt).first()
+        user = (await db_session.execute(user_stmt)).scalars().first()
         if user and user.email:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-            org_config = db_session.exec(org_config_stmt).first()
+            org_config = (await db_session.execute(org_config_stmt)).scalars().first()
             send_role_changed_email(
                 email=user.email,
                 username=user.username,
@@ -652,7 +637,7 @@ async def invite_batch_users(
     org_id: int,
     emails: str,
     invite_code_uuid: Optional[str],
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     # Redis init
@@ -666,9 +651,7 @@ async def invite_batch_users(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -678,7 +661,7 @@ async def invite_batch_users(
 
     # get User sender
     statement = select(User).where(User.id == current_user.id)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
@@ -714,7 +697,7 @@ async def invite_batch_users(
         org = OrganizationRead.model_validate(org)
         user = UserRead.model_validate(user)
 
-        isEmailSent = send_invite_email(
+        isEmailSent = await send_invite_email(
             org,
             invite_code_uuid,
             user,
@@ -775,7 +758,7 @@ async def invite_batch_users(
 async def get_list_of_invited_users(
     request: Request,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     # Redis init
@@ -789,9 +772,7 @@ async def get_list_of_invited_users(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -829,7 +810,7 @@ async def remove_invited_user(
     request: Request,
     org_id: int,
     email: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ):
     # Redis init
@@ -843,9 +824,7 @@ async def remove_invited_user(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(

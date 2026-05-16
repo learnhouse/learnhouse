@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
+from sqlmodel import select
 import json
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, get_authenticated_user, resolve_acting_user_id
@@ -44,7 +45,7 @@ async def event_generator(generator, session_uuid: str):
         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: Session) -> str:
+def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     """
     Get the AI model for MagicBlocks based on the organization's plan.
 
@@ -83,7 +84,7 @@ async def start_magicblock_session(
     request: Request,
     session_request: StartMagicBlockSession,
     current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Start a new MagicBlock AI generation session with streaming response.
@@ -93,7 +94,7 @@ async def start_magicblock_session(
     statement = select(Activity).where(
         Activity.activity_uuid == session_request.activity_uuid
     )
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -104,14 +105,14 @@ async def start_magicblock_session(
         .join(Activity)
         .where(Activity.activity_uuid == session_request.activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Get the organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -170,7 +171,7 @@ async def iterate_magicblock_session(
     request: Request,
     message_request: SendMagicBlockMessage,
     current_user: PublicUser | APITokenUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Continue an existing MagicBlock session with a new message.
@@ -203,14 +204,14 @@ async def iterate_magicblock_session(
         .join(Activity)
         .where(Activity.activity_uuid == message_request.activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Get the organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -261,7 +262,7 @@ async def iterate_magicblock_session(
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> MagicBlockSessionResponse:
     """
     Get the current state of a MagicBlock session.

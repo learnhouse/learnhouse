@@ -1,6 +1,7 @@
 import json
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.users import PublicUser
 from src.security.rbac.rbac import authorization_verify_if_user_is_anon
@@ -64,7 +65,7 @@ async def get_org_usage_and_limits(
     request: Request,
     org_id: int,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Get organization usage and limits for plan-based features.
@@ -83,8 +84,7 @@ async def get_org_usage_and_limits(
 
     # Get the Organization Config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(
@@ -101,9 +101,9 @@ async def get_org_usage_and_limits(
     mode = get_deployment_mode()
 
     # Get actual usage counts
-    courses_usage = _get_actual_usage("courses", org_id, db_session)
-    members_usage = _get_actual_usage("members", org_id, db_session)
-    admin_seats_usage = _get_actual_admin_seat_count(org_id, db_session)
+    courses_usage = await _get_actual_usage("courses", org_id, db_session)
+    members_usage = await _get_actual_usage("members", org_id, db_session)
+    admin_seats_usage = await _get_actual_admin_seat_count(org_id, db_session)
 
     # Get limits via resolve_feature (handles mode, overrides, packs)
     courses_resolved = resolve_feature("courses", config, org_id)

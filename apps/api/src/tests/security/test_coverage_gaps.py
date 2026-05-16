@@ -152,24 +152,26 @@ async def test_get_current_user_rejects_revoked_token(db):
 # src/security/features_utils/usage.py::_load_org_config_for_ai
 # ---------------------------------------------------------------------------
 
-def test_load_org_config_for_ai_returns_row_for_existing_org(db, org):
+@pytest.mark.asyncio
+async def test_load_org_config_for_ai_returns_row_for_existing_org(db, org):
     """Direct-call coverage for the tiny DB helper used by AI credit paths."""
     from src.db.organization_config import OrganizationConfig
     from src.security.features_utils import usage as usage_module
 
     db.add(OrganizationConfig(org_id=org.id, config={}))
-    db.commit()
+    await db.commit()
 
-    result = usage_module._load_org_config_for_ai(org.id, db)
+    result = await usage_module._load_org_config_for_ai(org.id, db)
     assert result is not None
     assert result.org_id == org.id
 
 
-def test_load_org_config_for_ai_returns_none_for_missing_org(db):
+@pytest.mark.asyncio
+async def test_load_org_config_for_ai_returns_none_for_missing_org(db):
     """Unknown org id → no config row."""
     from src.security.features_utils import usage as usage_module
 
-    assert usage_module._load_org_config_for_ai(999_999, db) is None
+    assert await usage_module._load_org_config_for_ai(999_999, db) is None
 
 
 # ---------------------------------------------------------------------------

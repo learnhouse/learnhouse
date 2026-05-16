@@ -7,9 +7,10 @@ from src.db.roles import Role, RoleTypeEnum
 from sqlalchemy import or_
 from src.core.deployment_mode import get_deployment_mode
 from src.core.redis import get_redis_client as _get_redis_pool_client
-from typing import Literal, TypeAlias
+from typing import Literal, Optional, TypeAlias
 from fastapi import HTTPException
-from sqlmodel import Session, select, func
+from sqlmodel import select, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.security.features_utils.plans import (
     PlanLevel,
     get_plan_limit,
@@ -69,19 +70,19 @@ def _get_org_plan(org_config: OrganizationConfig) -> PlanLevel:
 # Actual Usage Counts (from database)
 # ============================================================================
 
-def _get_actual_member_count(org_id: int, db_session: Session) -> int:
+async def _get_actual_member_count(org_id: int, db_session: AsyncSession) -> int:
     """Get actual member count from database."""
     statement = select(func.count()).where(UserOrganization.org_id == org_id)
-    return db_session.exec(statement).one()
+    return (await db_session.execute(statement)).scalar_one()
 
 
-def _get_actual_course_count(org_id: int, db_session: Session) -> int:
+async def _get_actual_course_count(org_id: int, db_session: AsyncSession) -> int:
     """Get actual course count from database."""
     statement = select(func.count()).where(Course.org_id == org_id)
-    return db_session.exec(statement).one()
+    return (await db_session.execute(statement)).scalar_one()
 
 
-def _get_actual_admin_seat_count(org_id: int, db_session: Session) -> int:
+async def _get_actual_admin_seat_count(org_id: int, db_session: AsyncSession) -> int:
     """
     Get count of users with dashboard access (admin seats).
     Admin seat = user with a role that has dashboard.action_access = true
@@ -93,7 +94,7 @@ def _get_actual_admin_seat_count(org_id: int, db_session: Session) -> int:
             Role.role_type == RoleTypeEnum.TYPE_GLOBAL,
         )
     )
-    roles = db_session.exec(statement).all()
+    roles = (await db_session.execute(statement)).scalars().all()
 
     # Find role IDs with dashboard access
     admin_role_ids = []
@@ -112,17 +113,17 @@ def _get_actual_admin_seat_count(org_id: int, db_session: Session) -> int:
         UserOrganization.org_id == org_id,
         UserOrganization.role_id.in_(admin_role_ids)
     )
-    return db_session.exec(statement).one()
+    return (await db_session.execute(statement)).scalar_one()
 
 
-def _get_actual_usage(feature: str, org_id: int, db_session: Session) -> int:
+async def _get_actual_usage(feature: str, org_id: int, db_session: AsyncSession) -> int:
     """Get actual usage count from database for plan-based features."""
     if feature == "members":
-        return _get_actual_member_count(org_id, db_session)
+        return await _get_actual_member_count(org_id, db_session)
     elif feature == "courses":
-        return _get_actual_course_count(org_id, db_session)
+        return await _get_actual_course_count(org_id, db_session)
     elif feature == "admin_seats":
-        return _get_actual_admin_seat_count(org_id, db_session)
+        return await _get_actual_admin_seat_count(org_id, db_session)
     return 0
 
 
@@ -139,11 +140,11 @@ def _invalidate_usage_cache(org_id: int) -> None:
         pass
 
 
-def log_usage_event(
+async def log_usage_event(
     org_id: int,
     feature: str,
     event_type: Literal["add", "remove"],
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Log a usage event for billing tracking.
@@ -153,7 +154,7 @@ def log_usage_event(
         return
 
     # Get current actual count
-    usage_after = _get_actual_usage(feature, org_id, db_session)
+    usage_after = await _get_actual_usage(feature, org_id, db_session)
 
     event = UsageEvent(
         org_id=org_id,
@@ -163,7 +164,7 @@ def log_usage_event(
         usage_after=usage_after,
     )
     db_session.add(event)
-    db_session.commit()
+    await db_session.commit()
 
     # Invalidate usage cache
     _invalidate_usage_cache(org_id)
@@ -173,16 +174,33 @@ def log_usage_event(
 # Main Usage Check Functions
 # ============================================================================
 
-def _get_org_config(org_id: int, db_session: Session) -> Optional[OrganizationConfig]:
-    """Return OrganizationConfig using the cache-first helper."""
-    from src.services.orgs.orgs import _get_org_config_cached
-    return _get_org_config_cached(org_id, db_session)
+async def _get_org_config(org_id: int, db_session: AsyncSession) -> Optional[OrganizationConfig]:
+    """Return OrganizationConfig with a Redis read-aside cache."""
+    from src.services.orgs.cache import get_cached_org_config, set_cached_org_config
+
+    raw = get_cached_org_config(org_id)
+    if raw is not None:
+        try:
+            return OrganizationConfig(**raw)
+        except Exception:
+            pass
+
+    stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = (await db_session.execute(stmt)).scalar_one_or_none()
+
+    if org_config is not None:
+        try:
+            set_cached_org_config(org_id, org_config.model_dump(mode="json"))
+        except Exception:
+            pass
+
+    return org_config
 
 
-def check_feature_enabled(
+async def check_feature_enabled(
     feature: FeatureSet,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Check if a feature is enabled for an organization.
@@ -197,7 +215,7 @@ def check_feature_enabled(
     """
     from src.security.features_utils.resolve import resolve_feature
 
-    org_config = _get_org_config(org_id, db_session)
+    org_config = await _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(
@@ -216,16 +234,16 @@ def check_feature_enabled(
     return True
 
 
-def check_limits_with_usage(
+async def check_limits_with_usage(
     feature: FeatureSet,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """Check if usage is within limits for a feature.
     Uses resolve_feature() for unified 4-layer resolution."""
     from src.security.features_utils.resolve import resolve_feature
 
-    org_config = _get_org_config(org_id, db_session)
+    org_config = await _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(
@@ -251,7 +269,7 @@ def check_limits_with_usage(
 
     # Plan-based features - check actual DB count
     if feature in PLAN_BASED_FEATURES:
-        current_usage = _get_actual_usage(feature, org_id, db_session)
+        current_usage = await _get_actual_usage(feature, org_id, db_session)
 
         if current_usage >= feature_limit:
             # For non-free plans, allow overage (tracked via events for billing)
@@ -282,15 +300,15 @@ def check_limits_with_usage(
     return True
 
 
-def increase_feature_usage(
+async def increase_feature_usage(
     feature: FeatureSet,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """Increase usage count for a feature."""
     # Plan-based features - log event
     if feature in PLAN_BASED_FEATURES:
-        log_usage_event(org_id, feature, "add", db_session)
+        await log_usage_event(org_id, feature, "add", db_session)
         return True
 
     # Redis-tracked features
@@ -306,15 +324,15 @@ def increase_feature_usage(
     return True
 
 
-def decrease_feature_usage(
+async def decrease_feature_usage(
     feature: FeatureSet,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """Decrease usage count for a feature."""
     # Plan-based features - log event
     if feature in PLAN_BASED_FEATURES:
-        log_usage_event(org_id, feature, "remove", db_session)
+        await log_usage_event(org_id, feature, "remove", db_session)
         return True
 
     # Redis-tracked features
@@ -334,10 +352,10 @@ def decrease_feature_usage(
 # Feature Access Check (Plan-Based Features)
 # ============================================================================
 
-def check_feature_access(
+async def check_feature_access(
     feature: str,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Check if a feature is accessible based on plan level or OSS mode.
@@ -370,7 +388,7 @@ def check_feature_access(
     if required_plan is None:
         return True
 
-    org_config = _get_org_config(org_id, db_session)
+    org_config = await _get_org_config(org_id, db_session)
 
     if org_config is None:
         raise HTTPException(
@@ -394,11 +412,11 @@ def check_feature_access(
 # Billing Calculation Functions (from events)
 # ============================================================================
 
-def get_usage_at_timestamp(
+async def get_usage_at_timestamp(
     org_id: int,
     feature: str,
     timestamp: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """Get usage count at a specific point in time."""
     statement = (
@@ -411,16 +429,16 @@ def get_usage_at_timestamp(
         .order_by(UsageEvent.timestamp.desc())
         .limit(1)
     )
-    event = db_session.exec(statement).first()
+    event = (await db_session.execute(statement)).scalars().first()
     return event.usage_after if event else 0
 
 
-def get_peak_usage(
+async def get_peak_usage(
     org_id: int,
     feature: str,
     start_date: datetime,
     end_date: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """Get peak (maximum) usage during a date range."""
     statement = (
@@ -432,21 +450,21 @@ def get_peak_usage(
             UsageEvent.timestamp <= end_date,
         )
     )
-    peak = db_session.exec(statement).first()
+    peak = (await db_session.execute(statement)).scalars().first()
 
     if peak is None:
         # No events in range - get usage at start of range
-        return get_usage_at_timestamp(org_id, feature, start_date, db_session)
+        return await get_usage_at_timestamp(org_id, feature, start_date, db_session)
 
     return peak
 
 
-def get_usage_events(
+async def get_usage_events(
     org_id: int,
     feature: str,
     start_date: datetime,
     end_date: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> list[UsageEvent]:
     """Get all usage events in a date range."""
     statement = (
@@ -459,24 +477,24 @@ def get_usage_events(
         )
         .order_by(UsageEvent.timestamp)
     )
-    return list(db_session.exec(statement).all())
+    return list((await db_session.execute(statement)).scalars().all())
 
 
-def calculate_weighted_average_usage(
+async def calculate_weighted_average_usage(
     org_id: int,
     feature: str,
     start_date: datetime,
     end_date: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> float:
     """
     Calculate time-weighted average usage over a period.
     This is the fairest billing method for mid-period starts.
     """
-    events = get_usage_events(org_id, feature, start_date, end_date, db_session)
+    events = await get_usage_events(org_id, feature, start_date, end_date, db_session)
 
     # Get initial usage at start of period
-    initial_usage = get_usage_at_timestamp(org_id, feature, start_date, db_session)
+    initial_usage = await get_usage_at_timestamp(org_id, feature, start_date, db_session)
 
     if not events:
         # No changes during period - usage was constant
@@ -506,13 +524,13 @@ def calculate_weighted_average_usage(
     return weighted_sum / total_seconds
 
 
-def calculate_billable_overage(
+async def calculate_billable_overage(
     org_id: int,
     feature: str,
     start_date: datetime,
     end_date: datetime,
     plan_limit: int,
-    db_session: Session,
+    db_session: AsyncSession,
     method: Literal["peak", "average"] = "peak",
 ) -> dict:
     """
@@ -541,9 +559,9 @@ def calculate_billable_overage(
         }
 
     if method == "peak":
-        usage = get_peak_usage(org_id, feature, start_date, end_date, db_session)
+        usage = await get_peak_usage(org_id, feature, start_date, end_date, db_session)
     else:
-        usage = calculate_weighted_average_usage(
+        usage = await calculate_weighted_average_usage(
             org_id, feature, start_date, end_date, db_session
         )
 
@@ -560,18 +578,18 @@ def calculate_billable_overage(
     }
 
 
-def get_billing_summary(
+async def get_billing_summary(
     org_id: int,
     start_date: datetime,
     end_date: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
     method: Literal["peak", "average"] = "peak",
 ) -> dict:
     """
     Get complete billing summary for an organization for a period.
     """
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         return {"error": "Organization has no config"}
@@ -589,7 +607,7 @@ def get_billing_summary(
 
     for feature in PLAN_BASED_FEATURES:
         plan_limit = get_plan_limit(org_plan, feature)
-        feature_billing = calculate_billable_overage(
+        feature_billing = await calculate_billable_overage(
             org_id, feature, start_date, end_date, plan_limit, db_session, method
         )
         summary["features"][feature] = feature_billing
@@ -597,10 +615,10 @@ def get_billing_summary(
     return summary
 
 
-def get_all_orgs_with_overage(
+async def get_all_orgs_with_overage(
     start_date: datetime,
     end_date: datetime,
-    db_session: Session,
+    db_session: AsyncSession,
     method: Literal["peak", "average"] = "peak",
 ) -> list[dict]:
     """
@@ -615,11 +633,11 @@ def get_all_orgs_with_overage(
         )
         .distinct()
     )
-    org_ids = db_session.exec(statement).all()
+    org_ids = (await db_session.execute(statement)).scalars().all()
 
     results = []
     for org_id in org_ids:
-        summary = get_billing_summary(org_id, start_date, end_date, db_session, method)
+        summary = await get_billing_summary(org_id, start_date, end_date, db_session, method)
 
         # Check if any feature has overage
         has_overage = any(
@@ -637,9 +655,9 @@ def get_all_orgs_with_overage(
 # Admin Seat Management
 # ============================================================================
 
-def check_admin_seat_limit(
+async def check_admin_seat_limit(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Check if the organization can add another admin seat.
@@ -651,22 +669,22 @@ def check_admin_seat_limit(
     Raises:
         HTTPException if limit reached (for free plan)
     """
-    return check_limits_with_usage("admin_seats", org_id, db_session)
+    return await check_limits_with_usage("admin_seats", org_id, db_session)
 
 
-def get_admin_seat_usage(
+async def get_admin_seat_usage(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Get admin seat usage summary."""
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         return {"error": "Organization has no config"}
 
     org_plan = _get_org_plan(org_config)
-    current_usage = _get_actual_admin_seat_count(org_id, db_session)
+    current_usage = await _get_actual_admin_seat_count(org_id, db_session)
     limit = get_plan_limit(org_plan, "admin_seats")
 
     return {
@@ -701,15 +719,15 @@ def get_purchased_member_seats(org_id: int) -> int:
 # AI Credit Management Functions (Redis)
 # ============================================================================
 
-def check_ai_credits(
+async def check_ai_credits(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """Check if the organization has AI credits available."""
     from src.security.features_utils.resolve import resolve_feature
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(
@@ -771,7 +789,7 @@ def check_ai_credits(
 
 def deduct_ai_credit(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     amount: int = 1,
 ) -> int:
     """Deduct AI credits from the organization.
@@ -809,14 +827,14 @@ return redis.call("INCRBY", KEYS[1], amount)
 """
 
 
-def _load_org_config_for_ai(org_id: int, db_session: Session):
+async def _load_org_config_for_ai(org_id: int, db_session: AsyncSession):
     stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    return db_session.exec(stmt).first()
+    return (await db_session.execute(stmt)).scalars().first()
 
 
-def reserve_ai_credit(
+async def reserve_ai_credit(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     amount: int = 1,
 ) -> int:
     """
@@ -830,7 +848,7 @@ def reserve_ai_credit(
     """
     from src.security.features_utils.resolve import resolve_feature
 
-    org_config = _load_org_config_for_ai(org_id, db_session)
+    org_config = await _load_org_config_for_ai(org_id, db_session)
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization has no config")
 
@@ -940,15 +958,14 @@ def reset_ai_credits_usage(org_id: int) -> bool:
     return True
 
 
-def get_ai_credits_summary(org_id: int, db_session: Session) -> dict:
+async def get_ai_credits_summary(org_id: int, db_session: AsyncSession) -> dict:
     """Get a summary of AI credits for an organization.
 
     Uses a single Redis connection and pipelines the key fetches to minimize
     round-trips (purchased + used credits fetched in one call).
     """
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    result = db_session.exec(statement)
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         return {"error": "Organization has no config"}

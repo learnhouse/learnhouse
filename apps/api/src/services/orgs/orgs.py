@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from typing import Literal, Optional
 from uuid import uuid4
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import (
     OrganizationConfig,
     OrganizationConfigBase,
@@ -29,7 +30,7 @@ from src.core.ee_hooks import is_multi_org_allowed
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
-def _get_org_config_cached(org_id: int, db_session: Session) -> Optional[OrganizationConfig]:
+async def _get_org_config_cached(org_id: int, db_session: AsyncSession) -> Optional[OrganizationConfig]:
     """Fetch OrganizationConfig with a Redis read-aside cache."""
     from src.services.orgs.cache import get_cached_org_config, set_cached_org_config
 
@@ -41,7 +42,7 @@ def _get_org_config_cached(org_id: int, db_session: Session) -> Optional[Organiz
             pass
 
     stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
-    org_config = db_session.execute(stmt).scalar_one_or_none()
+    org_config = (await db_session.execute(stmt)).scalar_one_or_none()
 
     if org_config is not None:
         try:
@@ -79,13 +80,11 @@ def _build_org_read_with_resolved(org, org_config) -> OrganizationRead:
 async def get_organization_by_uuid(
     request: Request,
     org_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
     statement = select(Organization).where(Organization.org_uuid == org_uuid)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -98,9 +97,7 @@ async def get_organization_by_uuid(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_uuid} has no config")
@@ -111,7 +108,7 @@ async def get_organization_by_uuid(
 async def get_organization_by_slug(
     request: Request,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
     from src.services.orgs.cache import get_cached_org_by_slug, set_cached_org_by_slug
@@ -122,9 +119,7 @@ async def get_organization_by_slug(
         return OrganizationRead(**cached)
 
     statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -134,7 +129,7 @@ async def get_organization_by_slug(
 
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    org_config = _get_org_config_cached(org.id, db_session)  # type: ignore[arg-type]
+    org_config = await _get_org_config_cached(org.id, db_session)
 
     if org_config is None:
         logging.error(f"Organization {org_slug} has no config")
@@ -153,11 +148,11 @@ async def create_org(
     request: Request,
     org_object: OrganizationCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # EE gating: only allow multiple orgs with Enterprise Edition
     if not is_multi_org_allowed():
-        existing_org = db_session.exec(select(Organization).limit(1)).first()
+        existing_org = (await db_session.execute(select(Organization).limit(1))).scalars().first()
         if existing_org is not None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -165,9 +160,7 @@ async def create_org(
             )
 
     statement = select(Organization).where(Organization.slug == org_object.slug)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if org:
         raise HTTPException(
@@ -189,8 +182,8 @@ async def create_org(
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     # Link user to org
     user_org = UserOrganization(
@@ -202,8 +195,8 @@ async def create_org(
     )
 
     db_session.add(user_org)
-    db_session.commit()
-    db_session.refresh(user_org)
+    await db_session.commit()
+    await db_session.refresh(user_org)
 
     # Invalidate session cache so the new org role is picked up immediately
     from src.routers.users import _invalidate_session_cache
@@ -226,14 +219,12 @@ async def create_org(
     )
 
     db_session.add(org_settings)
-    db_session.commit()
-    db_session.refresh(org_settings)
+    await db_session.commit()
+    await db_session.refresh(org_settings)
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
@@ -249,12 +240,12 @@ async def create_org_with_config(
     request: Request,
     org_object: OrganizationCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     submitted_config: dict | OrganizationConfigBase,
 ):
     # EE gating: only allow multiple orgs with Enterprise Edition
     if not is_multi_org_allowed():
-        existing_org = db_session.exec(select(Organization).limit(1)).first()
+        existing_org = (await db_session.execute(select(Organization).limit(1))).scalars().first()
         if existing_org is not None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -262,9 +253,7 @@ async def create_org_with_config(
             )
 
     statement = select(Organization).where(Organization.slug == org_object.slug)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if org:
         raise HTTPException(
@@ -286,8 +275,8 @@ async def create_org_with_config(
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     # Link user to org
     user_org = UserOrganization(
@@ -299,8 +288,8 @@ async def create_org_with_config(
     )
 
     db_session.add(user_org)
-    db_session.commit()
-    db_session.refresh(user_org)
+    await db_session.commit()
+    await db_session.refresh(user_org)
 
     # Invalidate session cache so the new org role is picked up immediately
     from src.routers.users import _invalidate_session_cache
@@ -321,14 +310,12 @@ async def create_org_with_config(
     )
 
     db_session.add(org_settings)
-    db_session.commit()
-    db_session.refresh(org_settings)
+    await db_session.commit()
+    await db_session.refresh(org_settings)
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
@@ -345,12 +332,10 @@ async def update_org(
     org_object: OrganizationUpdate,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -363,9 +348,7 @@ async def update_org(
 
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
-    result = db_session.exec(statement)
-
-    slug_available = result.first()
+    slug_available = (await db_session.execute(statement)).scalars().first()
 
     if slug_available and slug_available.id != org_id:
         raise HTTPException(
@@ -382,8 +365,8 @@ async def update_org(
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     org = OrganizationRead.model_validate(org)
 
@@ -394,12 +377,10 @@ async def update_org_with_config_no_auth(
     request: Request,
     orgconfig: dict | OrganizationConfigBase,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -409,9 +390,7 @@ async def update_org_with_config_no_auth(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -431,8 +410,8 @@ async def update_org_with_config_no_auth(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Organization updated"}
 
@@ -442,12 +421,10 @@ async def update_org_logo(
     logo_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -468,8 +445,8 @@ async def update_org_logo(
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     return {"detail": "Logo updated"}
 
@@ -479,12 +456,10 @@ async def update_org_favicon(
     favicon_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -500,9 +475,7 @@ async def update_org_favicon(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -525,8 +498,8 @@ async def update_org_favicon(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Favicon updated"}
 
@@ -536,12 +509,10 @@ async def update_org_thumbnail(
     thumbnail_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -562,8 +533,8 @@ async def update_org_thumbnail(
     org.update_date = str(datetime.now())
 
     db_session.add(org)
-    db_session.commit()
-    db_session.refresh(org)
+    await db_session.commit()
+    await db_session.refresh(org)
 
     return {"detail": "Thumbnail updated"}
 
@@ -572,12 +543,10 @@ async def update_org_preview(
     preview_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -597,7 +566,7 @@ async def delete_org(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Delete an organization and all related data.
@@ -610,9 +579,7 @@ async def delete_org(
     CASCADE constraints on foreign keys.
     """
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -636,24 +603,24 @@ async def delete_org(
 
     # Invalidate session cache for all users in this org before deletion
     from src.routers.users import _invalidate_session_cache
-    affected_users = db_session.exec(
+    affected_users = (await db_session.execute(
         select(UserOrganization.user_id).where(UserOrganization.org_id == org_id)
-    ).all()
+    )).scalars().all()
     for uid in affected_users:
         _invalidate_session_cache(uid)
 
     # Delete the organization
     # Related data (UserOrganization, Courses, Collections, etc.) will be
     # automatically deleted via CASCADE constraints in the database
-    db_session.delete(org)
-    db_session.commit()
+    await db_session.delete(org)
+    await db_session.commit()
 
     return {"detail": "Organization deleted", "org_id": org_id, "org_name": org_name}
 
 
 async def get_orgs_by_user_admin(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     user_id: str,
     page: int = 1,
     limit: int = 10,
@@ -674,8 +641,7 @@ async def get_orgs_by_user_admin(
     )
 
     # Execute single query to get all data
-    result = db_session.exec(statement)
-    org_data = result.all()
+    org_data = (await db_session.execute(statement)).all()
 
     # Process results in memory
     orgsWithConfig = []
@@ -689,7 +655,7 @@ async def get_orgs_by_user_admin(
 
 async def get_orgs_by_user(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     user_id: str,
     page: int = 1,
     limit: int = 10,
@@ -709,8 +675,7 @@ async def get_orgs_by_user(
     )
 
     # Execute single query to get all data
-    result = db_session.exec(statement)
-    org_data = result.all()
+    org_data = (await db_session.execute(statement)).all()
 
     # Process results in memory
     orgsWithConfig = []
@@ -738,12 +703,10 @@ async def update_org_signup_mechanism(
     signup_mechanism: Literal["open", "inviteOnly"],
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -756,9 +719,7 @@ async def update_org_signup_mechanism(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -782,8 +743,8 @@ async def update_org_signup_mechanism(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     # Explicit Redis invalidation — the SA after_update hook does this too,
     # but signup method changes must take effect instantly on the public
@@ -805,13 +766,11 @@ async def update_org_ai_config(
     ai_enabled: Optional[bool],
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     copilot_enabled: Optional[bool] = None,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -824,9 +783,7 @@ async def update_org_ai_config(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -856,8 +813,8 @@ async def update_org_ai_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     await dispatch_webhooks(
         event_name="org_ai_config_changed",
@@ -874,12 +831,12 @@ async def _update_feature_toggle(
     enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     v1_default: dict | None = None,
 ) -> dict:
     """Generic helper for updating a feature's enabled/disabled state."""
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -887,7 +844,7 @@ async def _update_feature_toggle(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -907,8 +864,8 @@ async def _update_feature_toggle(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": f"{feature.capitalize()} configuration updated"}
 
@@ -918,7 +875,7 @@ async def update_org_communities_config(
     communities_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "communities", communities_enabled, org_id, current_user, db_session,
@@ -931,7 +888,7 @@ async def update_org_payments_config(
     payments_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     result = await _update_feature_toggle(
         request, "payments", payments_enabled, org_id, current_user, db_session,
@@ -952,7 +909,7 @@ async def update_org_collections_config(
     collections_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "collections", collections_enabled, org_id, current_user, db_session,
@@ -965,7 +922,7 @@ async def update_org_courses_config(
     courses_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "courses", courses_enabled, org_id, current_user, db_session,
@@ -978,7 +935,7 @@ async def update_org_podcasts_config(
     podcasts_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "podcasts", podcasts_enabled, org_id, current_user, db_session,
@@ -991,7 +948,7 @@ async def update_org_boards_config(
     boards_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "boards", boards_enabled, org_id, current_user, db_session,
@@ -1004,7 +961,7 @@ async def update_org_playgrounds_config(
     playgrounds_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     return await _update_feature_toggle(
         request, "playgrounds", playgrounds_enabled, org_id, current_user, db_session,
@@ -1017,10 +974,10 @@ async def update_org_color_config(
     color: str,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1028,7 +985,7 @@ async def update_org_color_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1046,8 +1003,8 @@ async def update_org_color_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Color configuration updated"}
 
@@ -1057,10 +1014,10 @@ async def update_org_footer_text_config(
     footer_text: str,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1068,7 +1025,7 @@ async def update_org_footer_text_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1086,8 +1043,8 @@ async def update_org_footer_text_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Footer text configuration updated"}
 
@@ -1097,10 +1054,10 @@ async def update_org_font_config(
     font: str,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1108,7 +1065,7 @@ async def update_org_font_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1126,8 +1083,8 @@ async def update_org_font_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Font configuration updated"}
 
@@ -1137,7 +1094,7 @@ async def update_org_default_language_config(
     default_language: str,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     from src.services.email.translations import SUPPORTED_LANGUAGES
 
@@ -1148,7 +1105,7 @@ async def update_org_default_language_config(
         )
 
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1156,7 +1113,7 @@ async def update_org_default_language_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1174,8 +1131,8 @@ async def update_org_default_language_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Default language updated"}
 
@@ -1197,10 +1154,10 @@ async def update_org_watermark_config(
     watermark_enabled: bool,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1208,7 +1165,7 @@ async def update_org_watermark_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1232,8 +1189,8 @@ async def update_org_watermark_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Watermark configuration updated"}
 
@@ -1243,10 +1200,10 @@ async def update_org_auth_branding_config(
     auth_branding: AuthBrandingConfig,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -1254,7 +1211,7 @@ async def update_org_auth_branding_config(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(statement).first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         raise HTTPException(status_code=404, detail="Organization config not found")
@@ -1273,8 +1230,8 @@ async def update_org_auth_branding_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Auth branding configuration updated"}
 
@@ -1284,12 +1241,10 @@ async def upload_org_auth_background_service(
     background_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1313,12 +1268,10 @@ async def get_org_join_mechanism(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1331,9 +1284,7 @@ async def get_org_join_mechanism(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -1357,7 +1308,7 @@ async def upload_org_preview_service(
     org_uuid: str,
 ) -> dict:
     # No need for request or current_user since we're not doing RBAC checks for previews
-    
+
     # Upload preview
     name_in_disk = await upload_org_preview(preview_file, org_uuid)
 
@@ -1371,12 +1322,10 @@ async def update_org_landing(
     landing_object: dict,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1389,9 +1338,7 @@ async def update_org_landing(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -1412,8 +1359,8 @@ async def update_org_landing(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "Landing object updated"}
 
@@ -1422,12 +1369,10 @@ async def upload_org_landing_content_service(
     content_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1451,12 +1396,10 @@ async def update_org_seo_config(
     seo_config: SeoOrgConfig,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1469,9 +1412,7 @@ async def update_org_seo_config(
 
     # Get org config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    result = db_session.exec(statement)
-
-    org_config = result.first()
+    org_config = (await db_session.execute(statement)).scalars().first()
 
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
@@ -1494,8 +1435,8 @@ async def update_org_seo_config(
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
-    db_session.commit()
-    db_session.refresh(org_config)
+    await db_session.commit()
+    await db_session.refresh(org_config)
 
     return {"detail": "SEO configuration updated"}
 
@@ -1505,12 +1446,10 @@ async def upload_org_og_image_service(
     og_image_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -1538,7 +1477,7 @@ async def rbac_check(
     org_uuid: str,
     current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Organizations are readable by anyone
     if action == "read":
@@ -1560,9 +1499,9 @@ async def rbac_check(
             )
 
         # Verify token belongs to this organization
-        org = db_session.exec(
+        org = (await db_session.execute(
             select(Organization).where(Organization.org_uuid == org_uuid)
-        ).first()
+        )).scalars().first()
 
         if not org or org.id != current_user.org_id:
             raise HTTPException(

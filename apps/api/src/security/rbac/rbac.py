@@ -2,7 +2,8 @@ import logging
 from typing import Literal, Union
 from fastapi import HTTPException, status, Request
 from sqlalchemy import null
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.collections import Collection
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
@@ -22,7 +23,7 @@ from src.security.superadmin import is_user_superadmin
 logger = logging.getLogger(__name__)
 
 
-async def _get_offer_for_usergroup(usergroup_id: int, db_session: Session) -> dict | None:
+async def _get_offer_for_usergroup(usergroup_id: int, db_session: AsyncSession) -> dict | None:
     """
     Return offer metadata if a usergroup is the access-control group for a PaymentsOffer.
     Returns None if the usergroup is not tied to any offer.
@@ -32,7 +33,7 @@ async def _get_offer_for_usergroup(usergroup_id: int, db_session: Session) -> di
         stmt = select(PaymentsOffer).where(
             PaymentsOffer.usergroup_id == usergroup_id,
         )
-        offer = db_session.exec(stmt).first()
+        offer = (await db_session.execute(stmt)).scalars().first()
         if offer:
             return {
                 "offer_id": offer.id,
@@ -48,7 +49,7 @@ async def _get_offer_for_usergroup(usergroup_id: int, db_session: Session) -> di
 async def check_usergroup_access(
     resource_uuid: str,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Check if a user has access to a resource via UserGroup membership.
@@ -74,7 +75,7 @@ async def check_usergroup_access(
     usergroup_stmt = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == resource_uuid
     )
-    usergroup_resources = db_session.exec(usergroup_stmt).all()
+    usergroup_resources = (await db_session.execute(usergroup_stmt)).scalars().all()
 
     logger.info("[USERGROUP_ACCESS] Found %d UserGroupResource entries for resource", len(usergroup_resources))
 
@@ -91,7 +92,7 @@ async def check_usergroup_access(
         UserGroupUser.usergroup_id.in_(usergroup_ids),
         UserGroupUser.user_id == user_id
     )
-    membership = db_session.exec(membership_stmt).first()
+    membership = (await db_session.execute(membership_stmt)).scalars().first()
 
     if membership:
         logger.info("[USERGROUP_ACCESS] User %s IS a member of UserGroup %s, granting access", user_id, membership.usergroup_id)
@@ -123,7 +124,7 @@ async def authorization_verify_if_element_is_public(
     request,
     element_uuid: str,
     action: Literal["read"],
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     element_nature = await check_element_type(element_uuid)
     # Verifies if the element is public
@@ -131,7 +132,7 @@ async def authorization_verify_if_element_is_public(
         statement = select(Course).where(
             Course.public == True, Course.course_uuid == element_uuid
         )
-        course = db_session.exec(statement).first()
+        course = (await db_session.execute(statement)).scalars().first()
         if course:
             return True
         else:
@@ -144,7 +145,7 @@ async def authorization_verify_if_element_is_public(
         statement = select(Collection).where(
             Collection.public == True, Collection.collection_uuid == element_uuid
         )
-        collection = db_session.exec(statement).first()
+        collection = (await db_session.execute(statement)).scalars().first()
         if collection:
             return True
         else:
@@ -160,7 +161,7 @@ async def authorization_verify_if_element_is_public(
             Podcast.published == True,
             Podcast.podcast_uuid == element_uuid
         )
-        podcast = db_session.exec(statement).first()
+        podcast = (await db_session.execute(statement)).scalars().first()
         if podcast:
             return True
         else:
@@ -182,12 +183,12 @@ async def authorization_verify_if_user_is_author(
     user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # For create action, we don't need to check existing resource
     if action == "create":
         return True  # Allow creation if user is authenticated
-        
+
     if action in ["update", "delete", "read"]:
         # Query for the current user's authorship record specifically
         # FIXED: Previously this only filtered by resource_uuid and got .first(),
@@ -197,7 +198,7 @@ async def authorization_verify_if_user_is_author(
             ResourceAuthor.resource_uuid == element_uuid,
             ResourceAuthor.user_id == int(user_id)
         )
-        resource_author = db_session.exec(statement).first()
+        resource_author = (await db_session.execute(statement)).scalars().first()
 
         if resource_author:
             valid_authorships = [
@@ -215,8 +216,8 @@ async def authorization_verify_if_user_is_author(
     return False
 
 
-def _load_applicable_roles(
-    db_session: Session,
+async def _load_applicable_roles(
+    db_session: AsyncSession,
     user_id: int,
     target_org_id: int | None,
 ):
@@ -240,14 +241,14 @@ def _load_applicable_roles(
             )
             .where(UserOrganization.user_id == user_id)
         )
-        return db_session.exec(statement).all()
+        return (await db_session.execute(statement)).scalars().all()
 
-    is_member_of_target = db_session.exec(
+    is_member_of_target = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == target_org_id,
         )
-    ).first()
+    )).scalars().first()
 
     if not is_member_of_target:
         # Non-member: never grant role-based access to this org's resources.
@@ -259,7 +260,7 @@ def _load_applicable_roles(
         .where(UserOrganization.user_id == user_id)
         .where((Role.org_id == target_org_id) | (Role.org_id == null()))
     )
-    return db_session.exec(statement).all()
+    return (await db_session.execute(statement)).scalars().all()
 
 
 # Tested and working
@@ -268,10 +269,10 @@ async def authorization_verify_based_on_roles(
     user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Superadmin bypass - full access to all resources
-    if is_user_superadmin(user_id, db_session):
+    if await is_user_superadmin(user_id, db_session):
         return True
 
     element_type = await check_element_type(element_uuid)
@@ -282,11 +283,11 @@ async def authorization_verify_based_on_roles(
     # one of their org roles carries the permission.
     target_org_id = await get_element_organization_id(element_uuid, db_session)
 
-    user_roles_in_organization_and_standard_roles = _load_applicable_roles(
+    user_roles_in_organization_and_standard_roles = await _load_applicable_roles(
         db_session, user_id, target_org_id
     )
 
-    
+
     # Check if user is the author of the resource for "own" permissions
     is_author = False
     if action in ["update", "delete", "read"]:
@@ -317,7 +318,7 @@ async def authorization_verify_based_on_roles(
                             return True
                     elif getattr(element_rights, f"action_{action}", False):
                         return True
-    
+
     # If we get here, no role granted the permission
     return False
 
@@ -327,7 +328,7 @@ async def authorization_verify_based_on_org_admin_status(
     user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Verify if a user has admin status in the SPECIFIC organization being accessed.
@@ -343,7 +344,7 @@ async def authorization_verify_based_on_org_admin_status(
         bool: True if user is admin in the target organization, False otherwise
     """
     # Superadmin bypass - full access to all organizations
-    if is_user_superadmin(user_id, db_session):
+    if await is_user_superadmin(user_id, db_session):
         return True
 
     # Get the target organization's ID from the element UUID
@@ -362,7 +363,7 @@ async def authorization_verify_based_on_org_admin_status(
         .where(UserOrganization.role_id.in_(ADMIN_OR_MAINTAINER_ROLE_IDS))
     )
 
-    user_org = db_session.exec(statement).first()
+    user_org = (await db_session.execute(statement)).scalars().first()
 
     return user_org is not None
 
@@ -373,12 +374,12 @@ async def authorization_verify_based_on_roles_and_authorship(
     user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     logger.info("[RBAC] authorization_verify_based_on_roles_and_authorship: user_id=%s, action=%s, element_uuid=%s", user_id, action, element_uuid)
 
     # Superadmin bypass - full access to all resources
-    if is_user_superadmin(user_id, db_session):
+    if await is_user_superadmin(user_id, db_session):
         logger.info("[RBAC] Superadmin bypass for user_id=%s", user_id)
         return True
 
@@ -436,7 +437,7 @@ async def authorization_verify_api_token_permissions(
     api_token_user: APITokenUser,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """
     Verify API token permissions for an action on an element.
@@ -540,7 +541,7 @@ async def authorization_verify_based_on_roles_and_authorship_or_api_token(
     current_user: Union[APITokenUser, any],
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Combined authorization check that handles both regular users and API tokens.
@@ -555,7 +556,7 @@ async def authorization_verify_based_on_roles_and_authorship_or_api_token(
         )
 
     # Superadmin bypass - full access to all resources
-    if is_user_superadmin(current_user.id, db_session):
+    if await is_user_superadmin(current_user.id, db_session):
         return True
 
     # Regular user path: use existing logic

@@ -13,7 +13,8 @@ Extracts text from all course content types:
 import logging
 from typing import Optional
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity, ActivityTypeEnum
 from src.db.courses.blocks import Block, BlockTypeEnum
@@ -244,10 +245,10 @@ def _extract_block_content(block: Block, activity_name: str) -> Optional[dict]:
     return None
 
 
-def extract_all_course_content(
+async def extract_all_course_content(
     course_id: int,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> list[dict]:
     """
     Extract all indexable content from a course.
@@ -256,9 +257,9 @@ def extract_all_course_content(
     {text, activity_id, activity_uuid, activity_name, chapter_name, course_name, source_type, block_uuid}
     """
     # Get the course
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(Course.id == course_id)
-    ).first()
+    )).scalars().first()
     if not course:
         logger.warning("Course %d not found for extraction", course_id)
         return []
@@ -269,21 +270,21 @@ def extract_all_course_content(
     results = []
 
     # Get chapters for this course
-    chapters = db_session.exec(
+    chapters = (await db_session.execute(
         select(Chapter).where(Chapter.course_id == course_id)
-    ).all()
+    )).scalars().all()
     chapter_map = {ch.id: ch.name for ch in chapters}
 
     # Get all activities for this course
-    activities = db_session.exec(
+    activities = (await db_session.execute(
         select(Activity).where(Activity.course_id == course_id)
-    ).all()
+    )).scalars().all()
 
     for activity in activities:
         # Find chapter name via chapter_activities join
-        chapter_activity = db_session.exec(
+        chapter_activity = (await db_session.execute(
             select(ChapterActivity).where(ChapterActivity.activity_id == activity.id)
-        ).first()
+        )).scalars().first()
         chapter_name = chapter_map.get(chapter_activity.chapter_id, "") if chapter_activity else ""
 
         activity_name = activity.name
@@ -309,9 +310,9 @@ def extract_all_course_content(
                     })
 
             # Extract from blocks attached to this activity
-            blocks = db_session.exec(
+            blocks = (await db_session.execute(
                 select(Block).where(Block.activity_id == activity_id)
-            ).all()
+            )).scalars().all()
             for block in blocks:
                 block_content = _extract_block_content(block, activity_name)
                 if block_content:

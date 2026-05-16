@@ -19,7 +19,7 @@ from src.services.courses.updates import (
 )
 
 
-def _seed_course_update(
+async def _seed_course_update(
     db, org, course, *, update_id: int, courseupdate_uuid: str, creation_date: str
 ):
     update = CourseUpdate(
@@ -34,8 +34,8 @@ def _seed_course_update(
         update_date=creation_date,
     )
     db.add(update)
-    db.commit()
-    db.refresh(update)
+    await db.commit()
+    await db.refresh(update)
     return update
 
 
@@ -104,7 +104,7 @@ class TestCourseUpdatesService:
         assert created.org_id == org.id
         assert created.courseupdate_uuid == "courseupdate_12345678-1234-5678-1234-567812345678"
 
-        stored = db.get(CourseUpdate, created.id)
+        stored = await db.get(CourseUpdate, created.id)
         assert stored is not None
         assert stored.courseupdate_uuid == created.courseupdate_uuid
 
@@ -124,7 +124,7 @@ class TestCourseUpdatesService:
 
     @pytest.mark.asyncio
     async def test_update_update_updates_only_provided_fields(self, db, org, course, admin_user, mock_request):
-        seeded = _seed_course_update(
+        seeded = await _seed_course_update(
             db,
             org,
             course,
@@ -160,7 +160,7 @@ class TestCourseUpdatesService:
 
     @pytest.mark.asyncio
     async def test_delete_update_removes_row(self, db, org, course, admin_user, mock_request):
-        seeded = _seed_course_update(
+        seeded = await _seed_course_update(
             db,
             org,
             course,
@@ -177,7 +177,7 @@ class TestCourseUpdatesService:
 
         mock_access.assert_awaited_once()
         assert result == {"message": "Update deleted successfully"}
-        assert db.get(CourseUpdate, seeded.id) is None
+        assert await db.get(CourseUpdate, seeded.id) is None
 
     @pytest.mark.asyncio
     async def test_get_updates_by_course_uuid_validates_missing_course(self, db, admin_user, mock_request):
@@ -189,7 +189,7 @@ class TestCourseUpdatesService:
 
     @pytest.mark.asyncio
     async def test_get_updates_by_course_uuid_returns_newest_first(self, db, org, course, admin_user, mock_request):
-        older = _seed_course_update(
+        older = await _seed_course_update(
             db,
             org,
             course,
@@ -197,7 +197,7 @@ class TestCourseUpdatesService:
             courseupdate_uuid="courseupdate_old",
             creation_date="2025-01-01 10:00:00",
         )
-        newer = _seed_course_update(
+        newer = await _seed_course_update(
             db,
             org,
             course,

@@ -3,7 +3,7 @@ import logging
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.ai import (
     ai_send_activity_chat_message,
@@ -50,7 +50,7 @@ async def api_ai_start_activity_chat_session(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
     Start a new AI Chat session with a Course Activity
@@ -75,7 +75,7 @@ async def api_ai_send_activity_chat_message(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> ActivityAIChatSessionResponse:
     """
     Send a message to an AI Chat session with a Course Activity
@@ -167,7 +167,7 @@ async def api_ai_start_activity_chat_session_stream(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Start a new AI Chat session with streaming response (SSE).
@@ -223,7 +223,7 @@ async def api_ai_send_activity_chat_message_stream(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Send a message to an existing AI Chat session with streaming response (SSE).
@@ -440,7 +440,7 @@ async def api_editor_ai_start_chat_session_stream(
     request: Request,
     chat_session_object: StartEditorAIChatSession,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Start a new AI Editor chat session with streaming response (SSE).
@@ -496,7 +496,7 @@ async def api_editor_ai_send_message_stream(
     request: Request,
     chat_session_object: SendEditorAIChatMessage,
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Send a message to an existing AI Editor chat session with streaming response (SSE).

@@ -1,7 +1,8 @@
 from typing import List, Dict, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -19,7 +20,7 @@ async def upvote_comment(
     request: Request,
     comment_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionCommentVoteRead:
     """
     Upvote a comment.
@@ -34,7 +35,7 @@ async def upvote_comment(
     comment_statement = select(DiscussionComment).where(
         DiscussionComment.comment_uuid == comment_uuid
     )
-    comment = db_session.exec(comment_statement).first()
+    comment = (await db_session.execute(comment_statement)).scalars().first()
 
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -43,7 +44,7 @@ async def upvote_comment(
     discussion_statement = select(Discussion).where(
         Discussion.id == comment.discussion_id
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -52,7 +53,7 @@ async def upvote_comment(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -66,7 +67,7 @@ async def upvote_comment(
         DiscussionCommentVote.comment_id == comment.id,
         DiscussionCommentVote.user_id == current_user.id,
     )
-    existing_vote = db_session.exec(existing_vote_statement).first()
+    existing_vote = (await db_session.execute(existing_vote_statement)).scalars().first()
 
     if existing_vote:
         raise HTTPException(
@@ -88,8 +89,8 @@ async def upvote_comment(
     comment.upvote_count += 1
     db_session.add(comment)
 
-    db_session.commit()
-    db_session.refresh(vote)
+    await db_session.commit()
+    await db_session.refresh(vote)
 
     return DiscussionCommentVoteRead.model_validate(vote.model_dump())
 
@@ -98,7 +99,7 @@ async def remove_comment_upvote(
     request: Request,
     comment_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Remove an upvote from a comment.
@@ -112,7 +113,7 @@ async def remove_comment_upvote(
     comment_statement = select(DiscussionComment).where(
         DiscussionComment.comment_uuid == comment_uuid
     )
-    comment = db_session.exec(comment_statement).first()
+    comment = (await db_session.execute(comment_statement)).scalars().first()
 
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -122,7 +123,7 @@ async def remove_comment_upvote(
         DiscussionCommentVote.comment_id == comment.id,
         DiscussionCommentVote.user_id == current_user.id,
     )
-    vote = db_session.exec(vote_statement).first()
+    vote = (await db_session.execute(vote_statement)).scalars().first()
 
     if not vote:
         raise HTTPException(
@@ -131,13 +132,13 @@ async def remove_comment_upvote(
         )
 
     # Delete vote
-    db_session.delete(vote)
+    await db_session.delete(vote)
 
     # Decrement upvote count (minimum 0)
     comment.upvote_count = max(0, comment.upvote_count - 1)
     db_session.add(comment)
 
-    db_session.commit()
+    await db_session.commit()
 
     return {"detail": "Upvote removed"}
 
@@ -145,7 +146,7 @@ async def remove_comment_upvote(
 async def get_user_votes_for_comments(
     comment_ids: List[int],
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[int, bool]:
     """
     Check if user has voted for multiple comments.
@@ -161,7 +162,7 @@ async def get_user_votes_for_comments(
         DiscussionCommentVote.comment_id.in_(comment_ids),  # type: ignore
         DiscussionCommentVote.user_id == user_id,
     )
-    votes = db_session.exec(votes_statement).all()
+    votes = (await db_session.execute(votes_statement)).scalars().all()
     voted_comment_ids = {v.comment_id for v in votes}
 
     # Build result

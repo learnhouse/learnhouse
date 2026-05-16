@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional, Union
 from fastapi import APIRouter, Depends, Request, UploadFile, Query
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.services.orgs.invites import (
     create_invite_code,
     delete_invite_code,
@@ -88,7 +88,7 @@ async def api_create_org(
     request: Request,
     org_object: OrganizationCreate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Create new organization
@@ -112,7 +112,7 @@ async def api_create_org_withconfig(
     org_object: OrganizationCreate,
     config_object: OrganizationConfigBase,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Create new organization
@@ -136,7 +136,7 @@ async def api_get_org_by_uuid(
     request: Request,
     org_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Get single Org by UUID
@@ -169,7 +169,7 @@ async def api_export_org_users(
     role_id: Optional[int] = Query(default=None),
     status: Optional[Literal["verified", "unverified"]] = Query(default=None),
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Export organization users as CSV file.
@@ -207,7 +207,7 @@ async def api_get_org_users(
     role_id: Optional[int] = Query(default=None, description="Filter by role ID"),
     status: Optional[Literal["verified", "unverified"]] = Query(default=None, description="Filter by verification status"),
     current_user: PublicUser = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get organization users with pagination and search.
@@ -238,7 +238,7 @@ async def api_join_an_org(
     request: Request,
     args: JoinOrg,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get single Org by ID
@@ -263,7 +263,7 @@ async def api_update_user_role(
     user_id: str,
     role_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update user role
@@ -289,7 +289,7 @@ async def api_remove_batch_users_from_org(
     org_id: int,
     user_ids: List[int] = Query(..., description="List of user IDs to remove"),
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Remove multiple users from org in batch
@@ -315,7 +315,7 @@ async def api_remove_user_from_org(
     org_id: int,
     user_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Remove user from org
@@ -342,7 +342,7 @@ async def api_get_org_signup_mechanism(
     org_id: int,
     signup_mechanism: Literal["open", "inviteOnly"],
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get org signup mechanism
@@ -374,7 +374,7 @@ async def api_update_org_ai_config(
     ai_enabled: Optional[bool] = None,
     copilot_enabled: Optional[bool] = None,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization AI configuration (admin-only)
@@ -400,7 +400,7 @@ async def api_update_org_communities_config(
     org_id: int,
     communities_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization communities configuration (admin-only)
@@ -426,7 +426,7 @@ async def api_update_org_payments_config(
     org_id: int,
     payments_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization payments configuration (admin-only)
@@ -452,7 +452,7 @@ async def api_update_org_courses_config(
     org_id: int,
     courses_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization courses configuration (admin-only)
@@ -478,7 +478,7 @@ async def api_update_org_collections_config(
     org_id: int,
     collections_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization collections configuration (admin-only)
@@ -504,7 +504,7 @@ async def api_update_org_podcasts_config(
     org_id: int,
     podcasts_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization podcasts configuration (admin-only)
@@ -530,7 +530,7 @@ async def api_update_org_boards_config(
     org_id: int,
     boards_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization boards configuration (admin-only)
@@ -556,7 +556,7 @@ async def api_update_org_playgrounds_config(
     org_id: int,
     playgrounds_enabled: bool,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization playgrounds configuration (admin-only)
@@ -582,7 +582,7 @@ async def api_update_org_color_config(
     org_id: int,
     color: str = "",
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization color configuration
@@ -608,7 +608,7 @@ async def api_update_org_font_config(
     org_id: int,
     font: str = "",
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization font configuration
@@ -634,7 +634,7 @@ async def api_update_org_footer_text_config(
     org_id: int,
     footer_text: str = "",
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization footer text configuration
@@ -661,7 +661,7 @@ async def api_update_org_default_language_config(
     org_id: int,
     default_language: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization default language configuration
@@ -687,7 +687,7 @@ async def api_update_org_watermark_config(
     org_id: int,
     watermark_enabled: bool = True,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization watermark configuration.
@@ -714,7 +714,7 @@ async def api_update_org_auth_branding_config(
     org_id: int,
     auth_branding: AuthBrandingConfig,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization auth branding configuration
@@ -740,7 +740,7 @@ async def api_upload_org_auth_background(
     org_id: int,
     background_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Upload auth page background image
@@ -770,7 +770,7 @@ async def api_update_org_seo_config(
     org_id: int,
     seo_config: SeoOrgConfig,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization SEO configuration
@@ -796,7 +796,7 @@ async def api_upload_org_og_image(
     org_id: int,
     og_image_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Upload OG image for social media sharing
@@ -827,7 +827,7 @@ async def api_create_invite_code(
     org_id: int,
     usergroup_id: Optional[int] = None,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Create invite code, optionally linked to a usergroup
@@ -850,7 +850,7 @@ async def api_get_invite_codes(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get invite codes
@@ -874,7 +874,7 @@ async def api_get_invite_code(
     org_id: int,
     invite_code: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get invite code
@@ -898,7 +898,7 @@ async def api_delete_invite_code(
     org_id: int,
     org_invite_code_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Delete invite code
@@ -925,7 +925,7 @@ async def api_invite_batch_users(
     emails: str,
     invite_code_uuid: Optional[str] = None,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Invite batch users by emails
@@ -950,7 +950,7 @@ async def api_get_org_users_invites(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get org users invites
@@ -974,7 +974,7 @@ async def api_delete_org_users_invites(
     org_id: int,
     email: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Delete org users invites
@@ -996,7 +996,7 @@ async def api_get_org_by_slug(
     request: Request,
     org_slug: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Get single Org by Slug
@@ -1020,7 +1020,7 @@ async def api_update_org_logo(
     org_id: int,
     logo_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update org logo
@@ -1050,7 +1050,7 @@ async def api_update_org_favicon(
     org_id: int,
     favicon_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update org favicon
@@ -1080,7 +1080,7 @@ async def api_update_org_thumbnail(
     org_id: int,
     thumbnail_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update org thumbnail
@@ -1109,7 +1109,7 @@ async def api_update_org_preview(
     org_id: int,
     preview_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update org preview
@@ -1137,7 +1137,7 @@ async def api_user_orgs(
     page: int,
     limit: int,
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[OrganizationRead]:
     """
     Get orgs by page and limit by current user
@@ -1162,7 +1162,7 @@ async def api_user_orgs_admin(
     page: int,
     limit: int,
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[OrganizationRead]:
     """
     Get orgs by page and limit by current user
@@ -1190,7 +1190,7 @@ async def api_update_org(
     org_object: OrganizationUpdate,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Update Org by ID
@@ -1213,7 +1213,7 @@ async def api_delete_org(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Delete Org by ID
@@ -1238,7 +1238,7 @@ async def api_update_org_landing(
     org_id: int,
     landing_object: dict,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Update organization landing object
@@ -1262,7 +1262,7 @@ async def api_upload_org_landing_content(
     org_id: int,
     content_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Upload content for organization landing page
@@ -1294,7 +1294,7 @@ async def api_get_org_usage(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Get organization usage and limits for plan-based features.

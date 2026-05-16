@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
-from sqlmodel import Session, select, func, delete as sql_delete
+from sqlmodel import select, func, delete as sql_delete
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from src.db.courses.activities import Activity
@@ -19,10 +20,10 @@ from src.services.analytics import events as analytics_events
 from src.services.webhooks.dispatch import dispatch_webhooks
 
 
-def _build_trail_read(
+async def _build_trail_read(
     trail: Trail,
     trail_runs_raw: List[TrailRun],
-    db_session: Session,
+    db_session: AsyncSession,
     user_id: Optional[int] = None,
     with_course_info: bool = True,
 ) -> TrailRead:
@@ -36,19 +37,19 @@ def _build_trail_read(
     # Batch fetch all courses needed
     course_map: dict[int, Course] = {}
     if course_ids:
-        courses = db_session.exec(
+        courses = (await db_session.execute(
             select(Course).where(Course.id.in_(course_ids))  # type: ignore
-        ).all()
+        )).scalars().all()
         course_map = {c.id: c for c in courses}
 
     # Batch fetch chapter activity counts per course (for total_steps)
     course_total_steps_map: dict[int, int] = {}
     if with_course_info and course_ids:
-        step_counts = db_session.exec(
+        step_counts = (await db_session.execute(
             select(ChapterActivity.course_id, func.count(ChapterActivity.id))  # type: ignore
             .where(ChapterActivity.course_id.in_(course_ids))  # type: ignore
             .group_by(ChapterActivity.course_id)
-        ).all()
+        )).all()
         course_total_steps_map = {row[0]: row[1] for row in step_counts}
 
     # Batch fetch all trail steps for these trail runs
@@ -57,7 +58,7 @@ def _build_trail_read(
     )
     if user_id is not None:
         steps_statement = steps_statement.where(TrailStep.user_id == user_id)
-    all_steps = db_session.exec(steps_statement).all()
+    all_steps = (await db_session.execute(steps_statement)).scalars().all()
 
     # Group steps by trailrun_id
     steps_by_run: dict[int, list[TrailStep]] = {}
@@ -67,9 +68,9 @@ def _build_trail_read(
     # Also fetch courses referenced by trail steps (may overlap with trail_run courses)
     step_course_ids = list({s.course_id for s in all_steps} - set(course_map.keys()))
     if step_course_ids:
-        extra_courses = db_session.exec(
+        extra_courses = (await db_session.execute(
             select(Course).where(Course.id.in_(step_course_ids))  # type: ignore
-        ).all()
+        )).scalars().all()
         for c in extra_courses:
             course_map[c.id] = c
 
@@ -100,12 +101,12 @@ async def create_user_trail(
     request: Request,
     user: PublicUser,
     trail_object: TrailCreate,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Trail:
     statement = select(Trail).where(
         Trail.org_id == trail_object.org_id, Trail.user_id == user.id
     )
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if trail:
         raise HTTPException(
@@ -122,8 +123,8 @@ async def create_user_trail(
 
     # create trail
     db_session.add(trail)
-    db_session.commit()
-    db_session.refresh(trail)
+    await db_session.commit()
+    await db_session.refresh(trail)
 
     return trail
 
@@ -131,10 +132,10 @@ async def create_user_trail(
 async def get_user_trails(
     request: Request,
     user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     statement = select(Trail).where(Trail.user_id == user.id)
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
         raise HTTPException(
@@ -142,9 +143,9 @@ async def get_user_trails(
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session)
 
 
 async def check_trail_presence(
@@ -152,10 +153,10 @@ async def check_trail_presence(
     user_id: int,
     request: Request,
     user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id)
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
         trail = await create_user_trail(
@@ -173,7 +174,7 @@ async def check_trail_presence(
 
 
 async def get_user_trail_with_orgid(
-    request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: Session
+    request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: AsyncSession
 ) -> TrailRead:
 
     if isinstance(user, AnonymousUser):
@@ -191,20 +192,20 @@ async def get_user_trail_with_orgid(
     )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session)
 
 
 async def add_activity_to_trail(
     request: Request,
     user: PublicUser,
     activity_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     # Look for the activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -212,7 +213,7 @@ async def add_activity_to_trail(
         )
 
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -230,7 +231,7 @@ async def add_activity_to_trail(
     statement = select(TrailRun).where(
         TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
-    trailrun = db_session.exec(statement).first()
+    trailrun = (await db_session.execute(statement)).scalars().first()
 
     if not trailrun:
         trailrun = TrailRun(
@@ -242,13 +243,13 @@ async def add_activity_to_trail(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
-        db_session.commit()
-        db_session.refresh(trailrun)
+        await db_session.commit()
+        await db_session.refresh(trailrun)
 
     statement = select(TrailStep).where(
         TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id, TrailStep.user_id == user.id
     )
-    trailstep = db_session.exec(statement).first()
+    trailstep = (await db_session.execute(statement)).scalars().first()
 
     is_new_completion = trailstep is None
     if is_new_completion:
@@ -266,8 +267,8 @@ async def add_activity_to_trail(
             update_date=str(datetime.now()),
         )
         db_session.add(trailstep)
-        db_session.commit()
-        db_session.refresh(trailstep)
+        await db_session.commit()
+        await db_session.refresh(trailstep)
 
     # Only track on first completion — avoid duplicates on re-visits
     if is_new_completion:
@@ -304,7 +305,7 @@ async def add_activity_to_trail(
     # fire this webhook otherwise. See that function's docstring for context.
     course_was_completed = False
     if is_new_completion and course and course.id:
-        course_was_completed = is_course_fully_completed(user.id, course.id, db_session)
+        course_was_completed = await is_course_fully_completed(user.id, course.id, db_session)
 
     # Always run the certificate side effect when the course is complete,
     # regardless of whether a cert is configured (the function no-ops if none).
@@ -334,19 +335,19 @@ async def add_activity_to_trail(
         )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
 
 async def remove_activity_from_trail(
     request: Request,
     user: PublicUser,
     activity_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     # Look for the activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -354,7 +355,7 @@ async def remove_activity_from_trail(
         )
 
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -364,7 +365,7 @@ async def remove_activity_from_trail(
     statement = select(Trail).where(
         Trail.org_id == course.org_id, Trail.user_id == user.id
     )
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
         raise HTTPException(
@@ -373,31 +374,31 @@ async def remove_activity_from_trail(
 
     # Delete the trail step for this activity
     statement = select(TrailStep).where(
-        TrailStep.activity_id == activity.id, 
+        TrailStep.activity_id == activity.id,
         TrailStep.user_id == user.id,
         TrailStep.trail_id == trail.id
     )
-    trail_step = db_session.exec(statement).first()
+    trail_step = (await db_session.execute(statement)).scalars().first()
 
     if trail_step:
-        db_session.delete(trail_step)
-        db_session.commit()
+        await db_session.delete(trail_step)
+        await db_session.commit()
 
     # Get updated trail data
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
 
 
 async def add_course_to_trail(
     request: Request,
     user: PublicUser,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -408,7 +409,7 @@ async def add_course_to_trail(
     statement = select(TrailRun).where(
         TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
-    trailrun = db_session.exec(statement).first()
+    trailrun = (await db_session.execute(statement)).scalars().first()
 
     if trailrun:
         raise HTTPException(
@@ -418,7 +419,7 @@ async def add_course_to_trail(
     statement = select(Trail).where(
         Trail.org_id == course.org_id, Trail.user_id == user.id
     )
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
         raise HTTPException(
@@ -428,7 +429,7 @@ async def add_course_to_trail(
     statement = select(TrailRun).where(
         TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
-    trail_run = db_session.exec(statement).first()
+    trail_run = (await db_session.execute(statement)).scalars().first()
 
     if not trail_run:
         trail_run = TrailRun(
@@ -440,8 +441,8 @@ async def add_course_to_trail(
             update_date=str(datetime.now()),
         )
         db_session.add(trail_run)
-        db_session.commit()
-        db_session.refresh(trail_run)
+        await db_session.commit()
+        await db_session.refresh(trail_run)
 
     # Track course enrollment
     await track(
@@ -460,19 +461,19 @@ async def add_course_to_trail(
     )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
 
 
 async def remove_course_from_trail(
     request: Request,
     user: PublicUser,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -482,7 +483,7 @@ async def remove_course_from_trail(
     statement = select(Trail).where(
         Trail.org_id == course.org_id, Trail.user_id == user.id
     )
-    trail = db_session.exec(statement).first()
+    trail = (await db_session.execute(statement)).scalars().first()
 
     if not trail:
         raise HTTPException(
@@ -492,22 +493,22 @@ async def remove_course_from_trail(
     statement = select(TrailRun).where(
         TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
-    trail_run = db_session.exec(statement).first()
+    trail_run = (await db_session.execute(statement)).scalars().first()
 
     if trail_run:
-        db_session.delete(trail_run)
-        db_session.commit()
+        await db_session.delete(trail_run)
+        await db_session.commit()
 
     # Delete all trail steps for this course in a single statement
-    db_session.execute(
+    await db_session.execute(
         sql_delete(TrailStep).where(
             TrailStep.course_id == course.id,
             TrailStep.user_id == user.id,
         )
     )
-    db_session.commit()
+    await db_session.commit()
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
-    trail_runs_raw = db_session.exec(statement).all()
+    trail_runs_raw = (await db_session.execute(statement)).scalars().all()
 
-    return _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)
+    return await _build_trail_read(trail, list(trail_runs_raw), db_session, user_id=user.id)

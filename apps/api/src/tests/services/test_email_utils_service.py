@@ -97,7 +97,8 @@ class TestEmailUtilsService:
         ):
             assert not _is_allowed_base_url("https://unknown.test")
 
-    def test_get_org_signup_base_url_uses_request_in_single_tenancy(self):
+    @pytest.mark.asyncio
+    async def test_get_org_signup_base_url_uses_request_in_single_tenancy(self):
         request = _request({"origin": "https://app.test"})
 
         with patch(
@@ -107,7 +108,7 @@ class TestEmailUtilsService:
             "src.services.email.utils.get_base_url_from_request",
             return_value="https://fallback.test",
         ) as mock_base_url:
-            assert get_org_signup_base_url("acme", request) == "https://fallback.test"
+            assert await get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
     def test_is_allowed_base_url_accepts_request_host_in_single_tenancy(self):
@@ -123,11 +124,12 @@ class TestEmailUtilsService:
             assert not _is_allowed_base_url("javascript:alert(1)")
             assert not _is_allowed_base_url("https://")
 
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "ssl,expected",
         [(True, "https://acme.learnhouse.app"), (False, "http://acme.learnhouse.app")],
     )
-    def test_get_org_signup_base_url_builds_org_subdomain(self, ssl, expected):
+    async def test_get_org_signup_base_url_builds_org_subdomain(self, ssl, expected):
         request = _request({"origin": "https://app.test"})
 
         with patch(
@@ -137,9 +139,10 @@ class TestEmailUtilsService:
                 ssl=ssl,
             ),
         ):
-            assert get_org_signup_base_url("acme", request) == expected
+            assert await get_org_signup_base_url("acme", request) == expected
 
-    def test_get_org_signup_base_url_falls_back_for_invalid_or_localhost_domain(
+    @pytest.mark.asyncio
+    async def test_get_org_signup_base_url_falls_back_for_invalid_or_localhost_domain(
         self,
     ):
         request = _request({"origin": "https://app.test"})
@@ -151,7 +154,7 @@ class TestEmailUtilsService:
             "src.services.email.utils.get_base_url_from_request",
             return_value="https://fallback.test",
         ) as mock_base_url:
-            assert get_org_signup_base_url("acme", request) == "https://fallback.test"
+            assert await get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
         with patch(
@@ -161,7 +164,7 @@ class TestEmailUtilsService:
             "src.services.email.utils.get_base_url_from_request",
             return_value="https://fallback.test",
         ) as mock_base_url:
-            assert get_org_signup_base_url("acme", request) == "https://fallback.test"
+            assert await get_org_signup_base_url("acme", request) == "https://fallback.test"
             mock_base_url.assert_called_once_with(request)
 
     def test_get_base_url_from_request_prefers_valid_origin_then_referer(

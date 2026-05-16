@@ -61,6 +61,7 @@ def mock_admin_side_effects():
 
 class TestProvisionUserExtraMetadata:
 
+    @pytest.mark.asyncio
     async def test_provision_user_persists_extra_metadata(
         self,
         token_user,
@@ -88,19 +89,20 @@ class TestProvisionUserExtraMetadata:
         assert result.extra_metadata == metadata
 
         # Reload from DB to confirm persistence.
-        row = db.exec(select(User).where(User.id == result.id)).first()
+        row = (await db.execute(select(User).where(User.id == result.id))).scalars().first()
         assert row is not None
         assert row.extra_metadata == {"external_id": "abc-123", "team": "ops"}
 
         # Membership row was created.
-        membership = db.exec(
+        membership = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == result.id,
                 UserOrganization.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         assert membership is not None
 
+    @pytest.mark.asyncio
     async def test_provision_user_attach_existing_user_does_not_overwrite_metadata(
         self,
         token_user,
@@ -123,7 +125,7 @@ class TestProvisionUserExtraMetadata:
             extra_metadata={"keep": True},
         )
         db.add(existing)
-        db.commit()
+        await db.commit()
         db.add(
             UserOrganization(
                 user_id=existing.id,
@@ -133,7 +135,7 @@ class TestProvisionUserExtraMetadata:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         # Call provision_user with a *different* extra_metadata payload.
         result = await provision_user(
@@ -150,11 +152,12 @@ class TestProvisionUserExtraMetadata:
         )
 
         # documents current behavior: attach path leaves existing metadata intact.
-        db.refresh(existing)
+        await db.refresh(existing)
         assert existing.extra_metadata == {"keep": True}
         assert result.id == existing.id
         assert result.extra_metadata == {"keep": True}
 
+    @pytest.mark.asyncio
     async def test_update_user_persists_extra_metadata(
         self,
         regular_user,
@@ -186,6 +189,6 @@ class TestProvisionUserExtraMetadata:
         assert result.extra_metadata == {"locale": "en-GB", "tier": "gold"}
 
         # Persisted in the DB - proves extra_metadata is NOT in _PROTECTED_FIELDS.
-        row = db.exec(select(User).where(User.id == regular_user.id)).first()
+        row = (await db.execute(select(User).where(User.id == regular_user.id))).scalars().first()
         assert row is not None
         assert row.extra_metadata == {"locale": "en-GB", "tier": "gold"}

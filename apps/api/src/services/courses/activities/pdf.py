@@ -1,7 +1,8 @@
 from typing import Optional
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import (
     Activity,
@@ -24,13 +25,13 @@ async def create_documentpdf_activity(
     name: str,
     chapter_id: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     pdf_file: UploadFile | None = None,
     extra_metadata: Optional[dict] = None,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     if not chapter:
         raise HTTPException(
@@ -39,7 +40,7 @@ async def create_documentpdf_activity(
         )
 
     statement = select(CourseChapter).where(CourseChapter.chapter_id == chapter_id)
-    coursechapter = db_session.exec(statement).first()
+    coursechapter = (await db_session.execute(statement)).scalars().first()
 
     if not coursechapter:
         raise HTTPException(
@@ -49,7 +50,7 @@ async def create_documentpdf_activity(
 
     # Get course_uuid for RBAC check
     statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -67,7 +68,7 @@ async def create_documentpdf_activity(
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     # create activity uuid
     activity_uuid = f"activity_{uuid4()}"
@@ -117,8 +118,8 @@ async def create_documentpdf_activity(
 
     # Insert Activity in DB
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     # Find the last activity order in the chapter
     statement = (
@@ -126,7 +127,7 @@ async def create_documentpdf_activity(
         .where(ChapterActivity.chapter_id == int(chapter_id))
         .order_by(ChapterActivity.order)  # type: ignore
     )
-    chapter_activities = db_session.exec(statement).all()
+    chapter_activities = (await db_session.execute(statement)).scalars().all()
     last_order = chapter_activities[-1].order if chapter_activities else 0
     to_be_used_order = last_order + 1
 
@@ -143,8 +144,8 @@ async def create_documentpdf_activity(
 
     # Insert ChapterActivity link in DB
     db_session.add(activity_chapter)
-    db_session.commit()
-    db_session.refresh(activity_chapter)
+    await db_session.commit()
+    await db_session.refresh(activity_chapter)
 
     return ActivityRead.model_validate(activity)
 

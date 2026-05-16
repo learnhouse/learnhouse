@@ -11,6 +11,8 @@ from typing import Optional
 
 from src.core.redis import get_redis_client
 
+_get_redis_client = get_redis_client
+
 logger = logging.getLogger(__name__)
 
 CACHE_TTL_COURSES_LIST = 60  # 1 min — public course list

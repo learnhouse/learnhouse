@@ -6,7 +6,7 @@ for the unified RBAC system.
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, MagicMock, AsyncMock, patch
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 
@@ -168,7 +168,9 @@ class TestResourceAccessChecker:
     def mock_db_session(self):
         """Create a mock database session."""
         session = Mock(spec=Session)
-        session.exec = Mock()
+        execute_result = MagicMock()
+        execute_result.scalars.return_value.first.return_value = None
+        session.execute = AsyncMock(return_value=execute_result)
         return session
 
     @pytest.fixture
@@ -212,7 +214,7 @@ class TestResourceAccessChecker:
         assert decision.via_admin is True
         assert decision.user_id == mock_public_user.id
         # Bypass reads the flag off the user object — no DB calls.
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_check_access_empty_uuid(self, mock_request, mock_db_session, mock_public_user):
@@ -244,7 +246,7 @@ class TestResourceAccessChecker:
         mock_course.public = True
         mock_course.published = True
         mock_course.org_id = 1
-        mock_db_session.exec.return_value.first.return_value = mock_course
+        mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_course
 
         decision = await checker.check_access("course_123", AccessAction.READ)
 
@@ -263,7 +265,7 @@ class TestResourceAccessChecker:
         mock_course.public = False
         mock_course.published = True
         mock_course.org_id = 1
-        mock_db_session.exec.return_value.first.return_value = mock_course
+        mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_course
 
         decision = await checker.check_access("course_123", AccessAction.READ)
 
@@ -294,7 +296,7 @@ class TestResourceAccessChecker:
         mock_community.org_id = 1
         # Community doesn't have published field
         del mock_community.published
-        mock_db_session.exec.return_value.first.return_value = mock_community
+        mock_db_session.execute.return_value.scalars.return_value.first.return_value = mock_community
 
         decision = await checker.check_access("community_123", AccessAction.READ)
 
@@ -592,7 +594,9 @@ class TestRequestScopedChecker:
 
     @pytest.fixture
     def mock_db_session(self):
-        return Mock(spec=Session)
+        session = Mock(spec=Session)
+        session.execute = AsyncMock(return_value=MagicMock())
+        return session
 
     @pytest.fixture
     def mock_public_user(self):
@@ -650,7 +654,7 @@ class TestRequestScopedChecker:
         checker._author_cache["course_cached_author"] = True
 
         assert await checker._is_resource_author("course_cached_author") is True
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_admin_check_hits_cache(self, mock_db_session, mock_public_user):
@@ -659,7 +663,7 @@ class TestRequestScopedChecker:
         checker._admin_cache["course_cached_admin"] = True
 
         assert await checker._is_admin_or_maintainer("course_cached_admin") is True
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_public_published_check_hits_cache(self, mock_db_session, mock_public_user):
@@ -669,7 +673,7 @@ class TestRequestScopedChecker:
 
         config = get_resource_config("course_cached_pp")
         assert await checker._is_public_and_published("course_cached_pp", config) == (True, True)
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_usergroup_check_hits_cache(self, mock_db_session, mock_public_user):
@@ -678,7 +682,7 @@ class TestRequestScopedChecker:
         checker._usergroup_cache[("course_cached_ug", False)] = True
 
         assert await checker._check_usergroup_membership("course_cached_ug", False) is True
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_parent_uuid_resolution_hits_cache(self, mock_db_session, mock_public_user):
@@ -690,4 +694,4 @@ class TestRequestScopedChecker:
         config = get_resource_config("chapter_xyz")
         result = await checker._resolve_parent_resource_uuid("chapter_xyz", config)
         assert result == "course_parent"
-        mock_db_session.exec.assert_not_called()
+        mock_db_session.execute.assert_not_called()

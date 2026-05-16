@@ -4,7 +4,8 @@ from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import (
     Activity,
@@ -27,14 +28,14 @@ async def create_video_activity(
     name: str,
     chapter_id: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
     video_file: UploadFile | None = None,
     details: str = "{}",
     extra_metadata: Optional[dict] = None,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     # convert details to dict
     details = json.loads(details)
@@ -46,7 +47,7 @@ async def create_video_activity(
         )
 
     statement = select(CourseChapter).where(CourseChapter.chapter_id == chapter_id)
-    coursechapter = db_session.exec(statement).first()
+    coursechapter = (await db_session.execute(statement)).scalars().first()
 
     if not coursechapter:
         raise HTTPException(
@@ -56,7 +57,7 @@ async def create_video_activity(
 
     # Get course_uuid for RBAC check
     statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -71,7 +72,7 @@ async def create_video_activity(
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
@@ -124,8 +125,8 @@ async def create_video_activity(
     # create activity
     activity = Activity.model_validate(activity_object)
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     # Find the last activity order in the chapter
     statement = (
@@ -133,7 +134,7 @@ async def create_video_activity(
         .where(ChapterActivity.chapter_id == chapter.id)
         .order_by(ChapterActivity.order)  # type: ignore
     )
-    chapter_activities = db_session.exec(statement).all()
+    chapter_activities = (await db_session.execute(statement)).scalars().all()
     last_order = chapter_activities[-1].order if chapter_activities else 0
     to_be_used_order = last_order + 1
 
@@ -150,8 +151,8 @@ async def create_video_activity(
 
     # Insert ChapterActivity link in DB
     db_session.add(chapter_activity_object)
-    db_session.commit()
-    db_session.refresh(chapter_activity_object)
+    await db_session.commit()
+    await db_session.refresh(chapter_activity_object)
 
     return ActivityRead.model_validate(activity)
 
@@ -173,11 +174,11 @@ async def create_external_video_activity(
     request: Request,
     current_user: PublicUser | AnonymousUser,
     data: ExternalVideo,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == data.chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     if not chapter:
         raise HTTPException(
@@ -186,7 +187,7 @@ async def create_external_video_activity(
         )
 
     statement = select(CourseChapter).where(CourseChapter.chapter_id == data.chapter_id)
-    coursechapter = db_session.exec(statement).first()
+    coursechapter = (await db_session.execute(statement)).scalars().first()
 
     if not coursechapter:
         raise HTTPException(
@@ -196,7 +197,7 @@ async def create_external_video_activity(
 
     # Get course_uuid for RBAC check
     statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -236,8 +237,8 @@ async def create_external_video_activity(
     # create activity
     activity = Activity.model_validate(activity_object)
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     # Find the last activity order in the chapter
     statement = (
@@ -245,7 +246,7 @@ async def create_external_video_activity(
         .where(ChapterActivity.chapter_id == coursechapter.chapter_id)
         .order_by(ChapterActivity.order)  # type: ignore
     )
-    chapter_activities = db_session.exec(statement).all()
+    chapter_activities = (await db_session.execute(statement)).scalars().all()
     last_order = chapter_activities[-1].order if chapter_activities else 0
     to_be_used_order = last_order + 1
 
@@ -262,7 +263,7 @@ async def create_external_video_activity(
 
     # Insert ChapterActivity link in DB
     db_session.add(chapter_activity_object)
-    db_session.commit()
+    await db_session.commit()
 
     return ActivityRead.model_validate(activity)
 

@@ -1,16 +1,17 @@
 from fastapi import HTTPException
-from sqlmodel import Session
 from sqlalchemy import text
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-async def check_database_health(db_session: Session) -> bool:
-    result = db_session.exec(text("SELECT 1"))
+
+async def check_database_health(db_session: AsyncSession) -> bool:
+    result = await db_session.execute(text("SELECT 1"))
 
     if not result:
         return False
 
     return True
 
-async def check_health(db_session: Session) -> bool:
+async def check_health(db_session: AsyncSession) -> bool:
     # Check database health
     database_healthy = await check_database_health(db_session)
 

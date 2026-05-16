@@ -13,7 +13,7 @@ from src.services.playgrounds.playground_reactions import (
 
 
 @pytest.fixture
-def playground(db):
+async def playground(db):
     item = Playground(
         name="Playground",
         description="Desc",
@@ -26,13 +26,13 @@ def playground(db):
         update_date="now",
     )
     db.add(item)
-    db.commit()
-    db.refresh(item)
+    await db.commit()
+    await db.refresh(item)
     return item
 
 
 @pytest.fixture
-def reactor(db):
+async def reactor(db):
     user = User(
         username="reactor",
         first_name="Re",
@@ -53,9 +53,9 @@ def reactor(db):
     )
     db.add(user)
     db.add(other)
-    db.commit()
-    db.refresh(user)
-    db.refresh(other)
+    await db.commit()
+    await db.refresh(user)
+    await db.refresh(other)
     return user, other
 
 
@@ -91,7 +91,7 @@ async def test_get_playground_reactions_groups_users_and_flags_current_user(
             creation_date="now",
         )
     )
-    db.commit()
+    await db.commit()
 
     with patch(
         "src.services.playgrounds.playground_reactions._check_read_access"
@@ -125,7 +125,7 @@ async def test_get_playground_reactions_handles_missing_playground_and_anonymous
             creation_date="now",
         )
     )
-    db.commit()
+    await db.commit()
 
     with patch("src.services.playgrounds.playground_reactions._check_read_access"):
         summaries = await get_playground_reactions(

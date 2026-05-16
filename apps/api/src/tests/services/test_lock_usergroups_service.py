@@ -34,7 +34,7 @@ from src.services.courses.lock_usergroups import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_usergroup(db, org, *, ug_id=10, ug_uuid="ug_test"):
+async def _make_usergroup(db, org, *, ug_id=10, ug_uuid="ug_test"):
     """Insert and return a UserGroup row."""
     ug = UserGroup(
         id=ug_id,
@@ -46,12 +46,12 @@ def _make_usergroup(db, org, *, ug_id=10, ug_uuid="ug_test"):
         update_date=str(datetime.now()),
     )
     db.add(ug)
-    db.commit()
-    db.refresh(ug)
+    await db.commit()
+    await db.refresh(ug)
     return ug
 
 
-def _make_ugr(db, org, *, resource_uuid, usergroup_id):
+async def _make_ugr(db, org, *, resource_uuid, usergroup_id):
     """Insert and return a UserGroupResource row."""
     now = str(datetime.now())
     ugr = UserGroupResource(
@@ -62,8 +62,8 @@ def _make_ugr(db, org, *, resource_uuid, usergroup_id):
         update_date=now,
     )
     db.add(ugr)
-    db.commit()
-    db.refresh(ugr)
+    await db.commit()
+    await db.refresh(ugr)
     return ugr
 
 
@@ -72,18 +72,18 @@ def _make_ugr(db, org, *, resource_uuid, usergroup_id):
 # ===========================================================================
 
 class TestLoadChapterAndCourse:
-    def test_success(self, db, org, course, chapter):
-        ch, co = _load_chapter_and_course("chapter_test", db)
+    async def test_success(self, db, org, course, chapter):
+        ch, co = await _load_chapter_and_course("chapter_test", db)
         assert ch.chapter_uuid == "chapter_test"
         assert co.id == course.id
 
-    def test_chapter_not_found(self, db, org):
+    async def test_chapter_not_found(self, db, org):
         with pytest.raises(HTTPException) as exc_info:
-            _load_chapter_and_course("nonexistent_chapter", db)
+            await _load_chapter_and_course("nonexistent_chapter", db)
         assert exc_info.value.status_code == 404
         assert "Chapter not found" in exc_info.value.detail
 
-    def test_course_not_found_when_chapter_has_no_course(self, db, org):
+    async def test_course_not_found_when_chapter_has_no_course(self, db, org):
         """Chapter exists but its course_id points to a non-existent course."""
         orphan_chapter = Chapter(
             id=99,
@@ -96,10 +96,10 @@ class TestLoadChapterAndCourse:
             update_date=str(datetime.now()),
         )
         db.add(orphan_chapter)
-        db.commit()
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
-            _load_chapter_and_course("chapter_orphan", db)
+            await _load_chapter_and_course("chapter_orphan", db)
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
@@ -109,18 +109,18 @@ class TestLoadChapterAndCourse:
 # ===========================================================================
 
 class TestLoadActivityAndCourse:
-    def test_success(self, db, org, course, chapter, activity):
-        act, co = _load_activity_and_course("activity_test", db)
+    async def test_success(self, db, org, course, chapter, activity):
+        act, co = await _load_activity_and_course("activity_test", db)
         assert act.activity_uuid == "activity_test"
         assert co.id == course.id
 
-    def test_activity_not_found(self, db, org):
+    async def test_activity_not_found(self, db, org):
         with pytest.raises(HTTPException) as exc_info:
-            _load_activity_and_course("nonexistent_activity", db)
+            await _load_activity_and_course("nonexistent_activity", db)
         assert exc_info.value.status_code == 404
         assert "Activity not found" in exc_info.value.detail
 
-    def test_course_not_found_when_activity_has_no_course(self, db, org, chapter):
+    async def test_course_not_found_when_activity_has_no_course(self, db, org, chapter):
         """Activity exists but its course_id points to a non-existent course."""
         from src.db.courses.activities import ActivityTypeEnum, ActivitySubTypeEnum
 
@@ -138,10 +138,10 @@ class TestLoadActivityAndCourse:
             update_date=str(datetime.now()),
         )
         db.add(orphan_activity)
-        db.commit()
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
-            _load_activity_and_course("activity_orphan", db)
+            await _load_activity_and_course("activity_orphan", db)
         assert exc_info.value.status_code == 404
         assert "Course not found" in exc_info.value.detail
 
@@ -151,15 +151,15 @@ class TestLoadActivityAndCourse:
 # ===========================================================================
 
 class TestLoadUsergroup:
-    def test_success(self, db, org):
-        ug = _make_usergroup(db, org)
-        result = _load_usergroup("ug_test", db)
+    async def test_success(self, db, org):
+        ug = await _make_usergroup(db, org)
+        result = await _load_usergroup("ug_test", db)
         assert result.id == ug.id
         assert result.usergroup_uuid == "ug_test"
 
-    def test_not_found(self, db, org):
+    async def test_not_found(self, db, org):
         with pytest.raises(HTTPException) as exc_info:
-            _load_usergroup("nonexistent_ug", db)
+            await _load_usergroup("nonexistent_ug", db)
         assert exc_info.value.status_code == 404
         assert "User group not found" in exc_info.value.detail
 
@@ -169,17 +169,17 @@ class TestLoadUsergroup:
 # ===========================================================================
 
 class TestAttachUsergroup:
-    def test_attach_new(self, db, org):
-        ug = _make_usergroup(db, org)
-        result = _attach_usergroup("chapter_test", org.id, ug.id, db)
+    async def test_attach_new(self, db, org):
+        ug = await _make_usergroup(db, org)
+        result = await _attach_usergroup("chapter_test", org.id, ug.id, db)
         assert result == {"detail": "User group added"}
 
-    def test_attach_duplicate_returns_early(self, db, org):
-        ug = _make_usergroup(db, org)
+    async def test_attach_duplicate_returns_early(self, db, org):
+        ug = await _make_usergroup(db, org)
         # First attach creates the row
-        _attach_usergroup("chapter_test", org.id, ug.id, db)
+        await _attach_usergroup("chapter_test", org.id, ug.id, db)
         # Second attach must return the early-exit message without raising
-        result = _attach_usergroup("chapter_test", org.id, ug.id, db)
+        result = await _attach_usergroup("chapter_test", org.id, ug.id, db)
         assert result == {"detail": "User group already has access"}
 
 
@@ -188,16 +188,16 @@ class TestAttachUsergroup:
 # ===========================================================================
 
 class TestDetachUsergroup:
-    def test_detach_existing(self, db, org):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
-        result = _detach_usergroup("chapter_test", ug.id, db)
+    async def test_detach_existing(self, db, org):
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
+        result = await _detach_usergroup("chapter_test", ug.id, db)
         assert result == {"detail": "User group removed"}
 
-    def test_detach_nonexistent_raises_404(self, db, org):
-        ug = _make_usergroup(db, org)
+    async def test_detach_nonexistent_raises_404(self, db, org):
+        ug = await _make_usergroup(db, org)
         with pytest.raises(HTTPException) as exc_info:
-            _detach_usergroup("chapter_test", ug.id, db)
+            await _detach_usergroup("chapter_test", ug.id, db)
         assert exc_info.value.status_code == 404
         assert "User group not associated with resource" in exc_info.value.detail
 
@@ -207,14 +207,14 @@ class TestDetachUsergroup:
 # ===========================================================================
 
 class TestListUsergroupsForResource:
-    def test_empty(self, db, org):
-        result = _list_usergroups_for_resource("chapter_test", db)
+    async def test_empty(self, db, org):
+        result = await _list_usergroups_for_resource("chapter_test", db)
         assert result == []
 
-    def test_one_group(self, db, org):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
-        result = _list_usergroups_for_resource("chapter_test", db)
+    async def test_one_group(self, db, org):
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
+        result = await _list_usergroups_for_resource("chapter_test", db)
         assert len(result) == 1
         assert result[0]["usergroup_uuid"] == "ug_test"
         assert result[0]["name"] == "Test Group"
@@ -229,7 +229,7 @@ class TestListUsergroupsForResource:
 class TestAddUsergroupToChapter:
     @pytest.mark.asyncio
     async def test_success(self, db, org, course, chapter, admin_user, mock_request):
-        _make_usergroup(db, org)
+        await _make_usergroup(db, org)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -267,8 +267,8 @@ class TestAddUsergroupToChapter:
 class TestRemoveUsergroupFromChapter:
     @pytest.mark.asyncio
     async def test_success(self, db, org, course, chapter, admin_user, mock_request):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -280,7 +280,7 @@ class TestRemoveUsergroupFromChapter:
 
     @pytest.mark.asyncio
     async def test_not_associated_raises_404(self, db, org, course, chapter, admin_user, mock_request):
-        _make_usergroup(db, org)
+        await _make_usergroup(db, org)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -318,8 +318,8 @@ class TestGetChapterUsergroups:
 
     @pytest.mark.asyncio
     async def test_with_one_group(self, db, org, course, chapter, admin_user, mock_request):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="chapter_test", usergroup_id=ug.id)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -350,7 +350,7 @@ class TestGetChapterUsergroups:
 class TestAddUsergroupToActivity:
     @pytest.mark.asyncio
     async def test_success(self, db, org, course, chapter, activity, admin_user, mock_request):
-        _make_usergroup(db, org)
+        await _make_usergroup(db, org)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -388,8 +388,8 @@ class TestAddUsergroupToActivity:
 class TestRemoveUsergroupFromActivity:
     @pytest.mark.asyncio
     async def test_success(self, db, org, course, chapter, activity, admin_user, mock_request):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="activity_test", usergroup_id=ug.id)
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="activity_test", usergroup_id=ug.id)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -401,7 +401,7 @@ class TestRemoveUsergroupFromActivity:
 
     @pytest.mark.asyncio
     async def test_not_associated_raises_404(self, db, org, course, chapter, activity, admin_user, mock_request):
-        _make_usergroup(db, org)
+        await _make_usergroup(db, org)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
@@ -439,8 +439,8 @@ class TestGetActivityUsergroups:
 
     @pytest.mark.asyncio
     async def test_with_one_group(self, db, org, course, chapter, activity, admin_user, mock_request):
-        ug = _make_usergroup(db, org)
-        _make_ugr(db, org, resource_uuid="activity_test", usergroup_id=ug.id)
+        ug = await _make_usergroup(db, org)
+        await _make_ugr(db, org, resource_uuid="activity_test", usergroup_id=ug.id)
         with patch(
             "src.services.courses.lock_usergroups.check_resource_access",
             new_callable=AsyncMock,
