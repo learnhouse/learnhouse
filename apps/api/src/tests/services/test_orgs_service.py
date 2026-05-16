@@ -25,7 +25,7 @@ from src.services.orgs.orgs import (
 )
 
 
-def _make_org_config(db, org, config):
+async def _make_org_config(db, org, config):
     org_config = OrganizationConfig(
         id=None,
         org_id=org.id,
@@ -34,8 +34,8 @@ def _make_org_config(db, org, config):
         update_date=str(datetime.now()),
     )
     db.add(org_config)
-    db.commit()
-    db.refresh(org_config)
+    await db.commit()
+    await db.refresh(org_config)
     return org_config
 
 
@@ -165,9 +165,9 @@ class TestCreateOrg:
         assert result.slug == "new-org"
 
         # Verify row exists in DB
-        row = db.exec(
+        row = (await db.execute(
             select(Organization).where(Organization.slug == "new-org")
-        ).first()
+        )).scalars().first()
         assert row is not None
         assert row.name == "New Org"
 
@@ -239,9 +239,9 @@ class TestCreateOrg:
 
         assert isinstance(result, OrganizationRead)
         assert result.slug == "configured-org"
-        stored_config = db.exec(
+        stored_config = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == result.id)
-        ).first()
+        )).scalars().first()
         assert stored_config.config["config_version"] == "2.0"
 
 
@@ -250,7 +250,7 @@ class TestUpdateOrg:
     async def test_update_org_and_no_auth_config_update(
         self, mock_request, db, org, admin_user
     ):
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "free"})
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "free"})
 
         with patch(
             "src.services.orgs.orgs.rbac_check",
@@ -273,9 +273,9 @@ class TestUpdateOrg:
         assert updated.name == "Updated Org"
         assert updated.slug == "updated-org"
         assert config_result == {"detail": "Organization updated"}
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert stored.config["plan"] == "pro"
 
     @pytest.mark.asyncio
@@ -311,7 +311,7 @@ class TestOrgConfigUpdates:
     async def test_signup_mechanism_ai_landing_seo_and_join_mechanism_v2(
         self, mock_request, db, org, admin_user
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -349,9 +349,9 @@ class TestOrgConfigUpdates:
                 mock_request, org.id, admin_user, db
             )
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert signup == {"detail": "Signup mechanism updated"}
         assert ai == {"detail": "AI configuration updated"}
         assert landing == {"detail": "Landing object updated"}
@@ -366,7 +366,7 @@ class TestOrgConfigUpdates:
 
     @pytest.mark.asyncio
     async def test_join_mechanism_v1_and_missing_org(self, mock_request, db, org, admin_user):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {

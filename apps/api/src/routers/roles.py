@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.roles import RoleCreate, RoleRead, RoleUpdate
 from src.security.auth import get_current_user
@@ -29,7 +29,7 @@ async def api_create_role(
     org_id: int,
     role_object: RoleCreate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> RoleRead:
     """
     Create new role for a specific organization
@@ -53,7 +53,7 @@ async def api_get_roles_by_organization(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> List[RoleRead]:
     """
     Get all roles for a specific organization, including global roles
@@ -75,7 +75,7 @@ async def api_get_role(
     request: Request,
     role_id: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> RoleRead:
     """
     Get single role by role_id
@@ -99,7 +99,7 @@ async def api_update_role(
     role_id: str,
     role_object: RoleUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 )-> RoleRead:
     """
     Update role by role_id
@@ -130,7 +130,7 @@ async def api_delete_role(
     request: Request,
     role_id: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Delete role by ID

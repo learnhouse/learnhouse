@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select, and_
+from sqlmodel import select, and_
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
@@ -14,7 +15,7 @@ async def apply_course_contributor(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Apply to become a course contributor
@@ -31,7 +32,7 @@ async def apply_course_contributor(
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -40,14 +41,14 @@ async def apply_course_contributor(
         )
 
     # Check if user already has any authorship role for this course
-    existing_authorship = db_session.exec(
+    existing_authorship = (await db_session.execute(
         select(ResourceAuthor).where(
             and_(
                 ResourceAuthor.resource_uuid == course_uuid,
                 ResourceAuthor.user_id == acting_user_id
             )
         )
-    ).first()
+    )).scalars().first()
 
     if existing_authorship:
         raise HTTPException(
@@ -66,8 +67,8 @@ async def apply_course_contributor(
     )
 
     db_session.add(resource_author)
-    db_session.commit()
-    db_session.refresh(resource_author)
+    await db_session.commit()
+    await db_session.refresh(resource_author)
 
     return {
         "detail": "Contributor application submitted successfully",
@@ -81,7 +82,7 @@ async def update_course_contributor(
     authorship: ResourceAuthorshipEnum,
     authorship_status: ResourceAuthorshipStatusEnum,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Update a course contributor's role and status
@@ -99,7 +100,7 @@ async def update_course_contributor(
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -108,14 +109,14 @@ async def update_course_contributor(
         )
 
     # Check if the contributor exists for this course
-    existing_authorship = db_session.exec(
+    existing_authorship = (await db_session.execute(
         select(ResourceAuthor).where(
             and_(
                 ResourceAuthor.resource_uuid == course_uuid,
                 ResourceAuthor.user_id == contributor_user_id
             )
         )
-    ).first()
+    )).scalars().first()
 
     if not existing_authorship:
         raise HTTPException(
@@ -136,8 +137,8 @@ async def update_course_contributor(
     existing_authorship.update_date = str(datetime.now())
 
     db_session.add(existing_authorship)
-    db_session.commit()
-    db_session.refresh(existing_authorship)
+    await db_session.commit()
+    await db_session.refresh(existing_authorship)
 
     return {
         "detail": "Contributor updated successfully",
@@ -148,7 +149,7 @@ async def get_course_contributors(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
     """
     Get all contributors for a course with their user information
@@ -159,7 +160,7 @@ async def get_course_contributors(
     """
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -176,7 +177,7 @@ async def get_course_contributors(
         .join(User)  # SQLModel will automatically join on foreign key
         .where(ResourceAuthor.resource_uuid == course_uuid)
     )
-    results = db_session.exec(statement).all()
+    results = (await db_session.execute(statement)).all()
 
     return [
         {
@@ -195,7 +196,7 @@ async def add_bulk_course_contributors(
     course_uuid: str,
     usernames: List[str],
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Add multiple contributors to a course by their usernames
@@ -213,7 +214,7 @@ async def add_bulk_course_contributors(
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -230,21 +231,21 @@ async def add_bulk_course_contributors(
     current_time = str(datetime.now())
 
     # Batch fetch all users and existing authorships to avoid N+1 queries
-    found_users = db_session.exec(
+    found_users = (await db_session.execute(
         select(User).where(User.username.in_(usernames))
-    ).all()
+    )).scalars().all()
     user_map = {u.username: u for u in found_users if u.id is not None}
 
     found_user_ids = [u.id for u in user_map.values()]
     if found_user_ids:
-        existing_authorships = db_session.exec(
+        existing_authorships = (await db_session.execute(
             select(ResourceAuthor).where(
                 and_(
                     ResourceAuthor.resource_uuid == course_uuid,
                     ResourceAuthor.user_id.in_(found_user_ids),
                 )
             )
-        ).all()
+        )).scalars().all()
         authorship_map = {ra.user_id: ra for ra in existing_authorships}
     else:
         authorship_map = {}
@@ -286,7 +287,7 @@ async def add_bulk_course_contributors(
     # Single commit for all staged additions; surface DB errors via failed list
     if results["successful"]:
         try:
-            db_session.commit()
+            await db_session.commit()
         except Exception as db_err:
             db_session.rollback()
             for item in list(results["successful"]):
@@ -310,7 +311,7 @@ async def remove_bulk_course_contributors(
     course_uuid: str,
     usernames: List[str],
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     """
     Remove multiple contributors from a course by their usernames
@@ -329,7 +330,7 @@ async def remove_bulk_course_contributors(
 
     # Check if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -344,21 +345,21 @@ async def remove_bulk_course_contributors(
     }
 
     # Batch fetch all users and existing authorships to avoid N+1 queries
-    found_users = db_session.exec(
+    found_users = (await db_session.execute(
         select(User).where(User.username.in_(usernames))
-    ).all()
+    )).scalars().all()
     user_map = {u.username: u for u in found_users if u.id is not None}
 
     found_user_ids = [u.id for u in user_map.values()]
     if found_user_ids:
-        existing_authorships = db_session.exec(
+        existing_authorships = (await db_session.execute(
             select(ResourceAuthor).where(
                 and_(
                     ResourceAuthor.resource_uuid == course_uuid,
                     ResourceAuthor.user_id.in_(found_user_ids),
                 )
             )
-        ).all()
+        )).scalars().all()
         authorship_map = {ra.user_id: ra for ra in existing_authorships}
     else:
         authorship_map = {}
@@ -391,7 +392,7 @@ async def remove_bulk_course_contributors(
             continue
 
         # Mark for removal (commit after the loop)
-        db_session.delete(existing_authorship)
+        await db_session.delete(existing_authorship)
 
         results["successful"].append({
             "username": username,
@@ -401,7 +402,7 @@ async def remove_bulk_course_contributors(
     # Single commit for all staged removals; surface DB errors via failed list
     if results["successful"]:
         try:
-            db_session.commit()
+            await db_session.commit()
         except Exception as db_err:
             db_session.rollback()
             for item in list(results["successful"]):

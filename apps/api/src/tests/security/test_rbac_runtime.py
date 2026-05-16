@@ -1,10 +1,10 @@
 import sys
 from types import ModuleType, SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException, Request
-from sqlmodel import Field, Session, SQLModel
+from sqlmodel import Field, SQLModel
 
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import DashboardPermission, Permission, PermissionsWithOwn, Rights, Role
@@ -23,15 +23,18 @@ from src.security.rbac.rbac import (
 
 
 def _result(*, first=None, all=None):
-    result = Mock()
-    result.first.return_value = first
-    result.all.return_value = [] if all is None else all
+    result = MagicMock()
+    result.scalars.return_value.first.return_value = first
+    result.scalars.return_value.all.return_value = [] if all is None else all
     return result
 
 
 def _session_with_results(*results):
-    session = Mock(spec=Session)
-    session.exec.side_effect = list(results)
+    session = AsyncMock()
+    if len(results) == 1:
+        session.execute.return_value = results[0]
+    else:
+        session.execute.side_effect = list(results)
     return session
 
 
@@ -166,8 +169,8 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_get_offer_for_usergroup_returns_none_on_exception(self):
-        session = Mock(spec=Session)
-        session.exec.side_effect = RuntimeError("db failure")
+        session = AsyncMock()
+        session.execute.side_effect = RuntimeError("db failure")
 
         result = await _get_offer_for_usergroup(7, session)
 
@@ -221,11 +224,9 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_if_element_is_public_covers_podcast_and_collection_failures(self):
-        session = Mock(spec=Session)
-
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
             mock_check_type.return_value = "collections"
-            session.exec.return_value.first.return_value = None
+            session = _session_with_results(_result(first=None))
 
             with pytest.raises(HTTPException) as exc_info:
                 await authorization_verify_if_element_is_public(
@@ -239,7 +240,7 @@ class TestRBACRuntime:
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
             mock_check_type.return_value = "podcasts"
-            session.exec.return_value.first.return_value = SimpleNamespace(id=1)
+            session = _session_with_results(_result(first=SimpleNamespace(id=1)))
 
             assert (
                 await authorization_verify_if_element_is_public(
@@ -253,7 +254,7 @@ class TestRBACRuntime:
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
             mock_check_type.return_value = "podcasts"
-            session.exec.return_value.first.return_value = None
+            session = _session_with_results(_result(first=None))
 
             with pytest.raises(HTTPException) as exc_info:
                 await authorization_verify_if_element_is_public(
@@ -267,11 +268,10 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_if_user_is_author_covers_invalid_action_and_status(self):
-        session = Mock(spec=Session)
         author = Mock(spec=ResourceAuthor)
         author.authorship = ResourceAuthorshipEnum.REPORTER
         author.authorship_status = ResourceAuthorshipStatusEnum.PENDING
-        session.exec.return_value.first.return_value = author
+        session = _session_with_results(_result(first=author))
 
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock):
             assert (
@@ -287,12 +287,10 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_covers_dict_and_object_rights(self):
-        session = Mock(spec=Session)
-
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
             patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
-            session.exec.return_value.all.return_value = [_role_with_dict_rights()]
+            session = _session_with_results(_result(all=[_role_with_dict_rights()]))
 
             assert (
                 await authorization_verify_based_on_roles(
@@ -308,7 +306,7 @@ class TestRBACRuntime:
         with patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock, return_value="users"), \
             patch("src.security.rbac.rbac.is_user_superadmin", return_value=False), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock, return_value=False):
-            session.exec.return_value.all.return_value = [_role_with_object_rights()]
+            session = _session_with_results(_result(all=[_role_with_object_rights()]))
 
             assert (
                 await authorization_verify_based_on_roles(
@@ -323,7 +321,7 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_superadmin_bypass(self):
-        session = Mock(spec=Session)
+        session = AsyncMock()
 
         with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
             patch("src.security.rbac.rbac.check_element_type", new_callable=AsyncMock) as mock_check_type:
@@ -340,7 +338,7 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_org_admin_status_covers_superadmin_and_unknown_org(self):
-        session = Mock(spec=Session)
+        session = AsyncMock()
 
         with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
             patch("src.security.rbac.rbac.get_element_organization_id", new_callable=AsyncMock) as mock_get_org:
@@ -371,7 +369,7 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_and_authorship_superadmin_bypass(self):
-        session = Mock(spec=Session)
+        session = AsyncMock()
 
         with patch("src.security.rbac.rbac.is_user_superadmin", return_value=True), \
             patch("src.security.rbac.rbac.authorization_verify_if_user_is_author", new_callable=AsyncMock) as mock_author, \
@@ -391,7 +389,7 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_api_token_permissions_covers_all_branches(self):
-        session = Mock(spec=Session)
+        session = AsyncMock()
 
         token_rights = {
             "courses": {"action_read": True},
@@ -549,7 +547,7 @@ class TestRBACRuntime:
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_and_authorship_or_api_token_covers_both_paths(self):
-        session = Mock(spec=Session)
+        session = AsyncMock()
 
         token_user = APITokenUser(org_id=7, rights={"courses": {"action_read": True}}, token_name="demo")
         request = _request()

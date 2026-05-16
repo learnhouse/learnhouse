@@ -7,7 +7,7 @@ Rate limits:
 - Verification resend: 5 attempts per 5 minutes per email
 """
 import ipaddress
-from typing import Optional, Tuple
+from typing import Tuple
 from fastapi import HTTPException, Request
 from src.core.redis import get_redis_client as _get_redis_pool_client
 
@@ -91,7 +91,7 @@ def check_rate_limit(
     key: str,
     max_attempts: int,
     window_seconds: int,
-    r: Optional[redis.Redis] = None
+    r=None
 ) -> Tuple[bool, int, int]:
     """
     Check if rate limit is exceeded for a given key.

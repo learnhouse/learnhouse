@@ -156,7 +156,7 @@ class TestDeleteUserById:
             update_date=str(datetime.now()),
         )
         db.add(user_to_delete)
-        db.commit()
+        await db.commit()
 
         uo = UserOrganization(
             user_id=10,
@@ -166,19 +166,19 @@ class TestDeleteUserById:
             update_date=str(datetime.now()),
         )
         db.add(uo)
-        db.commit()
+        await db.commit()
 
         result = await delete_user_by_id(mock_request, db, admin_user, 10)
         assert result == {"detail": "User deleted successfully"}
 
         # Verify the user no longer exists
-        assert db.exec(select(User).where(User.id == 10)).first() is None
+        assert (await db.exec(select(User).where(User.id == 10))).first() is None
 
         # Verify the UserOrganization link is also gone
         assert (
-            db.exec(
+            (await db.exec(
                 select(UserOrganization).where(UserOrganization.user_id == 10)
-            ).first()
+            )).first()
             is None
         )
 
@@ -435,10 +435,10 @@ class TestUserPasswordAvatarSession:
     async def test_update_password_avatar_and_session(
         self, mock_request, db, admin_user, org
     ):
-        user = db.get(User, admin_user.id)
+        user = await db.get(User, admin_user.id)
         user.password = security_hash_password("old-password")
         db.add(user)
-        db.commit()
+        await db.commit()
         upload = UploadFile(filename="avatar.png", file=BytesIO(b"avatar"))
 
         with patch(
@@ -505,10 +505,10 @@ class TestUserPasswordAvatarSession:
     async def test_update_user_avatar_failure_and_wrong_password(
         self, mock_request, db, admin_user
     ):
-        user = db.get(User, admin_user.id)
+        user = await db.get(User, admin_user.id)
         user.password = security_hash_password("old-password")
         db.add(user)
-        db.commit()
+        await db.commit()
         with patch(
             "src.services.users.users.authorization_verify_based_on_roles_and_authorship",
             new_callable=AsyncMock,
@@ -851,9 +851,9 @@ class TestUserPasswordAvatarSession:
             await update_user_avatar(mock_request, db, ghost_user, None)
         assert avatar_exc.value.status_code == 400
 
-        user_row = db.get(User, admin_user.id)
-        db.delete(user_row)
-        db.commit()
+        user_row = await db.get(User, admin_user.id)
+        await db.delete(user_row)
+        await db.commit()
 
         with patch(
             "src.services.users.users.validate_password_complexity",
@@ -877,9 +877,9 @@ class TestUserPasswordAvatarSession:
     async def test_get_session_authorize_and_delete_missing_user(
         self, mock_request, db, admin_user
     ):
-        user_row = db.get(User, admin_user.id)
-        db.delete(user_row)
-        db.commit()
+        user_row = await db.get(User, admin_user.id)
+        await db.delete(user_row)
+        await db.commit()
 
         with pytest.raises(HTTPException) as session_exc:
             await get_user_session(mock_request, db, admin_user)

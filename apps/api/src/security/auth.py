@@ -1,5 +1,6 @@
 from typing import Optional, Union
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.services.users.users import security_get_user
@@ -119,7 +120,7 @@ async def authenticate_user(
     request: Request,
     email: str,
     password: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> User | bool:
     user = await security_get_user(request, db_session, email)
     if not user:
@@ -305,7 +306,7 @@ def _mark_refresh_jti_used(user_id: int, jti: str) -> bool:
 async def _verify_api_token_org_boundary(
     request: Request,
     api_token_user: APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Global safety net: reject API token requests that target a different organization.
@@ -331,9 +332,9 @@ async def _verify_api_token_org_boundary(
     org_slug_param = path_params.get("org_slug")
     if org_slug_param is not None:
         from src.db.organizations import Organization
-        org = db_session.exec(
+        org = (await db_session.execute(
             select(Organization).where(Organization.slug == org_slug_param)
-        ).first()
+        )).scalars().first()
         if org and org.id != api_token_user.org_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -343,7 +344,7 @@ async def _verify_api_token_org_boundary(
 
 async def get_current_user(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Union[PublicUser, APITokenUser, AnonymousUser]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -436,7 +437,7 @@ async def non_public_endpoint(current_user: UserRead | AnonymousUser):
 
 async def get_authenticated_user(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Union[PublicUser, APITokenUser]:
     """
     Dependency that requires authentication.
@@ -464,7 +465,7 @@ async def get_authenticated_user(
 
 async def validate_api_token(
     token: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Optional[APITokenUser]:
     """
     Validate an API token and return an APITokenUser if valid.

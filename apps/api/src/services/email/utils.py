@@ -70,7 +70,7 @@ def _is_allowed_base_url(url: str) -> bool:
     return False
 
 
-def get_org_signup_base_url(
+async def get_org_signup_base_url(
     org_slug: str,
     request: Request,
     db_session=None,
@@ -100,7 +100,7 @@ def get_org_signup_base_url(
     scheme = "https" if config.hosting_config.ssl else "http"
 
     if db_session is not None and org_id is not None:
-        custom_domain = _get_primary_verified_custom_domain(db_session, org_id)
+        custom_domain = await _get_primary_verified_custom_domain(db_session, org_id)
         if custom_domain:
             return f"{scheme}://{custom_domain}"
 
@@ -111,28 +111,28 @@ def get_org_signup_base_url(
     return f"{scheme}://{org_slug}.{base_domain}"
 
 
-def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
+async def _get_primary_verified_custom_domain(db_session, org_id: int) -> Optional[str]:
     """Return the org's primary verified custom domain, or any verified one."""
     try:
         from sqlmodel import select
         from src.db.custom_domains import CustomDomain
 
-        primary = db_session.exec(
+        primary = (await db_session.execute(
             select(CustomDomain).where(
                 CustomDomain.org_id == org_id,
                 CustomDomain.status == "verified",
                 CustomDomain.primary == True,  # noqa: E712
             )
-        ).first()
+        )).scalars().first()
         if primary:
             return primary.domain
 
-        any_verified = db_session.exec(
+        any_verified = (await db_session.execute(
             select(CustomDomain).where(
                 CustomDomain.org_id == org_id,
                 CustomDomain.status == "verified",
             )
-        ).first()
+        )).scalars().first()
         return any_verified.domain if any_verified else None
     except Exception:
         logger.exception("Failed to look up custom domain for org %s", org_id)

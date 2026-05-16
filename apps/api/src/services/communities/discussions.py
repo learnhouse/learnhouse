@@ -2,7 +2,8 @@ from typing import List, Union, Optional
 from uuid import uuid4
 from datetime import datetime, timezone
 from enum import Enum
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
@@ -78,7 +79,7 @@ async def create_discussion(
     content: str,
     label: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
     emoji: Optional[str] = None,
 ) -> DiscussionReadWithVoteStatus:
     """
@@ -99,7 +100,7 @@ async def create_discussion(
     community_statement = select(Community).where(
         Community.community_uuid == community_uuid
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -131,8 +132,8 @@ async def create_discussion(
     )
 
     db_session.add(discussion)
-    db_session.commit()
-    db_session.refresh(discussion)
+    await db_session.commit()
+    await db_session.refresh(discussion)
 
     # Track discussion posted event
     await track(
@@ -163,11 +164,11 @@ async def create_discussion(
         creation_date=str(datetime.now()),
     )
     db_session.add(vote)
-    db_session.commit()
+    await db_session.commit()
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
@@ -180,21 +181,21 @@ async def get_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionReadWithVoteStatus:
     """
     Get a discussion by UUID.
     """
     # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
-    discussion = db_session.exec(statement).first()
+    discussion = (await db_session.execute(statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
     # Get community and check access
     community_statement = select(Community).where(Community.id == discussion.community_id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -203,7 +204,7 @@ async def get_discussion(
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     # Check if user has voted
     has_voted = False
@@ -212,7 +213,7 @@ async def get_discussion(
             DiscussionVote.discussion_id == discussion.id,
             DiscussionVote.user_id == current_user.id,
         )
-        vote = db_session.exec(vote_statement).first()
+        vote = (await db_session.execute(vote_statement)).scalars().first()
         has_voted = vote is not None
 
     return DiscussionReadWithVoteStatus(
@@ -226,7 +227,7 @@ async def get_discussions_by_community(
     request: Request,
     community_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
     sort_by: DiscussionSortBy = DiscussionSortBy.RECENT,
     page: int = 1,
     limit: int = 10,
@@ -245,7 +246,7 @@ async def get_discussions_by_community(
     community_statement = select(Community).where(
         Community.community_uuid == community_uuid
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -268,7 +269,7 @@ async def get_discussions_by_community(
         )
         if label:
             pinned_query = pinned_query.where(Discussion.label == label)
-        pinned_discussions = list(db_session.exec(pinned_query).all())
+        pinned_discussions = list((await db_session.execute(pinned_query)).scalars().all())
 
     # Get non-pinned discussions with sorting
     non_pinned_query = select(Discussion).where(
@@ -292,7 +293,7 @@ async def get_discussions_by_community(
 
     if adjusted_limit > 0:
         non_pinned_query = non_pinned_query.offset(adjusted_offset).limit(adjusted_limit)
-        non_pinned_discussions = list(db_session.exec(non_pinned_query).all())
+        non_pinned_discussions = list((await db_session.execute(non_pinned_query)).scalars().all())
     else:
         non_pinned_discussions = []
 
@@ -315,7 +316,7 @@ async def get_discussions_by_community(
     # Batch fetch authors
     if author_ids:
         authors_query = select(User).where(User.id.in_(author_ids))  # type: ignore
-        authors = db_session.exec(authors_query).all()
+        authors = (await db_session.execute(authors_query)).scalars().all()
         authors_map = {a.id: a for a in authors}
     else:
         authors_map = {}
@@ -327,7 +328,7 @@ async def get_discussions_by_community(
             DiscussionVote.discussion_id.in_(discussion_ids),  # type: ignore
             DiscussionVote.user_id == current_user.id,
         )
-        votes = db_session.exec(votes_query).all()
+        votes = (await db_session.execute(votes_query)).scalars().all()
         user_votes = {v.discussion_id for v in votes}
 
     # Build response
@@ -352,7 +353,7 @@ async def update_discussion(
     discussion_uuid: str,
     discussion_object: DiscussionUpdate,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionReadWithVoteStatus:
     """
     Update a discussion.
@@ -369,14 +370,14 @@ async def update_discussion(
 
     # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
-    discussion = db_session.exec(statement).first()
+    discussion = (await db_session.execute(statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
     # Get community
     community_statement = select(Community).where(Community.id == discussion.community_id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -428,19 +429,19 @@ async def update_discussion(
     discussion.update_date = str(datetime.now())
 
     db_session.add(discussion)
-    db_session.commit()
-    db_session.refresh(discussion)
+    await db_session.commit()
+    await db_session.refresh(discussion)
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
         DiscussionVote.user_id == acting_user_id,
     )
-    vote = db_session.exec(vote_statement).first()
+    vote = (await db_session.execute(vote_statement)).scalars().first()
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
@@ -453,7 +454,7 @@ async def pin_discussion(
     discussion_uuid: str,
     is_pinned: bool,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionReadWithVoteStatus:
     """
     Pin or unpin a discussion.
@@ -464,13 +465,13 @@ async def pin_discussion(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
-    discussion = db_session.exec(statement).first()
+    discussion = (await db_session.execute(statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
     community_statement = select(Community).where(Community.id == discussion.community_id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -486,8 +487,8 @@ async def pin_discussion(
     discussion.update_date = str(datetime.now())
 
     db_session.add(discussion)
-    db_session.commit()
-    db_session.refresh(discussion)
+    await db_session.commit()
+    await db_session.refresh(discussion)
 
     await dispatch_webhooks(
         event_name="discussion_pinned",
@@ -502,14 +503,14 @@ async def pin_discussion(
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
         DiscussionVote.user_id == acting_user_id,
     )
-    vote = db_session.exec(vote_statement).first()
+    vote = (await db_session.execute(vote_statement)).scalars().first()
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
@@ -522,7 +523,7 @@ async def lock_discussion(
     discussion_uuid: str,
     is_locked: bool,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionReadWithVoteStatus:
     """
     Lock or unlock a discussion.
@@ -533,13 +534,13 @@ async def lock_discussion(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
-    discussion = db_session.exec(statement).first()
+    discussion = (await db_session.execute(statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
     community_statement = select(Community).where(Community.id == discussion.community_id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -555,8 +556,8 @@ async def lock_discussion(
     discussion.update_date = str(datetime.now())
 
     db_session.add(discussion)
-    db_session.commit()
-    db_session.refresh(discussion)
+    await db_session.commit()
+    await db_session.refresh(discussion)
 
     await dispatch_webhooks(
         event_name="discussion_locked",
@@ -571,14 +572,14 @@ async def lock_discussion(
 
     # Get author info
     author_statement = select(User).where(User.id == discussion.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     # Check if user has voted
     vote_statement = select(DiscussionVote).where(
         DiscussionVote.discussion_id == discussion.id,
         DiscussionVote.user_id == acting_user_id,
     )
-    vote = db_session.exec(vote_statement).first()
+    vote = (await db_session.execute(vote_statement)).scalars().first()
 
     return DiscussionReadWithVoteStatus(
         **discussion.model_dump(),
@@ -590,7 +591,7 @@ async def delete_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Delete a discussion.
@@ -604,14 +605,14 @@ async def delete_discussion(
 
     # Get discussion
     statement = select(Discussion).where(Discussion.discussion_uuid == discussion_uuid)
-    discussion = db_session.exec(statement).first()
+    discussion = (await db_session.execute(statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
 
     # Get community
     community_statement = select(Community).where(Community.id == discussion.community_id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -625,7 +626,7 @@ async def delete_discussion(
     if not is_author and not is_admin:
         raise HTTPException(status_code=403, detail="You don't have permission to delete this discussion")
 
-    db_session.delete(discussion)
-    db_session.commit()
+    await db_session.delete(discussion)
+    await db_session.commit()
 
     return {"detail": "Discussion deleted"}

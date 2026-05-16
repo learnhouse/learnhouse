@@ -60,7 +60,7 @@ from src.services.orgs.orgs import (
 )
 
 
-def _make_org_config(db, org, config):
+async def _make_org_config(db, org, config):
     row = OrganizationConfig(
         org_id=org.id,
         config=config,
@@ -68,12 +68,12 @@ def _make_org_config(db, org, config):
         update_date=str(datetime.now()),
     )
     db.add(row)
-    db.commit()
-    db.refresh(row)
+    await db.commit()
+    await db.refresh(row)
     return row
 
 
-def _attach_user_to_org(db, user_id, org_id, role_id):
+async def _attach_user_to_org(db, user_id, org_id, role_id):
     row = UserOrganization(
         user_id=user_id,
         org_id=org_id,
@@ -82,8 +82,8 @@ def _attach_user_to_org(db, user_id, org_id, role_id):
         update_date=str(datetime.now()),
     )
     db.add(row)
-    db.commit()
-    db.refresh(row)
+    await db.commit()
+    await db.refresh(row)
     return row
 
 
@@ -120,9 +120,9 @@ class TestOrgCreationAndListingWave3:
         assert created.slug == "wave3-org"
         assert created.config.config["config_version"] == "2.0"
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == created.id)
-        ).first()
+        )).scalars().first()
         assert stored is not None
         assert stored.config["plan"] == "pro"
 
@@ -165,9 +165,9 @@ class TestOrgCreationAndListingWave3:
         )
 
         assert updated == {"detail": "Organization updated"}
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == created.id)
-        ).first()
+        )).scalars().first()
         assert stored.config["plan"] == "enterprise"
         assert stored.config["customization"]["landing"]["hero"] == "updated"
         mock_invalidate.assert_called_once_with(admin_user.id)
@@ -183,14 +183,18 @@ class TestOrgCreationAndListingWave3:
         db,
         admin_user,
     ):
-        original_exec = db.exec
+        original_execute = db.execute
 
-        def exec_side_effect(statement):
+        async def execute_side_effect(statement, *args, **kwargs):
             if "organizationconfig" in str(statement).lower():
-                return SimpleNamespace(first=lambda: None)
-            return original_exec(statement)
+                from unittest.mock import MagicMock
+                result = MagicMock()
+                result.scalars.return_value.first.return_value = None
+                result.scalar_one_or_none.return_value = None
+                return result
+            return await original_execute(statement, *args, **kwargs)
 
-        with patch.object(db, "exec", side_effect=exec_side_effect), patch(
+        with patch.object(db, "execute", side_effect=execute_side_effect), patch(
             "src.services.orgs.orgs.OrganizationConfig.model_validate",
             return_value=OrganizationConfig(
                 org_id=0,
@@ -224,14 +228,18 @@ class TestOrgCreationAndListingWave3:
         db,
         admin_user,
     ):
-        original_exec = db.exec
+        original_execute = db.execute
 
-        def exec_side_effect(statement):
+        async def execute_side_effect(statement, *args, **kwargs):
             if "organizationconfig" in str(statement).lower():
-                return SimpleNamespace(first=lambda: None)
-            return original_exec(statement)
+                from unittest.mock import MagicMock
+                result = MagicMock()
+                result.scalars.return_value.first.return_value = None
+                result.scalar_one_or_none.return_value = None
+                return result
+            return await original_execute(statement, *args, **kwargs)
 
-        with patch.object(db, "exec", side_effect=exec_side_effect), patch(
+        with patch.object(db, "execute", side_effect=execute_side_effect), patch(
             "src.services.orgs.orgs.OrganizationConfig.model_validate",
             return_value=OrganizationConfig(
                 org_id=0,
@@ -325,7 +333,7 @@ class TestOrgCreationAndListingWave3:
         admin_user,
         regular_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -335,7 +343,7 @@ class TestOrgCreationAndListingWave3:
                 "customization": {},
             },
         )
-        _make_org_config(
+        await _make_org_config(
             db,
             other_org,
             {
@@ -344,7 +352,7 @@ class TestOrgCreationAndListingWave3:
                 "features": {"members": {"signup_mode": "open"}},
             },
         )
-        _attach_user_to_org(db, admin_user.id, other_org.id, 1)
+        await _attach_user_to_org(db, admin_user.id, other_org.id, 1)
 
         admin_orgs = await get_orgs_by_user_admin(
             mock_request, db, str(admin_user.id), page=1, limit=10
@@ -373,7 +381,7 @@ class TestOrgCreationAndListingWave3:
             update_date=str(datetime.now()),
         )
         db.add(missing_org)
-        db.commit()
+        await db.commit()
 
         with patch("src.services.orgs.orgs.rbac_check", new_callable=AsyncMock):
             with pytest.raises(HTTPException) as exc_info:
@@ -454,7 +462,7 @@ class TestOrgCreationAndListingWave3:
         org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -464,12 +472,12 @@ class TestOrgCreationAndListingWave3:
                 "customization": {},
             },
         )
-        config_row = db.exec(
+        config_row = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert config_row is not None
-        db.delete(config_row)
-        db.commit()
+        await db.delete(config_row)
+        await db.commit()
 
         with patch(
             "src.services.orgs.orgs.rbac_check",
@@ -548,7 +556,7 @@ class TestOrgUploadAndDeleteWave3:
         org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -665,7 +673,7 @@ class TestOrgUploadAndDeleteWave3:
             "filename": "stored-og.png",
         }
         assert delete_result["detail"] == "Organization deleted"
-        assert db.exec(select(Organization).where(Organization.id == org.id)).first() is None
+        assert (await db.execute(select(Organization).where(Organization.id == org.id))).scalars().first() is None
         mock_invalidate.assert_called_once_with(admin_user.id)
 
 
@@ -678,7 +686,7 @@ class TestOrgConfigBranchesWave3:
         org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -828,9 +836,9 @@ class TestOrgConfigBranchesWave3:
                 db,
             )
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert stored.config["general"]["favicon_image"] == "stored-favicon.png"
         assert stored.config["general"]["color"] == "#123456"
         assert stored.config["general"]["footer_text"] == "Footer text"
@@ -857,7 +865,7 @@ class TestOrgConfigBranchesWave3:
         other_org,
         admin_user,
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             other_org,
             {
@@ -992,9 +1000,9 @@ class TestOrgConfigBranchesWave3:
                 db,
             )
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == other_org.id)
-        ).first()
+        )).scalars().first()
         assert stored.config["customization"]["general"]["favicon_image"] == "stored-favicon.png"
         assert stored.config["customization"]["general"]["color"] == "#abcdef"
         assert stored.config["customization"]["general"]["footer_text"] == "Footer v2"
@@ -1122,7 +1130,7 @@ class TestOrgRbacWave3:
 
     @pytest.mark.asyncio
     async def test_update_feature_toggle_helper_v2_branch(self, mock_request, db, org, admin_user):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {"config_version": "2.0", "customization": {}},
@@ -1143,9 +1151,9 @@ class TestOrgRbacWave3:
                 v1_default={"enabled": True},
             )
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert result == {"detail": "Analytics configuration updated"}
         assert stored.config["admin_toggles"]["analytics"]["disabled"] is False
 

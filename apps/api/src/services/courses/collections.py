@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List
 from uuid import uuid4
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.db.collections import (
@@ -26,10 +27,10 @@ async def get_collection(
     request: Request,
     collection_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CollectionRead:
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
-    collection = db_session.exec(statement).first()
+    collection = (await db_session.execute(statement)).scalars().first()
 
     if not collection:
         raise HTTPException(
@@ -68,7 +69,7 @@ async def get_collection(
     else:
         statement = statement_all
 
-    courses = list(db_session.exec(statement).all())
+    courses = list((await db_session.execute(statement)).scalars().all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -79,7 +80,7 @@ async def create_collection(
     request: Request,
     collection_object: CollectionCreate,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CollectionRead:
     collection = Collection.model_validate(collection_object)
 
@@ -95,15 +96,15 @@ async def create_collection(
 
     # Add collection to database
     db_session.add(collection)
-    db_session.commit()
-    db_session.refresh(collection)
+    await db_session.commit()
+    await db_session.refresh(collection)
 
     # SECURITY: Link courses to collection - ensure user has access to all courses being added
     if collection:
         for course_id in collection_object.courses:
             # Check if user has access to this course
             statement = select(Course).where(Course.id == course_id)
-            course = db_session.exec(statement).first()
+            course = (await db_session.execute(statement)).scalars().first()
             
             if course:
                 # Verify user has read access to the course before adding it to collection
@@ -125,8 +126,8 @@ async def create_collection(
                 # Add collection_course to database
                 db_session.add(collection_course)
 
-    db_session.commit()
-    db_session.refresh(collection)
+    await db_session.commit()
+    await db_session.refresh(collection)
 
     # Get courses once again
     statement = (
@@ -135,7 +136,7 @@ async def create_collection(
         .where(CollectionCourse.collection_id == collection.id)
         .distinct()
     )
-    courses = list(db_session.exec(statement).all())
+    courses = list((await db_session.execute(statement)).scalars().all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -156,10 +157,10 @@ async def update_collection(
     collection_object: CollectionUpdate,
     collection_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CollectionRead:
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
-    collection = db_session.exec(statement).first()
+    collection = (await db_session.execute(statement)).scalars().first()
 
     if not collection:
         raise HTTPException(
@@ -185,11 +186,11 @@ async def update_collection(
     statement = select(CollectionCourse).where(
         CollectionCourse.collection_id == collection.id
     )
-    collection_courses = db_session.exec(statement).all()
+    collection_courses = (await db_session.execute(statement)).scalars().all()
 
     # Delete all collection_courses
     for collection_course in collection_courses:
-        db_session.delete(collection_course)
+        await db_session.delete(collection_course)
 
     # Add new collection_courses
     for course in courses or []:
@@ -203,8 +204,8 @@ async def update_collection(
         # Add collection_course to database
         db_session.add(collection_course)
 
-    db_session.commit()
-    db_session.refresh(collection)
+    await db_session.commit()
+    await db_session.refresh(collection)
 
     # Get courses once again
     statement = (
@@ -213,7 +214,7 @@ async def update_collection(
         .where(CollectionCourse.collection_id == collection.id)
         .distinct()
     )
-    courses = list(db_session.exec(statement).all())
+    courses = list((await db_session.execute(statement)).scalars().all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -224,10 +225,10 @@ async def delete_collection(
     request: Request,
     collection_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
-    collection = db_session.exec(statement).first()
+    collection = (await db_session.execute(statement)).scalars().first()
 
     if not collection:
         raise HTTPException(
@@ -241,8 +242,8 @@ async def delete_collection(
     )
 
     # delete collection from database
-    db_session.delete(collection)
-    db_session.commit()
+    await db_session.delete(collection)
+    await db_session.commit()
 
     return {"detail": "Collection deleted"}
 
@@ -256,7 +257,7 @@ async def get_collections(
     request: Request,
     org_id: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
 ) -> List[CollectionRead]:
@@ -269,9 +270,9 @@ async def get_collections(
     except (TypeError, ValueError):
         from src.db.organizations import Organization
 
-        org_row = db_session.exec(
+        org_row = (await db_session.execute(
             select(Organization).where(Organization.slug == org_id)
-        ).first()
+        )).scalars().first()
         if not org_row:
             return []
         numeric_org_id = org_row.id
@@ -289,7 +290,7 @@ async def get_collections(
     else:
         statement = statement_all
 
-    collections = db_session.exec(statement).all()
+    collections = (await db_session.execute(statement)).scalars().all()
 
     if not collections:
         return []
@@ -308,7 +309,7 @@ async def get_collections(
     if acting_user_id == 0:
         batch_statement = batch_statement.where(Course.public == True)
 
-    batch_results = db_session.exec(batch_statement).all()
+    batch_results = (await db_session.execute(batch_statement)).all()
 
     # Group courses by collection_id, deduplicating
     collection_courses_map: dict[int, list[Course]] = {}

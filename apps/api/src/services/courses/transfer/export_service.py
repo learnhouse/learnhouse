@@ -14,7 +14,8 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block
@@ -50,7 +51,7 @@ async def export_course(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> str:
     """
     Export a single course as a ZIP file.
@@ -69,7 +70,7 @@ async def export_courses_batch(
     request: Request,
     course_uuids: list[str],
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> str:
     """
     Export multiple courses as a single ZIP file.
@@ -87,7 +88,7 @@ async def export_courses_batch(
 
     for course_uuid in course_uuids:
         statement = select(Course).where(Course.course_uuid == course_uuid)
-        course = db_session.exec(statement).first()
+        course = (await db_session.execute(statement)).scalars().first()
 
         if not course:
             raise HTTPException(
@@ -99,7 +100,7 @@ async def export_courses_batch(
 
         if org is None:
             org_statement = select(Organization).where(Organization.id == course.org_id)
-            org = db_session.exec(org_statement).first()
+            org = (await db_session.execute(org_statement)).scalars().first()
             if not org:
                 raise HTTPException(status_code=404, detail="Organization not found")
         elif org.id != course.org_id:
@@ -113,7 +114,7 @@ async def export_courses_batch(
     # Pre-load all DB data needed for ZIP building (batch queries)
     course_export_data = []
     for course in courses_to_export:
-        course_data, chapters = _load_course_export_data(course, db_session)
+        course_data, chapters = await _load_course_export_data(course, db_session)
         # Extract plain values — can't access SQLModel objects from another thread
         course_export_data.append((course.course_uuid, course.name, course_data, chapters))
 
@@ -124,9 +125,9 @@ async def export_courses_batch(
     )
 
 
-def _load_course_export_data(
+async def _load_course_export_data(
     course: Course,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> tuple[dict, list]:
     """
     Load all DB data needed to export a course. Runs on the main thread.
@@ -151,23 +152,23 @@ def _load_course_export_data(
         "update_date": course.update_date,
     }
 
-    chapter_results = db_session.exec(
+    chapter_results = (await db_session.execute(
         select(Chapter, CourseChapter)
         .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
         .where(CourseChapter.course_id == course.id)
         .order_by(CourseChapter.order)
-    ).all()
+    )).all()
 
     chapter_ids = [ch.id for ch, _ in chapter_results]
 
     activities_by_chapter: dict[int, list] = {}
     if chapter_ids:
-        all_activities = db_session.exec(
+        all_activities = (await db_session.execute(
             select(Activity, ChapterActivity)
             .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
             .where(ChapterActivity.chapter_id.in_(chapter_ids))
             .order_by(ChapterActivity.order)
-        ).all()
+        )).all()
         for activity, ca in all_activities:
             activities_by_chapter.setdefault(ca.chapter_id, []).append((activity, ca))
 
@@ -178,9 +179,9 @@ def _load_course_export_data(
     ]
     blocks_by_activity: dict[int, list[Block]] = {}
     if dynamic_activity_ids:
-        all_blocks = db_session.exec(
+        all_blocks = (await db_session.execute(
             select(Block).where(Block.activity_id.in_(dynamic_activity_ids))
-        ).all()
+        )).scalars().all()
         for block in all_blocks:
             blocks_by_activity.setdefault(block.activity_id, []).append(block)
 

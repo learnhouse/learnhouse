@@ -29,7 +29,7 @@ from src.services.users.usergroups import (
 )
 
 
-def _make_board(db, org, admin_user, **overrides):
+async def _make_board(db, org, admin_user, **overrides):
     board = Board(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -43,8 +43,8 @@ def _make_board(db, org, admin_user, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(board)
-    db.commit()
-    db.refresh(board)
+    await db.commit()
+    await db.refresh(board)
     return board
 
 
@@ -127,8 +127,11 @@ class TestUsergroupsService:
     ):
         def _db_with_resource(resource):
             session = SimpleNamespace()
-            session.exec = MagicMock()
-            session.exec.return_value.first.return_value = resource
+            scalars_mock = MagicMock()
+            scalars_mock.first.return_value = resource
+            result_mock = MagicMock()
+            result_mock.scalars.return_value = scalars_mock
+            session.execute = AsyncMock(return_value=result_mock)
             return session
 
         with patch(
@@ -380,8 +383,8 @@ class TestUsergroupsService:
                 UserGroupCreate(name="UG", description="Desc", org_id=org.id),
             )
 
-        board = _make_board(db, org, admin_user, board_uuid="board_primary")
-        board_other = _make_board(db, org, admin_user, board_uuid="board_other")
+        board = await _make_board(db, org, admin_user, board_uuid="board_primary")
+        board_other = await _make_board(db, org, admin_user, board_uuid="board_other")
 
         existing_link = UserGroupResource(
             usergroup_id=usergroup.id,
@@ -391,7 +394,7 @@ class TestUsergroupsService:
             update_date="2024-01-01",
         )
         db.add(existing_link)
-        db.commit()
+        await db.commit()
 
         existing_user_link = UserGroupUser(
             usergroup_id=usergroup.id,
@@ -401,7 +404,7 @@ class TestUsergroupsService:
             update_date="2024-01-01",
         )
         db.add(existing_user_link)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.users.usergroups.rbac_check",
@@ -472,7 +475,7 @@ class TestUsergroupsService:
                 mock_request, db, admin_user, usergroup.id, f"{admin_user.id},{regular_user.id}"
             )
 
-        board = _make_board(db, org, admin_user)
+        board = await _make_board(db, org, admin_user)
         with patch(
             "src.services.users.usergroups.rbac_check",
             new_callable=AsyncMock,
@@ -511,8 +514,8 @@ class TestUsergroupsService:
     async def test_validate_resource_exists_and_belongs_to_org_and_errors(
         self, mock_request, db, org, other_org, admin_user
     ):
-        board = _make_board(db, org, admin_user, board_uuid="board_org")
-        _make_board(
+        board = await _make_board(db, org, admin_user, board_uuid="board_org")
+        await _make_board(
             db,
             other_org,
             admin_user,

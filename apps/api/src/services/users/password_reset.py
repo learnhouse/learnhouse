@@ -6,7 +6,8 @@ import redis
 import string
 from fastapi import HTTPException, Request
 from pydantic import EmailStr
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization, OrganizationRead
 from src.services.orgs.orgs import get_org_default_language
@@ -65,7 +66,7 @@ def generate_secure_reset_code(length: int = 8) -> str:
 
 async def send_reset_password_code(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     org_id: int,
     email: EmailStr,
@@ -95,7 +96,7 @@ async def send_reset_password_code(
 
     # Get org first (public info, safe to fail explicitly)
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -105,7 +106,7 @@ async def send_reset_password_code(
 
     # Get user - SECURITY: Don't reveal if user exists or not
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     # SECURITY FIX: Always return success message to prevent user enumeration
     # Log the attempt for security monitoring
@@ -159,7 +160,7 @@ async def send_reset_password_code(
     org_read = OrganizationRead.model_validate(org)
 
     org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    org_config = db_session.exec(org_config_stmt).first()
+    org_config = (await db_session.execute(org_config_stmt)).scalars().first()
 
     # Send reset code via email
     base_url = get_base_url_from_request(request)
@@ -185,7 +186,7 @@ async def send_reset_password_code(
 
 async def change_password_with_reset_code(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     new_password: str,
     org_id: int,
@@ -215,7 +216,7 @@ async def change_password_with_reset_code(
 
     # Get org first (public info)
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(
@@ -225,7 +226,7 @@ async def change_password_with_reset_code(
 
     # Get user - SECURITY: Use generic error message
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     # SECURITY FIX: Generic error message to prevent enumeration
     if not user:
@@ -291,8 +292,8 @@ async def change_password_with_reset_code(
     user.password_changed_at = datetime.now(timezone.utc)
     db_session.add(user)
 
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     # Delete reset code (one-time use)
     r.delete(reset_key)
@@ -303,7 +304,7 @@ async def change_password_with_reset_code(
 
 async def send_reset_password_code_platform(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     email: EmailStr,
 ):
@@ -316,7 +317,7 @@ async def send_reset_password_code_platform(
     - Logs attempts for security audit
     """
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         logging.info(f"Password reset requested for non-existent email: {email[:3]}***")
@@ -366,7 +367,7 @@ async def send_reset_password_code_platform(
 
 async def change_password_with_reset_code_platform(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     new_password: str,
     email: EmailStr,
@@ -393,7 +394,7 @@ async def change_password_with_reset_code_platform(
         )
 
     statement = select(User).where(User.email == email)
-    user = db_session.exec(statement).first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         logging.warning(f"Password change attempted for non-existent email: {email[:3]}***")
@@ -436,8 +437,8 @@ async def change_password_with_reset_code_platform(
     user.password_changed_at = datetime.now(timezone.utc)
     db_session.add(user)
 
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     r.delete(reset_key)
 

@@ -38,7 +38,7 @@ from src.services.communities.discussions import (
 )
 
 
-def _make_course(db, org, **overrides):
+async def _make_course(db, org, **overrides):
     course = Course(
         id=overrides.pop("id", None),
         name=overrides.pop("name", "Course"),
@@ -52,12 +52,12 @@ def _make_course(db, org, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
     return course
 
 
-def _make_community(db, org, **overrides):
+async def _make_community(db, org, **overrides):
     community = Community(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -72,12 +72,12 @@ def _make_community(db, org, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(community)
-    db.commit()
-    db.refresh(community)
+    await db.commit()
+    await db.refresh(community)
     return community
 
 
-def _make_discussion(db, community, org, author_id, **overrides):
+async def _make_discussion(db, community, org, author_id, **overrides):
     discussion = Discussion(
         id=overrides.pop("id", None),
         title=overrides.pop("title", "Title"),
@@ -96,12 +96,12 @@ def _make_discussion(db, community, org, author_id, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01T00:00:00+00:00"),
     )
     db.add(discussion)
-    db.commit()
-    db.refresh(discussion)
+    await db.commit()
+    await db.refresh(discussion)
     return discussion
 
 
-def _make_usergroup(db, org, **overrides):
+async def _make_usergroup(db, org, **overrides):
     usergroup = UserGroup(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -112,8 +112,8 @@ def _make_usergroup(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(usergroup)
-    db.commit()
-    db.refresh(usergroup)
+    await db.commit()
+    await db.refresh(usergroup)
     return usergroup
 
 
@@ -122,7 +122,7 @@ class TestCommunitiesService:
     async def test_community_crud_link_and_lookup(
         self, db, org, admin_user, mock_request
     ):
-        course = _make_course(db, org)
+        course = await _make_course(db, org)
         with patch(
             "src.services.communities.communities.authorization_verify_if_user_is_anon",
             new_callable=AsyncMock,
@@ -184,13 +184,13 @@ class TestCommunitiesService:
     async def test_get_communities_by_org_variants_and_rights(
         self, db, org, admin_user, regular_user, anonymous_user, mock_request
     ):
-        public_community = _make_community(
+        public_community = await _make_community(
             db, org, id=1, community_uuid="community_public", public=True
         )
-        private_community = _make_community(
+        private_community = await _make_community(
             db, org, id=2, community_uuid="community_private", public=False
         )
-        usergroup = _make_usergroup(db, org, id=50)
+        usergroup = await _make_usergroup(db, org, id=50)
         db.add(
             UserGroupResource(
                 usergroup_id=usergroup.id,
@@ -208,7 +208,7 @@ class TestCommunitiesService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.communities.is_user_superadmin",
@@ -255,15 +255,15 @@ class TestCommunitiesService:
     async def test_community_admin_and_error_branches(
         self, db, org, other_org, admin_user, anonymous_user, mock_request
     ):
-        course = _make_course(db, org, id=20, course_uuid="course_admin")
-        community = _make_community(
+        course = await _make_course(db, org, id=20, course_uuid="course_admin")
+        community = await _make_community(
             db,
             org,
             id=21,
             community_uuid="community_admin",
             public=False,
         )
-        _linked_community = _make_community(
+        _linked_community = await _make_community(
             db,
             org,
             id=22,
@@ -271,7 +271,7 @@ class TestCommunitiesService:
             public=False,
             course_id=course.id,
         )
-        other_org_community = _make_community(
+        other_org_community = await _make_community(
             db,
             org,
             id=23,
@@ -303,7 +303,7 @@ class TestCommunitiesService:
             admin_list_result = await get_communities_by_org(
                 mock_request, org.id, admin_user, db
             )
-            orphan_course = _make_course(
+            orphan_course = await _make_course(
                 db,
                 org,
                 id=24,
@@ -374,7 +374,7 @@ class TestCommunitiesService:
                     admin_user,
                     db,
                 )
-            existing_linked_community = _make_community(
+            existing_linked_community = await _make_community(
                 db,
                 org,
                 id=24,
@@ -391,7 +391,7 @@ class TestCommunitiesService:
                 )
             assert existing_linked_community.course_id == course.id
 
-        other_course = _make_course(
+        other_course = await _make_course(
             db,
             other_org,
             id=25,
@@ -435,21 +435,21 @@ class TestCommunitiesService:
     async def test_community_user_rights_anonymous_and_no_access(
         self, db, org, anonymous_user, regular_user, mock_request
     ):
-        public_community = _make_community(
+        public_community = await _make_community(
             db,
             org,
             id=30,
             community_uuid="community_public_rights",
             public=True,
         )
-        private_community = _make_community(
+        private_community = await _make_community(
             db,
             org,
             id=31,
             community_uuid="community_private_rights",
             public=False,
         )
-        usergroup = _make_usergroup(db, org, id=32, usergroup_uuid="ug_private_rights")
+        usergroup = await _make_usergroup(db, org, id=32, usergroup_uuid="ug_private_rights")
         db.add(
             UserGroupResource(
                 usergroup_id=usergroup.id,
@@ -459,8 +459,8 @@ class TestCommunitiesService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
-        private_group = _make_usergroup(db, org, id=51)
+        await db.commit()
+        private_group = await _make_usergroup(db, org, id=51)
         db.add(
             UserGroupResource(
                 usergroup_id=private_group.id,
@@ -470,7 +470,7 @@ class TestCommunitiesService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.communities.authorization_verify_based_on_roles",
@@ -497,9 +497,9 @@ class TestCommunitiesService:
 
     @pytest.mark.asyncio
     async def test_community_error_paths(self, db, org, admin_user, mock_request):
-        course = _make_course(db, org, id=2, course_uuid="course_two")
-        community = _make_community(db, org, id=10, course_id=course.id)
-        _make_community(db, org, id=11, community_uuid="community_two", course_id=course.id)
+        course = await _make_course(db, org, id=2, course_uuid="course_two")
+        community = await _make_community(db, org, id=10, course_id=course.id)
+        await _make_community(db, org, id=11, community_uuid="community_two", course_id=course.id)
 
         with patch(
             "src.services.communities.communities.authorization_verify_if_user_is_anon",
@@ -549,7 +549,7 @@ class TestDiscussionsService:
     async def test_discussion_crud_and_sorting(
         self, db, org, admin_user, anonymous_user, mock_request
     ):
-        community = _make_community(db, org)
+        community = await _make_community(db, org)
         with patch(
             "src.services.communities.discussions.authorization_verify_if_user_is_anon",
             new_callable=AsyncMock,
@@ -607,7 +607,7 @@ class TestDiscussionsService:
                 label="idea",
             )
 
-        older = _make_discussion(
+        older = await _make_discussion(
             db,
             community,
             org,
@@ -625,7 +625,7 @@ class TestDiscussionsService:
                 creation_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.communities.discussions.check_resource_access",
@@ -645,7 +645,7 @@ class TestDiscussionsService:
                 db,
                 sort_by=DiscussionSortBy.HOT,
             )
-            empty_community = _make_community(
+            empty_community = await _make_community(
                 db, org, id=21, community_uuid="community_empty"
             )
             empty = await get_discussions_by_community(
@@ -682,8 +682,8 @@ class TestDiscussionsService:
 
     @pytest.mark.asyncio
     async def test_discussion_error_paths(self, db, org, admin_user, regular_user, mock_request):
-        community = _make_community(db, org)
-        discussion = _make_discussion(
+        community = await _make_community(db, org)
+        discussion = await _make_discussion(
             db,
             community,
             org,
@@ -777,8 +777,8 @@ class TestDiscussionsService:
     async def test_discussion_missing_and_permission_paths(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        community = _make_community(db, org, id=30, community_uuid="community_discussion_paths")
-        discussion = _make_discussion(
+        community = await _make_community(db, org, id=30, community_uuid="community_discussion_paths")
+        discussion = await _make_discussion(
             db,
             community,
             org,
@@ -802,8 +802,8 @@ class TestDiscussionsService:
             update_date="2024-01-01T00:00:00+00:00",
         )
         db.add(orphan_discussion)
-        db.commit()
-        db.refresh(orphan_discussion)
+        await db.commit()
+        await db.refresh(orphan_discussion)
 
         with patch(
             "src.services.communities.discussions.authorization_verify_if_user_is_anon",

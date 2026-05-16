@@ -3,7 +3,8 @@ import hashlib
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
 
 from src.db.api_tokens import (
@@ -91,7 +92,7 @@ def verify_token(provided_token: str, stored_hash: str) -> bool:
 
 async def create_api_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     token_data: APITokenCreate,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -115,7 +116,7 @@ async def create_api_token(
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -124,7 +125,7 @@ async def create_api_token(
         )
 
     # VERIFICATION 3+4: Membership + permission (superadmins bypass)
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_create")
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_create")
 
     # VERIFICATION 5: Validate token name
     if not token_data.name or token_data.name.strip() == "":
@@ -145,7 +146,7 @@ async def create_api_token(
         APIToken.org_id == org_id,
         APIToken.is_active == True
     )
-    existing_token = db_session.exec(statement).first()
+    existing_token = (await db_session.execute(statement)).scalars().first()
 
     if existing_token:
         raise HTTPException(
@@ -155,7 +156,7 @@ async def create_api_token(
 
     # VERIFICATION 7: Validate rights structure if provided
     if token_data.rights:
-        user_role = get_user_org_role(current_user.id, org_id, db_session)
+        user_role = await get_user_org_role(current_user.id, org_id, db_session)
         user_rights = user_role.rights if user_role else None
         await validate_rights_structure(token_data.rights, user_rights)
 
@@ -180,8 +181,8 @@ async def create_api_token(
     )
 
     db_session.add(api_token)
-    db_session.commit()
-    db_session.refresh(api_token)
+    await db_session.commit()
+    await db_session.refresh(api_token)
 
     # Return the created response with the full token (only time it's shown!)
     return APITokenCreatedResponse(
@@ -200,7 +201,7 @@ async def create_api_token(
 
 async def list_api_tokens(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[APITokenRead]:
@@ -211,7 +212,7 @@ async def list_api_tokens(
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -220,21 +221,21 @@ async def list_api_tokens(
         )
 
     # VERIFICATION 3+4: Membership + permission (superadmins bypass)
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_read")
 
     # Get all tokens for the organization
     statement = select(APIToken).where(
         APIToken.org_id == org_id
     ).order_by(APIToken.creation_date.desc())  # type: ignore
 
-    tokens = db_session.exec(statement).all()
+    tokens = (await db_session.execute(statement)).scalars().all()
 
     return [APITokenRead(**token.model_dump()) for token in tokens]
 
 
 async def get_api_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     token_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -245,14 +246,14 @@ async def get_api_token(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(current_user.id, org_id, db_session)
+    await require_org_membership(current_user.id, org_id, db_session)
 
     # VERIFICATION 3: Get the token
     statement = select(APIToken).where(
         APIToken.token_uuid == token_uuid,
         APIToken.org_id == org_id
     )
-    token = db_session.exec(statement).first()
+    token = (await db_session.execute(statement)).scalars().first()
 
     if not token:
         raise HTTPException(
@@ -265,7 +266,7 @@ async def get_api_token(
 
 async def update_api_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     token_uuid: str,
     token_data: APITokenUpdate,
@@ -277,14 +278,14 @@ async def update_api_token(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # VERIFICATION 2+3: Membership + permission (superadmins bypass)
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
         APIToken.token_uuid == token_uuid,
         APIToken.org_id == org_id
     )
-    token = db_session.exec(statement).first()
+    token = (await db_session.execute(statement)).scalars().first()
 
     if not token:
         raise HTTPException(
@@ -294,7 +295,7 @@ async def update_api_token(
 
     # VERIFICATION 5: Validate rights if being updated
     if token_data.rights:
-        user_role = get_user_org_role(current_user.id, org_id, db_session)
+        user_role = await get_user_org_role(current_user.id, org_id, db_session)
         user_rights = user_role.rights if user_role else None
         await validate_rights_structure(token_data.rights, user_rights)
 
@@ -309,15 +310,15 @@ async def update_api_token(
     token.update_date = str(datetime.now())
 
     db_session.add(token)
-    db_session.commit()
-    db_session.refresh(token)
+    await db_session.commit()
+    await db_session.refresh(token)
 
     return APITokenRead(**token.model_dump())
 
 
 async def revoke_api_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     token_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -328,14 +329,14 @@ async def revoke_api_token(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # VERIFICATION 2+3: Membership + permission (superadmins bypass)
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_delete")
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_delete")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
         APIToken.token_uuid == token_uuid,
         APIToken.org_id == org_id
     )
-    token = db_session.exec(statement).first()
+    token = (await db_session.execute(statement)).scalars().first()
 
     if not token:
         raise HTTPException(
@@ -348,14 +349,14 @@ async def revoke_api_token(
     token.update_date = str(datetime.now())
 
     db_session.add(token)
-    db_session.commit()
+    await db_session.commit()
 
     return {"message": "API token revoked successfully"}
 
 
 async def regenerate_api_token(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     token_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -369,14 +370,14 @@ async def regenerate_api_token(
     await authorization_verify_if_user_is_anon(current_user.id)
 
     # VERIFICATION 2+3: Membership + permission (superadmins bypass)
-    require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
+    await require_org_role_permission(current_user.id, org_id, db_session, "roles", "action_update")
 
     # VERIFICATION 4: Get the token
     statement = select(APIToken).where(
         APIToken.token_uuid == token_uuid,
         APIToken.org_id == org_id
     )
-    token = db_session.exec(statement).first()
+    token = (await db_session.execute(statement)).scalars().first()
 
     if not token:
         raise HTTPException(
@@ -399,8 +400,8 @@ async def regenerate_api_token(
     token.update_date = str(datetime.now())
 
     db_session.add(token)
-    db_session.commit()
-    db_session.refresh(token)
+    await db_session.commit()
+    await db_session.refresh(token)
 
     # Return with the new full token
     return APITokenCreatedResponse(
@@ -419,7 +420,7 @@ async def regenerate_api_token(
 
 async def validate_api_token_for_auth(
     token: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Optional[APIToken]:
     """
     Validate an API token for authentication purposes.
@@ -441,7 +442,7 @@ async def validate_api_token_for_auth(
 
     # Find the token in the database
     statement = select(APIToken).where(APIToken.token_hash == token_hash)
-    api_token = db_session.exec(statement).first()
+    api_token = (await db_session.execute(statement)).scalars().first()
 
     if not api_token:
         return None
@@ -465,8 +466,8 @@ async def validate_api_token_for_auth(
     try:
         api_token.last_used_at = str(datetime.now())
         db_session.add(api_token)
-        db_session.commit()
-        db_session.refresh(api_token)
+        await db_session.commit()
+        await db_session.refresh(api_token)
     except Exception:
         # Don't fail validation just because we couldn't update last_used_at
         pass

@@ -11,7 +11,7 @@ Tests cover:
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException
 
 
@@ -19,36 +19,39 @@ class TestVerifyOrgMembership:
     """Test _verify_org_membership in analytics.py."""
 
     def _make_db_session(self, has_membership=False, is_superadmin=False):
-        session = MagicMock()
-        result = MagicMock()
-        if has_membership:
-            result.first.return_value = MagicMock()  # membership exists
-        else:
-            result.first.return_value = None
-        session.exec.return_value = result
+        session = AsyncMock()
+        membership = MagicMock() if has_membership else None
+        _scalars = MagicMock()
+        _scalars.first.return_value = membership
+        _exec_result = MagicMock()
+        _exec_result.scalars.return_value = _scalars
+        session.execute.return_value = _exec_result
         return session
 
-    @patch("src.routers.analytics.is_user_superadmin", return_value=False)
-    def test_non_member_rejected(self, mock_superadmin):
+    @pytest.mark.asyncio
+    async def test_non_member_rejected(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=False)
-        with pytest.raises(HTTPException) as exc_info:
-            _verify_org_membership(user_id=1, org_id=99, db_session=db)
+        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=False)):
+            with pytest.raises(HTTPException) as exc_info:
+                await _verify_org_membership(user_id=1, org_id=99, db_session=db)
         assert exc_info.value.status_code == 403
 
-    @patch("src.routers.analytics.is_user_superadmin", return_value=False)
-    def test_member_allowed(self, mock_superadmin):
+    @pytest.mark.asyncio
+    async def test_member_allowed(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=True)
-        # Should not raise
-        _verify_org_membership(user_id=1, org_id=1, db_session=db)
+        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=False)):
+            # Should not raise
+            await _verify_org_membership(user_id=1, org_id=1, db_session=db)
 
-    @patch("src.routers.analytics.is_user_superadmin", return_value=True)
-    def test_superadmin_bypasses(self, mock_superadmin):
+    @pytest.mark.asyncio
+    async def test_superadmin_bypasses(self):
         from src.routers.analytics import _verify_org_membership
         db = self._make_db_session(has_membership=False)
-        # Should not raise even though not a member
-        _verify_org_membership(user_id=1, org_id=99, db_session=db)
+        with patch("src.routers.analytics.is_user_superadmin", AsyncMock(return_value=True)):
+            # Should not raise even though not a member
+            await _verify_org_membership(user_id=1, org_id=99, db_session=db)
 
 
 class TestValidateCourseUuid:

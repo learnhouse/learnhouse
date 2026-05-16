@@ -2,8 +2,9 @@ from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from pydantic import BaseModel, EmailStr
-from sqlmodel import Session, select
+from sqlmodel import select
 from src.db.users import AnonymousUser, User, UserRead
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
 from src.core.deployment_mode import get_deployment_mode
@@ -193,7 +194,7 @@ def unset_auth_cookies(response: Response, request: Request = None):
 async def refresh(
     request: Request,
     response: Response,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Validates the refresh token and issues a new access token + rotated refresh
@@ -316,7 +317,7 @@ async def login(
     response: Response,
     username: str = Form(...),
     password: str = Form(...),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     # Step 1: Check rate limit (IP-based)
     is_allowed, retry_after = check_login_rate_limit(request)
@@ -343,9 +344,9 @@ async def login(
     if not user:
         # Unknown user OR wrong password — responses are indistinguishable.
         # The row lookup below runs behind that wall for lockout bookkeeping.
-        user_record = db_session.exec(
+        user_record = (await db_session.execute(
             select(User).where(User.email == username)
-        ).first()
+        )).scalars().first()
         if user_record:
             record_failed_login(
                 user_record,
@@ -441,7 +442,7 @@ async def third_party_login(
     body: ThirdPartyLogin,
     org_id: Optional[int] = None,
     current_user: AnonymousUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     import logging
     import redis as _redis
@@ -454,9 +455,9 @@ async def third_party_login(
     # association (prevents unauthorized org membership via OAuth).
     if org_id is not None:
         from src.db.organizations import Organization
-        org_record = db_session.exec(
+        org_record = (await db_session.execute(
             select(Organization).where(Organization.id == org_id)
-        ).first()
+        )).scalars().first()
 
         if not org_record:
             raise HTTPException(
@@ -535,7 +536,7 @@ async def third_party_login(
 async def logout(
     request: Request,
     response: Response,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Clear the auth cookies and revoke every JWT (access and refresh) that was
@@ -592,7 +593,7 @@ class VerifyEmailRequest(BaseModel):
 async def api_verify_email(
     request: Request,
     body: VerifyEmailRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Verify user email with token.
@@ -636,7 +637,7 @@ class ResendVerificationRequest(BaseModel):
 async def api_resend_verification_email(
     request: Request,
     body: ResendVerificationRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Resend verification email (rate limited).

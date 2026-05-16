@@ -7,7 +7,8 @@ import logging
 from typing import List, Optional, Tuple
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, status
 
 from src.db.custom_domains import (
@@ -113,7 +114,7 @@ DNS propagation may take up to 48 hours, but usually completes within a few minu
     )
 
 
-async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug: str) -> Tuple[bool, str]:
+async def verify_domain_dns(domain: CustomDomain, db_session: AsyncSession, org_slug: str) -> Tuple[bool, str]:
     """
     Verify DNS configuration for a custom domain.
     Returns (success, message) tuple.
@@ -126,7 +127,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
         domain.last_check_at = str(datetime.now())
         domain.check_error = None
         db_session.add(domain)
-        db_session.commit()
+        await db_session.commit()
         return True, "Verified (dev mode)"
 
     try:
@@ -150,7 +151,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
                 domain.last_check_at = str(datetime.now())
                 domain.check_error = "TXT record found but value doesn't match"
                 db_session.add(domain)
-                db_session.commit()
+                await db_session.commit()
                 return False, "TXT record found but value doesn't match expected value"
 
         except dns.resolver.NXDOMAIN:
@@ -158,14 +159,14 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
             domain.last_check_at = str(datetime.now())
             domain.check_error = "TXT record not found"
             db_session.add(domain)
-            db_session.commit()
+            await db_session.commit()
             return False, "TXT record not found. Please add the verification TXT record and try again."
         except dns.resolver.NoAnswer:
             domain.status = "pending"
             domain.last_check_at = str(datetime.now())
             domain.check_error = "TXT record not found (no answer)"
             db_session.add(domain)
-            db_session.commit()
+            await db_session.commit()
             return False, "TXT record not found. Please add the verification TXT record and try again."
 
         # TXT record verified - mark domain as verified
@@ -174,7 +175,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
         domain.last_check_at = str(datetime.now())
         domain.check_error = None
         db_session.add(domain)
-        db_session.commit()
+        await db_session.commit()
 
         return True, "Domain verified successfully"
 
@@ -184,7 +185,7 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
         domain.last_check_at = str(datetime.now())
         domain.check_error = "DNS verification unavailable"
         db_session.add(domain)
-        db_session.commit()
+        await db_session.commit()
         return False, "DNS verification is temporarily unavailable. Please try again later."
     except Exception as e:
         logger.error(f"DNS verification error for {domain.domain}: {str(e)}")
@@ -192,13 +193,13 @@ async def verify_domain_dns(domain: CustomDomain, db_session: Session, org_slug:
         domain.last_check_at = str(datetime.now())
         domain.check_error = str(e)
         db_session.add(domain)
-        db_session.commit()
+        await db_session.commit()
         return False, f"DNS verification failed: {str(e)}"
 
 
 async def add_custom_domain(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     domain_data: CustomDomainCreate,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -210,7 +211,7 @@ async def add_custom_domain(
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -219,7 +220,7 @@ async def add_custom_domain(
         )
 
     # VERIFICATION 3+4: Membership + admin permission (superadmins bypass)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
     # VERIFICATION 5: Validate domain format
     domain = domain_data.domain.lower().strip()
@@ -248,7 +249,7 @@ async def add_custom_domain(
 
     # VERIFICATION 7: Check if domain is already registered
     statement = select(CustomDomain).where(CustomDomain.domain == domain)
-    existing_domain = db_session.exec(statement).first()
+    existing_domain = (await db_session.execute(statement)).scalars().first()
 
     if existing_domain:
         raise HTTPException(
@@ -272,15 +273,15 @@ async def add_custom_domain(
     )
 
     db_session.add(custom_domain)
-    db_session.commit()
-    db_session.refresh(custom_domain)
+    await db_session.commit()
+    await db_session.refresh(custom_domain)
 
     return CustomDomainRead(**custom_domain.model_dump())
 
 
 async def list_custom_domains(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[CustomDomainRead]:
@@ -291,7 +292,7 @@ async def list_custom_domains(
 
     # VERIFICATION 2: Check if the organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -300,21 +301,21 @@ async def list_custom_domains(
         )
 
     # VERIFICATION 3: Membership (superadmins bypass)
-    require_org_membership(acting_user_id, org_id, db_session)
+    await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get all custom domains for the organization
     statement = select(CustomDomain).where(
         CustomDomain.org_id == org_id
     ).order_by(CustomDomain.creation_date.desc())  # type: ignore
 
-    domains = db_session.exec(statement).all()
+    domains = (await db_session.execute(statement)).scalars().all()
 
     return [CustomDomainRead(**domain.model_dump()) for domain in domains]
 
 
 async def get_custom_domain(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -325,14 +326,14 @@ async def get_custom_domain(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(acting_user_id, org_id, db_session)
+    await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
         CustomDomain.domain_uuid == domain_uuid,
         CustomDomain.org_id == org_id
     )
-    domain = db_session.exec(statement).first()
+    domain = (await db_session.execute(statement)).scalars().first()
 
     if not domain:
         raise HTTPException(
@@ -345,7 +346,7 @@ async def get_custom_domain(
 
 async def get_domain_verification_info(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -356,11 +357,11 @@ async def get_domain_verification_info(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(acting_user_id, org_id, db_session)
+    await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -373,7 +374,7 @@ async def get_domain_verification_info(
         CustomDomain.domain_uuid == domain_uuid,
         CustomDomain.org_id == org_id
     )
-    domain = db_session.exec(statement).first()
+    domain = (await db_session.execute(statement)).scalars().first()
 
     if not domain:
         raise HTTPException(
@@ -388,7 +389,7 @@ async def get_domain_verification_info(
 
 async def verify_custom_domain(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -399,11 +400,11 @@ async def verify_custom_domain(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
     # Get the organization for the slug
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         raise HTTPException(
@@ -416,7 +417,7 @@ async def verify_custom_domain(
         CustomDomain.domain_uuid == domain_uuid,
         CustomDomain.org_id == org_id
     )
-    domain = db_session.exec(statement).first()
+    domain = (await db_session.execute(statement)).scalars().first()
 
     if not domain:
         raise HTTPException(
@@ -438,7 +439,7 @@ async def verify_custom_domain(
 
 async def delete_custom_domain(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -456,7 +457,7 @@ async def delete_custom_domain(
         CustomDomain.domain_uuid == domain_uuid,
         CustomDomain.org_id == org_id
     )
-    domain = db_session.exec(statement).first()
+    domain = (await db_session.execute(statement)).scalars().first()
 
     if not domain:
         raise HTTPException(
@@ -465,14 +466,14 @@ async def delete_custom_domain(
         )
 
     # Delete the domain
-    db_session.delete(domain)
-    db_session.commit()
+    await db_session.delete(domain)
+    await db_session.commit()
 
     return {"message": "Custom domain deleted successfully"}
 
 
 async def list_all_verified_domains(
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
     """
     List all verified custom domains across all organizations.
@@ -481,13 +482,13 @@ async def list_all_verified_domains(
     statement = select(CustomDomain).where(
         CustomDomain.status == "verified"
     )
-    domains = db_session.exec(statement).all()
+    domains = (await db_session.execute(statement)).scalars().all()
     return [{"domain": d.domain, "org_id": d.org_id, "domain_uuid": d.domain_uuid} for d in domains]
 
 
 async def check_domain_ssl_status(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -505,7 +506,7 @@ async def check_domain_ssl_status(
         CustomDomain.domain_uuid == domain_uuid,
         CustomDomain.org_id == org_id
     )
-    domain = db_session.exec(statement).first()
+    domain = (await db_session.execute(statement)).scalars().first()
 
     if not domain:
         raise HTTPException(
@@ -580,7 +581,7 @@ async def check_domain_ssl_status(
 
 
 async def resolve_org_by_domain(
-    db_session: Session,
+    db_session: AsyncSession,
     domain: str,
 ) -> Optional[CustomDomainResolveResponse]:
     """
@@ -595,14 +596,14 @@ async def resolve_org_by_domain(
         CustomDomain.domain == domain,
         CustomDomain.status == "verified"
     )
-    custom_domain = db_session.exec(statement).first()
+    custom_domain = (await db_session.execute(statement)).scalars().first()
 
     if not custom_domain:
         return None
 
     # Get the organization
     statement = select(Organization).where(Organization.id == custom_domain.org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
 
     if not organization:
         return None

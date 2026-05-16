@@ -22,7 +22,7 @@ from src.services.users.email_verification import (
 )
 
 
-def _make_user(db, **overrides):
+async def _make_user(db, **overrides):
     user = User(
         id=overrides.pop("id", None),
         username=overrides.pop("username", "user"),
@@ -38,8 +38,8 @@ def _make_user(db, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
@@ -84,7 +84,7 @@ class TestEmailVerificationService:
 
     @pytest.mark.asyncio
     async def test_send_verification_email_org_and_platform(self, mock_request, db, org):
-        user = _make_user(
+        user = await _make_user(
             db,
             id=20,
             username="newuser",
@@ -145,7 +145,7 @@ class TestEmailVerificationService:
 
     @pytest.mark.asyncio
     async def test_send_verification_email_errors(self, mock_request, db, org):
-        user = _make_user(
+        user = await _make_user(
             db,
             id=21,
             username="sendfail",
@@ -183,9 +183,9 @@ class TestEmailVerificationService:
     async def test_verify_email_token_paths(
         self, mock_request, db, org, regular_user
     ):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
 
         base_token = "verify-token"
@@ -271,15 +271,15 @@ class TestEmailVerificationService:
             )
         assert result == "Email verified successfully"
         mock_dispatch.assert_awaited_once()
-        assert db.exec(
+        assert (await db.execute(
             select(User).where(User.user_uuid == user.user_uuid)
-        ).first().email_verified is True
+        )).scalars().first().email_verified is True
 
     @pytest.mark.asyncio
     async def test_verify_email_token_already_verified_and_user_missing(
         self, mock_request, db, org
     ):
-        verified_user = _make_user(
+        verified_user = await _make_user(
             db,
             id=22,
             username="verified",
@@ -368,9 +368,9 @@ class TestEmailVerificationService:
     async def test_resend_verification_email_paths(
         self, mock_request, db, org, regular_user
     ):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
 
         with patch(
@@ -398,12 +398,12 @@ class TestEmailVerificationService:
             )
         assert missing.startswith("If an account")
 
-        verified_user = db.exec(
+        verified_user = (await db.execute(
             select(User).where(User.email == user.email)
-        ).first()
+        )).scalars().first()
         verified_user.email_verified = True
         db.add(verified_user)
-        db.commit()
+        await db.commit()
 
         # SECURITY: resend-verification must return the same generic response
         # whether or not the account exists or is already verified — otherwise
@@ -422,7 +422,7 @@ class TestEmailVerificationService:
 
         verified_user.email_verified = False
         db.add(verified_user)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.users.email_verification.check_verification_resend_rate_limit",

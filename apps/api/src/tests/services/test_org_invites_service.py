@@ -455,12 +455,13 @@ class TestOrgInvitesService:
             return_value=fake_redis,
         ), patch(
             "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
             return_value="https://test-org.learnhouse.io",
         ), patch(
             "src.services.orgs.invites.send_invitation_email",
             return_value={"id": "email"},
         ):
-            result = send_invite_email(
+            result = await send_invite_email(
                 org,
                 "invite_uuid",
                 admin_user,
@@ -475,12 +476,13 @@ class TestOrgInvitesService:
             return_value=_fake_config(),
         ), patch(
             "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
             return_value="https://test-org.learnhouse.io",
         ), patch(
             "src.services.orgs.invites.send_invitation_email",
             side_effect=RuntimeError("boom"),
         ):
-            result = send_invite_email(
+            result = await send_invite_email(
                 org,
                 None,
                 admin_user,
@@ -495,7 +497,8 @@ class TestSendInviteEmailLangLookup:
     """Cover the branch in send_invite_email that loads the org's default
     language from OrganizationConfig and forwards it to send_invitation_email."""
 
-    def test_passes_org_default_language_to_email_helper(
+    @pytest.mark.asyncio
+    async def test_passes_org_default_language_to_email_helper(
         self, mock_request, db, org, admin_user
     ):
         from datetime import datetime as _dt
@@ -514,16 +517,17 @@ class TestSendInviteEmailLangLookup:
                 update_date=str(_dt.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
             return_value="https://test-org.learnhouse.io",
         ), patch(
             "src.services.orgs.invites.send_invitation_email",
             return_value={"id": "email"},
         ) as mock_send:
-            result = send_invite_email(
+            result = await send_invite_email(
                 org,
                 None,
                 admin_user,
@@ -536,19 +540,21 @@ class TestSendInviteEmailLangLookup:
         kwargs = mock_send.call_args.kwargs
         assert kwargs["lang"] == "fr"
 
-    def test_defaults_to_english_when_db_session_is_none(
+    @pytest.mark.asyncio
+    async def test_defaults_to_english_when_db_session_is_none(
         self, mock_request, org, admin_user
     ):
         from src.services.orgs.invites import send_invite_email
 
         with patch(
             "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
             return_value="https://test-org.learnhouse.io",
         ), patch(
             "src.services.orgs.invites.send_invitation_email",
             return_value={"id": "email"},
         ) as mock_send:
-            send_invite_email(
+            await send_invite_email(
                 org,
                 None,
                 admin_user,

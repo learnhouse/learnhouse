@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
+from sqlmodel import select
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
@@ -14,6 +14,7 @@ from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTyp
 from src.db.courses.course_chapters import CourseChapter
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.auth import get_current_user, resolve_acting_user_id
@@ -76,7 +77,7 @@ async def event_generator_with_save(generator, session_uuid: str, activity_uuid:
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating activity content.'})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: Session) -> str:
+def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     """Get the AI model based on the organization's plan."""
     try:
         current_plan = get_org_plan(org_id, db_session)
@@ -87,7 +88,7 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
         return "gemini-2.5-flash"
 
 
-async def verify_user_org_membership(user_id: int, org_id: int, db_session: Session) -> bool:
+async def verify_user_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """Verify that the user is a member of the organization (superadmins bypass)."""
     return is_org_member(user_id, org_id, db_session)
 
@@ -110,7 +111,7 @@ async def start_course_planning_session(
     request: Request,
     session_request: StartCoursePlanningSession,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Start a new course planning AI session with streaming response.
@@ -118,7 +119,7 @@ async def start_course_planning_session(
     """
     # Validate organization exists
     statement = select(Organization).where(Organization.id == session_request.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -178,7 +179,7 @@ async def iterate_course_planning_session(
     request: Request,
     message_request: SendCoursePlanningMessage,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Continue an existing course planning session with a new message.
@@ -199,7 +200,7 @@ async def iterate_course_planning_session(
 
     # Get the organization
     statement = select(Organization).where(Organization.id == session.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -258,7 +259,7 @@ async def finalize_course_plan(
     request: Request,
     finalize_request: FinalizeCoursePlanRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> FinalizeCoursePlanResponse:
     """
     Finalize the course plan and create the course structure in the database.
@@ -276,7 +277,7 @@ async def finalize_course_plan(
 
     # Get the organization
     statement = select(Organization).where(Organization.id == session.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -304,8 +305,8 @@ async def finalize_course_plan(
     )
 
     db_session.add(course)
-    db_session.commit()
-    db_session.refresh(course)
+    await db_session.commit()
+    await db_session.refresh(course)
 
     # Make the current user the creator of the course (resolve API tokens to
     # their creator so authorship records a real user_id, not the token id 0).
@@ -318,7 +319,7 @@ async def finalize_course_plan(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.commit()
+    await db_session.commit()
 
     created_chapters = []
 
@@ -336,8 +337,8 @@ async def finalize_course_plan(
         )
 
         db_session.add(chapter)
-        db_session.commit()
-        db_session.refresh(chapter)
+        await db_session.commit()
+        await db_session.refresh(chapter)
 
         # Create course-chapter link
         course_chapter = CourseChapter(
@@ -350,7 +351,7 @@ async def finalize_course_plan(
         )
 
         db_session.add(course_chapter)
-        db_session.commit()
+        await db_session.commit()
 
         created_activities = []
 
@@ -371,8 +372,8 @@ async def finalize_course_plan(
             )
 
             db_session.add(activity)
-            db_session.commit()
-            db_session.refresh(activity)
+            await db_session.commit()
+            await db_session.refresh(activity)
 
             # Create chapter-activity link
             chapter_activity = ChapterActivity(
@@ -386,7 +387,7 @@ async def finalize_course_plan(
             )
 
             db_session.add(chapter_activity)
-            db_session.commit()
+            await db_session.commit()
 
             created_activities.append({
                 "activity_uuid": activity.activity_uuid,
@@ -433,7 +434,7 @@ async def generate_activity_content(
     request: Request,
     content_request: GenerateActivityContentRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Generate content for a specific activity with streaming response.
@@ -464,14 +465,14 @@ async def generate_activity_content(
 
     # Validate activity exists
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
     # Get the organization
     statement = select(Organization).where(Organization.id == session.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -592,7 +593,7 @@ async def save_activity_content(
     request: Request,
     save_request: SaveActivityContentRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Save AI-generated content to an activity.
@@ -621,7 +622,7 @@ async def save_activity_content(
 
     # Validate activity exists first
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         logger.error(f"[Save Activity Content] Activity not found: {activity_uuid}")
@@ -632,7 +633,7 @@ async def save_activity_content(
 
     # Get organization for permission check
     statement = select(Organization).where(Organization.id == activity.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -656,14 +657,14 @@ async def save_activity_content(
 
         # Add and commit
         db_session.add(activity)
-        db_session.commit()
+        await db_session.commit()
 
         logger.info("[Save Activity Content] Commit completed")
 
         # Verify by re-fetching with a fresh query
         db_session.expire_all()  # Clear any cached data
         statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-        verified_activity = db_session.exec(statement).first()
+        verified_activity = (await db_session.execute(statement)).scalars().first()
 
         if verified_activity and verified_activity.content:
             content_keys = list(verified_activity.content.keys()) if isinstance(verified_activity.content, dict) else 'N/A'
@@ -680,7 +681,7 @@ async def save_activity_content(
         logger.error(f"[Save Activity Content] Error: {e}")
         import traceback
         logger.error(f"[Save Activity Content] Traceback: {traceback.format_exc()}")
-        db_session.rollback()
+        await db_session.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to save content: {str(e)}")
 
 
@@ -698,7 +699,7 @@ async def save_activity_content(
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CoursePlanningSessionResponse:
     """
     Get the current state of a course planning session.

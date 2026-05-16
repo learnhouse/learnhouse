@@ -63,7 +63,7 @@ def _make_token_user(org_id: int) -> APITokenUser:
     )
 
 
-def _add_user_to_org(db, user: User, org, role_id: int = 4) -> UserOrganization:
+async def _add_user_to_org(db, user: User, org, role_id: int = 4) -> UserOrganization:
     uo = UserOrganization(
         user_id=user.id,
         org_id=org.id,
@@ -72,11 +72,11 @@ def _add_user_to_org(db, user: User, org, role_id: int = 4) -> UserOrganization:
         update_date=str(datetime.now()),
     )
     db.add(uo)
-    db.commit()
+    await db.commit()
     return uo
 
 
-def _create_user(db, *, user_id: int, username: str, email: str) -> User:
+async def _create_user(db, *, user_id: int, username: str, email: str) -> User:
     u = User(
         id=user_id,
         username=username,
@@ -89,12 +89,12 @@ def _create_user(db, *, user_id: int, username: str, email: str) -> User:
         update_date=str(datetime.now()),
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     return u
 
 
-def _create_certification(db, course, *, cert_id: int = 10) -> Certifications:
+async def _create_certification(db, course, *, cert_id: int = 10) -> Certifications:
     cert = Certifications(
         id=cert_id,
         course_id=course.id,
@@ -104,12 +104,12 @@ def _create_certification(db, course, *, cert_id: int = 10) -> Certifications:
         update_date=str(datetime.now()),
     )
     db.add(cert)
-    db.commit()
-    db.refresh(cert)
+    await db.commit()
+    await db.refresh(cert)
     return cert
 
 
-def _create_certificate_user(
+async def _create_certificate_user(
     db,
     certification: Certifications,
     user: User,
@@ -126,12 +126,12 @@ def _create_certificate_user(
         updated_at=str(datetime.now()),
     )
     db.add(cu)
-    db.commit()
-    db.refresh(cu)
+    await db.commit()
+    await db.refresh(cu)
     return cu
 
 
-def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
+async def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
     trail = Trail(
         org_id=org.id,
         user_id=user.id,
@@ -140,8 +140,8 @@ def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
         update_date=str(datetime.now()),
     )
     db.add(trail)
-    db.commit()
-    db.refresh(trail)
+    await db.commit()
+    await db.refresh(trail)
 
     tr = TrailRun(
         trail_id=trail.id,
@@ -153,8 +153,8 @@ def _create_trail_run(db, user: User, course: Course, org) -> TrailRun:
         update_date=str(datetime.now()),
     )
     db.add(tr)
-    db.commit()
-    db.refresh(tr)
+    await db.commit()
+    await db.refresh(tr)
     return tr
 
 
@@ -221,8 +221,8 @@ async def test_list_course_enrollments_course_not_found(db, org):
 @pytest.mark.asyncio
 async def test_award_certificate_course_not_found(db, org, user_role):
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=50, username="awardee", email="awardee@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=50, username="awardee", email="awardee@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     mock_request = object()
     with pytest.raises(HTTPException) as exc_info:
@@ -240,8 +240,8 @@ async def test_award_certificate_course_not_found(db, org, user_role):
 async def test_revoke_certificate_certifications_row_missing_raises_404(db, org, course, user_role):
     """Line 1276: cert_user exists but Certifications row doesn't → 404."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=51, username="revokee1", email="revokee1@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=51, username="revokee1", email="revokee1@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     # Create a CertificateUser that points to a certification_id that doesn't exist
     # We do this via a raw insert to avoid FK enforcement on SQLite
@@ -254,7 +254,7 @@ async def test_revoke_certificate_certifications_row_missing_raises_404(db, org,
         updated_at=str(datetime.now()),
     )
     db.add(cu)
-    db.commit()
+    await db.commit()
 
     with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock):
         with pytest.raises(HTTPException) as exc_info:
@@ -266,8 +266,8 @@ async def test_revoke_certificate_certifications_row_missing_raises_404(db, org,
 async def test_revoke_certificate_course_wrong_org_raises_404(db, org, course, user_role):
     """Line 1282: course.org_id != token_user.org_id → 404."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=52, username="revokee2", email="revokee2@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=52, username="revokee2", email="revokee2@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     # Create a course that belongs to a *different* org (id=999)
     other_course = Course(
@@ -283,11 +283,11 @@ async def test_revoke_certificate_course_wrong_org_raises_404(db, org, course, u
         update_date=str(datetime.now()),
     )
     db.add(other_course)
-    db.commit()
-    db.refresh(other_course)
+    await db.commit()
+    await db.refresh(other_course)
 
-    cert = _create_certification(db, other_course, cert_id=11)
-    _create_certificate_user(db, cert, user, cu_id=31, uuid="wrong-org-cert-uuid")
+    cert = await _create_certification(db, other_course, cert_id=11)
+    await _create_certificate_user(db, cert, user, cu_id=31, uuid="wrong-org-cert-uuid")
 
     with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock):
         with pytest.raises(HTTPException) as exc_info:
@@ -306,16 +306,16 @@ async def test_remove_user_from_org_invalidate_cache_raises_is_swallowed(db, org
     token_user = _make_token_user(org.id)
 
     # We need an admin user in the org too (so we're not removing the last admin)
-    admin_user = _create_user(db, user_id=60, username="admin60", email="admin60@test.com")
-    _add_user_to_org(db, admin_user, org, role_id=admin_role.id)
+    admin_user = await _create_user(db, user_id=60, username="admin60", email="admin60@test.com")
+    await _add_user_to_org(db, admin_user, org, role_id=admin_role.id)
 
     # Another admin so there are 2 admins (prevents last-admin guard)
-    admin_user2 = _create_user(db, user_id=61, username="admin61", email="admin61@test.com")
-    _add_user_to_org(db, admin_user2, org, role_id=admin_role.id)
+    admin_user2 = await _create_user(db, user_id=61, username="admin61", email="admin61@test.com")
+    await _add_user_to_org(db, admin_user2, org, role_id=admin_role.id)
 
     # Regular user to remove
-    reg_user = _create_user(db, user_id=62, username="reg62", email="reg62@test.com")
-    _add_user_to_org(db, reg_user, org, role_id=user_role.id)
+    reg_user = await _create_user(db, user_id=62, username="reg62", email="reg62@test.com")
+    await _add_user_to_org(db, reg_user, org, role_id=user_role.id)
 
     with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock):
         with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
@@ -330,14 +330,14 @@ async def test_remove_user_from_org_decrease_feature_usage_raises_is_swallowed(d
     """Lines 852-853: decrease_feature_usage raises → swallowed, function succeeds."""
     token_user = _make_token_user(org.id)
 
-    admin_user = _create_user(db, user_id=63, username="admin63", email="admin63@test.com")
-    _add_user_to_org(db, admin_user, org, role_id=admin_role.id)
+    admin_user = await _create_user(db, user_id=63, username="admin63", email="admin63@test.com")
+    await _add_user_to_org(db, admin_user, org, role_id=admin_role.id)
 
-    admin_user2 = _create_user(db, user_id=64, username="admin64", email="admin64@test.com")
-    _add_user_to_org(db, admin_user2, org, role_id=admin_role.id)
+    admin_user2 = await _create_user(db, user_id=64, username="admin64", email="admin64@test.com")
+    await _add_user_to_org(db, admin_user2, org, role_id=admin_role.id)
 
-    reg_user = _create_user(db, user_id=65, username="reg65", email="reg65@test.com")
-    _add_user_to_org(db, reg_user, org, role_id=user_role.id)
+    reg_user = await _create_user(db, user_id=65, username="reg65", email="reg65@test.com")
+    await _add_user_to_org(db, reg_user, org, role_id=user_role.id)
 
     with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock):
         with patch("src.routers.users._invalidate_session_cache"):
@@ -356,8 +356,8 @@ async def test_remove_user_from_org_decrease_feature_usage_raises_is_swallowed(d
 async def test_update_user_profile_invalidate_cache_raises_is_swallowed(db, org, user_role):
     """Lines 1509-1510: _invalidate_session_cache raises → swallowed."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=70, username="profile70", email="profile70@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=70, username="profile70", email="profile70@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
         result = await update_user_profile(token_user, user.id, {"bio": "updated bio"}, db)
@@ -374,8 +374,8 @@ async def test_update_user_profile_invalidate_cache_raises_is_swallowed(db, org,
 async def test_change_user_role_role_wrong_org_raises_403(db, org, user_role):
     """Line 1529: role.org_id != token_user.org_id → 403."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=80, username="rolechange80", email="rolechange80@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=80, username="rolechange80", email="rolechange80@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     # Create a role that belongs to a different org (999)
     foreign_role = Role(
@@ -389,7 +389,7 @@ async def test_change_user_role_role_wrong_org_raises_403(db, org, user_role):
         update_date=str(datetime.now()),
     )
     db.add(foreign_role)
-    db.commit()
+    await db.commit()
 
     with pytest.raises(HTTPException) as exc_info:
         await change_user_role(token_user, user.id, foreign_role.id, db)
@@ -408,10 +408,10 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
     token_user = _make_token_user(org.id)
 
     # Need at least two admins so we can demote without triggering last-admin guard
-    admin1 = _create_user(db, user_id=81, username="admin81", email="admin81@test.com")
-    _add_user_to_org(db, admin1, org, role_id=admin_role.id)
-    admin2 = _create_user(db, user_id=82, username="admin82", email="admin82@test.com")
-    _add_user_to_org(db, admin2, org, role_id=admin_role.id)
+    admin1 = await _create_user(db, user_id=81, username="admin81", email="admin81@test.com")
+    await _add_user_to_org(db, admin1, org, role_id=admin_role.id)
+    admin2 = await _create_user(db, user_id=82, username="admin82", email="admin82@test.com")
+    await _add_user_to_org(db, admin2, org, role_id=admin_role.id)
 
     with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
         result = await change_user_role(token_user, admin1.id, user_role.id, db)
@@ -429,8 +429,8 @@ async def test_change_user_role_invalidate_cache_raises_is_swallowed(db, org, ad
 async def test_bulk_unenroll_users_user_not_enrolled_goes_to_not_enrolled(db, org, course, user_role):
     """Line 1836: user_id with no TrailRun → appended to not_enrolled."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=90, username="unenroll90", email="unenroll90@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=90, username="unenroll90", email="unenroll90@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     # Do NOT create a TrailRun for this user — they are not enrolled
     result = await bulk_unenroll_users(token_user, course.course_uuid, [user.id], db)
@@ -448,8 +448,8 @@ async def test_bulk_unenroll_users_user_not_enrolled_goes_to_not_enrolled(db, or
 async def test_anonymize_user_invalidate_cache_raises_is_swallowed(db, org, user_role):
     """Lines 1979-1980: _invalidate_session_cache raises → swallowed."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=100, username="anon100", email="anon100@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=100, username="anon100", email="anon100@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     with patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock):
         with patch("src.routers.users._invalidate_session_cache", side_effect=RuntimeError("cache fail")):
@@ -468,11 +468,11 @@ async def test_anonymize_user_invalidate_cache_raises_is_swallowed(db, org, user
 async def test_get_course_analytics_with_certification_and_cert_users(db, org, course, user_role):
     """Line 2058: certification exists and CertificateUser count > 0."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=110, username="certuser110", email="certuser110@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=110, username="certuser110", email="certuser110@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
-    cert = _create_certification(db, course, cert_id=12)
-    _create_certificate_user(db, cert, user, cu_id=40, uuid="analytics-cert-uuid")
+    cert = await _create_certification(db, course, cert_id=12)
+    await _create_certificate_user(db, cert, user, cu_id=40, uuid="analytics-cert-uuid")
 
     result = await get_course_analytics(token_user, course.course_uuid, db)
 
@@ -491,7 +491,7 @@ async def test_get_course_analytics_with_certification_and_cert_users(db, org, c
 async def test_remove_user_from_org_admin_no_membership_row_raises_404(db, org):
     """Line 827: _get_user_in_org succeeds but UserOrganization row missing."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=120, username="orphan120", email="orphan120@test.com")
+    user = await _create_user(db, user_id=120, username="orphan120", email="orphan120@test.com")
 
     with patch("src.services.admin.admin._get_user_in_org", return_value=user):
         with pytest.raises(HTTPException) as exc_info:
@@ -511,7 +511,7 @@ async def test_remove_user_from_org_admin_no_membership_row_raises_404(db, org):
 async def test_change_user_role_no_membership_row_raises_404(db, org, user_role):
     """Line 1538: _get_user_in_org succeeds but UserOrganization row missing."""
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=121, username="orphan121", email="orphan121@test.com")
+    user = await _create_user(db, user_id=121, username="orphan121", email="orphan121@test.com")
 
     with patch("src.services.admin.admin._get_user_in_org", return_value=user):
         with pytest.raises(HTTPException) as exc_info:
@@ -533,8 +533,8 @@ async def test_bulk_unenroll_users_enrolled_user_with_steps_deleted(db, org, cou
     from sqlmodel import select as sql_select
 
     token_user = _make_token_user(org.id)
-    user = _create_user(db, user_id=122, username="enrolled122", email="enrolled122@test.com")
-    _add_user_to_org(db, user, org, role_id=user_role.id)
+    user = await _create_user(db, user_id=122, username="enrolled122", email="enrolled122@test.com")
+    await _add_user_to_org(db, user, org, role_id=user_role.id)
 
     trail = Trail(
         org_id=org.id,
@@ -544,8 +544,8 @@ async def test_bulk_unenroll_users_enrolled_user_with_steps_deleted(db, org, cou
         update_date=str(datetime.now()),
     )
     db.add(trail)
-    db.commit()
-    db.refresh(trail)
+    await db.commit()
+    await db.refresh(trail)
 
     trail_run = TrailRun(
         trail_id=trail.id,
@@ -557,8 +557,8 @@ async def test_bulk_unenroll_users_enrolled_user_with_steps_deleted(db, org, cou
         update_date=str(datetime.now()),
     )
     db.add(trail_run)
-    db.commit()
-    db.refresh(trail_run)
+    await db.commit()
+    await db.refresh(trail_run)
 
     step = TrailStep(
         complete=True,
@@ -575,13 +575,13 @@ async def test_bulk_unenroll_users_enrolled_user_with_steps_deleted(db, org, cou
         update_date=str(datetime.now()),
     )
     db.add(step)
-    db.commit()
-    db.refresh(step)
+    await db.commit()
+    await db.refresh(step)
     step_id = step.id
 
     result = await bulk_unenroll_users(token_user, course.course_uuid, [user.id], db)
 
     assert user.id in result["unenrolled"]
     assert user.id not in result["not_enrolled"]
-    remaining = db.exec(sql_select(TrailStep).where(TrailStep.id == step_id)).first()
+    remaining = (await db.execute(sql_select(TrailStep).where(TrailStep.id == step_id))).scalars().first()
     assert remaining is None

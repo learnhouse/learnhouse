@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 async def check_element_type(element_uuid):
@@ -105,7 +106,7 @@ async def get_id_identifier_of_element(element_uuid):
 
 async def get_element_organization_id(
     element_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Optional[int]:
     """
     Get the organization ID that an element belongs to.
@@ -132,27 +133,27 @@ async def get_element_organization_id(
     element_type = await check_element_type(element_uuid)
 
     if element_type == "courses":
-        return db_session.exec(select(Course.org_id).where(Course.course_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Course.org_id).where(Course.course_uuid == element_uuid))).scalars().first()
 
     elif element_type == "coursechapters":
         # Chapter stores org_id directly, no need to join Course
-        return db_session.exec(select(Chapter.org_id).where(Chapter.chapter_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Chapter.org_id).where(Chapter.chapter_uuid == element_uuid))).scalars().first()
 
     elif element_type == "activities":
         # Activity stores org_id directly, no need to join Course
-        return db_session.exec(select(Activity.org_id).where(Activity.activity_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Activity.org_id).where(Activity.activity_uuid == element_uuid))).scalars().first()
 
     elif element_type == "collections":
-        return db_session.exec(select(Collection.org_id).where(Collection.collection_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Collection.org_id).where(Collection.collection_uuid == element_uuid))).scalars().first()
 
     elif element_type == "organizations":
-        return db_session.exec(select(Organization.id).where(Organization.org_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Organization.id).where(Organization.org_uuid == element_uuid))).scalars().first()
 
     elif element_type == "roles":
-        return db_session.exec(select(Role.org_id).where(Role.role_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Role.org_id).where(Role.role_uuid == element_uuid))).scalars().first()
 
     elif element_type == "usergroups":
-        return db_session.exec(select(UserGroup.org_id).where(UserGroup.usergroup_uuid == element_uuid)).first()
+        return (await db_session.execute(select(UserGroup.org_id).where(UserGroup.usergroup_uuid == element_uuid))).scalars().first()
 
     elif element_type == "users":
         return None
@@ -162,36 +163,36 @@ async def get_element_organization_id(
 
     elif element_type == "communities":
         from src.db.communities.communities import Community
-        return db_session.exec(select(Community.org_id).where(Community.community_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Community.org_id).where(Community.community_uuid == element_uuid))).scalars().first()
 
     elif element_type == "discussions":
         from src.db.communities.discussions import Discussion
-        return db_session.exec(select(Discussion.org_id).where(Discussion.discussion_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Discussion.org_id).where(Discussion.discussion_uuid == element_uuid))).scalars().first()
 
     elif element_type == "votes":
         from src.db.communities.discussion_votes import DiscussionVote
         from src.db.communities.discussions import Discussion
-        return db_session.exec(
+        return (await db_session.execute(
             select(Discussion.org_id)
             .join(DiscussionVote, Discussion.id == DiscussionVote.discussion_id)
             .where(DiscussionVote.vote_uuid == element_uuid)
-        ).first()
+        )).scalars().first()
 
     elif element_type == "podcasts":
         from src.db.podcasts.podcasts import Podcast
-        return db_session.exec(select(Podcast.org_id).where(Podcast.podcast_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Podcast.org_id).where(Podcast.podcast_uuid == element_uuid))).scalars().first()
 
     elif element_type == "episodes":
         from src.db.podcasts.episodes import PodcastEpisode
         from src.db.podcasts.podcasts import Podcast
-        return db_session.exec(
+        return (await db_session.execute(
             select(Podcast.org_id)
             .join(PodcastEpisode, Podcast.id == PodcastEpisode.podcast_id)
             .where(PodcastEpisode.episode_uuid == element_uuid)
-        ).first()
+        )).scalars().first()
 
     elif element_type == "boards":
         from src.db.boards import Board
-        return db_session.exec(select(Board.org_id).where(Board.board_uuid == element_uuid)).first()
+        return (await db_session.execute(select(Board.org_id).where(Board.board_uuid == element_uuid))).scalars().first()
 
     return None

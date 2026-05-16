@@ -1,7 +1,8 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User, UserRead
@@ -23,7 +24,7 @@ async def create_comment(
     discussion_uuid: str,
     content: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionCommentReadWithVoteStatus:
     """
     Create a new comment on a discussion.
@@ -37,7 +38,7 @@ async def create_comment(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -46,7 +47,7 @@ async def create_comment(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -79,12 +80,12 @@ async def create_comment(
     )
 
     db_session.add(comment)
-    db_session.commit()
-    db_session.refresh(comment)
+    await db_session.commit()
+    await db_session.refresh(comment)
 
     # Get author info
     author_statement = select(User).where(User.id == comment.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     await dispatch_webhooks(
         event_name="comment_created",
@@ -108,7 +109,7 @@ async def get_comments_by_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 50,
 ) -> List[DiscussionCommentReadWithVoteStatus]:
@@ -119,7 +120,7 @@ async def get_comments_by_discussion(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         raise HTTPException(status_code=404, detail="Discussion not found")
@@ -128,7 +129,7 @@ async def get_comments_by_discussion(
     community_statement = select(Community).where(
         Community.id == discussion.community_id
     )
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -148,12 +149,12 @@ async def get_comments_by_discussion(
         .limit(limit)
     )
 
-    comments = db_session.exec(query).all()
+    comments = (await db_session.execute(query)).scalars().all()
 
     # Batch fetch authors
     author_ids = [c.author_id for c in comments]
     authors_query = select(User).where(User.id.in_(author_ids))  # type: ignore
-    authors = db_session.exec(authors_query).all()
+    authors = (await db_session.execute(authors_query)).scalars().all()
     authors_map = {a.id: a for a in authors}
 
     # Get user's votes for these comments
@@ -182,7 +183,7 @@ async def update_comment(
     comment_uuid: str,
     comment_update: DiscussionCommentUpdate,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> DiscussionCommentReadWithVoteStatus:
     """
     Update a comment.
@@ -195,7 +196,7 @@ async def update_comment(
     comment_statement = select(DiscussionComment).where(
         DiscussionComment.comment_uuid == comment_uuid
     )
-    comment = db_session.exec(comment_statement).first()
+    comment = (await db_session.execute(comment_statement)).scalars().first()
 
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -211,7 +212,7 @@ async def update_comment(
     discussion_statement = select(Discussion).where(
         Discussion.id == comment.discussion_id
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     # Check content moderation for updated content
     if comment_update.content is not None and discussion:
@@ -226,12 +227,12 @@ async def update_comment(
     comment.update_date = str(datetime.now())
 
     db_session.add(comment)
-    db_session.commit()
-    db_session.refresh(comment)
+    await db_session.commit()
+    await db_session.refresh(comment)
 
     # Get author info
     author_statement = select(User).where(User.id == comment.author_id)
-    author = db_session.exec(author_statement).first()
+    author = (await db_session.execute(author_statement)).scalars().first()
 
     # Get user's vote status
     user_votes = await get_user_votes_for_comments(
@@ -249,7 +250,7 @@ async def delete_comment(
     request: Request,
     comment_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Delete a comment.
@@ -262,7 +263,7 @@ async def delete_comment(
     comment_statement = select(DiscussionComment).where(
         DiscussionComment.comment_uuid == comment_uuid
     )
-    comment = db_session.exec(comment_statement).first()
+    comment = (await db_session.execute(comment_statement)).scalars().first()
 
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
@@ -271,7 +272,7 @@ async def delete_comment(
     discussion_statement = select(Discussion).where(
         Discussion.id == comment.discussion_id
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     # Check if user is the author or has admin rights
     is_author = comment.author_id == current_user.id
@@ -282,7 +283,7 @@ async def delete_comment(
             community_statement = select(Community).where(
                 Community.id == discussion.community_id
             )
-            community = db_session.exec(community_statement).first()
+            community = (await db_session.execute(community_statement)).scalars().first()
 
             if community:
                 try:
@@ -305,15 +306,15 @@ async def delete_comment(
                 detail="You can only delete your own comments"
             )
 
-    db_session.delete(comment)
-    db_session.commit()
+    await db_session.delete(comment)
+    await db_session.commit()
 
     return {"detail": "Comment deleted"}
 
 
 async def get_comment_count(
     discussion_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """
     Get the count of comments for a discussion.
@@ -321,7 +322,7 @@ async def get_comment_count(
     discussion_statement = select(Discussion).where(
         Discussion.discussion_uuid == discussion_uuid
     )
-    discussion = db_session.exec(discussion_statement).first()
+    discussion = (await db_session.execute(discussion_statement)).scalars().first()
 
     if not discussion:
         return 0
@@ -330,6 +331,6 @@ async def get_comment_count(
     count_statement = select(func.count(DiscussionComment.id)).where(
         DiscussionComment.discussion_id == discussion.id
     )
-    count = db_session.exec(count_statement).first()
+    count = (await db_session.execute(count_statement)).scalar_one_or_none()
 
     return count or 0

@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -10,15 +10,18 @@ from src.security.rbac.utils import (
 )
 
 
-def _query_result(value):
-    result = Mock()
-    result.first.return_value = value
-    return result
-
-
 def _session_with_results(*values):
-    session = Mock()
-    session.exec.side_effect = [_query_result(value) for value in values]
+    """Async session whose execute().scalars().first() returns each value in order."""
+    session = AsyncMock()
+    execute_results = []
+    for value in values:
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.first.return_value = value
+        execute_results.append(mock_result)
+    if len(execute_results) == 1:
+        session.execute.return_value = execute_results[0]
+    else:
+        session.execute.side_effect = execute_results
     return session
 
 
@@ -109,7 +112,7 @@ class TestRBACUtilsRuntime:
 
     @pytest.mark.asyncio
     async def test_get_element_organization_id_unknown_type_returns_none(self):
-        session = Mock()
+        session = AsyncMock()
 
         with patch(
             "src.security.rbac.utils.check_element_type",
@@ -117,4 +120,4 @@ class TestRBACUtilsRuntime:
         ):
             assert await get_element_organization_id("mystery_1", session) is None
 
-        session.exec.assert_not_called()
+        session.execute.assert_not_called()

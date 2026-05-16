@@ -26,7 +26,7 @@ from src.services.courses.transfer.export_service import (
 )
 
 
-def _make_course(
+async def _make_course(
     db,
     org,
     *,
@@ -57,12 +57,12 @@ def _make_course(
         update_date=str(datetime.now()),
     )
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
     return course
 
 
-def _make_chapter(db, org, course, *, id: int, chapter_uuid: str, order: int, name: str):
+async def _make_chapter(db, org, course, *, id: int, chapter_uuid: str, order: int, name: str):
     chapter = Chapter(
         id=id,
         name=name,
@@ -75,8 +75,8 @@ def _make_chapter(db, org, course, *, id: int, chapter_uuid: str, order: int, na
         update_date=str(datetime.now()),
     )
     db.add(chapter)
-    db.commit()
-    db.refresh(chapter)
+    await db.commit()
+    await db.refresh(chapter)
     db.add(
         CourseChapter(
             chapter_id=chapter.id,
@@ -87,11 +87,11 @@ def _make_chapter(db, org, course, *, id: int, chapter_uuid: str, order: int, na
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return chapter
 
 
-def _make_activity(
+async def _make_activity(
     db,
     org,
     course,
@@ -122,8 +122,8 @@ def _make_activity(
         update_date=str(datetime.now()),
     )
     db.add(activity)
-    db.commit()
-    db.refresh(activity)
+    await db.commit()
+    await db.refresh(activity)
     db.add(
         ChapterActivity(
             order=order,
@@ -135,11 +135,11 @@ def _make_activity(
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return activity
 
 
-def _make_block(db, org, course, chapter, activity, *, id: int, block_uuid: str, block_type: BlockTypeEnum):
+async def _make_block(db, org, course, chapter, activity, *, id: int, block_uuid: str, block_type: BlockTypeEnum):
     block = Block(
         id=id,
         block_type=block_type,
@@ -153,8 +153,8 @@ def _make_block(db, org, course, chapter, activity, *, id: int, block_uuid: str,
         update_date=str(datetime.now()),
     )
     db.add(block)
-    db.commit()
-    db.refresh(block)
+    await db.commit()
+    await db.refresh(block)
     return block
 
 
@@ -198,7 +198,7 @@ class TestExportCoursesBatchValidation:
     async def test_export_courses_batch_rejects_missing_organization(
         self, mock_request, db, admin_user
     ):
-        course = _make_course(
+        course = await _make_course(
             db,
             Organization(
                 id=99,
@@ -228,7 +228,7 @@ class TestExportCoursesBatchValidation:
     async def test_export_courses_batch_rejects_cross_org_exports(
         self, mock_request, db, org, other_org, course, admin_user
     ):
-        other_course = _make_course(
+        other_course = await _make_course(
             db,
             other_org,
             id=2,
@@ -285,16 +285,17 @@ class TestExportCoursesBatchValidation:
 
 
 class TestLoadCourseExportData:
-    def test_load_course_export_data_serializes_chapters_activities_and_blocks(
+    @pytest.mark.asyncio
+    async def test_load_course_export_data_serializes_chapters_activities_and_blocks(
         self, db, org, course, chapter, activity
     ):
         course.thumbnail_type = ThumbnailType.BOTH
         course.seo = {"nested": {"title": "course-title"}}
         db.add(course)
-        db.commit()
-        db.refresh(course)
+        await db.commit()
+        await db.refresh(course)
 
-        second_chapter = _make_chapter(
+        second_chapter = await _make_chapter(
             db,
             org,
             course,
@@ -303,7 +304,7 @@ class TestLoadCourseExportData:
             order=2,
             name="Second Chapter",
         )
-        dynamic_activity = _make_activity(
+        dynamic_activity = await _make_activity(
             db,
             org,
             course,
@@ -318,7 +319,7 @@ class TestLoadCourseExportData:
             content={"content": {"nested": ["a"]}},
             details={"details": {"nested": ["b"]}},
         )
-        _make_block(
+        await _make_block(
             db,
             org,
             course,
@@ -328,7 +329,7 @@ class TestLoadCourseExportData:
             block_uuid="block_dynamic",
             block_type=BlockTypeEnum.BLOCK_DOCUMENT_PDF,
         )
-        _make_activity(
+        await _make_activity(
             db,
             org,
             course,
@@ -344,7 +345,7 @@ class TestLoadCourseExportData:
             details=None,
         )
 
-        course_data, chapters = _load_course_export_data(course, db)
+        course_data, chapters = await _load_course_export_data(course, db)
 
         assert course_data["course_uuid"] == "course_test"
         assert course_data["thumbnail_type"] == ThumbnailType.BOTH.value
@@ -373,10 +374,11 @@ class TestLoadCourseExportData:
             }
         ]
 
-    def test_load_course_export_data_handles_course_without_thumbnail_or_chapters(
+    @pytest.mark.asyncio
+    async def test_load_course_export_data_handles_course_without_thumbnail_or_chapters(
         self, db, org
     ):
-        empty_course = _make_course(
+        empty_course = await _make_course(
             db,
             org,
             id=99,
@@ -385,10 +387,10 @@ class TestLoadCourseExportData:
         )
         empty_course.thumbnail_type = None
         db.add(empty_course)
-        db.commit()
-        db.refresh(empty_course)
+        await db.commit()
+        await db.refresh(empty_course)
 
-        course_data, chapters = _load_course_export_data(empty_course, db)
+        course_data, chapters = await _load_course_export_data(empty_course, db)
 
         assert course_data["thumbnail_type"] is None
         assert chapters == []

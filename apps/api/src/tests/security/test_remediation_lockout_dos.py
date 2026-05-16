@@ -7,38 +7,40 @@ the existing brute-force protection is preserved.
 """
 
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
-from sqlmodel import Session
+import pytest
 
 from src.services.security import account_lockout
 
 
-def test_single_ip_does_not_lock_account_even_past_threshold():
+@pytest.mark.asyncio
+async def test_single_ip_does_not_lock_account_even_past_threshold():
     """
     F-08: 10 failed attempts from the SAME IP must not trigger the lockout
     (distinct_ips < 2). Previously this was the DoS primitive — any attacker
     could lock any victim's account with 10 requests to /auth/login.
     """
     user = SimpleNamespace(id=7, locked_until=None)
-    db_session = Mock(spec=Session)
+    db_session = AsyncMock()
 
     # Fake Redis reporting only one distinct IP for this account.
     with patch.object(
         account_lockout, "_record_failed_ip", return_value=1
     ):
         for _ in range(10):
-            is_locked, _ = account_lockout.record_failed_login(
+            is_locked, _ = await account_lockout.record_failed_login(
                 user, db_session, ip_address="1.2.3.4"
             )
 
-    # db_session.refresh is a Mock — so user.locked_until stays None — and
-    # we expect no lock.
+    # db_session.refresh is an AsyncMock — so user.locked_until stays None —
+    # and we expect no lock.
     assert user.locked_until is None
     assert is_locked is False
 
 
-def test_multi_ip_failures_still_lock_account(monkeypatch):
+@pytest.mark.asyncio
+async def test_multi_ip_failures_still_lock_account(monkeypatch):
     """
     Distributed brute-force (attempts across ≥2 IPs) still locks the account.
     F-08 closes the DoS amplifier, not the legitimate lockout.
@@ -52,9 +54,9 @@ def test_multi_ip_failures_still_lock_account(monkeypatch):
     # refresh copies that value back. We simulate by setting it directly.
     future = "2999-01-01T00:00:00+00:00"
     user = SimpleNamespace(id=8, locked_until=future)
-    db_session = Mock(spec=Session)
+    db_session = AsyncMock()
 
-    is_locked, duration = account_lockout.record_failed_login(
+    is_locked, duration = await account_lockout.record_failed_login(
         user, db_session, ip_address="2.2.2.2"
     )
 
@@ -62,7 +64,8 @@ def test_multi_ip_failures_still_lock_account(monkeypatch):
     assert duration == account_lockout.LOCKOUT_DURATION_MINUTES * 60
 
 
-def test_record_failed_login_is_backwards_compatible_without_ip():
+@pytest.mark.asyncio
+async def test_record_failed_login_is_backwards_compatible_without_ip():
     """
     Existing callers that did not pass ``ip_address`` still work (the kwarg
     is optional). Without an IP we treat ``distinct_ips=1`` (no lock via the
@@ -70,9 +73,9 @@ def test_record_failed_login_is_backwards_compatible_without_ip():
     semantics for legacy call sites.
     """
     user = SimpleNamespace(id=9, locked_until=None)
-    db_session = Mock(spec=Session)
+    db_session = AsyncMock()
 
     # Should not raise TypeError.
-    is_locked, duration = account_lockout.record_failed_login(user, db_session)
+    is_locked, duration = await account_lockout.record_failed_login(user, db_session)
     assert is_locked is False
     assert duration is None

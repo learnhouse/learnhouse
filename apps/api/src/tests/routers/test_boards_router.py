@@ -103,7 +103,7 @@ class TestBoardsRouter:
             update_date="2024-01-01",
         )
         db.add(board)
-        db.commit()
+        await db.commit()
 
         orphan_board = Board(
             id=3,
@@ -118,7 +118,7 @@ class TestBoardsRouter:
             update_date="2024-01-01",
         )
         db.add(orphan_board)
-        db.commit()
+        await db.commit()
 
         events = []
         async for item in boards_event_generator(_failing_stream(), "session-error"):
@@ -134,27 +134,30 @@ class TestBoardsRouter:
 
         with patch(
             "src.routers.boards.boards_playground.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.boards.boards_playground.plan_meets_requirement",
             return_value=True,
         ):
-            assert get_boards_org_ai_model(org.id, db) == "gemini-3-flash-preview"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-3-flash-preview"
 
         with patch(
             "src.routers.boards.boards_playground.get_org_plan",
+            new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
-            assert get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
 
         with patch(
             "src.routers.boards.boards_playground.get_org_plan",
+            new_callable=AsyncMock,
             return_value="basic",
         ), patch(
             "src.routers.boards.boards_playground.plan_meets_requirement",
             return_value=False,
         ):
-            assert get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
+            assert await get_boards_org_ai_model(org.id, db) == "gemini-2.5-flash-lite"
 
         with patch("src.routers.boards.boards_playground.reserve_ai_credit"), patch(
             "src.routers.boards.boards_playground.get_org_ai_model",
@@ -346,7 +349,7 @@ class TestBoardsRouter:
             update_date="2024-01-01",
         )
         db.add(missing_org_board)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.routers.boards.boards_playground.get_boards_playground_session",
@@ -616,7 +619,7 @@ class TestBoardsRouter:
             update_date="2024-01-01",
         )
         db.add(board)
-        db.commit()
+        await db.commit()
 
         fake_session = SimpleNamespace(
             session_uuid="session1",

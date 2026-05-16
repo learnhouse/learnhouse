@@ -1,7 +1,8 @@
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select, func, col
+from sqlmodel import select, func, col
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request, UploadFile
 from src.db.boards import (
     Board,
@@ -29,7 +30,7 @@ async def create_board(
     org_id: int,
     board_object: BoardCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardRead:
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
 
@@ -43,8 +44,8 @@ async def create_board(
     )
 
     db_session.add(board)
-    db_session.flush()
-    db_session.refresh(board)
+    await db_session.flush()
+    await db_session.refresh(board)
 
     # Add creator as owner
     member = BoardMember(
@@ -65,7 +66,7 @@ async def create_board(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.commit()
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="board_created",
@@ -77,25 +78,25 @@ async def create_board(
         },
     )
 
-    return _board_to_read(board, db_session)
+    return await _board_to_read(board, db_session)
 
 
 async def get_board(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardRead:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
-    return _board_to_read(board, db_session)
+    return await _board_to_read(board, db_session)
 
 
 async def get_boards_by_org(
     request: Request,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[BoardRead]:
     # Require org membership before listing boards — prevents unauthenticated
     # and cross-org enumeration of boards.
@@ -106,16 +107,16 @@ async def get_boards_by_org(
         .where(Board.org_id == org_id)
         .order_by(Board.creation_date.desc())
     )
-    boards = db_session.exec(statement).all()
+    boards = (await db_session.execute(statement)).scalars().all()
     if not boards:
         return []
 
     board_ids = [b.id for b in boards]
-    count_rows = db_session.exec(
+    count_rows = (await db_session.execute(
         select(BoardMember.board_id, func.count(BoardMember.id))
         .where(col(BoardMember.board_id).in_(board_ids))
         .group_by(BoardMember.board_id)
-    ).all()
+    )).all()
     counts = {row[0]: row[1] for row in count_rows}
 
     return [
@@ -129,9 +130,9 @@ async def update_board(
     board_uuid: str,
     board_object: BoardUpdate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardRead:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
     for var, value in vars(board_object).items():
@@ -140,19 +141,19 @@ async def update_board(
 
     board.update_date = str(datetime.now())
     db_session.add(board)
-    db_session.commit()
-    db_session.refresh(board)
+    await db_session.commit()
+    await db_session.refresh(board)
 
-    return _board_to_read(board, db_session)
+    return await _board_to_read(board, db_session)
 
 
 async def duplicate_board(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardRead:
-    source = _get_board_or_404(board_uuid, db_session)
+    source = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, source.board_uuid, AccessAction.READ)
     # Also need create permission
     await check_resource_access(request, db_session, current_user, "board_x", AccessAction.CREATE)
@@ -170,8 +171,8 @@ async def duplicate_board(
     )
 
     db_session.add(board)
-    db_session.flush()
-    db_session.refresh(board)
+    await db_session.flush()
+    await db_session.refresh(board)
 
     # Add current user as owner
     member = BoardMember(
@@ -191,22 +192,22 @@ async def duplicate_board(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.commit()
+    await db_session.commit()
 
-    return _board_to_read(board, db_session)
+    return await _board_to_read(board, db_session)
 
 
 async def delete_board(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.DELETE)
 
-    db_session.delete(board)
-    db_session.commit()
+    await db_session.delete(board)
+    await db_session.commit()
 
     return {"detail": "Board deleted"}
 
@@ -216,25 +217,25 @@ async def add_board_member(
     board_uuid: str,
     member_object: BoardMemberCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardMemberRead:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
     # Check member limit (max 10 per board)
-    member_count = db_session.exec(
+    member_count = (await db_session.execute(
         select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
-    ).one()
+    )).scalar_one()
     if member_count >= 10:
         raise HTTPException(status_code=403, detail="Board member limit reached (max 10)")
 
     # Check if already a member
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(BoardMember).where(
             BoardMember.board_id == board.id,
             BoardMember.user_id == member_object.user_id,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         raise HTTPException(status_code=409, detail="User is already a board member")
 
@@ -245,8 +246,8 @@ async def add_board_member(
         creation_date=str(datetime.now()),
     )
     db_session.add(member)
-    db_session.commit()
-    db_session.refresh(member)
+    await db_session.commit()
+    await db_session.refresh(member)
 
     await dispatch_webhooks(
         event_name="board_member_added",
@@ -258,7 +259,7 @@ async def add_board_member(
         },
     )
 
-    return _member_to_read(member, db_session)
+    return await _member_to_read(member, db_session)
 
 
 async def add_board_members_batch(
@@ -266,15 +267,15 @@ async def add_board_members_batch(
     board_uuid: str,
     batch_object: BoardMemberBatchCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[BoardMemberRead]:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
     # Current member count
-    member_count = db_session.exec(
+    member_count = (await db_session.execute(
         select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
-    ).one()
+    )).scalar_one()
 
     added: List[BoardMemberRead] = []
 
@@ -284,12 +285,12 @@ async def add_board_members_batch(
             break
 
         # Skip duplicates silently
-        existing = db_session.exec(
+        existing = (await db_session.execute(
             select(BoardMember).where(
                 BoardMember.board_id == board.id,
                 BoardMember.user_id == member_create.user_id,
             )
-        ).first()
+        )).scalars().first()
         if existing:
             continue
 
@@ -300,11 +301,11 @@ async def add_board_members_batch(
             creation_date=str(datetime.now()),
         )
         db_session.add(member)
-        db_session.flush()  # get the id without committing
-        db_session.refresh(member)
-        added.append(_member_to_read(member, db_session))
+        await db_session.flush()  # get the id without committing
+        await db_session.refresh(member)
+        added.append(await _member_to_read(member, db_session))
 
-    db_session.commit()
+    await db_session.commit()
     return added
 
 
@@ -313,17 +314,17 @@ async def remove_board_member(
     board_uuid: str,
     user_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
-    member = db_session.exec(
+    member = (await db_session.execute(
         select(BoardMember).where(
             BoardMember.board_id == board.id,
             BoardMember.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
 
     if not member:
         raise HTTPException(status_code=404, detail="Board member not found")
@@ -331,8 +332,8 @@ async def remove_board_member(
     if member.role == BoardMemberRole.OWNER:
         raise HTTPException(status_code=400, detail="Cannot remove the board owner")
 
-    db_session.delete(member)
-    db_session.commit()
+    await db_session.delete(member)
+    await db_session.commit()
 
     return {"detail": "Member removed"}
 
@@ -341,15 +342,15 @@ async def check_board_membership(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> BoardMemberRead:
     # Single joined query: Board + BoardMember + User in one round-trip
-    result = db_session.exec(
+    result = (await db_session.execute(
         select(BoardMember, User)
         .join(Board, BoardMember.board_id == Board.id)
         .join(User, BoardMember.user_id == User.id)
         .where(Board.board_uuid == board_uuid, BoardMember.user_id == current_user.id)
-    ).first()
+    )).first()
 
     if result:
         member, user = result
@@ -365,7 +366,7 @@ async def check_board_membership(
             user_uuid=user.user_uuid if user else None,
         )
 
-    board = db_session.exec(select(Board).where(Board.board_uuid == board_uuid)).first()
+    board = (await db_session.execute(select(Board).where(Board.board_uuid == board_uuid))).scalars().first()
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
 
@@ -373,7 +374,7 @@ async def check_board_membership(
     # resource authors, and org admins can still join the collab session as viewers.
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
 
-    user = db_session.exec(select(User).where(User.id == current_user.id)).first()
+    user = (await db_session.execute(select(User).where(User.id == current_user.id))).scalars().first()
     return BoardMemberRead(
         id=0,
         board_id=board.id,
@@ -391,21 +392,21 @@ async def get_board_members(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[BoardMemberRead]:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.READ)
 
-    members = db_session.exec(
+    members = (await db_session.execute(
         select(BoardMember).where(BoardMember.board_id == board.id)
-    ).all()
+    )).scalars().all()
     if not members:
         return []
 
     user_ids = [m.user_id for m in members]
     users = {
         u.id: u
-        for u in db_session.exec(select(User).where(col(User.id).in_(user_ids))).all()
+        for u in (await db_session.execute(select(User).where(col(User.id).in_(user_ids)))).scalars().all()
     }
     return [
         BoardMemberRead(
@@ -427,13 +428,13 @@ async def update_board_thumbnail(
     request: Request,
     board_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     thumbnail_file: UploadFile | None = None,
 ) -> BoardRead:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     await check_resource_access(request, db_session, current_user, board.board_uuid, AccessAction.UPDATE)
 
-    org = db_session.exec(select(Organization).where(Organization.id == board.org_id)).first()
+    org = (await db_session.execute(select(Organization).where(Organization.id == board.org_id))).scalars().first()
 
     if not thumbnail_file or not thumbnail_file.filename:
         raise HTTPException(status_code=400, detail="No thumbnail file provided")
@@ -450,57 +451,57 @@ async def update_board_thumbnail(
     board.thumbnail_image = name_in_disk
     board.update_date = str(datetime.now())
     db_session.add(board)
-    db_session.commit()
-    db_session.refresh(board)
+    await db_session.commit()
+    await db_session.refresh(board)
 
-    return _board_to_read(board, db_session)
+    return await _board_to_read(board, db_session)
 
 
 async def get_ydoc_state(
     board_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Optional[bytes]:
-    board = _get_board_or_404(board_uuid, db_session)
+    board = await _get_board_or_404(board_uuid, db_session)
     return board.ydoc_state
 
 
 async def store_ydoc_state(
     board_uuid: str,
     state: bytes,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     # Use SELECT ... FOR UPDATE to prevent concurrent writes from overwriting each other
     statement = select(Board).where(Board.board_uuid == board_uuid).with_for_update()
-    board = db_session.exec(statement).first()
+    board = (await db_session.execute(statement)).scalars().first()
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
     board.ydoc_state = state
     board.update_date = str(datetime.now())
     db_session.add(board)
-    db_session.commit()
+    await db_session.commit()
     return {"detail": "Ydoc state stored"}
 
 
-def _get_board_or_404(board_uuid: str, db_session: Session) -> Board:
+async def _get_board_or_404(board_uuid: str, db_session: AsyncSession) -> Board:
     statement = select(Board).where(Board.board_uuid == board_uuid)
-    board = db_session.exec(statement).first()
+    board = (await db_session.execute(statement)).scalars().first()
     if not board:
         raise HTTPException(status_code=404, detail="Board not found")
     return board
 
 
-def _board_to_read(board: Board, db_session: Session) -> BoardRead:
-    member_count = db_session.exec(
+async def _board_to_read(board: Board, db_session: AsyncSession) -> BoardRead:
+    member_count = (await db_session.execute(
         select(func.count(BoardMember.id)).where(BoardMember.board_id == board.id)
-    ).one()
+    )).scalar_one()
     return BoardRead(
         **board.model_dump(exclude={"ydoc_state"}),
         member_count=member_count,
     )
 
 
-def _member_to_read(member: BoardMember, db_session: Session) -> BoardMemberRead:
-    user = db_session.exec(select(User).where(User.id == member.user_id)).first()
+async def _member_to_read(member: BoardMember, db_session: AsyncSession) -> BoardMemberRead:
+    user = (await db_session.execute(select(User).where(User.id == member.user_id))).scalars().first()
     return BoardMemberRead(
         id=member.id,
         board_id=member.board_id,

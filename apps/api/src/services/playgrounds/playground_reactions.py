@@ -1,7 +1,8 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, User
@@ -18,21 +19,21 @@ async def get_playground_reactions(
     request: Request,
     playground_uuid: str,
     current_user: Union[PublicUser, AnonymousUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[PlaygroundReactionSummary]:
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    _check_read_access(playground, current_user, db_session)
+    await _check_read_access(playground, current_user, db_session)
 
-    reactions = db_session.exec(
+    reactions = (await db_session.execute(
         select(PlaygroundReaction).where(
             PlaygroundReaction.playground_id == playground.id
         )
-    ).all()
+    )).scalars().all()
 
     emoji_groups: dict = {}
     for reaction in reactions:
@@ -41,7 +42,7 @@ async def get_playground_reactions(
     summaries = []
     for emoji, emoji_reactions in emoji_groups.items():
         user_ids = [r.user_id for r in emoji_reactions]
-        users = db_session.exec(select(User).where(User.id.in_(user_ids))).all()  # type: ignore
+        users = (await db_session.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()  # type: ignore
         user_list = [
             ReactionUser(
                 id=u.id,
@@ -76,30 +77,30 @@ async def toggle_playground_reaction(
     playground_uuid: str,
     emoji: str,
     current_user: Union[PublicUser, AnonymousUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    _check_read_access(playground, current_user, db_session)
+    await _check_read_access(playground, current_user, db_session)
 
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(PlaygroundReaction).where(
             PlaygroundReaction.playground_id == playground.id,
             PlaygroundReaction.user_id == current_user.id,
             PlaygroundReaction.emoji == emoji,
         )
-    ).first()
+    )).scalars().first()
 
     if existing:
-        db_session.delete(existing)
-        db_session.commit()
+        await db_session.delete(existing)
+        await db_session.commit()
         return {"action": "removed", "emoji": emoji}
 
     reaction = PlaygroundReaction(
@@ -110,5 +111,5 @@ async def toggle_playground_reaction(
         creation_date=str(datetime.utcnow()),
     )
     db_session.add(reaction)
-    db_session.commit()
+    await db_session.commit()
     return {"action": "added", "emoji": emoji}

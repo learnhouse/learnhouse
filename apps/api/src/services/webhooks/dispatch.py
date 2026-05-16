@@ -14,9 +14,9 @@ from typing import List, Optional
 from uuid import uuid4
 
 import httpx
-from sqlmodel import Session, select, col, delete
+from sqlmodel import select, col, delete
 
-from src.core.events.database import engine
+from src.core.events.database import _async_session_factory
 from src.db.webhooks import WebhookEndpoint, WebhookDeliveryLog
 from src.services.utils.ssrf_guard import (
     SSRFBlockedError,
@@ -108,7 +108,7 @@ async def _deliver_webhooks(
     try:
         # Short-lived DB session -- fetch endpoint data then release immediately.
         endpoints: list[_EndpointInfo] = []
-        with Session(engine) as db_session:
+        async with _async_session_factory() as db_session:
             if webhook_ids:
                 statement = select(WebhookEndpoint).where(
                     WebhookEndpoint.id.in_(webhook_ids),  # type: ignore
@@ -119,7 +119,7 @@ async def _deliver_webhooks(
                     WebhookEndpoint.org_id == org_id,
                     WebhookEndpoint.is_active == True,
                 )
-            for ep in db_session.exec(statement).all():
+            for ep in (await db_session.execute(statement)).scalars().all():
                 if webhook_ids or event_name in (ep.events or []):
                     endpoints.append(_EndpointInfo(
                         id=ep.id,  # type: ignore
@@ -223,9 +223,9 @@ async def _deliver_to_endpoint(
             log_entry.error_message = str(e)[:1000]
 
         # Short-lived session just to persist the log entry.
-        with Session(engine) as db_session:
+        async with _async_session_factory() as db_session:
             db_session.add(log_entry)
-            db_session.commit()
+            await db_session.commit()
             success = bool(log_entry.success)
 
         if success:
@@ -236,31 +236,30 @@ async def _deliver_to_endpoint(
             delay = BACKOFF_DELAYS[attempt - 1] if attempt - 1 < len(BACKOFF_DELAYS) else BACKOFF_DELAYS[-1]
             await asyncio.sleep(delay)
 
-    # Prune old logs for this endpoint (offloaded to a thread to avoid
-    # blocking the event loop with synchronous DB I/O).
-    await asyncio.to_thread(_prune_delivery_logs, ep.id)
+    # Prune old logs for this endpoint asynchronously.
+    await _prune_delivery_logs(ep.id)
 
 
-def _prune_delivery_logs(webhook_id: int) -> None:
+async def _prune_delivery_logs(webhook_id: int) -> None:
     """Keep only the most recent LOG_RETENTION_PER_ENDPOINT logs per endpoint."""
     try:
-        with Session(engine) as db_session:
-            ordered_ids = db_session.exec(
+        async with _async_session_factory() as db_session:
+            ordered_ids = (await db_session.execute(
                 select(WebhookDeliveryLog.id)
                 .where(WebhookDeliveryLog.webhook_id == webhook_id)
                 .order_by(col(WebhookDeliveryLog.id).desc())
-            ).all()
+            )).scalars().all()
             stale_ids = [
                 row if isinstance(row, int) else row[0]
                 for row in ordered_ids[LOG_RETENTION_PER_ENDPOINT:]
             ]
             if stale_ids:
-                db_session.exec(
+                await db_session.execute(
                     delete(WebhookDeliveryLog).where(
                         WebhookDeliveryLog.webhook_id == webhook_id,
                         WebhookDeliveryLog.id.in_(stale_ids),
                     )
                 )
-                db_session.commit()
+                await db_session.commit()
     except Exception:
         logger.warning("Failed to prune webhook delivery logs for endpoint %s", webhook_id)

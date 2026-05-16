@@ -43,9 +43,9 @@ class TestCreateChapter:
             result = await create_chapter(mock_request, chapter_object, admin_user, db)
 
         assert result.name == "New Chapter"
-        link = db.exec(
+        link = (await db.execute(
             select(CourseChapter).where(CourseChapter.chapter_id == result.id)
-        ).first()
+        )).scalars().first()
         assert link is not None
         assert link.order == 2
 
@@ -82,7 +82,7 @@ class TestGetChapter:
     ):
         chapter.course_id = 999
         db.add(chapter)
-        db.commit()
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             await get_chapter(mock_request, chapter.id, admin_user, db)
@@ -142,7 +142,7 @@ class TestUpdateChapter:
     ):
         chapter.course_id = 999
         db.add(chapter)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.chapters.check_resource_access",
@@ -169,11 +169,11 @@ class TestDeleteChapter:
             result = await delete_chapter(mock_request, chapter.id, admin_user, db)
 
         assert result == {"detail": "chapter deleted"}
-        assert db.exec(select(Chapter).where(Chapter.id == chapter.id)).first() is None
+        assert (await db.execute(select(Chapter).where(Chapter.id == chapter.id))).scalars().first() is None
         assert (
-            db.exec(
+            (await db.execute(
                 select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
-            ).all()
+            )).scalars().all()
             == []
         )
 
@@ -193,7 +193,7 @@ class TestDeleteChapter:
     ):
         chapter.course_id = 999
         db.add(chapter)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.chapters.check_resource_access",
@@ -222,8 +222,8 @@ class TestCourseChapters:
             update_date="2024-01-01",
         )
         db.add(second_chapter)
-        db.commit()
-        db.refresh(second_chapter)
+        await db.commit()
+        await db.refresh(second_chapter)
 
         db.add(
             CourseChapter(
@@ -235,7 +235,7 @@ class TestCourseChapters:
                 update_date="2024-01-01",
             )
         )
-        db.commit()
+        await db.commit()
 
         second_activity = Activity(
             name="Second Activity",
@@ -253,8 +253,8 @@ class TestCourseChapters:
             last_modified_by_id=admin_user.id,
         )
         db.add(second_activity)
-        db.commit()
-        db.refresh(second_activity)
+        await db.commit()
+        await db.refresh(second_activity)
 
         # Link second_activity to second_chapter (chapter+activity link is set
         # up by the `activity` fixture). The unique constraint on
@@ -270,7 +270,7 @@ class TestCourseChapters:
                 update_date="2024-01-01",
             )
         )
-        db.commit()
+        await db.commit()
 
         slim_result = await get_course_chapters(
             mock_request,
@@ -357,8 +357,8 @@ class TestReorderChaptersAndActivities:
             update_date="2024-01-01",
         )
         db.add(extra_chapter)
-        db.commit()
-        db.refresh(extra_chapter)
+        await db.commit()
+        await db.refresh(extra_chapter)
 
         stale_link = CourseChapter(
             chapter_id=extra_chapter.id,
@@ -379,7 +379,7 @@ class TestReorderChaptersAndActivities:
         )
         db.add(stale_link)
         db.add(stale_activity_link)
-        db.commit()
+        await db.commit()
 
         payload = ChapterUpdateOrder.model_validate(
             {
@@ -401,14 +401,14 @@ class TestReorderChaptersAndActivities:
             )
 
         assert result["detail"] == "Chapters and activities reordered successfully"
-        remaining_chapters = db.exec(
+        remaining_chapters = (await db.execute(
             select(CourseChapter).where(CourseChapter.course_id == course.id)
-        ).all()
+        )).scalars().all()
         assert len(remaining_chapters) == 1
         assert remaining_chapters[0].chapter_id == chapter.id
-        remaining_activities = db.exec(
+        remaining_activities = (await db.execute(
             select(ChapterActivity).where(ChapterActivity.course_id == course.id)
-        ).all()
+        )).scalars().all()
         assert len(remaining_activities) == 1
         assert remaining_activities[0].chapter_id == chapter.id
 
@@ -427,8 +427,8 @@ class TestReorderChaptersAndActivities:
             update_date="2024-01-01",
         )
         db.add(third_chapter)
-        db.commit()
-        db.refresh(third_chapter)
+        await db.commit()
+        await db.refresh(third_chapter)
 
         third_activity = Activity(
             name="Third Activity",
@@ -444,8 +444,8 @@ class TestReorderChaptersAndActivities:
             current_version=1,
         )
         db.add(third_activity)
-        db.commit()
-        db.refresh(third_activity)
+        await db.commit()
+        await db.refresh(third_activity)
 
         payload = ChapterUpdateOrder.model_validate(
             {
@@ -475,13 +475,13 @@ class TestReorderChaptersAndActivities:
             )
 
         assert result["detail"] == "Chapters and activities reordered successfully"
-        new_course_chapter = db.exec(
+        new_course_chapter = (await db.execute(
             select(CourseChapter).where(CourseChapter.chapter_id == third_chapter.id)
-        ).first()
+        )).scalars().first()
         assert new_course_chapter is not None
-        new_chapter_activity = db.exec(
+        new_chapter_activity = (await db.execute(
             select(ChapterActivity).where(ChapterActivity.activity_id == third_activity.id)
-        ).first()
+        )).scalars().first()
         assert new_chapter_activity is not None
 
     @pytest.mark.asyncio
@@ -534,7 +534,8 @@ class TestApplyLocksToChapters:
             update_date="2024-01-01",
         )
 
-    def test_anonymous_user_locked_out_of_restricted_chapters(
+    @pytest.mark.asyncio
+    async def test_anonymous_user_locked_out_of_restricted_chapters(
         self, db, course, anonymous_user
     ):
         """Lines 394-398, 420-422, 440-442: restricted lock_type → uuid collected;
@@ -544,7 +545,7 @@ class TestApplyLocksToChapters:
             "ch_restricted", LockType.RESTRICTED, activities=[activity]
         )
 
-        _apply_locks_to_chapters([chapter], course, anonymous_user, db)
+        await _apply_locks_to_chapters([chapter], course, anonymous_user, db)
 
         assert chapter.is_locked is True
         assert chapter.description == ""
@@ -553,7 +554,8 @@ class TestApplyLocksToChapters:
         assert activity.content == {}
         assert activity.details is None
 
-    def test_course_grants_access_unlocks_activities(
+    @pytest.mark.asyncio
+    async def test_course_grants_access_unlocks_activities(
         self, db, org, course, regular_user
     ):
         """Lines 426-428: when the course uuid is in the accessible set,
@@ -572,8 +574,8 @@ class TestApplyLocksToChapters:
             update_date=str(datetime.now()),
         )
         db.add(ug)
-        db.commit()
-        db.refresh(ug)
+        await db.commit()
+        await db.refresh(ug)
 
         # Grant access to the course_uuid itself → course_grants_access=True
         ugr = UserGroupResource(
@@ -584,7 +586,7 @@ class TestApplyLocksToChapters:
             update_date=str(datetime.now()),
         )
         db.add(ugr)
-        db.commit()
+        await db.commit()
 
         ugu = UserGroupUser(
             usergroup_id=ug.id,
@@ -594,14 +596,14 @@ class TestApplyLocksToChapters:
             update_date=str(datetime.now()),
         )
         db.add(ugu)
-        db.commit()
+        await db.commit()
 
         activity = self._make_activity_read("act_restricted_course", ActivityLockType.RESTRICTED)
         chapter = self._make_chapter_read(
             "ch_public_course", LockType.PUBLIC, activities=[activity]
         )
 
-        _apply_locks_to_chapters([chapter], course, regular_user, db)
+        await _apply_locks_to_chapters([chapter], course, regular_user, db)
 
         # course_grants_access=True → activity must NOT be locked (line 427-428)
         assert chapter.is_locked is False
@@ -614,7 +616,7 @@ class TestApplyLocksToChapters:
         """Cover lines 313 (slim dedup) and 351 (full dedup) by injecting duplicate rows."""
         from unittest.mock import MagicMock
 
-        original_exec = db.exec
+        original_execute = db.execute
 
         # slim=True path → line 313
         slim_call = {"n": 0}
@@ -625,16 +627,16 @@ class TestApplyLocksToChapters:
             activity.creation_date, activity.update_date,
             1, None, activity.lock_type, 1,
         )
-        def exec_with_slim_dupes(statement):
+        async def execute_with_slim_dupes(statement):
             slim_call["n"] += 1
-            if slim_call["n"] == 2:  # activity query is second exec call
+            if slim_call["n"] == 2:  # activity query is second execute call
                 result = MagicMock()
                 result.all.return_value = [dup_row, dup_row]
                 return result
-            return original_exec(statement)
+            return await original_execute(statement)
 
         with patch("src.services.courses.chapters.check_resource_access", new_callable=AsyncMock):
-            with patch.object(db, "exec", side_effect=exec_with_slim_dupes):
+            with patch.object(db, "execute", side_effect=execute_with_slim_dupes):
                 slim_result = await get_course_chapters(
                     mock_request, course.id, db, admin_user,
                     with_unpublished_activities=True, slim=True, course=course,
@@ -643,18 +645,18 @@ class TestApplyLocksToChapters:
 
         # slim=False path → line 351
         full_call = {"n": 0}
-        def exec_with_full_dupes(statement):
+        async def execute_with_full_dupes(statement):
             full_call["n"] += 1
-            if full_call["n"] == 2:  # activity query is second exec call
+            if full_call["n"] == 2:  # activity query is second execute call
                 ca_mock = MagicMock()
                 ca_mock.chapter_id = chapter.id
                 result = MagicMock()
                 result.all.return_value = [(ca_mock, activity), (ca_mock, activity)]
                 return result
-            return original_exec(statement)
+            return await original_execute(statement)
 
         with patch("src.services.courses.chapters.check_resource_access", new_callable=AsyncMock):
-            with patch.object(db, "exec", side_effect=exec_with_full_dupes):
+            with patch.object(db, "execute", side_effect=execute_with_full_dupes):
                 full_result = await get_course_chapters(
                     mock_request, course.id, db, admin_user,
                     with_unpublished_activities=True, slim=False, course=course,

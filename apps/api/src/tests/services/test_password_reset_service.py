@@ -22,7 +22,7 @@ from src.services.users.password_reset import (
 )
 
 
-def _make_user(db, **overrides):
+async def _make_user(db, **overrides):
     user = User(
         id=overrides.pop("id", None),
         username=overrides.pop("username", "user"),
@@ -37,8 +37,8 @@ def _make_user(db, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
@@ -87,9 +87,9 @@ class TestPasswordResetService:
     async def test_send_reset_password_code_org_and_platform_paths(
         self, mock_request, db, org, regular_user
     ):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
         fake_redis = Mock()
         fake_redis.set = Mock()
@@ -168,7 +168,7 @@ class TestPasswordResetService:
 
     @pytest.mark.asyncio
     async def test_send_reset_password_code_error_paths(self, mock_request, db, org):
-        user = _make_user(
+        user = await _make_user(
             db,
             id=30,
             username="resetuser",
@@ -278,9 +278,9 @@ class TestPasswordResetService:
     async def test_change_password_with_reset_code_org_paths(
         self, mock_request, db, org, regular_user
     ):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
         old_password = user.password
         reset_code = "RESET123"
@@ -322,7 +322,7 @@ class TestPasswordResetService:
             )
 
         assert result == "Password changed"
-        refreshed = db.exec(select(User).where(User.email == user.email)).first()
+        refreshed = (await db.execute(select(User).where(User.email == user.email))).scalars().first()
         assert refreshed is not None
         assert refreshed.password != old_password
         assert security_verify_password("NewPassword123!", refreshed.password)
@@ -332,9 +332,9 @@ class TestPasswordResetService:
     async def test_change_password_with_reset_code_error_paths(
         self, mock_request, db, org, regular_user
     ):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
 
         with patch(
@@ -499,9 +499,9 @@ class TestPasswordResetService:
 
     @pytest.mark.asyncio
     async def test_platform_reset_code_paths(self, mock_request, db, regular_user):
-        user = db.exec(
+        user = (await db.execute(
             select(User).where(User.email == regular_user.email)
-        ).first()
+        )).scalars().first()
         assert user is not None
         fake_redis = Mock()
         fake_redis.set = Mock()
@@ -669,7 +669,7 @@ class TestPasswordResetService:
                 "PLAT1234",
             )
         assert result == "Password changed"
-        refreshed = db.exec(select(User).where(User.email == user.email)).first()
+        refreshed = (await db.execute(select(User).where(User.email == user.email))).scalars().first()
         assert refreshed is not None
         assert security_verify_password("NewPassword123!", refreshed.password)
 
