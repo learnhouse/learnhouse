@@ -1,4 +1,6 @@
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import EditVideoActivityModal from '@components/Objects/Modals/Activities/Edit/EditVideoActivityModal'
 import { getUriWithOrg } from '@services/config/config'
 import {
   addUserGroupToActivity,
@@ -77,6 +79,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const [isUpdatingName, setIsUpdatingName] = React.useState<boolean>(false)
   const [isPublishing, setIsPublishing] = React.useState<boolean>(false)
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false)
+  const [editVideoModalOpen, setEditVideoModalOpen] = React.useState(false)
   const activityUUID = props.activity.activity_uuid
   const isMobile = useMediaQuery('(max-width: 767px)')
   const org = useOrg() as any;
@@ -336,7 +339,34 @@ function ActivityElement(props: ActivitiyElementProps) {
               </button>
               <div className="w-px h-5 bg-gray-200/80 mx-1" />
               <div className="flex items-center gap-1">
-              {editHref ? (
+              {props.activity.activity_type === 'TYPE_VIDEO' ? (
+                <>
+                  <Modal
+                    isDialogOpen={editVideoModalOpen}
+                    onOpenChange={() => setEditVideoModalOpen(!editVideoModalOpen)}
+                    minHeight="no-min"
+                    minWidth="md"
+                    dialogTitle="Edit Video Activity"
+                    dialogDescription="Update the video source, URL, or playback settings."
+                    dialogContent={
+                      <EditVideoActivityModal
+                        activity={props.activity}
+                        courseUuid={props.course_uuid}
+                        orgSlug={props.orgslug}
+                        onClose={() => setEditVideoModalOpen(false)}
+                      />
+                    }
+                    dialogTrigger={
+                      <button
+                        className="h-7 w-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        title="Edit video"
+                      >
+                        <FilePenLine size={15} />
+                      </button>
+                    }
+                  />
+                </>
+              ) : editHref ? (
                 <Link
                   href={editHref}
                   target="_blank"

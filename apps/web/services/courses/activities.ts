@@ -196,6 +196,50 @@ export async function removeUserGroupFromActivity(
   return result.json()
 }
 
+export async function updateHostedVideoActivity(
+  activityUuid: string,
+  details: any,
+  access_token: string,
+  name?: string,
+  videoFile?: File | null,
+) {
+  const formData = new FormData()
+  if (name) formData.append('name', name)
+  formData.append('details', JSON.stringify({
+    startTime: details.startTime ?? 0,
+    endTime: details.endTime ?? null,
+    autoplay: details.autoplay ?? false,
+    muted: details.muted ?? false,
+  }))
+  if (videoFile) formData.append('video_file', videoFile)
+
+  const result = await fetch(
+    `${getAPIUrl()}activities/video/${activityUuid}`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  return getResponseMetadata(result)
+}
+
+export async function updateExternalVideoActivity(
+  activityUuid: string,
+  uri: string,
+  details: any,
+  access_token: string,
+  name?: string,
+) {
+  const data: any = {
+    content: { uri, type: 'youtube', activity_uuid: activityUuid },
+    details: {
+      startTime: details.startTime ?? 0,
+      endTime: details.endTime ?? null,
+      autoplay: details.autoplay ?? false,
+      muted: details.muted ?? false,
+    },
+  }
+  if (name) data.name = name
+  return updateActivity(data, activityUuid, access_token)
+}
+
 export async function getUrlPreview(url: string) {
   const result = await fetch(
     `${getAPIUrl()}utils/link-preview?url=${encodeURIComponent(url)}`,
