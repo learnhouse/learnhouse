@@ -450,7 +450,7 @@ async def delete_custom_domain(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership + admin permission (superadmins bypass)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(
@@ -499,7 +499,7 @@ async def check_domain_ssl_status(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     # VERIFICATION 2: Membership (superadmins bypass)
-    require_org_membership(acting_user_id, org_id, db_session)
+    await require_org_membership(acting_user_id, org_id, db_session)
 
     # Get the custom domain
     statement = select(CustomDomain).where(

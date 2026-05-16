@@ -106,7 +106,7 @@ async def create_user(
         )
 
     # Usage check
-    check_limits_with_usage("members", org_id, db_session)
+    await check_limits_with_usage("members", org_id, db_session)
 
     # SECURITY: single generic error for both email and username conflicts so
     # the endpoint cannot be used to probe which addresses or handles are
@@ -138,7 +138,7 @@ async def create_user(
     # Link user and organization
     user_organization = UserOrganization(
         user_id=user.id if user.id else 0,
-        org_id=int(org_id),
+        org_id=org_id,
         role_id=4,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -150,7 +150,7 @@ async def create_user(
 
     user_read = UserRead.model_validate(user)
 
-    increase_feature_usage("members", org_id, db_session)
+    await increase_feature_usage("members", org_id, db_session)
 
     # Track user signup
     await track(
@@ -176,7 +176,7 @@ async def create_user(
 
     # Send verification email for non-OAuth users, account creation email for OAuth users
     if is_oauth:
-        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == int(org_id))
+        org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
         org_config = (await db_session.execute(org_config_stmt)).scalars().first()
         send_account_creation_email(
             user=user_read,
@@ -212,7 +212,7 @@ async def create_user_with_invite(
         )
 
     # Usage check
-    check_limits_with_usage("members", org_id, db_session)
+    await check_limits_with_usage("members", org_id, db_session)
 
 
 
@@ -229,7 +229,7 @@ async def create_user_with_invite(
             str(user.id),
         )
 
-    increase_feature_usage("members", org_id, db_session)
+    await increase_feature_usage("members", org_id, db_session)
 
     # Mark the invitation as no longer pending in Redis
     try:

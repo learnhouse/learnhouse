@@ -681,7 +681,7 @@ async def api_read_user_assignment_submissions(
 async def api_update_user_assignment_submissions(
     request: Request,
     assignment_uuid: str,
-    user_id: str,
+    user_id: int,
     assignment_submission: AssignmentUserSubmissionCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
@@ -708,7 +708,7 @@ async def api_update_user_assignment_submissions(
 async def api_delete_user_assignment_submissions(
     request: Request,
     assignment_uuid: str,
-    user_id: str,
+    user_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -734,7 +734,7 @@ async def api_delete_user_assignment_submissions(
 async def api_get_submission_grade(
     request: Request,
     assignment_uuid: str,
-    user_id: str,
+    user_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -761,7 +761,7 @@ async def api_get_submission_grade(
 async def api_final_grade_submission(
     request: Request,
     assignment_uuid: str,
-    user_id: str,
+    user_id: int,
     body: Optional[GradeSubmissionBody] = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
@@ -830,7 +830,7 @@ async def api_retry_assignment_submission(
 async def api_submission_mark_as_done(
     request: Request,
     assignment_uuid: str,
-    user_id: str,
+    user_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):

@@ -172,7 +172,7 @@ async def editor_ai_start_chat_session_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)
@@ -280,7 +280,7 @@ async def editor_ai_send_message_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     # Serialize current content to text for AI context
     content_text = _serialize_tiptap_content_to_text(chat_session_object.current_content)

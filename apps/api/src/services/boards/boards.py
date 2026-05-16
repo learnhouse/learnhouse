@@ -100,7 +100,7 @@ async def get_boards_by_org(
 ) -> List[BoardRead]:
     # Require org membership before listing boards — prevents unauthenticated
     # and cross-org enumeration of boards.
-    require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await require_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
     statement = (
         select(Board)

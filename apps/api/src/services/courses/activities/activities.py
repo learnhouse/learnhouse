@@ -126,7 +126,7 @@ async def get_activity(
         .outerjoin(User, Activity.last_modified_by_id == User.id)
         .where(Activity.activity_uuid == activity_uuid)
     )
-    result = (await db_session.execute(statement)).scalars().first()
+    result = (await db_session.execute(statement)).first()
 
     if not result:
         raise HTTPException(
@@ -198,7 +198,7 @@ async def get_editor_bootstrap(
         .outerjoin(Chapter, Chapter.id == ChapterActivity.chapter_id)  # type: ignore
         .where(Activity.activity_uuid == activity_uuid)
     )
-    db_result = (await db_session.execute(statement)).scalars().first()
+    db_result = (await db_session.execute(statement)).first()
 
     if not db_result:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -330,7 +330,7 @@ async def _apply_activity_lock(
 
 async def get_activityby_id(
     request: Request,
-    activity_id: str,
+    activity_id: int,
     current_user: PublicUser,
     db_session: AsyncSession,
 ):
@@ -340,14 +340,14 @@ async def get_activityby_id(
         .join(Course)
         .where(Activity.id == activity_id)
     )
-    result = (await db_session.execute(statement)).scalars().first()
+    result = (await db_session.execute(statement)).first()
 
     if not result:
         raise HTTPException(
             status_code=404,
             detail="Activity not found",
         )
-    
+
     activity, course = result
 
     # RBAC check
@@ -436,8 +436,8 @@ async def _trigger_course_embedding(course_id: int, org_id: int) -> None:
         from src.core.events.database import get_db_session
         from src.services.ai.rag.embedding_service import embed_course_content
 
-        for session in get_db_session():
-            course = session.exec(select(Course).where(Course.id == course_id)).first()
+        async for session in get_db_session():
+            course = (await session.execute(select(Course).where(Course.id == course_id))).scalars().first()
             if not course:
                 logger.warning("Skipping embedding for deleted course %d", course_id)
                 return

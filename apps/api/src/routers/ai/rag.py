@@ -219,7 +219,7 @@ async def api_rag_chat(
     enforce_ai_rate_limit(chat_acting_user_id, org_id)
 
     # Atomic credit reservation — RAG chat makes 2 API calls (embedding + generation)
-    reserve_ai_credit(org_id, db_session, amount=2)
+    await reserve_ai_credit(org_id, db_session, amount=2)
 
     # Get or create chat session
     is_new_session = chat_request.aichat_uuid is None
@@ -288,7 +288,7 @@ async def api_rag_index(
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Require admin/maintainer access
-    require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
+    await require_org_admin(resolve_acting_user_id(current_user), course.org_id, db_session)
 
     # Run indexing
     chunks_indexed = await embed_course_content(

@@ -99,7 +99,7 @@ async def get_courses_for_an_org_explore(
 
 async def get_course_for_explore(
     request: Request,
-    course_id: str,
+    course_id: int,
     db_session: AsyncSession,
 ) -> CourseRead:
     statement = select(Course).where(Course.id == course_id)

@@ -915,6 +915,10 @@ class TestResolveAndSslStatus:
                     domain.domain_uuid,
                     admin_user,
                 )
+        with patch(
+            "src.services.orgs.custom_domains.require_org_membership",
+            return_value=None,
+        ):
             with pytest.raises(HTTPException) as ssl_org_exc:
                 await check_domain_ssl_status(
                     mock_request,

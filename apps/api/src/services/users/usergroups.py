@@ -131,7 +131,7 @@ async def create_usergroup(
         )
 
     # Usage check
-    check_limits_with_usage("courses", org.id, db_session)
+    await check_limits_with_usage("courses", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"
@@ -144,7 +144,7 @@ async def create_usergroup(
     await db_session.refresh(usergroup)
 
     # Feature usage
-    increase_feature_usage("usergroups", org.id, db_session)
+    await increase_feature_usage("usergroups", org.id, db_session)
 
     await dispatch_webhooks(
         event_name="usergroup_created",
@@ -387,7 +387,7 @@ async def delete_usergroup_by_id(
     )
 
     # Feature usage
-    increase_feature_usage("usergroups", usergroup.org_id, db_session)
+    await increase_feature_usage("usergroups", usergroup.org_id, db_session)
 
     usergroup_uuid_val = usergroup.usergroup_uuid
     usergroup_name_val = usergroup.name
@@ -435,7 +435,7 @@ async def add_users_to_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = user_ids.split(",")
+    user_ids_array = [int(uid) for uid in user_ids.split(",")]
 
     for user_id in user_ids_array:
         statement = select(User).where(User.id == user_id)
@@ -475,7 +475,7 @@ async def add_users_to_usergroup(
         data={
             "usergroup_id": usergroup_id,
             "usergroup_uuid": usergroup.usergroup_uuid,
-            "user_ids": [int(uid) for uid in user_ids_array],
+            "user_ids": user_ids_array,
         },
     )
 
@@ -509,7 +509,7 @@ async def remove_users_from_usergroup(
         org_id=usergroup.org_id,
     )
 
-    user_ids_array = user_ids.split(",")
+    user_ids_array = [int(uid) for uid in user_ids.split(",")]
 
     for user_id in user_ids_array:
         statement = select(UserGroupUser).where(
@@ -680,7 +680,7 @@ async def rbac_check(
 
         if org_id is not None:
             # Scope permission check to the usergroup's own org to prevent cross-org IDOR.
-            require_org_role_permission(
+            await require_org_role_permission(
                 current_user.id,
                 org_id,
                 db_session,

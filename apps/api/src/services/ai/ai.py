@@ -109,7 +109,7 @@ async def ai_start_activity_chat_session(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -251,7 +251,7 @@ async def ai_send_activity_chat_message(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    reserve_ai_credit(course.org_id, db_session)
+    await reserve_ai_credit(course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -440,7 +440,7 @@ async def ai_start_activity_chat_session_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history()
 
@@ -485,7 +485,7 @@ async def ai_send_activity_chat_message_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 

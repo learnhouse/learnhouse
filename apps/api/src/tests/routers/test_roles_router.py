@@ -106,8 +106,7 @@ class TestRolesRouter:
             json={"name": "Updated", "rights": {}},
         )
 
-        assert response.status_code == 400
-        assert "must be a number" in response.json()["detail"]
+        assert response.status_code == 422
 
     async def test_delete_role(self, client):
         with patch(

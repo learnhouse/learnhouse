@@ -77,10 +77,10 @@ async def event_generator_with_save(generator, session_uuid: str, activity_uuid:
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating activity content.'})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
+async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     """Get the AI model based on the organization's plan."""
     try:
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
         if plan_meets_requirement(current_plan, "pro"):
             return "gemini-2.5-pro"
         return "gemini-2.5-flash"
@@ -90,7 +90,7 @@ def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
 
 async def verify_user_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> bool:
     """Verify that the user is a member of the organization (superadmins bypass)."""
-    return is_org_member(user_id, org_id, db_session)
+    return await is_org_member(user_id, org_id, db_session)
 
 
 @router.post(
@@ -129,14 +129,14 @@ async def start_course_planning_session(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Create new session with language
     session = create_course_planning_session(org_id=org.id, language=session_request.language)
@@ -210,14 +210,14 @@ async def iterate_course_planning_session(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Use provided plan or session's current plan
     current_plan = message_request.current_plan or session.current_plan
@@ -482,14 +482,14 @@ async def generate_activity_content(
         raise HTTPException(status_code=403, detail="User is not a member of this organization")
 
     # Get AI model — pro models cost more credits
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
     credit_cost = 3 if ai_model == "gemini-2.5-pro" else 1
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
     # Atomic check+deduct via Redis Lua so concurrent streams can't race past
     # the plan limit. Raises 403 if quota would be exceeded.
-    reserve_ai_credit(org.id, db_session, amount=credit_cost)
+    await reserve_ai_credit(org.id, db_session, amount=credit_cost)
 
     # Get current content if iterating
     current_content = None

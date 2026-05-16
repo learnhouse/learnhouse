@@ -255,27 +255,14 @@ async def delete_collection(
 
 async def get_collections(
     request: Request,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
 ) -> List[CollectionRead]:
 
-    # Path param is typed as str but Collection.org_id is bigint. Accept
-    # either numeric id or org slug — resolving slug here keeps older
-    # callers working and avoids Postgres choking on a non-integer value.
-    try:
-        numeric_org_id = int(org_id)
-    except (TypeError, ValueError):
-        from src.db.organizations import Organization
-
-        org_row = (await db_session.execute(
-            select(Organization).where(Organization.slug == org_id)
-        )).scalars().first()
-        if not org_row:
-            return []
-        numeric_org_id = org_row.id
+    numeric_org_id = org_id
 
     statement_public = select(Collection).where(
         Collection.org_id == numeric_org_id, Collection.public == True

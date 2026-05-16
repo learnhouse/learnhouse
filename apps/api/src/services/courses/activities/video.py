@@ -26,7 +26,7 @@ from src.security.rbac import check_resource_access, AccessAction
 async def create_video_activity(
     request: Request,
     name: str,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser,
     db_session: AsyncSession,
     video_file: UploadFile | None = None,
@@ -161,13 +161,13 @@ class ExternalVideo(BaseModel):
     name: str
     uri: str
     type: Literal["youtube", "vimeo"]
-    chapter_id: str
+    chapter_id: int
     details: str = "{}"
     extra_metadata: Optional[dict] = None
 
 
 class ExternalVideoInDB(BaseModel):
-    activity_id: str
+    activity_id: int
 
 
 async def create_external_video_activity(

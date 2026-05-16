@@ -1001,7 +1001,7 @@ async def provision_user(
 
     await _check_token_can_assign_role(token_user, role, db_session)
 
-    check_limits_with_usage("members", token_user.org_id, db_session)
+    await check_limits_with_usage("members", token_user.org_id, db_session)
 
     now = datetime.now()
 
@@ -1033,7 +1033,7 @@ async def provision_user(
         db_session.add(membership)
         await db_session.commit()
 
-        increase_feature_usage("members", token_user.org_id, db_session)
+        await increase_feature_usage("members", token_user.org_id, db_session)
 
         await track(
             event_name=analytics_events.USER_SIGNED_UP,
@@ -1089,7 +1089,7 @@ async def provision_user(
     db_session.add(membership)
     await db_session.commit()
 
-    increase_feature_usage("members", token_user.org_id, db_session)
+    await increase_feature_usage("members", token_user.org_id, db_session)
 
     await track(
         event_name=analytics_events.USER_SIGNED_UP,
@@ -1155,7 +1155,7 @@ async def remove_user_from_org_admin(
         pass
 
     try:
-        decrease_feature_usage("members", token_user.org_id, db_session)
+        await decrease_feature_usage("members", token_user.org_id, db_session)
     except Exception:
         pass
 

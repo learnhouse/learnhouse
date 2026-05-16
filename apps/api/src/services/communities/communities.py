@@ -134,7 +134,7 @@ async def get_communities_by_org(
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # Superadmins bypass admin check — they can see all communities
-    if is_user_superadmin(acting_user_id, db_session):
+    if await is_user_superadmin(acting_user_id, db_session):
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
         communities = (await db_session.execute(query)).scalars().all()

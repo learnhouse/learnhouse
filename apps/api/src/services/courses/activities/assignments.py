@@ -637,7 +637,7 @@ async def create_assignment(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Usage check
-    check_limits_with_usage("assignments", course.org_id, db_session)
+    await check_limits_with_usage("assignments", course.org_id, db_session)
 
     # Create Assignment
     assignment = Assignment(**assignment_object.model_dump())
@@ -653,7 +653,7 @@ async def create_assignment(
     await db_session.refresh(assignment)
 
     # Feature usage
-    increase_feature_usage("assignments", course.org_id, db_session)
+    await increase_feature_usage("assignments", course.org_id, db_session)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -798,7 +798,7 @@ async def delete_assignment(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("assignments", course.org_id, db_session)
+    await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
     await db_session.delete(assignment)
@@ -849,7 +849,7 @@ async def delete_assignment_from_activity_uuid(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
      # Feature usage
-    decrease_feature_usage("assignments", course.org_id, db_session)
+    await decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
     await db_session.delete(assignment)
@@ -2145,7 +2145,7 @@ async def read_user_assignment_submissions_me(
 
 async def update_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     assignment_user_submission_object: AssignmentUserSubmissionCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -2219,7 +2219,7 @@ async def update_assignment_submission(
 
 async def delete_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
@@ -2269,7 +2269,7 @@ async def delete_assignment_submission(
     # from scratch.
     trailstep_statement = select(TrailStep).where(
         TrailStep.activity_id == assignment.activity_id,
-        TrailStep.user_id == int(user_id),
+        TrailStep.user_id == user_id,
     )
     trailstep = (await db_session.execute(trailstep_statement)).scalars().first()
     if trailstep:
@@ -2290,7 +2290,7 @@ async def delete_assignment_submission(
     certification = (await db_session.execute(cert_statement)).scalars().first()
     if certification:
         cert_user_statement = select(CertificateUser).where(
-            CertificateUser.user_id == int(user_id),
+            CertificateUser.user_id == user_id,
             CertificateUser.certification_id == certification.id,
         )
         cert_user = (await db_session.execute(cert_user_statement)).scalars().first()
@@ -2504,7 +2504,7 @@ async def _apply_grade_and_finalize(
     task_submissions_by_task_id: dict = {}
     if task_ids:
         ts_statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.user_id == int(user_id),
+            AssignmentTaskSubmission.user_id == user_id,
             AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
         )
         for ts in (await db_session.execute(ts_statement)).scalars().all():
@@ -2561,7 +2561,7 @@ async def _apply_grade_and_finalize(
         event_name="assignment_graded",
         org_id=course.org_id,
         data={
-            "user_id": int(user_id),
+            "user_id": user_id,
             "assignment_uuid": assignment.assignment_uuid,
             "course_uuid": course.course_uuid,
             "grade": computed["grade"],
@@ -2582,7 +2582,7 @@ async def _apply_grade_and_finalize(
 
 async def grade_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
@@ -2628,7 +2628,7 @@ async def grade_assignment_submission(
     computed = await _apply_grade_and_finalize(
         assignment=assignment,
         course=course,
-        user_id=int(user_id),
+        user_id=user_id,
         assignment_user_submission=assignment_user_submission,
         db_session=db_session,
         overall_feedback=overall_feedback,
@@ -2643,7 +2643,7 @@ async def grade_assignment_submission(
 
 async def get_grade_assignment_submission(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
@@ -2713,7 +2713,7 @@ async def get_grade_assignment_submission(
     task_submissions_by_task_id: dict = {}
     if task_ids:
         ts_statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.user_id == int(user_id),
+            AssignmentTaskSubmission.user_id == user_id,
             AssignmentTaskSubmission.assignment_task_id.in_(task_ids),  # type: ignore[attr-defined]
         )
         for ts in (await db_session.execute(ts_statement)).scalars().all():
@@ -2735,7 +2735,7 @@ async def get_grade_assignment_submission(
 
 async def mark_activity_as_done_for_user(
     request: Request,
-    user_id: str,
+    user_id: int,
     assignment_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: AsyncSession,
@@ -2809,7 +2809,7 @@ async def mark_activity_as_done_for_user(
     # Check if all activities in the course are completed and create certificate if so
     if course and course.id:
         await check_course_completion_and_create_certificate(
-            request, int(user_id), course.id, db_session
+            request, user_id, course.id, db_session
         )
 
     # return OK

@@ -289,7 +289,7 @@ async def add_bulk_course_contributors(
         try:
             await db_session.commit()
         except Exception as db_err:
-            db_session.rollback()
+            await db_session.rollback()
             for item in list(results["successful"]):
                 results["failed"].append({"username": item["username"], "reason": f"Database error: {db_err}"})
             results["successful"] = []
@@ -404,7 +404,7 @@ async def remove_bulk_course_contributors(
         try:
             await db_session.commit()
         except Exception as db_err:
-            db_session.rollback()
+            await db_session.rollback()
             for item in list(results["successful"]):
                 results["failed"].append({"username": item["username"], "reason": f"Database error: {db_err}"})
             results["successful"] = []

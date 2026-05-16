@@ -100,11 +100,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=False,
         ):
             with pytest.raises(HTTPException) as no_org_exc:
@@ -279,11 +279,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
             db, "commit", side_effect=commit_side_effect
@@ -341,11 +341,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
             db, "commit", side_effect=commit_side_effect
@@ -425,19 +425,19 @@ class TestRolesService:
                 mock_request, db, org.id, admin_user
             )
             read_org_role = await read_role(
-                mock_request, db, str(admin_role.id), admin_user
+                mock_request, db, admin_role.id, admin_user
             )
             read_global_role = await read_role(
-                mock_request, db, str(global_role.id), admin_user
+                mock_request, db, global_role.id, admin_user
             )
 
             with pytest.raises(HTTPException) as invalid_exc:
-                await read_role(mock_request, db, "abc", admin_user)
+                await read_role(mock_request, db, 99999, admin_user)
 
         assert [role.name for role in roles[:2]] == ["Global", "Admin"]
         assert read_org_role.id == admin_role.id
         assert read_global_role.id == global_role.id
-        assert invalid_exc.value.status_code == 400
+        assert invalid_exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_roles_by_organization_not_found(self, db, admin_user, mock_request):
@@ -588,11 +588,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
-            new_callable=MagicMock,
+            new_callable=AsyncMock,
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -756,17 +756,17 @@ class TestRolesService:
         with patch("src.services.roles.roles.require_org_role_permission"), patch(
             "src.routers.users._invalidate_session_cache"
         ) as invalidate_cache:
-            deleted = await delete_role(mock_request, db, str(org_role.id), admin_user)
+            deleted = await delete_role(mock_request, db, org_role.id, admin_user)
 
             with pytest.raises(HTTPException) as invalid_exc:
-                await delete_role(mock_request, db, "bad-id", admin_user)
+                await delete_role(mock_request, db, 99999, admin_user)
 
             with pytest.raises(HTTPException) as global_exc:
-                await delete_role(mock_request, db, str(global_role.id), admin_user)
+                await delete_role(mock_request, db, global_role.id, admin_user)
 
         assert deleted == "Role deleted"
         invalidate_cache.assert_called_once_with(regular_user.id)
-        assert invalid_exc.value.status_code == 400
+        assert invalid_exc.value.status_code == 404
         assert global_exc.value.status_code == 403
 
     @pytest.mark.asyncio
