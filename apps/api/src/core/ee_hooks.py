@@ -39,6 +39,9 @@ def get_ee_hooks():
 
 def register_ee_middlewares(app):
     """Call EE to register its middlewares."""
+    from config.config import get_learnhouse_config
+    if get_learnhouse_config().general_config.saas_mode:
+        return
     hooks = get_ee_hooks()
     if hooks and hasattr(hooks, "register_middlewares"):
         hooks.register_middlewares(app)
