@@ -58,9 +58,13 @@ def _parse_extra_metadata(raw: Optional[str]) -> Optional[dict]:
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+        raise HTTPException(
+            status_code=422, detail="extra_metadata must be a JSON object"
+        )
     if not isinstance(parsed, dict):
-        raise HTTPException(status_code=422, detail="extra_metadata must be a JSON object")
+        raise HTTPException(
+            status_code=422, detail="extra_metadata must be a JSON object"
+        )
     return parsed
 
 
@@ -72,7 +76,9 @@ def _parse_extra_metadata(raw: Optional[str]) -> Optional[dict]:
     responses={
         200: {"description": "Activity created and returned.", "model": ActivityRead},
         401: {"description": "Authentication required"},
-        403: {"description": "User lacks permission to create activities in this chapter"},
+        403: {
+            "description": "User lacks permission to create activities in this chapter"
+        },
         404: {"description": "Parent chapter or course not found"},
     },
 )
@@ -97,7 +103,10 @@ async def api_create_activity(
     summary="List activity versions",
     description="Get the version history for an activity, ordered newest first. Supports pagination via limit and offset.",
     responses={
-        200: {"description": "List of activity versions.", "model": List[ActivityVersionRead]},
+        200: {
+            "description": "List of activity versions.",
+            "model": List[ActivityVersionRead],
+        },
         401: {"description": "Authentication required"},
         403: {"description": "User lacks permission to view this activity's versions"},
         404: {"description": "Activity not found"},
@@ -126,7 +135,10 @@ async def api_get_activity_versions(
     summary="Get activity version",
     description="Get a specific historical version of an activity by its version number.",
     responses={
-        200: {"description": "Activity version returned.", "model": ActivityVersionRead},
+        200: {
+            "description": "Activity version returned.",
+            "model": ActivityVersionRead,
+        },
         401: {"description": "Authentication required"},
         403: {"description": "User lacks permission to view this activity version"},
         404: {"description": "Activity or version not found"},
@@ -170,9 +182,7 @@ async def api_get_activity_state(
     Returns lightweight info: update_date, current_version, last_modified_by.
     Used by frontend to check if remote state has changed.
     """
-    return await get_activity_state(
-        request, activity_uuid, current_user, db_session
-    )
+    return await get_activity_state(request, activity_uuid, current_user, db_session)
 
 
 @router.post(
@@ -181,7 +191,10 @@ async def api_get_activity_state(
     summary="Restore activity version",
     description="Restore an activity to a previous version. Creates a new version with the restored content rather than rewriting history.",
     responses={
-        200: {"description": "Activity restored; returns the updated activity.", "model": ActivityRead},
+        200: {
+            "description": "Activity restored; returns the updated activity.",
+            "model": ActivityRead,
+        },
         401: {"description": "Authentication required"},
         403: {"description": "User lacks permission to restore this activity"},
         404: {"description": "Activity or version not found"},
@@ -248,6 +261,7 @@ async def api_get_activity(
         request, activity_uuid, current_user=current_user, db_session=db_session
     )
 
+
 @router.get(
     "/id/{activity_id}",
     response_model=ActivityRead,
@@ -273,13 +287,17 @@ async def api_get_activityby_id(
         request, activity_id, current_user=current_user, db_session=db_session
     )
 
+
 @router.get(
     "/chapter/{chapter_id}",
     response_model=List[ActivityRead],
     summary="List chapter activities",
     description="Get all activities that belong to the given chapter, in their configured order.",
     responses={
-        200: {"description": "List of activities for the chapter.", "model": List[ActivityRead]},
+        200: {
+            "description": "List of activities for the chapter.",
+            "model": List[ActivityRead],
+        },
         401: {"description": "Authentication required"},
         403: {"description": "User lacks permission to view this chapter"},
         404: {"description": "Chapter not found"},
@@ -356,9 +374,14 @@ async def api_delete_activity(
     summary="Create video activity",
     description="Create a new video activity by uploading a video file. The video is stored and attached to the given chapter.",
     responses={
-        200: {"description": "Video activity created and returned.", "model": ActivityRead},
+        200: {
+            "description": "Video activity created and returned.",
+            "model": ActivityRead,
+        },
         401: {"description": "Authentication required"},
-        403: {"description": "User lacks permission to create activities in this chapter"},
+        403: {
+            "description": "User lacks permission to create activities in this chapter"
+        },
         404: {"description": "Chapter not found"},
     },
 )
@@ -393,9 +416,14 @@ async def api_create_video_activity(
     summary="Create external video activity",
     description="Create a new activity that embeds an externally hosted video (e.g. YouTube, Vimeo) instead of uploading a file.",
     responses={
-        200: {"description": "External video activity created and returned.", "model": ActivityRead},
+        200: {
+            "description": "External video activity created and returned.",
+            "model": ActivityRead,
+        },
         401: {"description": "Authentication required"},
-        403: {"description": "User lacks permission to create activities in this chapter"},
+        403: {
+            "description": "User lacks permission to create activities in this chapter"
+        },
         404: {"description": "Chapter not found"},
     },
 )
@@ -413,42 +441,20 @@ async def api_create_external_video_activity(
     )
 
 
-@router.put(
-    "/video/{activity_uuid}",
-    response_model=ActivityRead,
-    summary="Update hosted video activity",
-    description="Replace the video file and/or update settings for an existing hosted video activity.",
-    responses={
-        200: {"description": "Updated video activity.", "model": ActivityRead},
-        401: {"description": "Authentication required"},
-        403: {"description": "User lacks permission to update this activity"},
-        404: {"description": "Activity not found"},
-        409: {"description": "Invalid video format"},
-    },
-)
-async def api_update_video_activity(
-    request: Request,
-    activity_uuid: str,
-    name: Optional[str] = Form(default=None),
-    details: str = Form(default="{}"),
-    video_file: UploadFile | None = None,
-    current_user: PublicUser = Depends(get_current_user),
-    db_session=Depends(get_db_session),
-) -> ActivityRead:
-    return await update_video_activity(
-        request, activity_uuid, current_user, db_session, name, details, video_file
-    )
-
-
 @router.post(
     "/documentpdf",
     response_model=ActivityRead,
     summary="Create PDF document activity",
     description="Create a new activity by uploading a PDF document. The file is stored and attached to the given chapter.",
     responses={
-        200: {"description": "PDF activity created and returned.", "model": ActivityRead},
+        200: {
+            "description": "PDF activity created and returned.",
+            "model": ActivityRead,
+        },
         401: {"description": "Authentication required"},
-        403: {"description": "User lacks permission to create activities in this chapter"},
+        403: {
+            "description": "User lacks permission to create activities in this chapter"
+        },
         404: {"description": "Chapter not found"},
     },
 )
@@ -530,7 +536,13 @@ async def api_update_external_video_activity(
         details_dict["muted"] = body.muted
     details_str = json.dumps(details_dict) if details_dict else None
     return await update_external_video_activity(
-        request, activity_uuid, current_user, db_session, body.uri, body.name, details_str
+        request,
+        activity_uuid,
+        current_user,
+        db_session,
+        body.uri,
+        body.name,
+        details_str,
     )
 
 
@@ -563,7 +575,9 @@ async def api_list_activity_usergroups(
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
-    return await get_activity_usergroups(request, activity_uuid, current_user, db_session)
+    return await get_activity_usergroups(
+        request, activity_uuid, current_user, db_session
+    )
 
 
 @router.post(

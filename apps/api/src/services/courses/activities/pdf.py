@@ -58,7 +58,9 @@ async def create_documentpdf_activity(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.CREATE
+    )
 
     # get org_id
     org_id = coursechapter.org_id
@@ -104,7 +106,7 @@ async def create_documentpdf_activity(
         content={
             "filename": saved_filename or "documentpdf",
             "activity_uuid": activity_uuid,
-            },
+        },
         org_id=org_id if org_id else 0,
         course_id=coursechapter.course_id,
         activity_uuid=activity_uuid,
@@ -167,14 +169,18 @@ async def update_documentpdf_activity(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
 
     if name:
         activity.name = name
 
     if pdf_file and pdf_file.filename:
         if pdf_file.content_type not in ["application/pdf"]:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pdf : Wrong pdf format")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Pdf : Wrong pdf format"
+            )
 
         statement = select(Organization).where(Organization.id == activity.org_id)
         organization = db_session.exec(statement).first()

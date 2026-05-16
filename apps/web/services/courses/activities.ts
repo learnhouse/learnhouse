@@ -198,21 +198,18 @@ export async function removeUserGroupFromActivity(
 
 export async function updateHostedVideoActivity(
   activityUuid: string,
-  details: any,
+  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
   access_token: string,
   name?: string,
   videoFile?: File | null,
 ) {
   const formData = new FormData()
   if (name) formData.append('name', name)
-  formData.append('details', JSON.stringify({
-    startTime: details.startTime ?? 0,
-    endTime: details.endTime ?? null,
-    autoplay: details.autoplay ?? false,
-    muted: details.muted ?? false,
-  }))
+  formData.append('start_time', String(videoDetails.startTime))
+  if (videoDetails.endTime !== null) formData.append('end_time', String(videoDetails.endTime))
+  formData.append('autoplay', String(videoDetails.autoplay))
+  formData.append('muted', String(videoDetails.muted))
   if (videoFile) formData.append('video_file', videoFile)
-
   const result = await fetch(
     `${getAPIUrl()}activities/video/${activityUuid}`,
     RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
@@ -222,22 +219,28 @@ export async function updateHostedVideoActivity(
 
 export async function updateExternalVideoActivity(
   activityUuid: string,
-  uri: string,
-  details: any,
+  youtubeUrl: string,
+  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
   access_token: string,
   name?: string,
 ) {
-  const data: any = {
-    content: { uri, type: 'youtube', activity_uuid: activityUuid },
-    details: {
-      startTime: details.startTime ?? 0,
-      endTime: details.endTime ?? null,
-      autoplay: details.autoplay ?? false,
-      muted: details.muted ?? false,
-    },
-  }
-  if (name) data.name = name
-  return updateActivity(data, activityUuid, access_token)
+  const result = await fetch(
+    `${getAPIUrl()}activities/external_video/${activityUuid}`,
+    RequestBodyWithAuthHeader(
+      'PUT',
+      {
+        name,
+        uri: youtubeUrl,
+        startTime: videoDetails.startTime,
+        endTime: videoDetails.endTime,
+        autoplay: videoDetails.autoplay,
+        muted: videoDetails.muted,
+      },
+      null,
+      access_token
+    )
+  )
+  return getResponseMetadata(result)
 }
 
 export async function getUrlPreview(url: string) {
@@ -301,53 +304,6 @@ export async function restoreActivityVersion(
   )
   const res = await getResponseMetadata(result)
   return res
-}
-
-export async function updateHostedVideoActivity(
-  activityUuid: string,
-  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
-  access_token: string,
-  name?: string,
-  videoFile?: File | null,
-) {
-  const formData = new FormData()
-  if (name) formData.append('name', name)
-  formData.append('start_time', String(videoDetails.startTime))
-  if (videoDetails.endTime !== null) formData.append('end_time', String(videoDetails.endTime))
-  formData.append('autoplay', String(videoDetails.autoplay))
-  formData.append('muted', String(videoDetails.muted))
-  if (videoFile) formData.append('video_file', videoFile)
-  const result = await fetch(
-    `${getAPIUrl()}activities/video/${activityUuid}`,
-    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
-  )
-  return getResponseMetadata(result)
-}
-
-export async function updateExternalVideoActivity(
-  activityUuid: string,
-  youtubeUrl: string,
-  videoDetails: { startTime: number; endTime: number | null; autoplay: boolean; muted: boolean },
-  access_token: string,
-  name?: string,
-) {
-  const result = await fetch(
-    `${getAPIUrl()}activities/external_video/${activityUuid}`,
-    RequestBodyWithAuthHeader(
-      'PUT',
-      {
-        name,
-        uri: youtubeUrl,
-        startTime: videoDetails.startTime,
-        endTime: videoDetails.endTime,
-        autoplay: videoDetails.autoplay,
-        muted: videoDetails.muted,
-      },
-      null,
-      access_token
-    )
-  )
-  return getResponseMetadata(result)
 }
 
 export async function updateDocumentActivity(
