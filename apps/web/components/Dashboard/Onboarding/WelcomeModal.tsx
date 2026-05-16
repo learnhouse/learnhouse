@@ -102,8 +102,16 @@ export default function WelcomeModal() {
   const { welcomeSeen, markWelcomeSeen, dismissed } = useOnboarding()
   const { t } = useTranslation()
   const [step, setStep] = useState<'welcome' | 'features'>('welcome')
+  const [isMobile, setIsMobile] = useState(false)
 
-  if (welcomeSeen || dismissed) return null
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  if (isMobile || welcomeSeen || dismissed) return null
 
   const showFeatures = step === 'features'
 

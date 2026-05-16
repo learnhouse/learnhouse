@@ -66,16 +66,16 @@ function OrgUserGroups() {
 
     return (
         <FeatureGate feature="usergroups">
-            <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+            <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                    <div className="flex-1">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+                    <div className="flex-1 min-w-0">
                         <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.usergroups.title')}</h1>
                         <p className="text-sm text-gray-500 mt-0.5">
                             {t('dashboard.users.usergroups.subtitle')}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         {usergroups && usergroups.length > 0 && (
                             <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                                 {usergroups.length} {usergroups.length === 1
@@ -83,11 +83,11 @@ function OrgUserGroups() {
                                     : t('dashboard.users.usergroups.count.plural')}
                             </div>
                         )}
-                        <div className="relative">
+                        <div className="relative flex-1 sm:flex-none">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 placeholder={t('dashboard.users.usergroups.search_placeholder')}
-                                className="pl-10 pr-4 py-2 w-[260px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                                className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
                             />

@@ -2,7 +2,6 @@
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
 import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield, Globe, Search, BarChart3, Zap } from 'lucide-react'
-import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'motion/react'
 import Image from 'next/image'
@@ -19,17 +18,15 @@ import OrgEditSEO from '@components/Dashboard/Pages/Org/OrgEditSEO/OrgEditSEO'
 import OrgEditUsage from '@components/Dashboard/Pages/Org/OrgEditUsage/OrgEditUsage'
 import OrgEditAutomations from '@components/Dashboard/Pages/Org/OrgEditAutomations/OrgEditAutomations'
 import { useTranslation } from 'react-i18next'
-import { useOrg } from '@components/Contexts/OrgContext'
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 
 export type OrgParams = {
   subpage: string
   orgslug: string
 }
 
-interface TabItem {
+interface TabConfig {
   id: string
   label: string
   icon?: LucideIcon
@@ -37,7 +34,7 @@ interface TabItem {
   requiredPlan?: PlanLevel
 }
 
-const getSettingTabs = (t: any): TabItem[] => [
+const getSettingTabs = (t: any): TabConfig[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
   { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
@@ -52,42 +49,9 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
-function TabLink({ tab, isActive, orgslug, currentPlan }: {
-  tab: TabItem,
-  isActive: boolean,
-  orgslug: string,
-  currentPlan: PlanLevel
-}) {
-  return (
-    <Link prefetch={false} href={getUriWithOrg(orgslug, '') + `/dash/org/settings/${tab.id}`}>
-      <div
-        className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-          isActive ? 'border-b-4' : 'opacity-50'
-        } cursor-pointer`}
-      >
-        <div className="flex items-center space-x-2.5 mx-2.5">
-          {tab.customIcon ? (
-            <Image src={tab.customIcon} alt={tab.label} width={16} height={16} />
-          ) : tab.icon ? (
-            <tab.icon size={16} />
-          ) : null}
-          <div className="flex items-center">
-            {tab.label}
-            {tab.requiredPlan && (
-              <PlanBadge currentPlan={currentPlan} requiredPlan={tab.requiredPlan} />
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
 function OrgPage(props: { params: Promise<OrgParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
-  const org = useOrg() as any
-  const currentPlan = usePlan()
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
   const SETTING_TABS = getSettingTabs(t)
@@ -136,35 +100,38 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     handleLabels()
   }, [params.subpage, params, t])
 
+  const tabs: DashTabItem[] = SETTING_TABS.map((tab) => ({
+    key: tab.id,
+    label: tab.label,
+    icon: tab.customIcon
+      ? <Image src={tab.customIcon} alt={tab.label} width={16} height={16} />
+      : tab.icon
+        ? <tab.icon size={16} />
+        : null,
+    href: getUriWithOrg(params.orgslug, '') + `/dash/org/settings/${tab.id}`,
+    active: params.subpage === tab.id,
+    requiresPlan: tab.requiredPlan,
+  }))
+
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+      <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('common.organization'), href: '/dash/org/settings/general', icon: <School size={14} /> }
           ]} />
         </div>
-        <div className="my-2  py-2">
-          <div className="w-100 flex flex-col space-y-1">
-            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+        <div className="my-2 py-2">
+          <div className="w-full flex flex-col space-y-1 min-w-0">
+            <div className="pt-3 flex font-bold text-3xl sm:text-4xl tracking-tighter truncate">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md">
-              {H2Label}{' '}
+            <div className="flex font-medium text-gray-400 text-md truncate">
+              {H2Label}
             </div>
           </div>
         </div>
-        <div className="flex space-x-0.5 font-black text-sm">
-          {SETTING_TABS.map((tab) => (
-            <TabLink
-              key={tab.id}
-              tab={tab}
-              isActive={params.subpage === tab.id}
-              orgslug={params.orgslug}
-              currentPlan={currentPlan}
-            />
-          ))}
-        </div>
+        <DashTabBar tabs={tabs} />
       </div>
       <div className="h-6 flex-shrink-0"></div>
       <motion.div

@@ -236,16 +236,16 @@ function OrgUsers() {
     <div>
       <Toast></Toast>
       <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs">
+      <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div className="flex-1">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 py-5 border-b border-gray-100">
+              <div className="flex-1 min-w-0">
                 <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.active_users.title')}</h1>
                 <p className="text-sm text-gray-500 mt-0.5">
                   {t('dashboard.users.active_users.subtitle')}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 {total > 0 && (
                   <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg font-medium">
                     {total} {total === 1 ? 'user' : 'users'}
@@ -255,7 +255,7 @@ function OrgUsers() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     placeholder={t('dashboard.users.active_users.search_placeholder') || 'Search users...'}
-                    className="pl-10 pr-4 py-2 w-[260px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+                    className="pl-10 pr-4 py-2 w-full sm:w-[220px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
                     value={searchValue}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
@@ -267,13 +267,13 @@ function OrgUsers() {
                   title="Export users as CSV"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Export</span>
+                  <span className="hidden sm:inline">Export</span>
                 </button>
               </div>
             </div>
 
             {/* Filter Bar */}
-            <div className="flex items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/30">
+            <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-100 bg-gray-50/30">
               <Filter className="w-4 h-4 text-gray-400" />
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Filters</span>
 
@@ -361,7 +361,7 @@ function OrgUsers() {
             )}
 
             {/* Content */}
-            <div className="px-0 relative">
+            <div className="overflow-x-auto relative">
               {isInitialLoading ? (
                 <div className="py-20 flex justify-center">
                   <LearnHouseSpinner size={36} />
@@ -623,7 +623,7 @@ function OrgUsers() {
 
             {/* Pagination Controls */}
             {total > ITEMS_PER_PAGE && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                 <div className="text-xs text-gray-500 font-medium">
                   {t('dashboard.users.active_users.pagination.showing', {
                     start: (page - 1) * ITEMS_PER_PAGE + 1,
