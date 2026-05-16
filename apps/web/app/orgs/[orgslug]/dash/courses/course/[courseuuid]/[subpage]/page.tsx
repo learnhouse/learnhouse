@@ -1,7 +1,6 @@
 'use client'
 import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
-import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'motion/react'
 import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
@@ -14,15 +13,12 @@ import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCour
 import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config';
 import { useTranslation } from 'react-i18next';
-import { useOrg } from '@components/Contexts/OrgContext';
-import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
+import { PlanLevel } from '@services/plans/plans';
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate';
-import { usePlan } from '@components/Hooks/usePlan';
 import CourseAnalyticsTab from '@components/Dashboard/Analytics/Course/CourseAnalyticsTab';
+import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -34,10 +30,6 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
   const router = useRouter();
-  const org = useOrg() as any;
-  const currentPlan = usePlan();
-  const hasCertificationsAccess = isFeatureAvailable('certifications', currentPlan);
-  const hasSEOAccess = isFeatureAvailable('seo', currentPlan);
 
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
@@ -141,63 +133,31 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   }
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
+        <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative min-w-0 overflow-hidden">
           <CourseOverviewTop params={params} />
-          <div className="flex space-x-3 font-black text-sm">
-            {tabs.map((tab) => {
-              const IconComponent = tab.icon
-              const isActive = params.subpage.toString() === tab.key
-              const hasAccess = hasPermission(tab.requiredPermission)
-              
-              if (!hasAccess) {
-                // Show disabled tab with subtle visual cues and tooltip
-                return (
-                  <ToolTip
-                    key={tab.key}
-                    content={
-                      <div className="text-center">
-                        <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
-                        <div className="text-sm text-gray-600">
-                          {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
-                        </div>
-                      </div>
-                    }
-                  >
-                    <div className="flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear opacity-30 cursor-not-allowed">
-                      <div className="flex items-center space-x-2.5 mx-2">
-                        <IconComponent size={16} />
-                        <div>{tab.label}</div>
-                      </div>
-                    </div>
-                  </ToolTip>
-                )
-              }
-              
-              return (
-                <Link
-                  key={tab.key}
-                  prefetch={false}
-                  href={getUriWithOrg(params.orgslug, '') + tab.href}
-                >
-                  <div
-                    className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
-                      isActive ? 'border-b-4' : 'opacity-50 hover:opacity-75'
-                    } cursor-pointer`}
-                  >
-                    <div className="flex items-center space-x-2.5 mx-2">
-                      <IconComponent size={16} />
-                      <div>{tab.label}</div>
-                      {(tab as any).requiresPlan && (
-                        <PlanBadge currentPlan={currentPlan} requiredPlan={(tab as any).requiresPlan} size="sm" noMargin />
-                      )}
-                    </div>
+          <DashTabBar tabs={tabs.map((tab) => {
+            const hasAccess = hasPermission(tab.requiredPermission)
+            const IconComponent = tab.icon
+            return {
+              key: tab.key,
+              label: tab.label,
+              icon: <IconComponent size={16} />,
+              href: getUriWithOrg(params.orgslug, '') + tab.href,
+              active: params.subpage.toString() === tab.key,
+              disabled: !hasAccess,
+              disabledTooltip: !hasAccess ? (
+                <div className="text-center">
+                  <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
+                  <div className="text-sm text-gray-600">
+                    {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
                   </div>
-                </Link>
-              )
-            })}
-          </div>
+                </div>
+              ) : undefined,
+              requiresPlan: tab.requiresPlan,
+            } as DashTabItem
+          })} />
         </div>
         <motion.div
           initial={{ opacity: 0 }}

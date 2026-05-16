@@ -51,7 +51,7 @@ export default function DashboardHome() {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="px-10 pt-8 pb-10">
+      <div className="px-4 sm:px-10 pt-8 pb-10">
         <div className="space-y-6 max-w-[1600px] mx-auto w-full">
           {/* Welcome Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -70,7 +70,7 @@ export default function DashboardHome() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 href="/dash/courses?new=true"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"

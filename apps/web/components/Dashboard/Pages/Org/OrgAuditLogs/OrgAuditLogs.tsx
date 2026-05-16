@@ -168,9 +168,9 @@ const OrgAuditLogs = () => {
   return (
     <FeatureGate feature="audit_logs">
       <>
-        <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
+        <div className="mx-4 sm:mx-10 bg-white rounded-xl nice-shadow px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap gap-3 justify-between items-start">
             <div>
               <h1 className="font-bold text-xl text-gray-800 flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
@@ -180,7 +180,7 @@ const OrgAuditLogs = () => {
                 {t('dashboard.organization.audit_logs.subtitle')}
               </h2>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-wrap gap-2 items-center">
                <button 
                 onClick={handleRefresh}
                 className={`p-2 rounded-md hover:bg-gray-200 transition-colors ${isValidating ? 'animate-spin' : ''}`}
@@ -317,6 +317,7 @@ const OrgAuditLogs = () => {
           </div>
         </div>
 
+        <div className="overflow-x-auto">
         <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
           <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
             <tr className="font-bolder text-[10px] tracking-wider">
@@ -440,6 +441,7 @@ const OrgAuditLogs = () => {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination Controls */}
         {total > ITEMS_PER_PAGE && (

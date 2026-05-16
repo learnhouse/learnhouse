@@ -152,14 +152,15 @@ export function CourseOverviewTop({
           { label: courseStructure.name }
         ]} />
       </div>
-      <div className="flex">
-        <div className="flex py-3 grow items-center">
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex py-2 grow min-w-0 items-center">
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
+            className="shrink-0"
           >
             {courseStructure?.thumbnail_image ? (
               <img
-                className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md object-cover"
                 src={`${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
                   'course_' + params.courseuuid,
@@ -170,26 +171,26 @@ export function CourseOverviewTop({
             ) : (
               <Image
                 width={100}
-                className="h-[57px] rounded-md drop-shadow-md"
+                className="w-[72px] sm:w-[100px] h-[41px] sm:h-[57px] rounded-md drop-shadow-md"
                 src={EmptyThumbnailImage}
                 alt={courseStructure?.name || ''}
               />
             )}
           </Link>
-          <div className="flex flex-col course_metadata justify-center pl-5">
-            <div className="text-gray-400 font-semibold text-sm">{t('dashboard.courses.overview_top.course_label')}</div>
-            <div className="text-black font-bold text-xl -mt-1 first-letter:uppercase">
+          <div className="flex flex-col course_metadata justify-center pl-3 sm:pl-5 min-w-0">
+            <div className="text-gray-400 font-semibold text-xs sm:text-sm">{t('dashboard.courses.overview_top.course_label')}</div>
+            <div className="text-black font-bold text-base sm:text-xl -mt-0.5 first-letter:uppercase truncate">
               {courseStructure.name}
             </div>
           </div>
         </div>
-        <div className="flex items-center self-center rounded-lg shadow-sm shadow-neutral-300/40 ring-1 ring-neutral-200/60 overflow-hidden">
+        <div className="flex items-center self-center rounded-lg shadow-sm shadow-neutral-300/40 ring-1 ring-neutral-200/60 overflow-hidden shrink-0">
           <SaveState orgslug={params.orgslug} />
           <div className="w-px self-stretch bg-neutral-200/80" />
           <button
             onClick={togglePublishStatus}
             disabled={isPublishing}
-            className={`group px-3.5 py-2 text-sm font-semibold flex items-center space-x-2 transition-colors ${
+            className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
               isPublished
                 ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70'
                 : 'bg-yellow-50/70 text-yellow-700 hover:bg-yellow-100/70'
@@ -202,7 +203,7 @@ export function CourseOverviewTop({
             ) : (
               <GlobeLock className="w-4 h-4" />
             )}
-            <span>
+            <span className="hidden sm:inline">
               {isPublishing
                 ? t('dashboard.courses.processing')
                 : isPublished
@@ -211,7 +212,7 @@ export function CourseOverviewTop({
               }
             </span>
             {!isPublishing && (
-              <span className={`inline-flex overflow-hidden max-w-0 group-hover:max-w-[150px] opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out`}>
+              <span className={`hidden sm:inline-flex overflow-hidden max-w-0 group-hover:max-w-[150px] opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out`}>
                 <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded whitespace-nowrap ${
                   isPublished
                     ? 'bg-green-200/80 text-green-800'
@@ -231,7 +232,7 @@ export function CourseOverviewTop({
                     <button
                       onClick={indexCourseForAI}
                       disabled={isIndexing}
-                      className={`group px-3.5 py-2 text-sm font-semibold flex items-center space-x-2 transition-colors ${
+                      className={`group px-2.5 sm:px-3.5 py-2 text-sm font-semibold flex items-center space-x-1.5 transition-colors ${
                         isIndexed
                           ? 'bg-blue-50/70 text-blue-700'
                           : 'bg-purple-50/70 text-purple-700 hover:bg-purple-100/70'
@@ -244,7 +245,7 @@ export function CourseOverviewTop({
                       ) : (
                         <BrainCircuit className="w-4 h-4" />
                       )}
-                      <span>
+                      <span className="hidden sm:inline">
                         {isIndexing ? 'Indexing...' : isIndexed ? 'Indexed' : 'Index for AI'}
                       </span>
                     </button>
@@ -260,10 +261,10 @@ export function CourseOverviewTop({
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
             target="_blank"
-            className="px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-2"
+            className="px-2.5 sm:px-3.5 py-2 text-sm font-semibold text-neutral-600 bg-neutral-50/70 hover:bg-neutral-100/70 transition-colors flex items-center space-x-1.5"
           >
             <Eye className="w-4 h-4" />
-            <span>{t('dashboard.courses.preview')}</span>
+            <span className="hidden sm:inline">{t('dashboard.courses.preview')}</span>
           </Link>
         </div>
       </div>
