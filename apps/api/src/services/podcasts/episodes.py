@@ -40,7 +40,7 @@ async def _user_can_view_unpublished_episode(
     acting_user_id = resolve_acting_user_id(current_user)
 
     # Superadmins can view everything
-    if is_user_superadmin(acting_user_id, db_session):
+    if await is_user_superadmin(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast

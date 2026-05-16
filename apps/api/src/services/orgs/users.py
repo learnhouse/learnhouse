@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 async def get_organization_users(
     request: Request,
-    org_id: str,
+    org_id: int,
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     page: int = 1,
@@ -259,7 +259,7 @@ async def get_organization_users(
 
 async def export_organization_users_csv(
     request: Request,
-    org_id: str,
+    org_id: int,
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     search: str = "",
@@ -457,7 +457,7 @@ async def remove_user_from_org(
     from src.routers.users import _invalidate_session_cache
     _invalidate_session_cache(user_id)
 
-    decrease_feature_usage("members", org_id, db_session)
+    await decrease_feature_usage("members", org_id, db_session)
 
     await dispatch_webhooks(
         event_name="user_removed_from_org",
@@ -522,15 +522,15 @@ async def remove_batch_users_from_org(
         _invalidate_session_cache(uid)
 
     for _ in range(removed_count):
-        decrease_feature_usage("members", org_id, db_session)
+        await decrease_feature_usage("members", org_id, db_session)
 
     return {"detail": f"{removed_count} user(s) removed from org"}
 
 
 async def update_user_role(
     request: Request,
-    org_id: str,
-    user_id: str,
+    org_id: int,
+    user_id: int,
     role_uuid: str,
     db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
@@ -573,7 +573,7 @@ async def update_user_role(
 
     if (
         len(admins) == 1
-        and int(admins[0].user_id) == int(user_id)
+        and admins[0].user_id == user_id
         and str(role_uuid) != "role_global_admin"
     ):
         raise HTTPException(
@@ -604,17 +604,17 @@ async def update_user_role(
 
     await dispatch_webhooks(
         event_name="user_role_changed",
-        org_id=int(org_id),
+        org_id=org_id,
         data={
-            "user_id": int(user_id),
-            "org_id": int(org_id),
+            "user_id": user_id,
+            "org_id": org_id,
             "new_role_uuid": role_uuid,
         },
     )
 
     # Send role change notification email
     try:
-        user_stmt = select(User).where(User.id == int(user_id))
+        user_stmt = select(User).where(User.id == user_id)
         user = (await db_session.execute(user_stmt)).scalars().first()
         if user and user.email:
             org_config_stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)

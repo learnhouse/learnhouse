@@ -387,7 +387,7 @@ async def import_courses(
 
         try:
             # Check usage limits
-            check_limits_with_usage("courses", org_id, db_session)
+            await check_limits_with_usage("courses", org_id, db_session)
 
             # Pre-generate the course UUID so we can clean up files on failure
             new_course_uuid = f"course_{uuid4()}"
@@ -418,7 +418,7 @@ async def import_courses(
 
             # Track usage AFTER commit — increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint
-            increase_feature_usage("courses", organization.id, db_session)
+            await increase_feature_usage("courses", organization.id, db_session)
 
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
@@ -430,7 +430,7 @@ async def import_courses(
 
         except Exception as e:
             # Reset session to a clean state so the next iteration can work
-            db_session.rollback()
+            await db_session.rollback()
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
                 new_uuid="",

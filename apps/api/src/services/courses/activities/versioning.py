@@ -103,7 +103,7 @@ async def get_activity_versions(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
@@ -167,7 +167,7 @@ async def get_activity_version(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
@@ -240,7 +240,7 @@ async def get_activity_state(
     activity, user = result
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
@@ -285,7 +285,7 @@ async def restore_activity_version(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)

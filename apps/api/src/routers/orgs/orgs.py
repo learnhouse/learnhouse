@@ -161,7 +161,7 @@ async def api_get_org_by_uuid(
 )
 async def api_export_org_users(
     request: Request,
-    org_id: str,
+    org_id: int,
     search: str = "",
     usergroup_id: Optional[int] = Query(default=None),
     usergroup_filter: Optional[Literal["in_group", "not_in_group"]] = Query(default=None),
@@ -197,7 +197,7 @@ async def api_export_org_users(
 )
 async def api_get_org_users(
     request: Request,
-    org_id: str,
+    org_id: int,
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
     search: str = "",
@@ -259,8 +259,8 @@ async def api_join_an_org(
 )
 async def api_update_user_role(
     request: Request,
-    org_id: str,
-    user_id: str,
+    org_id: int,
+    user_id: int,
     role_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db_session),
@@ -1144,7 +1144,7 @@ async def api_user_orgs(
     """
     # API tokens cannot access organization endpoints
     return await get_orgs_by_user(
-        request, db_session, str(current_user.id), page, limit
+        request, db_session, current_user.id, page, limit
     )
 
 
@@ -1169,7 +1169,7 @@ async def api_user_orgs_admin(
     """
     # API tokens cannot access organization endpoints
     return await get_orgs_by_user_admin(
-        request, db_session, str(current_user.id), page, limit
+        request, db_session, current_user.id, page, limit
     )
 
 

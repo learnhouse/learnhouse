@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from io import BytesIO
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException, UploadFile
@@ -393,7 +393,7 @@ class TestPodcastsService:
             is False
         )
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=MagicMock(return_value=True)):
+        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
             assert (
                 await _user_can_view_unpublished_podcast(
                     mock_request, hidden_podcast, regular_user, db
@@ -401,7 +401,7 @@ class TestPodcastsService:
                 is True
             )
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=MagicMock(return_value=False)):
+        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=False)):
             assert (
                 await _user_can_view_unpublished_podcast(
                     mock_request, author_podcast, regular_user, db
@@ -461,7 +461,7 @@ class TestPodcastsService:
             new_callable=AsyncMock,
         ), patch(
             "src.services.podcasts.podcasts.is_user_superadmin",
-            new=MagicMock(return_value=False),
+            new=AsyncMock(return_value=False),
         ):
             with pytest.raises(HTTPException) as hidden_exc:
                 await get_podcast(mock_request, hidden_podcast.podcast_uuid, regular_user, db)
@@ -546,7 +546,7 @@ class TestPodcastsService:
         admin_results = await get_podcasts_orgslug(
             mock_request, admin_user, org.slug, db, include_unpublished=True
         )
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=MagicMock(return_value=True)):
+        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
             superadmin_results = await get_podcasts_orgslug(
                 mock_request, regular_user, org.slug, db, include_unpublished=True
             )
@@ -572,7 +572,7 @@ class TestPodcastsService:
             mock_request, anonymous_user, org.slug, db
         ) == 1
 
-        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=MagicMock(return_value=True)):
+        with patch("src.services.podcasts.podcasts.is_user_superadmin", new=AsyncMock(return_value=True)):
             assert await get_podcasts_count_orgslug(
                 mock_request, regular_user, org.slug, db
             ) == 4
@@ -873,7 +873,7 @@ class TestEpisodesService:
             is False
         )
 
-        with patch("src.services.podcasts.episodes.is_user_superadmin", new=MagicMock(return_value=True)):
+        with patch("src.services.podcasts.episodes.is_user_superadmin", new=AsyncMock(return_value=True)):
             assert (
                 await _user_can_view_unpublished_episode(
                     mock_request, episode, podcast, regular_user, db
@@ -881,7 +881,7 @@ class TestEpisodesService:
                 is True
             )
 
-        with patch("src.services.podcasts.episodes.is_user_superadmin", new=MagicMock(return_value=False)):
+        with patch("src.services.podcasts.episodes.is_user_superadmin", new=AsyncMock(return_value=False)):
             assert (
                 await _user_can_view_unpublished_episode(
                     mock_request, episode, podcast, regular_user, db

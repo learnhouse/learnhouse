@@ -42,7 +42,7 @@ async def join_org(
             detail="Organization not found",
         )
 
-    check_limits_with_usage("members", org.id, db_session)
+    await check_limits_with_usage("members", org.id, db_session)
 
     join_method = await get_org_join_mechanism(
         request, args.org_id, current_user, db_session
@@ -121,7 +121,7 @@ async def join_org(
                     str(user.id),
                 )
 
-            increase_feature_usage("members", org.id, db_session)
+            await increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 
@@ -148,7 +148,7 @@ async def join_org(
             from src.routers.users import _invalidate_session_cache
             _invalidate_session_cache(user.id)
 
-            increase_feature_usage("members", org.id, db_session)
+            await increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 

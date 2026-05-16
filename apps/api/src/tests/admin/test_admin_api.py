@@ -7,7 +7,7 @@ Uses an in-memory SQLite database with real SQLModel tables.
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from sqlmodel import SQLModel, select
 from sqlalchemy import JSON
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -477,9 +477,9 @@ def mock_admin_side_effects():
     patches = [
         patch("src.services.admin.admin.dispatch_webhooks", new_callable=AsyncMock),
         patch("src.services.admin.admin.track", new_callable=AsyncMock),
-        patch("src.services.admin.admin.check_limits_with_usage", new_callable=MagicMock, return_value=True),
-        patch("src.services.admin.admin.increase_feature_usage", new_callable=MagicMock, return_value=True),
-        patch("src.services.admin.admin.decrease_feature_usage", new_callable=MagicMock, return_value=True),
+        patch("src.services.admin.admin.check_limits_with_usage", new_callable=AsyncMock, return_value=True),
+        patch("src.services.admin.admin.increase_feature_usage", new_callable=AsyncMock, return_value=True),
+        patch("src.services.admin.admin.decrease_feature_usage", new_callable=AsyncMock, return_value=True),
     ]
     started = [p.start() for p in patches]
     yield {

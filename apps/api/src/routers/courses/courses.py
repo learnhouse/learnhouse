@@ -390,7 +390,7 @@ async def api_get_course(
 )
 async def api_get_course_by_id(
     request: Request,
-    course_id: str,
+    course_id: int,
     db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:

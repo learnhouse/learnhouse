@@ -650,7 +650,7 @@ async def create_course_from_migration(
         )
 
     except Exception as e:
-        db_session.rollback()
+        await db_session.rollback()
         logger.error("Migration course creation failed: %s", e, exc_info=True)
         # Clean up temp files on failure so they don't accumulate
         shutil.rmtree(temp_real, ignore_errors=True)

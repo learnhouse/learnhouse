@@ -45,7 +45,7 @@ async def event_generator(generator, session_uuid: str):
         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
+async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     """
     Get the AI model for MagicBlocks based on the organization's plan.
 
@@ -53,7 +53,7 @@ def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     - Pro plan or higher: gemini-3-flash-preview
     """
     try:
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
 
         # Pro or Enterprise plans get the better model
         if plan_meets_requirement(current_plan, "pro"):
@@ -122,10 +122,10 @@ async def start_magicblock_session(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
-    reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=3)
 
     # Get AI model
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     # Create new session
     session = create_magicblock_session(
@@ -221,10 +221,10 @@ async def iterate_magicblock_session(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomically check + deduct AI credits to prevent concurrent-request overdraw.
-    reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=3)
 
     # Get AI model
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     # Use client-provided HTML or fall back to session's current_html
     html_to_iterate = message_request.current_html or session.current_html

@@ -75,7 +75,7 @@ async def _user_can_view_unpublished_podcast(
     acting_user_id = resolve_acting_user_id(current_user)
 
     # Superadmins can always view unpublished podcasts
-    if is_user_superadmin(acting_user_id, db_session):
+    if await is_user_superadmin(acting_user_id, db_session):
         return True
 
     # Check if user is a resource author of this podcast
@@ -288,7 +288,7 @@ async def get_podcasts_orgslug(
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished podcasts
-        if is_user_superadmin(acting_user_id, db_session):
+        if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             role_statement = (
@@ -426,7 +426,7 @@ async def get_podcasts_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published podcasts
         query = query.where(Podcast.public == True, Podcast.published == True)
-    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(count_acting_user_id, db_session):
+    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(count_acting_user_id, db_session):
         # Superadmins see all podcasts (no additional filter)
         pass
     else:
@@ -470,10 +470,10 @@ async def create_podcast(
     await check_resource_access(request, db_session, current_user, "podcast_x", AccessAction.CREATE)
 
     # Check plan access (podcasts require standard+ plan)
-    check_feature_access("podcasts", org_id, db_session)
+    await check_feature_access("podcasts", org_id, db_session)
 
     # Usage check (also checks if feature is enabled)
-    check_limits_with_usage("podcasts", org_id, db_session)
+    await check_limits_with_usage("podcasts", org_id, db_session)
 
     # Complete podcast object
     podcast.org_id = org_id
@@ -542,7 +542,7 @@ async def create_podcast(
     ]
 
     # Feature usage
-    increase_feature_usage("podcasts", podcast.org_id, db_session)
+    await increase_feature_usage("podcasts", podcast.org_id, db_session)
 
     podcast_data = {key: getattr(podcast, key) for key in podcast.model_fields}
     return PodcastRead.model_validate({**podcast_data, "authors": authors})
@@ -732,7 +732,7 @@ async def delete_podcast(
     await check_resource_access(request, db_session, current_user, podcast.podcast_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("podcasts", podcast.org_id, db_session)
+    await decrease_feature_usage("podcasts", podcast.org_id, db_session)
 
     # Clean up content files from storage
     from src.db.organizations import Organization

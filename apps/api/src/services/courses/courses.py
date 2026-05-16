@@ -101,7 +101,7 @@ async def get_course(
 
 async def get_course_by_id(
     request: Request,
-    course_id: str,
+    course_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
 ):
@@ -275,7 +275,7 @@ async def get_courses_orgslug(
     can_view_unpublished = False
     if include_unpublished and not isinstance(current_user, AnonymousUser):
         # Superadmins can always view unpublished courses
-        if is_user_superadmin(acting_user_id, db_session):
+        if await is_user_superadmin(acting_user_id, db_session):
             can_view_unpublished = True
         else:
             # Check if user has admin/editor role in this organization
@@ -419,7 +419,7 @@ async def get_courses_count_orgslug(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only count public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif not isinstance(current_user, AnonymousUser) and is_user_superadmin(acting_user_id, db_session):
+    elif not isinstance(current_user, AnonymousUser) and await is_user_superadmin(acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -494,7 +494,7 @@ async def search_courses(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public AND published courses
         query = query.where(Course.public == True, Course.published == True)
-    elif is_user_superadmin(search_acting_user_id, db_session):
+    elif await is_user_superadmin(search_acting_user_id, db_session):
         # Superadmins see all courses (no additional filter)
         pass
     else:
@@ -595,7 +595,7 @@ async def create_course(
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check
-    check_limits_with_usage("courses", org_id, db_session)
+    await check_limits_with_usage("courses", org_id, db_session)
 
     # Complete course object
     course.org_id = course.org_id
@@ -649,7 +649,7 @@ async def create_course(
         await db_session.commit()  # Single commit for both
         await db_session.refresh(resource_author)
     except Exception:
-        db_session.rollback()
+        await db_session.rollback()
         raise
 
     # Get course authors with their roles
@@ -676,7 +676,7 @@ async def create_course(
     ]
 
     # Feature usage
-    increase_feature_usage("courses", course.org_id, db_session)
+    await increase_feature_usage("courses", course.org_id, db_session)
 
     await dispatch_webhooks(
         event_name="course_created",
@@ -918,7 +918,7 @@ async def delete_course(
     await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     # Feature usage
-    decrease_feature_usage("courses", course.org_id, db_session)
+    await decrease_feature_usage("courses", course.org_id, db_session)
 
     # Clean up content files from storage
     org_statement = select(Organization).where(Organization.id == course.org_id)
@@ -1131,7 +1131,7 @@ async def clone_course(
     await check_resource_access(request, db_session, current_user, "course_x", AccessAction.CREATE)
 
     # Usage check for creating new course
-    check_limits_with_usage("courses", original_course.org_id, db_session)
+    await check_limits_with_usage("courses", original_course.org_id, db_session)
 
     # Get organization for file operations
     org_statement = select(Organization).where(Organization.id == original_course.org_id)
@@ -1409,7 +1409,7 @@ async def clone_course(
     await db_session.commit()
 
     # Increase feature usage for the new course
-    increase_feature_usage("courses", new_course.org_id, db_session)
+    await increase_feature_usage("courses", new_course.org_id, db_session)
 
     # Get course authors with their roles
     authors_statement = (

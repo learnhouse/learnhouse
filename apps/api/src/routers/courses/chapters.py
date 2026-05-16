@@ -196,7 +196,7 @@ async def api_update_coursechapter(
 )
 async def api_delete_coursechapter(
     request: Request,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):

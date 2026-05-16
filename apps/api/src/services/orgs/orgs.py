@@ -621,7 +621,7 @@ async def delete_org(
 async def get_orgs_by_user_admin(
     request: Request,
     db_session: AsyncSession,
-    user_id: str,
+    user_id: int,
     page: int = 1,
     limit: int = 10,
 ) -> list[OrganizationRead]:
@@ -656,7 +656,7 @@ async def get_orgs_by_user_admin(
 async def get_orgs_by_user(
     request: Request,
     db_session: AsyncSession,
-    user_id: str,
+    user_id: int,
     page: int = 1,
     limit: int = 10,
 ) -> list[OrganizationRead]:

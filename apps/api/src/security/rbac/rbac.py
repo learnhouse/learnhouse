@@ -196,7 +196,7 @@ async def authorization_verify_if_user_is_author(
         # user was a different contributor. Now we filter by both resource_uuid AND user_id.
         statement = select(ResourceAuthor).where(
             ResourceAuthor.resource_uuid == element_uuid,
-            ResourceAuthor.user_id == int(user_id)
+            ResourceAuthor.user_id == user_id
         )
         resource_author = (await db_session.execute(statement)).scalars().first()
 

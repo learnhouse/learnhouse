@@ -23,7 +23,7 @@ from src.security.rbac import check_resource_access, AccessAction
 async def create_documentpdf_activity(
     request: Request,
     name: str,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: AsyncSession,
     pdf_file: UploadFile | None = None,
@@ -124,7 +124,7 @@ async def create_documentpdf_activity(
     # Find the last activity order in the chapter
     statement = (
         select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == int(chapter_id))
+        .where(ChapterActivity.chapter_id == chapter_id)
         .order_by(ChapterActivity.order)  # type: ignore
     )
     chapter_activities = (await db_session.execute(statement)).scalars().all()
@@ -133,7 +133,7 @@ async def create_documentpdf_activity(
 
     # Add activity to chapter
     activity_chapter = ChapterActivity(
-        chapter_id=(int(chapter_id)),
+        chapter_id=chapter_id,
         activity_id=activity.id,  # type: ignore
         course_id=coursechapter.course_id,
         org_id=coursechapter.org_id,
