@@ -102,7 +102,7 @@ function EditDocumentActivityModal({ activity, courseUuid, orgSlug, onClose }: E
           className="inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
           {isSubmitting ? (
-            <LearnHouseSpinner size={18} color="#ffffff" />
+            <LearnHouseSpinner size={18} className="[&>div]:border-t-white" />
           ) : (
             'Save changes'
           )}

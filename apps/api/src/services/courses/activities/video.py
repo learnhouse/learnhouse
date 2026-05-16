@@ -65,7 +65,9 @@ async def create_video_activity(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.CREATE
+    )
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
@@ -203,7 +205,9 @@ async def create_external_video_activity(
         )
 
     # RBAC check
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.CREATE
+    )
 
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
@@ -284,7 +288,9 @@ async def update_video_activity(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
 
     if name is not None:
         activity.name = name
@@ -294,7 +300,10 @@ async def update_video_activity(
 
     if video_file and video_file.filename:
         if video_file.content_type not in ["video/mp4", "video/webm"]:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Video : Wrong video format")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Video : Wrong video format",
+            )
 
         statement = select(Organization).where(Organization.id == activity.org_id)
         organization = db_session.exec(statement).first()
@@ -310,6 +319,7 @@ async def update_video_activity(
             new_content["filename"] = saved_filename
             activity.content = new_content
             from sqlalchemy.orm.attributes import flag_modified
+
             flag_modified(activity, "content")
 
     activity.update_date = str(datetime.now())
@@ -341,7 +351,9 @@ async def update_external_video_activity(
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
+    await check_resource_access(
+        request, db_session, current_user, course.course_uuid, AccessAction.UPDATE
+    )
 
     if name is not None:
         activity.name = name
@@ -351,6 +363,7 @@ async def update_external_video_activity(
         content["uri"] = uri
         activity.content = content
         from sqlalchemy.orm.attributes import flag_modified
+
         flag_modified(activity, "content")
 
     if details:
