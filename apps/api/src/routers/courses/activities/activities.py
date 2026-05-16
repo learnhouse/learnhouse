@@ -27,6 +27,7 @@ from src.services.courses.activities.video import (
     ExternalVideo,
     create_external_video_activity,
     create_video_activity,
+    update_video_activity,
 )
 from src.services.courses.lock_usergroups import (
     add_usergroup_to_activity,
@@ -395,6 +396,33 @@ async def api_create_external_video_activity(
     """
     return await create_external_video_activity(
         request, current_user, external_video, db_session
+    )
+
+
+@router.put(
+    "/video/{activity_uuid}",
+    response_model=ActivityRead,
+    summary="Update hosted video activity",
+    description="Replace the video file and/or update settings for an existing hosted video activity.",
+    responses={
+        200: {"description": "Updated video activity.", "model": ActivityRead},
+        401: {"description": "Authentication required"},
+        403: {"description": "User lacks permission to update this activity"},
+        404: {"description": "Activity not found"},
+        409: {"description": "Invalid video format"},
+    },
+)
+async def api_update_video_activity(
+    request: Request,
+    activity_uuid: str,
+    name: Optional[str] = Form(default=None),
+    details: str = Form(default="{}"),
+    video_file: UploadFile | None = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    return await update_video_activity(
+        request, activity_uuid, current_user, db_session, name, details, video_file
     )
 
 
