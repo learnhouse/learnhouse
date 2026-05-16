@@ -87,17 +87,42 @@ function DashMobileMenu() {
         style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)' }}
       >
         <div
-          className="flex items-center gap-0.5 px-1.5 py-1.5 bg-[#111113]/92 backdrop-blur-xl rounded-full border border-white/[0.1]"
-          style={{ boxShadow: '0 4px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)' }}
+          className="flex items-center gap-0.5 px-1.5 py-1.5 bg-[#111113]/90 backdrop-blur-xl rounded-full"
+          style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.3)' }}
         >
-          {/* Home — always visible */}
-          <PillLink href="/dash" icon={<House size={18} weight="fill" />} active={isActive('/dash')} />
-          {/* Progressive reveal on wider screens */}
+          {/* LearnHouse logo — links to home */}
+          <Link
+            href="/dash"
+            className="flex items-center justify-center px-2.5 py-2.5 rounded-full transition-all duration-200"
+            aria-label="Home"
+          >
+            <img
+              src="/lrn-dash.svg"
+              alt="LearnHouse"
+              className="h-[18px] w-[18px] opacity-60 hover:opacity-90 transition-opacity"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+          </Link>
+          {/* Progressive reveal — more icons as viewport widens */}
           <PillLink href="/dash/courses" icon={<BookOpen size={18} weight="fill" />} active={isActive('/dash/courses')} className="hidden min-[340px]:flex" />
           <PillLink href="/dash/assignments" icon={<Files size={18} weight="fill" />} active={isActive('/dash/assignments')} className="hidden min-[390px]:flex" />
           <PillLink href="/dash/users/settings/users" icon={<Users size={18} weight="fill" />} active={isActive('/dash/users')} className="hidden min-[430px]:flex" />
           {isEnabled('communities') && (
             <PillLink href="/dash/communities" icon={<ChatsCircle size={18} weight="fill" />} active={isActive('/dash/communities')} className="hidden min-[470px]:flex" />
+          )}
+          {isEnabled('podcasts') && (
+            <PillLink href="/dash/podcasts" icon={<Headphones size={18} weight="fill" />} active={isActive('/dash/podcasts')} className="hidden min-[510px]:flex" />
+          )}
+          {isEnabled('boards') && (
+            <PillLink href="/dash/boards" icon={<ChalkboardSimple size={18} weight="fill" />} active={isActive('/dash/boards')} className="hidden min-[550px]:flex" />
+          )}
+          {isEnabled('playgrounds') && (
+            <PillLink href="/dash/playgrounds" icon={<Cube size={18} weight="fill" />} active={isActive('/dash/playgrounds')} className="hidden min-[590px]:flex" />
+          )}
+          <PillLink href="/dash/analytics" icon={<ChartBar size={18} weight="fill" />} active={isActive('/dash/analytics')} className="hidden min-[630px]:flex" />
+          <PillLink href="/dash/org/settings/general" icon={<Buildings size={18} weight="fill" />} active={isActive('/dash/org')} className="hidden min-[670px]:flex" />
+          {isEnabled('payments') && (
+            <PillLink href="/dash/payments/overview" icon={<CurrencyCircleDollar size={18} weight="fill" />} active={isActive('/dash/payments')} className="hidden min-[710px]:flex" />
           )}
 
           <span className="w-px h-4 bg-white/[0.15] mx-1 shrink-0" />
@@ -124,10 +149,11 @@ function DashMobileMenu() {
             <AnimatePresence mode="wait" initial={false}>
               {menuOpen
                 ? <motion.span key="x" className="flex" initial={{ rotate: -45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 45, opacity: 0 }} transition={{ duration: 0.15 }}><X size={18} weight="bold" /></motion.span>
-                : <motion.span key="list" className="flex" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }} transition={{ duration: 0.15 }}><List size={18} weight="fill" /></motion.span>
+                : <motion.span key="list" className="flex" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -45, opacity: 0 }} transition={{ duration: 0.15 }}><List size={18} /></motion.span>
               }
             </AnimatePresence>
           </button>
+
         </div>
       </nav>
 
@@ -147,124 +173,123 @@ function DashMobileMenu() {
 
             <motion.div
               key="panel"
-              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 6, scale: 0.98 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 340 }}
-              className="fixed left-4 right-4 z-[9998] max-w-xs mx-auto bg-[#111113] rounded-2xl border border-white/[0.08] overflow-hidden"
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 360 }}
+              className="fixed left-4 right-4 z-[9998] max-w-sm mx-auto bg-[#0e0e10]/95 backdrop-blur-xl rounded-2xl overflow-hidden"
               style={{
                 bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)',
-                boxShadow: '0 16px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
               }}
             >
               {/* Org header */}
-              <div className="flex items-center gap-2.5 px-3.5 py-3 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3 px-4 py-3.5">
                 {plan === 'enterprise' && org?.logo_image ? (
                   <img
                     src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
                     alt={org?.name}
-                    className="h-6 w-6 object-contain rounded-md"
+                    className="h-7 w-7 object-contain rounded-lg"
                   />
                 ) : (
-                  <img src="/lrn-dash.svg" alt="LearnHouse" className="h-5 w-5" style={{ filter: 'brightness(0) invert(1)' }} />
+                  <div className="h-7 w-7 flex items-center justify-center bg-white/[0.06] rounded-lg">
+                    <img src="/lrn-dash.svg" alt="LearnHouse" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
+                  </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white leading-tight truncate">{org?.name}</p>
+                  <p className="text-sm font-semibold text-white truncate leading-none mb-0.5">{org?.name}</p>
                   <p className={cn(
-                    'text-[9px] font-medium uppercase tracking-wider',
+                    'text-[10px] font-medium',
                     mode === 'ee' ? 'text-amber-400' :
                     mode === 'oss' ? 'text-green-400' :
                     plan === 'enterprise' ? 'text-amber-400' :
                     plan === 'pro' ? 'text-purple-400' :
                     plan === 'standard' ? 'text-blue-400' :
-                    'text-white/40'
+                    'text-white/30'
                   )}>{planLabel}</p>
                 </div>
               </div>
 
+              <div className="h-px bg-white/[0.05] mx-4" />
+
               {/* Nav items */}
-              <div className="py-1.5 px-1.5 max-h-[52vh] overflow-y-auto overscroll-contain space-y-0.5">
-                <PanelItem href="/dash" icon={<House size={16} weight="fill" />} label={t('common.home')} active={isActive('/dash')} onClick={close} />
-                <PanelItem href="/dash/courses" icon={<BookOpen size={16} weight="fill" />} label={t('courses.courses')} active={isActive('/dash/courses')} onClick={close} />
-                <PanelItem href="/dash/assignments" icon={<Files size={16} weight="fill" />} label={t('common.assignments')} active={isActive('/dash/assignments')} onClick={close} />
-                {isEnabled('communities') && <PanelItem href="/dash/communities" icon={<ChatsCircle size={16} weight="fill" />} label={t('communities.title')} active={isActive('/dash/communities')} onClick={close} />}
-                {isEnabled('podcasts') && <PanelItem href="/dash/podcasts" icon={<Headphones size={16} weight="fill" />} label={t('podcasts.podcasts')} active={isActive('/dash/podcasts')} onClick={close} />}
-                {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={16} weight="fill" />} label="Boards" active={isActive('/dash/boards')} onClick={close} />}
-                {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={16} weight="fill" />} label="Playgrounds" active={isActive('/dash/playgrounds')} onClick={close} />}
-                <PanelItem href="/dash/users/settings/users" icon={<Users size={16} weight="fill" />} label={t('common.users')} active={isActive('/dash/users')} onClick={close} />
-                {isEnabled('payments') && <PanelItem href="/dash/payments/overview" icon={<CurrencyCircleDollar size={16} weight="fill" />} label={t('common.payments')} active={isActive('/dash/payments')} onClick={close} />}
-                <PanelItem href="/dash/org/settings/general" icon={<Buildings size={16} weight="fill" />} label={t('common.organization')} active={isActive('/dash/org')} onClick={close} />
-                <PanelItem href="/dash/analytics" icon={<ChartBar size={16} weight="fill" />} label="Analytics" active={isActive('/dash/analytics')} onClick={close} />
+              <div className="py-2 px-2 max-h-[52vh] overflow-y-auto overscroll-contain space-y-px">
+                <PanelItem href="/dash" icon={<House size={15} weight="fill" />} label={t('common.home')} active={isActive('/dash')} onClick={close} />
+                <PanelItem href="/dash/courses" icon={<BookOpen size={15} weight="fill" />} label={t('courses.courses')} active={isActive('/dash/courses')} onClick={close} />
+                <PanelItem href="/dash/assignments" icon={<Files size={15} weight="fill" />} label={t('common.assignments')} active={isActive('/dash/assignments')} onClick={close} />
+                <PanelItem href="/dash/users/settings/users" icon={<Users size={15} weight="fill" />} label={t('common.users')} active={isActive('/dash/users')} onClick={close} />
+                {isEnabled('communities') && <PanelItem href="/dash/communities" icon={<ChatsCircle size={15} weight="fill" />} label={t('communities.title')} active={isActive('/dash/communities')} onClick={close} />}
+                {isEnabled('podcasts') && <PanelItem href="/dash/podcasts" icon={<Headphones size={15} weight="fill" />} label={t('podcasts.podcasts')} active={isActive('/dash/podcasts')} onClick={close} />}
+                {isEnabled('boards') && <PanelItem href="/dash/boards" icon={<ChalkboardSimple size={15} weight="fill" />} label="Boards" active={isActive('/dash/boards')} onClick={close} />}
+                {isEnabled('playgrounds') && <PanelItem href="/dash/playgrounds" icon={<Cube size={15} weight="fill" />} label="Playgrounds" active={isActive('/dash/playgrounds')} onClick={close} />}
+                {isEnabled('payments') && <PanelItem href="/dash/payments/overview" icon={<CurrencyCircleDollar size={15} weight="fill" />} label={t('common.payments')} active={isActive('/dash/payments')} onClick={close} />}
+                <PanelItem href="/dash/analytics" icon={<ChartBar size={15} weight="fill" />} label="Analytics" active={isActive('/dash/analytics')} onClick={close} />
+                <PanelItem href="/dash/org/settings/general" icon={<Buildings size={15} weight="fill" />} label={t('common.organization')} active={isActive('/dash/org')} onClick={close} />
 
-                <div className="my-1 mx-2 border-t border-white/[0.06]" />
+                <div className="h-px bg-white/[0.05] mx-2 my-1.5" />
 
-                <PanelItem href="/account/general" icon={<Gear size={16} weight="fill" />} label={t('common.settings')} active={isActive('/account')} onClick={close} />
+                <PanelItem href="/account/general" icon={<Gear size={15} weight="fill" />} label={t('common.settings')} active={isActive('/account')} onClick={close} />
 
                 {/* Language picker */}
                 <button
                   onClick={() => setLangExpanded(v => !v)}
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2 text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                 >
-                  <Globe size={16} weight="fill" />
+                  <Globe size={15} weight="fill" />
                   <span className="text-sm font-medium flex-1 text-left">{t('common.language')}</span>
-                  <CaretDown size={11} weight="bold" className={cn('text-white/30 transition-transform', langExpanded && 'rotate-180')} />
+                  <CaretDown size={10} weight="bold" className={cn('transition-transform', langExpanded && 'rotate-180')} />
                 </button>
                 {langExpanded && (
-                  <div className="ml-2 pl-2 border-l border-white/[0.06] space-y-0.5">
+                  <div className="ml-2 pl-3 border-l border-white/[0.05] space-y-px">
                     {AVAILABLE_LANGUAGES.map(lang => (
                       <button
                         key={lang.code}
                         onClick={() => { changeLanguage(lang.code); setLangExpanded(false) }}
-                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-sm text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                       >
                         <span className="font-medium">{lang.nativeName}</span>
-                        {i18n.language.split('-')[0] === lang.code && <Check size={12} weight="bold" className="text-green-500" />}
+                        {i18n.language.split('-')[0] === lang.code && <Check size={11} weight="bold" className="text-green-500" />}
                       </button>
                     ))}
                   </div>
                 )}
 
-                <a
-                  href="https://docs.learnhouse.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2 text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+                <a href="https://docs.learnhouse.app" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                 >
-                  <Book size={16} weight="fill" />
+                  <Book size={15} weight="fill" />
                   <span className="text-sm font-medium">{t('common.help_menu.documentation')}</span>
                 </a>
-                <a
-                  href="https://discord.gg/learnhouse"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2 text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+                <a href="https://discord.gg/learnhouse" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                 >
-                  <DiscordIcon size={16} />
+                  <DiscordIcon size={15} />
                   <span className="text-sm font-medium">{t('common.help_menu.discord')}</span>
                 </a>
                 <button
                   onClick={() => { setFeedbackModalOpen(true); close() }}
-                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2 text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+                  className="flex items-center w-full rounded-lg px-2.5 py-2 gap-2.5 text-white/40 hover:text-white/80 hover:bg-white/[0.05] transition-all"
                 >
-                  <ChatCircleDots size={16} weight="fill" />
+                  <ChatCircleDots size={15} weight="fill" />
                   <span className="text-sm font-medium">{t('common.help_menu.report_feedback')}</span>
                 </button>
               </div>
 
               {/* User footer */}
-              <div className="border-t border-white/[0.06] px-3 py-2.5">
-                <div className="flex items-center gap-2.5">
-                  <UserAvatar width={26} rounded="rounded-full" shadow="shadow-none" />
+              <div className="h-px bg-white/[0.05] mx-4" />
+              <div className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <UserAvatar width={28} rounded="rounded-full" shadow="shadow-none" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white/90 truncate">{session?.data?.user?.username}</p>
-                    <p className="text-[10px] text-white/40 truncate">{session?.data?.user?.email}</p>
+                    <p className="text-sm font-semibold text-white/90 truncate leading-none mb-0.5">{session?.data?.user?.username}</p>
+                    <p className="text-[10px] text-white/30 truncate">{session?.data?.user?.email}</p>
                   </div>
                   <button
                     onClick={logOutUI}
                     aria-label={t('user.sign_out')}
-                    className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/[0.05] transition-all"
+                    className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/[0.05] transition-all"
                   >
-                    <SignOut size={15} weight="fill" />
+                    <SignOut size={14} weight="fill" />
                   </button>
                 </div>
               </div>
