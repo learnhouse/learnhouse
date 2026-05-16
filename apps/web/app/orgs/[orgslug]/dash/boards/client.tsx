@@ -239,7 +239,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   return (
     <FeatureGate feature="boards" orgslug={orgslug} context="dashboard">
-      <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
+      <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
         <div className="mb-6 pt-6">
           <Breadcrumbs items={[
             { label: t('boards.boards'), href: '/dash/boards', icon: <ChalkboardSimple size={14} /> }

@@ -1,13 +1,9 @@
 'use client'
 import React, { useEffect, use } from 'react';
 import { motion } from 'motion/react'
-import Link from 'next/link'
-import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
-import { Monitor, ScanEye, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
+import { ScanEye, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useOrg } from '@components/Contexts/OrgContext'
 import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
 import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
@@ -16,9 +12,7 @@ import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
-import { PlanLevel } from '@services/plans/plans'
-import { usePlan } from '@components/Hooks/usePlan'
+import { DashTabBar, DashTabItem } from '@components/Dashboard/Shared/DashTabBar/DashTabBar'
 
 export type SettingsParams = {
   subpage: string
@@ -28,12 +22,8 @@ export type SettingsParams = {
 function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
-  const session = useLHSession() as any
-  const org = useOrg() as any
-  const currentPlan = usePlan()
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
-  const isMobile = useMediaQuery('(max-width: 767px)')
 
   function handleLabels() {
     if (params.subpage == 'users') {
@@ -64,168 +54,82 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
 
   useEffect(() => {
     handleLabels()
-  }, [session, org, params.subpage, params, t])
+  }, [params.subpage, params, t])
 
-  if (isMobile) {
-    // TODO: Work on a better mobile experience
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">{t('dashboard.users.settings.mobile.title')}</h2>
-          <Monitor className='mx-auto my-5' size={60} />
-          <p>{t('dashboard.users.settings.mobile.message1')}</p>
-          <p>{t('dashboard.users.settings.mobile.message2')}</p>
-        </div>
-      </div>
-    )
-  }
+  const tabs: DashTabItem[] = [
+    {
+      key: 'users',
+      label: t('dashboard.users.settings.tabs.users'),
+      icon: <Users size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/users`,
+      active: params.subpage === 'users',
+    },
+    {
+      key: 'usergroups',
+      label: t('dashboard.users.settings.tabs.usergroups'),
+      icon: <SquareUserRound size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`,
+      active: params.subpage === 'usergroups',
+      requiresPlan: 'standard',
+    },
+    {
+      key: 'roles',
+      label: t('dashboard.users.settings.tabs.roles'),
+      icon: <Shield size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/roles`,
+      active: params.subpage === 'roles',
+      requiresPlan: 'pro',
+    },
+    {
+      key: 'signups',
+      label: t('dashboard.users.settings.tabs.signups'),
+      icon: <ScanEye size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`,
+      active: params.subpage === 'signups',
+    },
+    {
+      key: 'add',
+      label: t('dashboard.users.settings.tabs.add'),
+      icon: <UserPlus size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`,
+      active: params.subpage === 'add',
+    },
+    {
+      key: 'audit-logs',
+      label: t('dashboard.users.settings.tabs.audit_logs'),
+      icon: <ShieldAlert size={16} />,
+      href: getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`,
+      active: params.subpage === 'audit-logs',
+      requiresPlan: 'enterprise',
+    },
+  ]
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1 overflow-hidden">
+      <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('common.users'), href: '/dash/users/settings/users', icon: <Users size={14} /> }
           ]} />
         </div>
-        <div className="my-2  py-3">
-          <div className="w-100 flex flex-col space-y-1">
-            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+        <div className="my-2 py-3">
+          <div className="w-full flex flex-col space-y-1 min-w-0">
+            <div className="pt-3 flex font-bold text-3xl sm:text-4xl tracking-tighter truncate">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md">
-              {H2Label}{' '}
+            <div className="flex font-medium text-gray-400 text-md truncate">
+              {H2Label}
             </div>
           </div>
         </div>
-        <div className="flex space-x-5 font-black text-sm">
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/users`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'users'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <Users size={16} />
-                <div>{t('dashboard.users.settings.tabs.users')}</div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'usergroups'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <SquareUserRound size={16} />
-                <div className="flex items-center">
-                  {t('dashboard.users.settings.tabs.usergroups')}
-                  <PlanBadge currentPlan={currentPlan} requiredPlan="standard" />
-                </div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/roles`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'roles'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <Shield size={16} />
-                <div className="flex items-center">
-                  {t('dashboard.users.settings.tabs.roles')}
-                  <PlanBadge currentPlan={currentPlan} requiredPlan="pro" />
-                </div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'signups'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <ScanEye size={16} />
-                <div>{t('dashboard.users.settings.tabs.signups')}</div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'add'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <UserPlus size={16} />
-                <div>{t('dashboard.users.settings.tabs.add')}</div>
-              </div>
-            </div>
-          </Link>
-          
-          <Link
-            prefetch={false}
-            href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'audit-logs'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <ShieldAlert size={16} />
-                <div className="flex items-center">
-                  {t('dashboard.users.settings.tabs.audit_logs')}
-                  <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" />
-                </div>
-              </div>
-            </div>
-          </Link>
-          
-        </div>
+        <DashTabBar tabs={tabs} />
       </div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="flex-1 overflow-y-auto"
+        className="min-w-0 overflow-y-auto overflow-x-hidden"
       >
         {params.subpage == 'users' ? <OrgUsers /> : ''}
         {params.subpage == 'signups' ? <OrgAccess /> : ''}
