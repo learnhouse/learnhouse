@@ -71,7 +71,7 @@ FROM python:3.14.3-slim-bookworm AS runner
 
 # Single apt layer: nginx, curl, netcat, node, pm2
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx curl netcat-openbsd ca-certificates gnupg unzip \
+    && apt-get install -y --no-install-recommends nginx curl netcat-openbsd ca-certificates gnupg unzip build-essential \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm install -g pm2 \
