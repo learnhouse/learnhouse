@@ -1,97 +1,64 @@
-"""Smoke tests for the Atlas SSE event union + serializer.
+"""Round-trip and contract tests for Atlas SSE event models.
 
-Covers shape, discriminator behavior, and ``serialize`` envelope format.
-The frontend's typed ``switch (event.type)`` is the consumer, so we
-verify ``event`` and ``data`` keys come out matching the discriminator.
+These guard against accidental field renames that would break the
+frontend's discriminated union (see apps/web/services/ai/atlas.ts).
 """
-
-from __future__ import annotations
 
 import json
 
-from src.services.ai.atlas.events import (
-    AppliedEvent,
-    Candidate,
-    ConfirmRequiredEvent,
-    EntityAmbiguousEvent,
-    MessageDeltaEvent,
-    PendingDroppedEvent,
-    PreviewActivityEvent,
-    ResourceRef,
-    serialize,
-)
-from src.services.ai.atlas.tiers import ConfirmationChallenge
+from src.services.ai.atlas import events as ev
 
 
-def test_message_delta_serialize():
-    env = serialize(MessageDeltaEvent(delta="hello"))
-    assert env["event"] == "message.delta"
-    assert json.loads(env["data"]) == {"type": "message.delta", "delta": "hello"}
+def test_session_event_serializes_with_type():
+    e = ev.SessionEvent(aichat_uuid="aichat_xxx")
+    out = ev.serialize(e)
+    assert out["event"] == "session"
+    payload = json.loads(out["data"])
+    assert payload["type"] == "session"
+    assert payload["aichat_uuid"] == "aichat_xxx"
 
 
-def test_preview_activity_omits_none():
-    ev = PreviewActivityEvent(
-        pending_id="pend_x",
-        target=ResourceRef(kind="activity", uuid="activity_x", name="Welcome"),
-        proposed={"name": "Welcome 2"},
-        summary="Rename Welcome to Welcome 2.",
-        mode="rename",
+def test_preview_activity_uses_proposed_not_patch():
+    target = ev.ResourceRefDTO(kind="activity", uuid="activity_xxx", name="Intro")
+    e = ev.PreviewActivityEvent(
+        pending_id="pid", target=target, proposed={"name": "Intro"}, summary="x", mode="create"
     )
-    env = serialize(ev)
-    payload = json.loads(env["data"])
-    assert payload["type"] == "preview.activity"
-    assert payload["mode"] == "rename"
-    # current / expected_version are None → excluded
-    assert "current" not in payload
-    assert "expected_version" not in payload
+    payload = json.loads(ev.serialize(e)["data"])
+    assert "proposed" in payload
+    assert "patch" not in payload
 
 
-def test_entity_ambiguous_carries_candidates():
-    ev = EntityAmbiguousEvent(
-        kind="activity",
-        selector="intro",
-        candidates=[
-            Candidate(kind="activity", uuid="a1", name="Introduction", label="Ch 1 · Introduction", score=0.85),
-            Candidate(kind="activity", uuid="a2", name="Intro to DNS", label="Ch 3 · Intro to DNS", score=0.84),
-        ],
+def test_preview_course_uses_patch_not_proposed():
+    target = ev.ResourceRefDTO(kind="course", uuid="course_x", name="Algebra")
+    e = ev.PreviewCourseEvent(
+        pending_id="pid", target=target, patch={"name": "Algebra 1"}, summary="x", mode="rename"
     )
-    env = serialize(ev)
-    payload = json.loads(env["data"])
-    assert payload["type"] == "entity.ambiguous"
-    assert len(payload["candidates"]) == 2
+    payload = json.loads(ev.serialize(e)["data"])
+    assert "patch" in payload
+    assert "proposed" not in payload
 
 
-def test_confirm_required_serialize():
-    ch = ConfirmationChallenge(
-        pending_id="pend_y",
-        action_label="Delete chapter 'Foo'",
-        blast_radius_summary="Removes 3 activities.",
-        challenge_phrase="Foo",
+def test_confirmation_challenge_required_fields():
+    challenge = ev.ConfirmationChallengeDTO(
+        pending_id="pid",
+        action_label="Delete course",
+        blast_radius_summary="3 chapters, 12 activities",
+        challenge_phrase="algebra 1",
         challenge_kind="type_name",
     )
-    ev = ConfirmRequiredEvent(pending_id="pend_y", challenge=ch)
-    env = serialize(ev)
-    payload = json.loads(env["data"])
+    e = ev.ConfirmRequiredEvent(pending_id="pid", challenge=challenge)
+    payload = json.loads(ev.serialize(e)["data"])
     assert payload["type"] == "confirm.required"
-    assert payload["challenge"]["challenge_phrase"] == "Foo"
+    assert payload["challenge"]["challenge_kind"] in ("type_name", "type_phrase")
 
 
-def test_applied_serialize():
-    ev = AppliedEvent(
-        pending_id="pend_z",
-        target=ResourceRef(kind="activity", uuid="a1", name="Welcome"),
-        version_after=7,
-        undo_token="undo_xyz",
-    )
-    env = serialize(ev)
-    payload = json.loads(env["data"])
-    assert payload["type"] == "applied"
-    assert payload["version_after"] == 7
-    assert payload["undo_token"] == "undo_xyz"
+def test_pending_dropped_reasons():
+    for reason in ("superseded", "cancelled", "expired", "subject_change"):
+        e = ev.PendingDroppedEvent(pending_id="p", reason=reason)
+        payload = json.loads(ev.serialize(e)["data"])
+        assert payload["reason"] == reason
 
 
-def test_pending_dropped_serialize():
-    ev = PendingDroppedEvent(pending_id="p1", reason="superseded")
-    env = serialize(ev)
-    payload = json.loads(env["data"])
-    assert payload["reason"] == "superseded"
+def test_done_event_minimal():
+    payload = json.loads(ev.serialize(ev.DoneEvent())["data"])
+    assert payload == {"type": "done"}

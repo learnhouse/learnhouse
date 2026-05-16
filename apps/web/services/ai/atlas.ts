@@ -259,17 +259,33 @@ export async function* parseSseStream(
   const decoder = new TextDecoder()
   let buffer = ''
   let pendingEvent = ''
+
+  // SSE frames are terminated by a blank line, which the spec allows to be
+  // either ``\n\n`` (LF LF) or ``\r\n\r\n`` (CRLF CRLF). sse-starlette on
+  // the backend emits CRLF; using only ``indexOf('\n\n')`` here silently
+  // never matches inside CRLF data and the generator yields nothing while
+  // still consuming the whole stream.
+  const findFrameEnd = (s: string): { idx: number; sepLen: number } => {
+    const crlf = s.indexOf('\r\n\r\n')
+    const lf = s.indexOf('\n\n')
+    if (crlf === -1 && lf === -1) return { idx: -1, sepLen: 0 }
+    if (crlf === -1) return { idx: lf, sepLen: 2 }
+    if (lf === -1) return { idx: crlf, sepLen: 4 }
+    // Prefer whichever boundary appears first in the buffer.
+    return crlf <= lf ? { idx: crlf, sepLen: 4 } : { idx: lf, sepLen: 2 }
+  }
+
   while (true) {
     const { value, done } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    let sepIdx = buffer.indexOf('\n\n')
-    while (sepIdx !== -1) {
-      const raw = buffer.slice(0, sepIdx)
-      buffer = buffer.slice(sepIdx + 2)
+    let { idx, sepLen } = findFrameEnd(buffer)
+    while (idx !== -1) {
+      const raw = buffer.slice(0, idx)
+      buffer = buffer.slice(idx + sepLen)
       let event = pendingEvent
       const dataParts: string[] = []
-      for (const line of raw.split('\n')) {
+      for (const line of raw.split(/\r?\n/)) {
         if (line.startsWith('event: ')) {
           event = line.slice(7).trim()
         } else if (line.startsWith('data: ')) {
@@ -290,7 +306,7 @@ export async function* parseSseStream(
           /* skip malformed frame */
         }
       }
-      sepIdx = buffer.indexOf('\n\n')
+      ;({ idx, sepLen } = findFrameEnd(buffer))
     }
   }
 }
@@ -378,4 +394,105 @@ export async function updateAtlasChatSession(
   if (!res.ok) return null
   const body = await res.json()
   return body?.session || null
+}
+
+// ─── Undo applied pending ──────────────────────────────────────────────
+
+export async function* undoPendingEdit(params: {
+  pendingId: string
+  orgId: number
+  sessionToken: string
+  accessToken: string
+  signal?: AbortSignal
+}): AsyncGenerator<AtlasEvent> {
+  const res = await fetch(`${getAPIUrl()}ai/atlas/pending/${params.pendingId}/undo`, {
+    ...RequestBodyWithAuthHeader(
+      'POST',
+      { org_id: params.orgId, session_token: params.sessionToken },
+      undefined,
+      params.accessToken,
+    ),
+    signal: params.signal,
+  })
+  if (!res.ok || !res.body) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Undo failed (${res.status}): ${body}`)
+  }
+  yield* parseSseStream(res.body)
+}
+
+// ─── Live pending list for a chat session ──────────────────────────────
+
+export interface PersistedPending {
+  pending_id: string
+  tool_name: string
+  tier: 'READ' | 'CREATE' | 'EDIT' | 'DESTRUCTIVE'
+  target: ResourceRefDTO
+  status:
+    | 'proposed'
+    | 'awaiting_confirm'
+    | 'applying'
+    | 'applied'
+    | 'cancelled'
+    | 'superseded'
+    | 'reverted'
+    | 'failed'
+  summary: string
+  version_after?: number | null
+  undo_token?: string | null
+  expires_at?: string | null
+}
+
+export async function listPendingsForChat(
+  aichatUuid: string,
+  orgId: number,
+  accessToken: string,
+): Promise<PersistedPending[]> {
+  const res = await fetch(
+    `${getAPIUrl()}ai/atlas/sessions/${aichatUuid}/pendings?org_id=${orgId}`,
+    RequestBodyWithAuthHeader('GET', null, undefined, accessToken),
+  )
+  if (!res.ok) return []
+  const body = await res.json()
+  return (body?.pendings || []) as PersistedPending[]
+}
+
+// ─── Course-from-structure (one-shot provisioning) ─────────────────────
+
+export interface CourseStructureActivity {
+  name: string
+  kind: 'dynamic' | 'quiz' | 'video' | 'pdf' | 'assignment'
+  initial_brief?: string | null
+}
+
+export interface CourseStructureChapter {
+  name: string
+  description?: string | null
+  activities: CourseStructureActivity[]
+}
+
+export interface CourseStructurePayload {
+  name: string
+  description?: string | null
+  about?: string | null
+  learnings?: string[] | null
+  chapters: CourseStructureChapter[]
+}
+
+// ─── Atlas health probe ────────────────────────────────────────────────
+
+export interface AtlasHealth {
+  mcp_reachable: boolean
+  redis_reachable: boolean
+  gemini_key_present: boolean
+  plan_ok: boolean
+}
+
+export async function getAtlasHealth(accessToken: string): Promise<AtlasHealth | null> {
+  const res = await fetch(
+    `${getAPIUrl()}ai/atlas/health`,
+    RequestBodyWithAuthHeader('GET', null, undefined, accessToken),
+  )
+  if (!res.ok) return null
+  return res.json()
 }

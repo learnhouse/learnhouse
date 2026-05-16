@@ -15,11 +15,13 @@ import {
   ConfirmationChallengeDTO,
   deleteAtlasChatSession,
   listAtlasChatSessions,
+  listPendingsForChat,
   loadAtlasChatMessages,
   refinePendingEdit,
   revokeAtlasSession,
   startAtlasSession,
   streamAtlasChat,
+  undoPendingEdit,
   updateAtlasChatSession,
 } from '@services/ai/atlas'
 import {
@@ -524,12 +526,16 @@ export default function AtlasChat() {
         setMessages(persistedToChatMessages(loaded))
         setAichatUuid(uuid)
         syncUrl(uuid)
+        // After the frozen-at-save messages render, merge in the live
+        // pending status so applied / reverted / cancelled cards update.
+        void hydratePendingStatus(uuid)
       } catch (err: any) {
         setSessionError(err?.message || 'Could not load that chat.')
       } finally {
         setLoadingChat(false)
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [accessToken, syncUrl],
   )
 
@@ -612,10 +618,42 @@ export default function AtlasChat() {
           accessToken,
           signal: controller.signal,
         })
+        // Some events (applied, pending.dropped, confirm.required) target
+        // a pending_id that may live on an earlier assistant message —
+        // e.g. when the user types "yes go ahead" in a fresh turn to
+        // approve a previous proposal, the apply events stream back on
+        // the NEW turn but the card they update is hosted on the
+        // previous one. Route those by ``pending_id`` instead of the
+        // current assistant message id.
+        const PENDING_BOUND_EVENTS = new Set([
+          'applied',
+          'pending.dropped',
+          'confirm.required',
+        ])
         for await (const event of stream) {
           if (event.type === 'session') {
             setAichatUuid(event.aichat_uuid)
             syncUrl(event.aichat_uuid)
+            continue
+          }
+          if (
+            PENDING_BOUND_EVENTS.has(event.type) &&
+            (event as any).pending_id
+          ) {
+            const pid = (event as any).pending_id
+            setMessages((prev) => {
+              const ownerIdx = prev.findIndex(
+                (m) => m.pendings && m.pendings[pid],
+              )
+              if (ownerIdx === -1) {
+                return prev.map((m) =>
+                  m.id === assistantMsg.id ? applyEvent(m, event) : m,
+                )
+              }
+              return prev.map((m, i) =>
+                i === ownerIdx ? applyEvent(m, event) : m,
+              )
+            })
             continue
           }
           setMessages((prev) =>
@@ -801,29 +839,32 @@ export default function AtlasChat() {
   )
 
   // ── structure proposal apply ────────────────────────────────────────────
-  // We don't have a backend tool that consumes the edited tree wholesale
-  // (yet). Until that lands, the Apply button sends the structured tree
-  // back to the agent as a chat message; the agent then proposes the
-  // course create + chapter/activity stubs through its normal tooling.
+  // The backend provides `propose_course_from_structure` — a typed,
+  // transactional one-shot tool that takes the edited tree and stages a
+  // single preview.course (mode=create). We frame the chat message to
+  // point the agent directly at that tool with the structure embedded as
+  // JSON; the agent passes the payload through verbatim.
   const handleApplyStructure = useCallback(
     (structure: EditableStructure) => {
-      const lines: string[] = []
-      lines.push(`Apply this course structure as a new course.`)
-      lines.push(`Title: ${structure.title || 'Untitled'}`)
-      if (structure.description) lines.push(`Description: ${structure.description}`)
-      if (structure.audience) lines.push(`Audience: ${structure.audience}`)
-      lines.push(``)
-      structure.chapters.forEach((ch, i) => {
-        lines.push(`Chapter ${i + 1}: ${ch.name || `Chapter ${i + 1}`}`)
-        ch.activities.forEach((a) => {
-          lines.push(`  - ${a.name || '(unnamed)'} [${a.kind}]`)
-        })
-      })
-      lines.push(``)
-      lines.push(
-        `Propose creating the course, then propose each chapter and activity in order.`,
-      )
-      sendMessage(lines.join('\n'))
+      const payload = {
+        name: structure.title || 'Untitled course',
+        description: structure.description || undefined,
+        about: undefined,
+        learnings: undefined,
+        chapters: structure.chapters.map((ch) => ({
+          name: ch.name,
+          activities: ch.activities.map((a) => ({
+            name: a.name,
+            kind: a.kind,
+          })),
+        })),
+      }
+      const message =
+        'Call `propose_course_from_structure` with this exact structure ' +
+        '(do not modify it):\n```json\n' +
+        JSON.stringify(payload, null, 2) +
+        '\n```'
+      sendMessage(message)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -846,6 +887,88 @@ export default function AtlasChat() {
     if (lastUser?.content) sendMessage(lastUser.content)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
+
+  // ── undo applied pending ────────────────────────────────────────────────
+  const handleUndoPending = useCallback(
+    async (pendingId: string): Promise<boolean> => {
+      if (!atlasSession || !accessToken || !orgId) return false
+      try {
+        const stream = undoPendingEdit({
+          pendingId,
+          orgId,
+          sessionToken: atlasSession.token,
+          accessToken,
+        })
+        let undoneOk = false
+        for await (const event of stream) {
+          if (event.type === 'applied') {
+            undoneOk = true
+            updatePending(pendingId, (p) => ({
+              ...p,
+              status: 'dropped',
+              versionAfter: event.version_after ?? p.versionAfter,
+            }))
+          } else if (event.type === 'error') {
+            updatePending(pendingId, (p) => ({
+              ...p,
+              status: 'error',
+              errorMessage: event.message,
+            }))
+          }
+        }
+        return undoneOk
+      } catch {
+        return false
+      }
+    },
+    [accessToken, atlasSession, orgId, updatePending],
+  )
+
+  // ── pending hydration on chat reload ────────────────────────────────────
+  // After loading persisted messages, ask the backend for the live
+  // pending status (status / version_after / undo_token) and merge it
+  // into the message's pendings index — without this the UI would show
+  // stale "applying" cards after a refresh.
+  const hydratePendingStatus = useCallback(
+    async (aichat: string) => {
+      if (!orgId || !accessToken) return
+      try {
+        const live = await listPendingsForChat(aichat, orgId, accessToken)
+        if (!live.length) return
+        const byId: Record<string, (typeof live)[number]> = {}
+        for (const p of live) byId[p.pending_id] = p
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (!m.pendings) return m
+            const next = { ...m.pendings }
+            let changed = false
+            for (const [id, mp] of Object.entries(m.pendings)) {
+              const fresh = byId[id]
+              if (!fresh) continue
+              changed = true
+              next[id] = {
+                ...mp,
+                status:
+                  fresh.status === 'applied'
+                    ? 'applied'
+                    : fresh.status === 'cancelled' ||
+                      fresh.status === 'superseded' ||
+                      fresh.status === 'reverted'
+                    ? 'dropped'
+                    : mp.status,
+                versionAfter: fresh.version_after ?? mp.versionAfter,
+                undoToken: fresh.undo_token ?? mp.undoToken,
+              }
+            }
+            return changed ? { ...m, pendings: next } : m
+          }),
+        )
+      } catch {
+        /* non-fatal */
+      }
+    },
+    [accessToken, orgId],
+  )
 
   // ── layout ──────────────────────────────────────────────────────────────
   return (
@@ -903,6 +1026,7 @@ export default function AtlasChat() {
                   onApplyPending={handleApplyPending}
                   onCancelPending={handleCancelPending}
                   onRefinePending={handleRefinePending}
+                  onUndoPending={handleUndoPending}
                   onApplyStructure={handleApplyStructure}
                   onRefineStructure={handleRefineStructure}
                   onRetryError={handleRetryError}
@@ -1244,6 +1368,7 @@ export function MessageBubble({
   onApplyPending,
   onCancelPending,
   onRefinePending,
+  onUndoPending,
   onPickCandidate,
   onApplyStructure,
   onRefineStructure,
@@ -1258,6 +1383,7 @@ export function MessageBubble({
   onApplyPending?: (pendingId: string, opts?: { confirmationPhrase?: string }) => void
   onCancelPending?: (pendingId: string) => void
   onRefinePending?: (pendingId: string, instruction: string) => void
+  onUndoPending?: (pendingId: string) => Promise<boolean>
   onPickCandidate?: (cand: CandidateDTO) => void
   onApplyStructure?: (structure: EditableStructure) => void
   onRefineStructure?: (instruction: string) => void
@@ -1354,6 +1480,7 @@ export function MessageBubble({
             }
             onCancel={() => onCancelPending?.(p.pendingId)}
             onRefine={(instr) => onRefinePending?.(p.pendingId, instr)}
+            onUndo={onUndoPending}
           />
         ))}
 
@@ -1674,12 +1801,14 @@ function PendingCard({
   onApply,
   onCancel,
   onRefine,
+  onUndo,
 }: {
   pending: MessagePending
   busy: boolean
   onApply: (confirmationPhrase?: string) => void
   onCancel: () => void
   onRefine: (instruction: string) => void
+  onUndo?: (pendingId: string) => Promise<boolean>
 }) {
   if (pending.preview.type === 'preview.activity') {
     return (
@@ -1704,6 +1833,7 @@ function PendingCard({
             label={(pending.preview as any).target?.name || 'Activity'}
             versionAfter={pending.versionAfter}
             undoToken={pending.undoToken}
+            onUndo={onUndo ? () => onUndo(pending.pendingId) : undefined}
           />
         )}
       </div>
@@ -1734,6 +1864,7 @@ function PendingCard({
           label={(pending.preview as any).target?.name || (pending.preview.type === 'preview.chapter' ? 'Chapter' : 'Course')}
           versionAfter={pending.versionAfter}
           undoToken={pending.undoToken}
+          onUndo={onUndo ? () => onUndo(pending.pendingId) : undefined}
         />
       )}
     </>

@@ -104,6 +104,7 @@ function renderBody(
 ) {
   if (mode === 'create') {
     const p = (evt.patch as Record<string, any>) || {}
+    const chapters: Array<{ name?: string; description?: string; activities?: Array<{ name?: string; kind?: string; initial_brief?: string }> }> = Array.isArray(p.chapters) ? p.chapters : []
     return (
       <div className="space-y-3 text-sm">
         <div>
@@ -130,6 +131,47 @@ function renderBody(
                 <li key={i}>{String(l)}</li>
               ))}
             </ul>
+          </div>
+        )}
+        {chapters.length > 0 && (
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">
+              Structure · {chapters.length} chapter{chapters.length === 1 ? '' : 's'} ·{' '}
+              {chapters.reduce((sum, c) => sum + (Array.isArray(c.activities) ? c.activities.length : 0), 0)} activities
+            </div>
+            <ol className="space-y-2">
+              {chapters.map((ch, i) => (
+                <li
+                  key={i}
+                  className="rounded-md ring-1 ring-inset ring-white/10 bg-white/[0.03] px-3 py-2"
+                >
+                  <div className="text-[13px] font-semibold text-white/90">
+                    <span className="text-white/40 font-mono mr-2">{String(i + 1).padStart(2, '0')}</span>
+                    {ch.name || `Chapter ${i + 1}`}
+                  </div>
+                  {ch.description && (
+                    <div className="text-[12px] text-white/55 mt-0.5 leading-snug">
+                      {ch.description}
+                    </div>
+                  )}
+                  {Array.isArray(ch.activities) && ch.activities.length > 0 && (
+                    <ul className="mt-1.5 space-y-1">
+                      {ch.activities.map((a, j) => (
+                        <li
+                          key={j}
+                          className="flex items-baseline gap-2 text-[12px] text-white/75 pl-0.5"
+                        >
+                          <span className="inline-flex shrink-0 items-center rounded bg-white/[0.06] ring-1 ring-inset ring-white/10 px-1.5 py-[1px] text-[10px] uppercase tracking-wide text-white/55">
+                            {a.kind || 'dynamic'}
+                          </span>
+                          <span>{a.name || 'Untitled activity'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ol>
           </div>
         )}
       </div>

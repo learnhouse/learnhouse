@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
 
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -12,10 +13,12 @@ import {
   AtlasSession,
   CandidateDTO,
   cancelPendingEdit,
+  listPendingsForChat,
   refinePendingEdit,
   revokeAtlasSession,
   startAtlasSession,
   streamAtlasChat,
+  undoPendingEdit,
 } from '@services/ai/atlas'
 import { AlertTriangle, Loader2, Send, X as XIcon } from 'lucide-react'
 import { GlobeStand } from '@phosphor-icons/react'
@@ -74,6 +77,43 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   const inputElRef = useRef<HTMLTextAreaElement | null>(null)
   const pageContextRef = useRef(pageContext)
   const referencesRef = useRef(attachedReferences)
+
+  // Route-derived page context. ``useRegisterAtlasPageContext`` (called
+  // from CourseOverviewTop / EditorLoader) is the rich source — it supplies
+  // human-readable names and activity-level focus — but it only fires once
+  // the relevant component mounts and its context loads. The URL is always
+  // available, so we mine ``course_uuid`` straight from the params and
+  // merge it in as a fallback. This guarantees the backend sees
+  // ``course_uuid`` on every chat turn the user fires while on a course
+  // route, even before CourseContext has hydrated.
+  const routeParams = useParams() as Record<string, string | string[] | undefined> | null
+  const rawCourseUuid = (() => {
+    const v = routeParams?.courseuuid ?? routeParams?.courseid
+    return Array.isArray(v) ? v[0] : v
+  })()
+  // Dashboard routes pass the raw UUID in the URL; the backend / context
+  // layer expects the ``course_`` prefix. Add it if missing.
+  const routeCourseUuid = rawCourseUuid
+    ? rawCourseUuid.startsWith('course_')
+      ? rawCourseUuid
+      : `course_${rawCourseUuid}`
+    : undefined
+  const rawActivityUuid = (() => {
+    const v = routeParams?.activityuuid ?? routeParams?.activityid
+    return Array.isArray(v) ? v[0] : v
+  })()
+  const routeActivityUuid = rawActivityUuid
+    ? rawActivityUuid.startsWith('activity_')
+      ? rawActivityUuid
+      : `activity_${rawActivityUuid}`
+    : undefined
+  const routeContextRef = useRef<{ course_uuid?: string; activity_uuid?: string }>({})
+  useEffect(() => {
+    routeContextRef.current = {
+      course_uuid: routeCourseUuid,
+      activity_uuid: routeActivityUuid,
+    }
+  }, [routeCourseUuid, routeActivityUuid])
 
   // Latest-snapshot refs so the in-flight stream closure picks up
   // updated context without re-binding the send callback.
@@ -138,6 +178,7 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
   // ── derived state ──────────────────────────────────────────────────────
   const buildPageContextPayload = useCallback((): AtlasPageContextPayload | undefined => {
     const pc = pageContextRef.current
+    const route = routeContextRef.current
     const refs = referencesRef.current
     const refsPayload: AtlasReferencePayload[] | undefined = refs.length
       ? refs.map((r: AtlasReference) => ({
@@ -150,11 +191,23 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           activity_type: r.activity_type,
         }))
       : undefined
-    if (!pc && !refsPayload) return undefined
-    return {
+    // Merge order: route-derived UUIDs are the floor, the registered
+    // ``pageContext`` overlays them (so course_name / chapter_name from
+    // CourseContext win), and references are appended last.
+    const merged: AtlasPageContextPayload = {
+      ...(route.course_uuid ? { course_uuid: route.course_uuid } : {}),
+      ...(route.activity_uuid ? { activity_uuid: route.activity_uuid } : {}),
       ...(pc || {}),
-      references: refsPayload,
     }
+    if (refsPayload) merged.references = refsPayload
+    const hasAnyContext =
+      merged.course_uuid ||
+      merged.chapter_uuid ||
+      merged.chapter_id !== undefined ||
+      merged.activity_uuid ||
+      refsPayload
+    if (!hasAnyContext) return undefined
+    return merged
   }, [])
 
   const canSend =
@@ -216,6 +269,41 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
           delete next[pendingId]
           return next
         })
+      }
+    },
+    [accessToken, atlasSession, orgId, updatePending],
+  )
+
+  const handleUndoPending = useCallback(
+    async (pendingId: string): Promise<boolean> => {
+      if (!atlasSession || !accessToken || !orgId) return false
+      try {
+        const stream = undoPendingEdit({
+          pendingId,
+          orgId,
+          sessionToken: atlasSession.token,
+          accessToken,
+        })
+        let ok = false
+        for await (const event of stream) {
+          if (event.type === 'applied') {
+            ok = true
+            updatePending(pendingId, (p) => ({
+              ...p,
+              status: 'dropped',
+              versionAfter: event.version_after ?? p.versionAfter,
+            }))
+          } else if (event.type === 'error') {
+            updatePending(pendingId, (p) => ({
+              ...p,
+              status: 'error',
+              errorMessage: event.message,
+            }))
+          }
+        }
+        return ok
+      } catch {
+        return false
       }
     },
     [accessToken, atlasSession, orgId, updatePending],
@@ -439,19 +527,25 @@ export default function AtlasMiniPanel({ open, onClose }: Props) {
                   onApplyPending={handleApplyPending}
                   onCancelPending={handleCancelPending}
                   onRefinePending={handleRefinePending}
+                  onUndoPending={handleUndoPending}
                   onApplyStructure={(structure: EditableStructure) => {
-                    const lines: string[] = []
-                    lines.push('Apply this course structure as a new course.')
-                    lines.push(`Title: ${structure.title || 'Untitled'}`)
-                    if (structure.description) lines.push(`Description: ${structure.description}`)
-                    structure.chapters.forEach((ch, i) => {
-                      lines.push(`Chapter ${i + 1}: ${ch.name || `Chapter ${i + 1}`}`)
-                      ch.activities.forEach((a) => {
-                        lines.push(`  - ${a.name || '(unnamed)'} [${a.kind}]`)
-                      })
-                    })
-                    lines.push('Propose creating the course, then propose each chapter and activity in order.')
-                    sendMessage(lines.join('\n'))
+                    const payload = {
+                      name: structure.title || 'Untitled course',
+                      description: structure.description || undefined,
+                      chapters: structure.chapters.map((ch) => ({
+                        name: ch.name,
+                        activities: ch.activities.map((a) => ({
+                          name: a.name,
+                          kind: a.kind,
+                        })),
+                      })),
+                    }
+                    sendMessage(
+                      'Call `propose_course_from_structure` with this exact structure ' +
+                        '(do not modify it):\n```json\n' +
+                        JSON.stringify(payload, null, 2) +
+                        '\n```',
+                    )
                   }}
                   onRefineStructure={(instruction) =>
                     sendMessage(`Regenerate the course structure with this constraint: ${instruction}`)

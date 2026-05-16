@@ -1,78 +1,70 @@
-from __future__ import annotations
+"""FastMCP server with Streamable HTTP transport.
 
-import logging
+Exposes Atlas tools at `/mcp` and propagates the calling user's LH session
+token via an ASGI middleware that reads `Authorization: Bearer` into a
+ContextVar (`auth.set_token`). Tools then call `auth.get_token()` to
+authenticate downstream LH API requests.
+
+Plain ASGI middleware is used (not Starlette's `BaseHTTPMiddleware`)
+because ContextVar values must be set in the same task that handles the
+downstream call — `BaseHTTPMiddleware` runs middleware in a separate task
+and breaks ContextVar propagation.
+"""
+
+from collections.abc import Awaitable, Callable
 
 from mcp.server.fastmcp import FastMCP
 
-from .cache import TokenCache
-from .client import LearnHouseClient
-from .config import Settings, load_settings
+from . import auth
+from .config import Settings
+from .lh_client import LHClient
+from .tools import register_all
 
-logger = logging.getLogger("learnhouse_mcp")
+
+ASGIApp = Callable[[dict, Callable[[], Awaitable[dict]], Callable[[dict], Awaitable[None]]], Awaitable[None]]
 
 
-def build_server(settings: Settings | None = None) -> tuple[FastMCP, LearnHouseClient, Settings]:
-    settings = settings or load_settings()
-    logging.basicConfig(
-        level=settings.log_level, format="%(levelname)s %(name)s: %(message)s"
-    )
+class BearerTokenMiddleware:
+    """ASGI middleware that captures `Authorization: Bearer …` into the
+    `current_lh_token` ContextVar before the downstream MCP app runs."""
 
-    mcp = FastMCP(
-        "LearnHouse",
-        instructions=(
-            "You are connected to a LearnHouse organization via an API token. "
-            "Use these tools to browse and manage courses, chapters, activities, "
-            "collections, podcasts, certifications, and discussions within that "
-            "organization. Destructive actions (delete, bulk remove) are "
-            "irreversible — confirm with the user before calling them."
-        ),
-        streamable_http_path=settings.mount_path,
-        host=settings.host,
-        port=settings.port,
-    )
+    def __init__(self, app: ASGIApp):
+        self.app = app
 
-    cache = TokenCache(
-        ttl_seconds=settings.token_cache_ttl,
-        max_size=settings.token_cache_max,
-    )
-    client = LearnHouseClient(settings, cache)
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            token: str | None = None
+            org_id: int | None = None
+            org_slug: str | None = None
+            for raw_name, raw_value in scope.get("headers", []):
+                name = raw_name.lower()
+                value = raw_value.decode("latin-1")
+                if name == b"authorization":
+                    if value.lower().startswith("bearer "):
+                        token = value[7:].strip() or None
+                elif name == b"x-lh-org-id":
+                    try:
+                        org_id = int(value.strip())
+                    except ValueError:
+                        org_id = None
+                elif name == b"x-lh-org-slug":
+                    org_slug = value.strip() or None
+            auth.set_context(token, org_id, org_slug)
+        await self.app(scope, receive, send)
 
-    from .tools import (
-        activities as activities_tools,
-        assignments as assignments_tools,
-        atlas_activity as atlas_activity_tools,
-        atlas_chapter as atlas_chapter_tools,
-        atlas_course as atlas_course_tools,
-        atlas_read as atlas_read_tools,
-        certifications as certifications_tools,
-        chapters as chapters_tools,
-        collections as collections_tools,
-        compose as compose_tools,
-        courses as courses_tools,
-        instance as instance_tools,
-        magicblocks as magicblocks_tools,
-        podcasts as podcasts_tools,
-        search as search_tools,
-    )
 
-    for module in (
-        instance_tools,
-        courses_tools,
-        chapters_tools,
-        activities_tools,
-        assignments_tools,
-        collections_tools,
-        search_tools,
-        podcasts_tools,
-        certifications_tools,
-        magicblocks_tools,
-        compose_tools,
-        # Atlas-specific tier-tagged tools (replaces the old focus.py).
-        atlas_read_tools,
-        atlas_course_tools,
-        atlas_chapter_tools,
-        atlas_activity_tools,
-    ):
-        module.register(mcp, client)
+def build_server(settings: Settings | None = None):
+    """Build the FastMCP server + ASGI app wrapped with auth middleware.
 
-    return mcp, client, settings
+    FastMCP's `streamable_http_app()` already mounts the MCP endpoint at
+    `/mcp` internally, so we wrap it directly with our auth middleware
+    instead of mounting it under another prefix.
+    """
+    settings = settings or Settings.load()
+    mcp = FastMCP("learnhouse-atlas")
+    lh = LHClient(settings)
+    register_all(mcp, lh)
+
+    inner = mcp.streamable_http_app()
+    app = BearerTokenMiddleware(inner)
+    return mcp, app
