@@ -106,6 +106,29 @@ async def test_connect_to_db_get_db_session_and_close_database():
 
 
 @pytest.mark.asyncio
+async def test_connect_to_db_runs_create_all_when_not_testing(monkeypatch):
+    """The `if not is_testing: await conn.run_sync(SQLModel.metadata.create_all)`
+    branch is unreachable under the normal TESTING=true env.  Patch the module-level
+    flag to False so the branch executes, then restore it."""
+    app = SimpleNamespace()
+    create_all_calls = []
+
+    original_is_testing = database.is_testing
+    try:
+        monkeypatch.setattr(database, "is_testing", False)
+        monkeypatch.setattr(
+            "sqlmodel.SQLModel.metadata.create_all",
+            lambda bind: create_all_calls.append(bind),
+        )
+        await database.connect_to_db(app)
+    finally:
+        monkeypatch.setattr(database, "is_testing", original_is_testing)
+
+    assert app.db_engine is database.engine
+    assert len(create_all_calls) == 1
+
+
+@pytest.mark.asyncio
 async def test_register_cache_hooks_cover_listener_paths_and_commit_cleanup(db, monkeypatch):
     # The cache hooks track state on the underlying sync session.
     sync_session = db.sync_session
