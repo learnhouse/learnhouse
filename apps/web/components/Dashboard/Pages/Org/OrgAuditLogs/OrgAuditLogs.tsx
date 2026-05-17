@@ -4,10 +4,11 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import UserAvatar from '@components/Objects/UserAvatar'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Search, Activity, ShieldCheck, RefreshCw, Eye, Globe, Terminal, ChevronLeft, ChevronRight, Calendar, Download } from 'lucide-react'
 import React, { useState } from 'react'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { Input } from '@components/ui/input'
@@ -28,6 +29,7 @@ const OrgAuditLogs = () => {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [offset, setOffset] = useState(0)
   const [searchField, setSearchField] = useState('action')
@@ -84,19 +86,25 @@ const OrgAuditLogs = () => {
     return params.toString()
   }
 
-  const logsUrl = org && access_token ? `${getAPIUrl()}ee/audit_logs/?${buildQuery()}` : null
-  const { data, isLoading, isValidating } = useSWR(
-    logsUrl,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const logsQueryKey = org?.id
+    ? [...queryKeys.org.auditLogs(org.id), offset, filters, searchField]
+    : null
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: logsQueryKey ?? ['audit_logs_disabled'],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/audit_logs/?${buildQuery()}`, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
 
   const logs = data?.items || []
   const total = data?.total || 0
   const rf = org?.config?.config?.resolved_features
 
   const handleRefresh = () => {
-    mutate(logsUrl)
+    if (logsQueryKey) {
+      queryClient.invalidateQueries({ queryKey: logsQueryKey })
+    }
   }
 
   const handleExport = async () => {
@@ -183,7 +191,7 @@ const OrgAuditLogs = () => {
             <div className="flex flex-wrap gap-2 items-center">
                <button 
                 onClick={handleRefresh}
-                className={`p-2 rounded-md hover:bg-gray-200 transition-colors ${isValidating ? 'animate-spin' : ''}`}
+                className={`p-2 rounded-md hover:bg-gray-200 transition-colors ${isFetching ? 'animate-spin' : ''}`}
                 title={t('dashboard.organization.audit_logs.refresh')}
                >
                 <RefreshCw className="w-4 h-4 text-gray-600" />
@@ -332,14 +340,24 @@ const OrgAuditLogs = () => {
           </thead>
           <tbody className="bg-white relative">
             {isLoading && !data ? (
-              <tr>
-                <td colSpan={7} className="py-20 text-center text-gray-400">
-                  <div className="flex flex-col items-center gap-2">
-                      <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin opacity-20" />
-                      <span className="text-sm font-medium">{t('dashboard.organization.audit_logs.loading')}</span>
-                  </div>
-                </td>
-              </tr>
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="animate-pulse border-b border-gray-100">
+                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-24" /></td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 bg-gray-100 rounded-full" />
+                        <div className="h-4 bg-gray-100 rounded w-24" />
+                      </div>
+                    </td>
+                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-16" /></td>
+                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-32" /></td>
+                    <td className="py-3 px-4"><div className="h-4 bg-gray-100 rounded w-20" /></td>
+                    <td className="py-3 px-4 text-right"><div className="h-5 bg-gray-100 rounded w-12 ml-auto" /></td>
+                    <td className="py-3 px-4 text-right"><div className="h-5 bg-gray-100 rounded w-6 ml-auto" /></td>
+                  </tr>
+                ))}
+              </>
             ) : logs.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-gray-400">

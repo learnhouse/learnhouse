@@ -17,8 +17,8 @@ import {
 } from '@icons-pack/react-simple-icons'
 import { Plus, X as XIcon } from "lucide-react"
 import { useRouter } from 'next/navigation'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 interface OrganizationValues {
@@ -39,6 +39,7 @@ export default function OrgEditSocials() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const router = useRouter()
   const initialValues: OrganizationValues = {
     socials: org?.socials || {},
@@ -51,7 +52,7 @@ export default function OrgEditSocials() {
       await updateOrganization(org.id, values, access_token)
       await revalidateTags(['organizations'], org.slug)
 
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })

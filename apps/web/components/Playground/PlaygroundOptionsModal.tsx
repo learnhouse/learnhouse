@@ -16,8 +16,10 @@ import {
 } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { apiFetch } from '@services/utils/ts/requests'
+import { getUserGroups } from '@services/usergroups/usergroups'
 import {
   updatePlayground,
   updatePlaygroundThumbnail,
@@ -90,7 +92,7 @@ export default function PlaygroundOptionsModal({
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'general' && (
-              <GeneralTab playground={playground} onUpdated={onUpdated} />
+              <GeneralTab playground={playground} orgslug={orgslug} onUpdated={onUpdated} />
             )}
             {activeTab === 'access' && (
               <AccessTab
@@ -101,7 +103,7 @@ export default function PlaygroundOptionsModal({
               />
             )}
             {activeTab === 'thumbnail' && (
-              <ThumbnailTab playground={playground} onUpdated={onUpdated} />
+              <ThumbnailTab playground={playground} orgslug={orgslug} onUpdated={onUpdated} />
             )}
           </div>
         </div>
@@ -113,13 +115,16 @@ export default function PlaygroundOptionsModal({
 /* ── General Tab ── */
 function GeneralTab({
   playground,
+  orgslug,
   onUpdated,
 }: {
   playground: Playground
+  orgslug: string
   onUpdated: (p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [name, setName] = useState(playground.name)
   const [description, setDescription] = useState(playground.description || '')
@@ -144,6 +149,8 @@ function GeneralTab({
         access_token
       )
       onUpdated(updated)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       toast.success('Playground updated')
     } catch {
       toast.error('Failed to save changes')
@@ -213,16 +220,18 @@ function AccessTab({
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
+  const queryClient = useQueryClient()
   const [accessType, setAccessType] = useState<PlaygroundAccessType>(playground.access_type)
   const [isSaving, setIsSaving] = useState(false)
   const [linkModalOpen, setLinkModalOpen] = useState(false)
 
   // Correct endpoint: GET /playgrounds/{uuid}/usergroups
-  const ugKey =
-    accessType === 'restricted'
-      ? `${getAPIUrl()}playgrounds/${playground.playground_uuid}/usergroups`
-      : null
-  const { data: usergroups } = useSWR(ugKey, (url) => swrFetcher(url, access_token))
+  const { data: usergroups } = useQuery({
+    queryKey: [...queryKeys.playgrounds.detail(playground.playground_uuid), 'usergroups'],
+    queryFn: () => apiFetch(`${getAPIUrl()}playgrounds/${playground.playground_uuid}/usergroups`, access_token),
+    enabled: !!access_token && accessType === 'restricted',
+    staleTime: 60_000,
+  })
 
   const handleSetAccess = async (type: PlaygroundAccessType) => {
     if (type === accessType || isSaving) return
@@ -236,6 +245,8 @@ function AccessTab({
         access_token
       )
       onUpdated(updated)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       toast.success('Access updated')
     } catch {
       setAccessType(previous)
@@ -250,7 +261,8 @@ function AccessTab({
     try {
       await removeUserGroupFromPlayground(playground.playground_uuid, usergroupUuid, access_token)
       toast.success('User group removed')
-      if (ugKey) mutate(ugKey)
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.playgrounds.detail(playground.playground_uuid), 'usergroups'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
     } catch {
       toast.error('Failed to remove user group')
     }
@@ -341,7 +353,6 @@ function AccessTab({
                   orgId={orgId}
                   orgslug={orgslug}
                   accessToken={access_token}
-                  ugKey={ugKey}
                   onDone={() => setLinkModalOpen(false)}
                 />
               }
@@ -406,13 +417,16 @@ const VALID_IMAGE_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'] as const
 
 function ThumbnailTab({
   playground,
+  orgslug,
   onUpdated,
 }: {
   playground: Playground
+  orgslug: string
   onUpdated: (p: Playground) => void
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [localPreview, setLocalPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -439,6 +453,8 @@ function ThumbnailTab({
     try {
       const updated = await updatePlaygroundThumbnail(playground.playground_uuid, file, access_token)
       onUpdated(updated)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
       setLocalPreview(null)
       toast.success('Thumbnail updated')
     } catch {
@@ -562,20 +578,22 @@ function LinkUserGroupForm({
   orgId,
   orgslug,
   accessToken,
-  ugKey,
   onDone,
 }: {
   playgroundUuid: string
   orgId: number
   orgslug: string
   accessToken: string
-  ugKey: string | null
   onDone: () => void
 }) {
-  const { data: allGroups } = useSWR(
-    `${getAPIUrl()}usergroups/org/${orgId}?org_id=${orgId}`,
-    (url) => swrFetcher(url, accessToken)
-  )
+  const queryClient = useQueryClient()
+  const { data: allGroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(orgId),
+    queryFn: () => getUserGroups(orgId, accessToken),
+    select: (res: any) => res?.data ?? res,
+    enabled: !!accessToken && !!orgId,
+    staleTime: 60_000,
+  })
   // Store usergroup_uuid (string) — needed by the playground endpoint
   const [selected, setSelected] = useState<string>('')
 
@@ -589,7 +607,8 @@ function LinkUserGroupForm({
       // Correct endpoint: POST /playgrounds/{uuid}/usergroups/{ug_uuid}
       await addUserGroupToPlayground(playgroundUuid, selected, accessToken)
       toast.success('User group linked')
-      if (ugKey) mutate(ugKey)
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.playgrounds.detail(playgroundUuid), 'usergroups'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playgroundUuid) })
       onDone()
     } catch {
       toast.error('Failed to link user group')

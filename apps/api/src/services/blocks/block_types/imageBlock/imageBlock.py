@@ -2,7 +2,8 @@ from datetime import datetime
 from uuid import uuid4
 from src.db.organizations import Organization
 from fastapi import HTTPException, status, UploadFile, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.activities import Activity
 from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses.courses import Course
@@ -13,11 +14,11 @@ from src.services.blocks.utils.upload_files import upload_file_and_return_file_o
 
 
 async def create_image_block(
-    request: Request, image_file: UploadFile, activity_uuid: str, db_session: Session,
+    request: Request, image_file: UploadFile, activity_uuid: str, db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser = None,
 ):
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -26,13 +27,13 @@ async def create_image_block(
 
     block_type = "imageBlock"
 
-    # get org_uuid 
+    # get org_uuid
     statement = select(Organization).where(Organization.id == activity.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     # get course
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -55,7 +56,7 @@ async def create_image_block(
         org.org_uuid,
         str(course.course_uuid),
     )
-    
+
     # create block
     block = Block(
         activity_id=activity.id if activity.id else 0,
@@ -70,8 +71,8 @@ async def create_image_block(
 
     # insert block
     db_session.add(block)
-    db_session.commit()
-    db_session.refresh(block)
+    await db_session.commit()
+    await db_session.refresh(block)
 
     block = BlockRead.model_validate(block)
 
@@ -79,10 +80,10 @@ async def create_image_block(
 
 
 async def get_image_block(
-    request: Request, block_uuid: str, current_user: PublicUser | AnonymousUser, db_session: Session
+    request: Request, block_uuid: str, current_user: PublicUser | AnonymousUser, db_session: AsyncSession
 ):
     statement = select(Block).where(Block.block_uuid == block_uuid)
-    block = db_session.exec(statement).first()
+    block = (await db_session.execute(statement)).scalars().first()
 
     if not block:
         raise HTTPException(
@@ -93,16 +94,16 @@ async def get_image_block(
     # a user who obtains a block UUID from one org cannot read blocks from
     # another org. Public+published courses remain readable anonymously via
     # check_resource_access's PUBLIC_VIEW branch.
-    activity = db_session.exec(
+    activity = (await db_session.execute(
         select(Activity).where(Activity.id == block.activity_id)
-    ).first()
+    )).scalars().first()
     if not activity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image block does not exist"
         )
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(Course.id == activity.course_id)
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image block does not exist"
@@ -117,7 +118,7 @@ async def get_image_block(
     # caller to be a member of the owning org. Public+published content stays
     # anonymously readable through the RBAC branch above.
     if not course.public and isinstance(current_user, PublicUser):
-        if not is_org_member(current_user.id, block.org_id, db_session):
+        if not await is_org_member(current_user.id, block.org_id, db_session):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this resource",

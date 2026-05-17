@@ -11,7 +11,7 @@ client (e.g. a stale password in a keychain) can't trigger a lock on its own.
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.users import User
 
 
@@ -82,9 +82,9 @@ def check_account_locked(user: User) -> Tuple[bool, Optional[int]]:
         return False, None
 
 
-def record_failed_login(
+async def record_failed_login(
     user: User,
-    db_session: Session,
+    db_session: AsyncSession,
     ip_address: Optional[str] = None,
 ) -> Tuple[bool, Optional[int]]:
     """
@@ -136,11 +136,11 @@ def record_failed_login(
         )
         .execution_options(synchronize_session="fetch")
     )
-    db_session.execute(stmt)
-    db_session.commit()
+    await db_session.execute(stmt)
+    await db_session.commit()
 
     # Refresh the user object so callers see the updated values
-    db_session.refresh(user)
+    await db_session.refresh(user)
 
     # Check whether the updated locked_until is actually in the future.
     # user.locked_until may hold an expired timestamp from a previous lockout
@@ -158,7 +158,7 @@ def record_failed_login(
     return is_locked, LOCKOUT_DURATION_MINUTES * 60 if is_locked else None
 
 
-def reset_failed_attempts(user: User, db_session: Session) -> None:
+async def reset_failed_attempts(user: User, db_session: AsyncSession) -> None:
     """
     Reset failed login attempts counter on successful login.
 
@@ -170,17 +170,17 @@ def reset_failed_attempts(user: User, db_session: Session) -> None:
 
     # Fetch fresh user from session to avoid detached object issues
     statement = select(User).where(User.id == user.id)
-    db_user = db_session.exec(statement).first()
+    db_user = (await db_session.execute(statement)).scalars().first()
 
     if not db_user:
         return
 
     db_user.failed_login_attempts = 0
     db_user.locked_until = None
-    db_session.commit()
+    await db_session.commit()
 
 
-def update_login_info(user: User, ip_address: str, db_session: Session) -> None:
+async def update_login_info(user: User, ip_address: str, db_session: AsyncSession) -> None:
     """
     Update last login information on successful login.
 
@@ -193,14 +193,14 @@ def update_login_info(user: User, ip_address: str, db_session: Session) -> None:
 
     # Fetch fresh user from session to avoid detached object issues
     statement = select(User).where(User.id == user.id)
-    db_user = db_session.exec(statement).first()
+    db_user = (await db_session.execute(statement)).scalars().first()
 
     if not db_user:
         return
 
     db_user.last_login_at = datetime.now(timezone.utc).isoformat()
     db_user.last_login_ip = ip_address
-    db_session.commit()
+    await db_session.commit()
 
 
 def get_remaining_attempts(user: User) -> int:

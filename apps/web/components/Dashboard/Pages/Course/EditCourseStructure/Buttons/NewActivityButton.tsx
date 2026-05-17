@@ -1,7 +1,6 @@
 import { useCourse } from '@components/Contexts/CourseContext'
 import NewActivityModal from '@components/Objects/Modals/Activities/Create/NewActivity'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { getAPIUrl } from '@services/config/config'
 import {
   createActivity,
   createExternalVideoActivity,
@@ -14,7 +13,8 @@ import { ArrowLeft } from '@phosphor-icons/react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -32,6 +32,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
   const openNewActivityModal = async (chapterId: any) => {
     setSelectedView('home')
@@ -50,9 +52,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     )
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating'))
     await createActivity(activity, props.chapterId, org.id, access_token)
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
-    // Refresh sidebar cache
-    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
     setNewActivityModal(false)
@@ -69,9 +69,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   ) => {
     toast.loading(t('dashboard.courses.structure.activity.toasts.uploading'))
     await createFileActivity(file, type, activity, chapterId, access_token)
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
-    // Refresh sidebar cache
-    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
     toast.dismiss()
     toast.success(t('dashboard.courses.structure.activity.toasts.upload_success'))
@@ -92,9 +90,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       activity,
       props.chapterId, access_token
     )
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
-    // Refresh sidebar cache
-    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))

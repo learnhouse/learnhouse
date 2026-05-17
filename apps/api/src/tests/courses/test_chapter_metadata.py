@@ -37,7 +37,7 @@ async def test_create_chapter_with_extra_metadata(
 
     assert created.extra_metadata == {"a": 1}
 
-    row = db.exec(select(Chapter).where(Chapter.id == created.id)).first()
+    row = (await db.execute(select(Chapter).where(Chapter.id == created.id))).scalars().first()
     assert row is not None
     assert row.extra_metadata == {"a": 1}
 
@@ -58,8 +58,7 @@ async def test_update_chapter_sets_extra_metadata(
 
     assert updated.extra_metadata == {"b": 2}
 
-    db.expire_all()
-    row = db.exec(select(Chapter).where(Chapter.id == chapter.id)).first()
+    row = (await db.execute(select(Chapter).where(Chapter.id == chapter.id))).scalars().first()
     assert row.extra_metadata == {"b": 2}
 
 
@@ -69,7 +68,7 @@ async def test_update_chapter_does_not_clobber_when_omitted(
 ):
     chapter.extra_metadata = {"prior": "value"}
     db.add(chapter)
-    db.commit()
+    await db.commit()
 
     updated = await update_chapter(
         mock_request,
@@ -82,8 +81,7 @@ async def test_update_chapter_does_not_clobber_when_omitted(
     assert updated.name == "renamed"
     assert updated.extra_metadata == {"prior": "value"}
 
-    db.expire_all()
-    row = db.exec(select(Chapter).where(Chapter.id == chapter.id)).first()
+    row = (await db.execute(select(Chapter).where(Chapter.id == chapter.id))).scalars().first()
     assert row.extra_metadata == {"prior": "value"}
 
 

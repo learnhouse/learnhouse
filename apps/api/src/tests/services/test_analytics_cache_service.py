@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import src.core.redis as _core_redis
 from src.services.analytics.cache import (
     CACHE_TTL_ADVANCED,
     CACHE_TTL_CORE,
@@ -40,18 +41,31 @@ class TestAnalyticsCacheHelpers:
         assert get_ttl_for_query("event_counts") == CACHE_TTL_CORE
 
     def test_get_redis_client_missing_connection_string_returns_none(self):
-        with patch(
-            "src.services.analytics.cache.get_learnhouse_config",
-            return_value=_make_config(redis_connection_string=""),
-        ):
-            assert _get_redis_client() is None
+        # _get_redis_client in analytics.cache is the same as src.core.redis.get_redis_client.
+        # Patch the pool-level helper inside src.core.redis to simulate no connection string.
+        _core_redis.reset_pool()
+        try:
+            with patch(
+                "src.core.redis.get_learnhouse_config",
+                return_value=SimpleNamespace(
+                    redis_config=SimpleNamespace(redis_connection_string="")
+                ),
+            ):
+                assert _get_redis_client() is None
+        finally:
+            _core_redis.reset_pool()
 
     def test_get_redis_client_handles_construction_errors(self):
-        with patch(
-            "src.services.analytics.cache.get_learnhouse_config",
-            return_value=_make_config(),
-        ), patch("src.services.analytics.cache.redis.Redis.from_url", side_effect=RuntimeError("boom")):
-            assert _get_redis_client() is None
+        # Simulate get_learnhouse_config raising during pool creation.
+        _core_redis.reset_pool()
+        try:
+            with patch(
+                "src.core.redis.get_learnhouse_config",
+                side_effect=RuntimeError("boom"),
+            ):
+                assert _get_redis_client() is None
+        finally:
+            _core_redis.reset_pool()
 
 
 class TestAnalyticsCacheReadsAndWrites:

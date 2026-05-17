@@ -1,7 +1,8 @@
 import logging
 from typing import Tuple, Dict, Any
 from fastapi import Depends, HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.security.features_utils.usage import (
@@ -32,11 +33,11 @@ from src.services.courses.activities.utils import (
 logger = logging.getLogger(__name__)
 
 
-def ai_start_activity_chat_session(
+async def ai_start_activity_chat_session(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ActivityAIChatSessionResponse:
     """
     Start a new AI Chat session with a Course Activity
@@ -46,7 +47,7 @@ def ai_start_activity_chat_session(
     statement = select(Activity).where(
         Activity.activity_uuid == chat_session_object.activity_uuid
     )
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     activity = ActivityRead.model_validate(activity)
 
@@ -56,27 +57,27 @@ def ai_start_activity_chat_session(
         .join(Activity)
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
-    course = db_session.exec(statement).first()
-    
+    course = (await db_session.execute(statement)).scalars().first()
+
     if not course:
         raise HTTPException(
             status_code=404,
             detail="Course not found",
         )
-    
+
     # Get course authors
     from src.db.resource_authors import ResourceAuthor
     from src.db.users import User
     from src.services.courses.courses import AuthorWithRole, UserRead
-    
+
     authors_statement = (
         select(ResourceAuthor, User)
         .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_statement).all()
-    
+    author_results = (await db_session.execute(authors_statement)).all()
+
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
@@ -88,12 +89,12 @@ def ai_start_activity_chat_session(
         )
         for resource_author, user in author_results
     ]
-    
+
     course = CourseRead(**course.model_dump(), authors=authors)
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(
@@ -108,7 +109,7 @@ def ai_start_activity_chat_session(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -130,14 +131,14 @@ def ai_start_activity_chat_session(
 
     # Get Activity Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     # Get Organization Config
     statement = select(OrganizationConfig).where(
         OrganizationConfig.org_id == org.id  # type: ignore
     )
-    result = db_session.exec(statement)
-    org_config = result.first()
+    result = await db_session.execute(statement)
+    org_config = result.scalars().first()
 
     org_config = OrganizationConfig.model_validate(org_config)
 
@@ -183,11 +184,11 @@ def ai_start_activity_chat_session(
     )
 
 
-def ai_send_activity_chat_message(
+async def ai_send_activity_chat_message(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ActivityAIChatSessionResponse:
     """
     Send a message in an existing AI Chat session with a Course Activity
@@ -196,7 +197,7 @@ def ai_send_activity_chat_message(
     statement = select(Activity).where(
         Activity.activity_uuid == chat_session_object.activity_uuid
     )
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     activity = ActivityRead.model_validate(activity)
 
@@ -206,7 +207,7 @@ def ai_send_activity_chat_message(
         .join(Activity)
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -225,7 +226,7 @@ def ai_send_activity_chat_message(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -243,14 +244,14 @@ def ai_send_activity_chat_message(
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), course.org_id)
 
     # Reserve credit atomically before the AI call; refund below on failure.
-    reserve_ai_credit(course.org_id, db_session)
+    await reserve_ai_credit(course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -269,14 +270,14 @@ def ai_send_activity_chat_message(
 
     # Get Activity Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     # Get Organization Config
     statement = select(OrganizationConfig).where(
         OrganizationConfig.org_id == org.id  # type: ignore
     )
-    result = db_session.exec(statement)
-    org_config = result.first()
+    result = await db_session.execute(statement)
+    org_config = result.scalars().first()
 
     org_config = OrganizationConfig.model_validate(org_config)
 
@@ -322,9 +323,9 @@ def ai_send_activity_chat_message(
     )
 
 
-def _get_activity_and_course_info(
+async def _get_activity_and_course_info(
     activity_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Tuple[ActivityRead, CourseRead, Organization, str, str]:
     """
     Helper function to get activity, course, and organization info with AI model.
@@ -332,7 +333,7 @@ def _get_activity_and_course_info(
     """
     # Get the Activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -348,7 +349,7 @@ def _get_activity_and_course_info(
         .join(Activity)
         .where(Activity.activity_uuid == activity_uuid)
     )
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -367,7 +368,7 @@ def _get_activity_and_course_info(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -385,7 +386,7 @@ def _get_activity_and_course_info(
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(
@@ -407,8 +408,8 @@ def _get_activity_and_course_info(
     statement = select(OrganizationConfig).where(
         OrganizationConfig.org_id == org.id  # type: ignore
     )
-    result = db_session.exec(statement)
-    org_config = result.first()
+    result = await db_session.execute(statement)
+    org_config = result.scalars().first()
 
     org_config = OrganizationConfig.model_validate(org_config)
 
@@ -422,13 +423,13 @@ async def ai_start_activity_chat_session_stream(
     request: Request,
     chat_session_object: StartActivityAIChatSession,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[str, Any]:
     """
     Start a new AI Chat session with streaming response.
     Returns context needed for streaming.
     """
-    activity, course, org, ai_model, ai_friendly_text = _get_activity_and_course_info(
+    activity, course, org, ai_model, ai_friendly_text = await _get_activity_and_course_info(
         chat_session_object.activity_uuid, db_session
     )
 
@@ -439,7 +440,7 @@ async def ai_start_activity_chat_session_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history()
 
@@ -467,13 +468,13 @@ async def ai_send_activity_chat_message_stream(
     request: Request,
     chat_session_object: SendActivityAIChatMessage,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Dict[str, Any]:
     """
     Send a message in an existing AI Chat session with streaming response.
     Returns context needed for streaming.
     """
-    activity, course, org, ai_model, ai_friendly_text = _get_activity_and_course_info(
+    activity, course, org, ai_model, ai_friendly_text = await _get_activity_and_course_info(
         chat_session_object.activity_uuid, db_session
     )
 
@@ -484,7 +485,7 @@ async def ai_send_activity_chat_message_stream(
     enforce_ai_rate_limit(resolve_acting_user_id(current_user), org.id)
 
     # Atomic credit reservation to prevent concurrent over-use.
-    reserve_ai_credit(org.id, db_session)
+    await reserve_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 

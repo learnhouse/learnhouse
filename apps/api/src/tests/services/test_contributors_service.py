@@ -28,7 +28,7 @@ from src.services.courses.contributors import (
 )
 
 
-def _make_user(db, *, user_id: int, username: str) -> User:
+async def _make_user(db, *, user_id: int, username: str) -> User:
     user = User(
         id=user_id,
         username=username,
@@ -41,12 +41,12 @@ def _make_user(db, *, user_id: int, username: str) -> User:
         update_date=str(datetime.now()),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def _make_contributor(
+async def _make_contributor(
     db,
     course: Course,
     user_id: int,
@@ -63,8 +63,8 @@ def _make_contributor(
         update_date=str(datetime.now()),
     )
     db.add(contributor)
-    db.commit()
-    db.refresh(contributor)
+    await db.commit()
+    await db.refresh(contributor)
     return contributor
 
 
@@ -90,9 +90,11 @@ class TestApplyCourseContributor:
             "status": "pending",
         }
 
-        authorship = db.exec(
-            select(ResourceAuthor).where(ResourceAuthor.resource_uuid == course.course_uuid)
-        ).first()
+        authorship = (
+            await db.execute(
+                select(ResourceAuthor).where(ResourceAuthor.resource_uuid == course.course_uuid)
+            )
+        ).scalars().first()
         assert authorship is not None
         assert authorship.user_id == regular_user.id
         assert authorship.authorship == ResourceAuthorshipEnum.CONTRIBUTOR
@@ -140,7 +142,7 @@ class TestApplyCourseContributor:
     async def test_apply_course_contributor_existing_authorship_rejected(
         self, db, course, regular_user, mock_request
     ):
-        _make_contributor(db, course, regular_user.id)
+        await _make_contributor(db, course, regular_user.id)
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -162,8 +164,8 @@ class TestUpdateCourseContributor:
     async def test_update_course_contributor_success(
         self, db, course, admin_user, mock_request
     ):
-        contributor_user = _make_user(db, user_id=20, username="contrib")
-        _make_contributor(db, course, contributor_user.id)
+        contributor_user = await _make_user(db, user_id=20, username="contrib")
+        await _make_contributor(db, course, contributor_user.id)
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -189,12 +191,14 @@ class TestUpdateCourseContributor:
             "status": "success",
         }
 
-        updated = db.exec(
-            select(ResourceAuthor).where(
-                ResourceAuthor.resource_uuid == course.course_uuid,
-                ResourceAuthor.user_id == contributor_user.id,
+        updated = (
+            await db.execute(
+                select(ResourceAuthor).where(
+                    ResourceAuthor.resource_uuid == course.course_uuid,
+                    ResourceAuthor.user_id == contributor_user.id,
+                )
             )
-        ).first()
+        ).scalars().first()
         assert updated is not None
         assert updated.authorship == ResourceAuthorshipEnum.MAINTAINER
         assert updated.authorship_status == ResourceAuthorshipStatusEnum.INACTIVE
@@ -251,8 +255,8 @@ class TestUpdateCourseContributor:
     async def test_update_course_contributor_creator_guard(
         self, db, course, admin_user, mock_request
     ):
-        creator_user = _make_user(db, user_id=21, username="creator")
-        _make_contributor(
+        creator_user = await _make_user(db, user_id=21, username="creator")
+        await _make_contributor(
             db,
             course,
             creator_user.id,
@@ -285,8 +289,8 @@ class TestGetCourseContributors:
     async def test_get_course_contributors_success(
         self, db, course, admin_user, mock_request
     ):
-        contributor_user = _make_user(db, user_id=30, username="reader")
-        _make_contributor(db, course, contributor_user.id)
+        contributor_user = await _make_user(db, user_id=30, username="reader")
+        await _make_contributor(db, course, contributor_user.id)
 
         with patch(
             "src.services.courses.contributors.check_resource_access",
@@ -373,10 +377,10 @@ class TestAddBulkCourseContributors:
     async def test_add_bulk_course_contributors_mixed_result(
         self, db, course, admin_user, mock_request
     ):
-        alice = _make_user(db, user_id=40, username="alice")
-        bob = _make_user(db, user_id=41, username="bob")
-        _make_contributor(db, course, bob.id)
-        _make_user(db, user_id=42, username="carol")
+        alice = await _make_user(db, user_id=40, username="alice")
+        bob = await _make_user(db, user_id=41, username="bob")
+        await _make_contributor(db, course, bob.id)
+        await _make_user(db, user_id=42, username="carol")
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -411,12 +415,14 @@ class TestAddBulkCourseContributors:
             },
         ]
 
-        created = db.exec(
-            select(ResourceAuthor).where(
-                ResourceAuthor.resource_uuid == course.course_uuid,
-                ResourceAuthor.user_id == alice.id,
+        created = (
+            await db.execute(
+                select(ResourceAuthor).where(
+                    ResourceAuthor.resource_uuid == course.course_uuid,
+                    ResourceAuthor.user_id == alice.id,
+                )
             )
-        ).first()
+        ).scalars().first()
         assert created is not None
         assert created.authorship == ResourceAuthorshipEnum.CONTRIBUTOR
         assert created.authorship_status == ResourceAuthorshipStatusEnum.PENDING
@@ -425,7 +431,7 @@ class TestAddBulkCourseContributors:
     async def test_add_bulk_course_contributors_exception_branch(
         self, db, course, admin_user, mock_request
     ):
-        user = _make_user(db, user_id=43, username="boom")
+        user = await _make_user(db, user_id=43, username="boom")
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -505,7 +511,7 @@ class TestRemoveBulkCourseContributors:
     async def test_remove_bulk_course_contributors_user_not_contributor_fails(
         self, db, course, admin_user, mock_request
     ):
-        non_contrib = _make_user(db, user_id=60, username="noncontrib")
+        non_contrib = await _make_user(db, user_id=60, username="noncontrib")
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -532,10 +538,10 @@ class TestRemoveBulkCourseContributors:
     async def test_remove_bulk_course_contributors_mixed_result(
         self, db, course, admin_user, mock_request
     ):
-        alice = _make_user(db, user_id=50, username="alice")
-        bob = _make_user(db, user_id=51, username="bob")
-        _make_contributor(db, course, alice.id)
-        _make_contributor(db, course, bob.id, authorship=ResourceAuthorshipEnum.CREATOR)
+        alice = await _make_user(db, user_id=50, username="alice")
+        bob = await _make_user(db, user_id=51, username="bob")
+        await _make_contributor(db, course, alice.id)
+        await _make_contributor(db, course, bob.id, authorship=ResourceAuthorshipEnum.CREATOR)
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",
@@ -567,19 +573,21 @@ class TestRemoveBulkCourseContributors:
                 "reason": "User not found or invalid",
             },
         ]
-        assert db.exec(
-            select(ResourceAuthor).where(
-                ResourceAuthor.resource_uuid == course.course_uuid,
-                ResourceAuthor.user_id == bob.id,
+        assert (
+            await db.execute(
+                select(ResourceAuthor).where(
+                    ResourceAuthor.resource_uuid == course.course_uuid,
+                    ResourceAuthor.user_id == bob.id,
+                )
             )
-        ).first() is not None
+        ).scalars().first() is not None
 
     @pytest.mark.asyncio
     async def test_remove_bulk_course_contributors_exception_branch(
         self, db, course, admin_user, mock_request
     ):
-        user = _make_user(db, user_id=52, username="boom")
-        _make_contributor(db, course, user.id)
+        user = await _make_user(db, user_id=52, username="boom")
+        await _make_contributor(db, course, user.id)
 
         with patch(
             "src.services.courses.contributors.authorization_verify_if_user_is_anon",

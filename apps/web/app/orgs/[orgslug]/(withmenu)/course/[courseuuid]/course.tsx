@@ -1,9 +1,9 @@
 'use client'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { swrFetcher } from '@services/utils/ts/requests'
+import React, { useEffect, useState, Suspense } from 'react'
+import { getUriWithOrg } from '@services/config/config'
+import { getCourseMetadata } from '@services/courses/courses'
+import { useTrail } from '@/hooks/queries/useTrail'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -19,7 +19,9 @@ import CourseActionsMobile from '@components/Objects/Courses/CourseActions/Cours
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
@@ -39,18 +41,16 @@ const CourseClient = (props: any) => {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient()
 
-  // Fetch course data client-side if server didn't provide it (e.g., auth failed on server)
-  const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useSWR(
-    // Only fetch if we don't have initial course data AND we have a session token AND no server error
-    !initialCourse && !serverError && access_token
-      ? `${getAPIUrl()}courses/course_${courseuuid}/meta?slim=true`
-      : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  );
+  const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useQuery({
+    queryKey: queryKeys.courses.meta(courseuuid),
+    queryFn: () => getCourseMetadata(courseuuid, {}, access_token, { slim: true }),
+    enabled: !!courseuuid && !serverError,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
-  // Use server-provided course data, or client-fetched data as fallback
   const course = initialCourse || clientCourseData;
 
   const { track } = useAnalytics()
@@ -66,16 +66,98 @@ const CourseClient = (props: any) => {
     }
   }, [courseId, courseUuidForTracking, track])
 
-  // Add SWR for trail data — only fetch once session and org are ready
-  const { data: trailData } = useSWR(
-    access_token && org?.id ? `${getAPIUrl()}trail/org/${org.id}/trail` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  );
+  // Fetch trail data — shared cache with useTrail hook used elsewhere
+  const { data: trailData } = useTrail(org?.id);
+
+  // Must be before any early returns (React rules of hooks)
+  useEffect(() => {
+    if (!course) return
+
+    getLearningTags(course)
+
+    if (course?.chapters) {
+      const totalActivities = course.chapters.reduce((sum: number, chapter: any) => sum + (chapter.activities?.length || 0), 0)
+      const defaultExpanded: {[key: string]: boolean} = {}
+      course.chapters.forEach((chapter: any, idx: number) => {
+        defaultExpanded[chapter.chapter_uuid] = idx === 0 ? true : totalActivities <= 5
+      })
+      setExpandedChapters(defaultExpanded)
+    }
+  }, [course])
 
   // Show loading state if fetching course data client-side
   if (!initialCourse && !serverError && courseLoading) {
-    return <PageLoading />
+    return (
+      <GeneralWrapperStyled>
+        <div className="animate-pulse">
+          {/* Breadcrumb placeholder */}
+          <div className="pb-4 flex items-center gap-2">
+            <div className="h-3 bg-gray-200 rounded w-16" />
+            <div className="h-3 bg-gray-200 rounded w-2" />
+            <div className="h-3 bg-gray-200 rounded w-32" />
+          </div>
+
+          {/* Course title + share row */}
+          <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <div className="h-9 bg-gray-200 rounded w-2/3" />
+            <div className="h-8 bg-gray-200 rounded-lg w-24" />
+          </div>
+
+          {/* Main content: left 3/4 + right 1/4 sidebar */}
+          <div className="flex flex-col md:flex-row gap-8 pt-2">
+            {/* Left column */}
+            <div className="w-full md:w-3/4 space-y-4">
+              {/* Thumbnail */}
+              <div className="bg-gray-200 rounded-lg w-full h-[200px] md:h-[400px]" />
+              {/* About text block */}
+              <div className="space-y-2 py-2">
+                <div className="h-3 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-5/6" />
+                <div className="h-3 bg-gray-200 rounded w-4/6" />
+                <div className="h-3 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-3/4" />
+              </div>
+            </div>
+
+            {/* Right sidebar */}
+            <div className="w-full md:w-1/4 space-y-4">
+              {/* Actions box */}
+              <div className="bg-gray-200 rounded-lg h-40" />
+              {/* Authors box */}
+              <div className="bg-gray-200 rounded-lg h-24" />
+            </div>
+          </div>
+
+          {/* Chapter list */}
+          <div className="w-full my-5 mb-10">
+            <div className="h-7 bg-gray-200 rounded w-40 mb-5" />
+            <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
+              {Array.from({ length: 3 }).map((_, chIdx) => (
+                <div key={chIdx}>
+                  {/* Chapter header */}
+                  <div className="flex items-center gap-3 py-4 px-4 bg-neutral-50 outline outline-1 outline-neutral-200/40">
+                    <div className="h-5 w-5 bg-gray-200 rounded-full flex-shrink-0" />
+                    <div className="h-5 bg-gray-200 rounded w-5 flex-shrink-0" />
+                    <div className="h-5 bg-gray-200 rounded w-1/3" />
+                  </div>
+                  {/* Activity rows — only expand first chapter */}
+                  {chIdx === 0 && Array.from({ length: 3 }).map((_, aIdx) => (
+                    <div key={aIdx} className="flex items-center gap-3 px-4 py-4 border-t border-neutral-100">
+                      <div className="h-4 w-4 bg-gray-200 rounded flex-shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-4 bg-gray-200 rounded w-1/2" />
+                        <div className="h-3 bg-gray-200 rounded w-20" />
+                      </div>
+                      <div className="h-4 w-4 bg-gray-200 rounded flex-shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </GeneralWrapperStyled>
+    )
   }
 
   // Determine the active error (server-side or client-side)
@@ -130,23 +212,6 @@ const CourseClient = (props: any) => {
     setLearnings(learningItems)
   }
 
-  useEffect(() => {
-    if (!course) return
-
-    getLearningTags(course)
-
-    // Collapse chapters by default if more than 5 activities in total
-    if (course?.chapters) {
-      const totalActivities = course.chapters.reduce((sum: number, chapter: any) => sum + (chapter.activities?.length || 0), 0)
-      const defaultExpanded: {[key: string]: boolean} = {}
-      course.chapters.forEach((chapter: any, idx: number) => {
-        // Always expand the first chapter
-        defaultExpanded[chapter.chapter_uuid] = idx === 0 ? true : totalActivities <= 5
-      })
-      setExpandedChapters(defaultExpanded)
-    }
-  }, [course])
-
   const getActivityTypeLabel = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
@@ -196,6 +261,16 @@ const CourseClient = (props: any) => {
     return props.current_activity === activity_uuid
   }
 
+  const handleActivityMouseEnter = (activity: any) => {
+    if (!activity?.activity_uuid) return
+    const cleanUuid = activity.activity_uuid.replace('activity_', '')
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.activity.detail(cleanUuid),
+      queryFn: () => getActivityWithAuthHeader(cleanUuid, {}, access_token),
+      staleTime: 60_000,
+    })
+  }
+
   // Generate JSON-LD structured data for SEO
   const generateJsonLd = () => {
     if (!course || !org) return null
@@ -238,9 +313,7 @@ const CourseClient = (props: any) => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      {!course && !org ? (
-        <PageLoading></PageLoading>
-      ) : (
+      {!course || !org ? null : (
         <>
           <GeneralWrapperStyled>
             <div className="pb-4">
@@ -322,6 +395,15 @@ const CourseClient = (props: any) => {
                           )})`,
                         }}
                       >
+                        {/* Hidden img with fetchpriority="high" so the browser fetches this LCP image immediately */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getCourseThumbnailMediaDirectory(org?.org_uuid, course?.course_uuid, course?.thumbnail_image)}
+                          alt=""
+                          aria-hidden="true"
+                          fetchPriority="high"
+                          className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                        />
                         {course.thumbnail_type === 'both' && (
                           <div className="absolute top-3 right-3 z-10">
                             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
@@ -376,7 +458,7 @@ const CourseClient = (props: any) => {
                   return run;
                 })() && (
                   <ActivityIndicators
-                    course_uuid={props.course.course_uuid}
+                    course_uuid={course.course_uuid}
                     orgslug={orgslug}
                     course={course}
                     trailData={trailData}
@@ -576,6 +658,7 @@ const CourseClient = (props: any) => {
                                 rel="noopener noreferrer"
                                 prefetch={false}
                                 className="block group activity-container transition-all duration-200 px-4 py-4"
+                                onMouseEnter={() => handleActivityMouseEnter(activity)}
                               >
                                 {RowInner}
                               </Link>
@@ -590,7 +673,9 @@ const CourseClient = (props: any) => {
             </div>
 
             {/* Community Section */}
-            <CourseCommunitySection courseUuid={course.course_uuid} orgslug={orgslug} />
+            <Suspense fallback={<div className="animate-pulse h-48 bg-gray-100 rounded-lg mt-4" />}>
+              <CourseCommunitySection courseUuid={course.course_uuid} orgslug={orgslug} />
+            </Suspense>
           </GeneralWrapperStyled>
 
           {/* Mobile Actions Box */}

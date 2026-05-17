@@ -20,7 +20,7 @@ from src.services.roles.roles import (
 )
 
 
-def _make_role(db, org, **overrides):
+async def _make_role(db, org, **overrides):
     role = Role(
         id=overrides.pop("id", None),
         name=overrides.pop("name", "Role"),
@@ -33,8 +33,8 @@ def _make_role(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(role)
-    db.commit()
-    db.refresh(role)
+    await db.commit()
+    await db.refresh(role)
     return role
 
 
@@ -100,9 +100,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
+            new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
+            new_callable=AsyncMock,
             return_value=False,
         ):
             with pytest.raises(HTTPException) as no_org_exc:
@@ -251,6 +253,11 @@ class TestRolesService:
         rights_model = Rights.model_validate(admin_role.rights)
         max_result = MagicMock()
         max_result.scalar.return_value = 41
+        # Mock results for: org lookup, existing-role check
+        org_result = MagicMock()
+        org_result.scalars.return_value.first.return_value = org
+        no_existing_result = MagicMock()
+        no_existing_result.scalars.return_value.first.return_value = None
         commit_calls = []
 
         def commit_side_effect():
@@ -272,14 +279,16 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
+            new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
+            new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
             db, "commit", side_effect=commit_side_effect
         ), patch.object(db, "refresh"), patch.object(
-            db, "execute", side_effect=[max_result, Exception("missing sequence")]
+            db, "execute", side_effect=[org_result, no_existing_result, max_result, Exception("missing sequence")]
         ), patch.object(
             db, "rollback"
         ):
@@ -306,6 +315,11 @@ class TestRolesService:
         max_result = MagicMock()
         max_result.scalar.return_value = 41
         setval_result = MagicMock()
+        # Mock results for: org lookup, existing-role check
+        org_result = MagicMock()
+        org_result.scalars.return_value.first.return_value = org
+        no_existing_result = MagicMock()
+        no_existing_result.scalars.return_value.first.return_value = None
         commit_calls = []
 
         def commit_side_effect():
@@ -327,14 +341,16 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
+            new_callable=AsyncMock,
             return_value=admin_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
+            new_callable=AsyncMock,
             return_value=False,
         ), patch.object(db, "add"), patch.object(
             db, "commit", side_effect=commit_side_effect
         ), patch.object(db, "refresh"), patch.object(
-            db, "execute", side_effect=[max_result, setval_result]
+            db, "execute", side_effect=[org_result, no_existing_result, max_result, setval_result]
         ), patch.object(
             db, "rollback"
         ):
@@ -391,7 +407,7 @@ class TestRolesService:
     async def test_get_roles_by_org_and_read_role(
         self, db, org, admin_user, admin_role, mock_request
     ):
-        global_role = _make_role(
+        global_role = await _make_role(
             db,
             org,
             id=20,
@@ -409,19 +425,19 @@ class TestRolesService:
                 mock_request, db, org.id, admin_user
             )
             read_org_role = await read_role(
-                mock_request, db, str(admin_role.id), admin_user
+                mock_request, db, admin_role.id, admin_user
             )
             read_global_role = await read_role(
-                mock_request, db, str(global_role.id), admin_user
+                mock_request, db, global_role.id, admin_user
             )
 
             with pytest.raises(HTTPException) as invalid_exc:
-                await read_role(mock_request, db, "abc", admin_user)
+                await read_role(mock_request, db, 99999, admin_user)
 
         assert [role.name for role in roles[:2]] == ["Global", "Admin"]
         assert read_org_role.id == admin_role.id
         assert read_global_role.id == global_role.id
-        assert invalid_exc.value.status_code == 400
+        assert invalid_exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_roles_by_organization_not_found(self, db, admin_user, mock_request):
@@ -461,7 +477,7 @@ class TestRolesService:
         self, db, org, admin_user, admin_role, regular_user, mock_request
     ):
         rights_model = Rights.model_validate(admin_role.rights)
-        org_role = _make_role(
+        org_role = await _make_role(
             db,
             org,
             id=30,
@@ -469,7 +485,7 @@ class TestRolesService:
             role_uuid="role_editor",
             rights=admin_role.rights,
         )
-        global_role = _make_role(
+        global_role = await _make_role(
             db,
             org,
             id=31,
@@ -487,7 +503,7 @@ class TestRolesService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch("src.services.roles.roles.require_org_role_permission"), patch(
             "src.routers.users._invalidate_session_cache"
@@ -532,13 +548,13 @@ class TestRolesService:
             update_date=str(datetime.now()),
         )
         role_result = MagicMock()
-        role_result.first.return_value = role
+        role_result.scalars.return_value.first.return_value = role
         users_result = MagicMock()
-        users_result.all.return_value = []
+        users_result.scalars.return_value.all.return_value = []
 
         with patch(
             "src.services.roles.roles.require_org_role_permission"
-        ), patch.object(db, "exec", side_effect=[role_result, users_result]), patch.object(
+        ), patch.object(db, "execute", side_effect=[role_result, users_result]), patch.object(
             db, "add"
         ), patch.object(
             db, "commit"
@@ -572,9 +588,11 @@ class TestRolesService:
             "src.services.roles.roles.require_org_role_permission"
         ), patch(
             "src.services.roles.roles.get_user_org_role",
+            new_callable=AsyncMock,
             return_value=user_role,
         ), patch(
             "src.services.roles.roles.is_user_superadmin",
+            new_callable=AsyncMock,
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
@@ -624,9 +642,9 @@ class TestRolesService:
 
         fake_role = FakeRole()
         org_result = MagicMock()
-        org_result.first.return_value = org
+        org_result.scalars.return_value.first.return_value = org
         existing_result = MagicMock()
-        existing_result.first.return_value = None
+        existing_result.scalars.return_value.first.return_value = None
 
         with patch(
             "src.services.roles.roles.rbac_check",
@@ -643,7 +661,7 @@ class TestRolesService:
             "src.services.roles.roles.Role.model_validate",
             return_value=fake_role,
         ), patch.object(
-            db, "exec", side_effect=[org_result, existing_result]
+            db, "execute", side_effect=[org_result, existing_result]
         ), patch.object(
             db, "add"
         ), patch.object(
@@ -681,7 +699,7 @@ class TestRolesService:
     async def test_update_role_rights_validation_branches(
         self, db, org, admin_user, admin_role, mock_request, rights_mutator, expected_detail
     ):
-        role = _make_role(
+        role = await _make_role(
             db,
             org,
             id=35,
@@ -708,14 +726,14 @@ class TestRolesService:
     async def test_delete_role_success_and_guards(
         self, db, org, admin_user, regular_user, mock_request
     ):
-        org_role = _make_role(
+        org_role = await _make_role(
             db,
             org,
             id=40,
             name="Delete Me",
             role_uuid="role_delete_me",
         )
-        global_role = _make_role(
+        global_role = await _make_role(
             db,
             org,
             id=41,
@@ -733,22 +751,22 @@ class TestRolesService:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch("src.services.roles.roles.require_org_role_permission"), patch(
             "src.routers.users._invalidate_session_cache"
         ) as invalidate_cache:
-            deleted = await delete_role(mock_request, db, str(org_role.id), admin_user)
+            deleted = await delete_role(mock_request, db, org_role.id, admin_user)
 
             with pytest.raises(HTTPException) as invalid_exc:
-                await delete_role(mock_request, db, "bad-id", admin_user)
+                await delete_role(mock_request, db, 99999, admin_user)
 
             with pytest.raises(HTTPException) as global_exc:
-                await delete_role(mock_request, db, str(global_role.id), admin_user)
+                await delete_role(mock_request, db, global_role.id, admin_user)
 
         assert deleted == "Role deleted"
         invalidate_cache.assert_called_once_with(regular_user.id)
-        assert invalid_exc.value.status_code == 400
+        assert invalid_exc.value.status_code == 404
         assert global_exc.value.status_code == 403
 
     @pytest.mark.asyncio

@@ -24,7 +24,7 @@ from src.services.courses.collections import (
 )
 
 
-def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
+async def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
                  public=True, published=True):
     """Helper to insert an additional course."""
     c = Course(
@@ -40,12 +40,12 @@ def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
-def _make_collection(db, org, *, id, name="Extra Collection",
+async def _make_collection(db, org, *, id, name="Extra Collection",
                      collection_uuid=None, public=True):
     """Helper to insert an additional collection."""
     c = Collection(
@@ -59,12 +59,12 @@ def _make_collection(db, org, *, id, name="Extra Collection",
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
-def _link_course_to_collection(db, collection, course, org):
+async def _link_course_to_collection(db, collection, course, org):
     """Helper to create a CollectionCourse join row."""
     link = CollectionCourse(
         collection_id=collection.id,
@@ -74,7 +74,7 @@ def _link_course_to_collection(db, collection, course, org):
         update_date=str(datetime.now()),
     )
     db.add(link)
-    db.commit()
+    await db.commit()
 
 
 class TestGetCollection:
@@ -108,11 +108,11 @@ class TestGetCollection:
         self, db, org, course, collection, anonymous_user, mock_request,
         bypass_rbac,
     ):
-        private_course = _make_course(
+        private_course = await _make_course(
             db, org, id=50, name="Private Course",
             course_uuid="course_private", public=False,
         )
-        _link_course_to_collection(db, collection, private_course, org)
+        await _link_course_to_collection(db, collection, private_course, org)
 
         result = await get_collection(
             mock_request, "collection_test", anonymous_user, db
@@ -148,11 +148,11 @@ class TestCreateCollection:
         assert len(result.courses) == 1
 
         # Verify persisted in DB
-        stored = db.exec(
+        stored = (await db.execute(
             select(Collection).where(
                 Collection.collection_uuid == result.collection_uuid
             )
-        ).first()
+        )).scalars().first()
         assert stored is not None
 
 
@@ -223,7 +223,7 @@ class TestDeleteCollection:
 
         assert result == {"detail": "Collection deleted"}
 
-        remaining = db.get(Collection, 1)
+        remaining = await db.get(Collection, 1)
         assert remaining is None
 
     @pytest.mark.asyncio
@@ -266,7 +266,7 @@ class TestGetCollections:
         self, db, org, course, collection, anonymous_user, mock_request,
         bypass_rbac,
     ):
-        _make_collection(
+        await _make_collection(
             db, org, id=60, name="Private Collection",
             collection_uuid="collection_private", public=False,
         )

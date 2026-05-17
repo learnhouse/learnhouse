@@ -27,8 +27,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from sqlalchemy import JSON
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette.requests import Request
 
 from src.db.courses.activities import (
@@ -141,26 +143,29 @@ USER_RIGHTS = Rights(
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def engine():
-    """In-memory SQLite engine with JSONB-to-JSON remapping."""
-    eng = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+async def engine():
+    """In-memory async SQLite engine with JSONB-to-JSON remapping."""
     for table in SQLModel.metadata.tables.values():
         for col in table.columns:
             if isinstance(col.type, JSONB):
                 col.type = JSON()
-    SQLModel.metadata.create_all(eng)
+
+    eng = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    async with eng.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     yield eng
-    eng.dispose()
+    await eng.dispose()
 
 
 @pytest.fixture
-def db(engine):
-    """Yields a SQLModel Session bound to the in-memory engine."""
-    with Session(engine) as session:
+async def db(engine):
+    """Yields an async SQLModel AsyncSession bound to the in-memory engine."""
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
         yield session
 
 
@@ -169,7 +174,7 @@ def db(engine):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def org(db):
+async def org(db):
     """Primary test organization."""
     o = Organization(
         id=1,
@@ -181,13 +186,13 @@ def org(db):
         update_date=str(datetime.now()),
     )
     db.add(o)
-    db.commit()
-    db.refresh(o)
+    await db.commit()
+    await db.refresh(o)
     return o
 
 
 @pytest.fixture
-def other_org(db):
+async def other_org(db):
     """Secondary organization for cross-org isolation tests."""
     o = Organization(
         id=2,
@@ -199,8 +204,8 @@ def other_org(db):
         update_date=str(datetime.now()),
     )
     db.add(o)
-    db.commit()
-    db.refresh(o)
+    await db.commit()
+    await db.refresh(o)
     return o
 
 
@@ -209,7 +214,7 @@ def other_org(db):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def admin_role(db, org):
+async def admin_role(db, org):
     """Admin role (id=1) with full permissions."""
     r = Role(
         id=1,
@@ -222,13 +227,13 @@ def admin_role(db, org):
         update_date=str(datetime.now()),
     )
     db.add(r)
-    db.commit()
-    db.refresh(r)
+    await db.commit()
+    await db.refresh(r)
     return r
 
 
 @pytest.fixture
-def user_role(db, org):
+async def user_role(db, org):
     """Regular user role (id=4) with read-only permissions."""
     r = Role(
         id=4,
@@ -241,8 +246,8 @@ def user_role(db, org):
         update_date=str(datetime.now()),
     )
     db.add(r)
-    db.commit()
-    db.refresh(r)
+    await db.commit()
+    await db.refresh(r)
     return r
 
 
@@ -251,7 +256,7 @@ def user_role(db, org):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def admin_user(db, org, admin_role):
+async def admin_user(db, org, admin_role):
     """Admin user linked to the test org with admin role."""
     u = User(
         id=1,
@@ -265,8 +270,8 @@ def admin_user(db, org, admin_role):
         update_date=str(datetime.now()),
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     uo = UserOrganization(
         user_id=u.id,
         org_id=org.id,
@@ -275,7 +280,7 @@ def admin_user(db, org, admin_role):
         update_date=str(datetime.now()),
     )
     db.add(uo)
-    db.commit()
+    await db.commit()
     return PublicUser(
         id=u.id,
         username=u.username,
@@ -287,7 +292,7 @@ def admin_user(db, org, admin_role):
 
 
 @pytest.fixture
-def regular_user(db, org, user_role):
+async def regular_user(db, org, user_role):
     """Regular user linked to the test org with user role."""
     u = User(
         id=2,
@@ -301,8 +306,8 @@ def regular_user(db, org, user_role):
         update_date=str(datetime.now()),
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     uo = UserOrganization(
         user_id=u.id,
         org_id=org.id,
@@ -311,7 +316,7 @@ def regular_user(db, org, user_role):
         update_date=str(datetime.now()),
     )
     db.add(uo)
-    db.commit()
+    await db.commit()
     return PublicUser(
         id=u.id,
         username=u.username,
@@ -333,7 +338,7 @@ def anonymous_user():
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def course(db, org):
+async def course(db, org):
     """A published, public course in the test org."""
     c = Course(
         id=1,
@@ -348,13 +353,13 @@ def course(db, org):
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
 @pytest.fixture
-def chapter(db, org, course):
+async def chapter(db, org, course):
     """A chapter linked to the test course."""
     ch = Chapter(
         id=1,
@@ -367,8 +372,8 @@ def chapter(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(ch)
-    db.commit()
-    db.refresh(ch)
+    await db.commit()
+    await db.refresh(ch)
     link = CourseChapter(
         chapter_id=ch.id,
         course_id=course.id,
@@ -378,12 +383,12 @@ def chapter(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(link)
-    db.commit()
+    await db.commit()
     return ch
 
 
 @pytest.fixture
-def activity(db, org, course, chapter):
+async def activity(db, org, course, chapter):
     """A published activity linked to the test chapter."""
     a = Activity(
         id=1,
@@ -399,8 +404,8 @@ def activity(db, org, course, chapter):
         update_date=str(datetime.now()),
     )
     db.add(a)
-    db.commit()
-    db.refresh(a)
+    await db.commit()
+    await db.refresh(a)
     link = ChapterActivity(
         order=1,
         chapter_id=chapter.id,
@@ -411,7 +416,7 @@ def activity(db, org, course, chapter):
         update_date=str(datetime.now()),
     )
     db.add(link)
-    db.commit()
+    await db.commit()
     return a
 
 
@@ -420,7 +425,7 @@ def activity(db, org, course, chapter):
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def collection(db, org, course):
+async def collection(db, org, course):
     """A public collection containing the test course."""
     c = Collection(
         id=1,
@@ -433,8 +438,8 @@ def collection(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     link = CollectionCourse(
         collection_id=c.id,
         course_id=course.id,
@@ -443,7 +448,7 @@ def collection(db, org, course):
         update_date=str(datetime.now()),
     )
     db.add(link)
-    db.commit()
+    await db.commit()
     return c
 
 

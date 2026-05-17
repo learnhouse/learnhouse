@@ -2,12 +2,12 @@
 
 import React from 'react'
 import UserAvatar from '@components/Objects/UserAvatar'
-import { 
-  Briefcase, 
-  Building2, 
-  MapPin, 
-  Globe, 
-  Link as LinkIcon, 
+import {
+  Briefcase,
+  Building2,
+  MapPin,
+  Globe,
+  Link as LinkIcon,
   GraduationCap,
   Award,
   BookOpen,
@@ -22,6 +22,7 @@ import { getCoursesByUser } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 
 interface UserProfileClientProps {
   userData: any;
@@ -75,35 +76,19 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const [selectedImage, setSelectedImage] = React.useState<{ url: string; caption?: string } | null>(null);
-  const [userCourses, setUserCourses] = React.useState<any[]>([]);
-  const [isLoadingCourses, setIsLoadingCourses] = React.useState(false);
-  const [coursesError, setCoursesError] = React.useState(false);
 
-  React.useEffect(() => {
-    let mounted = true
+  const {
+    data: coursesResponse,
+    isLoading: isLoadingCourses,
+    isError: coursesError,
+  } = useQuery({
+    queryKey: ['userCourses', userData.id],
+    queryFn: () => getCoursesByUser(userData.id, access_token),
+    enabled: !!(userData.id && access_token),
+    staleTime: 60_000,
+  });
 
-    const fetchUserCourses = async () => {
-      if (userData.id && access_token) {
-        try {
-          setIsLoadingCourses(true);
-          const coursesData = await getCoursesByUser(userData.id, access_token);
-          if (mounted && coursesData.data) {
-            setUserCourses(coursesData.data);
-          }
-        } catch (error) {
-          if (mounted) {
-            console.error('Error fetching user courses:', error);
-            setCoursesError(true);
-          }
-        } finally {
-          if (mounted) setIsLoadingCourses(false);
-        }
-      }
-    };
-
-    fetchUserCourses();
-    return () => { mounted = false }
-  }, [userData.id, access_token]);
+  const userCourses: any[] = coursesResponse?.data ?? [];
 
   const IconComponent = ({ iconName }: { iconName: string }) => {
     const IconElement = ICON_MAP[iconName as keyof typeof ICON_MAP]
@@ -313,8 +298,10 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                       {section.type === 'courses' && (
                         <div>
                           {isLoadingCourses ? (
-                            <div className="flex items-center justify-center py-8">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr animate-pulse">
+                              {[1, 2, 3].map((i) => (
+                                <div key={i} className="rounded-xl bg-gray-100 aspect-video" />
+                              ))}
                             </div>
                           ) : coursesError ? (
                             <div className="text-center py-8 text-red-500">

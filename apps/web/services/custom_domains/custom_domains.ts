@@ -2,7 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyWithAuthHeader,
   getResponseMetadata,
-  swrFetcher,
+  apiFetch,
 } from '@services/utils/ts/requests'
 
 // Types
@@ -57,7 +57,7 @@ export async function listCustomDomains(
   accessToken: string
 ): Promise<CustomDomain[]> {
   const url = `${getAPIUrl()}orgs/${orgId}/domains`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**
@@ -69,7 +69,7 @@ export async function getCustomDomain(
   accessToken: string
 ): Promise<CustomDomain> {
   const url = `${getAPIUrl()}orgs/${orgId}/domains/${domainUuid}`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**
@@ -97,7 +97,7 @@ export async function getVerificationInfo(
   accessToken: string
 ): Promise<CustomDomainVerificationInfo> {
   const url = `${getAPIUrl()}orgs/${orgId}/domains/${domainUuid}/verification-info`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**
@@ -141,7 +141,7 @@ export async function checkSSLStatus(
   accessToken: string
 ): Promise<CustomDomainSSLStatus> {
   const url = `${getAPIUrl()}orgs/${orgId}/domains/${domainUuid}/ssl-status`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**

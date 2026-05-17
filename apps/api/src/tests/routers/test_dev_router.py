@@ -1,7 +1,7 @@
 """Router tests for src/routers/dev.py."""
 
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -80,10 +80,13 @@ class TestDevRouter:
     )
     async def test_migrations(self, client, app, endpoint, patch_target):
         org_config = SimpleNamespace(config={"version": "old"})
-        db_session = Mock()
-        db_session.exec.return_value = [org_config]
+        db_session = AsyncMock()
+        scalars_mock = MagicMock()
+        scalars_mock.all.return_value = [org_config]
+        result_mock = MagicMock()
+        result_mock.scalars.return_value = scalars_mock
+        db_session.execute.return_value = result_mock
         db_session.add = Mock()
-        db_session.commit = Mock()
 
         app.dependency_overrides[get_db_session] = lambda: db_session
 

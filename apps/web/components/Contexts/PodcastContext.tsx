@@ -1,10 +1,9 @@
 'use client'
 import React, { createContext, useContext } from 'react'
-import useSWR, { mutate } from 'swr'
-import { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/podcasts'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { Podcast, PodcastEpisode, PodcastMeta, getPodcastMeta } from '@services/podcasts/podcasts'
 import { useLHSession } from './LHSessionContext'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
 
 interface PodcastContextType {
   podcast: Podcast | null
@@ -27,37 +26,39 @@ export function PodcastProvider({
 }) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
-  const swrKey = access_token ? `${getAPIUrl()}podcasts/${podcastuuid}/meta` : null
-
-  const { data, error, isLoading, mutate: swrMutate } = useSWR<PodcastMeta>(
-    swrKey,
-    (url) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 0, // No automatic refresh for dashboard
-    }
-  )
+  const { data, error, isLoading } = useQuery<PodcastMeta>({
+    queryKey: queryKeys.podcasts.meta(podcastuuid),
+    queryFn: () => getPodcastMeta(podcastuuid, null, access_token),
+    enabled: !!(podcastuuid && access_token),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  })
 
   const podcast = data?.podcast || null
   const episodes = data?.episodes || []
 
   const refreshPodcast = async () => {
-    await swrMutate()
-    // Also mutate the public podcast key to keep frontend in sync
-    mutate((key) => typeof key === 'string' && key.includes('/podcasts/'), undefined, { revalidate: true })
+    await queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.meta(podcastuuid) })
   }
 
   const setPodcast = (newPodcast: Podcast | null) => {
     if (data) {
-      swrMutate({ ...data, podcast: newPodcast! }, false)
+      queryClient.setQueryData<PodcastMeta>(
+        queryKeys.podcasts.meta(podcastuuid),
+        { ...data, podcast: newPodcast! }
+      )
     }
   }
 
   const setEpisodes = (newEpisodes: PodcastEpisode[]) => {
     if (data) {
-      swrMutate({ ...data, episodes: newEpisodes }, false)
+      queryClient.setQueryData<PodcastMeta>(
+        queryKeys.podcasts.meta(podcastuuid),
+        { ...data, episodes: newEpisodes }
+      )
     }
   }
 

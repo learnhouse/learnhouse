@@ -3,7 +3,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple, Any, Dict
 from fastapi import HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.communities.communities import Community, DEFAULT_MODERATION_SETTINGS
 from src.db.communities.discussions import Discussion
@@ -45,7 +46,7 @@ def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
 async def enforce_posting_limits(
     user_id: int,
     community: Optional[Community],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Apply posting-level moderation (slow mode, per-day caps, account age, email
@@ -62,7 +63,7 @@ async def enforce_posting_limits(
 
     user = None
     if min_account_age_days > 0 or require_email_verified:
-        user = db_session.exec(select(User).where(User.id == user_id)).first()
+        user = (await db_session.execute(select(User).where(User.id == user_id))).scalars().first()
 
     if require_email_verified and user is not None and not user.email_verified:
         raise HTTPException(
@@ -93,7 +94,7 @@ async def enforce_posting_limits(
         Discussion.community_id == community.id,
         Discussion.author_id == user_id,
     ).order_by(Discussion.creation_date.desc())  # type: ignore
-    recent_discussions = list(db_session.exec(recent_query.limit(max(50, max_posts_per_day + 5))).all())
+    recent_discussions = list((await db_session.execute(recent_query.limit(max(50, max_posts_per_day + 5)))).scalars().all())
 
     if slow_mode_seconds > 0 and recent_discussions:
         last_created = _parse_iso_datetime(recent_discussions[0].creation_date)
@@ -132,7 +133,7 @@ async def enforce_posting_limits(
 async def enforce_auto_lock(
     discussion: Discussion,
     community: Optional[Community],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Lazily lock a discussion if it has been inactive longer than
@@ -150,8 +151,8 @@ async def enforce_auto_lock(
     if datetime.now(timezone.utc) - reference >= timedelta(days=auto_lock_days):
         discussion.is_locked = True
         db_session.add(discussion)
-        db_session.commit()
-        db_session.refresh(discussion)
+        await db_session.commit()
+        await db_session.refresh(discussion)
 
 
 def extract_text_from_tiptap(node: Any) -> str:
@@ -232,7 +233,7 @@ def check_content_moderation(
 async def validate_content_for_community(
     content: str,
     community_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     content_type: str = "content",
     *,
     max_length: int = 0,
@@ -244,7 +245,7 @@ async def validate_content_for_community(
     Raises HTTPException if content is blocked.
     """
     statement = select(Community).where(Community.id == community_id)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         return
@@ -295,13 +296,13 @@ async def validate_discussion_content(
     title: str,
     content: str,
     community_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Validate both title and content of a discussion.
     """
     statement = select(Community).where(Community.id == community_id)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
     settings = get_community_settings(community)
     block_links = bool(settings.get("block_links", False))
     min_post = int(settings.get("min_post_length", 0) or 0)
@@ -324,13 +325,13 @@ async def validate_discussion_content(
 async def validate_comment_content(
     content: str,
     community_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Validate comment/reply content.
     """
     statement = select(Community).where(Community.id == community_id)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
     settings = get_community_settings(community)
 
     await validate_content_for_community(

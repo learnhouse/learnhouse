@@ -1,12 +1,13 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Users, ShieldCheck, Clock, EnvelopeSimple } from '@phosphor-icons/react'
 
 export default function RecentMembers() {
@@ -16,13 +17,12 @@ export default function RecentMembers() {
   const token = session?.data?.tokens?.access_token
   const orgId = org?.id
 
-  const { data: membersData, isLoading } = useSWR(
-    token && orgId
-      ? `${getAPIUrl()}orgs/${orgId}/users?page=1&limit=8&sort_order=desc`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: membersData, isLoading } = useQuery({
+    queryKey: [...queryKeys.org.users(orgId), 1, 'recent', 8],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/users?page=1&limit=8&sort_order=desc`, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   const members: any[] = membersData?.items ?? []
   const totalMembers = membersData?.total ?? 0

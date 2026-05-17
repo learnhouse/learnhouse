@@ -8,7 +8,7 @@ import zipfile
 from io import BytesIO
 from itertools import count
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 import pytest
@@ -811,8 +811,8 @@ class TestImportHelpers:
                 new_course_uuid=new_course_uuid,
             )
 
-        persisted = db.exec(select(Course).where(Course.course_uuid == new_course_uuid)).first()
-        authors = db.exec(select(ResourceAuthor).where(ResourceAuthor.resource_uuid == new_course_uuid)).all()
+        persisted = (await db.execute(select(Course).where(Course.course_uuid == new_course_uuid))).scalars().first()
+        authors = (await db.execute(select(ResourceAuthor).where(ResourceAuthor.resource_uuid == new_course_uuid))).scalars().all()
 
         assert new_course.name == "Copy Original Course"
         assert new_course.public is False
@@ -969,7 +969,7 @@ class TestImportHelpers:
             "activity_uuid": ("old-activity", "activity-new"),
             "file_id": ("old-file", "file-new"),
         }
-        mock_db_session = MagicMock()
+        mock_db_session = AsyncMock()
 
         with patch(
             "src.services.courses.transfer.import_service._import_block",
@@ -1028,7 +1028,7 @@ class TestImportHelpers:
             json.dumps({"block_type": "BLOCK_VIDEO", "content": {"file_id": "old-file"}})
         )
 
-        mock_db_session = MagicMock()
+        mock_db_session = AsyncMock()
         original_json_loads = json.loads
 
         async def _fake_import_block(**kwargs):

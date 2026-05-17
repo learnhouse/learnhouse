@@ -17,11 +17,6 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sqlalchemy import JSON
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
-from starlette.requests import Request
 
 from src.db.courses.activities import (
     Activity,
@@ -29,107 +24,30 @@ from src.db.courses.activities import (
     ActivityTypeEnum,
 )
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.courses.chapters import Chapter
-from src.db.courses.course_chapters import CourseChapter
-from src.db.courses.courses import Course
-from src.db.organizations import Organization
 from src.db.users import PublicUser
 from src.services.courses.chapters import get_course_chapters
 
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
-
-@pytest.fixture
-def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    # Map JSONB -> JSON for SQLite compatibility
-    for table in SQLModel.metadata.tables.values():
-        for col in table.columns:
-            if isinstance(col.type, JSONB):
-                col.type = JSON()
-    SQLModel.metadata.create_all(engine)
-    yield engine
-    engine.dispose()
+# engine, db, org, course, chapter, mock_request, bypass_rbac are provided
+# by conftest.py as async fixtures backed by an async SQLite engine.
 
 
 @pytest.fixture
-def db(engine):
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture
-def org(db):
-    o = Organization(
+def public_user():
+    return PublicUser(
         id=1,
-        name="Test Org",
-        slug="test-org",
-        email="e@o.com",
-        org_uuid="org_test",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
+        username="u",
+        first_name="U",
+        last_name="T",
+        email="u@t.com",
+        user_uuid="user_t",
     )
-    db.add(o)
-    db.commit()
-    db.refresh(o)
-    return o
 
 
 @pytest.fixture
-def course(db, org):
-    c = Course(
-        id=1,
-        name="Test Course",
-        description="",
-        public=True,
-        published=True,
-        open_to_contributors=False,
-        org_id=org.id,
-        course_uuid="course_tree",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(c)
-    db.commit()
-    db.refresh(c)
-    return c
-
-
-@pytest.fixture
-def chapter(db, org, course):
-    ch = Chapter(
-        id=1,
-        name="Ch 1",
-        description="",
-        org_id=org.id,
-        course_id=course.id,
-        chapter_uuid="chapter_1",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(ch)
-    db.commit()
-    db.refresh(ch)
-    link = CourseChapter(
-        chapter_id=ch.id,
-        course_id=course.id,
-        org_id=org.id,
-        order=1,
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(link)
-    db.commit()
-    return ch
-
-
-@pytest.fixture
-def heavy_activity(db, org, course, chapter):
+async def heavy_activity(db, org, course, chapter):
     """An activity with a large content dict, to prove slim strips it."""
     big_content = {
         "type": "doc",
@@ -151,8 +69,8 @@ def heavy_activity(db, org, course, chapter):
         update_date=str(datetime.now()),
     )
     db.add(a)
-    db.commit()
-    db.refresh(a)
+    await db.commit()
+    await db.refresh(a)
     db.add(
         ChapterActivity(
             order=1,
@@ -164,12 +82,12 @@ def heavy_activity(db, org, course, chapter):
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return a
 
 
 @pytest.fixture
-def second_activity(db, org, course, chapter):
+async def second_activity(db, org, course, chapter):
     a = Activity(
         id=2,
         name="Second Activity",
@@ -185,8 +103,8 @@ def second_activity(db, org, course, chapter):
         update_date=str(datetime.now()),
     )
     db.add(a)
-    db.commit()
-    db.refresh(a)
+    await db.commit()
+    await db.refresh(a)
     db.add(
         ChapterActivity(
             order=2,
@@ -198,32 +116,8 @@ def second_activity(db, org, course, chapter):
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return a
-
-
-@pytest.fixture
-def mock_request():
-    scope = {
-        "type": "http",
-        "method": "GET",
-        "path": "/",
-        "headers": [],
-        "query_string": b"",
-    }
-    return Request(scope)
-
-
-@pytest.fixture
-def public_user():
-    return PublicUser(
-        id=1,
-        username="u",
-        first_name="U",
-        last_name="T",
-        email="u@t.com",
-        user_uuid="user_t",
-    )
 
 
 @pytest.fixture
@@ -329,7 +223,7 @@ async def test_slim_respects_published_filter(
     """with_unpublished_activities=False filters unpublished rows in slim mode."""
     heavy_activity.published = False
     db.add(heavy_activity)
-    db.commit()
+    await db.commit()
 
     chapters = await get_course_chapters(
         mock_request,

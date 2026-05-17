@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
 from src.core.events.database import get_db_session
 from src.core.ee_hooks import is_multi_org_allowed
@@ -26,7 +27,7 @@ def _strip_port(domain: str) -> str:
         200: {"description": "Instance configuration for the current deployment."},
     },
 )
-async def get_instance_info(db_session: Session = Depends(get_db_session)):
+async def get_instance_info(db_session: AsyncSession = Depends(get_db_session)):
     """Public endpoint returning instance configuration."""
     cached = get_cached_instance_info()
     if cached is not None:
@@ -35,10 +36,10 @@ async def get_instance_info(db_session: Session = Depends(get_db_session)):
     default_org_slug = "default"
     try:
         statement = select(Organization).where(Organization.slug == "default")
-        default_org = db_session.exec(statement).first()
+        default_org = (await db_session.execute(statement)).scalars().first()
         if not default_org:
             statement = select(Organization).order_by(Organization.id).limit(1)
-            default_org = db_session.exec(statement).first()
+            default_org = (await db_session.execute(statement)).scalars().first()
         if default_org:
             default_org_slug = default_org.slug
     except Exception:

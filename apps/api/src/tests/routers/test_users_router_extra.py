@@ -18,7 +18,6 @@ from src.db.courses.courses import CourseRead
 from src.db.users import AnonymousUser, UserRead, UserSession
 from src.routers.users import (
     SESSION_CACHE_TTL,
-    _get_redis_client,
     _get_session_cache,
     _invalidate_session_cache,
     _set_session_cache,
@@ -157,40 +156,6 @@ class TestSessionEndpoint:
 
 
 class TestSessionCacheHelpers:
-    def test_get_redis_client_missing_connection_string(self):
-        class FakeConfig:
-            class redis_config:
-                redis_connection_string = ""
-
-        with patch(
-            "src.routers.users.get_learnhouse_config",
-            return_value=FakeConfig(),
-        ):
-            assert _get_redis_client() is None
-
-    def test_get_redis_client_from_url_and_exception(self):
-        fake_client = object()
-
-        class FakeConfig:
-            class redis_config:
-                redis_connection_string = "redis://localhost:6379/0"
-
-        with (
-            patch("src.routers.users.get_learnhouse_config", return_value=FakeConfig()),
-            patch(
-                "src.routers.users.redis.Redis.from_url",
-                return_value=fake_client,
-            ) as from_url_mock,
-        ):
-            assert _get_redis_client() is fake_client
-            from_url_mock.assert_called_once()
-
-        with patch(
-            "src.routers.users.get_learnhouse_config",
-            side_effect=RuntimeError("boom"),
-        ):
-            assert _get_redis_client() is None
-
     def test_session_cache_read_write_and_invalidate(self):
         class FakeRedis:
             def __init__(self):
@@ -209,7 +174,7 @@ class TestSessionCacheHelpers:
         fake_redis = FakeRedis()
         fake_redis.storage["session:1"] = b'{"user": {"id": 1}, "roles": []}'
 
-        with patch("src.routers.users._get_redis_client", return_value=fake_redis):
+        with patch("src.routers.users._get_redis_pool_client", return_value=fake_redis):
             cached = _get_session_cache(1)
             assert cached == {"user": {"id": 1}, "roles": []}
 
@@ -231,13 +196,13 @@ class TestSessionCacheHelpers:
             def delete(self, key):
                 raise RuntimeError("delete failed")
 
-        with patch("src.routers.users._get_redis_client", return_value=ExplodingRedis()):
+        with patch("src.routers.users._get_redis_pool_client", return_value=ExplodingRedis()):
             assert _get_session_cache(1) is None
             _set_session_cache(1, {"user": {"id": 1}})
             _invalidate_session_cache(1)
 
     def test_session_cache_helpers_no_redis_client(self):
-        with patch("src.routers.users._get_redis_client", return_value=None):
+        with patch("src.routers.users._get_redis_pool_client", return_value=None):
             assert _get_session_cache(1) is None
             _set_session_cache(1, {"user": {"id": 1}})
             _invalidate_session_cache(1)

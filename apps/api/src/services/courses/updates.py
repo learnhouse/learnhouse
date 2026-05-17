@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, col, select
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.course_updates import (
     CourseUpdate,
     CourseUpdateCreate,
@@ -21,12 +22,12 @@ async def create_update(
     course_uuid: str,
     update_object: CourseUpdateCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CourseUpdateRead:
 
     # CHekc if org exists
     statement_org = select(Organization).where(Organization.id == update_object.org_id)
-    org = db_session.exec(statement_org).first()
+    org = (await db_session.execute(statement_org)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(
@@ -34,7 +35,7 @@ async def create_update(
         )
 
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course or course.id is None:
         raise HTTPException(
@@ -57,8 +58,8 @@ async def create_update(
 
     db_session.add(update)
 
-    db_session.commit()
-    db_session.refresh(update)
+    await db_session.commit()
+    await db_session.refresh(update)
 
     await dispatch_webhooks(
         event_name="course_update_published",
@@ -78,12 +79,12 @@ async def update_update(
     courseupdate_uuid: str,
     update_object: CourseUpdateUpdate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CourseUpdateRead:
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
     )
-    update = db_session.exec(statement).first()
+    update = (await db_session.execute(statement)).scalars().first()
 
     if not update or update.id is None:
         raise HTTPException(
@@ -101,8 +102,8 @@ async def update_update(
 
     db_session.add(update)
 
-    db_session.commit()
-    db_session.refresh(update)
+    await db_session.commit()
+    await db_session.refresh(update)
 
     return CourseUpdateRead(**update.model_dump())
 
@@ -112,12 +113,12 @@ async def delete_update(
     request: Request,
     courseupdate_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(CourseUpdate).where(
         CourseUpdate.courseupdate_uuid == courseupdate_uuid
     )
-    update = db_session.exec(statement).first()
+    update = (await db_session.execute(statement)).scalars().first()
 
     if not update or update.id is None:
         raise HTTPException(
@@ -129,8 +130,8 @@ async def delete_update(
         request, db_session, current_user, update.courseupdate_uuid, AccessAction.DELETE
     )
 
-    db_session.delete(update)
-    db_session.commit()
+    await db_session.delete(update)
+    await db_session.commit()
 
     return {"message": "Update deleted successfully"}
 
@@ -140,11 +141,11 @@ async def get_updates_by_course_uuid(
     request: Request,
     course_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[CourseUpdateRead]:
     # FInd if course exists
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course or course.id is None:
         raise HTTPException(
@@ -156,6 +157,6 @@ async def get_updates_by_course_uuid(
         .where(CourseUpdate.course_id == course.id)
         .order_by(col(CourseUpdate.creation_date).desc())
     )  # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
-    updates = db_session.exec(statement).all()
+    updates = (await db_session.execute(statement)).scalars().all()
 
     return [CourseUpdateRead(**update.model_dump()) for update in updates]

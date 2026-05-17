@@ -73,7 +73,7 @@ async def api_get_collections_by(
     request: Request,
     page: int,
     limit: int,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> List[CollectionRead]:

@@ -9,7 +9,7 @@ the check and all decrement — burning N model calls while billing for 1.
 script, so at most one caller can cross the boundary per reservation.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -87,6 +87,7 @@ def patched_usage(fake_redis):
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "standard"}),
     ), patch.object(
         usage, "_get_org_plan", return_value="standard"
@@ -99,28 +100,28 @@ def patched_usage(fake_redis):
         yield
 
 
-def test_reserve_grants_when_under_limit(patched_usage, fake_redis):
-    new_used = usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+async def test_reserve_grants_when_under_limit(patched_usage, fake_redis):
+    new_used = await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert new_used == 1
     assert fake_redis._store["ai_credits_used:1"] == 1
 
 
-def test_reserve_rejects_at_limit(patched_usage, fake_redis):
+async def test_reserve_rejects_at_limit(patched_usage, fake_redis):
     fake_redis.set("ai_credits_used:1", 10)
     with pytest.raises(HTTPException) as exc:
-        usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+        await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert exc.value.status_code == 403
     assert fake_redis._store["ai_credits_used:1"] == 10
 
 
-def test_reserve_rejects_oversize_request(patched_usage, fake_redis):
+async def test_reserve_rejects_oversize_request(patched_usage, fake_redis):
     fake_redis.set("ai_credits_used:1", 8)
     with pytest.raises(HTTPException):
-        usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
+        await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
     assert fake_redis._store["ai_credits_used:1"] == 8
 
 
-def test_concurrent_burst_cannot_exceed_limit(patched_usage, fake_redis):
+async def test_concurrent_burst_cannot_exceed_limit(patched_usage, fake_redis):
     """50 rapid-fire calls with 3 remaining: only 3 succeed."""
     fake_redis.set("ai_credits_used:1", 7)
 
@@ -128,7 +129,7 @@ def test_concurrent_burst_cannot_exceed_limit(patched_usage, fake_redis):
     failures = 0
     for _ in range(50):
         try:
-            usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+            await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
             successes += 1
         except HTTPException:
             failures += 1
@@ -145,16 +146,16 @@ def test_refund_clamps_at_zero(patched_usage, fake_redis):
     assert fake_redis._store["ai_credits_used:1"] == 0
 
 
-def test_refund_then_reserve_roundtrip(patched_usage, fake_redis):
+async def test_refund_then_reserve_roundtrip(patched_usage, fake_redis):
     fake_redis.set("ai_credits_used:1", 9)
 
-    usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+    await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert fake_redis._store["ai_credits_used:1"] == 10
 
     usage.refund_ai_credit(org_id=1, amount=1)
     assert fake_redis._store["ai_credits_used:1"] == 9
 
-    usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+    await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert fake_redis._store["ai_credits_used:1"] == 10
 
 
@@ -169,36 +170,38 @@ def test_refund_no_op_on_zero_or_negative_amount(patched_usage, fake_redis):
 # --- reserve_ai_credit early-exit branches ----------------------------------
 
 
-def test_reserve_raises_404_when_org_has_no_config(fake_redis):
+async def test_reserve_raises_404_when_org_has_no_config(fake_redis):
     with patch.object(usage, "_get_redis_client", return_value=fake_redis), patch.object(
-        usage, "_load_org_config_for_ai", return_value=None
+        usage, "_load_org_config_for_ai", new_callable=AsyncMock, return_value=None
     ):
         with pytest.raises(HTTPException) as exc:
-            usage.reserve_ai_credit(org_id=99, db_session=MagicMock(), amount=1)
+            await usage.reserve_ai_credit(org_id=99, db_session=MagicMock(), amount=1)
     assert exc.value.status_code == 404
 
 
-def test_reserve_raises_403_when_ai_feature_disabled(fake_redis):
+async def test_reserve_raises_403_when_ai_feature_disabled(fake_redis):
     with patch.object(usage, "_get_redis_client", return_value=fake_redis), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "free"}),
     ), patch(
         "src.security.features_utils.resolve.resolve_feature",
         return_value={"enabled": False, "limit": 0},
     ):
         with pytest.raises(HTTPException) as exc:
-            usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+            await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert exc.value.status_code == 403
     assert "not enabled" in exc.value.detail.lower()
 
 
-def test_reserve_raises_403_on_free_plan_with_zero_credits(fake_redis):
+async def test_reserve_raises_403_on_free_plan_with_zero_credits(fake_redis):
     with patch.object(usage, "_get_redis_client", return_value=fake_redis), patch.object(
         usage, "_is_non_saas", return_value=False
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "free"}),
     ), patch.object(
         usage, "_get_org_plan", return_value="free"
@@ -209,12 +212,12 @@ def test_reserve_raises_403_on_free_plan_with_zero_credits(fake_redis):
         return_value={"enabled": True, "limit": 0},
     ):
         with pytest.raises(HTTPException) as exc:
-            usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+            await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert exc.value.status_code == 403
     assert "free plan" in exc.value.detail.lower()
 
 
-def test_reserve_in_non_saas_mode_increments_without_limit(fake_redis):
+async def test_reserve_in_non_saas_mode_increments_without_limit(fake_redis):
     """OSS/EE deployments track usage but never gate on the limit."""
     fake_redis.set("ai_credits_used:1", 9999)
     with patch.object(usage, "_get_redis_client", return_value=fake_redis), patch.object(
@@ -222,16 +225,17 @@ def test_reserve_in_non_saas_mode_increments_without_limit(fake_redis):
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "free"}),
     ), patch(
         "src.security.features_utils.resolve.resolve_feature",
         return_value={"enabled": True, "limit": 0},
     ):
-        new_used = usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=2)
+        new_used = await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=2)
     assert new_used == 10001
 
 
-def test_reserve_raises_503_when_redis_script_fails():
+async def test_reserve_raises_503_when_redis_script_fails():
     failing_redis = MagicMock()
     failing_redis.register_script.side_effect = RuntimeError("lua boom")
 
@@ -240,6 +244,7 @@ def test_reserve_raises_503_when_redis_script_fails():
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "standard"}),
     ), patch.object(
         usage, "_get_org_plan", return_value="standard"
@@ -250,12 +255,12 @@ def test_reserve_raises_503_when_redis_script_fails():
         return_value={"enabled": True, "limit": 100},
     ):
         with pytest.raises(HTTPException) as exc:
-            usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
+            await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=1)
     assert exc.value.status_code == 503
     assert "temporarily unavailable" in exc.value.detail.lower()
 
 
-def test_reserve_unlimited_plan_always_grants(fake_redis):
+async def test_reserve_unlimited_plan_always_grants(fake_redis):
     """``base_credits == -1`` signals unlimited; every reserve succeeds."""
     fake_redis.set("ai_credits_used:1", 100)
     with patch.object(usage, "_get_redis_client", return_value=fake_redis), patch.object(
@@ -263,6 +268,7 @@ def test_reserve_unlimited_plan_always_grants(fake_redis):
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config={"plan": "enterprise"}),
     ), patch.object(
         usage, "_get_org_plan", return_value="enterprise"
@@ -272,11 +278,11 @@ def test_reserve_unlimited_plan_always_grants(fake_redis):
         "src.security.features_utils.resolve.resolve_feature",
         return_value={"enabled": True, "limit": -1},
     ):
-        new_used = usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
+        new_used = await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
     assert new_used == 105
 
 
-def test_reserve_uses_v2_config_extra_limit(fake_redis):
+async def test_reserve_uses_v2_config_extra_limit(fake_redis):
     """v2 configs expose extra credits via ``overrides.ai.extra_limit``."""
     fake_redis.set("ai_credits_used:1", 10)
     v2_config = {
@@ -289,6 +295,7 @@ def test_reserve_uses_v2_config_extra_limit(fake_redis):
     ), patch.object(
         usage,
         "_load_org_config_for_ai",
+        new_callable=AsyncMock,
         return_value=MagicMock(config=v2_config),
     ), patch.object(
         usage, "_get_org_plan", return_value="standard"
@@ -299,5 +306,5 @@ def test_reserve_uses_v2_config_extra_limit(fake_redis):
         return_value={"enabled": True, "limit": 10},
     ):
         # base 10 + extra 5 = 15 total; used=10, so 5 remaining. Take 5 → OK.
-        new_used = usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
+        new_used = await usage.reserve_ai_credit(org_id=1, db_session=MagicMock(), amount=5)
     assert new_used == 15

@@ -3,7 +3,8 @@ import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Droppable } from '@hello-pangea/dnd'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import ChapterElement from './DraggableElements/ChapterElement'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { createChapter } from '@services/courses/chapters'
@@ -11,7 +12,6 @@ import { useRouter } from 'next/navigation'
 import {
   useCourse,
   useCourseDispatch,
-  getCourseMetaCacheKey,
 } from '@components/Contexts/CourseContext'
 import { Hexagon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -44,6 +44,8 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
   const router = useRouter()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   // Check window availability
   const [winReady, setwinReady] = useState(false)
 
@@ -64,7 +66,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
     await createChapter(chapter,access_token)
-    await mutate(getCourseMetaCacheKey(course.courseStructure.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
+    await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
     setNewChapterModal(false)

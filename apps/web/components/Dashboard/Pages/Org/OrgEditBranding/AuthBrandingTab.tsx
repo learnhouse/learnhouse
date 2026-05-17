@@ -15,8 +15,8 @@ import { Label } from "@components/ui/label"
 import { Textarea } from "@components/ui/textarea"
 import { useTranslation } from 'react-i18next'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import UnsplashImagePicker, { UnsplashPhotoMeta } from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import { isOSSMode } from '@services/config/config'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -32,6 +32,7 @@ export default function AuthBrandingTab() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   const existingConfig = org?.config?.config?.customization?.auth_branding || org?.config?.config?.general?.auth_branding || {}
 
@@ -80,7 +81,7 @@ export default function AuthBrandingTab() {
       }
       await updateOrgAuthBrandingConfig(org.id, config, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.auth_branding.save_success'), { id: loadingToast })
       router.refresh()
     } catch (err) {
@@ -101,6 +102,7 @@ export default function AuthBrandingTab() {
         setBackgroundImage(response.filename)
         setBackgroundType('custom')
         toast.success(t('dashboard.organization.auth_branding.upload_success'), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       } catch (err) {
         toast.error(t('dashboard.organization.auth_branding.upload_error'), { id: loadingToast })
         setLocalBackgroundPreview(null)

@@ -1,4 +1,5 @@
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import desc
 from src.db.courses.activities import Activity
 from src.db.courses.activity_versions import ActivityVersion, ActivityVersionRead, ActivityStateRead
@@ -20,7 +21,7 @@ MAX_ACTIVITY_VERSIONS = 20
 async def create_activity_version(
     activity: Activity,
     user_id: Optional[int],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ActivityVersion:
     """
     Creates a new version snapshot of the activity content.
@@ -37,8 +38,8 @@ async def create_activity_version(
     )
 
     db_session.add(version)
-    db_session.commit()
-    db_session.refresh(version)
+    await db_session.commit()
+    await db_session.refresh(version)
 
     # Cleanup old versions
     await cleanup_old_versions(activity.id, db_session)
@@ -58,7 +59,7 @@ async def create_activity_version(
 
 async def cleanup_old_versions(
     activity_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Removes old versions keeping only the last MAX_ACTIVITY_VERSIONS.
@@ -69,21 +70,21 @@ async def cleanup_old_versions(
         .where(ActivityVersion.activity_id == activity_id)
         .order_by(desc(ActivityVersion.version_number))
     )
-    versions = db_session.exec(statement).all()
+    versions = (await db_session.execute(statement)).scalars().all()
 
     # Delete versions beyond the limit
     if len(versions) > MAX_ACTIVITY_VERSIONS:
         versions_to_delete = versions[MAX_ACTIVITY_VERSIONS:]
         for version in versions_to_delete:
-            db_session.delete(version)
-        db_session.commit()
+            await db_session.delete(version)
+        await db_session.commit()
 
 
 async def get_activity_versions(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     limit: int = 20,
     offset: int = 0,
 ) -> List[ActivityVersionRead]:
@@ -93,7 +94,7 @@ async def get_activity_versions(
     """
     # Get activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -102,11 +103,11 @@ async def get_activity_versions(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -125,7 +126,7 @@ async def get_activity_versions(
         .offset(offset)
         .limit(limit)
     )
-    results = db_session.exec(statement).all()
+    results = (await db_session.execute(statement)).all()
 
     versions = []
     for version, user in results:
@@ -150,14 +151,14 @@ async def get_activity_version(
     activity_uuid: str,
     version_number: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ActivityVersionRead:
     """
     Gets a specific version of an activity by version number.
     """
     # Get activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -166,11 +167,11 @@ async def get_activity_version(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -189,7 +190,7 @@ async def get_activity_version(
             ActivityVersion.version_number == version_number
         )
     )
-    result = db_session.exec(statement).first()
+    result = (await db_session.execute(statement)).first()
 
     if not result:
         raise HTTPException(
@@ -215,7 +216,7 @@ async def get_activity_state(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ActivityStateRead:
     """
     Gets the current state of an activity for conflict detection.
@@ -228,7 +229,7 @@ async def get_activity_state(
         .outerjoin(User, Activity.last_modified_by_id == User.id)
         .where(Activity.activity_uuid == activity_uuid)
     )
-    result = db_session.exec(statement).first()
+    result = (await db_session.execute(statement)).first()
 
     if not result:
         raise HTTPException(
@@ -239,11 +240,11 @@ async def get_activity_state(
     activity, user = result
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -267,7 +268,7 @@ async def restore_activity_version(
     activity_uuid: str,
     version_number: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Activity:
     """
     Restores an activity to a specific version.
@@ -275,7 +276,7 @@ async def restore_activity_version(
     """
     # Get activity
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    activity = (await db_session.execute(statement)).scalars().first()
 
     if not activity:
         raise HTTPException(
@@ -284,11 +285,11 @@ async def restore_activity_version(
         )
 
     # Check versioning feature access (requires standard plan or OSS mode)
-    check_feature_access("versioning", activity.org_id, db_session)
+    await check_feature_access("versioning", activity.org_id, db_session)
 
     # RBAC check
     statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -306,7 +307,7 @@ async def restore_activity_version(
             ActivityVersion.version_number == version_number
         )
     )
-    version = db_session.exec(statement).first()
+    version = (await db_session.execute(statement)).scalars().first()
 
     if not version:
         raise HTTPException(
@@ -329,8 +330,8 @@ async def restore_activity_version(
     flag_modified(activity, "content")
 
     db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    await db_session.commit()
+    await db_session.refresh(activity)
 
     await dispatch_webhooks(
         event_name="activity_version_restored",

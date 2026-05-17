@@ -2,10 +2,11 @@
 
 from typing import Optional
 from fastapi import APIRouter, Request, UploadFile, File, Depends, Query, HTTPException
-from sqlmodel import Session
+
 
 from src.db.users import PublicUser, AnonymousUser
 from src.security.auth import get_current_user, get_authenticated_user
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.services.courses.migration.models import (
     MigrationUploadResponse,
@@ -109,7 +110,7 @@ async def api_create_from_migration(
     org_id: int,
     body: CreateFromMigrationRequest,
     current_user: PublicUser | AnonymousUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Create a course from the finalized migration tree structure."""
     try:

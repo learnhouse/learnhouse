@@ -11,6 +11,7 @@ from src.db.organization_config import OrganizationConfig, SeoOrgConfig
 from src.db.organizations import Organization, OrganizationCreate, OrganizationRead, OrganizationUpdate
 from src.services.orgs.orgs import (
     _build_org_read_with_resolved,
+    _get_org_config_cached,
     create_org,
     create_org_with_config,
     get_organization_by_slug,
@@ -25,7 +26,7 @@ from src.services.orgs.orgs import (
 )
 
 
-def _make_org_config(db, org, config):
+async def _make_org_config(db, org, config):
     org_config = OrganizationConfig(
         id=None,
         org_id=org.id,
@@ -34,8 +35,8 @@ def _make_org_config(db, org, config):
         update_date=str(datetime.now()),
     )
     db.add(org_config)
-    db.commit()
-    db.refresh(org_config)
+    await db.commit()
+    await db.refresh(org_config)
     return org_config
 
 
@@ -165,9 +166,9 @@ class TestCreateOrg:
         assert result.slug == "new-org"
 
         # Verify row exists in DB
-        row = db.exec(
+        row = (await db.execute(
             select(Organization).where(Organization.slug == "new-org")
-        ).first()
+        )).scalars().first()
         assert row is not None
         assert row.name == "New Org"
 
@@ -239,9 +240,9 @@ class TestCreateOrg:
 
         assert isinstance(result, OrganizationRead)
         assert result.slug == "configured-org"
-        stored_config = db.exec(
+        stored_config = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == result.id)
-        ).first()
+        )).scalars().first()
         assert stored_config.config["config_version"] == "2.0"
 
 
@@ -250,7 +251,7 @@ class TestUpdateOrg:
     async def test_update_org_and_no_auth_config_update(
         self, mock_request, db, org, admin_user
     ):
-        _make_org_config(db, org, {"config_version": "2.0", "plan": "free"})
+        await _make_org_config(db, org, {"config_version": "2.0", "plan": "free"})
 
         with patch(
             "src.services.orgs.orgs.rbac_check",
@@ -273,9 +274,9 @@ class TestUpdateOrg:
         assert updated.name == "Updated Org"
         assert updated.slug == "updated-org"
         assert config_result == {"detail": "Organization updated"}
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert stored.config["plan"] == "pro"
 
     @pytest.mark.asyncio
@@ -311,7 +312,7 @@ class TestOrgConfigUpdates:
     async def test_signup_mechanism_ai_landing_seo_and_join_mechanism_v2(
         self, mock_request, db, org, admin_user
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -349,9 +350,9 @@ class TestOrgConfigUpdates:
                 mock_request, org.id, admin_user, db
             )
 
-        stored = db.exec(
+        stored = (await db.execute(
             select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        ).first()
+        )).scalars().first()
         assert signup == {"detail": "Signup mechanism updated"}
         assert ai == {"detail": "AI configuration updated"}
         assert landing == {"detail": "Landing object updated"}
@@ -366,7 +367,7 @@ class TestOrgConfigUpdates:
 
     @pytest.mark.asyncio
     async def test_join_mechanism_v1_and_missing_org(self, mock_request, db, org, admin_user):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -387,6 +388,66 @@ class TestOrgConfigUpdates:
         with pytest.raises(HTTPException) as missing_exc:
             await get_org_join_mechanism(mock_request, 999, admin_user, db)
         assert missing_exc.value.status_code == 404
+
+
+class TestGetOrgConfigCached:
+    """Cover _get_org_config_cached cache-hit and exception-swallow paths."""
+
+    @pytest.mark.asyncio
+    async def test_returns_cached_org_config_on_cache_hit(self, db, org):
+        cached_data = {"org_id": org.id, "config": {"plan": "pro"}}
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=cached_data):
+            result = await _get_org_config_cached(org.id, db)
+        assert isinstance(result, OrganizationConfig)
+
+    @pytest.mark.asyncio
+    async def test_invalid_cache_data_falls_back_to_db(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={"not_a_valid": "config"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_set_cached_exception_is_swallowed(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=None), \
+             patch("src.services.orgs.cache.set_cached_org_config", side_effect=RuntimeError("redis")):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_invalid_cached_data_exception_falls_back_to_db(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        # Dict with integer key causes TypeError on ** unpacking, exercising the except branch
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={1: "bad-key"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
 
 
 class TestBuildOrgReadWithResolved:

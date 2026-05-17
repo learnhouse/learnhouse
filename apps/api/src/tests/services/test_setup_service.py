@@ -1,3 +1,4 @@
+import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
@@ -15,7 +16,8 @@ from src.services.setup.setup import (
 )
 
 
-def test_install_default_elements_creates_and_updates_roles(db):
+@pytest.mark.asyncio
+async def test_install_default_elements_creates_and_updates_roles(db):
     stale_admin = Role(
         id=1,
         name="Old Admin",
@@ -27,11 +29,11 @@ def test_install_default_elements_creates_and_updates_roles(db):
         update_date="old",
     )
     db.add(stale_admin)
-    db.commit()
+    await db.commit()
 
-    assert install_default_elements(db) is True
+    assert await install_default_elements(db) is True
 
-    roles = db.exec(select(Role).order_by(Role.id)).all()
+    roles = (await db.execute(select(Role).order_by(Role.id))).scalars().all()
 
     assert [role.id for role in roles] == [1, 2, 3, 4]
     assert roles[0].name == "Admin"
@@ -40,8 +42,9 @@ def test_install_default_elements_creates_and_updates_roles(db):
     assert roles[3].name == "User"
 
 
-def test_install_create_organization_creates_org_and_default_config(db):
-    org = install_create_organization(
+@pytest.mark.asyncio
+async def test_install_create_organization_creates_org_and_default_config(db):
+    org = await install_create_organization(
         OrganizationCreate(
             name="Acme",
             slug="acme",
@@ -50,9 +53,11 @@ def test_install_create_organization_creates_org_and_default_config(db):
         db,
     )
 
-    config = db.exec(
-        select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-    ).one()
+    config = (
+        await db.execute(
+            select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+        )
+    ).scalars().one()
 
     assert isinstance(org, Organization)
     assert org.org_uuid.startswith("org_")
@@ -60,8 +65,9 @@ def test_install_create_organization_creates_org_and_default_config(db):
     assert config.config["plan"] == "free"
 
 
-def test_install_create_organization_user_creates_user_and_admin_membership(db):
-    org = install_create_organization(
+@pytest.mark.asyncio
+async def test_install_create_organization_user_creates_user_and_admin_membership(db):
+    org = await install_create_organization(
         OrganizationCreate(
             name="Acme",
             slug="acme",
@@ -70,7 +76,7 @@ def test_install_create_organization_user_creates_user_and_admin_membership(db):
         db,
     )
 
-    user = install_create_organization_user(
+    user = await install_create_organization_user(
         UserCreate(
             username="founder",
             first_name="Ada",
@@ -82,10 +88,14 @@ def test_install_create_organization_user_creates_user_and_admin_membership(db):
         db,
     )
 
-    stored_user = db.exec(select(User).where(User.id == user.id)).one()
-    membership = db.exec(
-        select(UserOrganization).where(UserOrganization.user_id == user.id)
-    ).one()
+    stored_user = (
+        await db.execute(select(User).where(User.id == user.id))
+    ).scalars().one()
+    membership = (
+        await db.execute(
+            select(UserOrganization).where(UserOrganization.user_id == user.id)
+        )
+    ).scalars().one()
 
     assert user.user_uuid.startswith("user_")
     assert stored_user.email_verified is False
@@ -95,9 +105,10 @@ def test_install_create_organization_user_creates_user_and_admin_membership(db):
     assert membership.role_id == ADMIN_ROLE_ID
 
 
-def test_install_create_organization_user_rejects_missing_org(db):
+@pytest.mark.asyncio
+async def test_install_create_organization_user_rejects_missing_org(db):
     try:
-        install_create_organization_user(
+        await install_create_organization_user(
             UserCreate(
                 username="founder",
                 first_name="Ada",
@@ -115,8 +126,9 @@ def test_install_create_organization_user_rejects_missing_org(db):
         raise AssertionError("Expected HTTPException")
 
 
-def test_install_create_organization_user_rejects_duplicate_username_and_email(db):
-    org = install_create_organization(
+@pytest.mark.asyncio
+async def test_install_create_organization_user_rejects_duplicate_username_and_email(db):
+    org = await install_create_organization(
         OrganizationCreate(
             name="Acme",
             slug="acme",
@@ -135,7 +147,7 @@ def test_install_create_organization_user_rejects_duplicate_username_and_email(d
         update_date="now",
     )
     db.add(existing)
-    db.commit()
+    await db.commit()
 
     for payload, expected_detail in (
         (
@@ -160,7 +172,7 @@ def test_install_create_organization_user_rejects_duplicate_username_and_email(d
         ),
     ):
         try:
-            install_create_organization_user(payload, org.slug, db)
+            await install_create_organization_user(payload, org.slug, db)
         except HTTPException as exc:
             assert exc.status_code == 409
             assert exc.detail == expected_detail

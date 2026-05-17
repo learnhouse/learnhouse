@@ -20,8 +20,8 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { useTranslation } from 'react-i18next'
 import { Form, Formik } from 'formik'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import AuthBrandingTab from './AuthBrandingTab'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
@@ -59,6 +59,7 @@ export default function OrgEditBranding() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   // Images state
   const ADD_PREVIEW_OPTIONS = [
@@ -148,6 +149,7 @@ export default function OrgEditBranding() {
         await uploadOrganizationLogo(org.id, file, access_token)
         await new Promise((r) => setTimeout(r, 1500))
         toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
@@ -167,6 +169,7 @@ export default function OrgEditBranding() {
         await uploadOrganizationThumbnail(org.id, file, access_token)
         await new Promise((r) => setTimeout(r, 1500))
         toast.success(t('dashboard.organization.images.toasts.thumbnail_success'), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.thumbnail_error'), { id: loadingToast })
@@ -187,7 +190,7 @@ export default function OrgEditBranding() {
         await new Promise((r) => setTimeout(r, 1500))
         toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
         await revalidateTags(['organizations'], org.slug)
-        mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
@@ -257,6 +260,7 @@ export default function OrgEditBranding() {
         toast.success(files.length === 1
           ? t('dashboard.organization.images.toasts.preview_added', { count: files.length })
           : t('dashboard.organization.images.toasts.preview_added_plural', { count: files.length }), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.preview_error'), { id: loadingToast })
@@ -280,6 +284,7 @@ export default function OrgEditBranding() {
 
       setPreviews(updatedPreviews)
       toast.success(t('dashboard.organization.images.toasts.preview_removed'), { id: loadingToast })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       router.refresh()
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.preview_remove_error'), { id: loadingToast })
@@ -352,6 +357,7 @@ export default function OrgEditBranding() {
       setVideoUrl('');
       setVideoDialogOpen(false);
       toast.success(t('dashboard.organization.images.toasts.video_preview_added'), { id: loadingToast });
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.video_preview_error'), { id: loadingToast });
@@ -394,6 +400,7 @@ export default function OrgEditBranding() {
       }, access_token);
 
       toast.success(t('dashboard.organization.images.toasts.order_updated'), { id: loadingToast });
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.order_update_error'), { id: loadingToast });
@@ -416,7 +423,7 @@ export default function OrgEditBranding() {
         updateOrgFontConfig(org.id, selectedFont, access_token),
       ])
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
       router.refresh()
     } catch (err) {
@@ -446,7 +453,7 @@ export default function OrgEditBranding() {
       await updateOrganization(org.id, values, access_token)
       await revalidateTags(['organizations'], org.slug)
 
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })

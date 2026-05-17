@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   BookOpen,
   Users,
@@ -12,8 +13,8 @@ import {
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getDeploymentMode } from '@services/config/config'
-import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { OrgUsageResponse, getOrgUsage } from '@services/orgs/usage'
+import { apiFetch } from '@services/utils/ts/requests'
 import { usePlan } from '@components/Hooks/usePlan'
 import { OrgPacksResponse } from '@services/packs/packs'
 
@@ -61,23 +62,26 @@ export default function OrgEditUsage() {
   const token = session?.data?.tokens?.access_token
   const orgId = org?.id
 
-  const { data: usageData, isLoading } = useSWR<OrgUsageResponse>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
-    (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: usageData, isLoading } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(orgId),
+    queryFn: () => getOrgUsage(orgId, token),
+    enabled: !!(token && orgId),
+    staleTime: 60_000,
+  })
 
-  const { data: aiCredits } = useSWR<AICreditsSummary>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/ai-credits` : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: aiCredits } = useQuery<AICreditsSummary>({
+    queryKey: orgId ? ['org', orgId, 'ai-credits'] : ['ai-credits-disabled'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/ai-credits`, token),
+    enabled: !!(token && orgId),
+    staleTime: 60_000,
+  })
 
-  const { data: packsData } = useSWR<OrgPacksResponse>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/packs` : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: packsData } = useQuery<OrgPacksResponse>({
+    queryKey: orgId ? ['org', orgId, 'packs'] : ['packs-disabled'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/packs`, token),
+    enabled: !!(token && orgId),
+    staleTime: 60_000,
+  })
 
   const ossMode = usageData?.oss_mode ?? false
   const mode = getDeploymentMode()

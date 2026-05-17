@@ -9,8 +9,8 @@ import { useCommunity, useCommunityDispatch } from '@components/Contexts/Communi
 import { updateCommunityThumbnail } from '@services/communities/communities'
 import { getCommunityThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
 import toast from 'react-hot-toast'
 import { Button } from '@components/ui/button'
@@ -29,6 +29,7 @@ const CommunityEditThumbnail: React.FC = () => {
   const dispatch = useCommunityDispatch()
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const imageInputRef = useRef<HTMLInputElement>(null)
 
   const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string } | null>(null)
@@ -112,7 +113,7 @@ const CommunityEditThumbnail: React.FC = () => {
       const res = await updateCommunityThumbnail(community.community_uuid, formData, accessToken)
 
       await revalidateTags(['communities'], org.slug)
-      mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
       await new Promise((r) => setTimeout(r, 1000))
 
       if (res.success === false) {

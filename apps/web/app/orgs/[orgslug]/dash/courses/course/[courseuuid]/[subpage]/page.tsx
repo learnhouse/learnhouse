@@ -110,16 +110,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
     }
   }, [rightsLoading, hasAccessToCurrentPage, visibleTabs, router, params.orgslug])
 
-  // Show loading state while rights are being fetched
-  if (rightsLoading) {
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    )
-  }
-
-  // Show access denied if no tabs are available
+  // Access denied (rights loaded but no tabs visible)
   if (!rightsLoading && visibleTabs.length === 0) {
     return (
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
@@ -132,6 +123,9 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
     )
   }
 
+  // CourseProvider is always rendered so course meta fetches IN PARALLEL with rights —
+  // no sequential waterfall. The tab content is gated by hasPermission() which returns
+  // false (safe default) until rights finish loading.
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr] grid-cols-1">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
@@ -167,19 +161,27 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           className="h-full overflow-y-auto overflow-x-hidden"
         >
           <div>
-            {params.subpage == 'content' && hasPermission('update_content') ? (
+            {rightsLoading ? (
+              <div className="p-10 space-y-4 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-48" />
+                <div className="h-4 bg-gray-200 rounded w-full max-w-xl" />
+                <div className="h-4 bg-gray-200 rounded w-full max-w-md" />
+                <div className="h-32 bg-gray-200 rounded w-full max-w-2xl mt-6" />
+              </div>
+            ) : null}
+            {!rightsLoading && params.subpage == 'content' && hasPermission('update_content') ? (
               <EditCourseStructure orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'general' && hasPermission('update') ? (
+            {!rightsLoading && params.subpage == 'general' && hasPermission('update') ? (
               <EditCourseGeneral orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'access' && hasPermission('manage_access') ? (
+            {!rightsLoading && params.subpage == 'access' && hasPermission('manage_access') ? (
               <EditCourseAccess orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
+            {!rightsLoading && params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
               <EditCourseContributors orgslug={params.orgslug} />
             ) : null}
-            {params.subpage == 'seo' && hasPermission('update') ? (
+            {!rightsLoading && params.subpage == 'seo' && hasPermission('update') ? (
               <>
                 <div className="h-6" />
                 <FeatureGate feature="seo">
@@ -187,15 +189,15 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
                 </FeatureGate>
               </>
             ) : null}
-            {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <div className="h-6" />
+            {!rightsLoading && params.subpage == 'certification' && hasPermission('create_certifications') ? (
+              <>
+                <div className="h-6" />
+                <FeatureGate feature="certifications">
+                  <EditCourseCertification orgslug={params.orgslug} />
+                </FeatureGate>
+              </>
             ) : null}
-            {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <FeatureGate feature="certifications">
-                <EditCourseCertification orgslug={params.orgslug} />
-              </FeatureGate>
-            ) : null}
-            {params.subpage == 'analytics' && hasPermission('update') ? (
+            {!rightsLoading && params.subpage == 'analytics' && hasPermission('update') ? (
               <FeatureGate feature="course_analytics">
                 <CourseAnalyticsTab courseUUID={courseuuid} />
               </FeatureGate>

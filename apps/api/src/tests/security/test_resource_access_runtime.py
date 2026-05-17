@@ -1,9 +1,8 @@
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException, Request
-from sqlmodel import Session
 
 from src.db.resource_authors import (
     ResourceAuthorshipEnum,
@@ -37,8 +36,8 @@ class TestResourceAccessRuntime:
 
     @pytest.fixture
     def session(self):
-        sess = Mock(spec=Session)
-        sess.exec = Mock()
+        sess = AsyncMock()
+        sess.execute.return_value = MagicMock()
         return sess
 
     @pytest.fixture
@@ -77,13 +76,12 @@ class TestResourceAccessRuntime:
         checker = self._checker(mock_request, session, anonymous_user)
         chapter = SimpleNamespace(chapter_uuid="chapter_1", course_id=101)
         course = SimpleNamespace(course_uuid="course_101", public=True, published=True, org_id=1)
-        chapter_exec = Mock()
-        chapter_exec.first.return_value = chapter
-        parent_exec = Mock()
-        parent_exec.first.return_value = course
-        course_exec = Mock()
-        course_exec.first.return_value = course
-        session.exec.side_effect = [chapter_exec, parent_exec, course_exec]
+        exec_results = []
+        for obj in [chapter, course, course]:
+            r = MagicMock()
+            r.scalars.return_value.first.return_value = obj
+            exec_results.append(r)
+        session.execute.side_effect = exec_results
 
         decision = await checker.check_access("chapter_1", AccessAction.READ)
 
@@ -94,9 +92,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_child_resource_missing_parent_denied(self, mock_request, session, anonymous_user):
         checker = self._checker(mock_request, session, anonymous_user)
         chapter = SimpleNamespace(chapter_uuid="chapter_2", course_id=None)
-        chapter_exec = Mock()
-        chapter_exec.first.return_value = chapter
-        session.exec.return_value = chapter_exec
+        session.execute.return_value.scalars.return_value.first.return_value = chapter
 
         decision = await checker.check_access("chapter_2", AccessAction.READ)
 
@@ -107,9 +103,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_public_view_on_authenticated_user(self, mock_request, session, public_user):
         checker = self._checker(mock_request, session, public_user)
         course = SimpleNamespace(course_uuid="course_1", public=True, published=True, org_id=1)
-        exec_result = Mock()
-        exec_result.first.return_value = course
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = course
 
         decision = await checker.check_access("course_1", AccessAction.READ, AccessContext.PUBLIC_VIEW)
 
@@ -120,9 +114,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_community_public_read_for_anonymous_user(self, mock_request, session, anonymous_user):
         checker = self._checker(mock_request, session, anonymous_user)
         community = SimpleNamespace(community_uuid="community_1", public=True, org_id=1)
-        exec_result = Mock()
-        exec_result.first.return_value = community
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = community
 
         decision = await checker.check_access("community_1", AccessAction.READ)
 
@@ -133,9 +125,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_authenticated_user_community_public_view(self, mock_request, session, public_user):
         checker = self._checker(mock_request, session, public_user)
         community = SimpleNamespace(community_uuid="community_3", public=True, org_id=1)
-        exec_result = Mock()
-        exec_result.first.return_value = community
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = community
 
         decision = await checker.check_access(
             "community_3", AccessAction.READ, AccessContext.PUBLIC_VIEW
@@ -148,9 +138,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_anonymous_community_private_denied(self, mock_request, session, anonymous_user):
         checker = self._checker(mock_request, session, anonymous_user)
         community = SimpleNamespace(community_uuid="community_4", public=False, org_id=1)
-        exec_result = Mock()
-        exec_result.first.return_value = community
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = community
 
         decision = await checker.check_access("community_4", AccessAction.READ)
 
@@ -161,9 +149,7 @@ class TestResourceAccessRuntime:
     async def test_check_access_community_private_read_for_anonymous_user(self, mock_request, session, anonymous_user):
         checker = self._checker(mock_request, session, anonymous_user)
         community = SimpleNamespace(community_uuid="community_2", public=False, org_id=1)
-        exec_result = Mock()
-        exec_result.first.return_value = community
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = community
 
         decision = await checker.check_access("community_2", AccessAction.READ)
 
@@ -567,26 +553,26 @@ class TestResourceAccessRuntime:
         assert await checker._check_usergroup_membership("course_1") is False
 
         checker = self._checker(mock_request, session, public_user)
-        session.exec.return_value.all.return_value = []
+        session.execute.return_value.scalars.return_value.all.return_value = []
         # No UserGroups linked → any authenticated user has access, regardless
         # of the resource's public flag (UsersOnly semantics).
         assert await checker._check_usergroup_membership("course_2", True) is True
         assert await checker._check_usergroup_membership("course_3", False) is True
 
         checker = self._checker(mock_request, session, public_user)
-        session.exec.return_value.all.return_value = [SimpleNamespace(usergroup_id=1)]
-        session.exec.return_value.first.return_value = SimpleNamespace(usergroup_id=1)
+        session.execute.return_value.scalars.return_value.all.return_value = [SimpleNamespace(usergroup_id=1)]
+        session.execute.return_value.scalars.return_value.first.return_value = SimpleNamespace(usergroup_id=1)
         assert await checker._check_usergroup_membership("course_4") is True
 
         checker = self._checker(mock_request, session, public_user)
-        session.exec.return_value.all.return_value = [SimpleNamespace(usergroup_id=1)]
-        session.exec.return_value.first.return_value = None
+        session.execute.return_value.scalars.return_value.all.return_value = [SimpleNamespace(usergroup_id=1)]
+        session.execute.return_value.scalars.return_value.first.return_value = None
         assert await checker._check_usergroup_membership("course_5") is False
 
     @pytest.mark.asyncio
     async def test_authorship_status_cache_and_variants(self, mock_request, session, public_user):
         checker = self._checker(mock_request, session, public_user)
-        session.exec.return_value.first.return_value = None
+        session.execute.return_value.scalars.return_value.first.return_value = None
         assert await checker._is_resource_author("course_1") is False
 
         checker._author_cache.clear()
@@ -594,9 +580,7 @@ class TestResourceAccessRuntime:
             authorship=ResourceAuthorshipEnum.CREATOR,
             authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
         )
-        exec_result = Mock()
-        exec_result.first.return_value = resource_author
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = resource_author
         assert await checker._is_resource_author("course_2") is True
 
         checker._author_cache.clear()
@@ -622,9 +606,7 @@ class TestResourceAccessRuntime:
             parent_id_field="course_id",
         )
         checker._get_resource = AsyncMock(return_value=SimpleNamespace(course_id=1))
-        course_exec = Mock()
-        course_exec.first.return_value = SimpleNamespace(course_uuid="course_1")
-        session.exec.return_value = course_exec
+        session.execute.return_value.scalars.return_value.first.return_value = SimpleNamespace(course_uuid="course_1")
         assert await checker._resolve_parent_resource_uuid("chapter_1", course_cfg) == "course_1"
 
         checker._get_resource = AsyncMock(return_value=None)
@@ -671,9 +653,7 @@ class TestResourceAccessRuntime:
     async def test_get_resource_branches(self, mock_request, session, public_user, resource_type, uuid_field, uuid_value):
         checker = self._checker(mock_request, session, public_user)
         resource = SimpleNamespace(**{uuid_field: uuid_value})
-        exec_result = Mock()
-        exec_result.first.return_value = resource
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = resource
 
         cfg = ResourceConfig(
             resource_type=resource_type,
@@ -700,9 +680,7 @@ class TestResourceAccessRuntime:
     async def test_get_parent_uuid_by_id_branches(self, mock_request, session, public_user, resource_type, expected_attr):
         checker = self._checker(mock_request, session, public_user)
         parent = SimpleNamespace(**{expected_attr: f"{resource_type}_1"})
-        exec_result = Mock()
-        exec_result.first.return_value = parent
-        session.exec.return_value = exec_result
+        session.execute.return_value.scalars.return_value.first.return_value = parent
 
         parent_cfg = ResourceConfig(
             resource_type=resource_type,

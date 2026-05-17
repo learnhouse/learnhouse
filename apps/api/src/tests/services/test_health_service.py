@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 from fastapi import HTTPException
 
 from src.services.health.health import check_health, check_database_health
@@ -20,8 +20,8 @@ class TestHealthService:
 
     @pytest.mark.asyncio
     async def test_check_health_raises_on_unhealthy_db(self):
-        mock_session = Mock()
-        mock_session.exec.return_value = None
+        mock_session = AsyncMock()
+        mock_session.execute.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
             await check_health(mock_session)

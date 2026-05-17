@@ -2,7 +2,9 @@
 
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from src.services.security.account_lockout import (
     check_account_locked,
@@ -63,11 +65,13 @@ class TestAccountLockoutService:
         assert format_lockout_message(61) == generic_message
         assert format_lockout_message(120) == generic_message
 
-    def test_record_failed_login_below_threshold_and_missing_user(self):
+    @pytest.mark.asyncio
+    async def test_record_failed_login_below_threshold_and_missing_user(self):
         user = SimpleNamespace(id=1, locked_until=None)
-        db_session = Mock()
+        db_session = AsyncMock()
+        db_session.execute.return_value = MagicMock()
 
-        is_locked, duration = record_failed_login(user, db_session)
+        is_locked, duration = await record_failed_login(user, db_session)
 
         assert is_locked is False
         assert duration is None
@@ -79,26 +83,30 @@ class TestAccountLockoutService:
             id=1,
             locked_until=(datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
         )
-        expired_session = Mock()
+        expired_session = AsyncMock()
+        expired_session.execute.return_value = MagicMock()
 
-        is_locked, duration = record_failed_login(expired_user, expired_session)
+        is_locked, duration = await record_failed_login(expired_user, expired_session)
 
         assert is_locked is False
         assert duration is None
 
-    def test_record_failed_login_threshold_locks_account(self):
+    @pytest.mark.asyncio
+    async def test_record_failed_login_threshold_locks_account(self):
         future = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
         user = SimpleNamespace(id=1, locked_until=future)
-        db_session = Mock()
+        db_session = AsyncMock()
+        db_session.execute.return_value = MagicMock()
 
-        is_locked, duration = record_failed_login(user, db_session)
+        is_locked, duration = await record_failed_login(user, db_session)
 
         assert is_locked is True
         assert duration == 300
         assert db_session.commit.call_count == 1
         db_session.refresh.assert_called_once_with(user)
 
-    def test_reset_failed_attempts_and_update_login_info_found(self):
+    @pytest.mark.asyncio
+    async def test_reset_failed_attempts_and_update_login_info_found(self):
         user = SimpleNamespace(id=1)
         db_user = SimpleNamespace(
             failed_login_attempts=6,
@@ -107,16 +115,16 @@ class TestAccountLockoutService:
             last_login_ip=None,
         )
 
-        reset_result = Mock()
-        reset_result.first.return_value = db_user
-        update_result = Mock()
-        update_result.first.return_value = db_user
+        reset_result = MagicMock()
+        reset_result.scalars.return_value.first.return_value = db_user
+        update_result = MagicMock()
+        update_result.scalars.return_value.first.return_value = db_user
 
-        db_session = Mock()
-        db_session.exec.side_effect = [reset_result, update_result]
+        db_session = AsyncMock()
+        db_session.execute.side_effect = [reset_result, update_result]
 
-        reset_failed_attempts(user, db_session)
-        update_login_info(user, "127.0.0.1", db_session)
+        await reset_failed_attempts(user, db_session)
+        await update_login_info(user, "127.0.0.1", db_session)
 
         assert db_user.failed_login_attempts == 0
         assert db_user.locked_until is None
@@ -124,40 +132,45 @@ class TestAccountLockoutService:
         assert db_user.last_login_at is not None
         assert db_session.commit.call_count == 2
 
-    def test_reset_failed_attempts_and_update_login_info_missing_user(self):
+    @pytest.mark.asyncio
+    async def test_reset_failed_attempts_and_update_login_info_missing_user(self):
         user = SimpleNamespace(id=1)
-        reset_result = Mock()
-        reset_result.first.return_value = None
-        update_result = Mock()
-        update_result.first.return_value = None
+        reset_result = MagicMock()
+        reset_result.scalars.return_value.first.return_value = None
+        update_result = MagicMock()
+        update_result.scalars.return_value.first.return_value = None
 
-        db_session = Mock()
-        db_session.exec.side_effect = [reset_result, update_result]
+        db_session = AsyncMock()
+        db_session.execute.side_effect = [reset_result, update_result]
 
-        reset_failed_attempts(user, db_session)
-        update_login_info(user, "127.0.0.1", db_session)
+        await reset_failed_attempts(user, db_session)
+        await update_login_info(user, "127.0.0.1", db_session)
 
         assert db_session.commit.call_count == 0
 
-    def test_record_failed_login_naive_locked_until_is_treated_as_utc(self):
+    @pytest.mark.asyncio
+    async def test_record_failed_login_naive_locked_until_is_treated_as_utc(self):
         """Line 101: naive locked_until datetime is given tzinfo=utc, so a
         future naive timestamp is still detected as a live lockout."""
         future = (datetime.now() + timedelta(hours=1)).isoformat()
         user = SimpleNamespace(id=1, locked_until=future)
-        db_session = Mock()
+        db_session = AsyncMock()
+        db_session.execute.return_value = MagicMock()
 
-        is_locked, remaining = record_failed_login(user, db_session)
+        is_locked, remaining = await record_failed_login(user, db_session)
 
         assert is_locked is True
         assert remaining is not None
 
-    def test_record_failed_login_invalid_locked_until_treated_as_not_locked(self):
+    @pytest.mark.asyncio
+    async def test_record_failed_login_invalid_locked_until_treated_as_not_locked(self):
         """Lines 103-104: unparseable locked_until falls into the except branch
         and returns is_locked=False."""
         user = SimpleNamespace(id=1, locked_until="not-a-valid-datetime")
-        db_session = Mock()
+        db_session = AsyncMock()
+        db_session.execute.return_value = MagicMock()
 
-        is_locked, remaining = record_failed_login(user, db_session)
+        is_locked, remaining = await record_failed_login(user, db_session)
 
         assert is_locked is False
         assert remaining is None

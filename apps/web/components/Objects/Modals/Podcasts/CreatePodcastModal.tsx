@@ -9,6 +9,8 @@ import { createPodcast } from '@services/podcasts/podcasts'
 import { revalidateTags } from '@services/utils/ts/requests'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 interface CreatePodcastModalProps {
   isOpen: boolean
@@ -26,6 +28,7 @@ export function CreatePodcastModal({
   const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -56,6 +59,7 @@ export function CreatePodcastModal({
 
       if (result) {
         await revalidateTags(['podcasts'], orgSlug)
+        queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgSlug) })
         router.refresh()
         onClose()
       }

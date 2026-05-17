@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { LandingSection } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getOrgCourses } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
@@ -23,10 +24,12 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
   const access_token = session?.data?.tokens?.access_token
 
   // Fetch all courses for the organization
-  const { data: allCourses } = useSWR(
-    orgslug ? [orgslug, access_token] : null,
-    ([slug, token]) => getOrgCourses(slug, null, token)
-  )
+  const { data: allCourses } = useQuery({
+    queryKey: queryKeys.courses.list(orgslug),
+    queryFn: () => getOrgCourses(orgslug, null, access_token),
+    enabled: !!orgslug,
+    staleTime: 60_000,
+  })
 
   const renderSection = (section: LandingSection) => {
     switch (section.type) {

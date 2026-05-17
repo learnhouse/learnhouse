@@ -35,7 +35,7 @@ from src.security.rbac import AccessAction
 from src.services.analytics import events as analytics_events
 
 
-def _create_certification(
+async def _create_certification(
     db,
     course,
     *,
@@ -52,12 +52,12 @@ def _create_certification(
         update_date="2024-01-01T00:00:00",
     )
     db.add(certification)
-    db.commit()
-    db.refresh(certification)
+    await db.commit()
+    await db.refresh(certification)
     return certification
 
 
-def _create_certificate_user(
+async def _create_certificate_user(
     db,
     certification,
     user,
@@ -74,12 +74,12 @@ def _create_certificate_user(
         updated_at="2024-01-01T00:00:00",
     )
     db.add(certificate_user)
-    db.commit()
-    db.refresh(certificate_user)
+    await db.commit()
+    await db.refresh(certificate_user)
     return certificate_user
 
 
-def _create_course_without_certifications(db, org, *, course_id: int, course_uuid: str):
+async def _create_course_without_certifications(db, org, *, course_id: int, course_uuid: str):
     course = Course(
         id=course_id,
         name=f"Course {course_id}",
@@ -93,12 +93,12 @@ def _create_course_without_certifications(db, org, *, course_id: int, course_uui
         update_date="2024-01-01T00:00:00",
     )
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
     return course
 
 
-def _create_trail_complete_graph(db, org, course, user):
+async def _create_trail_complete_graph(db, org, course, user):
     trail = Trail(
         id=1,
         org_id=org.id,
@@ -108,8 +108,8 @@ def _create_trail_complete_graph(db, org, course, user):
         update_date="2024-01-01T00:00:00",
     )
     db.add(trail)
-    db.commit()
-    db.refresh(trail)
+    await db.commit()
+    await db.refresh(trail)
 
     trail_run = TrailRun(
         id=1,
@@ -123,8 +123,8 @@ def _create_trail_complete_graph(db, org, course, user):
         update_date="2024-01-01T00:00:00",
     )
     db.add(trail_run)
-    db.commit()
-    db.refresh(trail_run)
+    await db.commit()
+    await db.refresh(trail_run)
 
     return trail, trail_run
 
@@ -206,7 +206,7 @@ class TestGetCertification:
     async def test_get_certification_success(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_get")
+        certification = await _create_certification(db, course, cert_uuid="cert_get")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -248,7 +248,7 @@ class TestGetCertification:
     async def test_get_certification_missing_course(
         self, db, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             Course(
                 id=999,
@@ -280,7 +280,7 @@ class TestGetCertification:
     async def test_get_certification_rbac_failure_bubbles(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_get_denied")
+        certification = await _create_certification(db, course, cert_uuid="cert_get_denied")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -303,7 +303,7 @@ class TestGetCertificationsByCourse:
     async def test_get_certifications_by_course_success(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_by_course")
+        certification = await _create_certification(db, course, cert_uuid="cert_by_course")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -330,7 +330,7 @@ class TestGetCertificationsByCourse:
     async def test_get_certifications_by_course_empty(
         self, db, org, admin_user, mock_request
     ):
-        empty_course = _create_course_without_certifications(
+        empty_course = await _create_course_without_certifications(
             db,
             org,
             course_id=99,
@@ -370,7 +370,7 @@ class TestUpdateCertification:
     async def test_update_certification_success(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_update",
@@ -424,7 +424,7 @@ class TestUpdateCertification:
     async def test_update_certification_missing_course(
         self, db, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             Course(
                 id=999,
@@ -457,7 +457,7 @@ class TestUpdateCertification:
     async def test_update_certification_rbac_failure_bubbles(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_update_denied",
@@ -485,7 +485,7 @@ class TestDeleteCertification:
     async def test_delete_certification_success(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_delete")
+        certification = await _create_certification(db, course, cert_uuid="cert_delete")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -499,11 +499,13 @@ class TestDeleteCertification:
             )
 
         assert result == {"detail": "Certification deleted successfully"}
-        assert db.exec(
-            select(Certifications).where(
-                Certifications.certification_uuid == certification.certification_uuid
+        assert (
+            await db.execute(
+                select(Certifications).where(
+                    Certifications.certification_uuid == certification.certification_uuid
+                )
             )
-        ).first() is None
+        ).scalars().first() is None
         mock_access.assert_awaited_once_with(
             mock_request,
             db,
@@ -531,7 +533,7 @@ class TestDeleteCertification:
     async def test_delete_certification_missing_course(
         self, db, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             Course(
                 id=999,
@@ -563,7 +565,7 @@ class TestDeleteCertification:
     async def test_delete_certification_rbac_failure_bubbles(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_delete_denied",
@@ -590,7 +592,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_success(
         self, db, course, org, admin_user, regular_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_claim")
+        certification = await _create_certification(db, course, cert_uuid="cert_claim")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -648,8 +650,8 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_duplicate(
         self, db, course, admin_user, regular_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_duplicate")
-        _create_certificate_user(db, certification, regular_user)
+        certification = await _create_certification(db, course, cert_uuid="cert_duplicate")
+        await _create_certificate_user(db, certification, regular_user)
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -679,7 +681,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_missing_user(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_missing_user")
+        certification = await _create_certification(db, course, cert_uuid="cert_missing_user")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -701,7 +703,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_missing_course_for_current_user(
         self, db, admin_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             Course(
                 id=999,
@@ -738,7 +740,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_rbac_failure_bubbles(
         self, db, course, admin_user, regular_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_claim_denied")
+        certification = await _create_certification(db, course, cert_uuid="cert_claim_denied")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -775,7 +777,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_tracks_failures_are_swallowed(
         self, db, course, admin_user, regular_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_claim_track")
+        certification = await _create_certification(db, course, cert_uuid="cert_claim_track")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -803,7 +805,7 @@ class TestCreateCertificateUser:
     async def test_create_certificate_user_missing_user_uuid_falls_back_to_user(
         self, db, course, admin_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_claim_fallback")
+        certification = await _create_certification(db, course, cert_uuid="cert_claim_fallback")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -846,8 +848,8 @@ class TestUserCertificatesForCourse:
     async def test_get_user_certificates_for_course_success(
         self, db, course, admin_user, regular_user, mock_request
     ):
-        certification = _create_certification(db, course, cert_uuid="cert_user_course")
-        _create_certificate_user(db, certification, regular_user)
+        certification = await _create_certification(db, course, cert_uuid="cert_user_course")
+        await _create_certificate_user(db, certification, regular_user)
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -875,7 +877,7 @@ class TestUserCertificatesForCourse:
     async def test_get_user_certificates_for_course_empty_course(
         self, db, org, regular_user, mock_request
     ):
-        empty_course = _create_course_without_certifications(
+        empty_course = await _create_course_without_certifications(
             db,
             org,
             course_id=111,
@@ -908,8 +910,8 @@ class TestUserCertificatesForCourse:
             update_date="2024-01-01T00:00:00",
         )
         db.add(certification)
-        db.commit()
-        _create_certificate_user(
+        await db.commit()
+        await _create_certificate_user(
             db,
             certification,
             regular_user,
@@ -948,7 +950,7 @@ class TestUserCertificatesForCourse:
     async def test_get_user_certificates_for_course_no_certificate_users(
         self, db, course, regular_user, mock_request
     ):
-        _create_certification(db, course, cert_uuid="cert_user_missing_link")
+        await _create_certification(db, course, cert_uuid="cert_user_missing_link")
 
         with patch(
             "src.services.courses.certifications.check_resource_access",
@@ -969,12 +971,12 @@ class TestCompletionHelpers:
     async def test_check_course_completion_and_create_certificate_success(
         self, db, course, org, regular_user, activity, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_completion",
         )
-        _create_trail_complete_graph(db, org, course, regular_user)
+        await _create_trail_complete_graph(db, org, course, regular_user)
         trail_step = TrailStep(
             complete=True,
             teacher_verified=False,
@@ -990,7 +992,7 @@ class TestCompletionHelpers:
             update_date="2024-01-01T00:00:00",
         )
         db.add(trail_step)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.certifications.track",
@@ -1007,12 +1009,14 @@ class TestCompletionHelpers:
             )
 
         assert result is True
-        created = db.exec(
-            select(CertificateUser).where(
-                CertificateUser.certification_id == certification.id,
-                CertificateUser.user_id == regular_user.id,
+        created = (
+            await db.execute(
+                select(CertificateUser).where(
+                    CertificateUser.certification_id == certification.id,
+                    CertificateUser.user_id == regular_user.id,
+                )
             )
-        ).first()
+        ).scalars().first()
         assert created is not None
         mock_track.assert_awaited_once()
         mock_webhooks.assert_awaited_once()
@@ -1029,7 +1033,7 @@ class TestCompletionHelpers:
     async def test_check_course_completion_and_create_certificate_no_activities(
         self, db, org, regular_user, mock_request
     ):
-        course_without_activities = _create_course_without_certifications(
+        course_without_activities = await _create_course_without_certifications(
             db,
             org,
             course_id=222,
@@ -1049,7 +1053,7 @@ class TestCompletionHelpers:
     async def test_check_course_completion_and_create_certificate_missing_certification(
         self, db, course, org, regular_user, activity, mock_request
     ):
-        _create_trail_complete_graph(db, org, course, regular_user)
+        await _create_trail_complete_graph(db, org, course, regular_user)
         trail_step = TrailStep(
             complete=True,
             teacher_verified=False,
@@ -1065,7 +1069,7 @@ class TestCompletionHelpers:
             update_date="2024-01-01T00:00:00",
         )
         db.add(trail_step)
-        db.commit()
+        await db.commit()
 
         result = await check_course_completion_and_create_certificate(
             mock_request,
@@ -1080,8 +1084,8 @@ class TestCompletionHelpers:
     async def test_check_course_completion_and_create_certificate_reraises_http_error(
         self, db, course, org, regular_user, activity, mock_request
     ):
-        _create_certification(db, course, cert_uuid="cert_completion_bubbles")
-        _create_trail_complete_graph(db, org, course, regular_user)
+        await _create_certification(db, course, cert_uuid="cert_completion_bubbles")
+        await _create_trail_complete_graph(db, org, course, regular_user)
         trail_step = TrailStep(
             complete=True,
             teacher_verified=False,
@@ -1097,7 +1101,7 @@ class TestCompletionHelpers:
             update_date="2024-01-01T00:00:00",
         )
         db.add(trail_step)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.certifications.create_certificate_user",
@@ -1118,12 +1122,12 @@ class TestCompletionHelpers:
     async def test_check_course_completion_and_create_certificate_duplicate_certificate(
         self, db, course, org, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_completion_duplicate",
         )
-        _create_trail_complete_graph(db, org, course, regular_user)
+        await _create_trail_complete_graph(db, org, course, regular_user)
         trail_step = TrailStep(
             complete=True,
             teacher_verified=False,
@@ -1139,8 +1143,8 @@ class TestCompletionHelpers:
             update_date="2024-01-01T00:00:00",
         )
         db.add(trail_step)
-        db.commit()
-        _create_certificate_user(db, certification, regular_user)
+        await db.commit()
+        await _create_certificate_user(db, certification, regular_user)
 
         result = await check_course_completion_and_create_certificate(
             mock_request,
@@ -1157,12 +1161,12 @@ class TestCertificateLookup:
     async def test_get_certificate_by_user_certification_uuid_success(
         self, db, course, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_lookup",
         )
-        certificate_user = _create_certificate_user(db, certification, regular_user)
+        certificate_user = await _create_certificate_user(db, certification, regular_user)
 
         result = await get_certificate_by_user_certification_uuid(
             mock_request,
@@ -1196,7 +1200,7 @@ class TestCertificateLookup:
     async def test_get_certificate_by_user_certification_uuid_missing_course(
         self, db, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             Course(
                 id=999,
@@ -1212,7 +1216,7 @@ class TestCertificateLookup:
             ),
             cert_uuid="cert_lookup_missing_course",
         )
-        certificate_user = _create_certificate_user(db, certification, regular_user)
+        certificate_user = await _create_certificate_user(db, certification, regular_user)
 
         with pytest.raises(HTTPException) as exc_info:
             await get_certificate_by_user_certification_uuid(
@@ -1229,14 +1233,15 @@ class TestCertificateLookup:
     async def test_get_certificate_by_user_certification_uuid_missing_certification(
         self, db, course, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_lookup_missing_cert",
         )
-        certificate_user = _create_certificate_user(db, certification, regular_user)
-        db.delete(db.get(Certifications, certification.id))
-        db.commit()
+        certificate_user = await _create_certificate_user(db, certification, regular_user)
+        cert_obj = await db.get(Certifications, certification.id)
+        await db.delete(cert_obj)
+        await db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             await get_certificate_by_user_certification_uuid(
@@ -1254,12 +1259,12 @@ class TestGetAllUserCertificates:
     async def test_get_all_user_certificates_success(
         self, db, course, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_all",
         )
-        certificate_user = _create_certificate_user(db, certification, regular_user)
+        certificate_user = await _create_certificate_user(db, certification, regular_user)
 
         result = await get_all_user_certificates(
             mock_request,
@@ -1298,8 +1303,8 @@ class TestGetAllUserCertificates:
             update_date="2024-01-01T00:00:00",
         )
         db.add(orphan_cert)
-        db.commit()
-        _create_certificate_user(
+        await db.commit()
+        await _create_certificate_user(
             db,
             orphan_cert,
             regular_user,
@@ -1315,7 +1320,7 @@ class TestGetAllUserCertificates:
             updated_at="2024-01-01T00:00:00",
         )
         db.add(orphan_link)
-        db.commit()
+        await db.commit()
 
         result = await get_all_user_certificates(
             mock_request,
@@ -1329,14 +1334,15 @@ class TestGetAllUserCertificates:
     async def test_get_all_user_certificates_missing_course_or_certification(
         self, db, course, regular_user, mock_request
     ):
-        certification = _create_certification(
+        certification = await _create_certification(
             db,
             course,
             cert_uuid="cert_all_missing_course",
         )
-        _create_certificate_user(db, certification, regular_user)
-        db.delete(db.get(Course, course.id))
-        db.commit()
+        await _create_certificate_user(db, certification, regular_user)
+        course_obj = await db.get(Course, course.id)
+        await db.delete(course_obj)
+        await db.commit()
 
         result = await get_all_user_certificates(
             mock_request,
@@ -1350,19 +1356,20 @@ class TestGetAllUserCertificates:
 class TestIsCourseFullyCompleted:
     """Tests for is_course_fully_completed (line 428)."""
 
-    def test_is_course_fully_completed_no_activities_returns_false(
+    @pytest.mark.asyncio
+    async def test_is_course_fully_completed_no_activities_returns_false(
         self, db, org, regular_user
     ):
         """Line 428: course with no ChapterActivity entries -> returns False."""
         from src.services.courses.certifications import is_course_fully_completed
 
-        course_no_acts = _create_course_without_certifications(
+        course_no_acts = await _create_course_without_certifications(
             db,
             org,
             course_id=333,
             course_uuid="course_no_acts_completed",
         )
 
-        result = is_course_fully_completed(regular_user.id, course_no_acts.id, db)
+        result = await is_course_fully_completed(regular_user.id, course_no_acts.id, db)
 
         assert result is False

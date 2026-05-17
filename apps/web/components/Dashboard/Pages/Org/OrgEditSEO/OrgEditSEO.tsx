@@ -15,8 +15,8 @@ import { Textarea } from '@components/ui/textarea'
 import { Button } from '@components/ui/button'
 import { Label } from '@components/ui/label'
 import { Switch } from '@components/ui/switch'
-import { mutate } from 'swr'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Copy, ExternalLink, Upload, X } from 'lucide-react'
 import { getCanonicalUrl } from '@/lib/seo/utils'
@@ -25,6 +25,7 @@ const OrgEditSEO: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const ogImageInputRef = useRef<HTMLInputElement>(null)
   const [ogImageFile, setOgImageFile] = useState<File | null>(null)
   const [ogImagePreview, setOgImagePreview] = useState<string | null>(null)
@@ -83,7 +84,7 @@ const OrgEditSEO: React.FC = () => {
 
       await updateOrgSeoConfig(org.id, values, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       setOgImageFile(null)
       toast.success('SEO settings saved successfully', { id: loadingToast })
     } catch (err) {

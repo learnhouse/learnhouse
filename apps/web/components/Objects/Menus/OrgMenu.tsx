@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react'
 import CopilotBubble from '@components/Copilot/CopilotBubble'
 import Image from 'next/image'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getUriWithOrg } from '@services/config/config'
 import { fetchRAGChatSessions, RAGChatSession } from '@services/ai/ai'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
@@ -433,17 +434,20 @@ const CopilotMenuButton = ({
 }) => {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
+  const [isOpen, setIsOpen] = useState(false)
 
-  const { data: sessions } = useSWR<RAGChatSession[]>(
-    accessToken && orgslug ? ['menu-rag-sessions', orgslug] : null,
-    () => fetchRAGChatSessions(accessToken, orgslug),
-    { revalidateOnFocus: false }
-  )
+  // Only fetch when the dropdown is open — avoids firing on every page load
+  const { data: sessions } = useQuery<RAGChatSession[]>({
+    queryKey: queryKeys.ai.ragSessions(orgslug),
+    queryFn: () => fetchRAGChatSessions(accessToken, orgslug),
+    enabled: isOpen && !!accessToken && !!orgslug,
+    staleTime: 60_000,
+  })
 
   const recentSessions = (sessions || []).slice(0, 5)
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={setIsOpen}>
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>

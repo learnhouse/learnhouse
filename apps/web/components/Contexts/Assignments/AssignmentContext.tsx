@@ -1,8 +1,9 @@
 'use client'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useMemo } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export const AssignmentContext = createContext({})
@@ -11,15 +12,19 @@ export function AssignmentProvider({ children, assignment_uuid }: { children: Re
     const session = useLHSession() as any
     const accessToken = session?.data?.tokens?.access_token
 
-    const { data: assignment, error: assignmentError } = useSWR(
-        `${getAPIUrl()}assignments/${assignment_uuid}`,
-        (url) => swrFetcher(url, accessToken)
-    )
+    const { data: assignment, error: assignmentError } = useQuery({
+        queryKey: queryKeys.assignments.detail(assignment_uuid),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}`, accessToken),
+        enabled: !!(assignment_uuid && accessToken),
+        staleTime: 60_000,
+    })
 
-    const { data: assignment_tasks, error: assignmentTasksError } = useSWR(
-        `${getAPIUrl()}assignments/${assignment_uuid}/tasks`,
-        (url) => swrFetcher(url, accessToken)
-    )
+    const { data: assignment_tasks, error: assignmentTasksError } = useQuery({
+        queryKey: queryKeys.assignments.tasks(assignment_uuid),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/${assignment_uuid}/tasks`, accessToken),
+        enabled: !!(assignment_uuid && accessToken),
+        staleTime: 60_000,
+    })
 
     // course_uuid/activity_uuid are now embedded in the assignment payload
     // (joined server-side) so we don't need separate /courses/id and

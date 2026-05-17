@@ -2,8 +2,8 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { BookOpenCheck, Check, CircleHelp, Download, Info, MessageSquare, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
-import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
 import TaskQuizObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskQuizObject';
@@ -25,6 +25,7 @@ function EvaluateAssignment({ user_id }: any) {
     const session = useLHSession() as any;
     const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient();
 
     // Overall feedback the teacher types. `undefined` means "not touched yet"
     // so we don't clobber existing server-side feedback with an empty string.
@@ -58,6 +59,9 @@ function EvaluateAssignment({ user_id }: any) {
         if (res.success) {
             setGradePreview(res.data);
             toast.success(res.data.message)
+            const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
         }
         else {
             toast.error(res.data.message)
@@ -74,6 +78,10 @@ function EvaluateAssignment({ user_id }: any) {
         const doneRes = await markActivityAsDoneForUser(user_id, assignmentUuid, access_token)
         if (doneRes.success) {
             toast.success(t('dashboard.assignments.submissions.toasts.finalize_success'))
+            const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.analytics(rawUuid) })
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(rawUuid) })
         } else {
             toast.error(doneRes.data.message)
         }
@@ -86,20 +94,11 @@ function EvaluateAssignment({ user_id }: any) {
             return
         }
         toast.success(t('dashboard.assignments.submissions.toasts.reject_success'))
-        // Revalidate the submissions list + this user's submission + grade
-        // caches instead of a hard reload, so the modal can close cleanly and
-        // the list below reflects the rollback (status gone, activity marked
-        // incomplete, certificate revoked) without a page refresh.
-        mutate(
-            (key: any) =>
-                typeof key === 'string' &&
-                (
-                    key.includes(`assignments/${assignmentUuid}/submissions`) ||
-                    key.includes(`assignments/${assignmentUuid}/tasks/submissions`)
-                ),
-            undefined,
-            { revalidate: true }
-        )
+        // Revalidate the submissions list + this user's submission caches
+        // so the modal can close cleanly and the list reflects the rollback.
+        const rawUuid = assignmentUuid?.replace('assignment_', '') ?? ''
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.allSubmissions(rawUuid) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(rawUuid) })
         setGradePreview(null)
     }
 

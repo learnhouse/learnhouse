@@ -18,7 +18,8 @@ from urllib.parse import unquote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.courses.courses import Course
@@ -56,10 +57,10 @@ def _validate_content_path(file_path: str) -> Path | None:
     return Path(full_real)
 
 
-def _check_content_access(
+async def _check_content_access(
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Check if the user has access to the requested content.
@@ -80,9 +81,9 @@ def _check_content_access(
         and parts[4] == 'activities'
     ):
         course_uuid = parts[3]
-        course = db_session.exec(
+        course = (await db_session.execute(
             select(Course).where(Course.course_uuid == course_uuid)
-        ).first()
+        )).scalars().first()
         if not course:
             raise HTTPException(status_code=403, detail="Access denied")
         if course.public:
@@ -95,12 +96,12 @@ def _check_content_access(
                 raise HTTPException(status_code=403, detail="Access denied")
             return
         # Verify user belongs to the org that owns this course
-        membership = db_session.exec(
+        membership = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == current_user.id,
                 UserOrganization.org_id == course.org_id,
             )
-        ).first()
+        )).scalars().first()
         if not membership:
             raise HTTPException(status_code=403, detail="Access denied")
         return
@@ -113,9 +114,9 @@ def _check_content_access(
         and parts[4] == 'episodes'
     ):
         podcast_uuid = parts[3]
-        podcast = db_session.exec(
+        podcast = (await db_session.execute(
             select(Podcast).where(Podcast.podcast_uuid == podcast_uuid)
-        ).first()
+        )).scalars().first()
         if not podcast:
             raise HTTPException(status_code=403, detail="Access denied")
         if podcast.public:
@@ -128,12 +129,12 @@ def _check_content_access(
                 raise HTTPException(status_code=403, detail="Access denied")
             return
         # Verify user belongs to the org that owns this podcast
-        membership = db_session.exec(
+        membership = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == current_user.id,
                 UserOrganization.org_id == podcast.org_id,
             )
-        ).first()
+        )).scalars().first()
         if not membership:
             raise HTTPException(status_code=403, detail="Access denied")
         return
@@ -192,7 +193,7 @@ async def serve_local_content(
     request: Request,
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Serve content files from local filesystem with access control.
@@ -205,7 +206,7 @@ async def serve_local_content(
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(file_path, current_user, db_session)
+    await _check_content_access(file_path, current_user, db_session)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")
@@ -239,14 +240,14 @@ async def head_local_content(
     request: Request,
     file_path: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """HEAD request for content files — returns metadata without body."""
     resolved = _validate_content_path(file_path)
     if resolved is None:
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    _check_content_access(file_path, current_user, db_session)
+    await _check_content_access(file_path, current_user, db_session)
 
     if not resolved.is_file():
         raise HTTPException(status_code=404, detail="File not found")

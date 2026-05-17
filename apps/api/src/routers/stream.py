@@ -10,7 +10,8 @@ Anonymous users can only stream content from public+published resources.
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Path
 from fastapi.responses import StreamingResponse, Response
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.courses import Course
 from src.db.courses.activities import Activity
@@ -39,7 +40,7 @@ async def _verify_course_activity_access(
     course_uuid: str,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Verify user has read access to the course/activity.
@@ -51,14 +52,14 @@ async def _verify_course_activity_access(
     """
     # Verify activity exists and belongs to the course
     activity_stmt = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(activity_stmt).first()
+    activity = (await db_session.execute(activity_stmt)).scalars().first()
 
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
     # Verify course exists and activity belongs to it
     course_stmt = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(course_stmt).first()
+    course = (await db_session.execute(course_stmt)).scalars().first()
 
     if not course or course.course_uuid != course_uuid:
         raise HTTPException(status_code=404, detail="Course not found or activity doesn't belong to course")
@@ -76,7 +77,7 @@ async def _verify_podcast_episode_access(
     podcast_uuid: str,
     episode_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Verify user has read access to the podcast/episode.
@@ -88,13 +89,13 @@ async def _verify_podcast_episode_access(
     """
     # Verify episode exists and belongs to the podcast
     episode_stmt = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == episode_uuid)
-    episode = db_session.exec(episode_stmt).first()
+    episode = (await db_session.execute(episode_stmt)).scalars().first()
 
     if not episode:
         raise HTTPException(status_code=404, detail="Episode not found")
 
     podcast_stmt = select(Podcast).where(Podcast.id == episode.podcast_id)
-    podcast = db_session.exec(podcast_stmt).first()
+    podcast = (await db_session.execute(podcast_stmt)).scalars().first()
 
     if not podcast or podcast.podcast_uuid != podcast_uuid:
         raise HTTPException(status_code=404, detail="Podcast not found or episode doesn't belong to podcast")
@@ -125,7 +126,7 @@ async def stream_activity_video(
     activity_uuid: str = Path(..., description="Activity UUID"),
     filename: str = Path(..., description="Video filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Stream a video file for an activity with proper Range request support.
@@ -220,7 +221,7 @@ async def stream_block_audio(
     block_uuid: str = Path(..., description="Block UUID"),
     filename: str = Path(..., description="Audio filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Stream an audio file from an audio block with proper Range request support.
@@ -294,7 +295,7 @@ async def stream_block_audio(
 @router.head(
     "/block/audio/{org_uuid}/{course_uuid}/{activity_uuid}/{block_uuid}/{filename:path}",
     summary="Get audio block file metadata",
-    description="Returns metadata for an audio block file without the body. Used by audio players to probe file size and Range support before playback.",
+    description="Returns metadata for an audio block file without the body. Used by audio players to probe file size and MIME type before playback.",
     responses={
         200: {"description": "Audio metadata returned via response headers"},
         403: {"description": "User is not permitted to read this course"},
@@ -309,7 +310,7 @@ async def head_block_audio(
     block_uuid: str = Path(..., description="Block UUID"),
     filename: str = Path(..., description="Audio filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     HEAD request for block audio - returns metadata without body.
@@ -371,7 +372,7 @@ async def stream_block_video(
     block_uuid: str = Path(..., description="Block UUID"),
     filename: str = Path(..., description="Video filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Stream a video file from a video block with proper Range request support.
@@ -467,7 +468,7 @@ async def head_activity_video(
     activity_uuid: str = Path(..., description="Activity UUID"),
     filename: str = Path(..., description="Video filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     HEAD request for activity video - returns metadata without body.
@@ -529,7 +530,7 @@ async def head_block_video(
     block_uuid: str = Path(..., description="Block UUID"),
     filename: str = Path(..., description="Video filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     HEAD request for block video - returns metadata without body.
@@ -594,7 +595,7 @@ async def stream_podcast_audio(
     episode_uuid: str = Path(..., description="Episode UUID"),
     filename: str = Path(..., description="Audio filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     Stream an audio file for a podcast episode with proper Range request support.
@@ -687,7 +688,7 @@ async def head_podcast_audio(
     episode_uuid: str = Path(..., description="Episode UUID"),
     filename: str = Path(..., description="Audio filename"),
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     HEAD request for podcast audio - returns metadata without body.

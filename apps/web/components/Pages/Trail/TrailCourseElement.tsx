@@ -1,7 +1,8 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { removeCourse } from '@services/courses/activity'
+import { getCourseMetadata } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -9,7 +10,8 @@ import { getUserCertificates } from '@services/courses/certifications'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { Award, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -36,16 +38,27 @@ function TrailCourseElement(props: TrailCourseElementProps) {
   
   const [courseCertificate, setCourseCertificate] = useState<any>(null)
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false)
+  const queryClient = useQueryClient()
+
+  const handleMouseEnter = () => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.courses.meta(courseid),
+      queryFn: () => getCourseMetadata(courseid, {}, access_token, { slim: true }),
+      staleTime: 60_000,
+    })
+  }
 
   async function quitCourse(course_uuid: string) {
     // Close activity
-    let activity = await removeCourse(course_uuid, props.orgslug,access_token)
+    let activity = await removeCourse(course_uuid, props.orgslug, access_token)
     // Mutate course
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
 
-    // Mutate
-    mutate(`${getAPIUrl()}trail/org/${orgID}/trail`)
+    // Invalidate trail
+    if (orgID) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(orgID) })
+    }
   }
 
   // Fetch certificate for this course
@@ -80,6 +93,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
     <div
       className="trailcoursebox flex p-3 bg-white rounded-xl"
       style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}
+      onMouseEnter={handleMouseEnter}
     >
       <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid)}>
         <div

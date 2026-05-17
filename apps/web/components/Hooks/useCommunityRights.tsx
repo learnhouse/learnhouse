@@ -1,7 +1,7 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR from 'swr'
+import { getCommunityRights } from '@services/communities/communities'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export interface CommunityRights {
@@ -25,10 +25,12 @@ export function useCommunityRights(communityuuid: string) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: rights, error, isLoading } = useSWR<CommunityRights>(
-    communityuuid ? `${getAPIUrl()}communities/${communityuuid}/rights` : null,
-    (url: string) => swrFetcher(url, access_token)
-  )
+  const { data: rights, error, isLoading } = useQuery<CommunityRights>({
+    queryKey: queryKeys.community.rights(communityuuid),
+    queryFn: () => getCommunityRights(communityuuid, access_token),
+    enabled: !!communityuuid && !!access_token,
+    staleTime: 60_000,
+  })
 
   return {
     rights,

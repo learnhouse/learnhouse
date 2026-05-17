@@ -35,26 +35,24 @@ def _patch_redis(fake):
 # ----------------------------------------------------------------------------
 
 def test_get_revocation_redis_client_returns_none_when_no_url():
-    fake_config = MagicMock()
-    fake_config.redis_config.redis_connection_string = None
-    with patch.object(auth_module, "get_learnhouse_config", return_value=fake_config):
+    import src.core.redis as core_redis
+    with patch.object(core_redis, "get_redis_client", return_value=None):
         assert auth_module._get_revocation_redis_client() is None
 
 
 def test_get_revocation_redis_client_returns_client_when_configured():
-    fake_config = MagicMock()
-    fake_config.redis_config.redis_connection_string = "redis://localhost:6379/0"
-    with patch.object(auth_module, "get_learnhouse_config", return_value=fake_config):
+    fake_client = MagicMock()
+    import src.core.redis as core_redis
+    with patch.object(core_redis, "get_redis_client", return_value=fake_client):
         client = auth_module._get_revocation_redis_client()
         # We don't actually want to connect — just confirm the code path returns
-        # a Redis object (redis-py constructs lazily).
+        # the configured client.
         assert client is not None
 
 
 def test_get_revocation_redis_client_swallows_exceptions():
-    with patch.object(
-        auth_module, "get_learnhouse_config", side_effect=RuntimeError("boom")
-    ):
+    import src.core.redis as core_redis
+    with patch.object(core_redis, "get_redis_client", side_effect=RuntimeError("boom")):
         assert auth_module._get_revocation_redis_client() is None
 
 

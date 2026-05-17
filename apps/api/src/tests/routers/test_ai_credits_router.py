@@ -172,3 +172,48 @@ class TestAICreditsRouter:
 
         response = await client.post("/api/v1/orgs/9999/ai-credits/reset")
         assert response.status_code == 404
+
+    async def test_set_org_ai_credits_superadmin_and_errors(self, client, org):
+        with patch(
+            "src.routers.orgs.ai_credits.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch(
+            "src.routers.orgs.ai_credits.set_ai_credits",
+            return_value=500,
+        ):
+            response = await client.post(
+                f"/api/v1/orgs/{org.id}/ai-credits/set",
+                json={"amount": 500},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["purchased_total"] == 500
+
+        with patch(
+            "src.routers.orgs.ai_credits.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            response = await client.post(
+                f"/api/v1/orgs/{org.id}/ai-credits/set",
+                json={"amount": 100},
+            )
+        assert response.status_code == 403
+
+        response = await client.post(
+            "/api/v1/orgs/9999/ai-credits/set",
+            json={"amount": 100},
+        )
+        assert response.status_code == 404
+
+        with patch(
+            "src.routers.orgs.ai_credits.is_user_superadmin",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
+            response = await client.post(
+                f"/api/v1/orgs/{org.id}/ai-credits/set",
+                json={"amount": -1},
+            )
+        assert response.status_code == 400

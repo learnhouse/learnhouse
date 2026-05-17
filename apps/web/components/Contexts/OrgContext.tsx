@@ -1,8 +1,8 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useMemo } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ErrorUI from '@components/Objects/StyledElements/Error/Error'
 
@@ -17,27 +17,19 @@ export const OrgContext = createContext<OrgContextValue | null>(null)
 export function OrgProvider({
   children,
   orgslug,
-  initialOrg,
 }: {
   children: React.ReactNode
   orgslug: string
-  initialOrg?: any
 }) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
-  const { data: org, error: orgError } = useSWR(
-    `${getAPIUrl()}orgs/slug/${orgslug}`,
-    (url) => swrFetcher(url, accessToken),
-    {
-      revalidateOnFocus: false,
-      // When the caller already has org data (e.g. from the editor bootstrap),
-      // hydrate SWR with it so renders don't block on a redundant fetch.
-      // SWR will revalidate in the background after the initial paint.
-      revalidateOnMount: !initialOrg,
-      fallbackData: initialOrg ?? undefined,
-    }
-  )
+  const { data: org, error: orgError, isLoading } = useQuery({
+    queryKey: queryKeys.org.detail(orgslug),
+    queryFn: () => getOrganizationContextInfo(orgslug, {}, accessToken),
+    staleTime: 5 * 60_000,
+    enabled: !!orgslug,
+  })
 
   const isOrgActive = useMemo(() => (org?.config?.config?.active ?? org?.config?.config?.general?.enabled) !== false, [org])
 
@@ -66,8 +58,7 @@ export function OrgProvider({
   }), [org, isUserPartOfTheOrg, orgslug])
 
   if (orgError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!org || !session) return <div></div>
-  if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
+  if (!isLoading && org && !isOrgActive) return <ErrorUI message='This organization is no longer active' />
 
   return <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
 }

@@ -25,24 +25,14 @@ async def _periodic_migration_cleanup():
             logger.warning("Periodic migration cleanup failed: %s", e)
 
 
-def _reconcile_packs():
+async def _reconcile_packs():
     """Reconcile Redis pack credits with DB state on startup."""
     try:
-        from sqlalchemy import create_engine
-        from sqlmodel import Session
-        learnhouse_config = get_learnhouse_config()
-        engine = create_engine(
-            learnhouse_config.database_config.sql_connection_string,
-            echo=False,
-            pool_pre_ping=True,
-        )
-        db_session = Session(engine)
-        try:
-            from src.services.packs.packs import reconcile_pack_credits
-            result = reconcile_pack_credits(db_session)
+        from src.core.events.database import _async_session_factory
+        from src.services.packs.packs import reconcile_pack_credits
+        async with _async_session_factory() as db_session:
+            result = await reconcile_pack_credits(db_session)
             logger.info("Pack reconciliation on startup: %s", result)
-        finally:
-            db_session.close()
     except Exception as e:
         logger.warning("Pack reconciliation skipped (non-fatal): %s", e)
 
@@ -66,7 +56,7 @@ def startup_app(app: FastAPI) -> Callable:
         auto_install()
 
         # Reconcile pack credits (Redis ↔ DB)
-        _reconcile_packs()
+        await _reconcile_packs()
 
         # Clean up stale migration temp directories (on startup + every 10 min)
         from src.services.courses.migration.migration_service import cleanup_old_temp_migrations

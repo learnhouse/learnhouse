@@ -7,7 +7,8 @@ import { Upload, Package, CheckCircle2, ChevronRight, AlertCircle } from 'lucide
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +52,8 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const router = useRouter()
 
   // Step state: 'upload' | 'assign'
@@ -200,8 +203,8 @@ function ScormActivityModal({ course, closeModal, onImportComplete }: ScormActiv
 
       const importedActivities = await response.json()
 
-      // Invalidate SWR cache and refresh data
-      await mutate(`${getAPIUrl()}courses/meta/course_uuid/${courseUuid}`)
+      // Invalidate TanStack Query cache and refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(courseUuid)) })
 
       // Show success toast
       toast.success(`Successfully imported ${importedActivities.length} SCORM ${importedActivities.length === 1 ? 'activity' : 'activities'}`)

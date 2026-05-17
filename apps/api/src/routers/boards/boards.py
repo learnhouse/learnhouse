@@ -2,7 +2,8 @@ import hmac
 import os
 from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, UploadFile, File
-from sqlmodel import Session
+
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.boards import (
     BoardCreate,
@@ -61,7 +62,7 @@ async def api_create_board(
     request: Request,
     org_id: int,
     board_object: BoardCreate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await create_board(request, org_id, board_object, current_user, db_session)
@@ -81,7 +82,7 @@ async def api_create_board(
 async def api_get_boards_by_org(
     request: Request,
     org_id: int,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[BoardRead]:
     return await get_boards_by_org(request, org_id, current_user, db_session)
@@ -102,7 +103,7 @@ async def api_get_boards_by_org(
 async def api_get_board(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await get_board(request, board_uuid, current_user, db_session)
@@ -124,7 +125,7 @@ async def api_update_board(
     request: Request,
     board_uuid: str,
     board_object: BoardUpdate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await update_board(request, board_uuid, board_object, current_user, db_session)
@@ -145,7 +146,7 @@ async def api_update_board(
 async def api_duplicate_board(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await duplicate_board(request, board_uuid, current_user, db_session)
@@ -165,7 +166,7 @@ async def api_duplicate_board(
 async def api_delete_board(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     return await delete_board(request, board_uuid, current_user, db_session)
@@ -186,7 +187,7 @@ async def api_delete_board(
 async def api_get_board_members(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[BoardMemberRead]:
     return await get_board_members(request, board_uuid, current_user, db_session)
@@ -209,7 +210,7 @@ async def api_update_board_thumbnail(
     request: Request,
     board_uuid: str,
     thumbnail: UploadFile = File(...),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardRead:
     return await update_board_thumbnail(request, board_uuid, current_user, db_session, thumbnail)
@@ -232,7 +233,7 @@ async def api_add_board_member(
     request: Request,
     board_uuid: str,
     member_object: BoardMemberCreate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardMemberRead:
     return await add_board_member(request, board_uuid, member_object, current_user, db_session)
@@ -254,7 +255,7 @@ async def api_add_board_members_batch(
     request: Request,
     board_uuid: str,
     batch_object: BoardMemberBatchCreate,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[BoardMemberRead]:
     return await add_board_members_batch(request, board_uuid, batch_object, current_user, db_session)
@@ -276,7 +277,7 @@ async def api_remove_board_member(
     request: Request,
     board_uuid: str,
     user_id: int,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     return await remove_board_member(request, board_uuid, user_id, current_user, db_session)
@@ -297,7 +298,7 @@ async def api_remove_board_member(
 async def api_check_board_membership(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BoardMemberRead:
     return await check_board_membership(request, board_uuid, current_user, db_session)
@@ -316,7 +317,7 @@ async def api_check_board_membership(
 )
 async def api_get_ydoc_state(
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     state = await get_ydoc_state(board_uuid, db_session)
     if state is None:
@@ -337,7 +338,7 @@ async def api_get_ydoc_state(
 async def api_store_ydoc_state(
     request: Request,
     board_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     body = await request.body()
     return await store_ydoc_state(board_uuid, body, db_session)

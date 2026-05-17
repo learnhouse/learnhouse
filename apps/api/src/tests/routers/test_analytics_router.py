@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx
 import pytest
@@ -27,9 +27,15 @@ from src.security.auth import get_current_user
 
 @pytest.fixture
 def db_session():
-    session = Mock()
-    session.exec.return_value.all.return_value = []
-    session.exec.return_value.first.return_value = None
+    session = AsyncMock()
+    result = MagicMock()
+    result.all.return_value = []
+    result.first.return_value = None
+    scalars = MagicMock()
+    scalars.all.return_value = []
+    scalars.first.return_value = None
+    result.scalars.return_value = scalars
+    session.execute.return_value = result
     return session
 
 
@@ -57,8 +63,8 @@ async def client(app):
 @contextmanager
 def _analytics_guard_patches():
     with (
-        patch("src.routers.analytics._verify_org_membership"),
-        patch("src.routers.analytics._verify_org_admin"),
+        patch("src.routers.analytics._verify_org_membership", new_callable=AsyncMock),
+        patch("src.routers.analytics._verify_org_admin", new_callable=AsyncMock),
     ):
         yield
 
@@ -111,44 +117,65 @@ class TestAnalyticsHelpers:
         monkeypatch.setattr(analytics_router_module, "_read_client", fake_client)
         assert _get_read_client() is fake_client
 
-    def test_verify_org_membership_and_admin(self):
-        db = Mock()
+    async def test_verify_org_membership_and_admin(self):
+        db = AsyncMock()
 
-        with patch("src.routers.analytics.is_user_superadmin", return_value=True):
-            _verify_org_membership(1, 10, db)
-            _verify_org_admin(1, 10, db)
+        def _make_execute_result(first_result=None, all_result=None):
+            scalars = MagicMock()
+            scalars.first.return_value = first_result
+            scalars.all.return_value = all_result if all_result is not None else []
+            result = MagicMock()
+            result.scalars.return_value = scalars
+            return result
 
-        db.exec.return_value.first.return_value = None
-        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=True):
+            await _verify_org_membership(1, 10, db)
+            await _verify_org_admin(1, 10, db)
+
+        db.execute.return_value = _make_execute_result(first_result=None)
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Not a member"):
-                _verify_org_membership(1, 10, db)
+                await _verify_org_membership(1, 10, db)
 
         membership = SimpleNamespace(role_id=7)
-        membership_result = _result(first_result=membership)
-        role_result = _result(first_result=SimpleNamespace(rights={"organizations": {"action_update": True}}))
-        db.exec.side_effect = [membership_result, role_result]
-        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
-            _verify_org_admin(1, 10, db)
+        db.execute.side_effect = [
+            _make_execute_result(first_result=membership),
+            _make_execute_result(first_result=SimpleNamespace(rights={"organizations": {"action_update": True}})),
+        ]
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
+            await _verify_org_admin(1, 10, db)
 
-        membership_result = _result(first_result=membership)
-        role_result = _result(first_result=SimpleNamespace(rights={"organizations": {"action_update": False}}))
-        db.exec.side_effect = [membership_result, role_result]
-        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+        db.execute.side_effect = [
+            _make_execute_result(first_result=membership),
+            _make_execute_result(first_result=SimpleNamespace(rights={"organizations": {"action_update": False}})),
+        ]
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
-                _verify_org_admin(1, 10, db)
+                await _verify_org_admin(1, 10, db)
 
-        db.exec.side_effect = [_result(first_result=None)]
-        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+        db.execute.side_effect = [_make_execute_result(first_result=None)]
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
-                _verify_org_admin(1, 10, db)
+                await _verify_org_admin(1, 10, db)
 
-        db.exec.side_effect = [membership_result, _result(first_result=None)]
-        with patch("src.routers.analytics.is_user_superadmin", return_value=False):
+        db.execute.side_effect = [
+            _make_execute_result(first_result=membership),
+            _make_execute_result(first_result=None),
+        ]
+        with patch("src.routers.analytics.is_user_superadmin", new_callable=AsyncMock, return_value=False):
             with pytest.raises(HTTPException, match="Admin access required"):
-                _verify_org_admin(1, 10, db)
+                await _verify_org_admin(1, 10, db)
 
-    def test_enrich_with_metadata(self):
-        db = Mock()
+    async def test_enrich_with_metadata(self):
+        db = AsyncMock()
+
+        def _make_execute_result(all_result=None):
+            scalars = MagicMock()
+            scalars.all.return_value = all_result if all_result is not None else []
+            result = MagicMock()
+            result.scalars.return_value = scalars
+            return result
+
         rows = [
             {"user_id": 9, "course_uuid": "course_1", "activity_uuid": "activity_1", "last_activity_uuid": "activity_2"},
             {"user_id": 10, "activity_uuid": "activity_2"},
@@ -161,9 +188,13 @@ class TestAnalyticsHelpers:
             SimpleNamespace(activity_uuid="activity_1", name="Activity 1", course_id=1),
             SimpleNamespace(activity_uuid="activity_2", name="Activity 2", course_id=2),
         ]
-        db.exec.side_effect = [_result(all_result=courses), _result(all_result=activities), _result(all_result=[courses[1]])]
+        db.execute.side_effect = [
+            _make_execute_result(all_result=courses),
+            _make_execute_result(all_result=activities),
+            _make_execute_result(all_result=[courses[1]]),
+        ]
 
-        enriched = _enrich_with_metadata(rows, db)
+        enriched = await _enrich_with_metadata(rows, db)
 
         assert enriched[0]["course_name"] == "Course 1"
         assert enriched[0]["thumbnail_image"] == ""
@@ -172,17 +203,24 @@ class TestAnalyticsHelpers:
         assert enriched[1]["course_uuid"] == "course_2"
         assert enriched[1]["course_name"] == "Course 2"
 
-    def test_enrich_with_metadata_empty_and_missing_course_resolution(self):
-        db = Mock()
-        assert _enrich_with_metadata([], db) == []
+    async def test_enrich_with_metadata_empty_and_missing_course_resolution(self):
+        db = AsyncMock()
+        assert await _enrich_with_metadata([], db) == []
+
+        def _make_execute_result(all_result=None):
+            scalars = MagicMock()
+            scalars.all.return_value = all_result if all_result is not None else []
+            result = MagicMock()
+            result.scalars.return_value = scalars
+            return result
 
         rows = [{"activity_uuid": "activity_1"}]
-        db.exec.side_effect = [
-            _result(all_result=[SimpleNamespace(activity_uuid="activity_1", name="Activity 1", course_id=2)]),
-            _result(all_result=[SimpleNamespace(id=2, course_uuid="course_2", name="Course 2", thumbnail_image="thumb")]),
+        db.execute.side_effect = [
+            _make_execute_result(all_result=[SimpleNamespace(activity_uuid="activity_1", name="Activity 1", course_id=2)]),
+            _make_execute_result(all_result=[SimpleNamespace(id=2, course_uuid="course_2", name="Course 2", thumbnail_image="thumb")]),
         ]
 
-        enriched = _enrich_with_metadata(rows, db)
+        enriched = await _enrich_with_metadata(rows, db)
 
         assert enriched[0]["course_uuid"] == "course_2"
         assert enriched[0]["course_name"] == "Course 2"
@@ -274,11 +312,11 @@ class TestAnalyticsRouter:
         assert response.status_code == 401
         app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1)
 
-        with patch("src.routers.analytics.get_org_plan", return_value="pro"), patch(
+        with patch("src.routers.analytics.get_org_plan", new_callable=AsyncMock, return_value="pro"), patch(
             "src.routers.analytics.plan_meets_requirement",
             return_value=True,
-        ), patch("src.routers.analytics._verify_org_membership"), patch(
-            "src.routers.analytics._verify_org_admin",
+        ), patch("src.routers.analytics._verify_org_membership", new_callable=AsyncMock), patch(
+            "src.routers.analytics._verify_org_admin", new_callable=AsyncMock,
         ):
             response = await client.get("/api/v1/analytics/plan-info?org_id=1")
         assert response.status_code == 200
@@ -355,6 +393,7 @@ class TestAnalyticsRouter:
     async def test_dashboard_routes(self, client, db_session):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -365,22 +404,26 @@ class TestAnalyticsRouter:
         assert response.status_code == 200
         assert response.json()["rows"] == 1
 
-        db_session.exec.return_value.all.return_value = [
-            SimpleNamespace(
-                id=1,
-                user_uuid="user_1",
-                first_name="First",
-                last_name="Last",
-                username="user1",
-                email="user1@test.com",
-                avatar_image="",
-            )
-        ]
+        user_ns = SimpleNamespace(
+            id=1,
+            user_uuid="user_1",
+            first_name="First",
+            last_name="Last",
+            username="user1",
+            email="user1@test.com",
+            avatar_image="",
+        )
+        scalars_mock = MagicMock()
+        scalars_mock.all.return_value = [user_ns]
+        result_mock = MagicMock()
+        result_mock.scalars.return_value = scalars_mock
+        db_session.execute.return_value = result_mock
         with _analytics_guard_patches(), patch(
             "src.security.features_utils.plan_check._check_mode_bypass",
             return_value=None,
         ), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="starter",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -391,6 +434,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -407,6 +451,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="starter",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -417,6 +462,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="starter",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -426,9 +472,19 @@ class TestAnalyticsRouter:
         assert response.status_code == 403
 
     async def test_dashboard_db_and_course_routes(self, client, db_session):
-        db_session.exec.side_effect = [_result(all_result=[(90, 2), (100, 1)])]
+        def _make_execute_result(all_result=None, first_result=None):
+            scalars = MagicMock()
+            scalars.all.return_value = all_result if all_result is not None else []
+            scalars.first.return_value = first_result
+            result = MagicMock()
+            result.scalars.return_value = scalars
+            result.all.return_value = all_result if all_result is not None else []
+            return result
+
+        db_session.execute.return_value = _make_execute_result(all_result=[(90, 2), (100, 1)])
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -440,12 +496,14 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
             return_value=True,
         ), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -458,10 +516,10 @@ class TestAnalyticsRouter:
         assert response.status_code == 200
         assert response.json()["data"][0]["course_uuid"] == "course_1"
 
-        db_session.exec.side_effect = [
-            _result(first_result=SimpleNamespace(id=100, course_uuid="course_1", name="Course 1")),
-            _result(all_result=[SimpleNamespace(user_id=7, creation_date="2024-01-01")]),
-            _result(
+        db_session.execute.side_effect = [
+            _make_execute_result(first_result=SimpleNamespace(id=100, course_uuid="course_1", name="Course 1")),
+            _make_execute_result(all_result=[SimpleNamespace(user_id=7, creation_date="2024-01-01")]),
+            _make_execute_result(
                 all_result=[
                     SimpleNamespace(
                         id=7,
@@ -477,12 +535,14 @@ class TestAnalyticsRouter:
         ]
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
             return_value=True,
         ), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -495,8 +555,10 @@ class TestAnalyticsRouter:
         assert response.status_code == 200
         assert response.json()["data"][0]["user_id"] == 7
 
+        db_session.execute.side_effect = None
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="starter",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -509,6 +571,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -521,6 +584,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -534,6 +598,7 @@ class TestAnalyticsRouter:
     async def test_export_json_csv_and_errors(self, client):
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -546,6 +611,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -568,6 +634,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -585,6 +652,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics._enrich_with_metadata",
+            new_callable=AsyncMock,
             side_effect=lambda rows, db: rows,
         ), patch(
             "src.routers.analytics._execute_tinybird_query",
@@ -603,6 +671,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="starter",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",
@@ -615,6 +684,7 @@ class TestAnalyticsRouter:
 
         with _analytics_guard_patches(), patch(
             "src.routers.analytics.get_org_plan",
+            new_callable=AsyncMock,
             return_value="pro",
         ), patch(
             "src.routers.analytics.plan_meets_requirement",

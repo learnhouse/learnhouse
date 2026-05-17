@@ -1,11 +1,12 @@
 'use client'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   DiscussionWithAuthor,
   DiscussionSortBy,
+  getDiscussions,
 } from '@services/communities/discussions'
 
 export interface UseDiscussionsOptions {
@@ -28,36 +29,47 @@ export function getDiscussionsKey(options: UseDiscussionsOptions) {
 export function useDiscussions(options: UseDiscussionsOptions) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const { communityUuid, sortBy = 'recent', page = 1, limit = 10, label } = options
+  const queryClient = useQueryClient()
 
-  const key = options.communityUuid ? getDiscussionsKey(options) : null
+  const queryKey = [
+    ...queryKeys.community.discussions(communityUuid, sortBy, page),
+    limit,
+    label ?? null,
+  ]
 
-  const { data, error, isLoading, isValidating, mutate: boundMutate } = useSWR<DiscussionWithAuthor[]>(
-    key,
-    (url: string) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
-    }
-  )
+  const { data, error, isLoading, isFetching } = useQuery<DiscussionWithAuthor[]>({
+    queryKey,
+    queryFn: () => getDiscussions(communityUuid, sortBy, page, limit, null, access_token, label ?? undefined),
+    enabled: !!communityUuid && !!access_token,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  })
+
+  const mutate = (
+    updater: (current: DiscussionWithAuthor[] | undefined) => DiscussionWithAuthor[] | undefined,
+  ) => {
+    queryClient.setQueryData<DiscussionWithAuthor[]>(queryKey, updater)
+  }
 
   return {
     discussions: data || [],
     error,
     isLoading,
-    isValidating,
-    mutate: boundMutate,
+    isValidating: isFetching,
+    mutate,
   }
 }
 
 /**
- * Mutate discussions cache for a specific community.
+ * Invalidate discussions cache for a specific community.
  * Call this after creating/updating/deleting a discussion.
  */
-export function mutateDiscussions(communityUuid: string) {
-  // Invalidate all discussions queries for this community
-  mutate(
-    (key) => typeof key === 'string' && key.includes(`/communities/${communityUuid}/discussions`),
-    undefined,
-    { revalidate: true }
-  )
+export function useMutateDiscussions() {
+  const queryClient = useQueryClient()
+  return (communityUuid: string) => {
+    queryClient.invalidateQueries({
+      queryKey: ['community', communityUuid, 'discussions'],
+    })
+  }
 }

@@ -2,7 +2,7 @@ from fastapi import UploadFile
 from src.services.utils.upload_content import upload_file
 
 
-async def upload_thumbnail(thumbnail_file: UploadFile, org_uuid: str, course_id: str) -> str:
+async def upload_thumbnail(thumbnail_file: UploadFile, org_uuid: str, course_id: int) -> str:
     """Upload a course thumbnail image with file validation."""
     return await upload_file(
         file=thumbnail_file,

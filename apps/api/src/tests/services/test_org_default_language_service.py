@@ -15,7 +15,7 @@ from src.services.orgs.orgs import (
 )
 
 
-def _make_org_config(db, org, config):
+async def _make_org_config(db, org, config):
     row = OrganizationConfig(
         org_id=org.id,
         config=config,
@@ -23,8 +23,8 @@ def _make_org_config(db, org, config):
         update_date=str(datetime.now()),
     )
     db.add(row)
-    db.commit()
-    db.refresh(row)
+    await db.commit()
+    await db.refresh(row)
     return row
 
 
@@ -33,7 +33,7 @@ class TestUpdateOrgDefaultLanguageConfig:
     async def test_updates_v2_customization_general(
         self, mock_request, db, other_org, admin_user
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             other_org,
             {
@@ -55,7 +55,7 @@ class TestUpdateOrgDefaultLanguageConfig:
         assert result == {"detail": "Default language updated"}
 
         stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == other_org.id)
-        stored = db.exec(stmt).first()
+        stored = (await db.execute(stmt)).scalars().first()
         assert stored.config["customization"]["general"]["default_language"] == "fr"
         # Pre-existing customization keys are preserved.
         assert stored.config["customization"]["general"]["color"] == "#000"
@@ -64,7 +64,7 @@ class TestUpdateOrgDefaultLanguageConfig:
     async def test_updates_v1_general_branch(
         self, mock_request, db, org, admin_user
     ):
-        _make_org_config(
+        await _make_org_config(
             db,
             org,
             {
@@ -85,7 +85,7 @@ class TestUpdateOrgDefaultLanguageConfig:
             )
 
         stmt = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
-        stored = db.exec(stmt).first()
+        stored = (await db.execute(stmt)).scalars().first()
         assert stored.config["general"]["default_language"] == "de"
 
     @pytest.mark.asyncio
@@ -129,8 +129,9 @@ class TestUpdateOrgDefaultLanguageConfig:
 
 
 class TestGetOrgDefaultLanguage:
-    def test_returns_v2_value_when_present(self, db, org):
-        row = _make_org_config(
+    @pytest.mark.asyncio
+    async def test_returns_v2_value_when_present(self, db, org):
+        row = await _make_org_config(
             db,
             org,
             {
@@ -140,8 +141,9 @@ class TestGetOrgDefaultLanguage:
         )
         assert get_org_default_language(row) == "ja"
 
-    def test_falls_back_to_v1_general_branch(self, db, org):
-        row = _make_org_config(
+    @pytest.mark.asyncio
+    async def test_falls_back_to_v1_general_branch(self, db, org):
+        row = await _make_org_config(
             db,
             org,
             {
@@ -151,8 +153,9 @@ class TestGetOrgDefaultLanguage:
         )
         assert get_org_default_language(row) == "es"
 
-    def test_returns_en_when_key_absent(self, db, org):
-        row = _make_org_config(
+    @pytest.mark.asyncio
+    async def test_returns_en_when_key_absent(self, db, org):
+        row = await _make_org_config(
             db,
             org,
             {"config_version": "2.0", "customization": {"general": {}}},
@@ -162,8 +165,9 @@ class TestGetOrgDefaultLanguage:
     def test_returns_en_when_org_config_is_none(self):
         assert get_org_default_language(None) == "en"
 
-    def test_returns_en_when_config_is_empty(self, db, org):
-        row = _make_org_config(db, org, {})
+    @pytest.mark.asyncio
+    async def test_returns_en_when_config_is_empty(self, db, org):
+        row = await _make_org_config(db, org, {})
         assert get_org_default_language(row) == "en"
 
 

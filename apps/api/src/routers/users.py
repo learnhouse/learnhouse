@@ -3,9 +3,8 @@ import logging
 from typing import Literal, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
 from pydantic import BaseModel, EmailStr
-from sqlmodel import Session
-import redis
-from config.config import get_learnhouse_config
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.core.redis import get_redis_client as _get_redis_pool_client
 from src.services.users.password_reset import (
     change_password_with_reset_code,
     change_password_with_reset_code_platform,
@@ -47,6 +46,7 @@ from src.services.users.users import (
 )
 from src.services.courses.courses import get_user_courses
 
+_get_redis_client = _get_redis_pool_client
 
 logger = logging.getLogger(__name__)
 
@@ -55,21 +55,9 @@ router = APIRouter()
 SESSION_CACHE_TTL = 600  # 10 minutes
 
 
-def _get_redis_client() -> Optional[redis.Redis]:
-    """Return a Redis client or None if unavailable."""
-    try:
-        config = get_learnhouse_config()
-        conn_string = config.redis_config.redis_connection_string
-        if not conn_string:
-            return None
-        return redis.Redis.from_url(conn_string, socket_connect_timeout=2)
-    except Exception:
-        return None
-
-
 def _get_session_cache(user_id: int) -> Optional[dict]:
     """Get cached session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return None
     try:
@@ -83,7 +71,7 @@ def _get_session_cache(user_id: int) -> Optional[dict]:
 
 def _set_session_cache(user_id: int, session_data: dict) -> None:
     """Cache session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return
     try:
@@ -94,7 +82,7 @@ def _set_session_cache(user_id: int, session_data: dict) -> None:
 
 def _invalidate_session_cache(user_id: int) -> None:
     """Invalidate cached session data for a user."""
-    r = _get_redis_client()
+    r = _get_redis_pool_client()
     if r is None:
         return
     try:
@@ -131,7 +119,7 @@ async def api_get_current_user(
 )
 async def api_get_current_user_session(
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
 ) -> UserSession:
     """
@@ -163,7 +151,7 @@ async def api_get_authorization_status(
     request: Request,
     ressource_uuid: str,
     action: Literal["create", "read", "update", "delete"],
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
@@ -188,7 +176,7 @@ async def api_get_authorization_status(
 async def api_create_user_with_orgid(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
     org_id: int,
@@ -224,7 +212,7 @@ async def api_create_user_with_orgid(
 async def api_create_user_with_orgid_and_invite(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
     invite_code: str,
@@ -277,7 +265,7 @@ async def api_create_user_with_orgid_and_invite(
 async def api_create_user_without_org(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
 ) -> UserRead:
@@ -301,7 +289,7 @@ async def api_create_user_without_org(
 async def api_get_user_by_id(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     user_id: int,
 ) -> UserReadPublic:
@@ -329,7 +317,7 @@ async def api_get_user_by_id(
 async def api_get_user_by_uuid(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     user_uuid: str,
 ) -> UserReadPublic:
@@ -356,7 +344,7 @@ async def api_get_user_by_uuid(
 async def api_get_user_by_username(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
     username: str,
 ) -> UserReadPublic:
@@ -385,7 +373,7 @@ async def api_get_user_by_username(
 async def api_update_user(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
     user_object: UserUpdate,
@@ -412,7 +400,7 @@ async def api_update_user(
 async def api_update_avatar_user(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
     avatar_file: UploadFile | None = None,
@@ -452,7 +440,7 @@ async def api_update_avatar_user(
 async def api_update_user_password(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
     form: UserUpdatePassword,
@@ -490,7 +478,7 @@ class SendResetCodeRequest(BaseModel):
 async def api_change_password_with_reset_code_v2(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     body: ResetPasswordRequest,
 ):
@@ -533,7 +521,7 @@ async def api_change_password_with_reset_code_v2(
 async def api_change_password_with_reset_code(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
     body: ResetPasswordRequest,
@@ -564,7 +552,7 @@ async def api_change_password_with_reset_code(
 async def api_send_password_reset_email_v2(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     body: SendResetCodeRequest,
 ):
@@ -587,7 +575,7 @@ async def api_send_password_reset_email_v2(
 async def api_send_password_reset_email(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
     org_id: int,
@@ -620,7 +608,7 @@ class SendPlatformResetCodeRequest(BaseModel):
 async def api_send_password_reset_email_platform_v2(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     body: SendPlatformResetCodeRequest,
 ):
@@ -649,7 +637,7 @@ async def api_send_password_reset_email_platform_v2(
 async def api_send_password_reset_email_platform(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
 ):
@@ -678,7 +666,7 @@ async def api_send_password_reset_email_platform(
 async def api_change_password_with_reset_code_platform_v2(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     body: PlatformResetPasswordRequest,
 ):
@@ -709,7 +697,7 @@ async def api_change_password_with_reset_code_platform_v2(
 async def api_change_password_with_reset_code_platform(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     email: EmailStr,
     body: PlatformResetPasswordRequest,
@@ -740,7 +728,7 @@ async def api_change_password_with_reset_code_platform(
 async def api_delete_user(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
 ):
@@ -766,7 +754,7 @@ async def api_delete_user(
 async def api_get_user_courses(
     *,
     request: Request,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
     page: int = Query(default=1, ge=1, description="Page number"),

@@ -2,14 +2,14 @@
 import { useCommunity } from '@components/Contexts/CommunityContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { linkResourcesToUserGroup } from '@services/usergroups/usergroups'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getUriWithOrg } from '@services/config/config'
+import { getUserGroups, linkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { Info } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 type LinkCommunityToUserGroupProps = {
@@ -23,11 +23,15 @@ function LinkCommunityToUserGroup(props: LinkCommunityToUserGroupProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
-  const { data: usergroups } = useSWR(
-    community && org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, access_token)
-  )
+  const { data: usergroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(org?.id),
+    queryFn: () => getUserGroups(org.id, access_token),
+    select: (res: any) => res?.data ?? res,
+    enabled: !!(community && org?.id && access_token),
+    staleTime: 60_000,
+  })
   const [selectedUserGroup, setSelectedUserGroup] = React.useState<any>(null)
 
   const handleLink = async () => {
@@ -41,7 +45,7 @@ function LinkCommunityToUserGroup(props: LinkCommunityToUserGroupProps) {
     if (res.status === 200) {
       props.setUserGroupModal(false)
       toast.success(t('dashboard.courses.communities.access.usergroups.toasts.link_success'))
-      mutate(`${getAPIUrl()}usergroups/resource/${community.community_uuid}?org_id=${org.id}`)
+      queryClient.invalidateQueries({ queryKey: ['usergroups', 'resource', community.community_uuid, org.id] })
     } else {
       toast.error(
         t('dashboard.courses.communities.access.usergroups.toasts.link_error', {

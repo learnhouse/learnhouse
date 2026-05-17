@@ -9,6 +9,8 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { createCommunity } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
 
@@ -28,6 +30,7 @@ export function CreateCommunityModal({
   const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -57,6 +60,7 @@ export function CreateCommunityModal({
 
       if (result) {
         await revalidateTags(['communities'], orgSlug)
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.list(orgId) })
         router.refresh()
         onClose()
       }

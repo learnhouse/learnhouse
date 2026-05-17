@@ -8,12 +8,13 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { PlanLevel } from '@services/plans/plans'
 import { Pencil, Shield, X, Globe, Lock, Eye, Check, XCircle } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { usePlan } from '@components/Hooks/usePlan'
 
@@ -22,6 +23,7 @@ function OrgRoles() {
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient()
     const currentPlan = usePlan()
     const rf = org?.config?.config?.resolved_features
     const canCreateRoles = rf?.roles?.enabled === true
@@ -30,17 +32,18 @@ function OrgRoles() {
     const [viewRightsModal, setViewRightsModal] = React.useState(false)
     const [selectedRole, setSelectedRole] = React.useState(null) as any
 
-    const { data: roles } = useSWR(
-        org ? `${getAPIUrl()}roles/org/${org.id}` : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    )
+    const { data: roles, isLoading: isRolesLoading } = useQuery({
+        queryKey: queryKeys.org.roles(org?.id),
+        queryFn: () => apiFetch(`${getAPIUrl()}roles/org/${org.id}`, access_token),
+        enabled: !!org?.id && !!access_token,
+        staleTime: 60_000,
+    })
 
     const deleteRoleUI = async (role_id: any) => {
         const toastId = toast.loading(t('dashboard.users.roles.toasts.deleting'));
         const res = await deleteRole(role_id, org.id, access_token)
         if (res.status === 200) {
-            mutate(`${getAPIUrl()}roles/org/${org.id}`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.org.roles(org.id) })
             toast.success(t('dashboard.users.roles.toasts.delete_success'), {id:toastId})
         }
         else {
@@ -126,14 +129,14 @@ function OrgRoles() {
 
     const getRightsSummary = (rights: any) => {
         if (!rights) return t('dashboard.users.roles.no_permissions')
-        
+
         const totalPermissions = Object.keys(rights).reduce((acc, key) => {
             if (typeof rights[key] === 'object') {
                 return acc + Object.keys(rights[key]).filter(k => rights[key][k] === true).length
             }
             return acc
         }, 0)
-        
+
         return t('dashboard.users.roles.permissions_count', { count: totalPermissions })
     }
 
@@ -143,22 +146,22 @@ function OrgRoles() {
         if (role.role_type === 'TYPE_GLOBAL') {
             return true
         }
-        
+
         // Check for role_uuid starting with role_global_
         if (role.role_uuid && role.role_uuid.startsWith('role_global_')) {
             return true
         }
-        
+
         // Check for common system role IDs (1-4 are typically system roles)
         if (role.id && [1, 2, 3, 4].includes(role.id)) {
             return true
         }
-        
+
         // Check if the role name indicates it's a system role
         if (role.name && ['Admin', 'Maintainer', 'Instructor', 'User'].includes(role.name)) {
             return true
         }
-        
+
         return false
     }
 
@@ -202,7 +205,25 @@ function OrgRoles() {
                 </div>
 
                 {/* Mobile view - Cards */}
-                <div className="block sm:hidden space-y-2 px-3 py-3">
+                <div className="block sm:hidden space-y-3">
+                    {isRolesLoading ? (
+                        <div className="animate-pulse space-y-3">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="h-4 bg-gray-100 rounded w-28" />
+                                        <div className="h-5 bg-gray-100 rounded w-20" />
+                                    </div>
+                                    <div className="h-4 bg-gray-100 rounded w-full" />
+                                    <div className="flex gap-2">
+                                        <div className="h-8 bg-gray-100 rounded flex-1" />
+                                        <div className="h-8 bg-gray-100 rounded flex-1" />
+                                        <div className="h-8 bg-gray-100 rounded flex-1" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
                     {roles?.map((role: any) => {
                         const isSystem = isSystemRole(role)
                         return (
@@ -299,13 +320,30 @@ function OrgRoles() {
 
                 {/* Desktop view - Table */}
                 <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-gray-100">
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">{t('dashboard.users.roles.table.role_name')}</th>
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">{t('dashboard.users.roles.table.description')}</th>
-                                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">{t('dashboard.users.roles.table.permissions')}</th>
-                                <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">{t('dashboard.users.roles.table.actions')}</th>
+                    {isRolesLoading ? (
+                        <div className="animate-pulse space-y-2">
+                            <div className="h-9 bg-gray-100 rounded w-full" />
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
+                                    <div className="h-4 bg-gray-100 rounded w-32" />
+                                    <div className="h-4 bg-gray-100 rounded w-48" />
+                                    <div className="h-5 bg-gray-100 rounded w-24" />
+                                    <div className="flex gap-2">
+                                        <div className="h-7 bg-gray-100 rounded w-20" />
+                                        <div className="h-7 bg-gray-100 rounded w-14" />
+                                        <div className="h-7 bg-gray-100 rounded w-14" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                    <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                        <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+                            <tr className="font-bolder text-sm">
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.role_name')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.description')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.permissions')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -388,11 +426,47 @@ function OrgRoles() {
                             })}
                         </tbody>
                     </table>
+                    )}
                 </div>
-                
+
+                <div className='flex justify-end mt-3 mr-2'>
+                    {canCreateRoles ? (
+                        <Modal
+                            isDialogOpen={createRoleModal}
+                            onOpenChange={() => setCreateRoleModal(!createRoleModal)}
+                            minHeight="no-min"
+                            minWidth='xl'
+                            customWidth="max-w-7xl"
+                            dialogContent={
+                                <AddRole
+                                    setCreateRoleModal={setCreateRoleModal}
+                                />
+                            }
+                            dialogTitle={t('dashboard.users.roles.modals.create.title')}
+                            dialogDescription={t('dashboard.users.roles.modals.create.description')}
+                            dialogTrigger={
+                                <button className="flex space-x-2 hover:cursor-pointer p-2 sm:p-1 sm:px-3 bg-black rounded-md font-bold items-center text-sm text-white w-full sm:w-auto justify-center hover:bg-gray-800 transition-colors shadow-sm">
+                                    <Shield className="w-4 h-4" />
+                                    <span>{t('dashboard.users.roles.actions.create')}</span>
+                                </button>
+                            }
+                        />
+                    ) : (
+                        <div className="flex items-center space-x-2">
+                            <button
+                                disabled
+                                className="flex space-x-2 p-2 sm:p-1 sm:px-3 bg-gray-300 rounded-md font-bold items-center text-sm text-gray-500 w-full sm:w-auto justify-center cursor-not-allowed"
+                            >
+                                <Lock className="w-4 h-4" />
+                                <span>{t('dashboard.users.roles.actions.create')}</span>
+                            </button>
+                            <PlanBadge currentPlan={currentPlan} requiredPlan={(rf?.roles?.required_plan || 'pro') as PlanLevel} />
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     )
 }
 
-export default OrgRoles 
+export default OrgRoles

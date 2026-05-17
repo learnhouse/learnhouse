@@ -276,7 +276,7 @@ async def api_get_activity(
 )
 async def api_get_activityby_id(
     request: Request,
-    activity_id: str,
+    activity_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> ActivityRead:
@@ -388,7 +388,7 @@ async def api_delete_activity(
 async def api_create_video_activity(
     request: Request,
     name: str = Form(),
-    chapter_id: str = Form(),
+    chapter_id: int = Form(),
     details: str = Form(default="{}"),
     extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
@@ -461,7 +461,7 @@ async def api_create_external_video_activity(
 async def api_create_documentpdf_activity(
     request: Request,
     name: str = Form(),
-    chapter_id: str = Form(),
+    chapter_id: int = Form(),
     extra_metadata: Optional[str] = Form(default=None),
     current_user: PublicUser = Depends(get_current_user),
     pdf_file: UploadFile | None = None,

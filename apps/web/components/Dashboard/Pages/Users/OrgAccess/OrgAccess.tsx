@@ -2,11 +2,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Check, Copy, Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import dayjs from 'dayjs'
 import {
   changeSignupMechanism,
@@ -44,15 +45,18 @@ function OrgAccess() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
-  const { data: invites } = useSWR(
-    org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const queryClient = useQueryClient()
   const [isLoading, setIsLoading] = React.useState(false)
   const [joinMethod, setJoinMethod] = React.useState('closed')
   const [invitesModal, setInvitesModal] = React.useState(false)
   const router = useRouter()
+
+  const { data: invites, isLoading: isInvitesLoading } = useQuery({
+    queryKey: queryKeys.org.inviteCodes(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${org?.id}/invites`, access_token),
+    enabled: !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
   async function getOrgJoinMethod() {
     if (org) {
@@ -74,7 +78,7 @@ function OrgAccess() {
     const toastId = toast.loading(t('dashboard.users.signups.invite_codes.toasts.deleting'))
     let res = await deleteInviteCode(org.id, invite.invite_code_uuid, access_token)
     if (res.status == 200) {
-      mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.inviteCodes(org.id) })
       toast.success(t('dashboard.users.signups.invite_codes.toasts.delete_success'), {id:toastId})
     } else {
       toast.error(t('dashboard.users.signups.invite_codes.toasts.delete_error'), {id:toastId})
@@ -86,7 +90,7 @@ function OrgAccess() {
     let res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
       setJoinMethod(method)
-      mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org?.slug) })
       router.refresh()
       toast.success(t('dashboard.users.signups.invite_codes.toasts.change_success', { method }), {id:toastId})
     } else {
@@ -165,18 +169,32 @@ function OrgAccess() {
                 <h2 className="font-bold text-lg text-gray-800">{t('dashboard.users.signups.invite_codes.title')}</h2>
                 <p className="text-sm text-gray-500 mt-0.5">{t('dashboard.users.signups.invite_codes.subtitle')}</p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="table-auto w-full text-left whitespace-nowrap">
-                  <thead className="bg-gray-50 text-gray-500 uppercase">
-                    <tr className="text-xs tracking-wider">
-                      <th className="py-3 px-4 sm:px-6">{t('dashboard.users.signups.invite_codes.table.code')}</th>
-                      <th className="py-3 px-4 sm:px-6">{t('dashboard.users.signups.invite_codes.table.signup_link')}</th>
-                      <th className="py-3 px-4 sm:px-6">{t('dashboard.users.signups.invite_codes.table.type')}</th>
-                      <th className="py-3 px-4 sm:px-6">{t('dashboard.users.signups.invite_codes.table.expiration_date')}</th>
-                      <th className="py-3 px-4 sm:px-6">{t('dashboard.users.signups.invite_codes.table.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              {isInvitesLoading ? (
+                <div className="animate-pulse space-y-2 mt-2">
+                  <div className="h-9 bg-gray-100 rounded w-full" />
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
+                      <div className="h-4 bg-gray-100 rounded w-24" />
+                      <div className="h-4 bg-gray-100 rounded w-52" />
+                      <div className="h-4 bg-gray-100 rounded w-20" />
+                      <div className="h-4 bg-gray-100 rounded w-20" />
+                      <div className="h-6 bg-gray-100 rounded w-20" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+              <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+                  <tr className="font-bolder text-sm">
+                    <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.code')}</th>
+                    <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.signup_link')}</th>
+                    <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.type')}</th>
+                    <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.expiration_date')}</th>
+                    <th className="py-3 px-4">{t('dashboard.users.signups.invite_codes.table.actions')}</th>
+                  </tr>
+                </thead>
+                <>
+                  <tbody className="mt-5 bg-white rounded-md">
                     {invites?.map((invite: any) => (
                       <tr key={invite.invite_code_uuid} className="border-b border-gray-100 text-sm">
                         <td className="py-3 px-4 sm:px-6">
@@ -231,10 +249,13 @@ function OrgAccess() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-              <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 gap-2 border-t border-gray-100">
-                <span className="text-xs text-gray-400">{inviteCount} / 6 invite codes used</span>
+                </>
+              </table>
+              )}
+              <div className='flex items-center justify-between mt-3 mr-2'>
+                <span className='text-xs text-gray-400 ml-2'>
+                  {inviteCount} / 6 invite codes used
+                </span>
                 <Modal
                   isDialogOpen={invitesModal}
                   onOpenChange={() => setInvitesModal(!invitesModal)}

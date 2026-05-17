@@ -3,7 +3,9 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import UserAvatar from '@components/Objects/UserAvatar';
 import { getAPIUrl } from '@services/config/config';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
-import { swrFetcher } from '@services/utils/ts/requests';
+import { apiFetch } from '@services/utils/ts/requests';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import {
     Activity,
     Award,
@@ -22,7 +24,6 @@ import {
     Trophy,
 } from 'lucide-react';
 import React, { useMemo } from 'react';
-import useSWR from 'swr';
 import {
     Area,
     AreaChart,
@@ -76,16 +77,13 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
     const assignmentObj = assignment?.assignment_object;
     const tasks = (assignment?.assignment_tasks || []) as any[];
 
-    const { data: submissions } = useSWR<Submission[]>(
-        `${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`,
-        (url) => swrFetcher(url, access_token),
-        {
-            refreshInterval: 30000,
-            revalidateOnFocus: true,
-            revalidateOnReconnect: true,
-            dedupingInterval: 10000,
-        }
-    );
+    const { data: submissions } = useQuery<Submission[]>({
+        queryKey: queryKeys.assignments.analytics(assignment_uuid),
+        queryFn: () => apiFetch(`${getAPIUrl()}assignments/assignment_${assignment_uuid}/submissions`, access_token),
+        enabled: !!(assignment_uuid && access_token),
+        staleTime: 10_000,
+        refetchInterval: 30_000,
+    });
 
     const graded = useMemo(
         () => (submissions || []).filter((s) => s.submission_status === 'GRADED'),
@@ -238,9 +236,26 @@ function AssignmentAnalyticsSubPage({ assignment_uuid }: { assignment_uuid: stri
 
     if (isLoading) {
         return (
-            <div className="flex flex-col w-full h-full custom-dots-bg">
-                <div className="flex items-center justify-center h-full text-sm text-gray-400 font-medium">
-                    {t('dashboard.assignments.analytics.loading')}
+            <div className="flex flex-col w-full h-full custom-dots-bg overflow-y-auto">
+                <div className="px-10 pt-6 pb-10 flex flex-col space-y-4 animate-pulse">
+                    {/* KPI row skeleton */}
+                    <div className="grid grid-cols-4 gap-3">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="bg-white nice-shadow rounded-xl px-4 py-3.5 space-y-3">
+                                <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                                <div className="space-y-1.5">
+                                    <div className="h-2.5 bg-gray-100 rounded w-1/2" />
+                                    <div className="h-7 bg-gray-100 rounded w-3/4" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Charts skeleton */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {[1, 2].map((i) => (
+                            <div key={i} className="bg-white nice-shadow rounded-xl p-4 h-64" />
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -662,11 +677,12 @@ function PerformerRow({
     tone: 'positive' | 'warning';
     access_token: string;
 }) {
-    const { data: user } = useSWR(
-        `${getAPIUrl()}users/id/${submission.user_id}`,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false, dedupingInterval: 30000 }
-    );
+    const { data: user } = useQuery({
+        queryKey: ['users', 'id', submission.user_id],
+        queryFn: () => apiFetch(`${getAPIUrl()}users/id/${submission.user_id}`, access_token),
+        enabled: !!(submission.user_id && access_token),
+        staleTime: 30_000,
+    });
 
     const gradeText = submission.grade_display?.display_grade ?? `${submission.grade}`;
     const points = submission.grade_display?.points_summary;

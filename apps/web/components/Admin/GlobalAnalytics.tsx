@@ -1,23 +1,23 @@
 'use client'
 import React from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { ChartBar } from '@phosphor-icons/react'
+import { queryKeys } from '@/lib/query/keys'
 
 export default function GlobalAnalytics({ days = 30 }: { days?: number }) {
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
-  const { data, isLoading, error } = useSWR(
-    accessToken
-      ? `${getAPIUrl()}ee/superadmin/analytics/global?days=${days}`
-      : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data, isLoading, error } = useQuery({
+    queryKey: [...queryKeys.superadmin.analytics(), days],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/analytics/global?days=${days}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from sqlmodel import select
 
 from src.db.courses.courses import (
@@ -33,6 +34,7 @@ def _bypass_create_dependencies():
     )
 
 
+@pytest.mark.asyncio
 async def test_create_course_with_extra_metadata(
     db, org, admin_user, mock_request
 ):
@@ -59,13 +61,14 @@ async def test_create_course_with_extra_metadata(
     assert isinstance(created, CourseRead)
     assert created.extra_metadata == metadata
 
-    row = db.exec(
+    row = (await db.execute(
         select(Course).where(Course.course_uuid == created.course_uuid)
-    ).first()
+    )).scalars().first()
     assert row is not None
     assert row.extra_metadata == metadata
 
 
+@pytest.mark.asyncio
 async def test_update_course_sets_extra_metadata(
     db, org, course, admin_user, mock_request, bypass_webhooks
 ):
@@ -84,18 +87,19 @@ async def test_update_course_sets_extra_metadata(
 
     assert updated.extra_metadata == {"k": "v"}
 
-    db.refresh(course)
+    await db.refresh(course)
     assert course.extra_metadata == {"k": "v"}
 
 
+@pytest.mark.asyncio
 async def test_update_course_does_not_clobber_extra_metadata_when_omitted(
     db, org, course, admin_user, mock_request, bypass_webhooks
 ):
     """A CourseUpdate that omits extra_metadata must leave the prior value intact."""
     course.extra_metadata = {"preserved": True}
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
 
     with patch(
         "src.services.courses.courses.check_resource_access",
@@ -112,10 +116,11 @@ async def test_update_course_does_not_clobber_extra_metadata_when_omitted(
     assert updated.name == "Renamed Course"
     assert updated.extra_metadata == {"preserved": True}
 
-    db.refresh(course)
+    await db.refresh(course)
     assert course.extra_metadata == {"preserved": True}
 
 
+@pytest.mark.asyncio
 async def test_get_courses_orgslug_returns_extra_metadata(
     db, org, admin_user, mock_request
 ):

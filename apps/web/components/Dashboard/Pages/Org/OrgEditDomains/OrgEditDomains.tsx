@@ -4,9 +4,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
 import { Button } from '@components/ui/button'
-import { getAPIUrl } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   Table,
   TableBody,
@@ -46,6 +45,7 @@ import {
 import {
   CustomDomain,
   addCustomDomain,
+  listCustomDomains,
   verifyCustomDomain,
   deleteCustomDomain,
   getVerificationInfo,
@@ -59,6 +59,7 @@ const OrgEditDomains: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -71,12 +72,12 @@ const OrgEditDomains: React.FC = () => {
   const [sslLoading, setSslLoading] = useState<Record<string, boolean>>({})
 
   // Fetch domains
-  const domainsUrl = org?.id ? `${getAPIUrl()}orgs/${org.id}/domains` : null
-  const { data: domains, isLoading } = useSWR<CustomDomain[]>(
-    domainsUrl,
-    (url: string) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: domains, isLoading } = useQuery<CustomDomain[]>({
+    queryKey: org?.id ? ['org', org.id, 'domains'] : ['domains-disabled'],
+    queryFn: () => listCustomDomains(org.id, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
 
   const handleAddDomain = async () => {
     if (!newDomain.trim()) {
@@ -89,7 +90,7 @@ const OrgEditDomains: React.FC = () => {
       const response = await addCustomDomain(org.id, { domain: newDomain.trim() }, access_token)
 
       if (response.success) {
-        mutate(domainsUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
         toast.success('Domain added successfully', { id: loadingToast })
         setNewDomain('')
         setIsAddDialogOpen(false)
@@ -123,7 +124,7 @@ const OrgEditDomains: React.FC = () => {
       const response = await verifyCustomDomain(org.id, selectedDomain.domain_uuid, access_token)
 
       if (response.success) {
-        mutate(domainsUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
         toast.success('Domain verified successfully!', { id: loadingToast })
         setIsVerifyDialogOpen(false)
         setSelectedDomain(null)
@@ -146,7 +147,7 @@ const OrgEditDomains: React.FC = () => {
       const response = await deleteCustomDomain(org.id, selectedDomain.domain_uuid, access_token)
 
       if (response.success) {
-        mutate(domainsUrl)
+        queryClient.invalidateQueries({ queryKey: ['org', org.id, 'domains'] })
         toast.success('Domain deleted successfully', { id: loadingToast })
         setIsDeleteDialogOpen(false)
         setSelectedDomain(null)
@@ -345,8 +346,18 @@ const OrgEditDomains: React.FC = () => {
               </div>
 
               {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <RefreshCw className="animate-spin text-gray-400" size={24} />
+                <div className="animate-pulse space-y-2">
+                  <div className="h-9 bg-gray-100 rounded w-full" />
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-4 px-4 py-3 border-b border-gray-100">
+                      <div className="h-4 bg-gray-100 rounded w-40" />
+                      <div className="h-4 bg-gray-100 rounded w-20" />
+                      <div className="h-4 bg-gray-100 rounded w-20" />
+                      <div className="h-4 bg-gray-100 rounded w-28" />
+                      <div className="h-4 bg-gray-100 rounded w-28" />
+                      <div className="h-4 bg-gray-100 rounded w-24" />
+                    </div>
+                  ))}
                 </div>
               ) : domains && domains.length > 0 ? (
                 <Table>

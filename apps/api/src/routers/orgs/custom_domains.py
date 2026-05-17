@@ -2,7 +2,7 @@ import os
 import secrets
 from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.custom_domains import (
@@ -56,7 +56,7 @@ async def api_add_custom_domain(
     org_id: int,
     domain_data: CustomDomainCreate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CustomDomainRead:
     """
     Add a new custom domain to an organization.
@@ -88,7 +88,7 @@ async def api_list_custom_domains(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[CustomDomainRead]:
     """
     List all custom domains for an organization.
@@ -115,7 +115,7 @@ async def api_get_custom_domain(
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CustomDomainRead:
     """
     Get details of a specific custom domain.
@@ -143,7 +143,7 @@ async def api_get_domain_verification_info(
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CustomDomainVerificationInfo:
     """
     Get DNS verification instructions for a custom domain.
@@ -176,7 +176,7 @@ async def api_verify_custom_domain(
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Verify DNS configuration for a custom domain.
@@ -208,7 +208,7 @@ async def api_check_domain_ssl_status(
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Check SSL certificate status for a custom domain.
@@ -239,7 +239,7 @@ async def api_delete_custom_domain(
     org_id: int,
     domain_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Delete a custom domain.
@@ -269,7 +269,7 @@ async def api_delete_custom_domain(
 async def api_resolve_domain(
     request: Request,
     domain: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CustomDomainResolveResponse:
     """
     Resolve a custom domain to an organization.
@@ -302,7 +302,7 @@ async def api_resolve_domain(
 async def api_list_all_verified_domains(
     request: Request,
     x_internal_key: str = Header(...),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[dict]:
     """
     List all verified custom domains across all organizations.

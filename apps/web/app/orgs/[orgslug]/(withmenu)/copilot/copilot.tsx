@@ -18,9 +18,10 @@ import {
   updateRAGChatSession,
   RAGChatSession,
 } from '@services/ai/ai'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR from 'swr'
+import { getUriWithOrg } from '@services/config/config'
+import { getOrgCourses } from '@services/courses/courses'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   PaperPlaneRight,
   CaretDown,
@@ -120,21 +121,26 @@ export function CopilotChat({ orgslug }: CopilotProps) {
   // Track whether this is a new chat (no session yet) so we can refresh sidebar after first response
   const isNewChatRef = useRef(true)
 
-  // Sessions list via SWR
-  const {
-    data: sessionsData,
-    mutate: mutateSessions,
-  } = useSWR(
-    accessToken && orgslug ? ['rag-sessions', orgslug] : null,
-    () => fetchRAGChatSessions(accessToken, orgslug),
-    { revalidateOnFocus: false }
-  )
+  const queryClient = useQueryClient()
+
+  // Sessions list via TanStack Query
+  const { data: sessionsData } = useQuery({
+    queryKey: queryKeys.ai.ragSessions(orgslug),
+    queryFn: () => fetchRAGChatSessions(accessToken, orgslug),
+    enabled: !!(accessToken && orgslug),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  })
   const sessions: RAGChatSession[] = sessionsData || []
 
-  const { data: coursesData } = useSWR(
-    org?.slug ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/100` : null,
-    (url: string) => swrFetcher(url, accessToken)
-  )
+  const mutateSessions = () => queryClient.invalidateQueries({ queryKey: queryKeys.ai.ragSessions(orgslug) })
+
+  const { data: coursesData } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug),
+    queryFn: () => getOrgCourses(org.slug, null, accessToken),
+    enabled: !!org?.slug,
+    staleTime: 60_000,
+  })
   const courses = coursesData?.data || coursesData || []
 
   const selectedCourseName = selectedCourse

@@ -1,7 +1,7 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR from 'swr'
+import { getCourseRights } from '@services/courses/courses'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export interface CourseRights {
@@ -41,10 +41,12 @@ export function useCourseRights(courseuuid: string) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: rights, error, isLoading } = useSWR<CourseRights>(
-    courseuuid ? `${getAPIUrl()}courses/${courseuuid}/rights` : null,
-    (url: string) => swrFetcher(url, access_token)
-  )
+  const { data: rights, error, isLoading } = useQuery<CourseRights>({
+    queryKey: queryKeys.courses.rights(courseuuid),
+    queryFn: () => getCourseRights(courseuuid, access_token),
+    enabled: !!courseuuid && !!access_token,
+    staleTime: 60_000,
+  })
 
   return {
     rights,
