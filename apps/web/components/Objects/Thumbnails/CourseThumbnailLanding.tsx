@@ -12,6 +12,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import toast from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import UserAvatar from '@components/Objects/UserAvatar'
 import {
   DropdownMenu,
@@ -106,9 +108,10 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
 
 const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLink }) => {
   const { t, i18n } = useTranslation()
-  const router = useRouter() 
+  const router = useRouter()
   const org = useOrg() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
 
   const activeAuthors = course.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
   const displayedAuthors = activeAuthors.slice(0, 3)
@@ -120,6 +123,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
     try {
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
       toast.success(t('courses.course_deleted_success'))
       router.refresh()
     } catch (error) {

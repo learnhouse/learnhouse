@@ -9,14 +9,14 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { FormMessage } from '@radix-ui/react-form'
-import { getAPIUrl } from '@services/config/config'
 import { updateUserRole } from '@services/organizations/orgs'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
+import { getAPIUrl } from '@services/config/config'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
-import { mutate } from 'swr'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 interface Props {
   user: any
@@ -28,6 +28,7 @@ function RolesUpdate(props: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole
@@ -35,10 +36,12 @@ function RolesUpdate(props: Props) {
   const [error, setError] = React.useState(null) as any
 
   // Fetch available roles for the organization
-  const { data: roles, error: rolesError } = useSWR(
-    org ? `${getAPIUrl()}roles/org/${org.id}` : null,
-    (url) => swrFetcher(url, access_token)
-  )
+  const { data: roles, error: rolesError } = useQuery({
+    queryKey: queryKeys.org.roles(org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}roles/org/${org.id}`, access_token),
+    enabled: !!(org?.id && access_token),
+    staleTime: 60_000,
+  })
 
   const handleAssignedRole = (event: React.ChangeEvent<any>) => {
     setError(null)
@@ -51,7 +54,7 @@ function RolesUpdate(props: Props) {
     const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
     const toastId = toast.loading("Updating role...")
     if (res.status === 200) {
-      await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.org.users(org.id) })
       props.setRolesModal(false)
       toast.success("Updated role", {id:toastId})
     } else {
@@ -86,7 +89,7 @@ function RolesUpdate(props: Props) {
               defaultValue={assignedRole}
               className="border border-gray-300 rounded-md p-2"
               required
-              disabled={!roles || rolesError}
+              disabled={!roles || !!rolesError}
             >
               {!roles || rolesError ? (
                 <option value="">Loading roles...</option>

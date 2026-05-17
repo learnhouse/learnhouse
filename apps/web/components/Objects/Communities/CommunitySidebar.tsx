@@ -16,10 +16,11 @@ import { Community } from '@services/communities/communities'
 import { getCommunityThumbnailMediaDirectory, getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getUriWithOrg } from '@services/config/config'
+import { getCourseById } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import dayjs from 'dayjs'
 import { SafeImage } from '@components/Objects/SafeImage'
 
@@ -43,11 +44,12 @@ export function CommunitySidebar({
   const accessToken = session?.data?.tokens?.access_token
 
   // Fetch linked course if community has a course_id
-  const { data: linkedCourse } = useSWR(
-    community.course_id ? `${getAPIUrl()}courses/id/${community.course_id}` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: linkedCourse } = useQuery({
+    queryKey: queryKeys.community.byCourse(String(community.course_id ?? '')),
+    queryFn: () => getCourseById(String(community.course_id), null, accessToken),
+    enabled: !!(community.course_id && accessToken),
+    staleTime: 60_000,
+  })
 
   const createdDate = dayjs(community.creation_date).format('MMM D, YYYY')
 

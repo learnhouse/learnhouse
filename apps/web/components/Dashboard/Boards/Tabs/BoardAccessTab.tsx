@@ -5,10 +5,11 @@ import { Globe, Users, X, SquareUserRound } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { apiFetch } from '@services/utils/ts/requests'
 import { updateBoard } from '@services/boards/boards'
-import { linkResourcesToUserGroup, unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
+import { getUserGroups, linkResourcesToUserGroup, unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import toast from 'react-hot-toast'
@@ -22,11 +23,16 @@ interface BoardAccessTabProps {
   boardKey: string | null
 }
 
+// Inline key for usergroups linked to a specific board resource
+const boardResourceUserGroupsKey = (boardUuid: string, orgId: number) =>
+  ['usergroups', 'resource', boardUuid, orgId] as const
+
 function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabProps) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [isPublic, setIsPublic] = useState<boolean>(board.public ?? true)
   const [isSaving, setIsSaving] = useState(false)
@@ -36,13 +42,12 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
     setIsPublic(board.public ?? true)
   }, [board.public])
 
-  const { data: usergroups } = useSWR(
-    !isPublic && boardUuid && org?.id
-      ? `${getAPIUrl()}usergroups/resource/${boardUuid}?org_id=${org.id}`
-      : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: usergroups } = useQuery({
+    queryKey: boardResourceUserGroupsKey(boardUuid, org?.id),
+    queryFn: () => apiFetch(`${getAPIUrl()}usergroups/resource/${boardUuid}?org_id=${org.id}`, access_token),
+    enabled: !isPublic && !!boardUuid && !!org?.id && !!access_token,
+    staleTime: 60_000,
+  })
 
   const handleSetAccess = async (value: boolean) => {
     setIsSaving(true)
@@ -50,8 +55,8 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
     try {
       await updateBoard(boardUuid, { public: value }, access_token)
       toast.success(value ? t('boards.access.board_set_public') : t('boards.access.board_set_private'))
-      if (boardKey) mutate(boardKey)
-      mutate((key) => typeof key === 'string' && key.includes('/boards/org/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(boardUuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(org?.slug) })
     } catch {
       setIsPublic(!value)
       toast.error(t('boards.access.access_update_error'))
@@ -65,7 +70,7 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
       const res = await unLinkResourcesToUserGroup(usergroup_id, boardUuid, orgId, access_token)
       if (res.status === 200) {
         toast.success(t('boards.access.user_group_unlinked'))
-        mutate(`${getAPIUrl()}usergroups/resource/${boardUuid}?org_id=${org.id}`)
+        queryClient.invalidateQueries({ queryKey: boardResourceUserGroupsKey(boardUuid, org.id) })
       } else {
         toast.error(`${t('boards.access.unlink_error')}${res.data?.detail || 'Unknown error'}`)
       }
@@ -117,7 +122,7 @@ function BoardAccessTab({ board, boardUuid, orgId, boardKey }: BoardAccessTabPro
                     {t('boards.access.active')}
                   </div>
                 )}
-                <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
+                <div className="flex flex-col space-y-1 justify-center items-center h full p-2 sm:p-4">
                   <Users className="text-slate-400" size={32} />
                   <div className="text-xl sm:text-2xl text-slate-700 font-bold">{t('boards.access.private_option')}</div>
                   <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
@@ -218,12 +223,15 @@ function LinkUserGroupToBoard({ boardUuid, orgId, accessToken, setModalOpen }: {
 }) {
   const { t } = useTranslation()
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
-  const { data: usergroups } = useSWR(
-    org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: usergroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(org?.id),
+    queryFn: () => getUserGroups(org.id, accessToken),
+    select: (res: any) => res?.data ?? res,
+    enabled: !!org?.id && !!accessToken,
+    staleTime: 60_000,
+  })
 
   const [selectedUserGroup, setSelectedUserGroup] = useState<number | null>(null)
 
@@ -239,7 +247,7 @@ function LinkUserGroupToBoard({ boardUuid, orgId, accessToken, setModalOpen }: {
     if (res.status === 200) {
       setModalOpen(false)
       toast.success(t('boards.access.user_group_linked'))
-      mutate(`${getAPIUrl()}usergroups/resource/${boardUuid}?org_id=${org.id}`)
+      queryClient.invalidateQueries({ queryKey: ['usergroups', 'resource', boardUuid, org?.id] })
     } else {
       toast.error(`${t('boards.access.link_error')}${res.data?.detail || 'Unknown error'}`)
     }

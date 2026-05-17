@@ -2,14 +2,13 @@ import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getAPIUrl } from '@services/config/config'
-import { bulkAddContributors, bulkRemoveContributors, editContributor } from '@services/courses/courses'
+import { bulkAddContributors, bulkRemoveContributors, editContributor, getCourseContributors } from '@services/courses/courses'
 import { searchOrgContent } from '@services/search/search'
-import { swrFetcher } from '@services/utils/ts/requests'
 import { Check, ChevronDown, Search, UserPen, Users } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import {
     DropdownMenu,
@@ -93,11 +92,14 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
     const dispatchCourse = useCourseDispatch() as any;
     const org = useOrg() as any;
 
-    const { data: contributors } = useSWR<Contributor[]>(
-        courseStructure ? `${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors` : null,
-        (url: string) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    );
+    const queryClient = useQueryClient()
+
+    const { data: contributors } = useQuery({
+        queryKey: queryKeys.courses.contributors(courseStructure?.course_uuid ?? ''),
+        queryFn: () => getCourseContributors(courseStructure!.course_uuid, access_token) as unknown as Promise<Contributor[]>,
+        enabled: !!courseStructure?.course_uuid && !!access_token,
+        staleTime: 60_000,
+    });
 
     const [isOpenToContributors, setIsOpenToContributors] = useState<boolean | undefined>(undefined);
     const [searchQuery, setSearchQuery] = useState('');
@@ -205,7 +207,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                 });
 
                 // Refresh contributors list
-                mutate(`${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors`);
+                queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
                 // Clear selection and search
                 setSelectedUsers([]);
                 setSearchQuery('');
@@ -237,7 +239,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             const res = await editContributor(courseStructure.course_uuid, contributorId, updatedData.authorship, updatedData.authorship_status, access_token);
             if (res.status === 200 && res.data?.status === 'success') {
                 toast.success(res.data.detail || t('dashboard.courses.contributors.toasts.update_success'));
-                mutate(`${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors`);
+                queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
             } else {
                 toast.error(t('dashboard.courses.contributors.toasts.update_error', { detail: res.data?.detail || t('dashboard.courses.contributors.toasts.update_failed') }));
             }
@@ -351,7 +353,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             if (response.status === 200) {
                 toast.success(t('dashboard.courses.contributors.toasts.remove_success', { count: selectedContributors.length }));
                 // Refresh contributors list
-                mutate(`${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors`);
+                queryClient.invalidateQueries({ queryKey: queryKeys.courses.contributors(courseStructure.course_uuid) });
                 // Clear selection
                 setSelectedContributors([]);
             }
@@ -360,6 +362,57 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             toast.error(t('dashboard.courses.contributors.toasts.remove_failed'));
         }
     };
+
+    if (isLoading || !courseStructure) {
+        return (
+            <div>
+                <div className="h-6" />
+                <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
+                    <div className="animate-pulse space-y-4">
+                        {/* Header block */}
+                        <div className="bg-gray-50 px-5 py-3 rounded-md space-y-2">
+                            <div className="h-5 bg-gray-200 rounded w-48" />
+                            <div className="h-3.5 bg-gray-100 rounded w-72" />
+                        </div>
+                        {/* Open/closed to contributors cards */}
+                        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
+                            <div className="w-full h-[200px] bg-gray-100 rounded-lg" />
+                            <div className="w-full h-[200px] bg-gray-100 rounded-lg" />
+                        </div>
+                        {/* Search input */}
+                        <div className="h-10 bg-gray-100 rounded-lg w-full" />
+                        {/* Table skeleton */}
+                        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                            {/* Table header */}
+                            <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-100">
+                                <div className="w-4 h-4 bg-gray-200 rounded" />
+                                <div className="w-8 h-8 bg-gray-200 rounded" />
+                                <div className="flex-1 h-3.5 bg-gray-200 rounded w-24" />
+                                <div className="h-3.5 bg-gray-100 rounded w-20" />
+                                <div className="h-3.5 bg-gray-100 rounded w-28" />
+                                <div className="h-3.5 bg-gray-100 rounded w-24" />
+                                <div className="h-3.5 bg-gray-100 rounded w-20" />
+                                <div className="h-3.5 bg-gray-100 rounded w-16" />
+                            </div>
+                            {/* Table rows */}
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50">
+                                    <div className="w-4 h-4 bg-gray-100 rounded" />
+                                    <div className="w-8 h-8 bg-gray-100 rounded" />
+                                    <div className="flex-1 h-3.5 bg-gray-100 rounded w-32" />
+                                    <div className="h-3.5 bg-gray-100 rounded w-24" />
+                                    <div className="h-3.5 bg-gray-100 rounded w-36" />
+                                    <div className="h-8 bg-gray-100 rounded-md w-[200px]" />
+                                    <div className="h-8 bg-gray-100 rounded-md w-[200px]" />
+                                    <div className="h-3.5 bg-gray-100 rounded w-20" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div>

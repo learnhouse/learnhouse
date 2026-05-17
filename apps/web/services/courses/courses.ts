@@ -46,11 +46,16 @@ export async function getCourseMetadata(
   course_uuid: string,
   next: any,
   access_token: string | null | undefined,
-  options?: { slim?: boolean }
+  options?: { slim?: boolean; withUnpublishedActivities?: boolean }
 ) {
-  const params = options?.slim ? '?slim=true' : ''
+  const searchParams = new URLSearchParams()
+  if (options?.slim) searchParams.set('slim', 'true')
+  if (options?.withUnpublishedActivities !== undefined) {
+    searchParams.set('with_unpublished_activities', String(options.withUnpublishedActivities))
+  }
+  const qs = searchParams.toString() ? `?${searchParams.toString()}` : ''
   const result = await fetch(
-    `${getAPIUrl()}courses/course_${course_uuid}/meta${params}`,
+    `${getAPIUrl()}courses/course_${course_uuid}/meta${qs}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
   const res = await errorHandling(result)

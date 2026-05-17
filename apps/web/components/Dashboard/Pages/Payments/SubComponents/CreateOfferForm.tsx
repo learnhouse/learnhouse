@@ -7,14 +7,14 @@ import { getPaymentsGroups } from '@services/payments/groups';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
-import { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import { Button } from '@components/ui/button';
 import { Input } from '@components/ui/input';
 import { Textarea } from '@components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@components/ui/select';
 import { Label } from '@components/ui/label';
 import currencyCodes from 'currency-codes';
-import useSWR from 'swr';
 import { BookOpen, X, Plus, Layers } from 'lucide-react';
 import { getOrgCourses } from '@services/courses/courses';
 
@@ -44,6 +44,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient();
   const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -55,19 +56,21 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
   }, []);
 
   // Payment Groups for the optional group picker
-  const { data: groupsResult } = useSWR(
-    org && token ? [`/payments/${org.id}/groups`, token] : null,
-    ([, t]: any) => getPaymentsGroups(org.id, t),
-    { revalidateOnFocus: false }
-  );
+  const { data: groupsResult } = useQuery({
+    queryKey: queryKeys.payments.groups(org?.id),
+    queryFn: () => getPaymentsGroups(org.id, token),
+    enabled: !!(org?.id && token),
+    staleTime: 60_000,
+  });
   const groups: any[] = Array.isArray(groupsResult?.data) ? groupsResult.data : Array.isArray(groupsResult) ? groupsResult : [];
 
   // Courses for the direct course picker
-  const { data: courses } = useSWR(
-    org && token ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
-    { revalidateOnFocus: false }
-  );
+  const { data: courses } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug ?? ''),
+    queryFn: () => getOrgCourses(org.slug, null, token, true),
+    enabled: !!(org?.slug && token),
+    staleTime: 60_000,
+  });
 
   const initialValues: OfferFormValues = {
     name: '',
@@ -90,7 +93,7 @@ const CreateOfferForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => 
       const res = await createOffer(org.id, payload, token);
       if (res.success) {
         toast.success('Offer created successfully');
-        mutate([`/payments/${org.id}/offers`, token]);
+        queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
         resetForm();
         onSuccess();
       } else {

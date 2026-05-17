@@ -4,18 +4,18 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import AddUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/AddUserGroup'
 import EditUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/EditUserGroup'
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
-import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { getAPIUrl } from '@services/config/config'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Pencil, SquareUserRound, Users, X, Search, Calendar } from 'lucide-react'
 import React, { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@components/ui/badge'
 
@@ -24,18 +24,20 @@ function OrgUserGroups() {
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient()
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
     const [searchValue, setSearchValue] = useState('')
 
-    const { data: usergroups, isValidating: isUsergroupsValidating } = useSWR(
-        org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    )
-    const isInitialLoading = !usergroups && isUsergroupsValidating
+    const { data: usergroups, isLoading: isUsergroupsLoading } = useQuery({
+        queryKey: queryKeys.usergroups.list(org?.id),
+        queryFn: () => apiFetch(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`, access_token),
+        enabled: !!org?.id && !!access_token,
+        staleTime: 60_000,
+    })
+    const isInitialLoading = isUsergroupsLoading && !usergroups
 
     // Filter usergroups based on search
     const filteredUsergroups = useMemo(() => {
@@ -50,7 +52,7 @@ function OrgUserGroups() {
         const toastId = toast.loading(t('dashboard.users.usergroups.toasts.deleting'));
         const res = await deleteUserGroup(usergroup_id, org.id, access_token)
         if (res.status == 200) {
-            mutate(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.usergroups.list(org.id) })
             toast.success(t('dashboard.users.usergroups.toasts.delete_success'), {id:toastId})
         }
         else {
@@ -118,8 +120,23 @@ function OrgUserGroups() {
                     {/* UserGroups List */}
                     <div className="space-y-1">
                         {isInitialLoading ? (
-                            <div className="py-20 flex justify-center">
-                                <LearnHouseSpinner size={36} />
+                            <div className="animate-pulse space-y-1 py-2">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-lg">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className="w-10 h-10 bg-gray-100 rounded-lg" />
+                                            <div className="space-y-1.5">
+                                                <div className="h-4 bg-gray-100 rounded w-32" />
+                                                <div className="h-3 bg-gray-100 rounded w-20" />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <div className="h-8 bg-gray-100 rounded w-24" />
+                                            <div className="h-8 bg-gray-100 rounded w-16" />
+                                            <div className="h-8 bg-gray-100 rounded w-16" />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : filteredUsergroups.length === 0 ? (
                             <div className="py-16 text-center">
@@ -250,11 +267,12 @@ function OrgUserGroups() {
 // Component to fetch and display member count for a usergroup
 function MemberCountBadge({ usergroup_id, org_id, access_token }: { usergroup_id: number, org_id: number, access_token: string }) {
     const { t } = useTranslation()
-    const { data: users } = useSWR(
-        access_token ? `${getAPIUrl()}usergroups/${usergroup_id}/users?org_id=${org_id}` : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    )
+    const { data: users } = useQuery({
+        queryKey: ['usergroup', usergroup_id, 'users', org_id],
+        queryFn: () => apiFetch(`${getAPIUrl()}usergroups/${usergroup_id}/users?org_id=${org_id}`, access_token),
+        enabled: !!access_token,
+        staleTime: 60_000,
+    })
 
     const count = users?.length || 0
 

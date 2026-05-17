@@ -1,5 +1,5 @@
 import { getAPIUrl } from "../config/config";
-import { swrFetcher } from "../utils/ts/requests";
+import { apiFetch } from "../utils/ts/requests";
 
 export const getAuditLogs = async (orgId: number, accessToken: string, filters: any = {}) => {
   const queryParams = new URLSearchParams();
@@ -14,11 +14,11 @@ export const getAuditLogs = async (orgId: number, accessToken: string, filters: 
   if (filters.end_date) queryParams.append("end_date", filters.end_date);
 
   const url = `${getAPIUrl()}ee/audit_logs/?${queryParams.toString()}`;
-  return swrFetcher(url, accessToken);
+  return apiFetch(url, accessToken);
 };
 
 export const getEEStatus = async (accessToken: string) => {
   const url = `${getAPIUrl()}ee/status`;
-  return swrFetcher(url, accessToken);
+  return apiFetch(url, accessToken);
 };
 

@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getOrgCourses } from '@services/courses/courses'
 import { SafeImage } from '@components/Objects/SafeImage'
 import { BookOpen, PlusCircle, Clock } from '@phosphor-icons/react'
 
@@ -18,13 +18,12 @@ export default function RecentCourses() {
   const token = session?.data?.tokens?.access_token
   const orgslug = org?.slug
 
-  const { data: coursesData, isLoading } = useSWR(
-    token && orgslug
-      ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/8?include_unpublished=true`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const { data: coursesData, isLoading } = useQuery({
+    queryKey: [...queryKeys.courses.list(orgslug), 'recent', 8],
+    queryFn: () => getOrgCourses(orgslug, null, token, true),
+    enabled: !!token && !!orgslug,
+    staleTime: 60_000,
+  })
 
   const courses: any[] = coursesData ?? []
   const publishedCount = courses.filter((c: any) => c.published).length

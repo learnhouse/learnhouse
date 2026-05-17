@@ -3,8 +3,8 @@ import * as Form from '@radix-ui/react-form'
 import { BarLoader } from 'react-spinners'
 import { Backpack } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl } from '@services/config/config'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { createAssignment } from '@services/courses/assignments'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createActivity, deleteActivity } from '@services/courses/activities'
@@ -28,6 +28,8 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
   const withUnpublishedActivities = course
     ? course.withUnpublishedActivities
     : false
@@ -93,16 +95,9 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
       )
     }
 
-    mutate(
-      `${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`
-    )
-    mutate(
-      (key) => typeof key === 'string' && key.includes('/courses/org_slug/')
-    )
-    mutate(
-      (key) =>
-        typeof key === 'string' && key.includes('/assignments/course/')
-    )
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(course.courseStructure.course_uuid)) })
+    queryClient.invalidateQueries({ queryKey: ['courses'] })
+    queryClient.invalidateQueries({ queryKey: ['assignments'] })
     setIsSubmitting(false)
     closeModal()
   }

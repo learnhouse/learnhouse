@@ -8,7 +8,8 @@ import {
   Users,
   BookOpen,
 } from '@phosphor-icons/react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -39,12 +40,13 @@ export default function DashboardHome() {
   const orgId = org?.id
   const username = session?.data?.user?.username || ''
 
-  // SWR will dedupe with UsageOverview's identical call
-  const { data: usageData } = useSWR<OrgUsageResponse>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
-    (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  // TanStack Query will dedupe with UsageOverview's identical call via shared queryKey
+  const { data: usageData } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(orgId),
+    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${orgId}/usage`, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   const plan = usePlan()
   const planStyle = PLAN_COLORS[plan] || PLAN_COLORS.free

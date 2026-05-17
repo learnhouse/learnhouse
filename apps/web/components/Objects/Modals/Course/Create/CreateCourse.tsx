@@ -13,8 +13,8 @@ import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
@@ -40,6 +40,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
   const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -87,7 +88,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         if (res.success) {
           await revalidateTags(['courses'], orgslug)
           // Refresh sidebar courses cache
-          mutate((key) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+          queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
           toast.dismiss(toast_loading)
           toast.success(t('courses.course_created_success'))
 

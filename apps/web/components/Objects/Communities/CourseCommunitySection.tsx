@@ -7,12 +7,12 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 
 dayjs.extend(relativeTime)
 import { MessageCircle, ArrowRight, ChevronUp } from 'lucide-react'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
-import { Community } from '@services/communities/communities'
-import { DiscussionWithAuthor } from '@services/communities/discussions'
+import { getUriWithOrg } from '@services/config/config'
+import { Community, getCommunityByCourse } from '@services/communities/communities'
+import { DiscussionWithAuthor, getDiscussions } from '@services/communities/discussions'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 interface CourseCommunitySection {
   courseUuid: string
@@ -24,24 +24,22 @@ export function CourseCommunitySection({ courseUuid, orgslug }: CourseCommunityS
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
 
-  // SWR for community data — cached across navigations within the same course
-  const { data: community } = useSWR<Community | null>(
-    courseUuid && accessToken
-      ? `${getAPIUrl()}communities/course/${courseUuid}`
-      : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  // TanStack Query for community data — cached across navigations within the same course
+  const { data: community } = useQuery<Community | null>({
+    queryKey: queryKeys.community.byCourse(courseUuid),
+    queryFn: () => getCommunityByCourse(courseUuid, null, accessToken),
+    enabled: !!courseUuid && !!accessToken,
+    staleTime: 60_000,
+  })
 
-  // SWR for discussions — only fetch when community is loaded
+  // TanStack Query for discussions — only fetch when community is loaded
   const communityUuid = community?.community_uuid
-  const { data: discussions } = useSWR<DiscussionWithAuthor[]>(
-    communityUuid && accessToken
-      ? `${getAPIUrl()}communities/${communityUuid}/discussions?sort_by=recent&page=1&limit=3`
-      : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const { data: discussions } = useQuery<DiscussionWithAuthor[]>({
+    queryKey: queryKeys.community.discussions(communityUuid ?? '', 'recent', 1),
+    queryFn: () => getDiscussions(communityUuid!, 'recent', 1, 3, null, accessToken),
+    enabled: !!communityUuid && !!accessToken,
+    staleTime: 60_000,
+  })
 
   if (!community) {
     return null

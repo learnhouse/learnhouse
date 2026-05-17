@@ -1,6 +1,5 @@
 import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { getAPIUrl } from '@services/config/config';
 import { createAssignmentTask } from '@services/courses/assignments'
 import {
   Code,
@@ -12,7 +11,8 @@ import {
 } from '@phosphor-icons/react'
 import React from 'react'
 import toast from 'react-hot-toast';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import { useTranslation } from 'react-i18next';
 
 // Light color themes for each task type. `stripeRgb` is used to build the
@@ -97,6 +97,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
+  const queryClient = useQueryClient()
 
   function showReminderToast() {
     // Check if the reminder has already been shown using sessionStorage
@@ -123,7 +124,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
     const res = await createAssignmentTask(task_object, assignment_uuid, access_token)
     toast.success(t('dashboard.assignments.editor.toasts.task_created'))
     showReminderToast()
-    mutate(`${getAPIUrl()}assignments/${assignment_uuid}/tasks`)
+    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(assignment_uuid) })
     assignmentTaskStateHook({ type: 'setSelectedAssignmentTaskUUID', payload: res.data.assignment_task_uuid })
     closeModal(false)
   }

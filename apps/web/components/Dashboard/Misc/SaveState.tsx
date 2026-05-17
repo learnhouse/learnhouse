@@ -6,12 +6,12 @@ import {
   useCourse,
   useCourseDispatch,
   useDebounceManager,
-  getCourseMetaCacheKey,
 } from '@components/Contexts/CourseContext'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { Check, SaveAllIcon, Timer, Loader2, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useCallback, useEffect, useRef } from 'react'
-import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
 import { updateCertification } from '@services/courses/certifications'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -27,6 +27,7 @@ interface SaveResult {
 
 function SaveState(props: { orgslug: string }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const course = useCourse() as any
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -38,18 +39,11 @@ function SaveState(props: { orgslug: string }) {
   const saved = course?.isSaved ?? true
   const isSaving = course?.isSaving ?? false
   const courseStructure = course?.courseStructure
-  const withUnpublishedActivities = course?.withUnpublishedActivities ?? false
-
   // Ref so saveCourseState always reads the latest unsynced changes without stale closure
   const unsyncedChangesRef = useRef<Partial<any>>({})
   useEffect(() => {
     unsyncedChangesRef.current = course?.unsyncedChanges ?? {}
   }, [course?.unsyncedChanges])
-
-  // Unified cache key
-  const cacheKey = courseStructure?.course_uuid
-    ? getCourseMetaCacheKey(courseStructure.course_uuid, withUnpublishedActivities)
-    : null
 
   const saveCourseState = useCallback(async () => {
     if (saved || isSaving || saveInProgressRef.current || !courseStructure?.course_uuid) {
@@ -130,9 +124,13 @@ function SaveState(props: { orgslug: string }) {
         }
       }
 
-      // All critical saves succeeded, now update caches with the fully merged data
-      if (cacheKey) {
-        await mutate(cacheKey, { ...courseStructure, ...unsyncedChangesRef.current }, { revalidate: false })
+      // Invalidate course meta cache after save
+      if (courseStructure?.course_uuid) {
+        const cleanUuid = courseStructure.course_uuid.startsWith('course_')
+          ? courseStructure.course_uuid.slice('course_'.length)
+          : courseStructure.course_uuid
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanUuid) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(props.orgslug) })
       }
 
       // Revalidate server-side cache
@@ -196,8 +194,7 @@ function SaveState(props: { orgslug: string }) {
     isSaving,
     courseStructure,
     course.courseOrder,
-    cacheKey,
-    withUnpublishedActivities,
+    queryClient,
     session.data?.tokens?.access_token,
     debounceManager,
     dispatchCourse,

@@ -3,12 +3,13 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { createCollection } from '@services/courses/collections'
 import { getOrgCourses } from '@services/courses/courses'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
+import { revalidateTags } from '@services/utils/ts/requests'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Loader2, Image as ImageIcon } from 'lucide-react'
+import { Image as ImageIcon, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useTranslation } from 'react-i18next'
@@ -25,10 +26,13 @@ function NewCollection(props: any) {
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const { data: courses, error: error, isLoading } = useSWR(
-    orgslug && access_token ? [`courses/org_slug/${orgslug}`, access_token] : null,
-    ([, token]) => getOrgCourses(orgslug, null, token)
-  )
+  const queryClient = useQueryClient()
+  const { data: courses, error, isLoading } = useQuery({
+    queryKey: queryKeys.courses.list(orgslug),
+    queryFn: () => getOrgCourses(orgslug, null, access_token),
+    enabled: !!(orgslug && access_token),
+    staleTime: 60_000,
+  })
   const [isPublic, setIsPublic] = useState('true')
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -74,6 +78,7 @@ function NewCollection(props: any) {
       }
       await createCollection(collection, session.data?.tokens?.access_token)
       await revalidateTags(['collections'], org.slug)
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.list(org.id) })
       toast.success(t('collections.collection_created_success'))
       router.push(getUriWithOrg(orgslug, '/collections'))
     } catch (error) {
@@ -142,8 +147,19 @@ function NewCollection(props: any) {
             <div className="space-y-2">
               <span className="text-sm font-medium text-gray-700">{t('collections.select_courses')}</span>
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                <div className="mt-2 border border-gray-200 rounded-lg bg-gray-50 animate-pulse">
+                  <div className="p-4 space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center gap-4 p-4 bg-white rounded-md">
+                        <div className="w-4 h-4 bg-gray-200 rounded" />
+                        <div className="w-24 h-16 bg-gray-200 rounded-md shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-1/2" />
+                          <div className="h-3 bg-gray-200 rounded w-3/4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : courses?.length === 0 ? (
                 <p className="text-sm text-gray-500 py-4">{t('collections.no_courses_available_desc')}</p>

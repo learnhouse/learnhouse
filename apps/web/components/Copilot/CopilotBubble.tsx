@@ -13,9 +13,9 @@ import {
   deleteRAGChatSession,
   RAGChatSession,
 } from '@services/ai/ai'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getOrgCourses } from '@services/courses/courses'
+import { queryKeys } from '@/lib/query/keys'
 import {
   ChatCircle,
   X,
@@ -95,17 +95,22 @@ function BubbleInner({ orgslug, open, onOpenChange, sessionToLoad }: CopilotBubb
   const isNewChatRef = useRef(true)
   const loadedSessionRef = useRef<string | null>(null)
 
-  const { data: sessionsData, mutate: mutateSessions } = useSWR(
-    accessToken && orgslug ? ['bubble-rag-sessions', orgslug] : null,
-    () => fetchRAGChatSessions(accessToken, orgslug),
-    { revalidateOnFocus: false }
-  )
+  const queryClient = useQueryClient()
+  const { data: sessionsData } = useQuery({
+    queryKey: queryKeys.ai.ragSessions(orgslug),
+    queryFn: () => fetchRAGChatSessions(accessToken, orgslug),
+    enabled: !!accessToken && !!orgslug,
+    staleTime: 60_000,
+  })
+  const mutateSessions = () => queryClient.invalidateQueries({ queryKey: queryKeys.ai.ragSessions(orgslug) })
   const sessions: RAGChatSession[] = sessionsData || []
 
-  const { data: coursesData } = useSWR(
-    org?.slug ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/100` : null,
-    (url: string) => swrFetcher(url, accessToken)
-  )
+  const { data: coursesData } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug || ''),
+    queryFn: () => getOrgCourses(org.slug, null, accessToken),
+    enabled: !!(org?.slug && accessToken),
+    staleTime: 60_000,
+  })
   const courses = coursesData?.data || coursesData || []
 
   useEffect(() => {

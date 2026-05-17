@@ -20,6 +20,8 @@ import { SlashIcon, DividerVerticalIcon } from '@radix-ui/react-icons'
 import PlaygroundPreview from './PlaygroundPreview'
 import PlaygroundChatPanel from './PlaygroundChatPanel'
 import PlaygroundOptionsModal from './PlaygroundOptionsModal'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { startPlaygroundSession, iteratePlayground } from '@services/playgrounds/generator'
 import { updatePlayground, Playground } from '@services/playgrounds/playgrounds'
 
@@ -78,6 +80,7 @@ export default function PlaygroundEditor({
   accessToken,
   orgCourses = [],
 }: PlaygroundEditorProps) {
+  const queryClient = useQueryClient()
   const [playground, setPlayground] = useState(initialPlayground)
   const [title, setTitle] = useState(initialPlayground.name)
   const [html, setHtml] = useState<string>(initialPlayground.html_content || '')
@@ -114,6 +117,8 @@ export default function PlaygroundEditor({
       setTitle(updated.name)
       setTitleSaveStatus('saved')
       setTimeout(() => setTitleSaveStatus('idle'), 2000)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
     } catch {
       // revert on error
       setTitle(playground.name)
@@ -208,6 +213,8 @@ export default function PlaygroundEditor({
       handleUpdated(updated)
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
     } catch (err) {
       console.error('Save failed:', err)
     } finally {
@@ -223,6 +230,8 @@ export default function PlaygroundEditor({
         accessToken
       )
       handleUpdated(updated)
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.detail(playground.playground_uuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.playgrounds.list(orgslug) })
     } catch (err) {
       console.error('Publish toggle failed:', err)
     }

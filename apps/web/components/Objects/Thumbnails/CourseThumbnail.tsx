@@ -7,7 +7,9 @@ import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getCourseMetadata } from '@services/courses/courses'
 import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
@@ -52,14 +54,27 @@ type PropsType = {
   isDashboard?: boolean
   isSelected?: boolean
   onToggleSelect?: (courseUuid: string) => void
+  isPriority?: boolean
 }
 
 export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
 
-function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isSelected = false, onToggleSelect }: PropsType) {
+function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isSelected = false, onToggleSelect, isPriority = false }: PropsType) {
   const { t, i18n } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
+
+  const cleanUuid = removeCoursePrefix(course.course_uuid)
+
+  // Prefetch course meta on hover so the course page feels instant
+  const handleMouseEnter = () => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.courses.meta(cleanUuid),
+      queryFn: () => getCourseMetadata(cleanUuid, {}, session?.data?.tokens?.access_token, { slim: true }),
+      staleTime: 60_000,
+    })
+  }
 
   const handleSelectClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -76,8 +91,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     const toastId = toast.loading(t('courses.deleting_course'))
     try {
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
-      // Revalidate all courses SWR caches
-      mutate((key) => typeof key === 'string' && key.includes('/courses/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
       toast.success(t('courses.course_deleted_success'))
     } catch (error) {
       toast.error(t('courses.course_deleted_error'))
@@ -91,8 +105,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
     try {
       const result = await cloneCourse(course.course_uuid, session.data?.tokens?.access_token)
       if (result.success) {
-        // Revalidate all courses SWR caches
-        mutate((key) => typeof key === 'string' && key.includes('/courses/'), undefined, { revalidate: true })
+        queryClient.invalidateQueries({ queryKey: ['courses'] })
         toast.success(t('courses.course_cloned_success'))
       } else {
         toast.error(result.HTTPmessage || t('courses.course_cloned_error'))
@@ -130,7 +143,7 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
   const courseLink = customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)
 
   return (
-    <div className={`group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01] ${isSelected ? 'ring-2 ring-black ring-offset-2' : ''}`}>
+    <div onMouseEnter={handleMouseEnter} className={`group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01] ${isSelected ? 'ring-2 ring-black ring-offset-2' : ''}`}>
       {/* Selection checkbox - visible on hover or when selected (dashboard only) */}
       {isDashboard && onToggleSelect && (
         <button
@@ -159,6 +172,17 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isS
       />
 
       <Link prefetch={false} href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
+        {/* Hidden img gives the browser a real resource hint so it can fetch the background-image early as an LCP candidate */}
+        {isPriority && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnailImage}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+          />
+        )}
         <div
           className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
           style={{ backgroundImage: `url(${thumbnailImage})` }}

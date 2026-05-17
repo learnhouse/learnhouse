@@ -2,12 +2,12 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { getAPIUrl } from '@services/config/config';
 import { deleteAssignmentTask } from '@services/courses/assignments';
 import { GalleryVerticalEnd, Info, TentTree, Trash } from 'lucide-react'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
-import { mutate } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import dynamic from 'next/dynamic';
 import { AssignmentTaskGeneralEdit } from './Subs/AssignmentTaskGeneralEdit';
 const AssignmentTaskContentEdit = dynamic(() => import('./Subs/AssignmentTaskContentEdit'))
@@ -19,6 +19,7 @@ function AssignmentTaskEditor({ page }: any) {
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient();
 
     async function deleteTaskUI() {
         const res = await deleteAssignmentTask(assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token)
@@ -30,8 +31,8 @@ function AssignmentTaskEditor({ page }: any) {
                     assignmentTask: {},
                 },
             });
-            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks`)
-            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.tasks(assignment.assignment_object.assignment_uuid) })
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment.assignment_object.assignment_uuid) })
             toast.success('Task deleted successfully')
         } else {
             toast.error('Error deleting task, please retry later.')

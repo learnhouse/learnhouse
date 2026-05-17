@@ -37,10 +37,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Draggable } from '@hello-pangea/dnd'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useCourse, useCourseDispatch, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
 import { useTranslation } from 'react-i18next'
@@ -90,6 +91,8 @@ function ActivityElement(props: ActivitiyElementProps) {
   const course = useCourse() as any;
   const dispatchCourse = useCourseDispatch() as any;
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
+  const queryClient = useQueryClient()
+  const cleanCourseUuid = (id: string) => id?.replace(/^course_/, '') ?? id
 
   // Assignment UUID for edit link
   const [assignmentUUID, setAssignmentUUID] = useState('');
@@ -118,8 +121,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     }
     dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
     dispatchCourse({ type: 'setIsSaved' })
-    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
-    mutate((key: string) => typeof key === 'string' && key.includes('/assignments/course/'))
+    queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
     revalidateTags(['courses'], props.orgslug)
@@ -144,6 +146,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
       dispatchCourse({ type: 'setIsSaved' })
       toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
       revalidateTags(['courses'], props.orgslug)
     } catch {
       toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
@@ -187,6 +190,7 @@ function ActivityElement(props: ActivitiyElementProps) {
         dispatchCourse({ type: 'setCourseStructure', payload: updatedStructure })
         dispatchCourse({ type: 'setIsSaved' })
         toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
+        await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
         revalidateTags(['courses'], props.orgslug)
       } else {
         toast.error(t('dashboard.courses.structure.activity.toasts.update_error'))
@@ -204,7 +208,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       setIsUpdatingName(true)
       try {
         await updateActivity({ name: modifiedActivity.activityName }, activityUUID, access_token)
-        await mutate(getCourseMetaCacheKey(props.course_uuid, withUnpublishedActivities), undefined, { revalidate: true })
+        await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid(props.course_uuid)) })
         await revalidateTags(['courses'], props.orgslug)
         toast.success(t('dashboard.courses.structure.activity.toasts.name_update_success'))
         router.refresh()

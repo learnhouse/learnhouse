@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
@@ -181,14 +182,16 @@ export default function UserList() {
   const {
     data: userData,
     isLoading,
-    isValidating,
-  } = useSWR<PaginatedUserResponse>(
-    accessToken
-      ? `${getAPIUrl()}ee/superadmin/users?${queryParams}`
-      : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: true, keepPreviousData: true }
-  )
+    isFetching,
+  } = useQuery<PaginatedUserResponse>({
+    queryKey: [...queryKeys.superadmin.users(), queryParams],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/users?${queryParams}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  })
+
+  const isValidating = isFetching
 
   const users = userData?.items
   const totalCount = userData?.total ?? 0

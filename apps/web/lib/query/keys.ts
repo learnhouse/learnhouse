@@ -1,0 +1,105 @@
+export const queryKeys = {
+  org: {
+    detail: (slug: string) => ['org', slug] as const,
+    users: (orgId: number) => ['org', orgId, 'users'] as const,
+    usage: (orgId: number) => ['org', orgId, 'usage'] as const,
+    admins: (orgId: number) => ['org', orgId, 'admins'] as const,
+    inviteCodes: (orgId: number) => ['org', orgId, 'inviteCodes'] as const,
+    roles: (orgId: number) => ['org', orgId, 'roles'] as const,
+    auditLogs: (orgId: number) => ['org', orgId, 'auditLogs'] as const,
+    automations: (orgId: number) => ['org', orgId, 'automations'] as const,
+    apiTokens: (orgId: number) => ['org', orgId, 'apiTokens'] as const,
+  },
+  courses: {
+    list: (orgSlug: string) => ['courses', orgSlug] as const,
+    detail: (uuid: string) => ['course', uuid] as const,
+    meta: (uuid: string) => ['course', uuid, 'meta'] as const,
+    contributors: (uuid: string) => ['course', uuid, 'contributors'] as const,
+    updates: (uuid: string) => ['course', uuid, 'updates'] as const,
+    rights: (uuid: string) => ['course', uuid, 'rights'] as const,
+  },
+  activity: {
+    detail: (uuid: string) => ['activity', uuid] as const,
+    versions: (uuid: string) => ['activity', uuid, 'versions'] as const,
+    state: (uuid: string) => ['activity', uuid, 'state'] as const,
+  },
+  trail: {
+    org: (orgId: number) => ['trail', 'org', orgId] as const,
+  },
+  collections: {
+    list: (orgId: number) => ['collections', orgId] as const,
+    detail: (uuid: string) => ['collection', uuid] as const,
+  },
+  community: {
+    list: (orgId: number, page?: number) => ['communities', orgId, page] as const,
+    detail: (uuid: string) => ['community', uuid] as const,
+    rights: (uuid: string) => ['community', uuid, 'rights'] as const,
+    discussions: (uuid: string, sort: string, page: number) => ['community', uuid, 'discussions', sort, page] as const,
+    byCourse: (courseUuid: string) => ['community', 'byCourse', courseUuid] as const,
+  },
+  discussion: {
+    detail: (uuid: string) => ['discussion', uuid] as const,
+    comments: (uuid: string, page: number) => ['discussion', uuid, 'comments', page] as const,
+    reactions: (uuid: string) => ['discussion', uuid, 'reactions'] as const,
+  },
+  assignments: {
+    list: (orgSlug: string) => ['assignments', orgSlug] as const,
+    detail: (uuid: string) => ['assignment', uuid] as const,
+    tasks: (uuid: string) => ['assignment', uuid, 'tasks'] as const,
+    submission: (uuid: string) => ['assignment', uuid, 'submission', 'me'] as const,
+    taskSubmission: (uuid: string) => ['assignment', uuid, 'task-submission', 'me'] as const,
+    analytics: (uuid: string) => ['assignment', uuid, 'analytics'] as const,
+    allSubmissions: (uuid: string) => ['assignment', uuid, 'submissions'] as const,
+  },
+  usergroups: {
+    list: (orgId: number) => ['usergroups', orgId] as const,
+    resources: (ugId: string, orgId: number) => ['usergroup', ugId, 'resources', orgId] as const,
+    members: (ugId: string) => ['usergroup', ugId, 'members'] as const,
+  },
+  playgrounds: {
+    list: (orgSlug: string | number) => ['playgrounds', orgSlug] as const,
+    detail: (uuid: string) => ['playground', uuid] as const,
+  },
+  boards: {
+    list: (orgSlug: string | number) => ['boards', orgSlug] as const,
+    detail: (uuid: string) => ['board', uuid] as const,
+    members: (uuid: string) => ['board', uuid, 'members'] as const,
+  },
+  podcasts: {
+    list: (orgSlug: string) => ['podcasts', orgSlug] as const,
+    detail: (uuid: string) => ['podcast', uuid] as const,
+    meta: (uuid: string) => ['podcast', uuid, 'meta'] as const,
+    episodes: (uuid: string) => ['podcast', uuid, 'episodes'] as const,
+  },
+  ai: {
+    ragSessions: (orgSlug: string) => ['ai', 'rag', 'sessions', orgSlug] as const,
+  },
+  certifications: {
+    detail: (uuid: string) => ['certification', uuid] as const,
+    byCourse: (courseUuid: string) => ['certification', 'byCourse', courseUuid] as const,
+  },
+  analytics: {
+    pipe: (orgId: number, pipeName: string, params: string) => ['analytics', orgId, 'pipe', pipeName, params] as const,
+    detail: (orgId: number, queryName: string, params: string) => ['analytics', orgId, 'detail', queryName, params] as const,
+    db: (orgId: number, queryName: string, params: string) => ['analytics', orgId, 'db', queryName, params] as const,
+    planInfo: (orgId: number) => ['analytics', orgId, 'planInfo'] as const,
+    status: () => ['analytics', 'status'] as const,
+    coursePipe: (orgId: number, courseUuid: string, pipeName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'pipe', pipeName, params] as const,
+    courseDetail: (orgId: number, courseUuid: string, queryName: string, params: string) => ['analytics', orgId, 'course', courseUuid, 'detail', queryName, params] as const,
+  },
+  courseUsergroups: {
+    resources: (courseUuid: string, orgId: number) => ['courseUsergroups', courseUuid, orgId] as const,
+  },
+  superadmin: {
+    status: () => ['superadmin', 'status'] as const,
+    orgs: () => ['superadmin', 'orgs'] as const,
+    users: () => ['superadmin', 'users'] as const,
+    analytics: () => ['superadmin', 'analytics'] as const,
+  },
+  payments: {
+    configs: (orgId: number) => ['payments', orgId, 'configs'] as const,
+    offers: (orgId: number) => ['payments', orgId, 'offers'] as const,
+    customers: (orgId: number) => ['payments', orgId, 'customers'] as const,
+    groups: (orgId: number) => ['payments', orgId, 'groups'] as const,
+  },
+}

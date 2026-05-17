@@ -12,6 +12,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,10 +123,14 @@ const CollectionAdminEditsArea = (props: any) => {
   const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
+  const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   const deleteCollectionUI = async () => {
     await deleteCollection(props.collection_uuid, session.data?.tokens?.access_token)
     await revalidateTags(['collections'], props.orgslug)
+    queryClient.invalidateQueries({ queryKey: queryKeys.collections.list(org.id) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.collections.detail(props.collection_uuid) })
     router.refresh()
   }
 

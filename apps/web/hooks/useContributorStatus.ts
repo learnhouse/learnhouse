@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { getAPIUrl } from '@services/config/config';
-import { swrFetcher } from '@services/utils/ts/requests';
-import useSWR from 'swr';
+import { getCourseContributors } from '@services/courses/courses';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 
 export type ContributorStatus = 'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE';
 
@@ -17,15 +17,15 @@ export function useContributorStatus(courseUuid: string) {
   const userId = session?.data?.user?.id;
 
   const prefixedUuid = courseUuid?.startsWith('course_') ? courseUuid : 'course_' + courseUuid;
-  const swrKey = access_token && courseUuid
-    ? `${getAPIUrl()}courses/${prefixedUuid}/contributors`
-    : null;
 
-  const { data, isLoading, mutate } = useSWR(
-    swrKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: queryKeys.courses.contributors(prefixedUuid),
+    queryFn: () => getCourseContributors(prefixedUuid, access_token),
+    select: (res: any) => (Array.isArray(res) ? res : res?.data ?? res),
+    enabled: !!access_token && !!courseUuid,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   const contributorStatus = useMemo<ContributorStatus>(() => {
     if (!userId || !data || !Array.isArray(data)) return 'NONE';
@@ -35,5 +35,5 @@ export function useContributorStatus(courseUuid: string) {
     return currentUser ? (currentUser.authorship_status as ContributorStatus) : 'NONE';
   }, [data, userId]);
 
-  return { contributorStatus, isLoading, refetch: mutate };
+  return { contributorStatus, isLoading, refetch };
 }

@@ -1,5 +1,5 @@
 'use client'
-import { useCourse, useCourseDispatch, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import SaveState from './SaveState'
 import { CourseOverviewParams } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page'
@@ -16,7 +16,8 @@ import { updateCourse } from '@services/courses/courses'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import { useState, useCallback } from 'react'
 
@@ -30,19 +31,13 @@ export function CourseOverviewTop({
   const dispatchCourse = useCourseDispatch() as any
   const org = useOrg() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
   const [isPublishing, setIsPublishing] = useState(false)
   const [isIndexing, setIsIndexing] = useState(false)
   const [isIndexed, setIsIndexed] = useState(false)
 
   const courseStructure = course?.courseStructure
   const isPublished = courseStructure?.published
-  const withUnpublishedActivities = course?.withUnpublishedActivities ?? false
-
-  // Use unified cache key
-  const cacheKey = courseStructure?.course_uuid
-    ? getCourseMetaCacheKey(courseStructure.course_uuid, withUnpublishedActivities)
-    : null
-
   const isAIEnabled = org?.config?.config?.resolved_features?.ai?.enabled ?? org?.config?.config?.features?.ai?.enabled !== false
 
   const indexCourseForAI = useCallback(async () => {
@@ -103,10 +98,8 @@ export function CourseOverviewTop({
         session.data?.tokens?.access_token
       )
 
-      // Update the SWR cache with the new state
-      if (cacheKey) {
-        await mutate(cacheKey, { ...courseStructure, published: newPublishedStatus }, { revalidate: false })
-      }
+      // Invalidate course meta cache so other components see the update
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(params.courseuuid) })
 
       // Revalidate server-side cache
       await revalidateTags(['courses'], params.orgslug)
@@ -133,10 +126,11 @@ export function CourseOverviewTop({
     isPublishing,
     isPublished,
     courseStructure,
-    cacheKey,
+    queryClient,
     session.data?.tokens?.access_token,
     dispatchCourse,
     params.orgslug,
+    params.courseuuid,
     t
   ])
 

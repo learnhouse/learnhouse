@@ -13,7 +13,8 @@ import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
@@ -27,6 +28,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
   const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
   const [orgId, setOrgId] = React.useState(null) as any
   const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
   const [isUploading, setIsUploading] = React.useState(false)
@@ -69,7 +71,7 @@ function CreatePodcastModal({ closeModal, orgslug }: any) {
 
         if (res.success) {
           await revalidateTags(['podcasts'], orgslug)
-          mutate((key) => typeof key === 'string' && key.includes('/podcasts/'))
+          queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.list(orgslug) })
           toast.dismiss(toast_loading)
           toast.success(t('podcasts.podcast_created_success'))
 

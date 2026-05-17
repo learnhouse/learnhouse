@@ -1,14 +1,12 @@
 import React from 'react'
 import CourseClient from './course'
-import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
+import { getCourseMetadata } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
-import { notFound } from 'next/navigation'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string }>
@@ -106,90 +104,30 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CoursePage = async (params: any) => {
+  const { courseuuid, orgslug } = await params.params
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
-  // Await params before using them
-  const { courseuuid, orgslug } = await params.params
-
-  // Fetch course metadata + org info in parallel
-  let course_meta = null
-  let fetchError: { status?: number } | null = null
-
-  const [courseResult, org] = await Promise.all([
-    getCourseMetadata(
+  let courseData = null
+  let serverError = null
+  try {
+    courseData = await getCourseMetadata(
       courseuuid,
       { revalidate: 120, tags: ['courses'] },
       access_token ?? undefined,
       { slim: true }
-    ).catch((error: any) => {
-      fetchError = { status: error?.status }
-      return null
-    }),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-  ])
-  course_meta = courseResult
-
-  // If truly not found (no auth token and no course), show 404
-  if (!course_meta && !fetchError) {
-    notFound()
+    )
+  } catch (err: any) {
+    serverError = { status: err?.status || 500, message: err?.message }
   }
-
-  // For anonymous visitors denied access to a non-public course, pretend it
-  // doesn't exist (404) rather than showing an access-denied screen — that
-  // would otherwise confirm the course's existence and leak its URL.
-  if (!course_meta && fetchError && !access_token) {
-    notFound()
-  }
-
-  // Resolve canonical URLs for JSON-LD (server-side, awaits middleware-injected
-  // tenancy headers). Done in parallel — Promise.all keeps the latency flat.
-  const [homeUrl, coursesUrl, courseUrl] = await Promise.all([
-    getServerCanonicalUrl(orgslug, '/'),
-    getServerCanonicalUrl(orgslug, '/courses'),
-    getServerCanonicalUrl(orgslug, `/course/${courseuuid}`),
-  ])
-
-  // Build Course JSON-LD for structured data
-  const courseJsonLd = course_meta ? {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course_meta.name,
-    description: course_meta.description || '',
-    url: courseUrl,
-    provider: {
-      '@type': 'Organization',
-      name: org?.name || '',
-    },
-    ...(course_meta.thumbnail_image && org && {
-      image: getCourseThumbnailMediaDirectory(org.org_uuid, course_meta.course_uuid, course_meta.thumbnail_image),
-    }),
-    ...(course_meta.learnings && {
-      keywords: Array.isArray(course_meta.learnings) ? course_meta.learnings.join(', ') : course_meta.learnings,
-    }),
-  } : null
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: homeUrl },
-    { name: 'Courses', url: coursesUrl },
-    { name: course_meta?.name || 'Course', url: courseUrl },
-  ])
 
   return (
-    <>
-      <JsonLd data={breadcrumbJsonLd} />
-      {courseJsonLd && <JsonLd data={courseJsonLd} />}
-      <CourseClient
-        courseuuid={courseuuid}
-        orgslug={orgslug}
-        course={course_meta}
-        access_token={access_token}
-        serverError={fetchError}
-      />
-    </>
+    <CourseClient
+      courseuuid={courseuuid}
+      orgslug={orgslug}
+      course={courseData}
+      serverError={serverError}
+    />
   )
 }
 

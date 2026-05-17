@@ -7,6 +7,8 @@ import { getUriWithOrg } from '@services/config/config'
 import { deleteCommunity, Community } from '@services/communities/communities'
 import { getCommunityThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { MoreVertical, Users, Trash2, Edit, MessageCircle, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -124,10 +126,13 @@ const CommunityAdminEditsArea = (props: any) => {
   const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
 
   const deleteCommunityUI = async () => {
     await deleteCommunity(props.community_uuid, session.data?.tokens?.access_token)
     await revalidateTags(['communities'], props.orgslug)
+    queryClient.invalidateQueries({ queryKey: queryKeys.community.list(props.org_id) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(props.community_uuid) })
     router.refresh()
   }
 
