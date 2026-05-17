@@ -30,7 +30,7 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   const [editorReady, setEditorReady] = React.useState(false)
 
   const { data: bootstrap, error: bootstrapError } = useQuery({
-    queryKey: queryKeys.activity.detail(activityuuid),
+    queryKey: queryKeys.activity.editorBootstrap(activityuuid),
     queryFn: () => apiFetch(`${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`, access_token ?? undefined),
     enabled: !!access_token && !!activityuuid,
     staleTime: 60_000,

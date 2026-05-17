@@ -1,15 +1,9 @@
-export const dynamic = 'force-dynamic'
 import { Metadata } from 'next'
-import { getOrgCourses } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgCollections } from '@services/courses/collections'
-import { getServerSession } from '@/lib/auth/server'
-import { getOrgThumbnailMediaDirectory, getOrgLogoMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
-import { getCanonicalUrl, getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
+import { getOrgThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
+import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
-import LandingClassic from '@components/Landings/LandingClassic'
-import LandingCustom from '@components/Landings/LandingCustom'
+import HomeClient from './home-client'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
@@ -82,58 +76,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const OrgHomePage = async (params: any) => {
   const orgslug = (await params.params).orgslug
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-  const [courses, org] = await Promise.all([
-    getOrgCourses(
-      orgslug,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined
-    ),
-    getOrganizationContextInfo(orgslug, {
-      revalidate: 120,
-      tags: ['organizations'],
-    }),
-  ])
-  const org_id = org.id
-  const collections = await getOrgCollections(
-    org.id,
-    access_token ?? undefined,
-    { revalidate: 120, tags: ['courses'] }
-  )
-
-  // Check if custom landing is enabled (v2: customization.landing, v1: landing)
-  const landingConfig = org.config?.config?.customization?.landing || org.config?.config?.landing
-  const hasCustomLanding = landingConfig?.enabled
-
-  const logoUrl = org?.logo_image ? getOrgLogoMediaDirectory(org.org_uuid, org.logo_image) : undefined
-  const orgJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: org.name,
-    description: org.description,
-    url: await getServerCanonicalUrl(orgslug, '/'),
-    ...(logoUrl && { logo: logoUrl }),
-  }
-
-  return (
-    <div className="w-full">
-      <JsonLd data={orgJsonLd} />
-      {hasCustomLanding ? (
-        <LandingCustom
-          landing={landingConfig}
-          orgslug={orgslug}
-        />
-      ) : (
-        <LandingClassic
-          courses={courses}
-          collections={collections}
-          orgslug={orgslug}
-          org_id={org_id}
-        />
-      )}
-    </div>
-  )
+  return <HomeClient orgslug={orgslug} />
 }
 
 export default OrgHomePage

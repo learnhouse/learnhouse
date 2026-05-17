@@ -43,17 +43,14 @@ const CourseClient = (props: any) => {
   const access_token = session?.data?.tokens?.access_token;
   const queryClient = useQueryClient()
 
-  // Fetch course data client-side if server didn't provide it (e.g., auth failed on server)
   const { data: clientCourseData, error: courseError, isLoading: courseLoading } = useQuery({
     queryKey: queryKeys.courses.meta(courseuuid),
     queryFn: () => getCourseMetadata(courseuuid, {}, access_token, { slim: true }),
-    // Only fetch if we don't have initial course data AND we have a session token AND no server error
-    enabled: !!(!initialCourse && !serverError && access_token),
+    enabled: !!courseuuid && !serverError,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
 
-  // Use server-provided course data, or client-fetched data as fallback
   const course = initialCourse || clientCourseData;
 
   const { track } = useAnalytics()
@@ -71,6 +68,22 @@ const CourseClient = (props: any) => {
 
   // Fetch trail data — shared cache with useTrail hook used elsewhere
   const { data: trailData } = useTrail(org?.id);
+
+  // Must be before any early returns (React rules of hooks)
+  useEffect(() => {
+    if (!course) return
+
+    getLearningTags(course)
+
+    if (course?.chapters) {
+      const totalActivities = course.chapters.reduce((sum: number, chapter: any) => sum + (chapter.activities?.length || 0), 0)
+      const defaultExpanded: {[key: string]: boolean} = {}
+      course.chapters.forEach((chapter: any, idx: number) => {
+        defaultExpanded[chapter.chapter_uuid] = idx === 0 ? true : totalActivities <= 5
+      })
+      setExpandedChapters(defaultExpanded)
+    }
+  }, [course])
 
   // Show loading state if fetching course data client-side
   if (!initialCourse && !serverError && courseLoading) {
@@ -199,23 +212,6 @@ const CourseClient = (props: any) => {
     setLearnings(learningItems)
   }
 
-  useEffect(() => {
-    if (!course) return
-
-    getLearningTags(course)
-
-    // Collapse chapters by default if more than 5 activities in total
-    if (course?.chapters) {
-      const totalActivities = course.chapters.reduce((sum: number, chapter: any) => sum + (chapter.activities?.length || 0), 0)
-      const defaultExpanded: {[key: string]: boolean} = {}
-      course.chapters.forEach((chapter: any, idx: number) => {
-        // Always expand the first chapter
-        defaultExpanded[chapter.chapter_uuid] = idx === 0 ? true : totalActivities <= 5
-      })
-      setExpandedChapters(defaultExpanded)
-    }
-  }, [course])
-
   const getActivityTypeLabel = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
@@ -317,7 +313,7 @@ const CourseClient = (props: any) => {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      {!course && !org ? null : (
+      {!course || !org ? null : (
         <>
           <GeneralWrapperStyled>
             <div className="pb-4">
@@ -462,7 +458,7 @@ const CourseClient = (props: any) => {
                   return run;
                 })() && (
                   <ActivityIndicators
-                    course_uuid={props.course.course_uuid}
+                    course_uuid={course.course_uuid}
                     orgslug={orgslug}
                     course={course}
                     trailData={trailData}

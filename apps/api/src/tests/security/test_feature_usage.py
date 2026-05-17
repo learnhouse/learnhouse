@@ -506,3 +506,57 @@ class TestFeatureUsage:
             "used_credits": 6,
             "remaining_credits": 3,
         }
+
+
+class TestGetOrgConfigCacheHit:
+    """Cover _get_org_config cache-hit and set_cached exception paths in usage.py."""
+
+    @pytest.mark.asyncio
+    async def test_returns_cached_org_config_without_db_hit(self, db, org):
+        from src.db.organization_config import OrganizationConfig
+
+        cached_data = {"org_id": org.id, "config": {"plan": "pro"}}
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=cached_data):
+            result = await usage._get_org_config(org.id, db)
+        assert isinstance(result, OrganizationConfig)
+
+    @pytest.mark.asyncio
+    async def test_invalid_cached_data_falls_back_to_db(self, db, org):
+        from src.db.organization_config import OrganizationConfig
+
+        org_config = OrganizationConfig(org_id=org.id, config={"plan": "free"})
+        db.add(org_config)
+        await db.commit()
+
+        # Corrupt cache data → falls through to DB
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={"bad": "data"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await usage._get_org_config(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_set_cached_exception_is_swallowed(self, db, org):
+        from src.db.organization_config import OrganizationConfig
+
+        org_config = OrganizationConfig(org_id=org.id, config={"plan": "free"})
+        db.add(org_config)
+        await db.commit()
+
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=None), \
+             patch("src.services.orgs.cache.set_cached_org_config", side_effect=RuntimeError("redis")):
+            result = await usage._get_org_config(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_invalid_cached_data_exception_falls_back_to_db(self, db, org):
+        from src.db.organization_config import OrganizationConfig
+
+        org_config = OrganizationConfig(org_id=org.id, config={"plan": "free"})
+        db.add(org_config)
+        await db.commit()
+
+        # Dict with integer key causes TypeError on ** unpacking, exercising the except branch
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={1: "bad-key"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await usage._get_org_config(org.id, db)
+        assert result is not None

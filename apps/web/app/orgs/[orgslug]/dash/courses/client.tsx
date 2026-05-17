@@ -35,8 +35,6 @@ import { searchMatchesAny } from '@/lib/search/normalize'
 
 type CourseProps = {
   orgslug: string
-  courses: any
-  org_id: string | number
 }
 
 function CoursesHome(params: CourseProps) {
@@ -51,6 +49,7 @@ function CoursesHome(params: CourseProps) {
   const orgslug = params.orgslug
   const { isAdmin: isUserAdmin } = useAdminStatus()
   const org = useOrg() as any
+  const orgId = org?.id as number | undefined
   const currentPlan = usePlan()
   const session = useLHSession() as any
   const access_token = session.data?.tokens?.access_token
@@ -59,8 +58,8 @@ function CoursesHome(params: CourseProps) {
   const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
   const queryClient = useQueryClient()
 
-  // TanStack Query for courses data - only fetch if feature is enabled
-  const { data: coursesData } = useQuery({
+  // TanStack Query for courses — cached on the client, instant on return visits
+  const { data: coursesData, isLoading: isCoursesLoading } = useQuery({
     queryKey: queryKeys.courses.list(orgslug),
     queryFn: async () => {
       const url = `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true`
@@ -69,20 +68,19 @@ function CoursesHome(params: CourseProps) {
       return res.json()
     },
     enabled: isCoursesEnabled && !!access_token,
-    placeholderData: params.courses,
-    staleTime: 30_000,
+    staleTime: 60_000,
   })
 
   const mutateCourses = () => queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
 
-  const allCourses = coursesData || params.courses
+  const allCourses = coursesData ?? []
 
   // Fetch usage limits from backend
   const { data: usageData } = useQuery<OrgUsageResponse>({
-    queryKey: queryKeys.org.usage(Number(params.org_id)),
-    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${params.org_id}/usage`, access_token),
-    enabled: !!access_token && !!params.org_id,
-    staleTime: 30_000,
+    queryKey: queryKeys.org.usage(orgId!),
+    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${orgId}/usage`, access_token),
+    enabled: !!access_token && !!orgId,
+    staleTime: 60_000,
   })
 
   // Check course creation limit from backend
@@ -103,8 +101,8 @@ function CoursesHome(params: CourseProps) {
 
   // Fetch usergroups
   React.useEffect(() => {
-    if (!usergroupsAvailable || !access_token || !params.org_id) return
-    getUserGroups(params.org_id, access_token)
+    if (!usergroupsAvailable || !access_token || !orgId) return
+    getUserGroups(orgId, access_token)
       .then((res: any) => {
         const list = Array.isArray(res) ? res : res?.data || []
         setUsergroups(list)
@@ -115,21 +113,21 @@ function CoursesHome(params: CourseProps) {
         }
       })
       .catch(() => setUsergroups([]))
-  }, [usergroupsAvailable, access_token, params.org_id])
+  }, [usergroupsAvailable, access_token, orgId])
 
   // Fetch resource UUIDs for selected usergroup
   React.useEffect(() => {
-    if (!selectedUsergroupId || !access_token || !params.org_id) {
+    if (!selectedUsergroupId || !access_token || !orgId) {
       setUsergroupResourceUuids(null)
       return
     }
-    getUserGroupResources(selectedUsergroupId, params.org_id, access_token)
+    getUserGroupResources(selectedUsergroupId, orgId, access_token)
       .then((res: any) => {
         const uuids = Array.isArray(res) ? res : res?.data || []
         setUsergroupResourceUuids(new Set(uuids))
       })
       .catch(() => setUsergroupResourceUuids(null))
-  }, [selectedUsergroupId, access_token, params.org_id])
+  }, [selectedUsergroupId, access_token, orgId])
 
   const handleUsergroupChange = (value: string) => {
     setSelectedUsergroupId(value)
@@ -254,7 +252,7 @@ function CoursesHome(params: CourseProps) {
       case 'scorm':
         return (
           <ScormCourseImport
-            orgId={Number(params.org_id)}
+            orgId={orgId!}
             orgslug={orgslug}
             closeModal={closeImportCourseModal}
           />
@@ -262,7 +260,7 @@ function CoursesHome(params: CourseProps) {
       case 'learnhouse':
         return (
           <LearnHouseCourseImport
-            orgId={Number(params.org_id)}
+            orgId={orgId!}
             orgslug={orgslug}
             closeModal={closeImportCourseModal}
           />
@@ -428,6 +426,28 @@ function CoursesHome(params: CourseProps) {
     return pages
   }
 
+  if (isCoursesLoading) {
+    return (
+      <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
+        <div className="mb-6 pt-6 animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-32 mb-6" />
+          <div className="h-8 bg-gray-200 rounded w-48 mb-8" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                <div className="h-[131px] bg-gray-200" />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="dashboard">
     <div className="h-full w-full bg-[#f8f8f8] pl-4 pr-4 sm:pl-10 sm:pr-10">
@@ -443,7 +463,7 @@ function CoursesHome(params: CourseProps) {
             checkMethod="roles"
             action="create"
             ressourceType="courses"
-            orgId={params.org_id}
+            orgId={orgId!}
           >
             <div className="flex items-center space-x-2">
               {courseLimitReached && (
@@ -495,7 +515,7 @@ function CoursesHome(params: CourseProps) {
               <AICourseCreationModal
                 isOpen={aiCourseModalOpen}
                 onClose={closeAICourseModal}
-                orgId={Number(params.org_id)}
+                orgId={orgId!}
                 orgslug={orgslug}
                 accessToken={access_token}
               />
@@ -568,7 +588,7 @@ function CoursesHome(params: CourseProps) {
               checkMethod="roles"
               action="update"
               ressourceType="courses"
-              orgId={params.org_id}
+              orgId={orgId!}
             >
               <div className="flex items-center gap-2 ml-auto">
                 <span className="text-sm font-medium text-gray-500 px-2">
@@ -689,7 +709,7 @@ function CoursesHome(params: CourseProps) {
                     action="create"
                     ressourceType="courses"
                     checkMethod="roles"
-                    orgId={params.org_id}
+                    orgId={orgId!}
                   >
                     <button onClick={() => setNewCourseModal(true)}>
                       <NewCourseButton />

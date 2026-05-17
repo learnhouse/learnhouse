@@ -11,6 +11,7 @@ from src.db.organization_config import OrganizationConfig, SeoOrgConfig
 from src.db.organizations import Organization, OrganizationCreate, OrganizationRead, OrganizationUpdate
 from src.services.orgs.orgs import (
     _build_org_read_with_resolved,
+    _get_org_config_cached,
     create_org,
     create_org_with_config,
     get_organization_by_slug,
@@ -387,6 +388,66 @@ class TestOrgConfigUpdates:
         with pytest.raises(HTTPException) as missing_exc:
             await get_org_join_mechanism(mock_request, 999, admin_user, db)
         assert missing_exc.value.status_code == 404
+
+
+class TestGetOrgConfigCached:
+    """Cover _get_org_config_cached cache-hit and exception-swallow paths."""
+
+    @pytest.mark.asyncio
+    async def test_returns_cached_org_config_on_cache_hit(self, db, org):
+        cached_data = {"org_id": org.id, "config": {"plan": "pro"}}
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=cached_data):
+            result = await _get_org_config_cached(org.id, db)
+        assert isinstance(result, OrganizationConfig)
+
+    @pytest.mark.asyncio
+    async def test_invalid_cache_data_falls_back_to_db(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={"not_a_valid": "config"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_set_cached_exception_is_swallowed(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value=None), \
+             patch("src.services.orgs.cache.set_cached_org_config", side_effect=RuntimeError("redis")):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_invalid_cached_data_exception_falls_back_to_db(self, db, org):
+        org_config = OrganizationConfig(
+            org_id=org.id,
+            config={"plan": "free"},
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db.add(org_config)
+        await db.commit()
+
+        # Dict with integer key causes TypeError on ** unpacking, exercising the except branch
+        with patch("src.services.orgs.cache.get_cached_org_config", return_value={1: "bad-key"}), \
+             patch("src.services.orgs.cache.set_cached_org_config"):
+            result = await _get_org_config_cached(org.id, db)
+        assert result is not None
 
 
 class TestBuildOrgReadWithResolved:

@@ -68,17 +68,27 @@ else:
     elif sql_url.startswith("postgres://"):
         sql_url = sql_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
-    # prepared_statement_cache_size=0: asyncpg uses named prepared statements by
-    # default, which break under PgBouncer/Supavisor in transaction or statement
-    # pool mode because prepared statements don't survive connection hand-offs.
-    # Setting this to 0 makes asyncpg use the unnamed prepared statement slot,
-    # which works correctly with any pooler and has negligible performance impact.
-    # prepared_statement_cache_size=0: disables SQLAlchemy's asyncpg adapter LRU cache.
-    # statement_cache_size=0: disables asyncpg's own internal named-statement cache
-    # (controls Connection.__execute__ → _get_statement path). Both are required when
-    # running behind Supavisor/PgBouncer in transaction pool mode — named prepared
-    # statements don't survive connection hand-offs across pooler backends.
-    _connect_args = {"prepared_statement_cache_size": 0, "statement_cache_size": 0}
+    # PgBouncer/Supavisor in transaction pool mode recycles backend connections
+    # between client requests, which breaks asyncpg's named prepared statements:
+    # two asyncpg connections independently generate __asyncpg_stmt_N__ and when
+    # PgBouncer routes them to the same backend, the second prepare fails with
+    # DuplicatePreparedStatementError.
+    #
+    # Root cause: asyncpg._prepare() does `named=True if name is None else name`.
+    # When SQLAlchemy calls prepare(query, name=None) (its default), asyncpg
+    # generates named statements (__asyncpg_stmt_N__) even when statement_cache_size=0.
+    # Passing name="" makes named="" (falsy) → asyncpg uses stmt_name='' (unnamed slot).
+    #
+    # All three connect_args are popped by SQLAlchemy's asyncpg dialect before
+    # forwarding to asyncpg.connect(), so they do NOT reach asyncpg as raw kwargs:
+    #   statement_cache_size=0           → disable asyncpg's own per-connection LRU
+    #   prepared_statement_name_func=""  → force unnamed prepared statements
+    #   prepared_statement_cache_size=0  → disable SQLAlchemy's adapter-level LRU
+    _connect_args = {
+        "statement_cache_size": 0,
+        "prepared_statement_name_func": lambda: "",
+        "prepared_statement_cache_size": 0,
+    }
 
     # Detect connection poolers (Supavisor, PgBouncer) to use a smaller
     # client-side pool so we don't overwhelm the pooler's upstream limit.

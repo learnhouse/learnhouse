@@ -8,6 +8,7 @@ import { getServerSession } from '@/lib/auth/server'
 import { getOrgSeoConfig, buildPageTitle } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
 
+
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -105,28 +106,12 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const CoursePage = async (params: any) => {
   const { courseuuid, orgslug } = await params.params
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-
-  let courseData = null
-  let serverError = null
-  try {
-    courseData = await getCourseMetadata(
-      courseuuid,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined,
-      { slim: true }
-    )
-  } catch (err: any) {
-    serverError = { status: err?.status || 500, message: err?.message }
-  }
-
   return (
     <CourseClient
       courseuuid={courseuuid}
       orgslug={orgslug}
-      course={courseData}
-      serverError={serverError}
+      course={null}
+      serverError={null}
     />
   )
 }

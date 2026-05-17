@@ -191,11 +191,24 @@ export function CourseProvider({
   // error (network, 500) we show a subtle inline message.
   if (error) {
     const status = (error as any)?.status
-    if (status === 403 || status === 404) return null
+    if (status === 403 || status === 404) {
+      // Still render the provider so children can call useCourse() without throwing —
+      // they'll see isLoading:false and courseStructure as the stub, and the parent
+      // page handles the access-denied redirect via useCourseRights.
+      return (
+        <CourseContext.Provider value={state}>
+          <CourseDispatchContext.Provider value={dispatch}>
+            {children}
+          </CourseDispatchContext.Provider>
+        </CourseContext.Provider>
+      )
+    }
     return <div className="p-4 text-center text-gray-500 text-sm">Failed to load course. Please refresh the page.</div>
   }
-  if (!effectiveData) return null
 
+  // Always render the provider — consumers use state.isLoading to show skeletons.
+  // Returning null here would unmount children before the context is provided,
+  // causing useCourse() to throw "must be used within a CourseProvider".
   return (
     <CourseContext.Provider value={state}>
       <CourseDispatchContext.Provider value={dispatch}>
