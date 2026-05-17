@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
@@ -110,10 +110,12 @@ function AccountPurchases({ orgId, orgslug }: AccountPurchasesProps) {
   const access_token = session?.data?.tokens?.access_token
   const [billingLoading, setBillingLoading] = useState(false)
 
-  const { data: enrollmentsResult, isLoading, error } = useSWR(
-    orgId && access_token ? [`/payments/${orgId}/enrollments/mine`, access_token] : null,
-    ([, token]) => getUserEnrollments(orgId, token)
-  )
+  const { data: enrollmentsResult, isLoading, error } = useQuery({
+    queryKey: ['payments', orgId, 'enrollments', 'mine'],
+    queryFn: () => getUserEnrollments(orgId, access_token),
+    enabled: !!orgId && !!access_token,
+    staleTime: 60_000,
+  })
 
   const enrollments: any[] = Array.isArray(enrollmentsResult?.data) ? enrollmentsResult.data : []
 

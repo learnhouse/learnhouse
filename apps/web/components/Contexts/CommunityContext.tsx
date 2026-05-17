@@ -1,10 +1,9 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Community } from '@services/communities/communities'
+import { Community, getCommunity } from '@services/communities/communities'
 
 interface CommunityState {
   community: Community | null
@@ -35,10 +34,12 @@ export function CommunityProvider({ children, communityuuid }: CommunityProvider
     ? communityuuid
     : `community_${communityuuid}`
 
-  const { data: communityData, error } = useSWR(
-    `${getAPIUrl()}communities/${fullCommunityUuid}`,
-    (url) => swrFetcher(url, access_token)
-  )
+  const { data: communityData, error } = useQuery({
+    queryKey: queryKeys.community.detail(fullCommunityUuid),
+    queryFn: () => getCommunity(fullCommunityUuid, null, access_token),
+    staleTime: 60_000,
+    enabled: !!(fullCommunityUuid && access_token),
+  })
 
   const initialState: CommunityState = {
     community: null,

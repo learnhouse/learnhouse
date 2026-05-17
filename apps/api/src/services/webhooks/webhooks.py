@@ -11,7 +11,8 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select, col
+from sqlmodel import select, col
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.organizations import Organization
 from src.db.webhooks import (
@@ -107,7 +108,7 @@ def _to_read(endpoint: WebhookEndpoint) -> WebhookEndpointRead:
 
 async def create_webhook_endpoint(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_object: WebhookEndpointCreate,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -116,10 +117,10 @@ async def create_webhook_endpoint(
     await authorization_verify_if_user_is_anon(acting_user_id)
 
     statement = select(Organization).where(Organization.id == org_id)
-    if not db_session.exec(statement).first():
+    if not (await db_session.execute(statement)).scalars().first():
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
     _validate_events(webhook_object.events)
     _validate_webhook_url(webhook_object.url)
 
@@ -140,8 +141,8 @@ async def create_webhook_endpoint(
     )
 
     db_session.add(endpoint)
-    db_session.commit()
-    db_session.refresh(endpoint)
+    await db_session.commit()
+    await db_session.refresh(endpoint)
 
     return WebhookEndpointCreatedResponse(
         webhook_uuid=endpoint.webhook_uuid,
@@ -157,37 +158,37 @@ async def create_webhook_endpoint(
 
 async def get_webhook_endpoints(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> List[WebhookEndpointRead]:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
     statement = select(WebhookEndpoint).where(WebhookEndpoint.org_id == org_id)
-    endpoints = db_session.exec(statement).all()
+    endpoints = (await db_session.execute(statement)).scalars().all()
     return [_to_read(ep) for ep in endpoints]
 
 
 async def get_webhook_endpoint(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> WebhookEndpointRead:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
     return _to_read(endpoint)
 
 
 async def update_webhook_endpoint(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     webhook_object: WebhookEndpointUpdate,
@@ -195,9 +196,9 @@ async def update_webhook_endpoint(
 ) -> WebhookEndpointRead:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
     is_zapier_managed = endpoint.source == "zapier"
 
@@ -224,50 +225,50 @@ async def update_webhook_endpoint(
 
     endpoint.update_date = str(datetime.now())
     db_session.add(endpoint)
-    db_session.commit()
-    db_session.refresh(endpoint)
+    await db_session.commit()
+    await db_session.refresh(endpoint)
 
     return _to_read(endpoint)
 
 
 async def delete_webhook_endpoint(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> dict:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
-    db_session.delete(endpoint)
-    db_session.commit()
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    await db_session.delete(endpoint)
+    await db_session.commit()
 
     return {"detail": "Webhook endpoint deleted successfully"}
 
 
 async def regenerate_webhook_secret(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
 ) -> WebhookEndpointCreatedResponse:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
     plaintext_secret = _generate_signing_secret()
     endpoint.secret_encrypted = encrypt_secret(plaintext_secret)
     endpoint.update_date = str(datetime.now())
 
     db_session.add(endpoint)
-    db_session.commit()
-    db_session.refresh(endpoint)
+    await db_session.commit()
+    await db_session.refresh(endpoint)
 
     return WebhookEndpointCreatedResponse(
         webhook_uuid=endpoint.webhook_uuid,
@@ -283,7 +284,7 @@ async def regenerate_webhook_secret(
 
 async def get_webhook_delivery_logs(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -291,9 +292,9 @@ async def get_webhook_delivery_logs(
 ) -> List[WebhookDeliveryLogRead]:
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
     statement = (
         select(WebhookDeliveryLog)
@@ -301,14 +302,14 @@ async def get_webhook_delivery_logs(
         .order_by(col(WebhookDeliveryLog.id).desc())
         .limit(min(limit, 200))
     )
-    logs = db_session.exec(statement).all()
+    logs = (await db_session.execute(statement)).scalars().all()
 
     return [WebhookDeliveryLogRead(**log.model_dump()) for log in logs]
 
 
 async def send_test_event(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser,
@@ -316,9 +317,9 @@ async def send_test_event(
     """Send a test 'ping' event to verify the webhook endpoint."""
     acting_user_id = resolve_acting_user_id(current_user)
     await authorization_verify_if_user_is_anon(acting_user_id)
-    require_org_admin(acting_user_id, org_id, db_session)
+    await require_org_admin(acting_user_id, org_id, db_session)
 
-    endpoint = _get_endpoint_or_404(db_session, org_id, webhook_uuid)
+    endpoint = await _get_endpoint_or_404(db_session, org_id, webhook_uuid)
 
     from src.services.webhooks.dispatch import dispatch_webhooks
 
@@ -337,14 +338,14 @@ async def send_test_event(
 # ---------------------------------------------------------------------------
 
 
-def _get_endpoint_or_404(
-    db_session: Session, org_id: int, webhook_uuid: str
+async def _get_endpoint_or_404(
+    db_session: AsyncSession, org_id: int, webhook_uuid: str
 ) -> WebhookEndpoint:
     statement = select(WebhookEndpoint).where(
         WebhookEndpoint.org_id == org_id,
         WebhookEndpoint.webhook_uuid == webhook_uuid,
     )
-    endpoint = db_session.exec(statement).first()
+    endpoint = (await db_session.execute(statement)).scalars().first()
     if not endpoint:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

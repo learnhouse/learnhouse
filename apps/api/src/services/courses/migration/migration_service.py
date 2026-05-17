@@ -13,7 +13,8 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 from fastapi import UploadFile
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course, ThumbnailType
@@ -373,7 +374,7 @@ def _fallback_structure(
 async def create_course_from_migration(
     org_id: int,
     current_user,
-    db_session: Session,
+    db_session: AsyncSession,
     temp_id: str,
     structure: MigrationTreeStructure,
 ) -> MigrationCreateResult:
@@ -397,7 +398,7 @@ async def create_course_from_migration(
 
     # Get org
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
     if not organization:
         raise ValueError("Organization not found")
 
@@ -426,7 +427,7 @@ async def create_course_from_migration(
             update_date=now,
         )
         db_session.add(course)
-        db_session.flush()
+        await db_session.flush()
 
         # Create resource author — resolve through helper so API-token
         # callers record their creator as the author instead of user_id=0.
@@ -463,7 +464,7 @@ async def create_course_from_migration(
                 update_date=now,
             )
             db_session.add(chapter)
-            db_session.flush()
+            await db_session.flush()
 
             course_chapter = CourseChapter(
                 course_id=course.id,
@@ -616,7 +617,7 @@ async def create_course_from_migration(
                     current_version=1,
                 )
                 db_session.add(activity)
-                db_session.flush()
+                await db_session.flush()
 
                 chapter_activity = ChapterActivity(
                     chapter_id=chapter.id,
@@ -635,7 +636,7 @@ async def create_course_from_migration(
 
                 activities_created += 1
 
-        db_session.commit()
+        await db_session.commit()
 
         # Clean up temp directory — temp_real already validated above
         shutil.rmtree(temp_real, ignore_errors=True)
@@ -649,7 +650,7 @@ async def create_course_from_migration(
         )
 
     except Exception as e:
-        db_session.rollback()
+        await db_session.rollback()
         logger.error("Migration course creation failed: %s", e, exc_info=True)
         # Clean up temp files on failure so they don't accumulate
         shutil.rmtree(temp_real, ignore_errors=True)

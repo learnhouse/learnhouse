@@ -22,9 +22,21 @@ export default function QuickStats() {
 
   if (statusLoading) {
     return (
-      <div className="bg-white rounded-xl nice-shadow p-5">
-        <div className="h-[120px] flex items-center justify-center text-gray-300 text-xs">
-          {t('dashboard.home.loading')}
+      <div className="bg-white rounded-xl nice-shadow p-5 animate-pulse">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-3.5 bg-gray-100 rounded w-24" />
+          <div className="h-3 bg-gray-100 rounded w-20" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 bg-gray-100 rounded-lg" />
+                <div className="h-2.5 bg-gray-100 rounded w-20" />
+              </div>
+              <div className="h-3.5 bg-gray-100 rounded w-8" />
+            </div>
+          ))}
         </div>
       </div>
     )

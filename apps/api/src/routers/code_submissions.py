@@ -2,9 +2,10 @@ from typing import Union
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func
-from sqlmodel import Session, select, col
+from sqlmodel import select, col
 from uuid import uuid4
 
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.code_submissions import CodeSubmission, CodeSubmissionRead
 from src.db.users import AnonymousUser, PublicUser
@@ -40,7 +41,7 @@ async def get_submission_history(
     page: int = 1,
     limit: int = 20,
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -57,7 +58,7 @@ async def get_submission_history(
         .offset(offset)
         .limit(limit)
     )
-    submissions = db_session.exec(statement).all()
+    submissions = (await db_session.execute(statement)).scalars().all()
 
     count_statement = (
         select(func.count(CodeSubmission.id))
@@ -67,7 +68,7 @@ async def get_submission_history(
             CodeSubmission.block_id == block_id,
         )
     )
-    total = db_session.exec(count_statement).one()
+    total = (await db_session.execute(count_statement)).scalar_one()
 
     return {
         "submissions": [
@@ -92,7 +93,7 @@ async def get_submission_history(
 async def save_submission(
     body: SaveSubmissionRequest,
     current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> CodeSubmissionRead:
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -111,6 +112,6 @@ async def save_submission(
         execution_time_ms=body.execution_time_ms,
     )
     db_session.add(submission)
-    db_session.commit()
-    db_session.refresh(submission)
+    await db_session.commit()
+    await db_session.refresh(submission)
     return CodeSubmissionRead.model_validate(submission)

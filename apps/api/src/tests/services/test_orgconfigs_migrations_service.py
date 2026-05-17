@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pytest
+
 from src.db.organization_config import OrganizationConfig
 from src.services.orgs import orgconfigs_migrations as migrations
 
@@ -50,7 +52,8 @@ def test_v2_migrate_config_returns_v2_payload_unchanged():
     assert migrations._v2_migrate_config(payload) is payload
 
 
-def test_v2_migrate_all_configs_migrates_and_patches_existing_v2(db):
+@pytest.mark.asyncio
+async def test_v2_migrate_all_configs_migrates_and_patches_existing_v2(db):
     v1_config = OrganizationConfig(
         org_id=1,
         config={
@@ -73,11 +76,11 @@ def test_v2_migrate_all_configs_migrates_and_patches_existing_v2(db):
     )
     db.add(v1_config)
     db.add(v2_config)
-    db.commit()
+    await db.commit()
 
-    migrated = migrations._v2_migrate_all_configs(db, batch_size=1)
+    migrated = await migrations._v2_migrate_all_configs(db, batch_size=1)
 
-    db.refresh(v1_config)
+    await db.refresh(v1_config)
     assert migrated == 2
     assert v1_config.config["config_version"] == "2.0"
     assert v1_config.config["admin_toggles"]["boards"]["disabled"] is True
@@ -88,7 +91,8 @@ def test_v2_migrate_all_configs_migrates_and_patches_existing_v2(db):
     assert v2_config.config["admin_toggles"]["collections"] == {"disabled": False}
 
 
-def test_v2_migrate_all_configs_continues_after_failure(db, monkeypatch):
+@pytest.mark.asyncio
+async def test_v2_migrate_all_configs_continues_after_failure(db, monkeypatch):
     broken = OrganizationConfig(
         org_id=3,
         config={"cloud": {"plan": "free"}},
@@ -103,7 +107,7 @@ def test_v2_migrate_all_configs_continues_after_failure(db, monkeypatch):
     )
     db.add(broken)
     db.add(healthy)
-    db.commit()
+    await db.commit()
 
     original = migrations._v2_migrate_config
 
@@ -114,10 +118,10 @@ def test_v2_migrate_all_configs_continues_after_failure(db, monkeypatch):
 
     monkeypatch.setattr(migrations, "_v2_migrate_config", flaky)
 
-    migrated = migrations._v2_migrate_all_configs(db, batch_size=10)
+    migrated = await migrations._v2_migrate_all_configs(db, batch_size=10)
 
-    db.refresh(broken)
-    db.refresh(healthy)
+    await db.refresh(broken)
+    await db.refresh(healthy)
 
     assert migrated == 1
     assert broken.config == {"cloud": {"plan": "free"}}

@@ -1,7 +1,8 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   BookOpen,
   Users,
@@ -12,8 +13,12 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { apiFetch } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getCommunities } from '@services/communities/communities'
+import { getBoards } from '@services/boards/boards'
+import { getOrgCourses } from '@services/courses/courses'
+import { getOrgPodcasts } from '@services/podcasts/podcasts'
 
 export default function ContentOverview() {
   const { t } = useTranslation()
@@ -31,52 +36,47 @@ export default function ContentOverview() {
   }
 
   // Courses
-  const { data: coursesData } = useSWR(
-    token && orgslug
-      ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: [...queryKeys.courses.list(orgslug), 'overview'],
+    queryFn: () => getOrgCourses(orgslug, null, token, true),
+    enabled: !!token && !!orgslug,
+    staleTime: 60_000,
+  })
 
   // Members
-  const { data: membersData } = useSWR(
-    token && orgId
-      ? `${getAPIUrl()}orgs/${orgId}/users?page=1&limit=1`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: membersData, isLoading: membersLoading } = useQuery({
+    queryKey: [...queryKeys.org.users(orgId), 'overview'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/users?page=1&limit=1`, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   // Communities
   const communitiesEnabled = isEnabled('communities')
-  const { data: communitiesData } = useSWR(
-    communitiesEnabled && token && orgId
-      ? `${getAPIUrl()}communities/org/${orgId}/page/1/limit/500`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: communitiesData } = useQuery({
+    queryKey: queryKeys.community.list(orgId),
+    queryFn: () => getCommunities(orgId, 1, 500, null, token),
+    enabled: !!communitiesEnabled && !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   // Podcasts
   const podcastsEnabled = isEnabled('podcasts', true)
-  const { data: podcastsData } = useSWR(
-    podcastsEnabled && token && orgslug
-      ? `${getAPIUrl()}podcasts/org_slug/${orgslug}/page/1/limit/100?include_unpublished=true`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: podcastsData } = useQuery({
+    queryKey: [...queryKeys.podcasts.list(orgslug), 'overview'],
+    queryFn: () => getOrgPodcasts(orgslug, null, token, true),
+    enabled: !!podcastsEnabled && !!token && !!orgslug,
+    staleTime: 60_000,
+  })
 
   // Boards
   const boardsEnabled = isEnabled('boards', true)
-  const { data: boardsData } = useSWR(
-    boardsEnabled && token && orgId
-      ? `${getAPIUrl()}boards/org/${orgId}`
-      : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: boardsData } = useQuery({
+    queryKey: [...queryKeys.boards.list(orgslug), 'overview'],
+    queryFn: () => getBoards(orgId, token),
+    enabled: !!boardsEnabled && !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   const courses: any[] = coursesData ?? []
   const totalMembers = membersData?.total ?? 0
@@ -141,6 +141,27 @@ export default function ContentOverview() {
   ]
 
   const visibleCards = cards.filter((c) => c.show)
+  const isLoading = coursesLoading || membersLoading
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="bg-white rounded-xl nice-shadow px-5 py-4 animate-pulse"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-gray-100 rounded-lg" />
+              <div className="h-2.5 bg-gray-100 rounded w-16" />
+            </div>
+            <div className="h-7 bg-gray-100 rounded w-10 mb-1.5" />
+            <div className="h-2 bg-gray-50 rounded w-24" />
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div

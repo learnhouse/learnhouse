@@ -2,7 +2,8 @@
 import React, { useState } from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   getOrgCustomers,
   getStripeOverview,
@@ -125,11 +126,12 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 // Overview tab
 // ---------------------------------------------------------------------------
 function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
-  const { data, error, isLoading } = useSWR(
-    [`/stripe/overview/${orgId}`, accessToken],
-    () => getStripeOverview(orgId, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['stripe', 'overview', orgId],
+    queryFn: () => getStripeOverview(orgId, accessToken),
+    enabled: !!(orgId && accessToken),
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
   if (error) return <StripeUnavailable />
@@ -188,11 +190,12 @@ function OverviewTab({ orgId, accessToken }: { orgId: number; accessToken: strin
 // Customers tab
 // ---------------------------------------------------------------------------
 function CustomersTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
-  const { data: customers, error, isLoading } = useSWR(
-    [`/payments/${orgId}/customers`, accessToken],
-    () => getOrgCustomers(orgId, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: customers, error, isLoading } = useQuery({
+    queryKey: queryKeys.payments.customers(orgId),
+    queryFn: () => getOrgCustomers(orgId, accessToken),
+    enabled: !!(orgId && accessToken),
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
   if (error) return <div className="p-6 text-sm text-red-500">Error loading customers</div>
@@ -292,11 +295,12 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
   const [cursor, setCursor] = useState<string | undefined>(undefined)
   const [cursorStack, setCursorStack] = useState<string[]>([])
 
-  const { data, error, isLoading } = useSWR(
-    [`/stripe/charges/${orgId}`, accessToken, cursor],
-    () => getStripeCharges(orgId, accessToken, 25, cursor),
-    { revalidateOnFocus: false }
-  )
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['stripe', 'charges', orgId, cursor],
+    queryFn: () => getStripeCharges(orgId, accessToken, 25, cursor),
+    enabled: !!(orgId && accessToken),
+    staleTime: 60_000,
+  })
 
   const goNext = () => {
     if (data?.next_cursor) {
@@ -384,11 +388,12 @@ function TransactionsTab({ orgId, accessToken }: { orgId: number; accessToken: s
 function SubscriptionsTab({ orgId, accessToken }: { orgId: number; accessToken: string }) {
   const [status, setStatus] = useState('active')
 
-  const { data, error, isLoading } = useSWR(
-    [`/stripe/subscriptions/${orgId}`, accessToken, status],
-    () => getStripeSubscriptions(orgId, accessToken, status),
-    { revalidateOnFocus: false }
-  )
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['stripe', 'subscriptions', orgId, status],
+    queryFn: () => getStripeSubscriptions(orgId, accessToken, status),
+    enabled: !!(orgId && accessToken),
+    staleTime: 60_000,
+  })
 
   const statuses = ['active', 'trialing', 'past_due', 'canceled', 'all']
 

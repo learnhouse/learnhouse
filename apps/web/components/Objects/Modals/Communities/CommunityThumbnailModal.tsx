@@ -7,6 +7,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { Community, updateCommunityThumbnail } from '@services/communities/communities'
 import { getCommunityThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,7 @@ export function CommunityThumbnailModal({
   const session = useLHSession() as any
   const router = useRouter()
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const accessToken = session?.data?.tokens?.access_token
   const imageInputRef = useRef<HTMLInputElement>(null)
 
@@ -123,6 +126,7 @@ export function CommunityThumbnailModal({
       )
 
       await revalidateTags(['communities'], orgSlug)
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
       await new Promise((r) => setTimeout(r, 1000))
 
       if (res.success === false) {

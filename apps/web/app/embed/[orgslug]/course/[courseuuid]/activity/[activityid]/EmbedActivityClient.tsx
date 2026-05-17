@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config'
 import Image from 'next/image'
 import { CourseContext, CourseDispatchContext } from '@components/Contexts/CourseContext'
+import { useActivity } from '@/hooks/queries/useActivity'
+import { useCourseMeta } from '@/hooks/queries/useCourses'
 
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
 const VideoActivity = lazy(() => import('@components/Objects/Activities/Video/Video'))
@@ -39,10 +41,10 @@ function EmbedCourseProvider({ children, course }: { children: React.ReactNode; 
 }
 
 interface EmbedActivityClientProps {
-  activity: any
-  course: any
   activityId: string
+  courseuuid: string
   orgslug: string
+  bgcolor: string | null
 }
 
 const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
@@ -116,24 +118,44 @@ function useContentReady(activityType: string, activitySubType?: string) {
   return { ready, containerRef }
 }
 
-function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedActivityClientProps) {
+function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: EmbedActivityClientProps) {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
   const showLearnHouseLogo = searchParams.get('showlearnhouselogo') !== 'false'
-  const bgColor = searchParams.get('bgcolor')
   const textColor = searchParams.get('textcolor')
-  const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
-  const { ready, containerRef } = useContentReady(activity.activity_type, activity.activity_sub_type)
+
+  const { data: activity, isLoading: activityLoading } = useActivity(activityId)
+  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
+
+  const isLoading = activityLoading || courseLoading
+  const { ready, containerRef } = useContentReady(
+    activity?.activity_type ?? '',
+    activity?.activity_sub_type,
+  )
 
   const getActivityUrl = () => {
-    const cleanCourseUuid = course.course_uuid.replace('course_', '')
+    const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
     return getUriWithOrg(orgslug, `/course/${cleanCourseUuid}/activity/${activityId}`)
   }
+
+  if (isLoading) {
+    return <div className="min-h-screen" />
+  }
+
+  if (!activity || activity.detail === 'Not Found' || !course || course.detail === 'Not Found') {
+    return null
+  }
+
+  if (!activity.published) {
+    return null
+  }
+
+  const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
 
   if (!isEmbeddable) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+        <div className="bg-white rounded-2xl nice-shadow p-8 max-w-md w-full text-center">
           <div className="mb-6">
             <Image
               src="/learnhouse_bigicon.png"
@@ -161,6 +183,13 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
         {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
       </div>
     )
+  }
+
+  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
+
+  const customStyles: React.CSSProperties = {
+    backgroundColor: bgcolor ?? defaultBg,
+    ...(textColor ? { color: `#${textColor}` } : {}),
   }
 
   const renderActivityContent = () => {
@@ -204,18 +233,10 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
     }
   }
 
-  const defaultBg = activity.activity_type === 'TYPE_DYNAMIC' ? '#ffffff' : '#09090b'
-
-  const customStyles: React.CSSProperties = {
-    backgroundColor: bgColor ? `#${bgColor}` : defaultBg,
-    ...(textColor ? { color: `#${textColor}` } : {}),
-  }
-
   return (
     <div className="min-h-screen relative" style={customStyles}>
       <div
         ref={containerRef}
-        className="p-4"
         style={{
           opacity: ready ? 1 : 0,
           transition: 'opacity 0.15s ease-in',

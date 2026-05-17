@@ -87,6 +87,29 @@ function PodcastOverviewHeader({
   const { t } = useTranslation()
   const { podcast, isLoading } = usePodcast()
 
+  if (isLoading) {
+    return (
+      <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative animate-pulse">
+        <div className="pt-6 pb-4">
+          <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-9 h-9 bg-gray-200 rounded-lg" />
+              <div className="h-7 w-48 bg-gray-200 rounded" />
+              <div className="h-5 w-16 bg-gray-100 rounded-full" />
+            </div>
+            <div className="h-4 w-28 bg-gray-100 rounded" />
+          </div>
+        </div>
+        <div className="flex space-x-3 pb-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-8 w-24 bg-gray-200 rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="pl-4 pr-4 sm:pl-10 sm:pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
       <div className="pt-6 pb-4">
@@ -98,7 +121,7 @@ function PodcastOverviewHeader({
               icon: <Headphones size={14} />,
             },
             {
-              label: isLoading ? '...' : podcast?.name || 'Podcast',
+              label: podcast?.name || 'Podcast',
               href: `/dash/podcasts/podcast/${params.podcastuuid}/general`,
             },
           ]}
@@ -112,7 +135,7 @@ function PodcastOverviewHeader({
               <ArrowLeft size={20} />
             </Link>
             <h1 className="text-2xl font-bold">
-              {isLoading ? '...' : podcast?.name || 'Podcast'}
+              {podcast?.name || 'Podcast'}
             </h1>
             {podcast && (
               <span

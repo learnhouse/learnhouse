@@ -49,8 +49,8 @@ from src.services.courses.courses import (
 )
 
 
-def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
-                 public=True, published=True):
+async def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
+                       public=True, published=True):
     """Helper to insert an additional course for multi-course tests."""
     c = Course(
         id=id,
@@ -65,8 +65,8 @@ def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
@@ -216,6 +216,8 @@ class TestGetCourseMeta:
     async def test_get_course_meta_skips_chapters_when_course_id_missing(
         self, org, mock_request, admin_user
     ):
+        from unittest.mock import AsyncMock as _AsyncMock, MagicMock
+
         course = Course(
             id=None,
             name="Detached Course",
@@ -229,8 +231,10 @@ class TestGetCourseMeta:
             update_date=str(datetime.now()),
         )
         fake_rows = [(course, None, None, org)]
-        fake_exec = Mock(all=Mock(return_value=fake_rows))
-        fake_db = Mock(exec=Mock(return_value=fake_exec))
+        execute_result = MagicMock()
+        execute_result.all.return_value = fake_rows
+        fake_db = MagicMock()
+        fake_db.execute = _AsyncMock(return_value=execute_result)
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -255,7 +259,12 @@ class TestGetCourseMeta:
 
     @pytest.mark.asyncio
     async def test_get_course_meta_not_found_raises(self, mock_request, admin_user):
-        fake_db = Mock(exec=Mock(return_value=Mock(all=Mock(return_value=[]))))
+        from unittest.mock import AsyncMock as _AsyncMock, MagicMock
+
+        execute_result = MagicMock()
+        execute_result.all.return_value = []
+        fake_db = MagicMock()
+        fake_db.execute = _AsyncMock(return_value=execute_result)
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -359,12 +368,12 @@ class TestGetCoursesOrgslug:
         self, db, org, course, anonymous_user, mock_request, bypass_rbac
     ):
         # Add a private course that anonymous users should NOT see
-        _make_course(db, org, id=10, name="Private Course",
-                     course_uuid="course_private", public=False, published=True)
+        await _make_course(db, org, id=10, name="Private Course",
+                           course_uuid="course_private", public=False, published=True)
 
         # Add an unpublished course that anonymous users should NOT see
-        _make_course(db, org, id=11, name="Unpublished Course",
-                     course_uuid="course_unpub", public=True, published=False)
+        await _make_course(db, org, id=11, name="Unpublished Course",
+                           course_uuid="course_unpub", public=True, published=False)
 
         with patch(
             "src.services.courses.cache.get_cached_courses_list", return_value=None
@@ -383,8 +392,8 @@ class TestGetCoursesOrgslug:
     async def test_get_courses_orgslug_pagination(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
-        _make_course(db, org, id=2, name="Course Two", course_uuid="course_2")
-        _make_course(db, org, id=3, name="Course Three", course_uuid="course_3")
+        await _make_course(db, org, id=2, name="Course Two", course_uuid="course_2")
+        await _make_course(db, org, id=3, name="Course Three", course_uuid="course_3")
 
         with patch(
             "src.services.courses.courses.is_user_superadmin", return_value=False
@@ -399,7 +408,7 @@ class TestGetCoursesOrgslug:
     async def test_get_courses_orgslug_include_unpublished_for_admin(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
-        _make_course(
+        await _make_course(
             db,
             org,
             id=12,
@@ -428,7 +437,7 @@ class TestGetCoursesOrgslug:
     async def test_get_courses_orgslug_include_unpublished_for_superadmin(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
-        _make_course(
+        await _make_course(
             db,
             org,
             id=13,
@@ -476,7 +485,7 @@ class TestGetCoursesOrgslug:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.is_user_superadmin", return_value=False
@@ -506,8 +515,8 @@ class TestGetCoursesCountOrgslug:
     async def test_get_courses_count_orgslug_excludes_private_for_anon(
         self, db, org, course, anonymous_user, mock_request
     ):
-        _make_course(db, org, id=20, name="Private", course_uuid="course_priv",
-                     public=False, published=True)
+        await _make_course(db, org, id=20, name="Private", course_uuid="course_priv",
+                           public=False, published=True)
 
         count = await get_courses_count_orgslug(
             mock_request, anonymous_user, "test-org", db
@@ -520,7 +529,7 @@ class TestGetCoursesCountOrgslug:
     async def test_get_courses_count_orgslug_superadmin_counts_all(
         self, db, org, course, admin_user, mock_request, bypass_rbac
     ):
-        _make_course(db, org, id=21, name="Hidden", course_uuid="course_hidden", public=False, published=False)
+        await _make_course(db, org, id=21, name="Hidden", course_uuid="course_hidden", public=False, published=False)
 
         with patch(
             "src.services.courses.courses.is_user_superadmin", return_value=True
@@ -562,7 +571,7 @@ class TestDeleteCourse:
         assert result == {"detail": "Course deleted"}
 
         # Verify the course is actually gone from the DB
-        remaining = db.get(Course, 1)
+        remaining = await db.get(Course, 1)
         assert remaining is None
 
     @pytest.mark.asyncio
@@ -670,7 +679,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.authorization_verify_if_user_is_anon",
@@ -696,7 +705,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -758,7 +767,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -784,7 +793,7 @@ class TestCourseMutationsAndRights:
     ):
         course.thumbnail_video = "existing.mp4"
         db.add(course)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -822,7 +831,7 @@ class TestCourseMutationsAndRights:
         )
         course.published = False
         db.add(course)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -860,7 +869,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.security.rbac.rbac.authorization_verify_based_on_org_admin_status",
@@ -926,11 +935,11 @@ class TestCourseMutationsAndRights:
                 thumbnail_type=ThumbnailType.VIDEO,
             )
 
-        author = db.exec(
+        author = (await db.execute(
             select(ResourceAuthor).where(
                 ResourceAuthor.resource_uuid == created.course_uuid
             )
-        ).first()
+        )).scalars().first()
 
         assert created.thumbnail_video == "thumb.mp4"
         assert created.thumbnail_type == ThumbnailType.VIDEO
@@ -995,7 +1004,7 @@ class TestCourseMutationsAndRights:
         course.thumbnail_video = "intro.mp4"
         course.thumbnail_type = ThumbnailType.BOTH
         db.add(course)
-        db.commit()
+        await db.commit()
 
         chapter = Chapter(
             name="Clone Chapter",
@@ -1008,8 +1017,8 @@ class TestCourseMutationsAndRights:
             update_date=str(datetime.now()),
         )
         db.add(chapter)
-        db.commit()
-        db.refresh(chapter)
+        await db.commit()
+        await db.refresh(chapter)
 
         db.add(
             CourseChapter(
@@ -1036,8 +1045,8 @@ class TestCourseMutationsAndRights:
             update_date=str(datetime.now()),
         )
         db.add(activity)
-        db.commit()
-        db.refresh(activity)
+        await db.commit()
+        await db.refresh(activity)
 
         db.add(
             ChapterActivity(
@@ -1063,7 +1072,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         token_user = APITokenUser(
             org_id=org.id,
@@ -1102,14 +1111,14 @@ class TestCourseMutationsAndRights:
                 db,
             )
 
-        cloned_course = db.exec(
+        cloned_course = (await db.execute(
             select(Course).where(Course.course_uuid == cloned.course_uuid)
-        ).first()
-        cloned_author = db.exec(
+        )).scalars().first()
+        cloned_author = (await db.execute(
             select(ResourceAuthor).where(
                 ResourceAuthor.resource_uuid == cloned.course_uuid
             )
-        ).first()
+        )).scalars().first()
 
         assert cloned.name == "Test Course (Copy)"
         assert cloned.public is False
@@ -1157,7 +1166,7 @@ class TestCourseMutationsAndRights:
             update_date=str(datetime.now()),
         )
         db.add(orphan)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -1208,11 +1217,11 @@ class TestCourseMutationsAndRights:
                 db,
             )
 
-        author = db.exec(
+        author = (await db.execute(
             select(ResourceAuthor).where(
                 ResourceAuthor.resource_uuid == cloned.course_uuid
             )
-        ).first()
+        )).scalars().first()
 
         assert cloned.name == "Test Course (Copy)"
         assert author is not None
@@ -1233,8 +1242,8 @@ class TestCourseMutationsAndRights:
             update_date=str(datetime.now()),
         )
         db.add(chapter)
-        db.commit()
-        db.refresh(chapter)
+        await db.commit()
+        await db.refresh(chapter)
 
         db.add(
             CourseChapter(
@@ -1261,8 +1270,8 @@ class TestCourseMutationsAndRights:
             update_date=str(datetime.now()),
         )
         db.add(activity)
-        db.commit()
-        db.refresh(activity)
+        await db.commit()
+        await db.refresh(activity)
 
         db.add(
             ChapterActivity(
@@ -1301,7 +1310,7 @@ class TestCourseMutationsAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.check_resource_access",
@@ -1374,8 +1383,8 @@ class TestSearchCourses:
     async def test_search_courses_anonymous_excludes_private(
         self, db, org, course, anonymous_user, mock_request
     ):
-        _make_course(db, org, id=30, name="Secret Stuff",
-                     course_uuid="course_secret", public=False, published=True)
+        await _make_course(db, org, id=30, name="Secret Stuff",
+                           course_uuid="course_secret", public=False, published=True)
 
         result = await search_courses(
             mock_request, anonymous_user, "test-org", "Secret", db
@@ -1388,7 +1397,7 @@ class TestSearchCourses:
     async def test_search_courses_authenticated_author_sees_unpublished(
         self, db, org, regular_user, mock_request
     ):
-        authored = _make_course(
+        authored = await _make_course(
             db,
             org,
             id=31,
@@ -1407,7 +1416,7 @@ class TestSearchCourses:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.courses.is_user_superadmin", return_value=False
@@ -1436,7 +1445,7 @@ class TestSearchCourses:
     async def test_search_courses_finds_emoji_in_name(
         self, db, org, anonymous_user, mock_request
     ):
-        _make_course(
+        await _make_course(
             db, org, id=40,
             name="Rocket Course \U0001f680",
             course_uuid="course_emoji",
@@ -1455,7 +1464,7 @@ class TestSearchCourses:
         self, db, org, anonymous_user, mock_request
     ):
         # Stored name is NFC; query is NFD ("cafe" + combining acute).
-        _make_course(
+        await _make_course(
             db, org, id=41,
             name="café Brewing",
             course_uuid="course_cafe",
@@ -1475,13 +1484,13 @@ class TestSearchCourses:
     ):
         # A literal "%" in the query must not act as a wildcard. Only the row
         # whose name actually contains "%" should match.
-        _make_course(
+        await _make_course(
             db, org, id=42,
             name="100% Practical",
             course_uuid="course_percent",
             public=True, published=True,
         )
-        _make_course(
+        await _make_course(
             db, org, id=43,
             name="Theoretical Course",
             course_uuid="course_theory",
@@ -1503,13 +1512,13 @@ class TestSearchCourses:
         # `_` in LIKE matches a single character. The escape must make it
         # literal so "a_b" only matches names that actually contain "a_b",
         # not "aXb".
-        _make_course(
+        await _make_course(
             db, org, id=44,
             name="snake_case Module",
             course_uuid="course_snake",
             public=True, published=True,
         )
-        _make_course(
+        await _make_course(
             db, org, id=45,
             name="snakeXcase Module",
             course_uuid="course_snakeX",
@@ -1530,7 +1539,7 @@ class TestSearchCourses:
     ):
         # User typing a backslash should not break the query or trigger
         # SQL errors. The course with a backslash in its name should match.
-        _make_course(
+        await _make_course(
             db, org, id=46,
             name="C:\\path course",
             course_uuid="course_backslash",
@@ -1550,7 +1559,7 @@ class TestSearchCourses:
     ):
         # ZWJ family sequence: 👨‍👩‍👧  (U+1F468 U+200D U+1F469 U+200D U+1F467).
         family = "\U0001f468‍\U0001f469‍\U0001f467"
-        _make_course(
+        await _make_course(
             db, org, id=47,
             name=f"Parenting {family} 101",
             course_uuid="course_zwj_family",
@@ -1570,7 +1579,7 @@ class TestSearchCourses:
     ):
         # Waving hand + medium-light skin tone modifier.
         waving = "\U0001f44b\U0001f3fb"
-        _make_course(
+        await _make_course(
             db, org, id=48,
             name=f"Welcome {waving} aboard",
             course_uuid="course_skin_tone",
@@ -1626,7 +1635,7 @@ class TestGetUserCoursesAndRights:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.security.rbac.rbac.authorization_verify_based_on_org_admin_status",
@@ -1785,11 +1794,14 @@ class TestGetUserCoursesAndRights:
         self, db, org, admin_user, mock_request
     ):
         """Cover lines 668-670: db_session.rollback() and re-raise when commit fails."""
-        from unittest.mock import MagicMock
+        from unittest.mock import AsyncMock as _AsyncMock, MagicMock
 
         mock_db = MagicMock()
-        mock_db.exec.return_value.first.return_value = org
-        mock_db.flush.side_effect = Exception("DB constraint violation")
+        execute_result = MagicMock()
+        execute_result.scalars.return_value.first.return_value = org
+        mock_db.execute = _AsyncMock(return_value=execute_result)
+        mock_db.flush = _AsyncMock(side_effect=Exception("DB constraint violation"))
+        mock_db.rollback = _AsyncMock()
 
         with patch(
             "src.services.courses.courses.check_resource_access",

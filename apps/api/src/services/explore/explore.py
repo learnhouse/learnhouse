@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import func, cast, String, literal
 
 from src.db.courses.courses import Course, CourseRead, AuthorWithRole
@@ -28,7 +29,7 @@ def _get_sort_expression(salt: str):
 
 async def get_orgs_for_explore(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
     label: str = "",
@@ -60,8 +61,8 @@ async def get_orgs_for_explore(
         .limit(limit)
     )
 
-    result = db_session.exec(statement)
-    orgs = result.all()
+    result = await db_session.execute(statement)
+    orgs = result.scalars().all()
 
     return [OrganizationRead.model_validate(org) for org in orgs]
 
@@ -69,14 +70,14 @@ async def get_orgs_for_explore(
 
 async def get_courses_for_an_org_explore(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     org_uuid: str,
     page: int = 1,
     limit: int = 30,
 ) -> list[CourseRead]:
     statement = select(Organization).where(Organization.org_uuid == org_uuid)
-    result = db_session.exec(statement)
-    org = result.first()
+    result = await db_session.execute(statement)
+    org = result.scalars().first()
 
     if not org:
         raise HTTPException(
@@ -93,18 +94,18 @@ async def get_courses_for_an_org_explore(
         .offset((page - 1) * limit)
         .limit(limit)
     )
-    result = db_session.exec(statement)
-    return list(result.all())
+    result = await db_session.execute(statement)
+    return list(result.scalars().all())
 
 async def get_course_for_explore(
     request: Request,
-    course_id: str,
-    db_session: Session,
+    course_id: int,
+    db_session: AsyncSession,
 ) -> CourseRead:
     statement = select(Course).where(Course.id == course_id)
-    result = db_session.exec(statement)
-    
-    course = result.first()
+    result = await db_session.execute(statement)
+
+    course = result.scalars().first()
 
     if not course:
         raise HTTPException(
@@ -118,7 +119,7 @@ async def get_course_for_explore(
         .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
-    author_results = db_session.exec(authors_statement).all()
+    author_results = (await db_session.execute(authors_statement)).all()
 
     # Convert to AuthorWithRole objects
     authors = [
@@ -136,7 +137,7 @@ async def get_course_for_explore(
 
 async def search_orgs_for_explore(
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     search_query: str,
     label: Optional[str] = None,
     page: int = 1,
@@ -156,7 +157,7 @@ async def search_orgs_for_explore(
             (Organization.description.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) | #type: ignore
             (Organization.label.ilike(term_pattern, escape=LIKE_ESCAPE_CHAR)) #type: ignore
         )
-    
+
     statement = (
         select(Organization)
         .where(Organization.explore == True)
@@ -177,26 +178,25 @@ async def search_orgs_for_explore(
         .offset((page - 1) * limit)
         .limit(limit)
     )
-    
-    result = db_session.exec(statement)
-    orgs = result.all()
+
+    result = await db_session.execute(statement)
+    orgs = result.scalars().all()
 
     return [OrganizationRead.model_validate(org) for org in orgs]
 
 async def get_org_for_explore(
     request: Request,
     org_slug: str,
-    db_session: Session,
+    db_session: AsyncSession,
  ) -> OrganizationRead:
     statement = select(Organization).where(Organization.slug == org_slug)
-    result = db_session.exec(statement)
-    org = result.first()
+    result = await db_session.execute(statement)
+    org = result.scalars().first()
 
     if not org:
         raise HTTPException(
             status_code=404,
             detail="Organization not found",
         )
-    
+
     return OrganizationRead.model_validate(org)
-    

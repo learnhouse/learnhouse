@@ -7,11 +7,12 @@ import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Form
 from pydantic import BaseModel
-from sqlmodel import Session
+
 from typing import Optional, Union
 import httpx
 
 from config.config import get_learnhouse_config
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import APITokenUser, PublicUser
 from src.security.auth import get_authenticated_user
@@ -147,7 +148,7 @@ async def _require_course_access(
     current_user: Union[PublicUser, APITokenUser],
     course_uuid: str,
     action: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """
     Verify the caller has the requested RBAC action on the given course.
@@ -259,7 +260,7 @@ async def execute_code(
     request: Request,
     body: ExecuteRequest,
     current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
 
@@ -306,7 +307,7 @@ async def execute_batch(
     request: Request,
     body: ExecuteBatchRequest,
     current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     judge0_cfg = _get_judge0_config()
 
@@ -392,7 +393,7 @@ async def upload_sqlite_db(
     org_uuid: str = Form(),
     course_uuid: str = Form(),
     current_user: Union[PublicUser, APITokenUser] = Depends(get_authenticated_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Upload a SQLite database file for a code playground block.
 

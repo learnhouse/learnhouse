@@ -4,13 +4,14 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { Check, Globe, SquareUserRound, Users, X } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 type EditCourseAccessProps = {
@@ -98,13 +99,17 @@ function EditCourseAccess(props: EditCourseAccessProps) {
         isSaving,
     } = useCourseFieldSync('editCourseAccess');
 
-    const { data: usergroups } = useSWR(
-        courseStructure?.course_uuid && org?.id
-            ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}`
-            : null,
-        (url) => swrFetcher(url, access_token),
-        { revalidateOnFocus: false }
-    );
+    const queryClient = useQueryClient()
+
+    const { data: usergroups } = useQuery({
+        queryKey: queryKeys.courseUsergroups.resources(courseStructure?.course_uuid ?? '', org?.id ?? 0),
+        queryFn: () => apiFetch(
+            `${getAPIUrl()}usergroups/resource/${courseStructure!.course_uuid}?org_id=${org.id}`,
+            access_token
+        ),
+        enabled: !!(courseStructure?.course_uuid && org?.id && access_token),
+        staleTime: 60_000,
+    });
 
     const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined);
     const hasInitializedRef = useRef(false);
@@ -232,6 +237,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const org = useOrg() as any;
+    const queryClient = useQueryClient();
 
     const removeUserGroupLink = async (usergroup_id: number) => {
         try {
@@ -243,7 +249,9 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
             );
             if (res.status === 200) {
                 toast.success(t('dashboard.courses.access.usergroups.toasts.unlink_success'));
-                mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}?org_id=${org.id}`);
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.courseUsergroups.resources(course.courseStructure.course_uuid, org.id),
+                });
             } else {
                 toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }));
             }

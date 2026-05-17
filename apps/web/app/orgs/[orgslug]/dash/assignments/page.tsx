@@ -2,10 +2,12 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config';
+import { getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
-import { swrFetcher } from '@services/utils/ts/requests';
+import { getOrgCourses } from '@services/courses/courses';
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import {
   ALargeSmall,
   Backpack,
@@ -27,7 +29,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { useMemo, useState } from 'react'
-import useSWR from 'swr';
 import { useTranslation } from 'react-i18next';
 
 type StatusFilter = 'all' | 'published' | 'drafts';
@@ -68,24 +69,27 @@ function AssignmentsHome() {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
-  const { data: courses } = useSWR(
-    org?.slug && access_token ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/50` : null,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
 
-  // Fetch all course assignments in a single SWR call to avoid N+1 requests
+  const { data: courses } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug ?? ''),
+    queryFn: () => getOrgCourses(org.slug, {}, access_token, true),
+    enabled: !!(org?.slug && access_token),
+    staleTime: 60_000,
+  })
+
+  // Fetch all course assignments in a single query call to avoid N+1 requests
   const courseUuids = useMemo(() => courses?.map((c: any) => c.course_uuid) || [], [courses])
-  const { data: courseAssignments } = useSWR(
-    courseUuids.length > 0 && access_token ? ['assignments-all', ...courseUuids] : null,
-    async () => {
+  const { data: courseAssignments } = useQuery({
+    queryKey: ['assignments-all', ...courseUuids],
+    queryFn: async () => {
       const results = await Promise.all(
         courseUuids.map((uuid: string) => getAssignmentsFromACourse(uuid, access_token))
       )
       return results.map((res: any) => res.data)
     },
-    { revalidateOnFocus: false }
-  )
+    enabled: courseUuids.length > 0 && !!access_token,
+    staleTime: 60_000,
+  })
 
   // === Filter / search state ===
   const [searchQuery, setSearchQuery] = useState('')
@@ -241,8 +245,46 @@ function AssignmentsHome() {
 
         {/* Content */}
         {!courseAssignments && (
-          <div className='flex items-center justify-center py-16 text-sm text-gray-400 font-medium'>
-            {t('dashboard.assignments.home.loading')}
+          <div className="animate-pulse space-y-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex flex-col space-y-3">
+                {/* Course header skeleton */}
+                <div className="flex items-center justify-between gap-3 px-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[70px] h-[40px] bg-gray-200 rounded-lg shrink-0" />
+                    <div className="flex flex-col gap-1.5">
+                      <div className="h-2.5 bg-gray-200 rounded w-16" />
+                      <div className="h-5 bg-gray-200 rounded w-48" />
+                    </div>
+                  </div>
+                  <div className="h-8 bg-gray-200 rounded-lg w-32" />
+                </div>
+                {/* Assignment cards skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="bg-white nice-shadow rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 bg-gray-100 rounded-full w-20" />
+                        <div className="h-3 bg-gray-100 rounded w-16" />
+                      </div>
+                      <div className="h-5 bg-gray-200 rounded w-3/4" />
+                      <div className="space-y-1.5">
+                        <div className="h-3 bg-gray-100 rounded w-full" />
+                        <div className="h-3 bg-gray-100 rounded w-2/3" />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="h-5 bg-gray-100 rounded-full w-20" />
+                        <div className="h-5 bg-gray-100 rounded-full w-16" />
+                      </div>
+                      <div className="flex gap-2 pt-3 border-t border-gray-100">
+                        <div className="h-6 bg-gray-100 rounded-full w-20" />
+                        <div className="h-6 bg-gray-100 rounded-full w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

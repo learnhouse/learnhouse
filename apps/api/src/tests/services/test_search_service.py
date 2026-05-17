@@ -24,7 +24,7 @@ from src.services.search.normalization import (
 )
 
 
-def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
+async def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
                  public=True, published=True):
     """Helper to insert an additional course."""
     c = Course(
@@ -40,12 +40,12 @@ def _make_course(db, org, *, id, name="Extra Course", course_uuid=None,
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
-def _make_collection(db, org, *, id, name="Extra Collection",
+async def _make_collection(db, org, *, id, name="Extra Collection",
                      collection_uuid=None, public=True):
     """Helper to insert an additional collection."""
     c = Collection(
@@ -59,8 +59,8 @@ def _make_collection(db, org, *, id, name="Extra Collection",
         update_date=str(datetime.now()),
     )
     db.add(c)
-    db.commit()
-    db.refresh(c)
+    await db.commit()
+    await db.refresh(c)
     return c
 
 
@@ -100,7 +100,7 @@ class TestSearchAcrossOrg:
     async def test_search_finds_collections_by_name(
         self, db, org, anonymous_user, mock_request
     ):
-        _make_collection(
+        await _make_collection(
             db, org, id=70, name="Searchable Bundle",
             collection_uuid="collection_searchable", public=True,
         )
@@ -313,7 +313,7 @@ class TestSearchAcrossOrg:
             update_date=str(datetime.now()),
         )
         db.add(pg)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.search.search.search_courses",
@@ -340,7 +340,7 @@ class TestSearchAcrossOrg:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.search.search.search_courses",
@@ -409,7 +409,7 @@ class TestSearchUnicodeMatching:
     async def test_search_finds_collection_with_emoji_in_name(
         self, db, org, anonymous_user, mock_request
     ):
-        _make_collection(
+        await _make_collection(
             db, org, id=71,
             name="Rocket Bundle \U0001f680",
             collection_uuid="collection_emoji",
@@ -432,7 +432,7 @@ class TestSearchUnicodeMatching:
         self, db, org, anonymous_user, mock_request
     ):
         # Stored as NFC ("café"); user query is NFD ("cafe" + U+0301).
-        _make_collection(
+        await _make_collection(
             db, org, id=72,
             name="café club",
             collection_uuid="collection_cafe",

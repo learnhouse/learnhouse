@@ -185,7 +185,35 @@ function EditCourseSEO(props: EditCourseSEOProps) {
   // useCourseFieldSync flushes pending edits on unmount, so no local cleanup.
 
   if (isLoading || !courseStructure) {
-    return <div>{t('dashboard.courses.settings.loading')}</div>;
+    return (
+      <div>
+        <div className="h-6" />
+        <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
+          <div className="animate-pulse space-y-6">
+            <div className="flex flex-col bg-gray-50 px-3 sm:px-5 py-3 rounded-md space-y-2">
+              <div className="h-5 bg-gray-200 rounded w-40" />
+              <div className="h-3 bg-gray-100 rounded w-64" />
+            </div>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-28" />
+                <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              </div>
+            ))}
+            <div className="flex flex-col bg-gray-50 px-3 sm:px-5 py-3 rounded-md space-y-2">
+              <div className="h-5 bg-gray-200 rounded w-40" />
+              <div className="h-3 bg-gray-100 rounded w-64" />
+            </div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-28" />
+                <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const CharacterCounter = ({ current, max }: { current: number, max: number }) => (

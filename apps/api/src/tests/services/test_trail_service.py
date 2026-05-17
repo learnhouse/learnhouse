@@ -26,7 +26,7 @@ from src.services.trail.trail import (
 )
 
 
-def _make_course(db, org, *, id, course_uuid, name):
+async def _make_course(db, org, *, id, course_uuid, name):
     course = Course(
         id=id,
         name=name,
@@ -40,12 +40,12 @@ def _make_course(db, org, *, id, course_uuid, name):
         update_date=str(datetime.now()),
     )
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
     return course
 
 
-def _make_trail(db, org, user, *, trail_uuid="trail_test"):
+async def _make_trail(db, org, user, *, trail_uuid="trail_test"):
     trail = Trail(
         org_id=org.id,
         user_id=user.id,
@@ -54,12 +54,12 @@ def _make_trail(db, org, user, *, trail_uuid="trail_test"):
         update_date=str(datetime.now()),
     )
     db.add(trail)
-    db.commit()
-    db.refresh(trail)
+    await db.commit()
+    await db.refresh(trail)
     return trail
 
 
-def _make_trail_run(db, trail, course, user):
+async def _make_trail_run(db, trail, course, user):
     trail_run = TrailRun(
         trail_id=trail.id,
         course_id=course.id,
@@ -69,12 +69,12 @@ def _make_trail_run(db, trail, course, user):
         update_date=str(datetime.now()),
     )
     db.add(trail_run)
-    db.commit()
-    db.refresh(trail_run)
+    await db.commit()
+    await db.refresh(trail_run)
     return trail_run
 
 
-def _make_trail_step(db, trail, trail_run, activity, course, user):
+async def _make_trail_step(db, trail, trail_run, activity, course, user):
     trail_step = TrailStep(
         trailrun_id=trail_run.id,
         trail_id=trail.id,
@@ -89,12 +89,12 @@ def _make_trail_step(db, trail, trail_run, activity, course, user):
         update_date=str(datetime.now()),
     )
     db.add(trail_step)
-    db.commit()
-    db.refresh(trail_step)
+    await db.commit()
+    await db.refresh(trail_step)
     return trail_step
 
 
-def _make_bogus_activity(db, org, *, activity_uuid, course_id):
+async def _make_bogus_activity(db, org, *, activity_uuid, course_id):
     activity = Activity(
         id=99,
         name="Bogus Activity",
@@ -109,8 +109,8 @@ def _make_bogus_activity(db, org, *, activity_uuid, course_id):
         update_date=str(datetime.now()),
     )
     db.add(activity)
-    db.commit()
-    db.refresh(activity)
+    await db.commit()
+    await db.refresh(activity)
     return activity
 
 
@@ -119,16 +119,16 @@ class TestTrailService:
     async def test_build_trail_read_handles_empty_and_populated_runs(
         self, db, org, course, activity, admin_user
     ):
-        trail = _make_trail(db, org, admin_user)
-        extra_course = _make_course(
+        trail = await _make_trail(db, org, admin_user)
+        extra_course = await _make_course(
             db,
             org,
             id=2,
             course_uuid="course_extra",
             name="Extra Course",
         )
-        trail_run = _make_trail_run(db, trail, course, admin_user)
-        _make_trail_step(db, trail, trail_run, activity, extra_course, admin_user)
+        trail_run = await _make_trail_run(db, trail, course, admin_user)
+        await _make_trail_step(db, trail, trail_run, activity, extra_course, admin_user)
 
         trail_payload = {
             "id": trail.id,
@@ -140,8 +140,8 @@ class TestTrailService:
         }
         trail_like = SimpleNamespace(model_dump=lambda: trail_payload)
 
-        empty = _build_trail_read(trail_like, [], db)
-        populated = _build_trail_read(
+        empty = await _build_trail_read(trail_like, [], db)
+        populated = await _build_trail_read(
             trail_like,
             [trail_run],
             db,
@@ -194,7 +194,7 @@ class TestTrailService:
         with pytest.raises(HTTPException) as missing_exc:
             await get_user_trails(mock_request, admin_user, db)
 
-        trail = _make_trail(db, org, admin_user)
+        trail = await _make_trail(db, org, admin_user)
         trail_read = await get_user_trail_with_orgid(
             mock_request, admin_user, org.id, db
         )
@@ -241,8 +241,8 @@ class TestTrailService:
         assert len(second.runs) == 1
         assert mock_track.await_count == 2
         assert mock_webhooks.await_count == 2
-        assert db.exec(TrailRun.__table__.select()).all()
-        assert db.exec(TrailStep.__table__.select()).all()
+        assert (await db.execute(TrailRun.__table__.select())).all()
+        assert (await db.execute(TrailStep.__table__.select())).all()
 
     @pytest.mark.asyncio
     async def test_add_activity_to_trail_rejects_missing_activity_and_course(
@@ -256,7 +256,7 @@ class TestTrailService:
                 db,
             )
 
-        _make_bogus_activity(db, org, activity_uuid="bogus-activity", course_id=999)
+        await _make_bogus_activity(db, org, activity_uuid="bogus-activity", course_id=999)
 
         with pytest.raises(HTTPException) as missing_course_exc:
             await add_activity_to_trail(
@@ -281,7 +281,7 @@ class TestTrailService:
                 db,
             )
 
-        bogus_activity = _make_bogus_activity(
+        bogus_activity = await _make_bogus_activity(
             db, org, activity_uuid="bogus-remove", course_id=999
         )
 
@@ -293,9 +293,9 @@ class TestTrailService:
                 db,
             )
 
-        trail = _make_trail(db, org, admin_user)
-        trail_run = _make_trail_run(db, trail, course, admin_user)
-        _make_trail_step(db, trail, trail_run, activity, course, admin_user)
+        trail = await _make_trail(db, org, admin_user)
+        trail_run = await _make_trail_run(db, trail, course, admin_user)
+        await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 
         removed = await remove_activity_from_trail(
             mock_request,
@@ -308,30 +308,30 @@ class TestTrailService:
         assert missing_course_exc.value.status_code == 404
         assert len(removed.runs) == 1
         assert removed.runs[0].steps == []
-        assert db.exec(
+        assert (await db.execute(
             TrailStep.__table__.select().where(TrailStep.activity_id == activity.id)
-        ).all() == []
+        )).all() == []
 
     @pytest.mark.asyncio
     async def test_add_course_to_trail_creates_run_and_rejects_duplicates(
         self, db, org, admin_user, mock_request
     ):
-        trail = _make_trail(db, org, admin_user)
-        course_a = _make_course(
+        trail = await _make_trail(db, org, admin_user)
+        course_a = await _make_course(
             db,
             org,
             id=2,
             course_uuid="course_a",
             name="Course A",
         )
-        course_b = _make_course(
+        course_b = await _make_course(
             db,
             org,
             id=3,
             course_uuid="course_b",
             name="Course B",
         )
-        _make_trail_run(db, trail, course_b, admin_user)
+        await _make_trail_run(db, trail, course_b, admin_user)
 
         with pytest.raises(HTTPException) as missing_course_exc:
             await add_course_to_trail(
@@ -373,7 +373,7 @@ class TestTrailService:
     async def test_add_course_to_trail_rejects_missing_trail(
         self, db, org, admin_user, mock_request
     ):
-        course = _make_course(
+        course = await _make_course(
             db,
             org,
             id=2,
@@ -411,10 +411,10 @@ class TestTrailService:
                 db,
             )
 
-        trail = _make_trail(db, org, admin_user)
-        trail_run = _make_trail_run(db, trail, course, admin_user)
-        _make_trail_step(db, trail, trail_run, activity, course, admin_user)
-        _make_trail_step(db, trail, trail_run, activity, course, admin_user)
+        trail = await _make_trail(db, org, admin_user)
+        trail_run = await _make_trail_run(db, trail, course, admin_user)
+        await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
+        await _make_trail_step(db, trail, trail_run, activity, course, admin_user)
 
         removed = await remove_course_from_trail(
             mock_request,
@@ -426,12 +426,12 @@ class TestTrailService:
         assert missing_course_exc.value.status_code == 404
         assert missing_trail_exc.value.status_code == 404
         assert removed.runs == []
-        assert db.exec(
+        assert (await db.execute(
             TrailRun.__table__.select().where(TrailRun.course_id == course.id)
-        ).all() == []
-        assert db.exec(
+        )).all() == []
+        assert (await db.execute(
             TrailStep.__table__.select().where(TrailStep.course_id == course.id)
-        ).all() == []
+        )).all() == []
 
     @pytest.mark.asyncio
     async def test_remove_activity_from_trail_raises_when_no_trail(

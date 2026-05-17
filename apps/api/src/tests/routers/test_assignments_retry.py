@@ -48,7 +48,7 @@ from src.services.courses.activities.assignments import (
 
 
 @pytest.fixture
-def assignment(db, org, course, chapter, activity):
+async def assignment(db, org, course, chapter, activity):
     """Assignment row with retries allowed by default."""
     a = Assignment(
         id=1,
@@ -71,13 +71,13 @@ def assignment(db, org, course, chapter, activity):
         update_date=str(datetime.now()),
     )
     db.add(a)
-    db.commit()
-    db.refresh(a)
+    await db.commit()
+    await db.refresh(a)
     return a
 
 
 @pytest.fixture
-def assignment_task(db, org, course, chapter, activity, assignment):
+async def assignment_task(db, org, course, chapter, activity, assignment):
     """One task hung off the assignment so retry has something to wipe."""
     t = AssignmentTask(
         id=1,
@@ -98,12 +98,12 @@ def assignment_task(db, org, course, chapter, activity, assignment):
         update_date=str(datetime.now()),
     )
     db.add(t)
-    db.commit()
-    db.refresh(t)
+    await db.commit()
+    await db.refresh(t)
     return t
 
 
-def _make_user_submission(
+async def _make_user_submission(
     db,
     assignment_id,
     user_id,
@@ -126,12 +126,12 @@ def _make_user_submission(
         update_date=str(datetime.now()),
     )
     db.add(sub)
-    db.commit()
-    db.refresh(sub)
+    await db.commit()
+    await db.refresh(sub)
     return sub
 
 
-def _make_task_submission(db, task, user_id, *, grade=50, uuid="ats_retry_test"):
+async def _make_task_submission(db, task, user_id, *, grade=50, uuid="ats_retry_test"):
     ts = AssignmentTaskSubmission(
         assignment_task_submission_uuid=uuid,
         task_submission={"answer": "x"},
@@ -147,12 +147,12 @@ def _make_task_submission(db, task, user_id, *, grade=50, uuid="ats_retry_test")
         update_date=str(datetime.now()),
     )
     db.add(ts)
-    db.commit()
-    db.refresh(ts)
+    await db.commit()
+    await db.refresh(ts)
     return ts
 
 
-def _make_trail_artifacts(db, org_id, course_id, activity_id, user_id, *, complete=True):
+async def _make_trail_artifacts(db, org_id, course_id, activity_id, user_id, *, complete=True):
     trail = Trail(
         org_id=org_id,
         user_id=user_id,
@@ -161,8 +161,8 @@ def _make_trail_artifacts(db, org_id, course_id, activity_id, user_id, *, comple
         update_date=str(datetime.now()),
     )
     db.add(trail)
-    db.commit()
-    db.refresh(trail)
+    await db.commit()
+    await db.refresh(trail)
     trail_run = TrailRun(
         trail_id=trail.id,
         course_id=course_id,
@@ -172,8 +172,8 @@ def _make_trail_artifacts(db, org_id, course_id, activity_id, user_id, *, comple
         update_date=str(datetime.now()),
     )
     db.add(trail_run)
-    db.commit()
-    db.refresh(trail_run)
+    await db.commit()
+    await db.refresh(trail_run)
     step = TrailStep(
         complete=complete,
         teacher_verified=True,
@@ -188,12 +188,12 @@ def _make_trail_artifacts(db, org_id, course_id, activity_id, user_id, *, comple
         update_date=str(datetime.now()),
     )
     db.add(step)
-    db.commit()
-    db.refresh(step)
+    await db.commit()
+    await db.refresh(step)
     return trail, trail_run, step
 
 
-def _make_certificate(db, course, user_id):
+async def _make_certificate(db, course, user_id):
     cert = Certifications(
         certification_uuid="cert_retry",
         course_id=course.id,
@@ -202,8 +202,8 @@ def _make_certificate(db, course, user_id):
         update_date=str(datetime.now()),
     )
     db.add(cert)
-    db.commit()
-    db.refresh(cert)
+    await db.commit()
+    await db.refresh(cert)
     cert_user = CertificateUser(
         user_id=user_id,
         certification_id=cert.id,
@@ -212,8 +212,8 @@ def _make_certificate(db, course, user_id):
         updated_at=str(datetime.now()),
     )
     db.add(cert_user)
-    db.commit()
-    db.refresh(cert_user)
+    await db.commit()
+    await db.refresh(cert_user)
     return cert, cert_user
 
 
@@ -227,12 +227,12 @@ class TestRetryAssignmentSubmissionService:
         self, db, regular_user, mock_request, org, course, activity, assignment, assignment_task
     ):
         user_id = regular_user.id
-        submission = _make_user_submission(db, assignment.id, user_id)
-        task_sub = _make_task_submission(db, assignment_task, user_id)
-        _, _, step = _make_trail_artifacts(
+        submission = await _make_user_submission(db, assignment.id, user_id)
+        task_sub = await _make_task_submission(db, assignment_task, user_id)
+        _, _, step = await _make_trail_artifacts(
             db, org.id, course.id, activity.id, user_id, complete=True
         )
-        cert, cert_user = _make_certificate(db, course, user_id)
+        cert, cert_user = await _make_certificate(db, course, user_id)
 
         with patch(
             "src.services.courses.activities.assignments.check_resource_access",
@@ -247,27 +247,27 @@ class TestRetryAssignmentSubmissionService:
         assert result["max_retries"] == 3
         assert result["submission"]["submission_status"] == AssignmentUserSubmissionStatus.PENDING.value
 
-        db.refresh(submission)
+        await db.refresh(submission)
         assert submission.submission_status == AssignmentUserSubmissionStatus.PENDING
         assert submission.grade == 0
         assert submission.overall_feedback is None
         assert submission.attempt_number == 2
 
-        leftover_task_sub = db.exec(
+        leftover_task_sub = (await db.execute(
             select(AssignmentTaskSubmission).where(
                 AssignmentTaskSubmission.id == task_sub.id
             )
-        ).first()
+        )).scalars().first()
         assert leftover_task_sub is None
 
-        db.refresh(step)
+        await db.refresh(step)
         assert step.complete is False
         assert step.teacher_verified is False
         assert step.grade == ""
 
-        leftover_cert = db.exec(
+        leftover_cert = (await db.execute(
             select(CertificateUser).where(CertificateUser.id == cert_user.id)
-        ).first()
+        )).scalars().first()
         assert leftover_cert is None
 
     async def test_retry_forbidden_when_allow_retries_false(
@@ -275,8 +275,8 @@ class TestRetryAssignmentSubmissionService:
     ):
         assignment.allow_retries = False
         db.add(assignment)
-        db.commit()
-        _make_user_submission(db, assignment.id, regular_user.id)
+        await db.commit()
+        await _make_user_submission(db, assignment.id, regular_user.id)
 
         with patch(
             "src.services.courses.activities.assignments.check_resource_access",
@@ -295,8 +295,8 @@ class TestRetryAssignmentSubmissionService:
     ):
         assignment.max_retries = 3
         db.add(assignment)
-        db.commit()
-        _make_user_submission(
+        await db.commit()
+        await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -318,7 +318,7 @@ class TestRetryAssignmentSubmissionService:
     async def test_retry_rejects_non_graded_submission(
         self, db, regular_user, mock_request, assignment
     ):
-        _make_user_submission(
+        await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -392,7 +392,7 @@ class TestRetryAssignmentSubmissionService:
             update_date=str(datetime.now()),
         )
         db.add(orphan)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.courses.activities.assignments.check_resource_access",
@@ -411,8 +411,8 @@ class TestRetryAssignmentSubmissionService:
     ):
         assignment.max_retries = 0
         db.add(assignment)
-        db.commit()
-        submission = _make_user_submission(
+        await db.commit()
+        submission = await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -429,7 +429,7 @@ class TestRetryAssignmentSubmissionService:
 
         assert result["attempt_number"] == 43
         assert result["max_retries"] == 0
-        db.refresh(submission)
+        await db.refresh(submission)
         assert submission.submission_status == AssignmentUserSubmissionStatus.PENDING
         assert submission.attempt_number == 43
 
@@ -451,7 +451,7 @@ class TestCreateAssignmentSubmissionRetryPath:
         assignment,
     ):
         original_uuid = "aus_reuse_after_retry"
-        submission = _make_user_submission(
+        submission = await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -461,7 +461,7 @@ class TestCreateAssignmentSubmissionRetryPath:
             attempt_number=2,
             uuid=original_uuid,
         )
-        _, _, step = _make_trail_artifacts(
+        _, _, step = await _make_trail_artifacts(
             db, org.id, course.id, activity.id, regular_user.id, complete=False
         )
         original_id = submission.id
@@ -489,15 +489,15 @@ class TestCreateAssignmentSubmissionRetryPath:
         assert result.grade == 0
         assert result.attempt_number == 2
 
-        db.refresh(step)
+        await db.refresh(step)
         assert step.complete is True
 
-        rows = db.exec(
+        rows = (await db.execute(
             select(AssignmentUserSubmission).where(
                 AssignmentUserSubmission.assignment_id == assignment.id,
                 AssignmentUserSubmission.user_id == regular_user.id,
             )
-        ).all()
+        )).scalars().all()
         assert len(rows) == 1
         # Same row reused: original uuid preserved on the persisted record.
         assert rows[0].assignmentusersubmission_uuid == original_uuid
@@ -505,7 +505,7 @@ class TestCreateAssignmentSubmissionRetryPath:
     async def test_rejects_when_existing_row_is_submitted(
         self, db, regular_user, mock_request, assignment
     ):
-        _make_user_submission(
+        await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -527,7 +527,7 @@ class TestCreateAssignmentSubmissionRetryPath:
     async def test_rejects_when_existing_row_is_graded(
         self, db, regular_user, mock_request, assignment
     ):
-        _make_user_submission(
+        await _make_user_submission(
             db,
             assignment.id,
             regular_user.id,
@@ -559,7 +559,7 @@ class TestCreateAssignmentSubmissionRetryPath:
         the else branch and creates a fresh row with attempt_number=1. The
         first-submission path also marks the (existing) trail step complete
         via the new else branch that keeps the reuse path consistent."""
-        _, _, step = _make_trail_artifacts(
+        _, _, step = await _make_trail_artifacts(
             db, org.id, course.id, activity.id, regular_user.id, complete=False
         )
 
@@ -585,15 +585,15 @@ class TestCreateAssignmentSubmissionRetryPath:
         assert result.grade == 0
         assert result.attempt_number == 1
 
-        db.refresh(step)
+        await db.refresh(step)
         assert step.complete is True
 
-        rows = db.exec(
+        rows = (await db.execute(
             select(AssignmentUserSubmission).where(
                 AssignmentUserSubmission.assignment_id == assignment.id,
                 AssignmentUserSubmission.user_id == regular_user.id,
             )
-        ).all()
+        )).scalars().all()
         assert len(rows) == 1
         # A brand-new uuid was generated (not the reuse path).
         assert rows[0].assignmentusersubmission_uuid.startswith(

@@ -9,7 +9,8 @@ import asyncio
 import logging
 from datetime import datetime
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.course_embeddings import CourseEmbedding
 from src.services.ai.base import get_gemini_client
@@ -98,7 +99,7 @@ async def embed_single_text(text: str) -> list[float]:
 async def embed_course_content(
     course_id: int,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """
     Index all content from a course into embeddings.
@@ -108,7 +109,7 @@ async def embed_course_content(
 
     Returns the number of chunks indexed.
     """
-    content_items = extract_all_course_content(course_id, org_id, db_session)
+    content_items = await extract_all_course_content(course_id, org_id, db_session)
     if not content_items:
         logger.info("No content to index for course %d", course_id)
         return 0
@@ -152,14 +153,14 @@ async def embed_course_content(
     ]
 
     # Atomically swap old embeddings for new ones in a single commit.
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(CourseEmbedding).where(CourseEmbedding.course_id == course_id)
-    ).all()
+    )).scalars().all()
     for emb in existing:
-        db_session.delete(emb)
+        await db_session.delete(emb)
     for record in new_records:
         db_session.add(record)
-    db_session.commit()
+    await db_session.commit()
 
     logger.info(
         "Indexed %d chunks for course %d (org %d)",

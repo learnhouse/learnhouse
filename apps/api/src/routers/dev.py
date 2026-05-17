@@ -1,6 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from config.config import get_learnhouse_config
 from migrations.orgconfigs.orgconfigs_migrations import migrate_to_v1_1, migrate_to_v1_2, migrate_v0_to_v1
 from src.core.events.database import get_db_session
@@ -70,7 +71,7 @@ def _redact_secrets(d: dict, _sensitive_keys=None):
     },
 )
 async def migrate(
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """
@@ -78,13 +79,13 @@ async def migrate(
     """
     _require_superadmin(current_user)
     statement = select(OrganizationConfig)
-    result = db_session.exec(statement)
+    result = (await db_session.execute(statement)).scalars().all()
 
     for orgConfig in result:
         orgConfig.config = migrate_v0_to_v1(orgConfig.config)
 
         db_session.add(orgConfig)
-        db_session.commit()
+        await db_session.commit()
 
     return {"message": "Migration successful"}
 
@@ -100,7 +101,7 @@ async def migrate(
     },
 )
 async def migratev1_1(
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """
@@ -108,13 +109,13 @@ async def migratev1_1(
     """
     _require_superadmin(current_user)
     statement = select(OrganizationConfig)
-    result = db_session.exec(statement)
+    result = (await db_session.execute(statement)).scalars().all()
 
     for orgConfig in result:
         orgConfig.config = migrate_to_v1_1(orgConfig.config)
 
         db_session.add(orgConfig)
-        db_session.commit()
+        await db_session.commit()
 
     return {"message": "Migration successful"}
 
@@ -129,7 +130,7 @@ async def migratev1_1(
     },
 )
 async def migratev1_2(
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
     current_user: PublicUser = Depends(get_authenticated_user),
 ):
     """
@@ -137,12 +138,12 @@ async def migratev1_2(
     """
     _require_superadmin(current_user)
     statement = select(OrganizationConfig)
-    result = db_session.exec(statement)
+    result = (await db_session.execute(statement)).scalars().all()
 
     for orgConfig in result:
         orgConfig.config = migrate_to_v1_2(orgConfig.config)
 
         db_session.add(orgConfig)
-        db_session.commit()
+        await db_session.commit()
 
     return {"message": "Migration successful"}

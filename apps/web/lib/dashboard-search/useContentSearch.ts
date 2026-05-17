@@ -1,5 +1,5 @@
 'use client'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -106,18 +106,17 @@ export function useContentSearch(query: string) {
   const trimmed = debounced.trim()
   const enabled = trimmed.length >= 2 && !!orgslug
 
-  const { data, error, isLoading } = useSWR(
-    enabled ? ['dash-search', orgslug, trimmed, accessToken ?? null] : null,
-    async () => {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['dash-search', orgslug, trimmed, accessToken ?? null],
+    queryFn: async () => {
       const res = await searchOrgContent(orgslug, trimmed, 1, 5, null, accessToken)
       return res?.success ? normalize(res.data) : []
     },
-    {
-      keepPreviousData: true,
-      revalidateOnFocus: false,
-      dedupingInterval: 1500,
-    },
-  )
+    enabled,
+    placeholderData: (prev) => prev,
+    refetchOnWindowFocus: false,
+    staleTime: 1500,
+  })
 
   return {
     results: (data ?? []) as ContentResult[],

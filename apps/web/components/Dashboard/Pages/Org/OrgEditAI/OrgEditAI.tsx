@@ -3,7 +3,8 @@ import React from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,7 @@ const OrgEditAI: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
 
@@ -70,7 +72,7 @@ const OrgEditAI: React.FC = () => {
       }
 
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       if (params.ai_enabled !== undefined) setAiEnabled(params.ai_enabled)
       if (params.copilot_enabled !== undefined) setCopilotEnabled(params.copilot_enabled)
       toast.success(t('dashboard.organization.ai.toasts.save_success'), { id: loadingToast })

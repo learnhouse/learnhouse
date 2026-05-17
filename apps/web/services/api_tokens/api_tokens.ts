@@ -2,7 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyWithAuthHeader,
   getResponseMetadata,
-  swrFetcher,
+  apiFetch,
 } from '@services/utils/ts/requests'
 
 // Types - API Token access is restricted to specific resources
@@ -255,7 +255,7 @@ export async function listAPITokens(
   accessToken: string
 ): Promise<APIToken[]> {
   const url = `${getAPIUrl()}orgs/${orgId}/api-tokens`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**
@@ -267,7 +267,7 @@ export async function getAPIToken(
   accessToken: string
 ): Promise<APIToken> {
   const url = `${getAPIUrl()}orgs/${orgId}/api-tokens/${tokenUuid}`
-  return swrFetcher(url, accessToken)
+  return apiFetch(url, accessToken)
 }
 
 /**

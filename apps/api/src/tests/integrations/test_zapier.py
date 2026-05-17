@@ -5,20 +5,14 @@ Exercises the router functions directly against an in-memory SQLite database.
 Covers auth, plan gating, dynamic dropdowns, and REST Hook subscription CRUD.
 """
 
-import asyncio
 from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import JSON, event
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine, select
-from starlette.requests import Request
+from sqlmodel import select
 
 from src.db.courses.courses import Course
-from src.db.organizations import Organization
 from src.db.roles import Role
 from src.db.usergroups import UserGroup
 from src.db.user_organizations import UserOrganization
@@ -40,75 +34,12 @@ from src.routers.integrations.zapier import (
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
-
-@pytest.fixture
-def engine():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    @event.listens_for(engine, "connect")
-    def _set_sqlite_pragma(dbapi_connection, connection_record):
-        # Enforce foreign key constraints in SQLite — off by default there,
-        # which previously hid a bug where webhook_endpoint.created_by_user_id
-        # was being set to 0 (passes SQLite, fails Postgres FK check at prod).
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys = ON")
-        cursor.close()
-
-    for table in SQLModel.metadata.tables.values():
-        for col in table.columns:
-            if isinstance(col.type, JSONB):
-                col.type = JSON()
-
-    SQLModel.metadata.create_all(engine)
-    return engine
+# engine, db, org, other_org, course are provided by conftest.py as async
+# fixtures backed by an async SQLite engine.
 
 
 @pytest.fixture
-def db(engine):
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture
-def org(db):
-    o = Organization(
-        id=1,
-        name="Test Org",
-        slug="test-org",
-        email="test@org.com",
-        org_uuid="org_test",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(o)
-    db.commit()
-    db.refresh(o)
-    return o
-
-
-@pytest.fixture
-def other_org(db):
-    o = Organization(
-        id=2,
-        name="Other",
-        slug="other",
-        email="o@o.com",
-        org_uuid="org_other",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(o)
-    db.commit()
-    db.refresh(o)
-    return o
-
-
-@pytest.fixture
-def role(db):
+async def role(db):
     # Prerequisite row for UserOrganization.role_id FK. Kept minimal — tests
     # don't exercise role-based authorization, only that the membership row
     # can be inserted under FK enforcement.
@@ -121,13 +52,13 @@ def role(db):
         update_date=str(datetime.now()),
     )
     db.add(r)
-    db.commit()
-    db.refresh(r)
+    await db.commit()
+    await db.refresh(r)
     return r
 
 
 @pytest.fixture
-def user(db, org, role):
+async def user(db, org, role):
     u = User(
         id=1,
         username="testuser",
@@ -138,8 +69,8 @@ def user(db, org, role):
         user_uuid="user_test",
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     db.add(
         UserOrganization(
             user_id=u.id,
@@ -149,7 +80,7 @@ def user(db, org, role):
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return u
 
 
@@ -166,7 +97,7 @@ def token_user(org, user):
 
 
 @pytest.fixture
-def other_user(db, other_org, role):
+async def other_user(db, other_org, role):
     u = User(
         id=99,
         username="otheruser",
@@ -177,8 +108,8 @@ def other_user(db, other_org, role):
         user_uuid="user_other",
     )
     db.add(u)
-    db.commit()
-    db.refresh(u)
+    await db.commit()
+    await db.refresh(u)
     db.add(
         UserOrganization(
             user_id=u.id,
@@ -188,7 +119,7 @@ def other_user(db, other_org, role):
             update_date=str(datetime.now()),
         )
     )
-    db.commit()
+    await db.commit()
     return u
 
 
@@ -205,27 +136,7 @@ def other_token(other_org, other_user):
 
 
 @pytest.fixture
-def course(db, org):
-    c = Course(
-        id=1,
-        name="Test Course",
-        description="desc",
-        public=True,
-        published=True,
-        open_to_contributors=False,
-        org_id=org.id,
-        course_uuid="course_test",
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-    )
-    db.add(c)
-    db.commit()
-    db.refresh(c)
-    return c
-
-
-@pytest.fixture
-def usergroup(db, org):
+async def usergroup(db, org):
     g = UserGroup(
         id=1,
         name="Students",
@@ -236,15 +147,14 @@ def usergroup(db, org):
         update_date=str(datetime.now()),
     )
     db.add(g)
-    db.commit()
-    db.refresh(g)
+    await db.commit()
+    await db.refresh(g)
     return g
 
 
 @pytest.fixture
-def request_obj():
-    scope = {"type": "http", "method": "GET", "path": "/", "headers": [], "query_string": b""}
-    return Request(scope)
+def request_obj(mock_request):
+    return mock_request
 
 
 def _patch_plan_pro():
@@ -291,15 +201,15 @@ class TestRequireApiToken:
 
 
 class TestZapierMe:
-    def test_me_returns_org_context(self, db, token_user, org):
+    async def test_me_returns_org_context(self, db, token_user, org):
         with _patch_plan_pro():
-            result = asyncio.run(zapier_me(ctx=(token_user, db)))
+            result = await zapier_me(ctx=(token_user, db))
         assert result.org_id == org.id
-        assert result.org_slug == "test-org"
-        assert result.org_name == "Test Org"
+        assert result.org_slug == org.slug
+        assert result.org_name == org.name
         assert result.token_name == "Test Token"
 
-    def test_me_raises_when_org_missing(self, db, user):
+    async def test_me_raises_when_org_missing(self, db, user):
         orphan_token = APITokenUser(
             id=99,
             user_uuid="apitoken_orphan",
@@ -310,35 +220,35 @@ class TestZapierMe:
         )
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
-                asyncio.run(zapier_me(ctx=(orphan_token, db)))
+                await zapier_me(ctx=(orphan_token, db))
         assert exc.value.status_code == 404
 
-    def test_me_rejects_free_plan(self, db, token_user):
+    async def test_me_rejects_free_plan(self, db, token_user):
         from src.routers.integrations.zapier import _require_pro_plan
         with _patch_plan_free(), patch(
             "src.routers.integrations.zapier.plan_meets_requirement",
             return_value=False,
         ):
             with pytest.raises(HTTPException) as exc:
-                _require_pro_plan(token_user.org_id, db)
+                await _require_pro_plan(token_user.org_id, db)
         assert exc.value.status_code == 403
         assert "Pro plan" in exc.value.detail
 
-    def test_require_pro_plan_passes_on_pro(self, db, token_user):
+    async def test_require_pro_plan_passes_on_pro(self, db, token_user):
         from src.routers.integrations.zapier import _require_pro_plan
         with _patch_plan_pro(), patch(
             "src.routers.integrations.zapier.plan_meets_requirement",
             return_value=True,
         ):
-            assert _require_pro_plan(token_user.org_id, db) is None
+            assert await _require_pro_plan(token_user.org_id, db) is None
 
-    def test_zapier_context_returns_api_user_and_session(self, db, token_user):
+    async def test_zapier_context_returns_api_user_and_session(self, db, token_user):
         from src.routers.integrations.zapier import _zapier_context
         with _patch_plan_pro(), patch(
             "src.routers.integrations.zapier.plan_meets_requirement",
             return_value=True,
         ):
-            api_user, session = _zapier_context(
+            api_user, session = await _zapier_context(
                 current_user=token_user, db_session=db
             )
         assert api_user is token_user
@@ -349,9 +259,9 @@ class TestZapierMe:
 
 
 class TestZapierEvents:
-    def test_events_returns_registry(self, db, token_user):
+    async def test_events_returns_registry(self, db, token_user):
         with _patch_plan_pro():
-            result = asyncio.run(zapier_list_events(ctx=(token_user, db)))
+            result = await zapier_list_events(ctx=(token_user, db))
         assert "events" in result
         assert "course_completed" in result["events"]
         assert "ping" in result["events"]
@@ -361,7 +271,7 @@ class TestZapierEvents:
 
 
 class TestZapierCourses:
-    def test_lists_only_own_org(self, db, token_user, course, other_org):
+    async def test_lists_only_own_org(self, db, token_user, course, other_org):
         # Add a course in another org
         other_course = Course(
             id=2,
@@ -376,26 +286,26 @@ class TestZapierCourses:
             update_date=str(datetime.now()),
         )
         db.add(other_course)
-        db.commit()
+        await db.commit()
 
         with _patch_plan_pro():
-            result = asyncio.run(zapier_list_courses(limit=100, ctx=(token_user, db)))
+            result = await zapier_list_courses(limit=100, ctx=(token_user, db))
         assert len(result) == 1
         assert result[0].course_uuid == "course_test"
 
 
 class TestZapierUsers:
-    def test_lists_org_members(self, db, token_user, user):
+    async def test_lists_org_members(self, db, token_user, user):
         with _patch_plan_pro():
-            result = asyncio.run(zapier_list_users(limit=100, ctx=(token_user, db)))
+            result = await zapier_list_users(limit=100, ctx=(token_user, db))
         assert len(result) == 1
         assert result[0].email == "test@example.com"
 
 
 class TestZapierUsergroups:
-    def test_lists_org_groups(self, db, token_user, usergroup):
+    async def test_lists_org_groups(self, db, token_user, usergroup):
         with _patch_plan_pro():
-            result = asyncio.run(zapier_list_usergroups(limit=100, ctx=(token_user, db)))
+            result = await zapier_list_usergroups(limit=100, ctx=(token_user, db))
         assert len(result) == 1
         assert result[0].name == "Students"
 
@@ -404,7 +314,7 @@ class TestZapierUsergroups:
 
 
 class TestZapierSubscriptions:
-    def test_create_subscription_persists_zapier_webhook(self, db, token_user, request_obj):
+    async def test_create_subscription_persists_zapier_webhook(self, db, token_user, request_obj):
         payload = ZapierSubscriptionCreate(
             target_url="https://hooks.zapier.com/hooks/catch/123/abc",
             event="course_completed",
@@ -412,12 +322,10 @@ class TestZapierSubscriptions:
             zap_name="My Zap",
         )
         with _patch_plan_pro():
-            result = asyncio.run(
-                zapier_create_subscription(
-                    request=request_obj,
-                    payload=payload,
-                    ctx=(token_user, db),
-                )
+            result = await zapier_create_subscription(
+                request=request_obj,
+                payload=payload,
+                ctx=(token_user, db),
             )
 
         assert result.id > 0
@@ -425,9 +333,11 @@ class TestZapierSubscriptions:
         assert result.event == "course_completed"
         assert result.is_active is True
 
-        stored = db.scalars(
-            select(WebhookEndpoint).where(WebhookEndpoint.id == result.id)
-        ).first()
+        stored = (
+            await db.execute(
+                select(WebhookEndpoint).where(WebhookEndpoint.id == result.id)
+            )
+        ).scalars().first()
         assert stored is not None
         assert stored.source == "zapier"
         assert stored.zap_name == "My Zap"
@@ -441,37 +351,33 @@ class TestZapierSubscriptions:
         assert stored.created_by_user_id == token_user.created_by_user_id
         assert stored.created_by_user_id != 0
 
-    def test_create_rejects_unknown_event(self, db, token_user, request_obj):
+    async def test_create_rejects_unknown_event(self, db, token_user, request_obj):
         payload = ZapierSubscriptionCreate(
             target_url="https://hooks.zapier.com/hooks/catch/1/x",
             event="nonexistent_event",
         )
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
-                asyncio.run(
-                    zapier_create_subscription(
-                        request=request_obj,
-                        payload=payload,
-                        ctx=(token_user, db),
-                    )
+                await zapier_create_subscription(
+                    request=request_obj,
+                    payload=payload,
+                    ctx=(token_user, db),
                 )
         assert exc.value.status_code == 400
 
-    def test_list_subscriptions_only_own_org_and_zapier_source(
+    async def test_list_subscriptions_only_own_org_and_zapier_source(
         self, db, token_user, other_token, request_obj
     ):
         # Create one via the router under our token
         with _patch_plan_pro():
-            asyncio.run(
-                zapier_create_subscription(
-                    request=request_obj,
-                    payload=ZapierSubscriptionCreate(
-                        target_url="https://hooks.zapier.com/hooks/catch/1/a",
-                        event="ping",
-                        zap_name="A",
-                    ),
-                    ctx=(token_user, db),
-                )
+            await zapier_create_subscription(
+                request=request_obj,
+                payload=ZapierSubscriptionCreate(
+                    target_url="https://hooks.zapier.com/hooks/catch/1/a",
+                    event="ping",
+                    zap_name="A",
+                ),
+                ctx=(token_user, db),
             )
 
         # A manual (non-Zapier) webhook in the same org — should NOT appear
@@ -506,38 +412,36 @@ class TestZapierSubscriptions:
                 update_date=str(datetime.now()),
             )
         )
-        db.commit()
+        await db.commit()
 
         with _patch_plan_pro():
-            result = asyncio.run(zapier_list_subscriptions(ctx=(token_user, db)))
+            result = await zapier_list_subscriptions(ctx=(token_user, db))
         assert len(result) == 1
         assert result[0].zap_name == "A"
 
-    def test_delete_subscription_removes_row(self, db, token_user, request_obj):
+    async def test_delete_subscription_removes_row(self, db, token_user, request_obj):
         with _patch_plan_pro():
-            created = asyncio.run(
-                zapier_create_subscription(
-                    request=request_obj,
-                    payload=ZapierSubscriptionCreate(
-                        target_url="https://hooks.zapier.com/hooks/catch/1/a",
-                        event="ping",
-                    ),
-                    ctx=(token_user, db),
-                )
+            created = await zapier_create_subscription(
+                request=request_obj,
+                payload=ZapierSubscriptionCreate(
+                    target_url="https://hooks.zapier.com/hooks/catch/1/a",
+                    event="ping",
+                ),
+                ctx=(token_user, db),
             )
-            asyncio.run(
-                zapier_delete_subscription(
-                    subscription_id=created.id,
-                    ctx=(token_user, db),
-                )
+            await zapier_delete_subscription(
+                subscription_id=created.id,
+                ctx=(token_user, db),
             )
 
-        remaining = db.scalars(
-            select(WebhookEndpoint).where(WebhookEndpoint.id == created.id)
-        ).first()
+        remaining = (
+            await db.execute(
+                select(WebhookEndpoint).where(WebhookEndpoint.id == created.id)
+            )
+        ).scalars().first()
         assert remaining is None
 
-    def test_delete_refuses_cross_org(
+    async def test_delete_refuses_cross_org(
         self, db, token_user, other_token, request_obj
     ):
         # Create a Zapier webhook in other org
@@ -546,29 +450,25 @@ class TestZapierSubscriptions:
                 "src.routers.integrations.zapier.get_org_plan",
                 return_value="pro",
             ):
-                created = asyncio.run(
-                    zapier_create_subscription(
-                        request=request_obj,
-                        payload=ZapierSubscriptionCreate(
-                            target_url="https://hooks.zapier.com/hooks/catch/2/x",
-                            event="ping",
-                        ),
-                        ctx=(other_token, db),
-                    )
+                created = await zapier_create_subscription(
+                    request=request_obj,
+                    payload=ZapierSubscriptionCreate(
+                        target_url="https://hooks.zapier.com/hooks/catch/2/x",
+                        event="ping",
+                    ),
+                    ctx=(other_token, db),
                 )
 
         # Our token tries to delete — should 404 (not leak existence)
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
-                asyncio.run(
-                    zapier_delete_subscription(
-                        subscription_id=created.id,
-                        ctx=(token_user, db),
-                    )
+                await zapier_delete_subscription(
+                    subscription_id=created.id,
+                    ctx=(token_user, db),
                 )
         assert exc.value.status_code == 404
 
-    def test_delete_refuses_manual_webhook(self, db, token_user):
+    async def test_delete_refuses_manual_webhook(self, db, token_user):
         # Create a manual webhook in our org
         wh = WebhookEndpoint(
             webhook_uuid="webhook_manual",
@@ -584,15 +484,13 @@ class TestZapierSubscriptions:
             update_date=str(datetime.now()),
         )
         db.add(wh)
-        db.commit()
-        db.refresh(wh)
+        await db.commit()
+        await db.refresh(wh)
 
         with _patch_plan_pro():
             with pytest.raises(HTTPException) as exc:
-                asyncio.run(
-                    zapier_delete_subscription(
-                        subscription_id=wh.id,
-                        ctx=(token_user, db),
-                    )
+                await zapier_delete_subscription(
+                    subscription_id=wh.id,
+                    ctx=(token_user, db),
                 )
         assert exc.value.status_code == 404

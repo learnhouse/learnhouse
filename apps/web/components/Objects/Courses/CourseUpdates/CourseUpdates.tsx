@@ -10,9 +10,10 @@ import FormLayout, {
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import { useCourse } from '@components/Contexts/CourseContext'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { createCourseUpdate, deleteCourseUpdate } from '@services/courses/updates'
@@ -30,7 +31,12 @@ function CourseUpdates() {
   const course = useCourse() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`, (url) => swrFetcher(url, access_token), { revalidateOnFocus: false })
+  const { data: updates } = useQuery({
+    queryKey: queryKeys.courses.updates(course?.courseStructure?.course_uuid ?? ''),
+    queryFn: () => apiFetch(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`, access_token),
+    enabled: !!(course?.courseStructure?.course_uuid && access_token),
+    staleTime: 60_000,
+  })
   const [isModelOpen, setIsModelOpen] = React.useState(false)
 
   function handleModelOpen() {
@@ -105,6 +111,7 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
   const org = useOrg() as any;
   const course = useCourse() as any;
   const session = useLHSession() as any;
+  const queryClient = useQueryClient();
 
   const validate = (values: any) => {
     const errors: any = {}
@@ -135,7 +142,7 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
       if (res.status === 200) {
         toast.success(t('courses.update_added_success'))
         setSelectedView('list')
-        mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.updates(course?.courseStructure.course_uuid) })
       }
       else {
         toast.error(t('courses.failed_add_update'))
@@ -203,7 +210,12 @@ const UpdatesListView = () => {
   const adminStatus = useAdminStatus() ;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure?.course_uuid}/updates`, (url) => swrFetcher(url, access_token))
+  const { data: updates } = useQuery({
+    queryKey: queryKeys.courses.updates(course?.courseStructure?.course_uuid ?? ''),
+    queryFn: () => apiFetch(`${getAPIUrl()}courses/${course?.courseStructure?.course_uuid}/updates`, access_token),
+    enabled: !!(course?.courseStructure?.course_uuid && access_token),
+    staleTime: 60_000,
+  })
 
   return (
     <div className='px-5 bg-white overflow-y-auto' style={{ maxHeight: '400px' }}>
@@ -237,6 +249,7 @@ const DeleteUpdateButton = ({ update }: any) => {
   const session = useLHSession() as any;
   const course = useCourse() as any;
   const org = useOrg() as any;
+  const queryClient = useQueryClient();
 
   const handleDelete = async () => {
     const res = await deleteCourseUpdate(course.courseStructure.course_uuid, update.courseupdate_uuid, session.data?.tokens?.access_token)
@@ -244,7 +257,7 @@ const DeleteUpdateButton = ({ update }: any) => {
     if (res.status === 200) {
       toast.dismiss(toast_loading)
       toast.success(t('courses.update_deleted_success'))
-      mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.updates(course?.courseStructure.course_uuid) })
     }
     else {
       toast.error(t('courses.failed_delete_update'))

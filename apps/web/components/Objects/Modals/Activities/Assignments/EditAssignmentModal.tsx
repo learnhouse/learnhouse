@@ -1,7 +1,7 @@
 import React from 'react';
 import { updateAssignment } from '@services/courses/assignments';
-import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import toast from 'react-hot-toast';
 import * as Form from '@radix-ui/react-form';
 import { useFormik } from 'formik';
@@ -128,6 +128,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
     accessToken
 }) => {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
 
     // Auto-grading is incompatible with file-submission tasks — those need
     // human review. If any such task exists, we force the toggle off and
@@ -167,7 +168,7 @@ const EditAssignmentForm: React.FC<EditAssignmentFormProps> = ({
             try {
                 const res = await updateAssignment(payload, assignment.assignment_uuid, accessToken);
                 if (res.success) {
-                    mutate(`${getAPIUrl()}assignments/${assignment.assignment_uuid}`);
+                    queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignment.assignment_uuid) });
                     toast.success(t('dashboard.assignments.modals.edit.toasts.success'));
                     onClose();
                 } else {

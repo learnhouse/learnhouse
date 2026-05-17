@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, Request
 import httpx
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import User, UserCreate, UserRead
 from src.security.auth import get_current_user
@@ -98,7 +99,7 @@ async def signWithGoogle(
     email: str,
     org_id: Optional[int] = None,
     current_user=Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     # Google
     google_user = await get_google_user_info(access_token)
@@ -120,9 +121,9 @@ async def signWithGoogle(
     # Normalise to lower-case to match the DB unique-ish invariant on email.
     user_email = google_email.strip().lower()
 
-    user = db_session.exec(
+    user = (await db_session.execute(
         select(User).where(User.email == user_email)
-    ).first()
+    )).scalars().first()
 
     if not user:
         # Extract user data with safe defaults
@@ -185,8 +186,8 @@ async def signWithGoogle(
 
     if needs_update:
         db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
     # Update last login info
     client_ip = get_client_ip(request)

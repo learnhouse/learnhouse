@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useTranslation } from 'react-i18next'
@@ -83,6 +84,7 @@ const OrgEditFeatures: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const currentPlan = usePlan()
   const { rights } = useAdminStatus()
   const canEditOrgSettings = rights?.organizations?.action_update === true
@@ -142,7 +144,7 @@ const OrgEditFeatures: React.FC = () => {
       }
 
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
 
       toast.success(
         enabled

@@ -1,7 +1,8 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select, and_, or_
+from sqlmodel import select, and_, or_
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -31,7 +32,7 @@ async def create_community(
     org_id: int,
     community_object: CommunityCreate,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead:
     """
     Create a new community in an organization.
@@ -43,7 +44,7 @@ async def create_community(
 
     # Verify org exists
     org_statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(org_statement).first()
+    org = (await db_session.execute(org_statement)).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -72,8 +73,8 @@ async def create_community(
     )
 
     db_session.add(community)
-    db_session.commit()
-    db_session.refresh(community)
+    await db_session.commit()
+    await db_session.refresh(community)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -82,14 +83,14 @@ async def get_community(
     request: Request,
     community_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead:
     """
     Get a community by UUID.
     """
     # Get community
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -104,7 +105,7 @@ async def get_communities_by_org(
     request: Request,
     org_id: int,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 10,
 ) -> List[CommunityRead]:
@@ -129,14 +130,14 @@ async def get_communities_by_org(
             Community.public == True
         )
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
-        communities = db_session.exec(query).all()
+        communities = (await db_session.execute(query)).scalars().all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # Superadmins bypass admin check — they can see all communities
-    if is_user_superadmin(acting_user_id, db_session):
+    if await is_user_superadmin(acting_user_id, db_session):
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
-        communities = db_session.exec(query).all()
+        communities = (await db_session.execute(query)).scalars().all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # Check if user has admin-level permissions (can read all communities)
@@ -152,7 +153,7 @@ async def get_communities_by_org(
         # Admins see all communities
         query = select(Community).where(Community.org_id == org_id)
         query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
-        communities = db_session.exec(query).all()
+        communities = (await db_session.execute(query)).scalars().all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
     # For regular users, use a subquery approach to avoid DISTINCT with JSON columns
@@ -182,7 +183,7 @@ async def get_communities_by_org(
         .limit(limit)
     )
 
-    communities = db_session.exec(query).all()
+    communities = (await db_session.execute(query)).scalars().all()
     return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
 
@@ -190,21 +191,21 @@ async def get_community_by_course(
     request: Request,
     course_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead | None:
     """
     Get the community linked to a specific course.
     """
     # Get the course first
     course_statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(course_statement).first()
+    course = (await db_session.execute(course_statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Find community linked to this course
     community_statement = select(Community).where(Community.course_id == course.id)
-    community = db_session.exec(community_statement).first()
+    community = (await db_session.execute(community_statement)).scalars().first()
 
     if not community:
         return None
@@ -222,7 +223,7 @@ async def update_community(
     community_uuid: str,
     community_object: CommunityUpdate,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead:
     """
     Update a community.
@@ -231,7 +232,7 @@ async def update_community(
     """
     # Get community
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -254,8 +255,8 @@ async def update_community(
     community.update_date = str(datetime.now())
 
     db_session.add(community)
-    db_session.commit()
-    db_session.refresh(community)
+    await db_session.commit()
+    await db_session.refresh(community)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -264,7 +265,7 @@ async def delete_community(
     request: Request,
     community_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Delete a community.
@@ -273,7 +274,7 @@ async def delete_community(
     """
     # Get community
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -281,8 +282,8 @@ async def delete_community(
     # RBAC check
     await check_resource_access(request, db_session, current_user, community_uuid, AccessAction.DELETE)
 
-    db_session.delete(community)
-    db_session.commit()
+    await db_session.delete(community)
+    await db_session.commit()
 
     return {"detail": "Community deleted"}
 
@@ -292,7 +293,7 @@ async def link_community_to_course(
     community_uuid: str,
     course_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead:
     """
     Link a community to a course.
@@ -301,7 +302,7 @@ async def link_community_to_course(
     """
     # Get community
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -311,7 +312,7 @@ async def link_community_to_course(
 
     # Get the course
     course_statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(course_statement).first()
+    course = (await db_session.execute(course_statement)).scalars().first()
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -328,7 +329,7 @@ async def link_community_to_course(
         Community.course_id == course.id,
         Community.id != community.id
     )
-    existing = db_session.exec(existing_statement).first()
+    existing = (await db_session.execute(existing_statement)).scalars().first()
 
     if existing:
         raise HTTPException(
@@ -340,8 +341,8 @@ async def link_community_to_course(
     community.update_date = str(datetime.now())
 
     db_session.add(community)
-    db_session.commit()
-    db_session.refresh(community)
+    await db_session.commit()
+    await db_session.refresh(community)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -350,7 +351,7 @@ async def unlink_community_from_course(
     request: Request,
     community_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> CommunityRead:
     """
     Unlink a community from its course.
@@ -359,7 +360,7 @@ async def unlink_community_from_course(
     """
     # Get community
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -371,8 +372,8 @@ async def unlink_community_from_course(
     community.update_date = str(datetime.now())
 
     db_session.add(community)
-    db_session.commit()
-    db_session.refresh(community)
+    await db_session.commit()
+    await db_session.refresh(community)
 
     return CommunityRead.model_validate(community.model_dump())
 
@@ -381,7 +382,7 @@ async def get_community_user_rights(
     request: Request,
     community_uuid: str,
     current_user: Union[PublicUser, AnonymousUser, APITokenUser],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """
     Get detailed user rights for a specific community.
@@ -390,7 +391,7 @@ async def get_community_user_rights(
     """
     # Check if community exists
     statement = select(Community).where(Community.community_uuid == community_uuid)
-    community = db_session.exec(statement).first()
+    community = (await db_session.execute(statement)).scalars().first()
 
     if not community:
         raise HTTPException(status_code=404, detail="Community not found")
@@ -435,7 +436,7 @@ async def get_community_user_rights(
     usergroup_stmt = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == community_uuid
     )
-    usergroup_resources = db_session.exec(usergroup_stmt).all()
+    usergroup_resources = (await db_session.execute(usergroup_stmt)).scalars().all()
 
     if usergroup_resources:
         rights["access"]["has_usergroup_restriction"] = True
@@ -445,7 +446,7 @@ async def get_community_user_rights(
             UserGroupUser.usergroup_id.in_(usergroup_ids),
             UserGroupUser.user_id == acting_user_id
         )
-        user_memberships = db_session.exec(membership_stmt).all()
+        user_memberships = (await db_session.execute(membership_stmt)).scalars().all()
         rights["access"]["via_usergroups"] = [m.usergroup_id for m in user_memberships]
 
     # Check admin/maintainer role using role-based permissions

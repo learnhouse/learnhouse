@@ -15,7 +15,7 @@ if _api_root not in sys.path:  # pragma: no cover
     sys.path.insert(0, _api_root)
 
 from datetime import datetime  # noqa: E402
-from sqlmodel import Session, select  # noqa: E402
+from sqlmodel import select  # noqa: E402
 from src.db.organization_config import OrganizationConfig  # noqa: E402
 from src.security.features_utils.plans import PLAN_FEATURE_CONFIGS  # noqa: E402
 
@@ -113,7 +113,7 @@ def _v2_migrate_config(config: dict) -> dict:
     }
 
 
-def _v2_migrate_all_configs(db_session: Session, batch_size: int = 50) -> int:
+async def _v2_migrate_all_configs(db_session, batch_size: int = 50) -> int:
     """
     Migrate all org configs from v1 to v2 in batches.
 
@@ -121,7 +121,7 @@ def _v2_migrate_all_configs(db_session: Session, batch_size: int = 50) -> int:
         Number of configs migrated.
     """
     statement = select(OrganizationConfig)
-    all_configs = db_session.exec(statement).all()
+    all_configs = (await db_session.execute(statement)).scalars().all()
 
     migrated = 0
     for org_config in all_configs:
@@ -169,22 +169,28 @@ def _v2_migrate_all_configs(db_session: Session, batch_size: int = 50) -> int:
             migrated += 1
 
             if migrated % batch_size == 0:
-                db_session.commit()
+                await db_session.commit()
                 logger.info(f"Migrated {migrated} configs so far...")
 
         except Exception:
             logger.exception(f"Failed to migrate org config id={org_config.id}")
 
     if migrated % batch_size != 0:
-        db_session.commit()
+        await db_session.commit()
 
     logger.info(f"Migration complete: {migrated} configs migrated to v2")
     return migrated
 
 
 if __name__ == "__main__":
+    import asyncio
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    from src.core.events.database import engine
-    with Session(engine) as session:
-        count = _v2_migrate_all_configs(session)
-        logger.info("Done — %s config(s) migrated to v2.", count)
+    from sqlmodel.ext.asyncio.session import AsyncSession as _AsyncSession
+    from src.core.events.database import engine as _engine
+
+    async def _main():
+        async with _AsyncSession(_engine) as session:
+            count = await _v2_migrate_all_configs(session)
+            logger.info("Done — %s config(s) migrated to v2.", count)
+
+    asyncio.run(_main())

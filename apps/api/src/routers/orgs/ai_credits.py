@@ -9,7 +9,8 @@ Provides endpoints for managing AI credits for organizations:
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.organizations import Organization
@@ -72,19 +73,19 @@ class AICreditsSummary(BaseModel):
 async def verify_user_is_org_admin(
     user_id: int,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """Verify that the user is an admin of the organization (superadmins bypass)."""
-    return is_org_admin(user_id, org_id, db_session)
+    return await is_org_admin(user_id, org_id, db_session)
 
 
 async def verify_user_is_org_member(
     user_id: int,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> bool:
     """Verify that the user is a member of the organization (superadmins bypass)."""
-    return is_org_member(user_id, org_id, db_session)
+    return await is_org_member(user_id, org_id, db_session)
 
 
 @router.get(
@@ -105,7 +106,7 @@ async def verify_user_is_org_member(
 async def get_org_ai_credits(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> AICreditsSummary:
     """
     Get the AI credits summary for an organization.
@@ -115,7 +116,7 @@ async def get_org_ai_credits(
     """
     # Validate organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -127,7 +128,7 @@ async def get_org_ai_credits(
             detail="User is not a member of this organization",
         )
 
-    summary = get_ai_credits_summary(org_id, db_session)
+    summary = await get_ai_credits_summary(org_id, db_session)
 
     if "error" in summary:
         raise HTTPException(status_code=404, detail=summary["error"])
@@ -154,7 +155,7 @@ async def add_org_ai_credits(
     org_id: int,
     request: AddCreditsRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> AddCreditsResponse:
     """
     Add purchased AI credits to an organization.
@@ -170,7 +171,7 @@ async def add_org_ai_credits(
     """
     # Validate organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -216,7 +217,7 @@ async def add_org_ai_credits(
 async def reset_org_ai_credits(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> ResetCreditsResponse:
     """
     Reset AI credits usage for an organization.
@@ -232,7 +233,7 @@ async def reset_org_ai_credits(
     """
     # Validate organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -273,15 +274,15 @@ async def set_org_ai_credits(
     org_id: int,
     request: SetCreditsRequest,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> SetCreditsResponse:
     statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    org = (await db_session.execute(statement)).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     user_id = resolve_acting_user_id(current_user)
-    if not user_id or not is_user_superadmin(user_id, db_session):
+    if not user_id or not await is_user_superadmin(user_id, db_session):
         raise HTTPException(status_code=403, detail="Superadmin access required")
 
     if request.amount < 0:

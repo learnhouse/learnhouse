@@ -9,8 +9,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useCommunity, useCommunityDispatch } from '@components/Contexts/CommunityContext'
 import { updateCommunity } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Label } from '@components/ui/label'
@@ -29,6 +29,7 @@ const CommunityEditGeneral: React.FC = () => {
   const community = communityState?.community
   const accessToken = session?.data?.tokens?.access_token
 
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const validationSchema = Yup.object({
@@ -65,7 +66,8 @@ const CommunityEditGeneral: React.FC = () => {
 
       if (result) {
         await revalidateTags(['communities'], org.slug)
-        mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.list(org.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
         if (dispatch) {
           dispatch({ type: 'setCommunity', payload: { ...community, ...values } })
         }

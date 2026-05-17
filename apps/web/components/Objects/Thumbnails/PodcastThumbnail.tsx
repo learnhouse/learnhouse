@@ -5,7 +5,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { getUriWithOrg } from '@services/config/config'
 import { deletePodcast, removePodcastPrefix } from '@services/podcasts/podcasts'
 import { getPodcastThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
 import { Trash2, FilePenLine, Settings2, MoreVertical, Play, Headphones } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
@@ -55,6 +55,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
   const { t, i18n } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
 
   const activeAuthors = podcast.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
   const displayedAuthors = activeAuthors.slice(0, 3)
@@ -65,7 +66,7 @@ function PodcastThumbnail({ podcast, orgslug, customLink, isDashboard = false }:
     const toastId = toast.loading(t('podcasts.deleting_podcast'))
     try {
       await deletePodcast(podcast.podcast_uuid, session.data?.tokens?.access_token)
-      mutate((key) => typeof key === 'string' && key.includes('/podcasts/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: ['podcasts'] })
       toast.success(t('podcasts.podcast_deleted_success'))
     } catch (error) {
       toast.error(t('podcasts.podcast_deleted_error'))

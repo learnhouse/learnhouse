@@ -12,7 +12,7 @@ from src.db.webhooks import (
 from src.services.webhooks import webhooks
 
 
-def _make_webhook_endpoint(
+async def _make_webhook_endpoint(
     db,
     org,
     *,
@@ -36,12 +36,12 @@ def _make_webhook_endpoint(
         update_date="2024-01-01T00:00:00",
     )
     db.add(endpoint)
-    db.commit()
-    db.refresh(endpoint)
+    await db.commit()
+    await db.refresh(endpoint)
     return endpoint
 
 
-def _make_delivery_log(db, endpoint, *, delivery_uuid, attempt, created_at):
+async def _make_delivery_log(db, endpoint, *, delivery_uuid, attempt, created_at):
     log = WebhookDeliveryLog(
         webhook_id=endpoint.id,
         event_name="ping",
@@ -55,8 +55,8 @@ def _make_delivery_log(db, endpoint, *, delivery_uuid, attempt, created_at):
         created_at=created_at,
     )
     db.add(log)
-    db.commit()
-    db.refresh(log)
+    await db.commit()
+    await db.refresh(log)
     return log
 
 
@@ -184,11 +184,13 @@ class TestWebhookCrud:
         assert result.webhook_uuid == "webhook_uuid-123"
         assert result.secret == "whsec_plaintext"
 
-        stored = db.exec(
-            webhooks.select(WebhookEndpoint).where(  # type: ignore[attr-defined]
-                WebhookEndpoint.org_id == org.id
+        stored = (
+            await db.execute(
+                webhooks.select(WebhookEndpoint).where(  # type: ignore[attr-defined]
+                    WebhookEndpoint.org_id == org.id
+                )
             )
-        ).first()
+        ).scalars().first()
         assert stored is not None
         assert stored.secret_encrypted == "encrypted-secret"
         assert stored.description == "Test webhook"
@@ -225,7 +227,7 @@ class TestWebhookCrud:
     async def test_get_webhook_endpoints_and_endpoint(
         self, db, org, admin_user, mock_request
     ):
-        endpoint = _make_webhook_endpoint(db, org)
+        endpoint = await _make_webhook_endpoint(db, org)
 
         with patch(
             "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
@@ -271,7 +273,7 @@ class TestWebhookCrud:
     async def test_update_delete_regenerate_webhook_endpoint(
         self, db, org, admin_user, mock_request
     ):
-        endpoint = _make_webhook_endpoint(db, org)
+        endpoint = await _make_webhook_endpoint(db, org)
 
         with patch(
             "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
@@ -324,7 +326,7 @@ class TestWebhookCrud:
         assert regenerated.secret == "whsec_new_secret"
         assert regenerated.webhook_uuid == endpoint.webhook_uuid
 
-        refreshed = db.get(WebhookEndpoint, endpoint.id)
+        refreshed = await db.get(WebhookEndpoint, endpoint.id)
         assert refreshed is not None
         assert refreshed.url == "https://example.org/updated"
         assert refreshed.secret_encrypted == "encrypted-new-secret"
@@ -344,15 +346,15 @@ class TestWebhookCrud:
             )
 
         assert deleted == {"detail": "Webhook endpoint deleted successfully"}
-        assert db.get(WebhookEndpoint, endpoint.id) is None
+        assert await db.get(WebhookEndpoint, endpoint.id) is None
 
     async def test_update_webhook_endpoint_rejects_events_edit_on_zapier_managed(
         self, db, org, admin_user, mock_request
     ):
-        endpoint = _make_webhook_endpoint(db, org)
+        endpoint = await _make_webhook_endpoint(db, org)
         endpoint.source = "zapier"
         db.add(endpoint)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
@@ -377,10 +379,10 @@ class TestWebhookCrud:
     async def test_update_webhook_endpoint_rejects_url_edit_on_zapier_managed(
         self, db, org, admin_user, mock_request
     ):
-        endpoint = _make_webhook_endpoint(db, org)
+        endpoint = await _make_webhook_endpoint(db, org)
         endpoint.source = "zapier"
         db.add(endpoint)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.webhooks.webhooks.authorization_verify_if_user_is_anon",
@@ -427,15 +429,15 @@ class TestWebhookCrud:
     async def test_get_delivery_logs_and_send_test_event(
         self, db, org, admin_user, mock_request
     ):
-        endpoint = _make_webhook_endpoint(db, org)
-        first_log = _make_delivery_log(
+        endpoint = await _make_webhook_endpoint(db, org)
+        first_log = await _make_delivery_log(
             db,
             endpoint,
             delivery_uuid="delivery-1",
             attempt=1,
             created_at="2024-01-02T00:00:00",
         )
-        second_log = _make_delivery_log(
+        second_log = await _make_delivery_log(
             db,
             endpoint,
             delivery_uuid="delivery-2",

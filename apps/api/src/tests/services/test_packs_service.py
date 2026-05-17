@@ -68,7 +68,7 @@ def _fake_create_task(task):
     return _create_task
 
 
-def _make_pack(db, org, **overrides):
+async def _make_pack(db, org, **overrides):
     pack = OrgPack(
         id=overrides.pop("id", None),
         org_id=overrides.pop("org_id", org.id),
@@ -84,8 +84,8 @@ def _make_pack(db, org, **overrides):
         ),
     )
     db.add(pack)
-    db.commit()
-    db.refresh(pack)
+    await db.commit()
+    await db.refresh(pack)
     return pack
 
 
@@ -116,7 +116,8 @@ class TestPackHelpers:
 
 
 class TestPackLifecycle:
-    def test_activate_pack_create_reactivate_and_guards(self, db, org, other_org):
+    @pytest.mark.asyncio
+    async def test_activate_pack_create_reactivate_and_guards(self, db, org, other_org):
         redis = FakeRedis()
         background_tasks = Mock()
         fake_task = FakeTask()
@@ -139,14 +140,14 @@ class TestPackLifecycle:
             "src.services.packs.packs._background_tasks",
             new=background_tasks,
         ):
-            created = activate_pack(
+            created = await activate_pack(
                 org.id,
                 "ai_500",
                 "sub_new",
                 db,
             )
 
-            _make_pack(
+            await _make_pack(
                 db,
                 org,
                 id=2,
@@ -158,14 +159,14 @@ class TestPackLifecycle:
                 cancelled_at=datetime(2024, 1, 2),
                 cancel_at_period_end=True,
             )
-            reactivated = activate_pack(
+            reactivated = await activate_pack(
                 org.id,
                 "seats_200",
                 "sub_cancelled",
                 db,
             )
 
-            active = _make_pack(
+            active = await _make_pack(
                 db,
                 org,
                 id=3,
@@ -175,14 +176,14 @@ class TestPackLifecycle:
                 status=PackStatusEnum.active,
                 platform_subscription_id="sub_active",
             )
-            same_org = activate_pack(
+            same_org = await activate_pack(
                 org.id,
                 "ai_500",
                 "sub_active",
                 db,
             )
 
-            foreign = _make_pack(
+            foreign = await _make_pack(
                 db,
                 other_org,
                 id=4,
@@ -193,10 +194,10 @@ class TestPackLifecycle:
                 platform_subscription_id="sub_foreign",
             )
             with pytest.raises(HTTPException) as unknown_exc:
-                activate_pack(org.id, "missing_pack", "sub_missing", db)
+                await activate_pack(org.id, "missing_pack", "sub_missing", db)
 
             with pytest.raises(HTTPException) as cross_org_exc:
-                activate_pack(org.id, "ai_500", "sub_foreign", db)
+                await activate_pack(org.id, "ai_500", "sub_foreign", db)
 
         assert created.pack_id == "ai_500"
         assert redis.values["ai_credits_purchased:1"] == 500
@@ -213,7 +214,8 @@ class TestPackLifecycle:
         background_tasks.add.assert_called()
         background_tasks.discard.assert_called()
 
-    def test_deactivate_pack_and_deactivate_all(self, db, org):
+    @pytest.mark.asyncio
+    async def test_deactivate_pack_and_deactivate_all(self, db, org):
         redis = FakeRedis(
             {
                 "ai_credits_purchased:1": 500,
@@ -223,7 +225,7 @@ class TestPackLifecycle:
         background_tasks = Mock()
         fake_task = FakeTask()
 
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=10,
@@ -232,7 +234,7 @@ class TestPackLifecycle:
             quantity=500,
             platform_subscription_id="sub_ai",
         )
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=11,
@@ -241,7 +243,7 @@ class TestPackLifecycle:
             quantity=200,
             platform_subscription_id="sub_seats",
         )
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=12,
@@ -266,15 +268,15 @@ class TestPackLifecycle:
             "src.services.packs.packs._background_tasks",
             new=background_tasks,
         ):
-            cancelled_result = deactivate_pack(org.id, "sub_cancelled", db)
-            deactivated_ai = deactivate_pack(org.id, "sub_ai", db)
-            deactivated_count = deactivate_all_packs_for_org(org.id, db)
+            cancelled_result = await deactivate_pack(org.id, "sub_cancelled", db)
+            deactivated_ai = await deactivate_pack(org.id, "sub_ai", db)
+            deactivated_count = await deactivate_all_packs_for_org(org.id, db)
 
             with pytest.raises(HTTPException) as missing_exc:
-                deactivate_pack(org.id, "missing-sub", db)
+                await deactivate_pack(org.id, "missing-sub", db)
 
             with pytest.raises(HTTPException) as canceling_exc:
-                mark_pack_canceling(org.id, "missing-sub", db)
+                await mark_pack_canceling(org.id, "missing-sub", db)
 
         assert cancelled_result.status == PackStatusEnum.cancelled
         assert deactivated_ai.status == PackStatusEnum.cancelled
@@ -288,8 +290,9 @@ class TestPackLifecycle:
         background_tasks.add.assert_called()
         background_tasks.discard.assert_called()
 
-    def test_get_org_pack_summary_and_mark_canceling(self, db, org):
-        _make_pack(
+    @pytest.mark.asyncio
+    async def test_get_org_pack_summary_and_mark_canceling(self, db, org):
+        await _make_pack(
             db,
             org,
             id=20,
@@ -298,7 +301,7 @@ class TestPackLifecycle:
             quantity=500,
             platform_subscription_id="sub_ai_summary",
         )
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=21,
@@ -307,7 +310,7 @@ class TestPackLifecycle:
             quantity=200,
             platform_subscription_id="sub_seats_summary",
         )
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=22,
@@ -318,9 +321,9 @@ class TestPackLifecycle:
             platform_subscription_id="sub_cancelled_summary",
         )
 
-        summary = get_org_pack_summary(org.id, db)
-        active = get_org_active_packs(org.id, db)
-        marked = mark_pack_canceling(org.id, "sub_ai_summary", db)
+        summary = await get_org_pack_summary(org.id, db)
+        active = await get_org_active_packs(org.id, db)
+        marked = await mark_pack_canceling(org.id, "sub_ai_summary", db)
 
         assert summary == {
             "ai_credits": 500,
@@ -330,8 +333,9 @@ class TestPackLifecycle:
         assert {pack.pack_id for pack in active} == {"ai_500", "seats_200"}
         assert marked.cancel_at_period_end is True
 
-    def test_reconcile_pack_credits(self, db, org, other_org):
-        _make_pack(
+    @pytest.mark.asyncio
+    async def test_reconcile_pack_credits(self, db, org, other_org):
+        await _make_pack(
             db,
             org,
             id=30,
@@ -340,7 +344,7 @@ class TestPackLifecycle:
             quantity=500,
             platform_subscription_id="sub_ai_reconcile",
         )
-        _make_pack(
+        await _make_pack(
             db,
             org,
             id=31,
@@ -349,7 +353,7 @@ class TestPackLifecycle:
             quantity=200,
             platform_subscription_id="sub_seats_reconcile",
         )
-        _make_pack(
+        await _make_pack(
             db,
             other_org,
             id=32,
@@ -375,7 +379,7 @@ class TestPackLifecycle:
             "src.services.packs.packs._get_redis_client",
             return_value=redis,
         ):
-            result = reconcile_pack_credits(db)
+            result = await reconcile_pack_credits(db)
 
         assert result == {
             "orgs": 2,

@@ -6,10 +6,11 @@ import { Info, Globe, Users, Image as ImageIcon, Eye } from 'lucide-react'
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { getBoard } from '@services/boards/boards'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import BoardGeneralTab from '@components/Dashboard/Boards/Tabs/BoardGeneralTab'
 import BoardThumbnailTab from '@components/Dashboard/Boards/Tabs/BoardThumbnailTab'
@@ -33,12 +34,15 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
     ? params.boarduuid
     : `board_${params.boarduuid}`
 
-  const boardKey = access_token ? `${getAPIUrl()}boards/${boardUuid}` : null
-  const { data: board, isLoading } = useSWR(
-    boardKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: board, isLoading } = useQuery({
+    queryKey: queryKeys.boards.detail(boardUuid),
+    queryFn: () => getBoard(boardUuid, access_token!),
+    enabled: !!access_token && !!boardUuid,
+    staleTime: 60_000,
+  })
+
+  // boardKey passed as null — tabs use queryKeys directly now
+  const boardKey = null
 
   const tabs: DashTabItem[] = [
     {
@@ -73,8 +77,31 @@ function BoardSettingsPage(props: { params: Promise<BoardSettingsParams> }) {
 
   if (isLoading || !board) {
     return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
+        <div className="pl-10 pr-10 bg-[#fcfbfc] nice-shadow animate-pulse">
+          <div className="pt-6 pb-4">
+            <div className="h-4 w-40 bg-gray-200 rounded" />
+          </div>
+          <div className="flex py-3 items-center gap-5">
+            <div className="w-[100px] h-[57px] bg-gray-200 rounded-md" />
+            <div className="flex flex-col gap-2">
+              <div className="h-3 w-24 bg-gray-200 rounded" />
+              <div className="h-5 w-48 bg-gray-200 rounded" />
+            </div>
+          </div>
+          <div className="flex space-x-3 pb-2 mt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-8 w-24 bg-gray-200 rounded" />
+            ))}
+          </div>
+        </div>
+        <div className="p-10">
+          <div className="bg-white rounded-xl shadow-sm p-6 space-y-4 animate-pulse">
+            <div className="h-4 w-32 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-100 rounded" />
+            <div className="h-10 bg-gray-100 rounded" />
+          </div>
+        </div>
       </div>
     )
   }

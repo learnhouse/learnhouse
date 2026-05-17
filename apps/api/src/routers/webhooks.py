@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.webhooks import (
@@ -80,7 +80,7 @@ async def api_create_webhook_endpoint(
     org_id: int,
     webhook_object: WebhookEndpointCreate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> WebhookEndpointCreatedResponse:
     """
     Create a new webhook endpoint for an organization.
@@ -110,7 +110,7 @@ async def api_list_webhook_endpoints(
     request: Request,
     org_id: int,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[WebhookEndpointRead]:
     """List all webhook endpoints for an organization."""
     return await get_webhook_endpoints(request, db_session, org_id, current_user)
@@ -133,7 +133,7 @@ async def api_get_webhook_endpoint(
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> WebhookEndpointRead:
     """Get details of a specific webhook endpoint."""
     return await get_webhook_endpoint(
@@ -159,7 +159,7 @@ async def api_update_webhook_endpoint(
     webhook_uuid: str,
     webhook_object: WebhookEndpointUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> WebhookEndpointRead:
     """Update a webhook endpoint (URL, events, active status)."""
     return await update_webhook_endpoint(
@@ -183,7 +183,7 @@ async def api_delete_webhook_endpoint(
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Delete a webhook endpoint and all its delivery logs."""
     return await delete_webhook_endpoint(
@@ -208,7 +208,7 @@ async def api_regenerate_webhook_secret(
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> WebhookEndpointCreatedResponse:
     """
     Regenerate the signing secret for a webhook endpoint.
@@ -236,7 +236,7 @@ async def api_send_test_event(
     org_id: int,
     webhook_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Send a test 'ping' event to verify the webhook endpoint is reachable."""
     _enforce_webhook_rate_limit(org_id, "test")
@@ -263,7 +263,7 @@ async def api_get_webhook_deliveries(
     webhook_uuid: str,
     limit: int = 50,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[WebhookDeliveryLogRead]:
     """Get recent delivery logs for a webhook endpoint."""
     return await get_webhook_delivery_logs(

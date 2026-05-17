@@ -2,7 +2,8 @@ import hmac
 import os
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.events.database import get_db_session
 from src.db.organizations import Organization
@@ -70,9 +71,9 @@ class MarkCancelingRequest(BaseModel):
 async def api_activate_pack(
     org_id: int,
     body: ActivatePackRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    return activate_pack(org_id, body.pack_id, body.platform_subscription_id, db_session)
+    return await activate_pack(org_id, body.pack_id, body.platform_subscription_id, db_session)
 
 
 @internal_router.patch(
@@ -93,9 +94,9 @@ async def api_activate_pack(
 async def api_mark_pack_canceling(
     org_id: int,
     body: MarkCancelingRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    return mark_pack_canceling(org_id, body.platform_subscription_id, db_session)
+    return await mark_pack_canceling(org_id, body.platform_subscription_id, db_session)
 
 
 @internal_router.delete(
@@ -116,9 +117,9 @@ async def api_mark_pack_canceling(
 async def api_deactivate_pack(
     org_id: int,
     body: DeactivatePackRequest,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    return deactivate_pack(org_id, body.platform_subscription_id, db_session)
+    return await deactivate_pack(org_id, body.platform_subscription_id, db_session)
 
 
 @internal_router.delete(
@@ -137,9 +138,9 @@ async def api_deactivate_pack(
 )
 async def api_deactivate_all_packs(
     org_id: int,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    count = deactivate_all_packs_for_org(org_id, db_session)
+    count = await deactivate_all_packs_for_org(org_id, db_session)
     return {"deactivated": count}
 
 
@@ -185,16 +186,16 @@ class PackSummaryResponse(BaseModel):
 async def api_get_org_packs(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    if not is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
+    if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view packs")
 
-    active_packs = get_org_active_packs(org_id, db_session)
+    active_packs = await get_org_active_packs(org_id, db_session)
     catalog = [
         PackCatalogItem(pack_id=k, type=v["type"], quantity=v["quantity"], label=v["label"])
         for k, v in AVAILABLE_PACKS.items()
@@ -221,13 +222,13 @@ async def api_get_org_packs(
 async def api_get_org_pack_summary(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
-    org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
+    org = (await db_session.execute(select(Organization).where(Organization.id == org_id))).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    if not is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
+    if not await is_org_admin(resolve_acting_user_id(current_user), org_id, db_session):
         raise HTTPException(status_code=403, detail="Only organization admins can view pack summary")
 
-    return get_org_pack_summary(org_id, db_session)
+    return await get_org_pack_summary(org_id, db_session)

@@ -9,7 +9,7 @@ import logging
 from typing import AsyncGenerator, Optional
 
 from sqlalchemy import text
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.services.ai.rag.embedding_service import embed_single_text
 from src.services.ai.base import ask_ai_stream
@@ -23,7 +23,7 @@ GEMINI_MODEL = "gemini-2.5-flash"
 async def query_course_rag(
     question: str,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     course_id: Optional[int] = None,
     top_k: int = TOP_K,
 ) -> dict:
@@ -82,7 +82,7 @@ async def query_course_rag(
             "top_k": top_k,
         }
 
-    results = db_session.execute(sql, params).fetchall()
+    results = (await db_session.execute(sql, params)).fetchall()
 
     if not results:
         return {"context": "", "sources": []}
@@ -124,7 +124,7 @@ async def query_course_rag(
 async def query_course_rag_stream(
     question: str,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     message_history: list,
     course_id: Optional[int] = None,
     mode: str = "course_only",

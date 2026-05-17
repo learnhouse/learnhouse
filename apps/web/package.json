@@ -53,6 +53,8 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sentry/nextjs": "^10.40.0",
+    "@tanstack/react-query": "^5.100.10",
+    "@tanstack/react-query-devtools": "^5.100.10",
     "@tiptap/core": "^3.10.1",
     "@tiptap/extension-bullet-list": "^3.10.1",
     "@tiptap/extension-code-block-lowlight": "^3.10.1",

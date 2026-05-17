@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
@@ -16,9 +16,11 @@ import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentC
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import AssignmentSubmissionProvider, { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
-import { mutate } from 'swr'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { useTrail } from '@/hooks/queries/useTrail'
+import { useCourseMeta } from '@/hooks/queries/useCourses'
+import { useActivity } from '@/hooks/queries/useActivity'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
@@ -64,12 +66,61 @@ const LoadingFallback = () => (
   </div>
 );
 
+function ActivityContentSkeleton({ activityType }: { activityType?: string }) {
+  const isVideo = activityType === 'TYPE_VIDEO' || activityType === 'TYPE_SCORM'
+  const isDocument = activityType === 'TYPE_DOCUMENT'
+
+  if (isVideo) {
+    return (
+      <div className="rounded-lg overflow-hidden relative bg-zinc-900 animate-pulse" style={{ minHeight: '420px' }}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
+            <div className="ml-1 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-l-[18px] border-l-white/25" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isDocument) {
+    return (
+      <div className="bg-white nice-shadow rounded-lg p-3 sm:p-7 animate-pulse space-y-3" style={{ minHeight: '520px' }}>
+        <div className="h-4 bg-gray-100 rounded w-full" />
+        <div className="h-4 bg-gray-100 rounded w-[94%]" />
+        <div className="h-4 bg-gray-100 rounded w-[88%]" />
+        <div className="rounded bg-gray-100 h-[320px] mt-4" />
+        <div className="h-4 bg-gray-100 rounded w-full mt-4" />
+        <div className="h-4 bg-gray-100 rounded w-[91%]" />
+        <div className="h-4 bg-gray-100 rounded w-[82%]" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white nice-shadow rounded-lg p-3 sm:p-7 animate-pulse space-y-4" style={{ minHeight: '420px' }}>
+      <div className="h-7 bg-gray-100 rounded w-2/5 mb-2" />
+      <div className="h-4 bg-gray-100 rounded w-full" />
+      <div className="h-4 bg-gray-100 rounded w-[92%]" />
+      <div className="h-4 bg-gray-100 rounded w-full" />
+      <div className="h-4 bg-gray-100 rounded w-[86%]" />
+      <div className="h-5 bg-gray-100 rounded w-1/3 mt-6" />
+      <div className="h-4 bg-gray-100 rounded w-full" />
+      <div className="h-4 bg-gray-100 rounded w-[96%]" />
+      <div className="h-4 bg-gray-100 rounded w-[78%]" />
+      <div className="h-5 bg-gray-100 rounded w-2/5 mt-4" />
+      <div className="h-4 bg-gray-100 rounded w-full" />
+      <div className="h-4 bg-gray-100 rounded w-[88%]" />
+      <div className="h-4 bg-gray-100 rounded w-[72%]" />
+    </div>
+  )
+}
+
 interface ActivityClientProps {
   activityid: string
   courseuuid: string
   orgslug: string
-  activity: any
-  course: any
+  activity: any | null
+  course: any | null
 }
 
 interface ActivityActionsProps {
@@ -85,9 +136,11 @@ interface ActivityActionsProps {
 // Custom hook for activity position
 function useActivityPosition(course: any, activityId: string) {
   return useMemo(() => {
+    if (!course?.chapters) return { allActivities: [], currentIndex: -1 };
+
     let allActivities: any[] = [];
     let currentIndex = -1;
-    
+
     course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
         const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
@@ -96,13 +149,13 @@ function useActivityPosition(course: any, activityId: string) {
           cleanUuid: cleanActivityUuid,
           chapterName: chapter.name
         });
-        
+
         if (cleanActivityUuid === activityId.replace('activity_', '')) {
           currentIndex = allActivities.length - 1;
         }
       });
     });
-    
+
     return { allActivities, currentIndex };
   }, [course, activityId]);
 }
@@ -178,13 +231,14 @@ function ActivityClient(props: ActivityClientProps) {
 
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
-  const activity = props.activity
-  const course = props.course
   const org = useOrg() as any
+
+  const { data: course, isLoading: courseLoading } = useCourseMeta(courseuuid)
+  const { data: activity, isLoading: activityLoading } = useActivity(activityid)
   const session = useLHSession() as any;
   const pathname = usePathname()
   const access_token = session?.data?.tokens?.access_token;
-  const [bgColor, setBgColor] = React.useState('bg-white')
+  const [bgColor, setBgColor] = React.useState('bg-white nice-shadow')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
   const [isFocusMode, setIsFocusMode] = React.useState(false);
@@ -222,12 +276,10 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }, [activityid, activityUuidForTracking, courseUuidForTracking, activityTypeForTracking, track])
 
-  // Add SWR for trail data
-  const { data: trailData, error: error } = useSWR(
-    `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const queryClient = useQueryClient()
+
+  // Fetch trail data — shares cache key with course page trail query
+  const { data: trailData } = useTrail(org?.id)
 
   // Memoize activity position calculation
   const { allActivities, currentIndex } = useActivityPosition(course, activityid);
@@ -351,6 +403,7 @@ function ActivityClient(props: ActivityClientProps) {
   }
 
   useEffect(() => {
+    if (!activity) return;
     if (activity.activity_type == 'TYPE_DYNAMIC' || activity.activity_type == 'TYPE_SCORM') {
       setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
     }
@@ -364,6 +417,58 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }
     , [activity, pathname, isFocusMode])
+
+  if (courseLoading || !course) {
+    return (
+      <GeneralWrapperStyled>
+        <div className="animate-pulse pt-6 space-y-5">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 pb-1">
+            <div className="h-3 bg-gray-200 rounded w-14" />
+            <div className="h-3 bg-gray-200 rounded w-2" />
+            <div className="h-3 bg-gray-200 rounded w-24" />
+            <div className="h-3 bg-gray-200 rounded w-2" />
+            <div className="h-3 bg-gray-200 rounded w-28" />
+          </div>
+          {/* Course header: thumbnail + name */}
+          <div className="flex items-center gap-4">
+            <div className="w-[60px] h-[34px] sm:w-[100px] sm:h-[57px] bg-gray-200 rounded-md shrink-0" />
+            <div className="space-y-2">
+              <div className="h-3 bg-gray-200 rounded w-10" />
+              <div className="h-7 bg-gray-200 rounded w-52" />
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div className="h-2 bg-gray-200 rounded-full w-full" />
+          {/* Activity title row */}
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-28" />
+            <div className="h-8 bg-gray-200 rounded w-2/3" />
+            <div className="flex items-center gap-2 pt-0.5">
+              <div className="w-6 h-6 bg-gray-200 rounded-full shrink-0" />
+              <div className="h-3 bg-gray-200 rounded w-24" />
+            </div>
+          </div>
+          {/* Content box placeholder */}
+          <div className="bg-white nice-shadow rounded-lg p-3 sm:p-7 animate-pulse space-y-4" style={{ minHeight: '420px' }}>
+            <div className="h-7 bg-gray-100 rounded w-2/5 mb-2" />
+            <div className="h-4 bg-gray-100 rounded w-full" />
+            <div className="h-4 bg-gray-100 rounded w-[92%]" />
+            <div className="h-4 bg-gray-100 rounded w-full" />
+            <div className="h-4 bg-gray-100 rounded w-[86%]" />
+            <div className="h-5 bg-gray-100 rounded w-1/3 mt-6" />
+            <div className="h-4 bg-gray-100 rounded w-full" />
+            <div className="h-4 bg-gray-100 rounded w-[96%]" />
+          </div>
+        </div>
+      </GeneralWrapperStyled>
+    )
+  }
+
+  const activityNameFromCourse = allActivities[currentIndex]?.name ?? ''
+  const chapterNameFromCourse = allActivities[currentIndex]?.chapterName ?? ''
+  const displayName = activity?.name ?? activityNameFromCourse
+  const displayActivityType = allActivities[currentIndex]?.activity_type
 
   if (activity?.is_locked) {
     const isAuthenticated = session?.status === 'authenticated'
@@ -404,7 +509,7 @@ function ActivityClient(props: ActivityClientProps) {
 
   return (
     <>
-      <CourseProvider courseuuid={course?.course_uuid}>
+      <CourseProvider courseuuid={course?.course_uuid} initialCourseStructure={course}>
         <Suspense fallback={<LoadingFallback />}>
           <AIChatBotProvider>
             <Suspense fallback={null}>
@@ -510,19 +615,21 @@ function ActivityClient(props: ActivityClientProps) {
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
                         >
-                          <div className="hidden sm:block">
-                            <ActivityShareDropdown
-                              activityName={activity.name}
-                              activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
-                              orgslug={orgslug}
-                              courseUuid={course.course_uuid}
-                              activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                              activityType={activity.activity_type}
-                            />
-                          </div>
+                          {activity && (
+                            <div className="hidden sm:block">
+                              <ActivityShareDropdown
+                                activityName={activity.name}
+                                activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                                orgslug={orgslug}
+                                courseUuid={course.course_uuid}
+                                activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                                activityType={activity.activity_type}
+                              />
+                            </div>
+                          )}
                           <ActivityChapterDropdown
                             course={course}
-                            currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                            currentActivityId={activity ? (activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')) : activityid.replace('activity_', '')}
                             orgslug={orgslug}
                             trailData={trailData}
                           />
@@ -650,7 +757,7 @@ function ActivityClient(props: ActivityClientProps) {
                       <Breadcrumbs items={[
                         { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
                         { label: course.name, href: getUriWithOrg(orgslug, `/course/${courseuuid}`) },
-                        { label: activity.name }
+                        { label: displayName }
                       ]} />
                     </div>
                     <div className="space-y-3 sm:space-y-4 activity-info-section relative" style={{ zIndex: 'var(--z-content)' }}>
@@ -681,16 +788,18 @@ function ActivityClient(props: ActivityClientProps) {
                               </h1>
                             </div>
                           </div>
-                          <div className="hidden sm:block">
-                            <ActivityShareDropdown
-                              activityName={activity.name}
-                              activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
-                              orgslug={orgslug}
-                              courseUuid={course.course_uuid}
-                              activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                              activityType={activity.activity_type}
-                            />
-                          </div>
+                          {activity && (
+                            <div className="hidden sm:block">
+                              <ActivityShareDropdown
+                                activityName={activity.name}
+                                activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                                orgslug={orgslug}
+                                courseUuid={course.course_uuid}
+                                activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                                activityType={activity.activity_type}
+                              />
+                            </div>
+                          )}
                         </div>
 
                         <ActivityIndicators
@@ -706,10 +815,10 @@ function ActivityClient(props: ActivityClientProps) {
                           <div className="flex flex-1 items-center space-x-3 min-w-0">
                             <div className="flex flex-col -space-y-1 min-w-0">
                               <p className="font-bold text-gray-700 text-xs sm:text-md">
-                                {getChapterNameByActivityId(course, activity.id)}
+                                {getChapterNameByActivityId(course, activity?.id) ?? chapterNameFromCourse}
                               </p>
                               <h1 className="font-bold text-gray-950 text-base sm:text-2xl first-letter:uppercase">
-                                {activity.name}
+                                {displayName}
                               </h1>
                               {/* Authors and Dates Section */}
                               <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -816,23 +925,23 @@ function ActivityClient(props: ActivityClientProps) {
                         </div>
                       </div>
 
-                      {activity && activity.published == false && (
-                        <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
+                      {activityLoading || !activity ? (
+                        <ActivityContentSkeleton activityType={displayActivityType} />
+                      ) : activity.published == false ? (
+                        <div className="p-7 rounded-lg bg-gray-800">
                           <div className="text-white">
                             <h1 className="font-bold text-2xl">
                               {t('activities.not_published_yet')}
                             </h1>
                           </div>
                         </div>
-                      )}
-
-                      {activity && activity.published == true && (
+                      ) : activity.published == true ? (
                         <>
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
                             <div className="flex gap-6">
-                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-3 sm:p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
+                              <div className={`flex-1 min-w-0 ${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-3 sm:p-7 rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                                 <button
                                   onClick={() => setIsFocusMode(true)}
                                   className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} hidden sm:flex bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
@@ -854,7 +963,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </div>
                           )}
                         </>
-                      )}
+                      ) : null}
 
                       {/* Activity Actions below the content box */}
                       {activity && activity.published == true && activity.content.paid_access != false && (
@@ -921,6 +1030,7 @@ export function MarkStatus(props: {
   const session = useLHSession() as any;
   const org = useOrg() as any;
   const { isUserPartOfTheOrg } = useOrgMembership();
+  const queryClient = useQueryClient();
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
@@ -1021,9 +1131,10 @@ export function MarkStatus(props: {
         session.data?.tokens?.access_token
       );
 
-      await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
 
       const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid) });
       if (willCompleteAll || !nextActivity) {
         router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
       } else {
@@ -1049,7 +1160,8 @@ export function MarkStatus(props: {
         session.data?.tokens?.access_token
       );
 
-      await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(props.course.course_uuid.replace('course_', '')) });
     } catch (error) {
       toast.error(t('activities.failed_unmark_complete'));
     } finally {
@@ -1306,6 +1418,7 @@ function AssignmentTools(props: {
   const { t } = useTranslation();
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
+  const queryClient = useQueryClient();
   const [gradeData, setGradeData] = React.useState<any>(null);
   const [isGradeModalOpen, setIsGradeModalOpen] = React.useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -1321,7 +1434,8 @@ function AssignmentTools(props: {
       )
       if (res.success) {
         toast.success(t('assignments.assignment_submitted_success'))
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`,)
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
       }
       else {
         toast.error(t('assignments.failed_submit_assignment'))
@@ -1342,8 +1456,8 @@ function AssignmentTools(props: {
         toast.success(t('assignments.retry_assignment_success'));
         // Pull the fresh per-task batch + the user submission so the task
         // editors snap back to an empty state without a hard reload.
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`);
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/tasks/submissions/me`);
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) });
         setGradeData(null);
         setIsGradeModalOpen(false);
         // Re-arm the auto-open on this fresh attempt so the next graded

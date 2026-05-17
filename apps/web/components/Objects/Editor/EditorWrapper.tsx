@@ -191,7 +191,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   return (
     <>
       <Toast></Toast>
-      <OrgProvider orgslug={props.org.slug} initialOrg={props.org}>
+      <OrgProvider orgslug={props.org.slug}>
         {!session.isLoading && (
           <Editor
             org={props.org}

@@ -24,8 +24,8 @@ import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignm
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
 import { updateAssignment } from '@services/courses/assignments';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -151,6 +151,7 @@ function PublishingState() {
     const assignment = useAssignments() as any;
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient();
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
@@ -158,7 +159,7 @@ function PublishingState() {
         const res2 = await updateActivity({ published: !assignment?.assignment_object?.published }, assignment?.activity_object?.activity_uuid, access_token)
         const toast_loading = toast.loading(t('dashboard.assignments.detail.publishing.toasts.updating'))
         if (res.success && res2) {
-            mutate(`${getAPIUrl()}assignments/${assignmentUUID}`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.assignments.detail(assignmentUUID) })
             toast.success(t('dashboard.assignments.detail.publishing.toasts.update_success'))
             toast.dismiss(toast_loading)
         }

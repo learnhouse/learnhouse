@@ -78,7 +78,7 @@ class TestLocalContentRouter:
             update_date="2024-01-01",
         )
         db.add(course)
-        db.commit()
+        await db.commit()
 
         content_root = tmp_path / "content"
         file_path = (
@@ -118,7 +118,7 @@ class TestLocalContentRouter:
                     update_date="2024-01-01",
                 )
             )
-            db.commit()
+            await db.commit()
             app.dependency_overrides[get_current_user] = lambda: regular_user
             ok_response = await client.get(
                 f"/content/orgs/{org.org_uuid}/courses/{course.course_uuid}/activities/activity_x/video.mp4"
@@ -146,7 +146,7 @@ class TestLocalContentRouter:
             update_date="2024-01-01",
         )
         db.add(podcast)
-        db.commit()
+        await db.commit()
 
         content_root = tmp_path / "content"
         file_path = (
@@ -228,7 +228,7 @@ class TestLocalContentRouter:
                 update_date="2024-01-01",
             )
             db.add(private_course)
-            db.commit()
+            await db.commit()
 
             public_podcast = Podcast(
                 id=52,
@@ -254,10 +254,10 @@ class TestLocalContentRouter:
             )
             db.add(public_podcast)
             db.add(private_podcast)
-            db.commit()
+            await db.commit()
 
             assert (
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/course_test/activities/activity_test/file.txt",
                     anonymous_user,
                     db,
@@ -265,7 +265,7 @@ class TestLocalContentRouter:
                 is None
             )
             assert (
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/podcasts/podcast_public_router/episodes/episode_1/file.txt",
                     anonymous_user,
                     db,
@@ -273,7 +273,7 @@ class TestLocalContentRouter:
                 is None
             )
             assert (
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/course_test/activities/activity_test/file.txt",
                     regular_user,
                     db,
@@ -281,7 +281,7 @@ class TestLocalContentRouter:
             ) is None
 
             assert (
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
                     APITokenUser(org_id=org.id, created_by_user_id=1),
                     db,
@@ -290,7 +290,7 @@ class TestLocalContentRouter:
             )
 
             with pytest.raises(HTTPException) as token_course_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
                     APITokenUser(org_id=999, created_by_user_id=1),
                     db,
@@ -298,7 +298,7 @@ class TestLocalContentRouter:
             assert token_course_exc.value.status_code == 403
 
             with pytest.raises(HTTPException) as anon_course_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/course_private_router/activities/activity_test/file.txt",
                     anonymous_user,
                     db,
@@ -306,7 +306,7 @@ class TestLocalContentRouter:
             assert anon_course_exc.value.status_code == 401
 
             with pytest.raises(HTTPException) as anon_podcast_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/podcasts/podcast_private_router/episodes/episode_1/file.txt",
                     anonymous_user,
                     db,
@@ -314,11 +314,11 @@ class TestLocalContentRouter:
             assert anon_podcast_exc.value.status_code == 401
 
             with pytest.raises(HTTPException) as unknown_exc:
-                local_content._check_content_access("misc/file.txt", anonymous_user, db)
+                await local_content._check_content_access("misc/file.txt", anonymous_user, db)
             assert unknown_exc.value.status_code == 401
 
             with pytest.raises(HTTPException) as missing_course_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/courses/missing/activities/activity_test/file.txt",
                     regular_user,
                     db,
@@ -326,7 +326,7 @@ class TestLocalContentRouter:
             assert missing_course_exc.value.status_code == 403
 
             with pytest.raises(HTTPException) as missing_podcast_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/podcasts/missing/episodes/episode_1/file.txt",
                     regular_user,
                     db,
@@ -334,7 +334,7 @@ class TestLocalContentRouter:
             assert missing_podcast_exc.value.status_code == 403
 
             with pytest.raises(HTTPException) as podcast_member_exc:
-                local_content._check_content_access(
+                await local_content._check_content_access(
                     "orgs/org_test/podcasts/podcast_private_router/episodes/episode_1/file.txt",
                     regular_user.model_copy(update={"id": 999}),
                     db,

@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select, func
+from sqlmodel import select, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.courses.activities import Activity
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.courses.chapters import Chapter
@@ -64,13 +65,11 @@ def _require_api_token(current_user) -> APITokenUser:
     return current_user
 
 
-
-
-def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: Session) -> Organization:
+async def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: AsyncSession) -> Organization:
     """Resolve an org_slug, verify it matches the API token's org, and check plan."""
-    org = db_session.exec(
+    org = (await db_session.execute(
         select(Organization).where(Organization.slug == org_slug)
-    ).first()
+    )).scalars().first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
     if org.id != token_user.org_id:
@@ -79,7 +78,7 @@ def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: Sessi
             detail="API token does not have access to this organization",
         )
     # Enforce pro plan requirement for admin API
-    current_plan = get_org_plan(org.id, db_session)
+    current_plan = await get_org_plan(org.id, db_session)
     if not plan_meets_requirement(current_plan, "pro"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -88,24 +87,27 @@ def _resolve_org_slug(org_slug: str, token_user: APITokenUser, db_session: Sessi
     return org
 
 
-def _get_user_in_org(user_id: int, org_id: int, db_session: Session) -> User:
-    """Get a user and verify they belong to the token's organization."""
-    user = db_session.exec(select(User).where(User.id == user_id)).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    membership = db_session.exec(
-        select(UserOrganization).where(
-            UserOrganization.user_id == user_id,
-            UserOrganization.org_id == org_id,
+async def _get_user_in_org(user_id: int, org_id: int, db_session: AsyncSession) -> User:
+    """Get a user and verify they belong to the token's organization (single JOIN)."""
+    result = (await db_session.execute(
+        select(User)
+        .join(
+            UserOrganization,
+            (UserOrganization.user_id == User.id) & (UserOrganization.org_id == org_id),
         )
-    ).first()
-    if not membership:
+        .where(User.id == user_id)
+    )).scalar_one_or_none()
+
+    if result is None:
+        # Distinguish "user not found" from "not a member" for a better error
+        exists = (await db_session.execute(select(User.id).where(User.id == user_id))).scalar_one_or_none()
+        if not exists:
+            raise HTTPException(status_code=404, detail="User not found")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not belong to this organization",
         )
-    return user
+    return result
 
 
 _ROLE_PRIORITY = {
@@ -121,10 +123,10 @@ def _role_priority(role_id: int) -> int:
     return _ROLE_PRIORITY.get(role_id, _DEFAULT_ROLE_PRIORITY)
 
 
-def _check_token_can_assign_role(
+async def _check_token_can_assign_role(
     token_user: APITokenUser,
     role: Role,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """Defense-in-depth guard for role assignment via API tokens.
 
@@ -146,7 +148,7 @@ def _check_token_can_assign_role(
         UserOrganization.user_id == token_user.created_by_user_id,
         UserOrganization.org_id == token_user.org_id,
     )
-    creator_membership = db_session.exec(membership_q).first()
+    creator_membership = (await db_session.execute(membership_q)).scalars().first()
     if creator_membership is None:
         raise HTTPException(
             status_code=403,
@@ -166,11 +168,11 @@ def _check_token_can_assign_role(
 async def issue_user_token(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Issue a JWT access token on behalf of a user in the token's org."""
 
-    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     # Issue a short-lived token (1 hour) for headless use — shorter than the
     # default 8-hour session token to limit blast radius if leaked.
@@ -194,29 +196,29 @@ async def check_course_access(
     token_user: APITokenUser,
     course_uuid: str,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Check if a user can access a specific course within the token's org."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Check if user has a TrailRun (enrollment) for this course
-    enrollment = db_session.exec(
+    enrollment = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
 
     return {
         "has_access": course.public or enrollment is not None,
@@ -234,25 +236,25 @@ async def enroll_user(
     token_user: APITokenUser,
     user_id: int,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     """Enroll a user in a course on their behalf."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Ensure trail exists
-    trail = db_session.exec(
+    trail = (await db_session.execute(
         select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    ).first()
+    )).scalars().first()
     if not trail:
         trail = Trail(
             org_id=token_user.org_id,
@@ -262,17 +264,17 @@ async def enroll_user(
             update_date=str(datetime.now()),
         )
         db_session.add(trail)
-        db_session.commit()
-        db_session.refresh(trail)
+        await db_session.commit()
+        await db_session.refresh(trail)
 
     # Check for existing enrollment
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         raise HTTPException(status_code=400, detail="User is already enrolled in this course")
 
@@ -285,8 +287,8 @@ async def enroll_user(
         update_date=str(datetime.now()),
     )
     db_session.add(trail_run)
-    db_session.commit()
-    db_session.refresh(trail_run)
+    await db_session.commit()
+    await db_session.refresh(trail_run)
 
     await track(
         event_name=analytics_events.COURSE_ENROLLED,
@@ -295,54 +297,54 @@ async def enroll_user(
         properties={"course_uuid": course.course_uuid},
     )
 
-    trail_runs_raw = list(db_session.exec(
+    trail_runs_raw = list((await db_session.execute(
         select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user_id)
-    ).all())
-    return _build_trail_read(trail, trail_runs_raw, db_session, user_id=user_id)
+    )).scalars().all())
+    return await _build_trail_read(trail, trail_runs_raw, db_session, user_id=user_id)
 
 
 async def unenroll_user(
     token_user: APITokenUser,
     user_id: int,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Unenroll a user from a course."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    trail_run = db_session.exec(
+    trail_run = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not trail_run:
         raise HTTPException(status_code=404, detail="Enrollment not found")
 
     # Delete associated trail steps scoped to this org
-    steps = db_session.exec(
+    steps = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.course_id == course.id,
             TrailStep.user_id == user_id,
             TrailStep.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
     for step in steps:
-        db_session.delete(step)
+        await db_session.delete(step)
 
-    db_session.delete(trail_run)
-    db_session.commit()
+    await db_session.delete(trail_run)
+    await db_session.commit()
 
     return {"detail": "User unenrolled successfully"}
 
@@ -350,15 +352,15 @@ async def unenroll_user(
 async def get_user_enrollments(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> TrailRead:
     """Get all enrollments for a user in the token's org."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    trail = db_session.exec(
+    trail = (await db_session.execute(
         select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    ).first()
+    )).scalars().first()
     if not trail:
         return TrailRead(
             org_id=token_user.org_id,
@@ -366,11 +368,11 @@ async def get_user_enrollments(
             runs=[],
         )
 
-    trail_runs_raw = list(db_session.exec(
+    trail_runs_raw = list((await db_session.execute(
         select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user_id)
-    ).all())
+    )).scalars().all())
 
-    return _build_trail_read(trail, trail_runs_raw, db_session, user_id=user_id)
+    return await _build_trail_read(trail, trail_runs_raw, db_session, user_id=user_id)
 
 
 # -- Progress endpoints -------------------------------------------------------
@@ -380,36 +382,36 @@ async def get_user_progress(
     token_user: APITokenUser,
     user_id: int,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Get a user's progress in a specific course."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Total activities in the course
-    total = db_session.exec(
+    total = (await db_session.execute(
         select(func.count(ChapterActivity.id)).where(  # type: ignore
             ChapterActivity.course_id == course.id
         )
-    ).one()
+    )).scalar_one()
 
     # Completed activities - select only activity_id to avoid loading full rows
-    completed_activity_ids = db_session.exec(
+    completed_activity_ids = (await db_session.execute(
         select(TrailStep.activity_id).where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course.id,
             TrailStep.complete == True,
         )
-    ).all()
+    )).scalars().all()
 
     return {
         "course_uuid": course.course_uuid,
@@ -426,26 +428,26 @@ async def complete_activity(
     token_user: APITokenUser,
     user_id: int,
     activity_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Mark an activity as completed on behalf of a user."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    activity = db_session.exec(
+    activity = (await db_session.execute(
         select(Activity).where(Activity.activity_uuid == activity_uuid)
-    ).first()
+    )).scalars().first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    course = db_session.exec(select(Course).where(Course.id == activity.course_id)).first()
+    course = (await db_session.execute(select(Course).where(Course.id == activity.course_id))).scalars().first()
     if not course or course.org_id != token_user.org_id:
         raise HTTPException(status_code=404, detail="Activity not found")
 
     # Ensure trail exists
-    trail = db_session.exec(
+    trail = (await db_session.execute(
         select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    ).first()
+    )).scalars().first()
     if not trail:
         trail = Trail(
             org_id=token_user.org_id,
@@ -455,17 +457,17 @@ async def complete_activity(
             update_date=str(datetime.now()),
         )
         db_session.add(trail)
-        db_session.commit()
-        db_session.refresh(trail)
+        await db_session.commit()
+        await db_session.refresh(trail)
 
     # Ensure trail run exists
-    trailrun = db_session.exec(
+    trailrun = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.trail_id == trail.id,
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
     if not trailrun:
         trailrun = TrailRun(
             trail_id=trail.id if trail.id is not None else 0,
@@ -476,17 +478,17 @@ async def complete_activity(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
-        db_session.commit()
-        db_session.refresh(trailrun)
+        await db_session.commit()
+        await db_session.refresh(trailrun)
 
     # Check for existing step
-    existing_step = db_session.exec(
+    existing_step = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.trailrun_id == trailrun.id,
             TrailStep.activity_id == activity.id,
             TrailStep.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
 
     is_new = existing_step is None
     if is_new:
@@ -504,8 +506,8 @@ async def complete_activity(
             update_date=str(datetime.now()),
         )
         db_session.add(step)
-        db_session.commit()
-        db_session.refresh(step)
+        await db_session.commit()
+        await db_session.refresh(step)
 
         await track(
             event_name=analytics_events.ACTIVITY_COMPLETED,
@@ -546,33 +548,33 @@ async def uncomplete_activity(
     token_user: APITokenUser,
     user_id: int,
     activity_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Remove an activity completion for a user."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    activity = db_session.exec(
+    activity = (await db_session.execute(
         select(Activity).where(Activity.activity_uuid == activity_uuid)
-    ).first()
+    )).scalars().first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    course = db_session.exec(select(Course).where(Course.id == activity.course_id)).first()
+    course = (await db_session.execute(select(Course).where(Course.id == activity.course_id))).scalars().first()
     if not course or course.org_id != token_user.org_id:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    step = db_session.exec(
+    step = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.activity_id == activity.id,
             TrailStep.user_id == user_id,
             TrailStep.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
 
     if step:
-        db_session.delete(step)
-        db_session.commit()
+        await db_session.delete(step)
+        await db_session.commit()
 
     return {
         "activity_uuid": activity_uuid,
@@ -586,25 +588,25 @@ async def complete_course(
     token_user: APITokenUser,
     user_id: int,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Mark all activities in a course as completed for a user."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     # Ensure trail exists
-    trail = db_session.exec(
+    trail = (await db_session.execute(
         select(Trail).where(Trail.org_id == token_user.org_id, Trail.user_id == user_id)
-    ).first()
+    )).scalars().first()
     if not trail:
         trail = Trail(
             org_id=token_user.org_id,
@@ -614,17 +616,17 @@ async def complete_course(
             update_date=str(datetime.now()),
         )
         db_session.add(trail)
-        db_session.commit()
-        db_session.refresh(trail)
+        await db_session.commit()
+        await db_session.refresh(trail)
 
     # Ensure trail run exists
-    trailrun = db_session.exec(
+    trailrun = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.trail_id == trail.id,
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
     if not trailrun:
         trailrun = TrailRun(
             trail_id=trail.id if trail.id is not None else 0,
@@ -635,26 +637,26 @@ async def complete_course(
             update_date=str(datetime.now()),
         )
         db_session.add(trailrun)
-        db_session.commit()
-        db_session.refresh(trailrun)
+        await db_session.commit()
+        await db_session.refresh(trailrun)
 
     # Get all activities in the course
-    chapter_activities = db_session.exec(
+    chapter_activities = (await db_session.execute(
         select(ChapterActivity).where(ChapterActivity.course_id == course.id)
-    ).all()
+    )).scalars().all()
 
     activity_ids = [ca.activity_id for ca in chapter_activities]
     if not activity_ids:
         return {"detail": "No activities in course", "completed_count": 0}
 
     # Get already completed activities
-    existing_steps = db_session.exec(
+    existing_steps = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course.id,
             TrailStep.complete == True,
         )
-    ).all()
+    )).scalars().all()
     already_completed = {s.activity_id for s in existing_steps}
 
     new_count = 0
@@ -676,7 +678,7 @@ async def complete_course(
             db_session.add(step)
             new_count += 1
 
-    db_session.commit()
+    await db_session.commit()
 
     # Check course completion and create certificate
     course_completed = await check_course_completion_and_create_certificate(
@@ -705,18 +707,18 @@ async def complete_course(
 async def get_all_user_progress(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
     """Get progress summary for all courses a user is enrolled in."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    trail_runs = db_session.exec(
+    trail_runs = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
 
     if not trail_runs:
         return []
@@ -724,21 +726,21 @@ async def get_all_user_progress(
     course_ids = [tr.course_id for tr in trail_runs]
 
     # Batch fetch courses
-    courses = db_session.exec(
+    courses = (await db_session.execute(
         select(Course).where(Course.id.in_(course_ids))  # type: ignore
-    ).all()
+    )).scalars().all()
     course_map = {c.id: c for c in courses}
 
     # Batch fetch total activities per course
-    total_counts = db_session.exec(
+    total_counts = (await db_session.execute(
         select(ChapterActivity.course_id, func.count(ChapterActivity.id))  # type: ignore
         .where(ChapterActivity.course_id.in_(course_ids))  # type: ignore
         .group_by(ChapterActivity.course_id)
-    ).all()
+    )).all()
     total_map = {row[0]: row[1] for row in total_counts}
 
     # Batch fetch completed steps
-    completed_counts = db_session.exec(
+    completed_counts = (await db_session.execute(
         select(TrailStep.course_id, func.count(TrailStep.id))  # type: ignore
         .where(
             TrailStep.user_id == user_id,
@@ -746,7 +748,7 @@ async def get_all_user_progress(
             TrailStep.complete == True,
         )
         .group_by(TrailStep.course_id)
-    ).all()
+    )).all()
     completed_map = {row[0]: row[1] for row in completed_counts}
 
     result = []
@@ -776,31 +778,31 @@ def _enum_value(value) -> str:
 async def get_user_trail_detail(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     course_uuid: Optional[str] = None,
 ) -> dict:
     """Build a full trail breakdown for a user — every chapter + every activity
     with per-activity completion status. Optionally filtered to a single course."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     target_course: Optional[Course] = None
     if course_uuid is not None:
-        target_course = db_session.exec(
+        target_course = (await db_session.execute(
             select(Course).where(
                 Course.course_uuid == course_uuid,
                 Course.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         if not target_course:
             raise HTTPException(status_code=404, detail="Course not found")
 
-    trail = db_session.exec(
+    trail = (await db_session.execute(
         select(Trail).where(
             Trail.org_id == token_user.org_id,
             Trail.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
 
     empty_shell = {
         "trail_uuid": trail.trail_uuid if trail else None,
@@ -819,7 +821,7 @@ async def get_user_trail_detail(
         tr_statement = tr_statement.where(TrailRun.trail_id == trail.id)
     if target_course is not None:
         tr_statement = tr_statement.where(TrailRun.course_id == target_course.id)
-    trail_runs = list(db_session.exec(tr_statement).all())
+    trail_runs = list((await db_session.execute(tr_statement)).scalars().all())
 
     course_ids: list[int] = [tr.course_id for tr in trail_runs]
     if target_course is not None and target_course.id not in course_ids:
@@ -828,17 +830,17 @@ async def get_user_trail_detail(
     if not course_ids:
         return empty_shell
 
-    courses = db_session.exec(
+    courses = (await db_session.execute(
         select(Course).where(Course.id.in_(course_ids))  # type: ignore
-    ).all()
+    )).scalars().all()
     course_map = {c.id: c for c in courses if c.org_id == token_user.org_id}
 
     trail_runs = [tr for tr in trail_runs if tr.course_id in course_map]
     run_by_course: dict[int, TrailRun] = {tr.course_id: tr for tr in trail_runs}
 
-    course_chapters = db_session.exec(
+    course_chapters = (await db_session.execute(
         select(CourseChapter).where(CourseChapter.course_id.in_(course_map.keys()))  # type: ignore
-    ).all()
+    )).scalars().all()
     chapters_by_course: dict[int, list[tuple[int, int]]] = {}
     for cc in course_chapters:
         chapters_by_course.setdefault(cc.course_id, []).append((cc.chapter_id, cc.order))
@@ -848,14 +850,14 @@ async def get_user_trail_detail(
     chapter_ids = [cc.chapter_id for cc in course_chapters]
     chapter_map: dict[int, Chapter] = {}
     if chapter_ids:
-        chapters = db_session.exec(
+        chapters = (await db_session.execute(
             select(Chapter).where(Chapter.id.in_(chapter_ids))  # type: ignore
-        ).all()
+        )).scalars().all()
         chapter_map = {c.id: c for c in chapters}
 
-    chapter_activities = db_session.exec(
+    chapter_activities = (await db_session.execute(
         select(ChapterActivity).where(ChapterActivity.course_id.in_(course_map.keys()))  # type: ignore
-    ).all()
+    )).scalars().all()
     chapter_activities_by_chapter: dict[int, list[ChapterActivity]] = {}
     for ca in chapter_activities:
         chapter_activities_by_chapter.setdefault(ca.chapter_id, []).append(ca)
@@ -865,17 +867,17 @@ async def get_user_trail_detail(
     activity_ids = list({ca.activity_id for ca in chapter_activities})
     activity_map: dict[int, Activity] = {}
     if activity_ids:
-        activities = db_session.exec(
+        activities = (await db_session.execute(
             select(Activity).where(Activity.id.in_(activity_ids))  # type: ignore
-        ).all()
+        )).scalars().all()
         activity_map = {a.id: a for a in activities}
 
-    trail_steps = db_session.exec(
+    trail_steps = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.user_id == user_id,
             TrailStep.course_id.in_(course_map.keys()),  # type: ignore
         )
-    ).all()
+    )).scalars().all()
     step_by_activity: dict[int, TrailStep] = {s.activity_id: s for s in trail_steps}
 
     course_blocks: list[dict] = []
@@ -967,7 +969,7 @@ async def provision_user(
     password: Optional[str],
     role_id: int,
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
     extra_metadata: Optional[dict] = None,
 ) -> UserRead:
     """Create a user and attach them to the token's org in one call.
@@ -988,7 +990,7 @@ async def provision_user(
                 },
             )
 
-    role = db_session.exec(select(Role).where(Role.id == role_id)).first()
+    role = (await db_session.execute(select(Role).where(Role.id == role_id))).scalars().first()
     if not role:
         raise HTTPException(status_code=400, detail="Role not found")
     if role.org_id is not None and role.org_id != token_user.org_id:
@@ -997,24 +999,24 @@ async def provision_user(
             detail="Role does not belong to this organization",
         )
 
-    _check_token_can_assign_role(token_user, role, db_session)
+    await _check_token_can_assign_role(token_user, role, db_session)
 
-    check_limits_with_usage("members", token_user.org_id, db_session)
+    await check_limits_with_usage("members", token_user.org_id, db_session)
 
     now = datetime.now()
 
-    existing_user = db_session.exec(select(User).where(User.email == email)).first()
+    existing_user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
     if existing_user:
         # Email matches an existing account — treat this as "attach to org"
         # rather than "create new user". Previously this raised 400 and left
         # any user that had been created in a prior aborted call as an orphan
         # (in the users table but with no UserOrganization row).
-        existing_membership = db_session.exec(
+        existing_membership = (await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == existing_user.id,
                 UserOrganization.org_id == token_user.org_id,
             )
-        ).first()
+        )).scalars().first()
         if existing_membership:
             raise HTTPException(
                 status_code=400,
@@ -1029,9 +1031,9 @@ async def provision_user(
             update_date=str(now),
         )
         db_session.add(membership)
-        db_session.commit()
+        await db_session.commit()
 
-        increase_feature_usage("members", token_user.org_id, db_session)
+        await increase_feature_usage("members", token_user.org_id, db_session)
 
         await track(
             event_name=analytics_events.USER_SIGNED_UP,
@@ -1056,7 +1058,7 @@ async def provision_user(
 
         return UserRead.model_validate(existing_user)
 
-    if db_session.exec(select(User).where(User.username == username)).first():
+    if (await db_session.execute(select(User).where(User.username == username))).scalars().first():
         raise HTTPException(status_code=400, detail="Username already exists")
 
     user = User(
@@ -1074,8 +1076,8 @@ async def provision_user(
         extra_metadata=extra_metadata,
     )
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     membership = UserOrganization(
         user_id=user.id if user.id else 0,
@@ -1085,9 +1087,9 @@ async def provision_user(
         update_date=str(now),
     )
     db_session.add(membership)
-    db_session.commit()
+    await db_session.commit()
 
-    increase_feature_usage("members", token_user.org_id, db_session)
+    await increase_feature_usage("members", token_user.org_id, db_session)
 
     await track(
         event_name=analytics_events.USER_SIGNED_UP,
@@ -1116,35 +1118,35 @@ async def provision_user(
 async def remove_user_from_org_admin(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Remove a user's org membership (scope: membership only)."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    membership = db_session.exec(
+    membership = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not membership:
         raise HTTPException(status_code=404, detail="User not in org")
 
-    admin_memberships = db_session.exec(
+    admin_memberships = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.org_id == token_user.org_id,
             UserOrganization.role_id == ADMIN_ROLE_ID,
         )
-    ).all()
+    )).scalars().all()
     if len(admin_memberships) == 1 and admin_memberships[0].user_id == user_id:
         raise HTTPException(
             status_code=400,
             detail="Cannot remove the last admin of the organization",
         )
 
-    db_session.delete(membership)
-    db_session.commit()
+    await db_session.delete(membership)
+    await db_session.commit()
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -1153,7 +1155,7 @@ async def remove_user_from_org_admin(
         pass
 
     try:
-        decrease_feature_usage("members", token_user.org_id, db_session)
+        await decrease_feature_usage("members", token_user.org_id, db_session)
     except Exception:
         pass
 
@@ -1169,18 +1171,18 @@ async def remove_user_from_org_admin(
 async def get_user_by_email(
     token_user: APITokenUser,
     email: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> UserRead:
     """Find a user by email within the token's org. 404 if not a member."""
 
-    row = db_session.exec(
+    row = (await db_session.execute(
         select(User)
         .join(UserOrganization, UserOrganization.user_id == User.id)  # type: ignore
         .where(
             User.email == email,
             UserOrganization.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not row:
         raise HTTPException(status_code=404, detail="User not found in this organization")
     return UserRead.model_validate(row)
@@ -1226,7 +1228,7 @@ async def issue_magic_link(
     ttl_seconds: int,
     org_slug: str,
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Issue a short-lived JWT wrapped in a browser-clickable consume URL.
 
@@ -1235,7 +1237,7 @@ async def issue_magic_link(
     deployment's allowed-origin config.
     """
 
-    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     safe_redirect = _validate_magic_link_redirect(redirect_to)
 
@@ -1268,7 +1270,7 @@ async def issue_magic_link(
 
 async def consume_magic_link_token(
     token: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> tuple[User, str, str, Optional[str]]:
     """Validate a magic-link JWT. Returns (user, access_token, refresh_token, redirect_to).
 
@@ -1328,16 +1330,16 @@ async def consume_magic_link_token(
     except HTTPException:
         redirect_to = None  # fall through to default "/" on bad redirect
 
-    user = db_session.exec(select(User).where(User.email == email)).first()
+    user = (await db_session.execute(select(User).where(User.email == email))).scalars().first()
     if not user:
         raise HTTPException(status_code=410, detail="User no longer exists")
 
-    membership = db_session.exec(
+    membership = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user.id,
             UserOrganization.org_id == org_id,
         )
-    ).first()
+    )).scalars().first()
     if not membership:
         raise HTTPException(status_code=410, detail="User is no longer a member of this organization")
 
@@ -1357,77 +1359,97 @@ async def bulk_enroll_users(
     course_uuid: str,
     user_ids: List[int],
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Enroll a batch of users in a course. Returns summary of results."""
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+
+    # Pre-fetch memberships, existing enrollments, and trails in 3 queries total
+    member_ids = set(
+        (await db_session.execute(
+            select(UserOrganization.user_id).where(
+                UserOrganization.user_id.in_(user_ids),
+                UserOrganization.org_id == token_user.org_id,
+            )
+        )).scalars().all()
+    )
+    already_enrolled_ids = set(
+        (await db_session.execute(
+            select(TrailRun.user_id).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id.in_(user_ids),
+                TrailRun.org_id == token_user.org_id,
+            )
+        )).scalars().all()
+    )
 
     enrolled: List[int] = []
     already_enrolled: List[int] = []
     skipped: List[int] = []
-
-    now = datetime.now()
+    to_enroll: List[int] = []
 
     for user_id in user_ids:
-        membership = db_session.exec(
-            select(UserOrganization).where(
-                UserOrganization.user_id == user_id,
-                UserOrganization.org_id == token_user.org_id,
-            )
-        ).first()
-        if not membership:
+        if user_id not in member_ids:
             skipped.append(user_id)
-            continue
-
-        existing = db_session.exec(
-            select(TrailRun).where(
-                TrailRun.course_id == course.id,
-                TrailRun.user_id == user_id,
-                TrailRun.org_id == token_user.org_id,
-            )
-        ).first()
-        if existing:
+        elif user_id in already_enrolled_ids:
             already_enrolled.append(user_id)
-            continue
+        else:
+            to_enroll.append(user_id)
 
-        trail = db_session.exec(
+    if not to_enroll:
+        return {"enrolled": enrolled, "already_enrolled": already_enrolled, "skipped": skipped}
+
+    now = datetime.now()
+    trails_by_user: dict[int, Trail] = {
+        t.user_id: t
+        for t in (await db_session.execute(
             select(Trail).where(
                 Trail.org_id == token_user.org_id,
-                Trail.user_id == user_id,
+                Trail.user_id.in_(to_enroll),
             )
-        ).first()
-        if not trail:
-            trail = Trail(
+        )).scalars().all()
+    }
+
+    # Create missing trails in one flush
+    new_trails = []
+    for user_id in to_enroll:
+        if user_id not in trails_by_user:
+            t = Trail(
                 org_id=token_user.org_id,
                 user_id=user_id,
                 trail_uuid=f"trail_{uuid4()}",
                 creation_date=str(now),
                 update_date=str(now),
             )
-            db_session.add(trail)
-            db_session.commit()
-            db_session.refresh(trail)
+            new_trails.append(t)
+            db_session.add(t)
+    if new_trails:
+        await db_session.flush()
+        for t in new_trails:
+            trails_by_user[t.user_id] = t
 
-        trail_run = TrailRun(
+    # Batch-insert all trail runs
+    for user_id in to_enroll:
+        trail = trails_by_user[user_id]
+        db_session.add(TrailRun(
             trail_id=trail.id if trail.id is not None else 0,
             course_id=course.id if course.id is not None else 0,
             org_id=token_user.org_id,
             user_id=user_id,
             creation_date=str(now),
             update_date=str(now),
-        )
-        db_session.add(trail_run)
+        ))
         enrolled.append(user_id)
 
-    db_session.commit()
+    await db_session.commit()
 
     for user_id in enrolled:
         await track(
@@ -1447,23 +1469,23 @@ async def bulk_enroll_users(
 async def list_course_enrollments(
     token_user: APITokenUser,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 25,
 ) -> List[dict]:
     """List users enrolled in a course within the token's org."""
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
     offset = (page - 1) * limit
-    rows = db_session.exec(
+    rows = (await db_session.execute(
         select(User, TrailRun)
         .join(TrailRun, TrailRun.user_id == User.id)  # type: ignore
         .where(
@@ -1473,7 +1495,7 @@ async def list_course_enrollments(
         .order_by(TrailRun.creation_date.desc())  # type: ignore
         .offset(offset)
         .limit(limit)
-    ).all()
+    )).all()
 
     return [
         {
@@ -1492,47 +1514,47 @@ async def reset_user_progress(
     token_user: APITokenUser,
     user_id: int,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Delete a user's trail steps for a course. Keeps TrailRun enrollment intact."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    steps = db_session.exec(
+    steps = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.user_id == user_id,
             TrailStep.course_id == course.id,
             TrailStep.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
     deleted = 0
     for step in steps:
-        db_session.delete(step)
+        await db_session.delete(step)
         deleted += 1
 
-    trail_run = db_session.exec(
+    trail_run = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.course_id == course.id,
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if trail_run:
         from src.db.trail_runs import StatusEnum
         trail_run.status = StatusEnum.STATUS_IN_PROGRESS
         trail_run.update_date = str(datetime.now())
         db_session.add(trail_run)
 
-    db_session.commit()
+    await db_session.commit()
 
     return {
         "course_uuid": course_uuid,
@@ -1549,24 +1571,24 @@ async def award_certificate(
     user_id: int,
     course_uuid: str,
     request: Request,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Manually award a certificate, bypassing the completion gate."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    certification = db_session.exec(
+    certification = (await db_session.execute(
         select(Certifications).where(Certifications.course_id == course.id)
-    ).first()
+    )).scalars().first()
     if not certification:
         raise HTTPException(
             status_code=404,
@@ -1592,35 +1614,35 @@ async def revoke_certificate(
     token_user: APITokenUser,
     user_id: int,
     user_certification_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Delete a user's certificate. Verifies cross-org boundary."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    cert_user = db_session.exec(
+    cert_user = (await db_session.execute(
         select(CertificateUser).where(
             CertificateUser.user_certification_uuid == user_certification_uuid,
             CertificateUser.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
     if not cert_user:
         raise HTTPException(status_code=404, detail="Certificate not found")
 
-    certification = db_session.exec(
+    certification = (await db_session.execute(
         select(Certifications).where(Certifications.id == cert_user.certification_id)
-    ).first()
+    )).scalars().first()
     if not certification:
         raise HTTPException(status_code=404, detail="Certificate not found")
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(Course.id == certification.course_id)
-    ).first()
+    )).scalars().first()
     if not course or course.org_id != token_user.org_id:
         raise HTTPException(status_code=404, detail="Certificate not found")
 
-    db_session.delete(cert_user)
-    db_session.commit()
+    await db_session.delete(cert_user)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name=analytics_events.CERTIFICATE_REVOKED,
@@ -1641,17 +1663,17 @@ async def revoke_certificate(
 # -- User group membership ----------------------------------------------------
 
 
-def _get_usergroup_in_org(
+async def _get_usergroup_in_org(
     usergroup_uuid: str,
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> UserGroup:
-    group = db_session.exec(
+    group = (await db_session.execute(
         select(UserGroup).where(
             UserGroup.usergroup_uuid == usergroup_uuid,
             UserGroup.org_id == org_id,
         )
-    ).first()
+    )).scalars().first()
     if not group:
         raise HTTPException(status_code=404, detail="UserGroup not found")
     return group
@@ -1661,19 +1683,19 @@ async def add_usergroup_member(
     token_user: APITokenUser,
     usergroup_uuid: str,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Add a user to a user group. User and group must both be in the token's org."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(UserGroupUser).where(
             UserGroupUser.usergroup_id == group.id,
             UserGroupUser.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         raise HTTPException(status_code=400, detail="User is already in this group")
 
@@ -1686,7 +1708,7 @@ async def add_usergroup_member(
         update_date=str(now),
     )
     db_session.add(member)
-    db_session.commit()
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_users_added",
@@ -1709,24 +1731,24 @@ async def remove_usergroup_member(
     token_user: APITokenUser,
     usergroup_uuid: str,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Remove a user from a user group."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    member = db_session.exec(
+    member = (await db_session.execute(
         select(UserGroupUser).where(
             UserGroupUser.usergroup_id == group.id,
             UserGroupUser.user_id == user_id,
         )
-    ).first()
+    )).scalars().first()
     if not member:
         raise HTTPException(status_code=404, detail="User is not a member of this group")
 
-    db_session.delete(member)
-    db_session.commit()
+    await db_session.delete(member)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_users_removed",
@@ -1750,29 +1772,29 @@ async def remove_usergroup_member(
 async def get_user_certificates(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
     """Get all certificates for a user in the token's org."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    cert_users = db_session.exec(
+    cert_users = (await db_session.execute(
         select(CertificateUser).where(CertificateUser.user_id == user_id)
-    ).all()
+    )).scalars().all()
 
     if not cert_users:
         return []
 
     cert_ids = list({cu.certification_id for cu in cert_users})
-    certifications = db_session.exec(
+    certifications = (await db_session.execute(
         select(Certifications).where(Certifications.id.in_(cert_ids))  # type: ignore
-    ).all()
+    )).scalars().all()
     cert_map = {c.id: c for c in certifications}
 
     course_ids = list({c.course_id for c in certifications if c.course_id})
-    courses = db_session.exec(
+    courses = (await db_session.execute(
         select(Course).where(Course.id.in_(course_ids))  # type: ignore
-    ).all() if course_ids else []
+    )).scalars().all() if course_ids else []
     course_map = {c.id: c for c in courses}
 
     # Filter to only certs in this org
@@ -1812,23 +1834,23 @@ async def update_user_profile(
     token_user: APITokenUser,
     user_id: int,
     updates: dict,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> UserRead:
     """Update a user's profile fields. Org-scoped — user must be a member."""
 
-    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     if "email" in updates and updates["email"] != user.email:
-        existing = db_session.exec(
+        existing = (await db_session.execute(
             select(User).where(User.email == updates["email"], User.id != user_id)
-        ).first()
+        )).scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Email already in use")
 
     if "username" in updates and updates["username"] != user.username:
-        existing = db_session.exec(
+        existing = (await db_session.execute(
             select(User).where(User.username == updates["username"], User.id != user_id)
-        ).first()
+        )).scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Username already in use")
 
@@ -1838,8 +1860,8 @@ async def update_user_profile(
 
     user.update_date = str(datetime.now())
     db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+    await db_session.commit()
+    await db_session.refresh(user)
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -1854,34 +1876,34 @@ async def change_user_role(
     token_user: APITokenUser,
     user_id: int,
     new_role_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Change a user's org role. Blocks demoting the last admin."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    role = db_session.exec(select(Role).where(Role.id == new_role_id)).first()
+    role = (await db_session.execute(select(Role).where(Role.id == new_role_id))).scalars().first()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
     if role.org_id is not None and role.org_id != token_user.org_id:
         raise HTTPException(status_code=403, detail="Role does not belong to this organization")
 
-    membership = db_session.exec(
+    membership = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not membership:
         raise HTTPException(status_code=404, detail="User not in org")
 
     if membership.role_id == ADMIN_ROLE_ID and new_role_id != ADMIN_ROLE_ID:
-        admin_count = len(db_session.exec(
+        admin_count = len((await db_session.execute(
             select(UserOrganization).where(
                 UserOrganization.org_id == token_user.org_id,
                 UserOrganization.role_id == ADMIN_ROLE_ID,
             )
-        ).all())
+        )).scalars().all())
         if admin_count <= 1:
             raise HTTPException(
                 status_code=400,
@@ -1891,7 +1913,7 @@ async def change_user_role(
     membership.role_id = new_role_id
     membership.update_date = str(datetime.now())
     db_session.add(membership)
-    db_session.commit()
+    await db_session.commit()
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -1912,7 +1934,7 @@ async def create_usergroup(
     token_user: APITokenUser,
     name: str,
     description: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> UserGroupRead:
     """Create a user group / cohort in the token's org."""
 
@@ -1926,8 +1948,8 @@ async def create_usergroup(
         update_date=str(now),
     )
     db_session.add(group)
-    db_session.commit()
-    db_session.refresh(group)
+    await db_session.commit()
+    await db_session.refresh(group)
 
     await dispatch_webhooks(
         event_name="usergroup_created",
@@ -1944,26 +1966,26 @@ async def create_usergroup(
 async def delete_usergroup(
     token_user: APITokenUser,
     usergroup_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Delete a user group and all its memberships + resource links."""
 
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    members = db_session.exec(
+    members = (await db_session.execute(
         select(UserGroupUser).where(UserGroupUser.usergroup_id == group.id)
-    ).all()
+    )).scalars().all()
     for m in members:
-        db_session.delete(m)
+        await db_session.delete(m)
 
-    resources = db_session.exec(
+    resources = (await db_session.execute(
         select(UserGroupResource).where(UserGroupResource.usergroup_id == group.id)
-    ).all()
+    )).scalars().all()
     for r in resources:
-        db_session.delete(r)
+        await db_session.delete(r)
 
-    db_session.delete(group)
-    db_session.commit()
+    await db_session.delete(group)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_deleted",
@@ -1977,23 +1999,23 @@ async def delete_usergroup(
 async def list_usergroup_members(
     token_user: APITokenUser,
     usergroup_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
     page: int = 1,
     limit: int = 25,
 ) -> List[dict]:
     """List users in a cohort, with pagination."""
 
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
     offset = (page - 1) * limit
-    rows = db_session.exec(
+    rows = (await db_session.execute(
         select(User, UserGroupUser)
         .join(UserGroupUser, UserGroupUser.user_id == User.id)  # type: ignore
         .where(UserGroupUser.usergroup_id == group.id)
         .order_by(UserGroupUser.creation_date.asc())  # type: ignore
         .offset(offset)
         .limit(limit)
-    ).all()
+    )).all()
 
     return [
         {
@@ -2007,13 +2029,13 @@ async def list_usergroup_members(
 async def get_user_groups(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> List[dict]:
     """List user groups a user belongs to within the token's org."""
 
-    _get_user_in_org(user_id, token_user.org_id, db_session)
+    await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    rows = db_session.exec(
+    rows = (await db_session.execute(
         select(UserGroup, UserGroupUser)
         .join(UserGroupUser, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
         .where(
@@ -2021,7 +2043,7 @@ async def get_user_groups(
             UserGroup.org_id == token_user.org_id,
         )
         .order_by(UserGroupUser.creation_date.asc())  # type: ignore
-    ).all()
+    )).all()
 
     return [
         {
@@ -2039,27 +2061,27 @@ async def add_course_to_usergroup(
     token_user: APITokenUser,
     usergroup_uuid: str,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Grant a cohort access to a course."""
 
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.usergroup_id == group.id,
             UserGroupResource.resource_uuid == course.course_uuid,
         )
-    ).first()
+    )).scalars().first()
     if existing:
         raise HTTPException(status_code=400, detail="Course is already linked to this group")
 
@@ -2072,7 +2094,7 @@ async def add_course_to_usergroup(
         update_date=str(now),
     )
     db_session.add(link)
-    db_session.commit()
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_resources_added",
@@ -2094,23 +2116,23 @@ async def remove_course_from_usergroup(
     token_user: APITokenUser,
     usergroup_uuid: str,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Revoke a cohort's access to a course."""
 
-    group = _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
+    group = await _get_usergroup_in_org(usergroup_uuid, token_user.org_id, db_session)
 
-    link = db_session.exec(
+    link = (await db_session.execute(
         select(UserGroupResource).where(
             UserGroupResource.usergroup_id == group.id,
             UserGroupResource.resource_uuid == course_uuid,
         )
-    ).first()
+    )).scalars().first()
     if not link:
         raise HTTPException(status_code=404, detail="Course not linked to this group")
 
-    db_session.delete(link)
-    db_session.commit()
+    await db_session.delete(link)
+    await db_session.commit()
 
     await dispatch_webhooks(
         event_name="usergroup_resources_removed",
@@ -2135,48 +2157,49 @@ async def bulk_unenroll_users(
     token_user: APITokenUser,
     course_uuid: str,
     user_ids: List[int],
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Unenroll a batch of users from a course. Returns summary."""
+    from sqlmodel import delete as sql_delete
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    unenrolled: List[int] = []
-    not_enrolled: List[int] = []
-
-    for user_id in user_ids:
-        trail_run = db_session.exec(
-            select(TrailRun).where(
+    enrolled_ids = set(
+        (await db_session.execute(
+            select(TrailRun.user_id).where(
                 TrailRun.course_id == course.id,
-                TrailRun.user_id == user_id,
+                TrailRun.user_id.in_(user_ids),
                 TrailRun.org_id == token_user.org_id,
             )
-        ).first()
-        if not trail_run:
-            not_enrolled.append(user_id)
-            continue
+        )).scalars().all()
+    )
 
-        steps = db_session.exec(
-            select(TrailStep).where(
+    unenrolled = [uid for uid in user_ids if uid in enrolled_ids]
+    not_enrolled = [uid for uid in user_ids if uid not in enrolled_ids]
+
+    if unenrolled:
+        await db_session.execute(
+            sql_delete(TrailStep).where(
                 TrailStep.course_id == course.id,
-                TrailStep.user_id == user_id,
+                TrailStep.user_id.in_(unenrolled),
                 TrailStep.org_id == token_user.org_id,
             )
-        ).all()
-        for step in steps:
-            db_session.delete(step)
-
-        db_session.delete(trail_run)
-        unenrolled.append(user_id)
-
-    db_session.commit()
+        )
+        await db_session.execute(
+            sql_delete(TrailRun).where(
+                TrailRun.course_id == course.id,
+                TrailRun.user_id.in_(unenrolled),
+                TrailRun.org_id == token_user.org_id,
+            )
+        )
+        await db_session.commit()
 
     return {
         "unenrolled": unenrolled,
@@ -2190,7 +2213,7 @@ async def bulk_unenroll_users(
 async def export_user_data(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Full GDPR data export scoped to the token's org.
 
@@ -2199,36 +2222,36 @@ async def export_user_data(
     org A cannot read a user's history in org B.
     """
 
-    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
-    memberships = db_session.exec(
+    memberships = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
 
-    trails = db_session.exec(
+    trails = (await db_session.execute(
         select(Trail).where(
             Trail.user_id == user_id,
             Trail.org_id == token_user.org_id,
         )
-    ).all()
-    trail_runs = db_session.exec(
+    )).scalars().all()
+    trail_runs = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.user_id == user_id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).all()
-    trail_steps = db_session.exec(
+    )).scalars().all()
+    trail_steps = (await db_session.execute(
         select(TrailStep).where(
             TrailStep.user_id == user_id,
             TrailStep.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
 
     # Certificates scoped to this org via Certifications -> Course -> org_id
-    cert_rows = db_session.exec(
+    cert_rows = (await db_session.execute(
         select(CertificateUser, Certifications, Course)
         .join(Certifications, Certifications.id == CertificateUser.certification_id)  # type: ignore
         .join(Course, Course.id == Certifications.course_id)  # type: ignore
@@ -2236,17 +2259,17 @@ async def export_user_data(
             CertificateUser.user_id == user_id,
             Course.org_id == token_user.org_id,
         )
-    ).all()
+    )).all()
     cert_users = [cu for cu, _cert, _course in cert_rows]
 
-    group_rows = db_session.exec(
+    group_rows = (await db_session.execute(
         select(UserGroup, UserGroupUser)
         .join(UserGroupUser, UserGroupUser.usergroup_id == UserGroup.id)  # type: ignore
         .where(
             UserGroupUser.user_id == user_id,
             UserGroup.org_id == token_user.org_id,
         )
-    ).all()
+    )).all()
 
     return {
         "profile": UserRead.model_validate(user).model_dump(),
@@ -2267,7 +2290,7 @@ async def export_user_data(
 async def anonymize_user(
     token_user: APITokenUser,
     user_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """GDPR right-to-be-forgotten. Scrub PII, delete API tokens, invalidate session.
 
@@ -2280,19 +2303,19 @@ async def anonymize_user(
     exposed here) that has platform-wide authority.
     """
 
-    user = _get_user_in_org(user_id, token_user.org_id, db_session)
+    user = await _get_user_in_org(user_id, token_user.org_id, db_session)
 
     placeholder_email = f"deleted-user-{user_id}@anonymized.local"
     placeholder_username = f"deleted_user_{user_id}"
 
-    existing_tokens = db_session.exec(
+    existing_tokens = (await db_session.execute(
         select(APIToken).where(
             APIToken.created_by_user_id == user_id,
             APIToken.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
     for token in existing_tokens:
-        db_session.delete(token)
+        await db_session.delete(token)
 
     user.email = placeholder_email
     user.username = placeholder_username
@@ -2309,7 +2332,7 @@ async def anonymize_user(
     user.signup_method = "anonymized"
     user.update_date = str(datetime.now())
     db_session.add(user)
-    db_session.commit()
+    await db_session.commit()
 
     try:
         from src.routers.users import _invalidate_session_cache
@@ -2341,33 +2364,33 @@ async def anonymize_user(
 async def get_course_analytics(
     token_user: APITokenUser,
     course_uuid: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> dict:
     """Aggregate course stats: enrollment, completion, in-progress, cert count."""
 
     from src.db.trail_runs import StatusEnum
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(
             Course.course_uuid == course_uuid,
             Course.org_id == token_user.org_id,
         )
-    ).first()
+    )).scalars().first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    total_activities = db_session.exec(
+    total_activities = (await db_session.execute(
         select(func.count(ChapterActivity.id)).where(  # type: ignore
             ChapterActivity.course_id == course.id
         )
-    ).one()
+    )).scalar_one()
 
-    trail_runs = db_session.exec(
+    trail_runs = (await db_session.execute(
         select(TrailRun).where(
             TrailRun.course_id == course.id,
             TrailRun.org_id == token_user.org_id,
         )
-    ).all()
+    )).scalars().all()
 
     enrollment_count = len(trail_runs)
     completed_count = sum(1 for tr in trail_runs if tr.status == StatusEnum.STATUS_COMPLETED)
@@ -2375,29 +2398,33 @@ async def get_course_analytics(
 
     average_completion_percentage = 0.0
     if trail_runs and total_activities:
-        percentages = []
-        for tr in trail_runs:
-            completed_steps = db_session.exec(
-                select(func.count(TrailStep.id)).where(  # type: ignore
-                    TrailStep.user_id == tr.user_id,
-                    TrailStep.course_id == course.id,
-                    TrailStep.complete == True,
-                )
-            ).one()
-            percentages.append(completed_steps / total_activities * 100)
-        if percentages:
-            average_completion_percentage = round(sum(percentages) / len(percentages), 1)
+        # Single GROUP BY query replaces one query per enrolled user
+        completion_rows = (await db_session.execute(
+            select(TrailStep.user_id, func.count(TrailStep.id))  # type: ignore
+            .where(
+                TrailStep.course_id == course.id,
+                TrailStep.complete == True,
+            )
+            .group_by(TrailStep.user_id)
+        )).all()
+        completed_by_user = {row[0]: row[1] for row in completion_rows}
+        if trail_runs:
+            total_pct = sum(
+                completed_by_user.get(tr.user_id, 0) / total_activities * 100
+                for tr in trail_runs
+            )
+            average_completion_percentage = round(total_pct / len(trail_runs), 1)
 
     certificate_count = 0
-    certification = db_session.exec(
+    certification = (await db_session.execute(
         select(Certifications).where(Certifications.course_id == course.id)
-    ).first()
+    )).scalars().first()
     if certification:
-        certificate_count = db_session.exec(
+        certificate_count = (await db_session.execute(
             select(func.count(CertificateUser.id)).where(  # type: ignore
                 CertificateUser.certification_id == certification.id
             )
-        ).one()
+        )).scalar_one()
 
     return {
         "course_uuid": course_uuid,
@@ -2408,4 +2435,3 @@ async def get_course_analytics(
         "average_completion_percentage": average_completion_percentage,
         "certificate_count": certificate_count,
     }
-

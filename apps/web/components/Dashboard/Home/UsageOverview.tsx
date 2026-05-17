@@ -1,7 +1,8 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import {
   BookOpen,
   Users,
@@ -16,8 +17,8 @@ import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
-import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { OrgUsageResponse, getOrgUsage } from '@services/orgs/usage'
+import { apiFetch } from '@services/utils/ts/requests'
 import { usePlan } from '@components/Hooks/usePlan'
 
 interface AICreditsSummary {
@@ -64,17 +65,19 @@ export default function UsageOverview() {
   const token = session?.data?.tokens?.access_token
   const orgId = org?.id
 
-  const { data: usageData, isLoading } = useSWR<OrgUsageResponse>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/usage` : null,
-    (url) => orgUsageFetcher(url, token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const { data: usageData, isLoading } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(orgId),
+    queryFn: () => getOrgUsage(orgId, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
-  const { data: aiCredits } = useSWR<AICreditsSummary>(
-    token && orgId ? `${getAPIUrl()}orgs/${orgId}/ai-credits` : null,
-    (url) => swrFetcher(url, token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const { data: aiCredits } = useQuery<AICreditsSummary>({
+    queryKey: ['org', orgId, 'ai-credits'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/ai-credits`, token),
+    enabled: !!token && !!orgId,
+    staleTime: 60_000,
+  })
 
   const ossMode = usageData?.oss_mode ?? false
   const plan = usePlan()

@@ -5,31 +5,12 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getCourseThumbnailMediaDirectory, getOrgOgImageMediaDirectory } from '@services/media/media'
 import { Metadata } from 'next'
 import { getServerSession } from '@/lib/auth/server'
-import { getCanonicalUrl, getOrgSeoConfig, buildBreadcrumbJsonLd } from '@/lib/seo/utils'
+import { getOrgSeoConfig } from '@/lib/seo/utils'
 import { getServerCanonicalUrl } from '@/lib/seo/utils.server'
-import { JsonLd } from '@components/SEO/JsonLd'
-import { notFound } from 'next/navigation'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-type Session = {
-  tokens?: {
-    access_token?: string
-  }
-}
-
-// Shared fetch config so generateMetadata + page component use the same
-// Next.js fetch cache key, enabling automatic request deduplication.
-async function fetchCourseMetadata(courseuuid: string, access_token: string | null | undefined) {
-  return await getCourseMetadata(
-    courseuuid,
-    { revalidate: 120, tags: ['courses'] },
-    access_token || null,
-    { slim: true }
-  )
 }
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
@@ -37,13 +18,12 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const session = await getServerSession()
   const access_token = session?.tokens?.access_token || null
 
-  // Parallelize all metadata fetches
   const [org, course_meta, activity] = await Promise.all([
     getOrganizationContextInfo(params.orgslug, {
       revalidate: 120,
       tags: ['organizations'],
     }),
-    fetchCourseMetadata(params.courseuuid, access_token),
+    getCourseMetadata(params.courseuuid, { revalidate: 120, tags: ['courses'] }, access_token || null, { slim: true }),
     getActivityWithAuthHeader(
       params.activityid,
       { revalidate: 120, tags: ['activities'] },
@@ -112,59 +92,18 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const ActivityPage = async (params: any) => {
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token || null
   const activityid = (await params.params).activityid
   const courseuuid = (await params.params).courseuuid
   const orgslug = (await params.params).orgslug
 
-  let course_meta
-  let activity
-
-  try {
-    [course_meta, activity] = await Promise.all([
-      fetchCourseMetadata(courseuuid, access_token),
-      getActivityWithAuthHeader(
-        activityid,
-        { revalidate: 120, tags: ['activities'] },
-        access_token || null
-      )
-    ])
-  } catch (error) {
-    // If course or activity not found (404) or any error, show not found
-    notFound()
-  }
-
-  // If no course data returned, show not found
-  if (!course_meta || !activity) {
-    notFound()
-  }
-
-  const [homeUrl, coursesUrl, courseUrl, activityUrl] = await Promise.all([
-    getServerCanonicalUrl(orgslug, '/'),
-    getServerCanonicalUrl(orgslug, '/courses'),
-    getServerCanonicalUrl(orgslug, `/course/${courseuuid}`),
-    getServerCanonicalUrl(orgslug, `/course/${courseuuid}/activity/${activityid}`),
-  ])
-
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
-    { name: 'Home', url: homeUrl },
-    { name: 'Courses', url: coursesUrl },
-    { name: course_meta.name, url: courseUrl },
-    { name: activity.name, url: activityUrl },
-  ])
-
   return (
-    <>
-      <JsonLd data={breadcrumbJsonLd} />
-      <ActivityClient
-        activityid={activityid}
-        courseuuid={courseuuid}
-        orgslug={orgslug}
-        activity={activity}
-        course={course_meta}
-      />
-    </>
+    <ActivityClient
+      activityid={activityid}
+      courseuuid={courseuuid}
+      orgslug={orgslug}
+      activity={null}
+      course={null}
+    />
   )
 }
 

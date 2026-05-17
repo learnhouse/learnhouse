@@ -69,8 +69,9 @@ import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { cn } from '@/lib/utils'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
 import { getDeploymentMode } from '@services/config/config'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -93,18 +94,18 @@ function DashLeftMenu() {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const access_token = session?.data?.tokens?.access_token
 
-  // SWR key for courses
-  const coursesKey = org?.slug ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/8` : null
-
   // Fetch recent courses
-  const { data: coursesData } = useSWR(
-    coursesKey,
-    (url) => swrFetcher(url, access_token),
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000,
-    }
-  )
+  const { data: coursesData } = useQuery({
+    queryKey: [...queryKeys.courses.list(org?.slug || ''), 'recent', 8],
+    queryFn: async () => {
+      const url = `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/8`
+      const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, access_token))
+      if (!res.ok) throw new Error('Failed to fetch courses')
+      return res.json()
+    },
+    enabled: !!org?.slug,
+    staleTime: 60_000,
+  })
   const recentCourses = coursesData?.slice(0, 8) || []
 
   // Lazy-load assignments only when the assignments hover menu is opened
@@ -154,10 +155,10 @@ function DashLeftMenu() {
   }
 
 
-  if (!org || !session) return null
-
   const plan = usePlan()
   const mode = getDeploymentMode()
+
+  if (!org || !session) return null
   const planLabel =
     mode === 'ee' ? 'Enterprise Edition' :
     mode === 'oss' ? 'OSS' :

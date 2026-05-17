@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -47,8 +47,10 @@ class TestAuthUtilsService:
     ):
         request = Mock(spec=Request)
         current_user = Mock()
-        db_session = Mock()
-        db_session.exec.return_value.first.return_value = None
+        db_session = AsyncMock()
+        _result = MagicMock()
+        _result.scalars.return_value.first.return_value = None
+        db_session.execute.return_value = _result
 
         without_org_result = SimpleNamespace(user_uuid="created-without-org")
         # After the F-03 fix, ``signWithGoogle`` no longer trusts the
@@ -145,8 +147,10 @@ class TestAuthUtilsService:
             creation_date=str(datetime.now(timezone.utc)),
             update_date=str(datetime.now(timezone.utc)),
         )
-        db_session = Mock()
-        db_session.exec.return_value.first.return_value = user
+        db_session = AsyncMock()
+        _result = MagicMock()
+        _result.scalars.return_value.first.return_value = user
+        db_session.execute.return_value = _result
 
         with patch(
             "src.services.auth.utils.get_google_user_info",
@@ -168,8 +172,8 @@ class TestAuthUtilsService:
         assert user.email_verified is True
         assert user.signup_method == "google"
         db_session.add.assert_called_once_with(user)
-        db_session.commit.assert_called_once()
-        db_session.refresh.assert_called_once_with(user)
+        db_session.commit.assert_awaited_once()
+        db_session.refresh.assert_awaited_once_with(user)
         mock_update_login.assert_called_once_with(user, "10.0.0.7", db_session)
 
     @pytest.mark.asyncio
@@ -178,8 +182,10 @@ class TestAuthUtilsService:
         and the email has no '@', so the prefix-based branch is also skipped."""
         request = Mock(spec=Request)
         current_user = Mock()
-        db_session = Mock()
-        db_session.exec.return_value.first.return_value = None
+        db_session = AsyncMock()
+        _result = MagicMock()
+        _result.scalars.return_value.first.return_value = None
+        db_session.execute.return_value = _result
 
         created_result = SimpleNamespace(user_uuid="created-fallback")
         fake_user_obj = Mock()

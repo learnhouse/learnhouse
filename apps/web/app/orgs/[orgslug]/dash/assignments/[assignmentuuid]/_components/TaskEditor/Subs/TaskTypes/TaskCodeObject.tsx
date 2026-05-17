@@ -39,7 +39,8 @@ import toast from 'react-hot-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { useTranslation } from 'react-i18next'
 import dynamic from 'next/dynamic'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
@@ -173,6 +174,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
   const taskSubmissionsMap = useAssignmentTaskSubmissions()
+  const queryClient = useQueryClient()
 
   // Editor state
   const [contents, setContents] = useState<CodeTaskContents>(DEFAULT_CONTENTS)
@@ -407,9 +409,7 @@ function TaskCodeObject({ view, assignmentTaskUUID, user_id }: TaskCodeObjectPro
       setShowSavingDisclaimer(false)
       // Refresh the batch task-submissions cache so peer Task*Objects (and
       // a future re-mount of this one) see the new submission state.
-      mutate(
-        `${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks/submissions/me`
-      )
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(assignment.assignment_object.assignment_uuid) })
       toast.success(t('dashboard.assignments.editor.toasts.task_saved'))
     } else {
       toast.error(t('dashboard.assignments.editor.toasts.task_save_error'))

@@ -1,7 +1,8 @@
 from typing import List, Dict
 from fastapi import APIRouter, Depends, Request, Query
 from pydantic import BaseModel
-from sqlmodel import Session
+
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.communities.discussions import (
@@ -97,7 +98,7 @@ async def api_create_discussion(
     community_uuid: str,
     discussion_data: DiscussionCreateRequest,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
     Create a new discussion in a community.
@@ -136,7 +137,7 @@ async def api_get_discussions_by_community(
     limit: int = Query(default=10, ge=1, le=100),
     label: str | None = Query(default=None),
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[DiscussionReadWithVoteStatus]:
     """
     Get paginated list of discussions for a community with sorting.
@@ -170,7 +171,7 @@ async def api_get_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
     Get a discussion by UUID.
@@ -195,7 +196,7 @@ async def api_update_discussion(
     discussion_uuid: str,
     discussion_data: DiscussionUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
     Update a discussion.
@@ -224,7 +225,7 @@ async def api_pin_discussion(
     discussion_uuid: str,
     pin_data: DiscussionPinUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
     Pin or unpin a discussion. Requires community admin or maintainer role.
@@ -251,7 +252,7 @@ async def api_lock_discussion(
     discussion_uuid: str,
     lock_data: DiscussionLockUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionReadWithVoteStatus:
     """
     Lock or unlock a discussion. Requires community admin or maintainer role.
@@ -276,7 +277,7 @@ async def api_delete_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Delete a discussion.
@@ -302,7 +303,7 @@ async def api_upvote_discussion(
     request: Request,
     discussion_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionVoteRead:
     """
     Upvote a discussion.
@@ -327,7 +328,7 @@ async def api_remove_upvote(
     request: Request,
     discussion_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Remove an upvote from a discussion.
@@ -350,7 +351,7 @@ async def api_get_user_votes_batch(
     request: Request,
     discussion_uuids: List[str],
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Dict[str, bool]:
     """
     Batch check if user has voted for multiple discussions.
@@ -388,7 +389,7 @@ async def api_create_comment(
     discussion_uuid: str,
     comment_data: CommentCreateRequest,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionCommentReadWithVoteStatus:
     """
     Create a new comment on a discussion.
@@ -423,7 +424,7 @@ async def api_get_comments_by_discussion(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=50, ge=1, le=100),
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[DiscussionCommentReadWithVoteStatus]:
     """
     Get paginated list of comments for a discussion.
@@ -444,7 +445,7 @@ async def api_get_comments_by_discussion(
 )
 async def api_get_comment_count(
     discussion_uuid: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Get the count of comments for a discussion.
@@ -470,7 +471,7 @@ async def api_update_comment(
     comment_uuid: str,
     comment_data: DiscussionCommentUpdate,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionCommentReadWithVoteStatus:
     """
     Update a comment.
@@ -498,7 +499,7 @@ async def api_upvote_comment(
     request: Request,
     comment_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> DiscussionCommentVoteRead:
     """
     Upvote a comment.
@@ -523,7 +524,7 @@ async def api_remove_comment_upvote(
     request: Request,
     comment_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Remove an upvote from a comment.
@@ -548,7 +549,7 @@ async def api_delete_comment(
     request: Request,
     comment_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Delete a comment.
@@ -583,7 +584,7 @@ async def api_get_reactions(
     request: Request,
     discussion_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> List[DiscussionReactionSummary]:
     """
     Get all reactions for a discussion, grouped by emoji.
@@ -613,7 +614,7 @@ async def api_toggle_reaction(
     discussion_uuid: str,
     reaction_data: ReactionRequest,
     current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """
     Toggle a reaction on a discussion.

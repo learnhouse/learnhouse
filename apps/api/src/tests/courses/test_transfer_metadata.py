@@ -38,7 +38,7 @@ CHAPTER_META = {"reviewer": "alice", "weight": 3}
 ACTIVITY_META = {"duration_minutes": 12, "tags": ["video", "intro"]}
 
 
-def _seed(db, org):
+async def _seed(db, org):
     """Insert a Course + Chapter + Activity carrying the test metadata."""
     now = str(datetime.now())
     course = Course(
@@ -54,8 +54,8 @@ def _seed(db, org):
         update_date=now,
     )
     db.add(course)
-    db.commit()
-    db.refresh(course)
+    await db.commit()
+    await db.refresh(course)
 
     chapter = Chapter(
         name="Meta Chapter",
@@ -68,8 +68,8 @@ def _seed(db, org):
         update_date=now,
     )
     db.add(chapter)
-    db.commit()
-    db.refresh(chapter)
+    await db.commit()
+    await db.refresh(chapter)
     db.add(CourseChapter(
         chapter_id=chapter.id, course_id=course.id, org_id=org.id,
         order=1, creation_date=now, update_date=now,
@@ -89,22 +89,23 @@ def _seed(db, org):
         update_date=now,
     )
     db.add(activity)
-    db.commit()
-    db.refresh(activity)
+    await db.commit()
+    await db.refresh(activity)
     db.add(ChapterActivity(
         order=1, chapter_id=chapter.id, activity_id=activity.id,
         course_id=course.id, org_id=org.id,
         creation_date=now, update_date=now,
     ))
-    db.commit()
+    await db.commit()
     return course
 
 
-def test_export_serialization_includes_extra_metadata(db, org):
+@pytest.mark.asyncio
+async def test_export_serialization_includes_extra_metadata(db, org):
     """Export dicts must carry extra_metadata at all three levels."""
-    course = _seed(db, org)
+    course = await _seed(db, org)
 
-    course_data, chapters = _load_course_export_data(course, db)
+    course_data, chapters = await _load_course_export_data(course, db)
 
     assert course_data["extra_metadata"] == COURSE_META
     assert len(chapters) == 1
@@ -130,8 +131,8 @@ async def test_import_constructors_restore_extra_metadata(db, org, tmp_path):
         creation_date=now, update_date=now,
     )
     db.add(new_course)
-    db.commit()
-    db.refresh(new_course)
+    await db.commit()
+    await db.refresh(new_course)
 
     chapter_data = {
         "name": "Imported Chapter", "description": "", "thumbnail_image": "",
@@ -169,18 +170,18 @@ async def test_import_constructors_restore_extra_metadata(db, org, tmp_path):
         db_session=db,
     )
 
-    db.commit()
+    await db.commit()
 
     # Re-fetch to confirm the values are persisted.
-    persisted_course = db.exec(
+    persisted_course = (await db.execute(
         select(Course).where(Course.id == new_course.id)
-    ).one()
-    persisted_chapter = db.exec(
+    )).scalars().one()
+    persisted_chapter = (await db.execute(
         select(Chapter).where(Chapter.id == new_chapter.id)
-    ).one()
-    persisted_activity = db.exec(
+    )).scalars().one()
+    persisted_activity = (await db.execute(
         select(Activity).where(Activity.id == new_activity.id)
-    ).one()
+    )).scalars().one()
 
     assert persisted_course.extra_metadata == COURSE_META
     assert persisted_chapter.extra_metadata == CHAPTER_META

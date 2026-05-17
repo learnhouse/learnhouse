@@ -1,7 +1,8 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 import json
 import logging
 
@@ -42,9 +43,9 @@ async def event_generator(generator, session_uuid: str):
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred.'})}\n\n"
 
 
-def get_org_ai_model(org_id: int, db_session: Session) -> str:
+async def get_org_ai_model(org_id: int, db_session: AsyncSession) -> str:
     try:
-        current_plan = get_org_plan(org_id, db_session)
+        current_plan = await get_org_plan(org_id, db_session)
         if plan_meets_requirement(current_plan, "pro"):
             return "gemini-3-flash-preview"
         return "gemini-2.5-flash-lite"
@@ -55,16 +56,16 @@ def get_org_ai_model(org_id: int, db_session: Session) -> str:
 async def _get_course_context(
     course_uuid: Optional[str],
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     prompt: str,
 ) -> tuple[Optional[str], Optional[int]]:
     """Return (course_context_str, course_id) or (None, None) if no course."""
     if not course_uuid:
         return None, None
 
-    course = db_session.exec(
+    course = (await db_session.execute(
         select(Course).where(Course.course_uuid == course_uuid)
-    ).first()
+    )).scalars().first()
     if not course or course.org_id != org_id:
         return None, None
 
@@ -97,25 +98,25 @@ async def start_playground_session(
     request: Request,
     session_request: StartPlaygroundSession,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Start a new Playground AI generation session with streaming response."""
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == session_request.playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    org = db_session.exec(
+    org = (await db_session.execute(
         select(Organization).where(Organization.id == playground.org_id)
-    ).first()
+    )).scalars().first()
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user can edit (must be creator or have update rights)
     generate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
-    rights = _get_user_rights(generate_acting_user_id, playground.org_id, db_session)
+    rights = await _get_user_rights(generate_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     is_owner = playground.created_by == generate_acting_user_id
     can_edit = pg_rights.get("action_update", False) or (
@@ -127,9 +128,9 @@ async def start_playground_session(
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(generate_acting_user_id, org.id)
-    reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=3)
 
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     # Fetch RAG context if course linked
     course_context, _ = await _get_course_context(
@@ -179,7 +180,7 @@ async def iterate_playground_session(
     request: Request,
     message_request: SendPlaygroundMessage,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Continue an existing Playground session with a new message."""
     session = get_playground_session(message_request.session_uuid)
@@ -195,22 +196,22 @@ async def iterate_playground_session(
     if session.playground_uuid != message_request.playground_uuid:
         raise HTTPException(status_code=400, detail="Playground UUID mismatch")
 
-    playground = db_session.exec(
+    playground = (await db_session.execute(
         select(Playground).where(Playground.playground_uuid == message_request.playground_uuid)
-    ).first()
+    )).scalars().first()
     if not playground:
         raise HTTPException(status_code=404, detail="Playground not found")
 
-    org = db_session.exec(
+    org = (await db_session.execute(
         select(Organization).where(Organization.id == playground.org_id)
-    ).first()
+    )).scalars().first()
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Verify user can edit
     iterate_acting_user_id = resolve_acting_user_id(current_user)
     from src.services.playgrounds.playgrounds import _get_user_rights
-    rights = _get_user_rights(iterate_acting_user_id, playground.org_id, db_session)
+    rights = await _get_user_rights(iterate_acting_user_id, playground.org_id, db_session)
     pg_rights = rights.get("playgrounds", {})
     is_owner = playground.created_by == iterate_acting_user_id
     can_edit = pg_rights.get("action_update", False) or (
@@ -222,9 +223,9 @@ async def iterate_playground_session(
     # F-9: per-user + per-org rate limit before any compute / credit spend.
     from src.services.security.rate_limiting import enforce_ai_rate_limit
     enforce_ai_rate_limit(iterate_acting_user_id, org.id)
-    reserve_ai_credit(org.id, db_session, amount=3)
+    await reserve_ai_credit(org.id, db_session, amount=3)
 
-    ai_model = get_org_ai_model(org.id, db_session)
+    ai_model = await get_org_ai_model(org.id, db_session)
 
     # Fetch RAG context if course linked
     course_context, _ = await _get_course_context(
@@ -269,7 +270,7 @@ async def iterate_playground_session(
 async def get_session_state(
     session_uuid: str,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> PlaygroundSessionResponse:
     """Get the current state of a Playground session."""
     session = get_playground_session(session_uuid)

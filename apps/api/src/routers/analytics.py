@@ -6,8 +6,9 @@ import re
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import select
 from config.config import get_learnhouse_config
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser, AnonymousUser, APITokenUser, User
 from src.db.user_organizations import UserOrganization
@@ -147,27 +148,27 @@ async def _execute_tinybird_query(
     return response
 
 
-def _verify_org_membership(user_id: int, org_id: int, db_session: Session) -> None:
+async def _verify_org_membership(user_id: int, org_id: int, db_session: AsyncSession) -> None:
     """Verify the user is a member of the specified organization.
 
     Prevents cross-org data access (IDOR) by ensuring the requesting user
     actually belongs to the org whose data they are querying.
     Superadmins bypass this check (they have access to all organizations).
     """
-    if is_user_superadmin(user_id, db_session):
+    if await is_user_superadmin(user_id, db_session):
         return
 
-    membership = db_session.exec(
+    membership = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == org_id,
         )
-    ).first()
+    )).scalars().first()
     if not membership:
         raise HTTPException(status_code=403, detail="Not a member of this organization")
 
 
-def _verify_org_admin(user_id: int, org_id: int, db_session: Session) -> None:
+async def _verify_org_admin(user_id: int, org_id: int, db_session: AsyncSession) -> None:
     """Verify the user has admin/maintainer role or a custom role with
     organizations.action_update permission in the specific organization.
 
@@ -175,23 +176,23 @@ def _verify_org_admin(user_id: int, org_id: int, db_session: Session) -> None:
     to the actual organization being accessed — not any org the user belongs to.
     Superadmins bypass this check.
     """
-    if is_user_superadmin(user_id, db_session):
+    if await is_user_superadmin(user_id, db_session):
         return
 
     # Get the user's role in this specific org
-    membership = db_session.exec(
+    membership = (await db_session.execute(
         select(UserOrganization).where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == org_id,
         )
-    ).first()
+    )).scalars().first()
     if not membership:
         raise HTTPException(status_code=403, detail="Admin access required for this organization")
 
     # Fetch the role to check permissions
-    role = db_session.exec(
+    role = (await db_session.execute(
         select(Role).where(Role.id == membership.role_id)
-    ).first()
+    )).scalars().first()
     if not role:
         raise HTTPException(status_code=403, detail="Admin access required for this organization")
 
@@ -222,7 +223,7 @@ def _parse_safe_params(
     return safe_org_id, safe_days
 
 
-def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
+async def _enrich_with_metadata(rows: list[dict], db_session: AsyncSession) -> list[dict]:
     """Enrich analytics result rows with course/activity metadata from PostgreSQL."""
     if not rows:
         return rows
@@ -236,9 +237,9 @@ def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
     # Batch fetch courses
     course_map: dict[str, Course] = {}
     if course_uuids:
-        courses = db_session.exec(
+        courses = (await db_session.execute(
             select(Course).where(Course.course_uuid.in_(list(course_uuids)))  # type: ignore
-        ).all()
+        )).scalars().all()
         course_map = {c.course_uuid: c for c in courses}
 
     # Collect unique activity_uuids
@@ -251,18 +252,18 @@ def _enrich_with_metadata(rows: list[dict], db_session: Session) -> list[dict]:
     # Batch fetch activities
     activity_map: dict[str, Activity] = {}
     if activity_uuids:
-        activities = db_session.exec(
+        activities = (await db_session.execute(
             select(Activity).where(Activity.activity_uuid.in_(list(activity_uuids)))  # type: ignore
-        ).all()
+        )).scalars().all()
         activity_map = {a.activity_uuid: a for a in activities}
 
         # Also resolve course_uuid for activities (needed when rows don't have course_uuid)
         activity_course_ids = {a.course_id for a in activities if a.course_id}
         missing_course_ids = activity_course_ids - {c.id for c in course_map.values()}
         if missing_course_ids:
-            extra_courses = db_session.exec(
+            extra_courses = (await db_session.execute(
                 select(Course).where(Course.id.in_(list(missing_course_ids)))  # type: ignore
-            ).all()
+            )).scalars().all()
             for c in extra_courses:
                 course_map[c.course_uuid] = c
 
@@ -333,12 +334,12 @@ async def ingest_frontend_event(
     body: FrontendEvent,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), body.org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), body.org_id, db_session)
 
     if body.event_name not in ALLOWED_FRONTEND_EVENTS:
         raise HTTPException(status_code=400, detail="Invalid event name")
@@ -400,14 +401,14 @@ async def query_dashboard_detail(
     org_id: int,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     if query_name not in DETAIL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown detail query")
@@ -425,13 +426,13 @@ async def query_dashboard_detail(
     ch_data = ch_result.get("data", [])
 
     # Enrich with course/activity metadata from PostgreSQL
-    ch_data = _enrich_with_metadata(ch_data, db_session)
+    ch_data = await _enrich_with_metadata(ch_data, db_session)
 
     # Enrich with user info from PostgreSQL
     user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
-        users = db_session.exec(select(User).where(User.id.in_(user_ids))).all()  # type: ignore
+        users = (await db_session.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()  # type: ignore
         users_map = {
             u.id: {
                 "user_uuid": u.user_uuid,
@@ -469,15 +470,15 @@ async def query_dashboard(
     org_id: int,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Admin check
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     if query_name not in ALL_QUERIES:
         raise HTTPException(status_code=404, detail="Unknown query")
@@ -487,7 +488,7 @@ async def query_dashboard(
         from src.security.features_utils.plan_check import _check_mode_bypass
         bypass = _check_mode_bypass("analytics_advanced")
         if bypass is None:  # SaaS mode — check plan
-            current_plan = get_org_plan(org_id, db_session)
+            current_plan = await get_org_plan(org_id, db_session)
             if not plan_meets_requirement(current_plan, "enterprise"):
                 raise HTTPException(
                     status_code=403,
@@ -500,7 +501,7 @@ async def query_dashboard(
     sql = _build_sql(sql_template, safe_org_id, safe_days)
 
     result = await _execute_tinybird_query(query_name, sql, safe_org_id, safe_days)
-    result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
+    result["data"] = await _enrich_with_metadata(result.get("data", []), db_session)
     return result
 
 
@@ -523,14 +524,14 @@ async def query_dashboard_db(
     org_id: int,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     DB_QUERIES = {"grade_distribution"}
 
@@ -538,7 +539,7 @@ async def query_dashboard_db(
         raise HTTPException(status_code=404, detail="Unknown query")
 
     # All DB queries are Pro+ gated
-    current_plan = get_org_plan(org_id, db_session)
+    current_plan = await get_org_plan(org_id, db_session)
     if not plan_meets_requirement(current_plan, "pro"):
         raise HTTPException(
             status_code=403,
@@ -546,16 +547,16 @@ async def query_dashboard_db(
         )
 
     if query_name == "grade_distribution":
-        return _query_grade_distribution(org_id, db_session)
+        return await _query_grade_distribution(org_id, db_session)
 
     raise HTTPException(status_code=404, detail="Unknown query")  # pragma: no cover
 
 
-def _query_grade_distribution(org_id: int, db_session: Session):
+async def _query_grade_distribution(org_id: int, db_session: AsyncSession):
     """Grade distribution histogram from PostgreSQL."""
-    from sqlmodel import text
+    from sqlalchemy import text
 
-    result = db_session.exec(
+    result = await db_session.execute(
         text(
             """
             SELECT
@@ -569,7 +570,7 @@ def _query_grade_distribution(org_id: int, db_session: Session):
             ORDER BY aus.grade
             """
         ),
-        params={"org_id": org_id},
+        {"org_id": org_id},
     )
     rows = result.all()
     return {"data": [{"grade": row[0], "count": row[1]} for row in rows]}
@@ -641,17 +642,17 @@ async def query_course_dashboard_detail(
     course_uuid: str,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Pro plan required for all course analytics
-    current_plan = get_org_plan(org_id, db_session)
+    current_plan = await get_org_plan(org_id, db_session)
     if not plan_meets_requirement(current_plan, "pro"):
         raise HTTPException(
             status_code=403,
@@ -678,11 +679,11 @@ async def query_course_dashboard_detail(
 
     # Fallback: if Tinybird has no enrollment data, use PostgreSQL TrailRun
     if query_name == "course_recent_enrollments" and not ch_data:
-        course_obj = db_session.exec(
+        course_obj = (await db_session.execute(
             select(Course).where(Course.course_uuid == safe_course_uuid)
-        ).first()
+        )).scalars().first()
         if course_obj:
-            trail_runs = db_session.exec(
+            trail_runs = (await db_session.execute(
                 select(TrailRun)
                 .where(
                     TrailRun.course_id == course_obj.id,
@@ -690,7 +691,7 @@ async def query_course_dashboard_detail(
                 )
                 .order_by(TrailRun.id.desc())  # type: ignore
                 .limit(50)
-            ).all()
+            )).scalars().all()
             ch_data = [
                 {
                     "user_id": tr.user_id,
@@ -700,13 +701,13 @@ async def query_course_dashboard_detail(
             ]
 
     # Enrich with course/activity metadata from PostgreSQL
-    ch_data = _enrich_with_metadata(ch_data, db_session)
+    ch_data = await _enrich_with_metadata(ch_data, db_session)
 
     # Enrich with user info from PostgreSQL
     user_ids = list({int(row["user_id"]) for row in ch_data if row.get("user_id")})
     users_map: dict[int, dict] = {}
     if user_ids:
-        users = db_session.exec(select(User).where(User.id.in_(user_ids))).all()  # type: ignore
+        users = (await db_session.execute(select(User).where(User.id.in_(user_ids)))).scalars().all()  # type: ignore
         users_map = {
             u.id: {
                 "user_uuid": u.user_uuid,
@@ -745,17 +746,17 @@ async def query_course_dashboard(
     course_uuid: str,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Pro plan required for all course analytics
-    current_plan = get_org_plan(org_id, db_session)
+    current_plan = await get_org_plan(org_id, db_session)
     if not plan_meets_requirement(current_plan, "pro"):
         raise HTTPException(
             status_code=403,
@@ -776,7 +777,7 @@ async def query_course_dashboard(
         query_name, sql, safe_org_id, safe_days,
         course_id=safe_course_uuid,
     )
-    result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
+    result["data"] = await _enrich_with_metadata(result.get("data", []), db_session)
     return result
 
 
@@ -800,14 +801,14 @@ async def export_analytics(
     org_id: int,
     request: Request,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_admin(resolve_acting_user_id(current_user), org_id, db_session)
 
     # Parse params
     fmt = request.query_params.get("format", "json")
@@ -844,7 +845,7 @@ async def export_analytics(
         d = safe_days if safe_days else default_days
         sql = _build_sql(sql_template, safe_org_id, d, safe_course_uuid)
         result = await _execute_tinybird_query(qname, sql, safe_org_id, d, course_id=safe_course_uuid)
-        result["data"] = _enrich_with_metadata(result.get("data", []), db_session)
+        result["data"] = await _enrich_with_metadata(result.get("data", []), db_session)
         results[qname] = result
 
     if fmt == "json":
@@ -885,13 +886,13 @@ async def export_analytics(
 async def get_plan_info(
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
+    await _verify_org_membership(resolve_acting_user_id(current_user), org_id, db_session)
 
-    current_plan = get_org_plan(org_id, db_session)
+    current_plan = await get_org_plan(org_id, db_session)
     tier = "advanced" if plan_meets_requirement(current_plan, "pro") else "core"
     return PlanInfoResponse(tier=tier, plan=current_plan)

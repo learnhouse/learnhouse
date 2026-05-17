@@ -9,8 +9,8 @@ import * as Form from '@radix-ui/react-form'
 import { useOrg } from '@components/Contexts/OrgContext'
 import React from 'react'
 import { createRole } from '@services/roles/roles'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
@@ -296,6 +296,7 @@ function AddRole(props: AddRoleProps) {
     const org = useOrg() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient()
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [rights, setRights] = React.useState<Rights>(defaultRights)
 
@@ -377,7 +378,7 @@ function AddRole(props: AddRoleProps) {
             }, access_token)
             if (res.status === 200 || res.status === 201) {
                 setIsSubmitting(false)
-                mutate(`${getAPIUrl()}roles/org/${org.id}`)
+                queryClient.invalidateQueries({ queryKey: queryKeys.org.roles(org.id) })
                 props.setCreateRoleModal(false)
                 toast.success(t('dashboard.users.roles.modals.create.toasts.success'), {id:toastID})
             } else {

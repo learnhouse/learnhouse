@@ -2,7 +2,8 @@ import asyncio
 import logging
 from datetime import datetime
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.packs import OrgPack, PackStatusEnum, PackTypeEnum
 from src.security.features_utils.packs import AVAILABLE_PACKS
@@ -65,11 +66,11 @@ def _revoke_pack_credits(org_id: int, pack_type: PackTypeEnum, quantity: int):
         _remove_member_seats(org_id, quantity)
 
 
-def activate_pack(
+async def activate_pack(
     org_id: int,
     pack_id: str,
     platform_subscription_id: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> OrgPack:
     if pack_id not in AVAILABLE_PACKS:
         raise HTTPException(status_code=400, detail=f"Unknown pack_id: {pack_id}")
@@ -77,11 +78,11 @@ def activate_pack(
     pack_def = AVAILABLE_PACKS[pack_id]
 
     # Use SELECT ... FOR UPDATE to prevent race conditions from concurrent webhooks
-    existing = db_session.exec(
+    existing = (await db_session.execute(
         select(OrgPack)
         .where(OrgPack.platform_subscription_id == platform_subscription_id)
         .with_for_update()
-    ).first()
+    )).scalars().first()
 
     if existing:
         # Validate org_id matches to prevent cross-org activation
@@ -107,13 +108,13 @@ def activate_pack(
         # Use the stored quantity, not the pack_def quantity (they should match,
         # but the DB record is the source of truth)
         db_session.add(existing)
-        db_session.flush()
+        await db_session.flush()
 
         # Add credits/seats to Redis — use stored quantity from DB record
         _apply_pack_credits(org_id, pack_def)
 
-        db_session.commit()
-        db_session.refresh(existing)
+        await db_session.commit()
+        await db_session.refresh(existing)
         return existing
 
     # Create new pack record
@@ -127,13 +128,13 @@ def activate_pack(
         platform_subscription_id=platform_subscription_id,
     )
     db_session.add(org_pack)
-    db_session.flush()
+    await db_session.flush()
 
     # Add credits/seats to Redis
     _apply_pack_credits(org_id, pack_def)
 
-    db_session.commit()
-    db_session.refresh(org_pack)
+    await db_session.commit()
+    await db_session.refresh(org_pack)
 
     _task = asyncio.create_task(dispatch_webhooks(
         event_name="pack_activated",
@@ -151,19 +152,19 @@ def activate_pack(
     return org_pack
 
 
-def deactivate_pack(
+async def deactivate_pack(
     org_id: int,
     platform_subscription_id: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> OrgPack:
-    org_pack = db_session.exec(
+    org_pack = (await db_session.execute(
         select(OrgPack)
         .where(
             OrgPack.org_id == org_id,
             OrgPack.platform_subscription_id == platform_subscription_id,
         )
         .with_for_update()
-    ).first()
+    )).scalars().first()
 
     if not org_pack:
         raise HTTPException(
@@ -178,13 +179,13 @@ def deactivate_pack(
     org_pack.status = PackStatusEnum.cancelled
     org_pack.cancelled_at = datetime.now()
     db_session.add(org_pack)
-    db_session.flush()
+    await db_session.flush()
 
     # Remove credits/seats from Redis
     _revoke_pack_credits(org_id, org_pack.pack_type, org_pack.quantity)
 
-    db_session.commit()
-    db_session.refresh(org_pack)
+    await db_session.commit()
+    await db_session.refresh(org_pack)
 
     _task = asyncio.create_task(dispatch_webhooks(
         event_name="pack_deactivated",
@@ -201,16 +202,16 @@ def deactivate_pack(
     return org_pack
 
 
-def deactivate_all_packs_for_org(
+async def deactivate_all_packs_for_org(
     org_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> int:
     """Deactivate all active packs for an org. Returns count of deactivated packs."""
-    active_packs = list(db_session.exec(
+    active_packs = list((await db_session.execute(
         select(OrgPack)
         .where(OrgPack.org_id == org_id, OrgPack.status == PackStatusEnum.active)
         .with_for_update()
-    ).all())
+    )).scalars().all())
 
     count = 0
     for pack in active_packs:
@@ -221,23 +222,23 @@ def deactivate_all_packs_for_org(
         count += 1
 
     if count > 0:
-        db_session.commit()
+        await db_session.commit()
 
     return count
 
 
-def mark_pack_canceling(
+async def mark_pack_canceling(
     org_id: int,
     platform_subscription_id: str,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> OrgPack:
-    org_pack = db_session.exec(
+    org_pack = (await db_session.execute(
         select(OrgPack).where(
             OrgPack.org_id == org_id,
             OrgPack.platform_subscription_id == platform_subscription_id,
             OrgPack.status == PackStatusEnum.active,
         )
-    ).first()
+    )).scalars().first()
 
     if not org_pack:
         raise HTTPException(
@@ -247,22 +248,22 @@ def mark_pack_canceling(
 
     org_pack.cancel_at_period_end = True
     db_session.add(org_pack)
-    db_session.commit()
-    db_session.refresh(org_pack)
+    await db_session.commit()
+    await db_session.refresh(org_pack)
 
     return org_pack
 
 
-def get_org_active_packs(org_id: int, db_session: Session) -> list[OrgPack]:
-    return list(db_session.exec(
+async def get_org_active_packs(org_id: int, db_session: AsyncSession) -> list[OrgPack]:
+    return list((await db_session.execute(
         select(OrgPack).where(
             OrgPack.org_id == org_id,
             OrgPack.status == PackStatusEnum.active,
         )
-    ).all())
+    )).scalars().all())
 
 
-def reconcile_pack_credits(db_session: Session) -> dict:
+async def reconcile_pack_credits(db_session: AsyncSession) -> dict:
     """
     Rebuild Redis purchased credits/seats from OrgPack DB records.
     Call this on API startup to ensure Redis matches DB state.
@@ -270,9 +271,9 @@ def reconcile_pack_credits(db_session: Session) -> dict:
     """
 
     # Get all active packs grouped by org
-    active_packs = list(db_session.exec(
+    active_packs = list((await db_session.execute(
         select(OrgPack).where(OrgPack.status == PackStatusEnum.active)
-    ).all())
+    )).scalars().all())
 
     # Aggregate by org_id
     org_totals: dict[int, dict[str, int]] = {}
@@ -336,8 +337,8 @@ def reconcile_pack_credits(db_session: Session) -> dict:
     return reconciled
 
 
-def get_org_pack_summary(org_id: int, db_session: Session) -> dict:
-    active_packs = get_org_active_packs(org_id, db_session)
+async def get_org_pack_summary(org_id: int, db_session: AsyncSession) -> dict:
+    active_packs = await get_org_active_packs(org_id, db_session)
 
     total_ai_credits = sum(
         p.quantity for p in active_packs if p.pack_type == PackTypeEnum.ai_credits

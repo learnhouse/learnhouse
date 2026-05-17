@@ -170,7 +170,56 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
   // instead of discarding them), so no local cleanup is needed here.
 
   if (isLoading || !courseStructure) {
-    return <div>{t('dashboard.courses.settings.loading')}</div>;
+    return (
+      <div className="h-full">
+        <div className="h-6" />
+        <div className="px-10 pb-10">
+          <div className="bg-white rounded-xl shadow-xs p-6">
+            <div className="animate-pulse space-y-6">
+              {/* Name field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-24" />
+                <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              </div>
+              {/* Description field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-32" />
+                <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              </div>
+              {/* About field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-20" />
+                <div className="h-[200px] bg-gray-100 rounded-lg w-full" />
+              </div>
+              {/* Learnings field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-36" />
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-10 bg-gray-100 rounded-lg w-full" />
+                  ))}
+                </div>
+              </div>
+              {/* Tags field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-16" />
+                <div className="h-10 bg-gray-100 rounded-lg w-full" />
+              </div>
+              {/* Thumbnail type field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-28" />
+                <div className="h-10 bg-gray-100 rounded-lg w-48" />
+              </div>
+              {/* Thumbnail field */}
+              <div className="space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded w-24" />
+                <div className="h-40 bg-gray-100 rounded-xl w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

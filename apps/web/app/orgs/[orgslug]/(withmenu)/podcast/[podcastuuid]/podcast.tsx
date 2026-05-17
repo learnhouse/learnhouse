@@ -1,19 +1,19 @@
 'use client'
 
 import React from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { PodcastSidebar } from '@components/Objects/Podcasts/PodcastSidebar'
 import EpisodeCard from '@components/Objects/Podcasts/EpisodeCard'
-import { Podcast, PodcastEpisode, PodcastMeta } from '@services/podcasts/podcasts'
+import { Podcast, PodcastEpisode, PodcastMeta, getPodcastMeta } from '@services/podcasts/podcasts'
 import { Headphones, ListMusic, Loader2 } from 'lucide-react'
-import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'usehooks-ts'
 import { usePodcastPlayer } from '@components/Contexts/PodcastPlayerContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { swrFetcher } from '@services/utils/ts/requests'
 
 interface PodcastClientProps {
   orgslug: string
@@ -36,20 +36,16 @@ export default function PodcastClient({
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  // SWR key for fetching podcast meta
-  const swrKey = `${getAPIUrl()}podcasts/${podcastUuid}/meta`
-
-  // Use SWR for real-time updates
-  const { data, error, isLoading, mutate } = useSWR<PodcastMeta>(
-    swrKey,
-    (url) => swrFetcher(url, access_token),
-    {
-      fallbackData: { podcast: initialPodcast, episodes: initialEpisodes },
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 30000, // Refresh every 30 seconds
-    }
-  )
+  // Use TanStack Query for real-time updates
+  const { data, error, isLoading } = useQuery<PodcastMeta>({
+    queryKey: queryKeys.podcasts.meta(podcastUuid),
+    queryFn: () => getPodcastMeta(podcastUuid, null, access_token),
+    initialData: { podcast: initialPodcast, episodes: initialEpisodes },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 60_000,
+  })
 
   const podcast = data?.podcast || initialPodcast
   const episodes = data?.episodes || initialEpisodes

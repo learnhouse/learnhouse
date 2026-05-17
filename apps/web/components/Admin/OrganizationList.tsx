@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { getOrgLogoMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
@@ -247,20 +248,25 @@ export default function OrganizationList() {
     return params.toString()
   }, [page, sortBy, debouncedSearch, planFilter])
 
-  const { data: orgData, isLoading, isValidating } = useSWR<PaginatedOrgResponse>(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations?${queryParams}` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: true, keepPreviousData: true }
-  )
+  const { data: orgData, isLoading, isFetching } = useQuery<PaginatedOrgResponse>({
+    queryKey: [...queryKeys.superadmin.orgs(), queryParams],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations?${queryParams}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  })
+
+  const isValidating = isFetching
 
   const orgs = orgData?.items
   const totalCount = orgData?.total ?? 0
 
-  const { data: visitsData } = useSWR<{ data: VisitRow[] }>(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations/visits` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: visitsData } = useQuery<{ data: VisitRow[] }>({
+    queryKey: ['superadmin', 'orgs', 'visits'],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/visits`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   const visitsByOrg = useMemo(() => {
     const map: Record<number, number[]> = {}

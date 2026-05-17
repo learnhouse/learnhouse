@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List
 from uuid import uuid4
 from sqlalchemy import func
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.users import AnonymousUser, APITokenUser, PublicUser
 from src.security.auth import resolve_acting_user_id
 from src.db.courses.course_chapters import CourseChapter
@@ -34,14 +35,14 @@ async def create_chapter(
     request: Request,
     chapter_object: ChapterCreate,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ChapterRead:
     chapter = Chapter.model_validate(chapter_object)
 
     # Get COurse
     statement = select(Course).where(Course.id == chapter_object.course_id)
 
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -61,16 +62,16 @@ async def create_chapter(
 
     # Determine insertion order atomically to prevent duplicate order values
     # under concurrent chapter creation for the same course
-    max_order = db_session.exec(
+    max_order = (await db_session.execute(
         select(func.max(CourseChapter.order)).where(
             CourseChapter.course_id == chapter.course_id
         )
-    ).first()
+    )).scalars().first()
     to_be_used_order = (max_order or 0) + 1
 
     # Flush to get the DB-assigned ID without committing yet
     db_session.add(chapter)
-    db_session.flush()
+    await db_session.flush()
 
     chapter_read = ChapterRead(**chapter.model_dump(), activities=[])
 
@@ -86,7 +87,7 @@ async def create_chapter(
 
     # Single atomic commit for both Chapter and CourseChapter
     db_session.add(course_chapter)
-    db_session.commit()
+    await db_session.commit()
 
     return chapter_read
 
@@ -95,7 +96,7 @@ async def get_chapter(
     request: Request,
     chapter_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ChapterRead:
     # Fetch Chapter and Course in one query to avoid two sequential round-trips
     statement = (
@@ -103,7 +104,7 @@ async def get_chapter(
         .outerjoin(Course, Course.id == Chapter.course_id)
         .where(Chapter.id == chapter_id)
     )
-    result = db_session.exec(statement).first()
+    result = (await db_session.execute(statement)).first()
 
     if not result:
         raise HTTPException(
@@ -128,14 +129,14 @@ async def get_chapter(
         .distinct(Activity.id) # type: ignore
     )
 
-    activities = db_session.exec(statement).all()
+    activities = (await db_session.execute(statement)).scalars().all()
 
     chapter = ChapterRead(
         **chapter.model_dump(),
         activities=[ActivityRead(**activity.model_dump()) for activity in activities],
     )
 
-    _apply_locks_to_chapters([chapter], course, current_user, db_session)
+    await _apply_locks_to_chapters([chapter], course, current_user, db_session)
 
     return chapter
 
@@ -145,10 +146,10 @@ async def update_chapter(
     chapter_object: ChapterUpdate,
     chapter_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ChapterRead:
     statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     if not chapter:
         raise HTTPException(
@@ -157,7 +158,7 @@ async def update_chapter(
 
     # RBAC check — use course_uuid (not chapter_uuid) to be consistent with create/get
     statement = select(Course).where(Course.id == chapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -173,8 +174,8 @@ async def update_chapter(
 
     chapter.update_date = str(datetime.now())
 
-    db_session.commit()
-    db_session.refresh(chapter)
+    await db_session.commit()
+    await db_session.refresh(chapter)
 
     if chapter:
         chapter = await get_chapter(
@@ -186,12 +187,12 @@ async def update_chapter(
 
 async def delete_chapter(
     request: Request,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Chapter).where(Chapter.id == chapter_id)
-    chapter = db_session.exec(statement).first()
+    chapter = (await db_session.execute(statement)).scalars().first()
 
     if not chapter:
         raise HTTPException(
@@ -200,7 +201,7 @@ async def delete_chapter(
 
     # RBAC check — permissions are held at the course level, not the chapter level
     statement = select(Course).where(Course.id == chapter.course_id)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
@@ -210,14 +211,14 @@ async def delete_chapter(
 
     # Remove all linked chapter activities
     statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
-    chapter_activities = db_session.exec(statement).all()
+    chapter_activities = (await db_session.execute(statement)).scalars().all()
 
     for chapter_activity in chapter_activities:
-        db_session.delete(chapter_activity)
+        await db_session.delete(chapter_activity)
 
     # Delete the chapter
-    db_session.delete(chapter)
-    db_session.commit()
+    await db_session.delete(chapter)
+    await db_session.commit()
 
     return {"detail": "chapter deleted"}
 
@@ -225,7 +226,7 @@ async def delete_chapter(
 async def get_course_chapters(
     request: Request,
     course_id: int,
-    db_session: Session,
+    db_session: AsyncSession,
     current_user: PublicUser | AnonymousUser,
     with_unpublished_activities: bool,
     page: int = 1,
@@ -238,7 +239,7 @@ async def get_course_chapters(
     # already has the course in hand.
     if course is None:
         statement = select(Course).where(Course.id == course_id)
-        course = db_session.exec(statement).first()
+        course = (await db_session.execute(statement)).scalars().first()
 
     statement = (
         select(Chapter)
@@ -248,7 +249,7 @@ async def get_course_chapters(
         .order_by(CourseChapter.order) # type: ignore
         .group_by(Chapter.id, CourseChapter.order) # type: ignore
     )
-    chapters = db_session.exec(statement).all()
+    chapters = (await db_session.execute(statement)).scalars().all()
 
     chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
 
@@ -287,7 +288,7 @@ async def get_course_chapters(
             if not with_unpublished_activities:
                 activity_statement = activity_statement.where(Activity.published == True)
 
-            rows = db_session.exec(activity_statement).all()
+            rows = (await db_session.execute(activity_statement)).all()
 
             chapter_activities_map: dict[int, list[ActivityRead]] = {}
             seen: set[tuple[int, int]] = set()
@@ -342,7 +343,7 @@ async def get_course_chapters(
             if not with_unpublished_activities:
                 activity_statement = activity_statement.where(Activity.published == True)
 
-            activity_results = db_session.exec(activity_statement).all()
+            activity_results = (await db_session.execute(activity_statement)).all()
 
             chapter_activities_map = {}
             seen = set()
@@ -358,16 +359,16 @@ async def get_course_chapters(
         for chapter in chapters:
             chapter.activities = chapter_activities_map.get(chapter.id, [])
 
-    _apply_locks_to_chapters(chapters, course, current_user, db_session)
+    await _apply_locks_to_chapters(chapters, course, current_user, db_session)
 
     return chapters
 
 
-def _apply_locks_to_chapters(
+async def _apply_locks_to_chapters(
     chapters: List[ChapterRead],
     course: "Course | None",
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> None:
     """Compute is_locked for each chapter + activity and strip content for locked items.
 
@@ -383,7 +384,7 @@ def _apply_locks_to_chapters(
 
     is_anon = isinstance(current_user, AnonymousUser)
     acting_user_id = resolve_acting_user_id(current_user)
-    admin = False if is_anon else is_org_admin(acting_user_id, course.org_id, db_session)
+    admin = False if is_anon else await is_org_admin(acting_user_id, course.org_id, db_session)
 
     # Admins see everything — no stripping.
     if admin:
@@ -401,7 +402,7 @@ def _apply_locks_to_chapters(
 
     accessible: set[str] = set()
     if not is_anon:
-        accessible = batch_accessible_restricted_uuids(
+        accessible = await batch_accessible_restricted_uuids(
             acting_user_id, check_uuids, db_session
         )
 
@@ -409,7 +410,7 @@ def _apply_locks_to_chapters(
     course_grants_access = course.course_uuid in accessible
 
     for chapter in chapters:
-        chapter_locked = False if course_grants_access else is_locked_for_user(
+        chapter_locked = False if course_grants_access else await is_locked_for_user(
             chapter.lock_type,
             chapter.chapter_uuid,
             course.org_id,
@@ -429,7 +430,7 @@ def _apply_locks_to_chapters(
             elif course_grants_access:
                 activity_locked = False
             else:
-                activity_locked = is_locked_for_user(
+                activity_locked = await is_locked_for_user(
                     activity.lock_type,
                     activity.activity_uuid,
                     course.org_id,
@@ -451,10 +452,10 @@ async def DEPRECEATED_get_course_chapters(
     request: Request,
     course_uuid: str,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -492,7 +493,7 @@ async def DEPRECEATED_get_course_chapters(
         .where(ChapterActivity.activity_id == Activity.id)
         .group_by(Activity.id) # type: ignore
     )
-    activities_in_db = db_session.exec(statement).all()
+    activities_in_db = (await db_session.execute(statement)).scalars().all()
 
     for activity in activities_in_db:
         activities_list[activity.activity_uuid] = {
@@ -511,7 +512,7 @@ async def DEPRECEATED_get_course_chapters(
         .group_by(Chapter.id, CourseChapter.order) # type: ignore
         .order_by(CourseChapter.order) # type: ignore
     )
-    chapters_in_db = db_session.exec(statement).all()
+    chapters_in_db = (await db_session.execute(statement)).scalars().all()
 
     chapterOrder = []
 
@@ -532,10 +533,10 @@ async def reorder_chapters_and_activities(
     course_uuid: str,
     chapters_order: ChapterUpdateOrder,
     current_user: PublicUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(statement).first()
+    course = (await db_session.execute(statement)).scalars().first()
 
     if not course:
         raise HTTPException(
@@ -554,7 +555,7 @@ async def reorder_chapters_and_activities(
         CourseChapter.course_id == course.id,
         CourseChapter.org_id == course.org_id
     )
-    existing_course_chapters = db_session.exec(statement).all()
+    existing_course_chapters = (await db_session.execute(statement)).scalars().all()
 
     # Create a map of existing chapters for faster lookup
     existing_chapter_map = {cc.chapter_id: cc for cc in existing_course_chapters}
@@ -582,8 +583,8 @@ async def reorder_chapters_and_activities(
     chapter_ids_to_keep = {co.chapter_id for co in chapters_order.chapter_order_by_ids}
     for cc in existing_course_chapters:
         if cc.chapter_id not in chapter_ids_to_keep:
-            db_session.delete(cc)
-    db_session.commit()
+            await db_session.delete(cc)
+    await db_session.commit()
 
     ###########
     # Activities
@@ -594,7 +595,7 @@ async def reorder_chapters_and_activities(
         ChapterActivity.course_id == course.id,
         ChapterActivity.org_id == course.org_id
     )
-    existing_chapter_activities = db_session.exec(statement).all()
+    existing_chapter_activities = (await db_session.execute(statement)).scalars().all()
 
     # Create a map for faster lookup
     existing_activity_map = {
@@ -632,7 +633,7 @@ async def reorder_chapters_and_activities(
     # Remove activities that are no longer in any chapter
     for ca in existing_chapter_activities:
         if (ca.chapter_id, ca.activity_id) not in activities_to_keep:
-            db_session.delete(ca)
-    db_session.commit()
+            await db_session.delete(ca)
+    await db_session.commit()
 
     return {"detail": "Chapters and activities reordered successfully"}

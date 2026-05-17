@@ -45,6 +45,9 @@
       "@hooks/*": [
         "components/Hooks/*"
       ],
+      "@lib/*": [
+        "lib/*"
+      ],
       "@/*": [
         "./*"
       ]

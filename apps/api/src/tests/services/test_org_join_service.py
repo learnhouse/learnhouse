@@ -15,7 +15,7 @@ from src.db.users import User
 from src.services.orgs.join import JoinOrg, join_org
 
 
-def _make_user(db, **overrides):
+async def _make_user(db, **overrides):
     user = User(
         id=overrides.pop("id", None),
         username=overrides.pop("username", "joiner"),
@@ -30,12 +30,12 @@ def _make_user(db, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def _make_org_config(db, org, signup_mode="open", version="1.0"):
+async def _make_org_config(db, org, signup_mode="open", version="1.0"):
     if version.startswith("2"):
         config = {
             "config_version": version,
@@ -54,12 +54,12 @@ def _make_org_config(db, org, signup_mode="open", version="1.0"):
         update_date=str(datetime.now()),
     )
     db.add(org_config)
-    db.commit()
-    db.refresh(org_config)
+    await db.commit()
+    await db.refresh(org_config)
     return org_config
 
 
-def _make_usergroup(db, org, **overrides):
+async def _make_usergroup(db, org, **overrides):
     usergroup = UserGroup(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -70,8 +70,8 @@ def _make_usergroup(db, org, **overrides):
         update_date=overrides.pop("update_date", str(datetime.now())),
     )
     db.add(usergroup)
-    db.commit()
-    db.refresh(usergroup)
+    await db.commit()
+    await db.refresh(usergroup)
     return usergroup
 
 
@@ -82,8 +82,8 @@ class TestOrgJoinService:
 
     @pytest.mark.asyncio
     async def test_join_org_open_success(self, mock_request, db, org):
-        user = _make_user(db, id=11, user_uuid="user_11")
-        _make_org_config(db, org, signup_mode="open", version="1.0")
+        user = await _make_user(db, id=11, user_uuid="user_11")
+        await _make_org_config(db, org, signup_mode="open", version="1.0")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -103,18 +103,18 @@ class TestOrgJoinService:
             )
 
         assert result == "Great, You're part of the Organization"
-        row = db.exec(
+        row = (await db.execute(
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
                 UserOrganization.org_id == org.id,
             )
-        ).first()
+        )).scalars().first()
         assert row is not None
 
     @pytest.mark.asyncio
     async def test_join_org_open_success_uses_user_uuid_lookup(self, mock_request, db, org):
-        user = _make_user(db, id=15, user_uuid="user_15")
-        _make_org_config(db, org, signup_mode="open", version="1.0")
+        user = await _make_user(db, id=15, user_uuid="user_15")
+        await _make_org_config(db, org, signup_mode="open", version="1.0")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -137,7 +137,7 @@ class TestOrgJoinService:
 
     @pytest.mark.asyncio
     async def test_join_org_user_not_found(self, mock_request, db, org):
-        _make_org_config(db, org, signup_mode="open", version="1.0")
+        await _make_org_config(db, org, signup_mode="open", version="1.0")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -149,7 +149,7 @@ class TestOrgJoinService:
                 await join_org(
                     mock_request,
                     JoinOrg(org_id=org.id, user_id="missing-user"),
-                    _make_user(db, id=16, user_uuid="user_16"),
+                    await _make_user(db, id=16, user_uuid="user_16"),
                     db,
                 )
 
@@ -157,8 +157,13 @@ class TestOrgJoinService:
 
     @pytest.mark.asyncio
     async def test_join_org_missing_org(self, mock_request, db, anonymous_user):
-        mock_db = Mock()
-        mock_db.exec.return_value.first.return_value = None
+        from unittest.mock import AsyncMock as _AsyncMock
+        mock_db = _AsyncMock()
+        scalars_mock = Mock()
+        scalars_mock.first.return_value = None
+        execute_result = Mock()
+        execute_result.scalars.return_value = scalars_mock
+        mock_db.execute.return_value = execute_result
 
         with patch("src.services.orgs.join.check_limits_with_usage") as mock_limits:
             with pytest.raises(HTTPException) as exc_info:
@@ -176,9 +181,9 @@ class TestOrgJoinService:
     async def test_join_org_invite_only_success_with_usergroup(
         self, mock_request, db, org
     ):
-        user = _make_user(db, id=12, user_uuid="user_12")
-        usergroup = _make_usergroup(db, org, id=22)
-        _make_org_config(db, org, signup_mode="inviteOnly", version="2.0")
+        user = await _make_user(db, id=12, user_uuid="user_12")
+        usergroup = await _make_usergroup(db, org, id=22)
+        await _make_org_config(db, org, signup_mode="inviteOnly", version="2.0")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -210,8 +215,8 @@ class TestOrgJoinService:
     async def test_join_org_failure_branches(
         self, mock_request, db, org, anonymous_user
     ):
-        user = _make_user(db, id=13, user_uuid="user_13")
-        _make_org_config(db, org, signup_mode="inviteOnly", version="2.0")
+        user = await _make_user(db, id=13, user_uuid="user_13")
+        await _make_org_config(db, org, signup_mode="inviteOnly", version="2.0")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -233,7 +238,7 @@ class TestOrgJoinService:
 
         user.email_verified = False
         db.add(user)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -252,7 +257,7 @@ class TestOrgJoinService:
 
         user.email_verified = True
         db.add(user)
-        db.commit()
+        await db.commit()
 
         already_linked = UserOrganization(
             user_id=user.id,
@@ -262,7 +267,7 @@ class TestOrgJoinService:
             update_date=str(datetime.now()),
         )
         db.add(already_linked)
-        db.commit()
+        await db.commit()
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -294,7 +299,7 @@ class TestOrgJoinService:
                 )
         assert org_missing_exc.value.status_code == 404
 
-        denied_user = _make_user(db, id=14, user_uuid="user_14")
+        denied_user = await _make_user(db, id=14, user_uuid="user_14")
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"
@@ -315,18 +320,33 @@ class TestOrgJoinService:
     async def test_join_org_invite_only_missing_ids_and_open_missing_ids(
         self, mock_request, org, anonymous_user
     ):
-        invite_db = Mock()
-        invite_db.exec.side_effect = [
-            SimpleNamespace(first=lambda: org),
-            SimpleNamespace(first=lambda: SimpleNamespace(id=None, email_verified=True)),
-            SimpleNamespace(first=lambda: None),
-        ]
-        open_db = Mock()
-        open_db.exec.side_effect = [
-            SimpleNamespace(first=lambda: org),
-            SimpleNamespace(first=lambda: SimpleNamespace(id=None, email_verified=True)),
-            SimpleNamespace(first=lambda: None),
-        ]
+        from unittest.mock import AsyncMock as _AsyncMock
+
+        def _make_execute_mock(*results):
+            """Build an AsyncMock whose side_effect yields scalars().first() == result for each call."""
+            side_effects = []
+            for result in results:
+                execute_result = Mock()
+                scalars_result = Mock()
+                scalars_result.first.return_value = result
+                execute_result.scalars.return_value = scalars_result
+                side_effects.append(execute_result)
+            mock = _AsyncMock()
+            mock.side_effect = side_effects
+            return mock
+
+        invite_db = _AsyncMock()
+        invite_db.execute = _make_execute_mock(
+            org,
+            SimpleNamespace(id=None, email_verified=True),
+            None,
+        )
+        open_db = _AsyncMock()
+        open_db.execute = _make_execute_mock(
+            org,
+            SimpleNamespace(id=None, email_verified=True),
+            None,
+        )
 
         with patch(
             "src.services.orgs.join.check_limits_with_usage"

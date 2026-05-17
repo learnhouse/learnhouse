@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Optional, Union
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, field_validator
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, InternalUser, PublicUser, User
@@ -30,12 +31,10 @@ async def join_org(
     request: Request,
     args: JoinOrg,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ):
     statement = select(Organization).where(Organization.id == args.org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
+    org = (await db_session.execute(statement)).scalars().first()
 
     if not org or org.id is None:
         raise HTTPException(
@@ -43,7 +42,7 @@ async def join_org(
             detail="Organization not found",
         )
 
-    check_limits_with_usage("members", org.id, db_session)
+    await check_limits_with_usage("members", org.id, db_session)
 
     join_method = await get_org_join_mechanism(
         request, args.org_id, current_user, db_session
@@ -57,9 +56,7 @@ async def join_org(
         )
     else:
         statement = select(User).where(User.user_uuid == user_id_str)
-    result = db_session.exec(statement)
-
-    user = result.first()
+    user = (await db_session.execute(statement)).scalars().first()
 
     if not user:
         raise HTTPException(
@@ -78,9 +75,7 @@ async def join_org(
     statement = select(UserOrganization).where(
         UserOrganization.user_id == user.id, UserOrganization.org_id == args.org_id
     )
-    result = db_session.exec(statement)
-
-    userorg = result.first()
+    userorg = (await db_session.execute(statement)).scalars().first()
 
     if userorg:
         raise HTTPException(
@@ -111,7 +106,7 @@ async def join_org(
             )
 
             db_session.add(user_organization)
-            db_session.commit()
+            await db_session.commit()
 
             from src.routers.users import _invalidate_session_cache
             _invalidate_session_cache(user.id)
@@ -126,7 +121,7 @@ async def join_org(
                     str(user.id),
                 )
 
-            increase_feature_usage("members", org.id, db_session)
+            await increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 
@@ -148,12 +143,12 @@ async def join_org(
             )
 
             db_session.add(user_organization)
-            db_session.commit()
+            await db_session.commit()
 
             from src.routers.users import _invalidate_session_cache
             _invalidate_session_cache(user.id)
 
-            increase_feature_usage("members", org.id, db_session)
+            await increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 

@@ -49,7 +49,7 @@ async def test_create_activity_with_extra_metadata(
 
     assert created.extra_metadata == {"x": 1}
 
-    row = db.exec(select(Activity).where(Activity.id == created.id)).first()
+    row = (await db.execute(select(Activity).where(Activity.id == created.id))).scalars().first()
     assert row is not None
     assert row.extra_metadata == {"x": 1}
 
@@ -61,8 +61,8 @@ async def test_update_activity_clears_extra_metadata(
     # Start from non-None metadata so we can prove None clears it.
     activity.extra_metadata = {"prior": "value"}
     db.add(activity)
-    db.commit()
-    db.refresh(activity)
+    await db.commit()
+    await db.refresh(activity)
     assert activity.extra_metadata == {"prior": "value"}
 
     # Build via model_validate so extra_metadata=None is *set* (not default).
@@ -75,8 +75,8 @@ async def test_update_activity_clears_extra_metadata(
 
     assert updated.extra_metadata is None
 
-    db.expire_all()
-    row = db.exec(select(Activity).where(Activity.id == activity.id)).first()
+    await db.execute(select(Activity).where(Activity.id == activity.id))  # flush expired state
+    row = (await db.execute(select(Activity).where(Activity.id == activity.id))).scalars().first()
     assert row.extra_metadata is None
 
 
@@ -96,8 +96,7 @@ async def test_update_activity_sets_extra_metadata(
 
     assert updated.extra_metadata == {"k": [1, 2, 3], "flag": True}
 
-    db.expire_all()
-    row = db.exec(select(Activity).where(Activity.id == activity.id)).first()
+    row = (await db.execute(select(Activity).where(Activity.id == activity.id))).scalars().first()
     assert row.extra_metadata == {"k": [1, 2, 3], "flag": True}
 
 
@@ -131,6 +130,6 @@ async def test_create_documentpdf_activity_passes_extra_metadata(
     assert created.activity_type == ActivityTypeEnum.TYPE_DOCUMENT
     assert created.activity_sub_type == ActivitySubTypeEnum.SUBTYPE_DOCUMENT_PDF
 
-    row = db.exec(select(Activity).where(Activity.id == created.id)).first()
+    row = (await db.execute(select(Activity).where(Activity.id == created.id))).scalars().first()
     assert row is not None
     assert row.extra_metadata == {"source": "upload", "page_count": 3}

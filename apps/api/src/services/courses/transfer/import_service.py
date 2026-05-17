@@ -14,7 +14,8 @@ from typing import Optional
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, UploadFile
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.courses.activities import Activity, ActivityTypeEnum, ActivitySubTypeEnum
 from src.db.courses.blocks import Block, BlockTypeEnum
@@ -95,7 +96,7 @@ async def analyze_import_package(
     zip_file: UploadFile,
     org_id: int,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ImportAnalysisResponse:
     """
     Analyze a LearnHouse course export package.
@@ -103,7 +104,7 @@ async def analyze_import_package(
     """
     # Verify organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -323,14 +324,14 @@ async def import_courses(
     org_id: int,
     options: ImportOptions,
     current_user: PublicUser | AnonymousUser | APITokenUser,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> ImportResult:
     """
     Import courses from an analyzed package.
     """
     # Verify organization exists
     statement = select(Organization).where(Organization.id == org_id)
-    organization = db_session.exec(statement).first()
+    organization = (await db_session.execute(statement)).scalars().first()
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -386,7 +387,7 @@ async def import_courses(
 
         try:
             # Check usage limits
-            check_limits_with_usage("courses", org_id, db_session)
+            await check_limits_with_usage("courses", org_id, db_session)
 
             # Pre-generate the course UUID so we can clean up files on failure
             new_course_uuid = f"course_{uuid4()}"
@@ -413,11 +414,11 @@ async def import_courses(
                 raise
 
             # Commit the outer transaction so the course is persisted
-            db_session.commit()
+            await db_session.commit()
 
             # Track usage AFTER commit — increase_feature_usage calls commit()
             # internally, so it must not run inside the savepoint
-            increase_feature_usage("courses", organization.id, db_session)
+            await increase_feature_usage("courses", organization.id, db_session)
 
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
@@ -429,7 +430,7 @@ async def import_courses(
 
         except Exception as e:
             # Reset session to a clean state so the next iteration can work
-            db_session.rollback()
+            await db_session.rollback()
             results.append(ImportCourseResult(
                 original_uuid=course_uuid,
                 new_uuid="",
@@ -455,7 +456,7 @@ async def _import_single_course(
     organization: Organization,
     current_user: PublicUser | AnonymousUser | APITokenUser,
     options: ImportOptions,
-    db_session: Session,
+    db_session: AsyncSession,
     new_course_uuid: str,
 ) -> Course:
     """
@@ -531,7 +532,7 @@ async def _import_single_course(
 
     # Use flush (not commit) for intermediate entities — the caller manages the transaction
     db_session.add(new_course)
-    db_session.flush()
+    await db_session.flush()
 
     # Create resource author
     if isinstance(current_user, APITokenUser):
@@ -548,7 +549,7 @@ async def _import_single_course(
         update_date=str(datetime.now()),
     )
     db_session.add(resource_author)
-    db_session.flush()
+    await db_session.flush()
 
     # Import chapters
     chapters_dir = os.path.join(course_path, "chapters")
@@ -585,7 +586,7 @@ async def _import_chapter(
     new_course: Course,
     new_course_path: str,
     organization: Organization,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Chapter:
     """
     Import a chapter and its activities.
@@ -605,7 +606,7 @@ async def _import_chapter(
     )
 
     db_session.add(new_chapter)
-    db_session.flush()
+    await db_session.flush()
 
     # Create CourseChapter link
     new_course_chapter = CourseChapter(
@@ -617,7 +618,7 @@ async def _import_chapter(
         update_date=str(datetime.now()),
     )
     db_session.add(new_course_chapter)
-    db_session.flush()
+    await db_session.flush()
 
     # Import activities
     activities_dir = os.path.join(chapter_path, "activities")
@@ -655,7 +656,7 @@ async def _import_activity(
     new_chapter: Chapter,
     new_course_path: str,
     organization: Organization,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> Activity:
     """
     Import an activity and its blocks/files.
@@ -698,7 +699,7 @@ async def _import_activity(
     )
 
     db_session.add(new_activity)
-    db_session.flush()
+    await db_session.flush()
 
     # Create ChapterActivity link
     new_chapter_activity = ChapterActivity(
@@ -711,7 +712,7 @@ async def _import_activity(
         update_date=str(datetime.now()),
     )
     db_session.add(new_chapter_activity)
-    db_session.flush()
+    await db_session.flush()
 
     # Copy entire activity files directory (videos, documents, SCORM, dynamic blocks, etc.)
     new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
@@ -777,7 +778,7 @@ async def _import_activity(
             try:
                 new_activity.content = json.loads(content_str)
                 db_session.add(new_activity)
-                db_session.flush()
+                await db_session.flush()
             except json.JSONDecodeError:
                 pass  # Keep original content if parsing fails
 
@@ -792,7 +793,7 @@ async def _import_block(
     new_course: Course,
     new_chapter: Chapter,
     organization: Organization,
-    db_session: Session,
+    db_session: AsyncSession,
 ) -> tuple[str, dict]:
     """
     Import a block and rename its files.
@@ -880,7 +881,7 @@ async def _import_block(
     )
 
     db_session.add(new_block)
-    db_session.flush()
+    await db_session.flush()
 
     return new_block_uuid, content_updates
 

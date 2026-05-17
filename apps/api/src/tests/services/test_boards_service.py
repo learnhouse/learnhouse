@@ -37,7 +37,7 @@ from src.services.boards.boards import (
 )
 
 
-def _make_user(db, *, id, email, username):
+async def _make_user(db, *, id, email, username):
     user = User(
         id=id,
         username=username,
@@ -50,12 +50,12 @@ def _make_user(db, *, id, email, username):
         update_date=str(datetime.now()),
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
-def _make_board(db, org, admin_user, **overrides):
+async def _make_board(db, org, admin_user, **overrides):
     board = Board(
         id=overrides.pop("id", None),
         org_id=org.id,
@@ -70,12 +70,12 @@ def _make_board(db, org, admin_user, **overrides):
         update_date=overrides.pop("update_date", "2024-01-01"),
     )
     db.add(board)
-    db.commit()
-    db.refresh(board)
+    await db.commit()
+    await db.refresh(board)
     return board
 
 
-def _make_member(db, board_id, user_id, role=BoardMemberRole.EDITOR):
+async def _make_member(db, board_id, user_id, role=BoardMemberRole.EDITOR):
     member = BoardMember(
         board_id=board_id,
         user_id=user_id,
@@ -83,8 +83,8 @@ def _make_member(db, board_id, user_id, role=BoardMemberRole.EDITOR):
         creation_date=str(datetime.now()),
     )
     db.add(member)
-    db.commit()
-    db.refresh(member)
+    await db.commit()
+    await db.refresh(member)
     return member
 
 
@@ -129,22 +129,22 @@ class TestBoardsService:
         assert updated.public is False
         assert duplicated.name.endswith("(copy)")
         assert deleted == {"detail": "Board deleted"}
-        assert db.exec(
+        assert (await db.execute(
             select(ResourceAuthor).where(
                 ResourceAuthor.resource_uuid == duplicated.board_uuid
             )
-        ).first() is not None
+        )).scalars().first() is not None
 
     @pytest.mark.asyncio
     async def test_get_boards_by_org_and_get_board_members(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
-        _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        other_user = _make_user(
+        board = await _make_board(db, org, admin_user)
+        await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        other_user = await _make_user(
             db, id=20, email="member@test.com", username="member"
         )
-        _make_member(db, board.id, other_user.id)
+        await _make_member(db, board.id, other_user.id)
 
         with patch("src.services.boards.boards.require_org_membership"), patch(
             "src.services.boards.boards.check_resource_access",
@@ -163,11 +163,11 @@ class TestBoardsService:
     async def test_add_and_batch_add_members(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
-        _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        _make_user(db, id=21, email="first@test.com", username="first")
-        _make_user(db, id=22, email="second@test.com", username="second")
-        _make_user(db, id=23, email="third@test.com", username="third")
+        board = await _make_board(db, org, admin_user)
+        await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        await _make_user(db, id=21, email="first@test.com", username="first")
+        await _make_user(db, id=22, email="second@test.com", username="second")
+        await _make_user(db, id=23, email="third@test.com", username="third")
         member_create = BoardMemberCreate(user_id=21, role=BoardMemberRole.EDITOR)
         member_create.role = BoardMemberRole.EDITOR
         batch_create = BoardMemberBatchCreate(
@@ -210,10 +210,10 @@ class TestBoardsService:
     async def test_add_board_member_rejects_duplicate_and_limit(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
-        _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        _make_user(db, id=30, email="dup@test.com", username="dup")
-        _make_member(db, board.id, 30)
+        board = await _make_board(db, org, admin_user)
+        await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        await _make_user(db, id=30, email="dup@test.com", username="dup")
+        await _make_member(db, board.id, 30)
 
         with patch(
             "src.services.boards.boards.check_resource_access",
@@ -231,11 +231,11 @@ class TestBoardsService:
         assert duplicate_exc.value.status_code == 409
 
         for user_id in range(31, 39):
-            _make_user(
+            await _make_user(
                 db, id=user_id, email=f"user{user_id}@test.com", username=f"user{user_id}"
             )
-            _make_member(db, board.id, user_id)
-        _make_user(db, id=39, email="overflow@test.com", username="overflow")
+            await _make_member(db, board.id, user_id)
+        await _make_user(db, id=39, email="overflow@test.com", username="overflow")
 
         with patch(
             "src.services.boards.boards.check_resource_access",
@@ -256,12 +256,12 @@ class TestBoardsService:
     async def test_remove_member_and_membership_checks(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
-        owner = _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
-        member_user = _make_user(
+        board = await _make_board(db, org, admin_user)
+        owner = await _make_member(db, board.id, admin_user.id, BoardMemberRole.OWNER)
+        member_user = await _make_user(
             db, id=40, email="member40@test.com", username="member40"
         )
-        _make_member(db, board.id, member_user.id)
+        await _make_member(db, board.id, member_user.id)
 
         membership = await check_board_membership(
             mock_request, board.board_uuid, admin_user, db
@@ -292,7 +292,7 @@ class TestBoardsService:
     async def test_check_board_membership_errors(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
+        board = await _make_board(db, org, admin_user)
         # Non-member on a private board is denied. Patch RBAC to simulate denial
         # so this test exercises the membership path, not RBAC internals.
         with patch(
@@ -316,7 +316,7 @@ class TestBoardsService:
     async def test_update_thumbnail_and_ydoc_state(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
+        board = await _make_board(db, org, admin_user)
         upload = UploadFile(filename="thumb.png", file=SimpleNamespace())
 
         with patch(
@@ -346,7 +346,7 @@ class TestBoardsService:
     async def test_update_thumbnail_requires_file(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user)
+        board = await _make_board(db, org, admin_user)
 
         with patch(
             "src.services.boards.boards.check_resource_access",
@@ -374,7 +374,7 @@ class TestBoardsService:
     async def test_get_board_members_empty_returns_empty_list(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user, board_uuid="board_no_members")
+        board = await _make_board(db, org, admin_user, board_uuid="board_no_members")
         with patch(
             "src.services.boards.boards.check_resource_access",
             new_callable=AsyncMock,
@@ -386,7 +386,7 @@ class TestBoardsService:
     async def test_remove_board_member_not_found_raises(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user, board_uuid="board_remove_missing")
+        board = await _make_board(db, org, admin_user, board_uuid="board_remove_missing")
         with patch(
             "src.services.boards.boards.check_resource_access",
             new_callable=AsyncMock,
@@ -419,13 +419,13 @@ class TestBoardsService:
     async def test_add_board_members_batch_stops_at_limit(
         self, db, org, admin_user, mock_request
     ):
-        board = _make_board(db, org, admin_user, board_uuid="board_batch_limit")
+        board = await _make_board(db, org, admin_user, board_uuid="board_batch_limit")
         # Add 10 members so member_count >= 10
         for i in range(100, 110):
-            u = _make_user(db, id=i, email=f"u{i}@test.com", username=f"u{i}")
-            _make_member(db, board.id, u.id)
+            u = await _make_user(db, id=i, email=f"u{i}@test.com", username=f"u{i}")
+            await _make_member(db, board.id, u.id)
 
-        new_user = _make_user(db, id=200, email="new200@test.com", username="new200")
+        new_user = await _make_user(db, id=200, email="new200@test.com", username="new200")
         batch = BoardMemberBatchCreate(
             members=[BoardMemberCreate(user_id=new_user.id, role=BoardMemberRole.EDITOR)]
         )
@@ -440,3 +440,58 @@ class TestBoardsService:
 
         # Batch hit the limit immediately, so no members were added
         assert result == []
+
+    @pytest.mark.asyncio
+    async def test_add_board_members_batch_skips_duplicate_silently(
+        self, db, org, admin_user, mock_request
+    ):
+        """When a requested user is already a member, that entry is skipped
+        without error and the others are still added (covers the `if existing:
+        continue` branch in add_board_members_batch)."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_batch_dup")
+        existing_user = await _make_user(
+            db, id=301, email="existing301@test.com", username="existing301"
+        )
+        await _make_member(db, board.id, existing_user.id)
+
+        new_user = await _make_user(
+            db, id=302, email="new302@test.com", username="new302"
+        )
+        batch = BoardMemberBatchCreate(
+            members=[
+                BoardMemberCreate(user_id=existing_user.id, role=BoardMemberRole.EDITOR),
+                BoardMemberCreate(user_id=new_user.id, role=BoardMemberRole.EDITOR),
+            ]
+        )
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await add_board_members_batch(
+                mock_request, board.board_uuid, batch, admin_user, db
+            )
+
+        # Only the non-duplicate new_user was added
+        assert len(result) == 1
+        assert result[0].user_id == new_user.id
+
+    @pytest.mark.asyncio
+    async def test_check_board_membership_rbac_fallback(
+        self, db, org, admin_user, mock_request
+    ):
+        """Non-member whose RBAC check passes returns a VIEWER BoardMemberRead.
+        Covers lines 377-378 (user lookup + synthetic BoardMemberRead)."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_rbac_fb")
+        non_member = await _make_user(
+            db, id=401, email="nonmember401@test.com", username="nonmember401"
+        )
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            membership = await check_board_membership(
+                mock_request, board.board_uuid, non_member, db
+            )
+        assert membership.role == BoardMemberRole.VIEWER
+        assert membership.id == 0

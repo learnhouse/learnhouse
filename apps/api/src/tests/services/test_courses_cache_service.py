@@ -1,12 +1,10 @@
 """Tests for src/services/courses/cache.py."""
 
-from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from src.services.courses.cache import (
     CACHE_TTL_COURSE_META,
     CACHE_TTL_COURSES_LIST,
-    _get_redis_client,
     get_cached_course_meta,
     get_cached_courses_list,
     invalidate_course_meta_cache,
@@ -16,38 +14,9 @@ from src.services.courses.cache import (
 )
 
 
-def _make_config(*, redis_connection_string="redis://test"):
-    return SimpleNamespace(redis_config=SimpleNamespace(redis_connection_string=redis_connection_string))
-
-
-class TestRedisClient:
-    def test_get_redis_client_returns_none_without_connection_string(self):
-        with patch(
-            "src.services.courses.cache.get_learnhouse_config",
-            return_value=_make_config(redis_connection_string=""),
-        ):
-            assert _get_redis_client() is None
-
-    def test_get_redis_client_returns_client_and_handles_errors(self):
-        with patch(
-            "src.services.courses.cache.get_learnhouse_config",
-            return_value=_make_config(),
-        ), patch("src.services.courses.cache.redis.Redis.from_url", return_value=Mock()) as mock_from_url:
-            client = _get_redis_client()
-
-        mock_from_url.assert_called_once_with("redis://test", socket_connect_timeout=2)
-        assert client is not None
-
-        with patch(
-            "src.services.courses.cache.get_learnhouse_config",
-            side_effect=RuntimeError("boom"),
-        ):
-            assert _get_redis_client() is None
-
-
 class TestCourseListCache:
     def test_get_cached_courses_list_returns_none_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             assert get_cached_courses_list("org-1", 1, 10) is None
 
     def test_get_cached_courses_list_covers_miss_hit_and_failure(self):
@@ -55,7 +24,7 @@ class TestCourseListCache:
         redis_client.get.return_value = b"[{\"id\": 1}]"
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             assert get_cached_courses_list("org-1", 1, 10) == [{"id": 1}]
@@ -72,7 +41,7 @@ class TestCourseListCache:
         redis_client = Mock()
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             set_cached_courses_list("org-1", 2, 25, [{"id": 1}])
@@ -86,7 +55,7 @@ class TestCourseListCache:
         mock_debug.assert_called_once()
 
     def test_set_cached_courses_list_returns_quickly_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             set_cached_courses_list("org-1", 2, 25, [{"id": 1}])
 
     def test_invalidate_courses_cache_covers_delete_paths(self):
@@ -94,7 +63,7 @@ class TestCourseListCache:
         redis_client.keys.return_value = [b"courses_cache:list:org-1:1:10"]
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             invalidate_courses_cache("org-1")
@@ -109,13 +78,13 @@ class TestCourseListCache:
         mock_debug.assert_called_once()
 
     def test_invalidate_courses_cache_returns_quickly_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             invalidate_courses_cache("org-1")
 
 
 class TestCourseMetaCache:
     def test_get_cached_course_meta_returns_none_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             assert get_cached_course_meta("course-1", slim=True) is None
 
     def test_get_cached_course_meta_covers_hit_miss_and_failure(self):
@@ -123,7 +92,7 @@ class TestCourseMetaCache:
         redis_client.get.return_value = b"{\"id\": 1}"
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             assert get_cached_course_meta("course-1", slim=True) == {"id": 1}
@@ -140,7 +109,7 @@ class TestCourseMetaCache:
         redis_client = Mock()
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             set_cached_course_meta("course-1", slim=True, data={"id": 1})
@@ -154,14 +123,14 @@ class TestCourseMetaCache:
         mock_debug.assert_called_once()
 
     def test_set_cached_course_meta_returns_quickly_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             set_cached_course_meta("course-1", slim=True, data={"id": 1})
 
     def test_invalidate_course_meta_cache_covers_delete_and_failure(self):
         redis_client = Mock()
 
         with patch(
-            "src.services.courses.cache._get_redis_client",
+            "src.services.courses.cache.get_redis_client",
             return_value=redis_client,
         ), patch("src.services.courses.cache.logger.debug") as mock_debug:
             invalidate_course_meta_cache("course-1")
@@ -177,5 +146,5 @@ class TestCourseMetaCache:
         mock_debug.assert_called_once()
 
     def test_invalidate_course_meta_cache_returns_quickly_when_redis_is_unavailable(self):
-        with patch("src.services.courses.cache._get_redis_client", return_value=None):
+        with patch("src.services.courses.cache.get_redis_client", return_value=None):
             invalidate_course_meta_cache("course-1")

@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import toast from 'react-hot-toast';
 import { BookOpen, Mic, Puzzle, X, Plus, Loader2 } from 'lucide-react';
 import { getOrgCourses } from '@services/courses/courses';
@@ -28,22 +29,25 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
   const org = useOrg() as any;
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
+  const queryClient = useQueryClient();
   const [showPicker, setShowPicker] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
 
-  const swrKey = org && token ? [`/offers/${offerId}/resources`, org.id, token] : null;
+  const resourceQueryKey = ['offers', offerId, 'resources', org?.id];
 
-  const { data: resources, error } = useSWR(
-    swrKey,
-    ([, orgId, t]: any) => getOfferResources(orgId, offerId, t),
-    { revalidateOnFocus: false }
-  );
+  const { data: resources, error } = useQuery({
+    queryKey: resourceQueryKey,
+    queryFn: () => getOfferResources(org.id, offerId, token),
+    enabled: !!(org?.id && token),
+    staleTime: 60_000,
+  });
 
-  const { data: coursesData } = useSWR(
-    showPicker && org && token ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
-    { revalidateOnFocus: false }
-  );
+  const { data: coursesData } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug ?? ''),
+    queryFn: () => getOrgCourses(org.slug, null, token, true),
+    enabled: !!(showPicker && org?.slug && token),
+    staleTime: 60_000,
+  });
 
   if (error) return <div className="text-sm text-red-500">Failed to load resources</div>;
   if (!resources) return <div className="text-sm text-gray-400">Loading resources…</div>;
@@ -58,7 +62,7 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
   const handleRemove = async (resourceUuid: string) => {
     try {
       await removeOfferResource(org.id, offerId, resourceUuid, token);
-      mutate(swrKey);
+      queryClient.invalidateQueries({ queryKey: resourceQueryKey });
       toast.success('Resource removed from offer');
     } catch {
       toast.error('Failed to remove resource');
@@ -70,7 +74,7 @@ function OfferResourcesPanel({ offerId, offerName }: OfferResourcesPanelProps) {
     setIsLinking(true);
     try {
       await addOfferResource(org.id, offerId, courseUuid, token);
-      mutate(swrKey);
+      queryClient.invalidateQueries({ queryKey: resourceQueryKey });
       toast.success('Course linked to offer');
       setShowPicker(false);
     } catch {

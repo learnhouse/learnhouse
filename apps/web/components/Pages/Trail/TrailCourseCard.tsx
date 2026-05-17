@@ -1,7 +1,8 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { removeCourse } from '@services/courses/activity'
+import { getCourseMetadata } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -9,7 +10,8 @@ import { getUserCertificates } from '@services/courses/certifications'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { Award, ExternalLink, BookOpen, MoreVertical, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -43,12 +45,23 @@ function TrailCourseCard(props: TrailCourseCardProps) {
 
   const [courseCertificate, setCourseCertificate] = useState<any>(null)
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false)
+  const queryClient = useQueryClient()
+
+  const handleMouseEnter = () => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.courses.meta(courseid),
+      queryFn: () => getCourseMetadata(courseid, {}, access_token, { slim: true }),
+      staleTime: 60_000,
+    })
+  }
 
   async function quitCourse(course_uuid: string) {
     let activity = await removeCourse(course_uuid, props.orgslug, access_token)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
-    mutate(`${getAPIUrl()}trail/org/${orgID}/trail`)
+    if (orgID) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(orgID) })
+    }
   }
 
   useEffect(() => {
@@ -81,7 +94,7 @@ function TrailCourseCard(props: TrailCourseCardProps) {
   const courseLink = getUriWithOrg(props.orgslug, '/course/' + courseid)
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
+    <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]" onMouseEnter={handleMouseEnter}>
       {/* Dropdown Menu */}
       <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>

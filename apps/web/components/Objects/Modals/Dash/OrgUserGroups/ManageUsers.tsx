@@ -2,12 +2,12 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl } from '@services/config/config'
 import { linkUsersToUserGroup, unlinkUsersFromUserGroup } from '@services/usergroups/usergroups'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import { Search, Check, Plus, Minus, ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Checkbox } from '@components/ui/checkbox'
 import { Badge } from '@components/ui/badge'
@@ -27,6 +27,7 @@ function ManageUsers(props: ManageUsersProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -63,18 +64,19 @@ function ManageUsers(props: ManageUsersProps) {
   }, [page, debouncedSearch, activeTab, props.usergroup_id])
 
   const usersUrl = org && access_token ? `${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}` : null
-  const { data: usersData, isValidating } = useSWR(
-    usersUrl,
-    (url) => swrFetcher(url, access_token),
-    { keepPreviousData: true }
-  )
+  const { data: usersData, isLoading: isInitialLoading, isFetching } = useQuery({
+    queryKey: ['org', org?.id, 'users', page, debouncedSearch, activeTab, props.usergroup_id],
+    queryFn: () => apiFetch(usersUrl!, access_token),
+    enabled: !!usersUrl,
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+  })
 
   const orgUsers = usersData?.items || []
   const total = usersData?.total || 0
   const inGroupTotal: number | undefined = usersData?.in_group_total
   const allTotal: number | undefined = usersData?.all_total
-  const isInitialLoading = !usersData && isValidating
-  const isPageTransitioning = !!usersData && isValidating
+  const isPageTransitioning = !!usersData && isFetching
 
   // Compute tab counts from API response.
   // `all_total` = total org users matching search (always provided when usergroup_id is set)
@@ -143,10 +145,9 @@ function ManageUsers(props: ManageUsersProps) {
     })
   }, [selectedUserIds, orgUsers, isUserPartOfGroup])
 
-  // Revalidate all tabs' SWR cache after mutations
+  // Revalidate all tabs' TanStack Query cache after mutations
   const invalidateCache = () => {
-    const baseUrl = `${getAPIUrl()}orgs/${org?.id}/users`
-    mutate((key: string) => typeof key === 'string' && key.startsWith(baseUrl))
+    queryClient.invalidateQueries({ queryKey: ['org', org?.id, 'users'] })
   }
 
   // Bulk actions
@@ -291,8 +292,18 @@ function ManageUsers(props: ManageUsersProps) {
       {/* Users List */}
       <div className="space-y-1 max-h-[400px] overflow-y-auto relative">
         {isInitialLoading ? (
-          <div className="py-16 flex justify-center">
-            <LearnHouseSpinner size={32} />
+          <div className="animate-pulse space-y-1 py-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg">
+                <div className="h-4 w-4 bg-gray-100 rounded" />
+                <div className="h-9 w-9 bg-gray-100 rounded-full" />
+                <div className="flex-1 space-y-1">
+                  <div className="h-4 bg-gray-100 rounded w-32" />
+                  <div className="h-3 bg-gray-100 rounded w-20" />
+                </div>
+                <div className="h-5 bg-gray-100 rounded w-16" />
+              </div>
+            ))}
           </div>
         ) : orgUsers.length === 0 ? (
           <div className="py-12 text-center">
