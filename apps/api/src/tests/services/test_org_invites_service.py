@@ -565,6 +565,40 @@ class TestSendInviteEmailLangLookup:
         assert mock_send.call_args.kwargs["lang"] == "en"
 
 
+class TestSendInviteEmailExceptionBranch:
+    """Cover the except Exception: pass path in send_invite_email when the
+    db_session is present but raises during the OrganizationConfig lookup."""
+
+    @pytest.mark.asyncio
+    async def test_lang_defaults_to_en_when_db_execute_raises(
+        self, mock_request, org, admin_user
+    ):
+        from unittest.mock import AsyncMock as _AsyncMock
+
+        bad_session = _AsyncMock()
+        bad_session.execute = _AsyncMock(side_effect=RuntimeError("db fail"))
+
+        with patch(
+            "src.services.email.utils.get_org_signup_base_url",
+            new_callable=AsyncMock,
+            return_value="https://test-org.learnhouse.io",
+        ), patch(
+            "src.services.orgs.invites.send_invitation_email",
+            return_value={"id": "email"},
+        ) as mock_send:
+            result = await send_invite_email(
+                org,
+                None,
+                admin_user,
+                admin_user.email,
+                mock_request,
+                db_session=bad_session,
+            )
+
+        assert result is True
+        assert mock_send.call_args.kwargs["lang"] == "en"
+
+
 class TestGetRedis:
     def test_get_redis_creates_pool_on_first_call(self):
         fake_pool = Mock()

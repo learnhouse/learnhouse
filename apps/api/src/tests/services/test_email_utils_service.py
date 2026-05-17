@@ -2,7 +2,7 @@
 
 import smtplib
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -361,3 +361,113 @@ class TestEmailUtilsService:
             with pytest.raises(HTTPException) as exc_info:
                 send_email("to@test.com", "Subject", "<p>Body</p>")
         assert exc_info.value.status_code == 503
+
+
+class TestGetPrimaryVerifiedCustomDomain:
+    """Tests for _get_primary_verified_custom_domain and the db_session + org_id
+    branch in get_org_signup_base_url."""
+
+    @pytest.mark.asyncio
+    async def test_get_org_signup_base_url_uses_primary_custom_domain(self):
+        """get_org_signup_base_url should return the verified custom domain when
+        db_session + org_id are supplied and _get_primary_verified_custom_domain
+        returns a domain."""
+        from src.services.email.utils import get_org_signup_base_url
+
+        request = _request()
+        mock_session = AsyncMock()
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(tenancy="multi", ssl=True, domain="learnhouse.app"),
+        ), patch(
+            "src.services.email.utils._get_primary_verified_custom_domain",
+            new_callable=AsyncMock,
+            return_value="custom.example.com",
+        ):
+            url = await get_org_signup_base_url(
+                "myorg", request, db_session=mock_session, org_id=42
+            )
+
+        assert url == "https://custom.example.com"
+
+    @pytest.mark.asyncio
+    async def test_get_org_signup_base_url_falls_through_when_no_custom_domain(self):
+        """When _get_primary_verified_custom_domain returns None, the function
+        falls through to the subdomain URL (covers the `if custom_domain:` False
+        branch and lines that follow)."""
+        from src.services.email.utils import get_org_signup_base_url
+
+        request = _request()
+        mock_session = AsyncMock()
+
+        with patch(
+            "src.services.email.utils.get_learnhouse_config",
+            return_value=_config(tenancy="multi", ssl=True, domain="learnhouse.app"),
+        ), patch(
+            "src.services.email.utils._get_primary_verified_custom_domain",
+            new_callable=AsyncMock,
+            return_value=None,
+        ):
+            url = await get_org_signup_base_url(
+                "myorg", request, db_session=mock_session, org_id=42
+            )
+
+        assert url == "https://myorg.learnhouse.app"
+
+    @pytest.mark.asyncio
+    async def test_get_primary_verified_custom_domain_returns_primary(self):
+        """Should return the primary domain's name when a primary verified row
+        is found (covers the execute + scalars().first() lines)."""
+        from types import SimpleNamespace
+        from src.services.email.utils import _get_primary_verified_custom_domain
+
+        primary_domain = SimpleNamespace(domain="primary.example.com")
+
+        # Simulate scalars().first() returning a domain row
+        scalars_result = Mock()
+        scalars_result.first = Mock(return_value=primary_domain)
+        execute_result = Mock()
+        execute_result.scalars = Mock(return_value=scalars_result)
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(return_value=execute_result)
+
+        result = await _get_primary_verified_custom_domain(mock_session, org_id=1)
+        assert result == "primary.example.com"
+
+    @pytest.mark.asyncio
+    async def test_get_primary_verified_custom_domain_falls_back_to_any_verified(self):
+        """When no primary row exists, should query for any verified domain and
+        return it (covers the any_verified execute + return lines)."""
+        from types import SimpleNamespace
+        from src.services.email.utils import _get_primary_verified_custom_domain
+
+        any_domain = SimpleNamespace(domain="any-verified.example.com")
+
+        scalars_none = Mock()
+        scalars_none.first = Mock(return_value=None)
+        result_none = Mock()
+        result_none.scalars = Mock(return_value=scalars_none)
+
+        scalars_any = Mock()
+        scalars_any.first = Mock(return_value=any_domain)
+        result_any = Mock()
+        result_any.scalars = Mock(return_value=scalars_any)
+
+        mock_session = AsyncMock()
+        mock_session.execute = AsyncMock(side_effect=[result_none, result_any])
+
+        result = await _get_primary_verified_custom_domain(mock_session, org_id=1)
+        assert result == "any-verified.example.com"
+
+    @pytest.mark.asyncio
+    async def test_get_primary_verified_custom_domain_returns_none_on_exception(self):
+        """Should return None and log an exception when db_session.execute raises."""
+        from src.services.email.utils import _get_primary_verified_custom_domain
+
+        bad_session = AsyncMock()
+        bad_session.execute = AsyncMock(side_effect=RuntimeError("db error"))
+
+        result = await _get_primary_verified_custom_domain(bad_session, org_id=1)
+        assert result is None

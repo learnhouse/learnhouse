@@ -440,3 +440,58 @@ class TestBoardsService:
 
         # Batch hit the limit immediately, so no members were added
         assert result == []
+
+    @pytest.mark.asyncio
+    async def test_add_board_members_batch_skips_duplicate_silently(
+        self, db, org, admin_user, mock_request
+    ):
+        """When a requested user is already a member, that entry is skipped
+        without error and the others are still added (covers the `if existing:
+        continue` branch in add_board_members_batch)."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_batch_dup")
+        existing_user = await _make_user(
+            db, id=301, email="existing301@test.com", username="existing301"
+        )
+        await _make_member(db, board.id, existing_user.id)
+
+        new_user = await _make_user(
+            db, id=302, email="new302@test.com", username="new302"
+        )
+        batch = BoardMemberBatchCreate(
+            members=[
+                BoardMemberCreate(user_id=existing_user.id, role=BoardMemberRole.EDITOR),
+                BoardMemberCreate(user_id=new_user.id, role=BoardMemberRole.EDITOR),
+            ]
+        )
+
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            result = await add_board_members_batch(
+                mock_request, board.board_uuid, batch, admin_user, db
+            )
+
+        # Only the non-duplicate new_user was added
+        assert len(result) == 1
+        assert result[0].user_id == new_user.id
+
+    @pytest.mark.asyncio
+    async def test_check_board_membership_rbac_fallback(
+        self, db, org, admin_user, mock_request
+    ):
+        """Non-member whose RBAC check passes returns a VIEWER BoardMemberRead.
+        Covers lines 377-378 (user lookup + synthetic BoardMemberRead)."""
+        board = await _make_board(db, org, admin_user, board_uuid="board_rbac_fb")
+        non_member = await _make_user(
+            db, id=401, email="nonmember401@test.com", username="nonmember401"
+        )
+        with patch(
+            "src.services.boards.boards.check_resource_access",
+            new_callable=AsyncMock,
+        ):
+            membership = await check_board_membership(
+                mock_request, board.board_uuid, non_member, db
+            )
+        assert membership.role == BoardMemberRole.VIEWER
+        assert membership.id == 0
