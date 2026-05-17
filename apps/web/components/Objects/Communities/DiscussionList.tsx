@@ -15,7 +15,7 @@ import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
-import { useDiscussions, mutateDiscussions } from '@components/Hooks/useDiscussions'
+import { useDiscussions, useMutateDiscussions } from '@components/Hooks/useDiscussions'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { searchMatchesAny } from '@/lib/search/normalize'
 
@@ -38,6 +38,7 @@ export function DiscussionList({
   const { canCreateDiscussion: hasCreatePermission, canManageCommunity } = useCommunityRights(communityUuid)
   const canCreateDiscussion = hasCreatePermission && isUserPartOfTheOrg
   const accessToken = session?.data?.tokens?.access_token
+  const mutateDiscussions = useMutateDiscussions()
 
   const [sortBy, setSortBy] = useState<DiscussionSortBy>('recent')
   const [searchQuery, setSearchQuery] = useState('')
@@ -168,20 +169,16 @@ export function DiscussionList({
   }
 
   const handleDiscussionUpdate = (updated: DiscussionWithAuthor) => {
-    // Optimistically update the local cache
     mutate(
       (current) => current?.map(d =>
         d.discussion_uuid === updated.discussion_uuid ? updated : d
       ),
-      false
     )
   }
 
   const handleDiscussionDelete = (discussionUuid: string) => {
-    // Optimistically update the local cache
     mutate(
       (current) => current?.filter(d => d.discussion_uuid !== discussionUuid),
-      false
     )
   }
 

@@ -3,7 +3,7 @@ import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { getOffersByResource } from '@services/payments/offers'
 import { UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
 import { OfferCard } from './OfferCard'
@@ -13,7 +13,8 @@ import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 import CourseProgress from '../CourseProgress/CourseProgress'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 
@@ -62,6 +63,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const [isProgressOpen, setIsProgressOpen] = useState(false)
   const org = useOrg() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
+  const queryClient = useQueryClient()
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -75,10 +77,12 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   ) ?? false;
 
   // Public endpoint — no auth needed, works for unauthenticated visitors too
-  const { data: offersResult, isLoading } = useSWR(
-    org && resourceUuid ? [`/offers/by-resource`, org.id, resourceUuid] : null,
-    ([, orgId, uuid]) => getOffersByResource(orgId, uuid)
-  );
+  const { data: offersResult, isLoading } = useQuery({
+    queryKey: ['offers', 'by-resource', org?.id, resourceUuid],
+    queryFn: () => getOffersByResource(org.id, resourceUuid!),
+    enabled: !!org && !!resourceUuid,
+    staleTime: 60_000,
+  });
   const linkedOffers: any[] = offersResult?.data ?? [];
 
   const handleCourseAction = async () => {
@@ -101,11 +105,11 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     try {
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-        mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
+        if (org?.id) queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
         toast.success(t('courses.leave_course_success'), { id: loadingToast })
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-        mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
+        if (org?.id) queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
         toast.success(t('courses.start_course_success'), { id: loadingToast })
 
         // Get the first activity from the first chapter
@@ -118,8 +122,6 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
             getUriWithOrg(orgslug, '') +
             `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
           )
-        } else {
-          mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
         }
       }
     } catch (error) {

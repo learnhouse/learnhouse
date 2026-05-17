@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import { getOffers, updateOffer, archiveOffer } from '@services/payments/offers';
 import { Plus, Pencil, Info, RefreshCcw, SquareCheck, ChevronDown, ChevronUp, Archive, Users, Layers } from 'lucide-react';
 import currencyCodes from 'currency-codes';
@@ -35,21 +36,23 @@ const editValidationSchema = Yup.object().shape({
 function PaymentsOffersPage() {
   const org = useOrg() as any;
   const session = useLHSession() as any;
+  const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
   const [expandedOffers, setExpandedOffers] = useState<{ [key: string]: boolean }>({});
   const [resourcesPanelOffer, setResourcesPanelOffer] = useState<any>(null);
   const { isEnabled, isLoading } = usePaymentsEnabled();
 
-  const { data: offers, error } = useSWR(
-    () => org && session ? [`/payments/${org.id}/offers`, session.data?.tokens?.access_token] : null,
-    ([, token]) => getOffers(org.id, token),
-    { revalidateOnFocus: false }
-  );
+  const { data: offers, error } = useQuery({
+    queryKey: queryKeys.payments.offers(org?.id),
+    queryFn: () => getOffers(org.id, session.data?.tokens?.access_token),
+    enabled: !!(org?.id && session?.data?.tokens?.access_token),
+    staleTime: 60_000,
+  });
 
   const handleArchiveOffer = async (offerId: string) => {
     const res = await archiveOffer(org.id, offerId, session.data?.tokens?.access_token);
-    mutate([`/payments/${org.id}/offers`, session.data?.tokens?.access_token]);
+    queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
     if (res.status === 200) {
       toast.success('Offer archived successfully');
     } else {
@@ -65,8 +68,24 @@ function PaymentsOffersPage() {
     return <UnconfiguredPaymentsDisclaimer />;
   }
 
-  if (error) return <div>Failed to load offers</div>;
-  if (!offers) return <div>Loading…</div>;
+  if (error) return <div className="p-8 text-sm text-red-500">Failed to load offers</div>;
+  if (!offers) return (
+    <div className="h-full w-full bg-[#f8f8f8]">
+      <div className="pl-10 pr-10 mx-auto animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-4 rounded-lg nice-shadow space-y-3">
+              <div className="h-5 bg-gray-200 rounded w-1/3" />
+              <div className="h-6 bg-gray-200 rounded w-2/3" />
+              <div className="h-3 bg-gray-100 rounded w-full" />
+              <div className="h-3 bg-gray-100 rounded w-4/5" />
+              <div className="h-10 bg-gray-100 rounded w-full mt-4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
@@ -230,6 +249,7 @@ const EditOfferForm = ({
 }) => {
   const org = useOrg() as any;
   const session = useLHSession() as any;
+  const queryClient = useQueryClient();
   const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -256,7 +276,7 @@ const EditOfferForm = ({
   ) => {
     try {
       await updateOffer(org.id, offer.id, values, session.data?.tokens?.access_token);
-      mutate([`/payments/${org.id}/offers`, session.data?.tokens?.access_token]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.offers(org.id) });
       onSuccess();
       toast.success('Offer updated successfully');
     } catch {

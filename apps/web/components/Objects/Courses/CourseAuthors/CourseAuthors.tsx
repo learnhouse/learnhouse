@@ -5,9 +5,10 @@ import { useMediaQuery } from 'usehooks-ts'
 import { Rss, PencilLine, TentTree } from 'lucide-react'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { createCourseUpdate, deleteCourseUpdate } from '@services/courses/updates'
@@ -152,10 +153,13 @@ const UpdatesSection = () => {
   const course = useCourse() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { data: updates } = useSWR(
-    `${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`,
-    (url) => swrFetcher(url, access_token)
-  )
+  const courseUuid = course?.courseStructure?.course_uuid
+  const { data: updates } = useQuery({
+    queryKey: queryKeys.courses.updates(courseUuid),
+    queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
+    enabled: !!(courseUuid && access_token),
+    staleTime: 60_000,
+  })
 
   return (
     <div className="mt-2 pt-2">
@@ -212,6 +216,8 @@ const NewUpdateForm = ({ setSelectedView }: { setSelectedView: (view: string) =>
   const org = useOrg() as any
   const course = useCourse() as any
   const session = useLHSession() as any
+  const queryClient = useQueryClient()
+  const courseUuid = course?.courseStructure?.course_uuid
 
   const formik = useFormik({
     initialValues: {
@@ -235,7 +241,7 @@ const NewUpdateForm = ({ setSelectedView }: { setSelectedView: (view: string) =>
       if (res.status === 200) {
         toast.success(t('courses.update_added_success'))
         setSelectedView('list')
-        mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
+        queryClient.invalidateQueries({ queryKey: queryKeys.courses.updates(courseUuid) })
       } else {
         toast.error(t('courses.failed_add_update'))
       }
@@ -295,10 +301,13 @@ const UpdatesListView = () => {
   const adminStatus = useAdminStatus()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { data: updates } = useSWR(
-    `${getAPIUrl()}courses/${course?.courseStructure?.course_uuid}/updates`,
-    (url) => swrFetcher(url, access_token)
-  )
+  const courseUuid = course?.courseStructure?.course_uuid
+  const { data: updates } = useQuery({
+    queryKey: queryKeys.courses.updates(courseUuid),
+    queryFn: () => apiFetch(`${getAPIUrl()}courses/${courseUuid}/updates`, access_token),
+    enabled: !!(courseUuid && access_token),
+    staleTime: 60_000,
+  })
 
   if (!updates || updates.length === 0) {
     return (
@@ -349,6 +358,8 @@ const DeleteUpdateButton = ({ update }: any) => {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const course = useCourse() as any
+  const queryClient = useQueryClient()
+  const courseUuid = course?.courseStructure?.course_uuid
 
   const handleDelete = async () => {
     const toast_loading = toast.loading(t('courses.deleting_update'))
@@ -361,7 +372,7 @@ const DeleteUpdateButton = ({ update }: any) => {
     if (res.status === 200) {
       toast.dismiss(toast_loading)
       toast.success(t('courses.update_deleted_success'))
-      mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses.updates(courseUuid) })
     } else {
       toast.error(t('courses.failed_delete_update'))
     }

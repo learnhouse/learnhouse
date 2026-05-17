@@ -5,9 +5,11 @@ import { UserPlus, Trash2, Search, Check, User, Users } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { addBoardMembersBatch, removeBoardMember } from '@services/boards/boards'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { apiFetch } from '@services/utils/ts/requests'
+import { addBoardMembersBatch, getBoardMembers, removeBoardMember } from '@services/boards/boards'
+import { getUserGroups } from '@services/usergroups/usergroups'
 import { searchMatchesAny } from '@/lib/search/normalize'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -25,13 +27,14 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
-  const membersKey = access_token ? `${getAPIUrl()}boards/${boardUuid}/members` : null
-  const { data: members } = useSWR(
-    membersKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: members, isLoading: membersLoading } = useQuery({
+    queryKey: queryKeys.boards.members(boardUuid),
+    queryFn: () => getBoardMembers(boardUuid, access_token),
+    enabled: !!access_token && !!boardUuid,
+    staleTime: 60_000,
+  })
 
   const [addMemberModal, setAddMemberModal] = useState(false)
 
@@ -39,13 +42,40 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
     try {
       await removeBoardMember(boardUuid, userId, access_token)
       toast.success(t('boards.members.member_removed'))
-      if (membersKey) mutate(membersKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.members(boardUuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(boardUuid) })
     } catch {
       toast.error(t('boards.members.member_removed_error'))
     }
   }
 
   const membersList = members || []
+
+  if (membersLoading) {
+    return (
+      <div>
+        <div className="h-6"></div>
+        <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4 animate-pulse">
+          <div className="flex flex-col bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-3 gap-2">
+            <div className="h-5 w-32 bg-gray-200 rounded" />
+            <div className="h-3 w-64 bg-gray-100 rounded" />
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 py-3 px-4 border-b border-gray-100">
+                <div className="w-7 h-7 bg-gray-200 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 bg-gray-200 rounded w-32" />
+                  <div className="h-3 bg-gray-100 rounded w-40" />
+                </div>
+                <div className="h-5 w-14 bg-gray-100 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -150,7 +180,6 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
                   orgId={orgId}
                   accessToken={access_token}
                   setModalOpen={setAddMemberModal}
-                  membersKey={membersKey}
                 />
               }
               dialogTitle={t('boards.members.add_member')}
@@ -169,31 +198,34 @@ function BoardMembersTab({ boardUuid, orgId }: BoardMembersTabProps) {
   )
 }
 
-function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKey }: {
+function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen }: {
   boardUuid: string
   orgId: number
   accessToken: string
   setModalOpen: (open: boolean) => void
-  membersKey: string | null
 }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
   const [activeGroup, setActiveGroup] = useState<string | null>(null) // null = "All"
   const [role, setRole] = useState('editor')
   const [isAdding, setIsAdding] = useState(false)
 
-  const { data: orgUsers } = useSWR(
-    accessToken ? `${getAPIUrl()}orgs/${orgId}/users?page=1&limit=100` : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: orgUsers } = useQuery({
+    queryKey: ['org', orgId, 'users', 'all'],
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/users?page=1&limit=100`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
-  const { data: usergroups } = useSWR(
-    accessToken ? `${getAPIUrl()}usergroups/org/${orgId}?org_id=${orgId}` : null,
-    (url) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: usergroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(orgId),
+    queryFn: () => getUserGroups(orgId, accessToken),
+    select: (res: any) => res?.data ?? res,
+    enabled: !!accessToken && !!orgId,
+    staleTime: 60_000,
+  })
 
   const allUsers: any[] = orgUsers?.items || []
   const allGroups: any[] = usergroups || []
@@ -281,7 +313,8 @@ function AddBoardMember({ boardUuid, orgId, accessToken, setModalOpen, membersKe
       await addBoardMembersBatch(boardUuid, members, accessToken)
       toast.success(t('boards.members.member_added'))
       setModalOpen(false)
-      if (membersKey) mutate(membersKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.members(boardUuid) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(boardUuid) })
     } catch {
       toast.error(t('boards.members.member_added_error'))
     } finally {

@@ -9,7 +9,8 @@ import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import UserAvatar from '../../UserAvatar'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 
 interface Author {
@@ -130,6 +131,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   const session = useLHSession() as any
   const { isUserPartOfTheOrg } = useOrgMembership()
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const [isActionLoading, setIsActionLoading] = useState(false)
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -143,10 +145,12 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
   ) ?? false;
 
   // Public endpoint — no auth needed, works for unauthenticated visitors too
-  const { data: offersResult, isLoading } = useSWR(
-    org && resourceUuid ? [`/offers/by-resource`, org.id, resourceUuid] : null,
-    ([, orgId, uuid]) => getOffersByResource(orgId, uuid)
-  );
+  const { data: offersResult, isLoading } = useQuery({
+    queryKey: ['offers', 'by-resource', org?.id, resourceUuid],
+    queryFn: () => getOffersByResource(org.id, resourceUuid!),
+    enabled: !!org && !!resourceUuid,
+    staleTime: 60_000,
+  });
   const linkedOffers: any[] = offersResult?.data ?? [];
 
   const handleCourseAction = async () => {
@@ -166,10 +170,12 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
+        queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
         router.refresh()
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
+        queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org.id) })
         
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]

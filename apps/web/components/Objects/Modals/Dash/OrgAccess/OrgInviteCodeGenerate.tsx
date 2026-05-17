@@ -1,12 +1,13 @@
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { createInviteCode } from '@services/organizations/invites'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getUserGroups } from '@services/usergroups/usergroups'
 import { Ticket, UserSquare, Users } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 
@@ -19,19 +20,23 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const queryClient = useQueryClient()
     const [mode, setMode] = React.useState<'normal' | 'usergroup'>('normal');
     const [usergroup_id, setUsergroup_id] = React.useState(0);
 
-    const { data: usergroups } = useSWR(
-        org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
-        (url) => swrFetcher(url, access_token)
-    )
+    const { data: usergroups } = useQuery({
+        queryKey: queryKeys.usergroups.list(org?.id),
+        queryFn: () => getUserGroups(org.id, access_token),
+        select: (res: any) => res?.data ?? res,
+        enabled: !!(org?.id && access_token),
+        staleTime: 60_000,
+    })
 
     async function handleGenerate() {
         const ugId = mode === 'usergroup' && usergroup_id ? usergroup_id : undefined
         let res = await createInviteCode(org.id, session.data?.tokens?.access_token, ugId)
         if (res.status == 200) {
-            mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
+            queryClient.invalidateQueries({ queryKey: queryKeys.org.inviteCodes(org.id) })
             props.setInvitesModal(false)
         } else {
             toast.error(t('dashboard.users.signups.generate_modal.toasts.error', { status: res.status, detail: res.data.detail }))

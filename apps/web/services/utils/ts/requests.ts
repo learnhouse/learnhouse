@@ -99,7 +99,7 @@ export const RequestBodyFormWithAuthHeader = (
   return options
 }
 
-export const swrFetcher = async (url: string, token?: string) => {
+export const apiFetch = async (url: string, token?: string) => {
   // Create the request options
   let HeadersConfig = new Headers(
     token

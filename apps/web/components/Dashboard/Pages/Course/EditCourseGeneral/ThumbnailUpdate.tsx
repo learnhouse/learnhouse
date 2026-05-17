@@ -1,11 +1,12 @@
-import { useCourse, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
+import { useCourse } from '@components/Contexts/CourseContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ArrowBigUpDash, UploadCloud, Image as ImageIcon, Video } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useState, useEffect, useRef } from 'react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@lib/query/keys'
 import UnsplashImagePicker from './UnsplashImagePicker'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -32,6 +33,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
   const course = useCourse() as any
   const session = useLHSession() as any;
   const org = useOrg() as any
+  const queryClient = useQueryClient()
   const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string; type: 'image' | 'video' } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
@@ -145,9 +147,10 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         session.data?.tokens?.access_token
       );
       
-      // Use unified cache key
-      const cacheKey = getCourseMetaCacheKey(course.courseStructure.course_uuid, withUnpublishedActivities);
-      await mutate(cacheKey);
+      // Invalidate course meta cache
+      const cleanUuid = course.courseStructure.course_uuid.replace('course_', '')
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanUuid) })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(org.slug) })
       await new Promise((r) => setTimeout(r, 1500));
 
       if (res.success === false) {

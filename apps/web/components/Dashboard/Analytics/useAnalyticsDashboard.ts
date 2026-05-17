@@ -1,5 +1,6 @@
 'use client'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -13,10 +14,7 @@ function fetcher(url: string, token: string) {
   })
 }
 
-const SWR_DEFAULTS = {
-  revalidateOnFocus: false,
-  dedupingInterval: 60000,
-}
+const STALE_TIME = 60_000
 
 export function useAnalyticsPipe(
   pipeName: string,
@@ -29,11 +27,15 @@ export function useAnalyticsPipe(
   const orgId = org?.id
 
   const params = new URLSearchParams({ org_id: String(orgId ?? ''), ...extraParams })
-  const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/${pipeName}?${params}` : null
+  const paramsStr = params.toString()
 
-  return useSWR(url, (u) => fetcher(u, token), {
-    ...SWR_DEFAULTS,
-    refreshInterval,
+  return useQuery({
+    queryKey: queryKeys.analytics.pipe(orgId ?? 0, pipeName, paramsStr),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/dashboard/${pipeName}?${paramsStr}`, token),
+    enabled: !!(orgId && token),
+    staleTime: STALE_TIME,
+    refetchInterval: refreshInterval || false,
   })
 }
 
@@ -48,11 +50,15 @@ export function useAnalyticsDetail(
   const orgId = org?.id
 
   const params = new URLSearchParams({ org_id: String(orgId ?? ''), ...extraParams })
-  const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/detail/${queryName}?${params}` : null
+  const paramsStr = params.toString()
 
-  return useSWR(url, (u) => fetcher(u, token), {
-    ...SWR_DEFAULTS,
-    refreshInterval,
+  return useQuery({
+    queryKey: queryKeys.analytics.detail(orgId ?? 0, queryName, paramsStr),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/dashboard/detail/${queryName}?${paramsStr}`, token),
+    enabled: !!(orgId && token),
+    staleTime: STALE_TIME,
+    refetchInterval: refreshInterval || false,
   })
 }
 
@@ -66,9 +72,15 @@ export function useAnalyticsDbQuery(
   const orgId = org?.id
 
   const params = new URLSearchParams({ org_id: String(orgId ?? ''), ...extraParams })
-  const url = orgId && token ? `${getAPIUrl()}analytics/dashboard/db/${queryName}?${params}` : null
+  const paramsStr = params.toString()
 
-  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
+  return useQuery({
+    queryKey: queryKeys.analytics.db(orgId ?? 0, queryName, paramsStr),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/dashboard/db/${queryName}?${paramsStr}`, token),
+    enabled: !!(orgId && token),
+    staleTime: STALE_TIME,
+  })
 }
 
 export function usePlanInfo() {
@@ -77,18 +89,25 @@ export function usePlanInfo() {
   const token = session?.data?.tokens?.access_token
   const orgId = org?.id
 
-  const url = orgId && token ? `${getAPIUrl()}analytics/plan-info?org_id=${orgId}` : null
-
-  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
+  return useQuery({
+    queryKey: queryKeys.analytics.planInfo(orgId ?? 0),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/plan-info?org_id=${orgId}`, token),
+    enabled: !!(orgId && token),
+    staleTime: STALE_TIME,
+  })
 }
 
 export function useAnalyticsStatus() {
   const session = useLHSession() as any
   const token = session?.data?.tokens?.access_token
 
-  const url = token ? `${getAPIUrl()}analytics/status` : null
-
-  return useSWR(url, (u) => fetcher(u, token), SWR_DEFAULTS)
+  return useQuery({
+    queryKey: queryKeys.analytics.status(),
+    queryFn: () => fetcher(`${getAPIUrl()}analytics/status`, token),
+    enabled: !!token,
+    staleTime: STALE_TIME,
+  })
 }
 
 export function useCoursePipe(
@@ -107,14 +126,15 @@ export function useCoursePipe(
     course_uuid: courseUuid,
     ...extraParams,
   })
-  const url =
-    orgId && token && courseUuid
-      ? `${getAPIUrl()}analytics/dashboard/course/${pipeName}?${params}`
-      : null
+  const paramsStr = params.toString()
 
-  return useSWR(url, (u) => fetcher(u, token), {
-    ...SWR_DEFAULTS,
-    refreshInterval,
+  return useQuery({
+    queryKey: queryKeys.analytics.coursePipe(orgId ?? 0, courseUuid, pipeName, paramsStr),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/dashboard/course/${pipeName}?${paramsStr}`, token),
+    enabled: !!(orgId && token && courseUuid),
+    staleTime: STALE_TIME,
+    refetchInterval: refreshInterval || false,
   })
 }
 
@@ -134,13 +154,14 @@ export function useCourseAnalyticsDetail(
     course_uuid: courseUuid,
     ...extraParams,
   })
-  const url =
-    orgId && token && courseUuid
-      ? `${getAPIUrl()}analytics/dashboard/course/detail/${queryName}?${params}`
-      : null
+  const paramsStr = params.toString()
 
-  return useSWR(url, (u) => fetcher(u, token), {
-    ...SWR_DEFAULTS,
-    refreshInterval,
+  return useQuery({
+    queryKey: queryKeys.analytics.courseDetail(orgId ?? 0, courseUuid, queryName, paramsStr),
+    queryFn: () =>
+      fetcher(`${getAPIUrl()}analytics/dashboard/course/detail/${queryName}?${paramsStr}`, token),
+    enabled: !!(orgId && token && courseUuid),
+    staleTime: STALE_TIME,
+    refetchInterval: refreshInterval || false,
   })
 }

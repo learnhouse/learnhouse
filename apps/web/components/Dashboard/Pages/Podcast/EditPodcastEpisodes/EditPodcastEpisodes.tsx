@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { usePodcast } from '@components/Contexts/PodcastContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -48,6 +49,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
   const session = useLHSession() as any
   const org = useOrg() as any
   const accessToken = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null)
@@ -87,8 +89,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
       await deleteEpisode(episode.episode_uuid, accessToken)
       await revalidateTags(['podcasts'], orgslug)
       await refreshPodcast()
-      // Revalidate all podcast-related SWR caches
-      mutate((key) => typeof key === 'string' && key.includes('/podcasts/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastuuid) })
       toast.success(t('podcasts.dashboard.episodes.deleted'), { id: toastId })
     } catch (error) {
       console.error('Failed to delete episode:', error)
@@ -102,8 +103,7 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
       await updateEpisode(episode.episode_uuid, { published: !episode.published }, accessToken)
       await revalidateTags(['podcasts'], orgslug)
       await refreshPodcast()
-      // Revalidate all podcast-related SWR caches
-      mutate((key) => typeof key === 'string' && key.includes('/podcasts/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastuuid) })
       toast.success(t('podcasts.dashboard.episodes.updated'), { id: toastId })
     } catch (error) {
       console.error('Failed to update episode:', error)
@@ -113,8 +113,32 @@ function EditPodcastEpisodes({ orgslug, podcastuuid }: EditPodcastEpisodesProps)
 
   if (isLoading || !podcast) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="h-full">
+        <div className="h-6" />
+        <div className="px-10 pb-10">
+          <div className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+            <div className="flex items-center justify-between mb-6">
+              <div className="space-y-2">
+                <div className="h-5 w-24 bg-gray-200 rounded" />
+                <div className="h-3 w-16 bg-gray-100 rounded" />
+              </div>
+              <div className="h-9 w-32 bg-gray-200 rounded-lg" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center p-4 bg-gray-50 rounded-lg gap-4">
+                  <div className="w-5 h-5 bg-gray-200 rounded shrink-0" />
+                  <div className="w-12 h-12 bg-gray-200 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-48" />
+                    <div className="h-3 bg-gray-100 rounded w-64" />
+                  </div>
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -342,6 +366,7 @@ function CreateEpisodeModal({
   onSuccess: () => Promise<void>
 }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -378,8 +403,7 @@ function CreateEpisodeModal({
 
       await revalidateTags(['podcasts'], orgslug)
       await onSuccess()
-      // Revalidate all podcast-related SWR caches
-      mutate((key) => typeof key === 'string' && key.includes('/podcasts/'), undefined, { revalidate: true })
+      queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastuuid) })
       toast.success(t('podcasts.dashboard.episodes.created'), { id: toastId })
       handleClose()
     } catch (error: any) {
@@ -505,6 +529,7 @@ function EditEpisodeModal({
   podcastUuid: string
 }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [title, setTitle] = useState(episode.title)
   const [description, setDescription] = useState(episode.description || '')
@@ -527,6 +552,7 @@ function EditEpisodeModal({
 
       await revalidateTags(['podcasts'], orgslug)
       await onSuccess()
+      queryClient.invalidateQueries({ queryKey: queryKeys.podcasts.episodes(podcastUuid) })
       toast.success(t('podcasts.dashboard.episodes.updated'), { id: toastId })
       onClose()
     } catch (error) {

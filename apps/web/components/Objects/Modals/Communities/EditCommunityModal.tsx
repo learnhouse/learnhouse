@@ -5,8 +5,11 @@ import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 import toast from 'react-hot-toast'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { updateCommunity, Community } from '@services/communities/communities'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { Loader2 } from 'lucide-react'
 
@@ -34,7 +37,9 @@ export function EditCommunityModal({
   orgSlug,
 }: EditCommunityModalProps) {
   const session = useLHSession() as any
+  const org = useOrg() as any
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const accessToken = session?.data?.tokens?.access_token
@@ -54,6 +59,8 @@ export function EditCommunityModal({
 
       if (result) {
         await revalidateTags(['communities'], orgSlug)
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.list(org?.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.community.detail(community.community_uuid) })
         router.refresh()
         onClose()
       }

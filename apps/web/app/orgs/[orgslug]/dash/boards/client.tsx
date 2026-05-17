@@ -5,10 +5,10 @@ import { Search, X, Users, Globe, Lock, ChevronLeft, ChevronRight, MoreVertical,
 import { ChalkboardSimple } from '@phosphor-icons/react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import useSWR, { mutate } from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { createBoard, deleteBoard, duplicateBoard } from '@services/boards/boards'
+import { getUriWithOrg } from '@services/config/config'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { createBoard, deleteBoard, duplicateBoard, getBoards } from '@services/boards/boards'
 import { getBoardThumbnailMediaDirectory } from '@services/media/media'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -95,6 +95,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
 
   const isBoardsEnabled = org?.config?.config?.resolved_features?.boards?.enabled ?? org?.config?.config?.features?.boards?.enabled !== false
 
@@ -104,12 +105,12 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
   const [selectedBoards, setSelectedBoards] = useState<Set<string>>(new Set())
   const itemsPerPage = 12
 
-  const boardsKey = isBoardsEnabled && access_token ? `${getAPIUrl()}boards/org/${org_id}` : null
-  const { data: boards, isLoading } = useSWR(
-    boardsKey,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false }
-  )
+  const { data: boards, isLoading } = useQuery({
+    queryKey: queryKeys.boards.list(orgslug),
+    queryFn: () => getBoards(org_id, access_token),
+    enabled: isBoardsEnabled && !!access_token && !!org_id,
+    staleTime: 60_000,
+  })
 
   const allBoards = boards || []
 
@@ -132,7 +133,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
 
   const handleCreated = () => {
     setCreateModalOpen(false)
-    if (boardsKey) mutate(boardsKey)
+    queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
   }
 
   const toggleBoardSelection = (boardUuid: string) => {
@@ -176,14 +177,14 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     }
 
     clearSelection()
-    if (boardsKey) mutate(boardsKey)
+    queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
   }
 
   const handleDeleteBoard = async (boardUuid: string) => {
     const toastId = toast.loading(t('boards.deleting_board'))
     try {
       await deleteBoard(boardUuid, access_token)
-      if (boardsKey) mutate(boardsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
       toast.success(t('boards.board_deleted_success'))
     } catch {
       toast.error(t('boards.board_deleted_error'))
@@ -196,7 +197,7 @@ export default function BoardListClient({ org_id, orgslug }: BoardListClientProp
     const toastId = toast.loading(t('boards.duplicating_board'))
     try {
       await duplicateBoard(boardUuid, access_token)
-      if (boardsKey) mutate(boardsKey)
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(orgslug) })
       toast.success(t('boards.board_duplicated_success'))
     } catch {
       toast.error(t('boards.board_duplicated_error'))

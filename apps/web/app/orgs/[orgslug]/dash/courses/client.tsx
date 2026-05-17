@@ -24,10 +24,10 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
 import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
-import { mutate } from 'swr'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import toast from 'react-hot-toast'
 import FeatureGate from '@components/Dashboard/Shared/FeatureGate/FeatureGate'
 import { usePlan } from '@components/Hooks/usePlan'
@@ -57,22 +57,33 @@ function CoursesHome(params: CourseProps) {
 
   // Check if courses feature is enabled
   const isCoursesEnabled = org?.config?.config?.resolved_features?.courses?.enabled ?? org?.config?.config?.features?.courses?.enabled !== false
+  const queryClient = useQueryClient()
 
-  // SWR for courses data - only fetch if feature is enabled
-  const { data: coursesData, mutate: mutateCourses } = useSWR(
-    isCoursesEnabled && access_token ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true` : null,
-    (url) => swrFetcher(url, access_token),
-    { fallbackData: params.courses, revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  // TanStack Query for courses data - only fetch if feature is enabled
+  const { data: coursesData } = useQuery({
+    queryKey: queryKeys.courses.list(orgslug),
+    queryFn: async () => {
+      const url = `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true`
+      const res = await fetch(url, RequestBodyWithAuthHeader('GET', null, null, access_token))
+      if (!res.ok) throw new Error('Failed to fetch courses')
+      return res.json()
+    },
+    enabled: isCoursesEnabled && !!access_token,
+    placeholderData: params.courses,
+    staleTime: 30_000,
+  })
+
+  const mutateCourses = () => queryClient.invalidateQueries({ queryKey: queryKeys.courses.list(orgslug) })
 
   const allCourses = coursesData || params.courses
 
   // Fetch usage limits from backend
-  const { data: usageData } = useSWR<OrgUsageResponse>(
-    access_token && params.org_id ? `${getAPIUrl()}orgs/${params.org_id}/usage` : null,
-    (url) => orgUsageFetcher(url, access_token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const { data: usageData } = useQuery<OrgUsageResponse>({
+    queryKey: queryKeys.org.usage(Number(params.org_id)),
+    queryFn: () => orgUsageFetcher(`${getAPIUrl()}orgs/${params.org_id}/usage`, access_token),
+    enabled: !!access_token && !!params.org_id,
+    staleTime: 30_000,
+  })
 
   // Check course creation limit from backend
   const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false

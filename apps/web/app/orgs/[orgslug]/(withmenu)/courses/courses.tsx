@@ -18,17 +18,15 @@ import { searchMatchesAny } from '@/lib/search/normalize'
 import { PlanLevel } from '@services/plans/plans'
 import { getUserGroups, getUserGroupResources } from '@services/usergroups/usergroups'
 import { usePlan } from '@components/Hooks/usePlan'
+import { useCourses } from '@/hooks/queries/useCourses'
 
 interface CourseProps {
   orgslug: string
-  courses: any
-  org_id: string | number
 }
 
 function Courses(props: CourseProps) {
   const { t } = useTranslation()
   const orgslug = props.orgslug
-  const allCourses = props.courses
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
@@ -37,6 +35,9 @@ function Courses(props: CourseProps) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const currentPlan = usePlan()
+  const { data: coursesData, isLoading: coursesLoading } = useCourses(orgslug)
+
+  const allCourses = coursesData || []
 
   // Usergroup filter — only shown on personal/family plans
   const usergroupsAvailable = currentPlan === 'personal' || currentPlan === 'family'
@@ -52,8 +53,8 @@ function Courses(props: CourseProps) {
 
   // Fetch usergroups
   useEffect(() => {
-    if (!usergroupsAvailable || !access_token || !props.org_id) return
-    getUserGroups(props.org_id, access_token)
+    if (!usergroupsAvailable || !access_token || !org?.id) return
+    getUserGroups(org?.id, access_token)
       .then((res: any) => {
         const list = Array.isArray(res) ? res : res?.data || []
         setUsergroups(list)
@@ -63,21 +64,21 @@ function Courses(props: CourseProps) {
         }
       })
       .catch(() => setUsergroups([]))
-  }, [usergroupsAvailable, access_token, props.org_id])
+  }, [usergroupsAvailable, access_token, org?.id])
 
   // Fetch resource UUIDs for selected usergroup
   useEffect(() => {
-    if (!selectedUsergroupId || !access_token || !props.org_id) {
+    if (!selectedUsergroupId || !access_token || !org?.id) {
       setUsergroupResourceUuids(null)
       return
     }
-    getUserGroupResources(selectedUsergroupId, props.org_id, access_token)
+    getUserGroupResources(selectedUsergroupId, org?.id, access_token)
       .then((res: any) => {
         const uuids = Array.isArray(res) ? res : res?.data || []
         setUsergroupResourceUuids(new Set(uuids))
       })
       .catch(() => setUsergroupResourceUuids(null))
-  }, [selectedUsergroupId, access_token, props.org_id])
+  }, [selectedUsergroupId, access_token, org?.id])
 
   const handleUsergroupChange = (value: string) => {
     setSelectedUsergroupId(value)
@@ -163,6 +164,38 @@ function Courses(props: CourseProps) {
     setNewCourseModal(false)
   }
 
+  if (coursesLoading && !coursesData) {
+    return (
+      <div className="w-full animate-pulse">
+        <GeneralWrapperStyled>
+          <div className="flex flex-col space-y-2 mb-2">
+            {/* Header row: title + button placeholder */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-7 bg-gray-200 rounded w-28" />
+              <div className="h-9 bg-gray-200 rounded-lg w-32" />
+            </div>
+            {/* Search bar placeholder */}
+            <div className="h-10 bg-gray-200 rounded-lg w-full sm:w-80 mb-4" />
+            {/* Course card grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-xl overflow-hidden">
+                  {/* Thumbnail area */}
+                  <div className="bg-gray-200 w-full h-40 rounded-xl" />
+                  {/* Card body */}
+                  <div className="pt-3 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </GeneralWrapperStyled>
+      </div>
+    )
+  }
+
   return (
     <FeatureGate feature="courses" orgslug={orgslug} context="public">
     <div className="w-full">
@@ -174,7 +207,7 @@ function Courses(props: CourseProps) {
               checkMethod="roles"
               action="create"
               ressourceType="courses"
-              orgId={props.org_id}
+              orgId={org?.id}
             >
               <Modal
                 isDialogOpen={newCourseModal}
@@ -264,9 +297,9 @@ function Courses(props: CourseProps) {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {paginatedCourses.map((course: any) => (
+            {paginatedCourses.map((course: any, index: number) => (
               <div key={course.course_uuid} className="">
-                <CourseThumbnail course={course} orgslug={orgslug} />
+                <CourseThumbnail course={course} orgslug={orgslug} isPriority={currentPage === 1 && index < 3} />
               </div>
             ))}
             {filteredCourses.length === 0 && searchQuery && (
@@ -301,7 +334,7 @@ function Courses(props: CourseProps) {
                       action="create"
                       ressourceType="courses"
                       checkMethod="roles"
-                      orgId={props.org_id}
+                      orgId={org?.id}
                     >
                       <button onClick={() => setNewCourseModal(true)}>
                         <NewCourseButton />

@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query/keys';
 import {
   getPaymentsGroups,
   createPaymentsGroup,
@@ -36,17 +37,24 @@ import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/Unconfigu
 
 function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number; token: string }) {
   const org = useOrg() as any;
+  const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const swrKey = [`/payments/${orgId}/groups/${group.id}/resources`, orgId, token];
+  const resourceQueryKey = ['payments', orgId, 'groups', group.id, 'resources'];
 
-  const { data: resources } = useSWR(swrKey, () => getGroupResources(orgId, group.id, token), { revalidateOnFocus: false });
+  const { data: resources } = useQuery({
+    queryKey: resourceQueryKey,
+    queryFn: () => getGroupResources(orgId, group.id, token),
+    enabled: !!(orgId && token),
+    staleTime: 60_000,
+  });
 
-  const { data: coursesData } = useSWR(
-    org ? [`/courses/org`, org.slug, token] : null,
-    ([, slug, t]: any) => getOrgCourses(slug, null, t, true),
-    { revalidateOnFocus: false }
-  );
+  const { data: coursesData } = useQuery({
+    queryKey: queryKeys.courses.list(org?.slug ?? ''),
+    queryFn: () => getOrgCourses(org.slug, null, token, true),
+    enabled: !!(org?.slug && token),
+    staleTime: 60_000,
+  });
 
   const rawList: string[] = Array.isArray(resources?.data) ? resources.data : Array.isArray(resources) ? resources : [];
   const courses: any[] = coursesData ?? [];
@@ -66,14 +74,14 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
 
   const handleAdd = async (resourceUuid: string) => {
     await addGroupResource(orgId, group.id, resourceUuid, token);
-    mutate(swrKey);
+    queryClient.invalidateQueries({ queryKey: resourceQueryKey });
     setPickerOpen(false);
     toast.success('Course added to group');
   };
 
   const handleRemove = async (resourceUuid: string) => {
     await removeGroupResource(orgId, group.id, resourceUuid, token);
-    mutate(swrKey);
+    queryClient.invalidateQueries({ queryKey: resourceQueryKey });
     toast.success('Course removed');
   };
 
@@ -152,19 +160,27 @@ function GroupResourcePanel({ group, orgId, token }: { group: any; orgId: number
 // ---------------------------------------------------------------------------
 
 function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; token: string }) {
-  const swrKey = [`/payments/${orgId}/groups/${group.id}/sync`, token];
+  const queryClient = useQueryClient();
 
-  const { data: syncs } = useSWR(swrKey, () => getGroupSyncs(orgId, group.id, token), { revalidateOnFocus: false });
+  const syncQueryKey = ['payments', orgId, 'groups', group.id, 'sync'];
 
-  const { data: usergroups } = useSWR(
-    [`/usergroups/${orgId}`, token],
-    async ([, t]) => {
+  const { data: syncs } = useQuery({
+    queryKey: syncQueryKey,
+    queryFn: () => getGroupSyncs(orgId, group.id, token),
+    enabled: !!(orgId && token),
+    staleTime: 60_000,
+  });
+
+  const { data: usergroups } = useQuery({
+    queryKey: queryKeys.usergroups.list(orgId),
+    queryFn: async () => {
       const { getUserGroups } = await import('@services/usergroups/usergroups');
-      const res = await getUserGroups(orgId, t);
+      const res = await getUserGroups(orgId, token);
       return res?.data ?? res ?? [];
     },
-    { revalidateOnFocus: false }
-  );
+    enabled: !!(orgId && token),
+    staleTime: 60_000,
+  });
 
   const syncList: any[] = Array.isArray(syncs?.data) ? syncs.data : Array.isArray(syncs) ? syncs : [];
   const syncedIds = new Set(syncList.map((s: any) => s.usergroup_id));
@@ -172,13 +188,13 @@ function GroupSyncPanel({ group, orgId, token }: { group: any; orgId: number; to
 
   const handleAdd = async (ugId: number) => {
     await addGroupSync(orgId, group.id, ugId, token);
-    mutate(swrKey);
+    queryClient.invalidateQueries({ queryKey: syncQueryKey });
     toast.success('UserGroup synced — enrolled users will be auto-added');
   };
 
   const handleRemove = async (ugId: number) => {
     await removeGroupSync(orgId, group.id, ugId, token);
-    mutate(swrKey);
+    queryClient.invalidateQueries({ queryKey: syncQueryKey });
     toast.success('Sync removed');
   };
 
@@ -363,16 +379,40 @@ export default function PaymentsGroupsPage() {
   const session = useLHSession() as any;
   const token = session?.data?.tokens?.access_token;
   const { isEnabled, isLoading } = usePaymentsEnabled();
+  const queryClient = useQueryClient();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
 
-  const swrKey = org && token ? [`/payments/${org.id}/groups`, token] : null;
-  const { data: groups, error } = useSWR(swrKey, ([, t]: any) => getPaymentsGroups(org.id, t), { revalidateOnFocus: false });
+  const { data: groups, error } = useQuery({
+    queryKey: queryKeys.payments.groups(org?.id),
+    queryFn: () => getPaymentsGroups(org.id, token),
+    enabled: !!(org?.id && token),
+    staleTime: 60_000,
+  });
 
   if (!isEnabled && !isLoading) return <UnconfiguredPaymentsDisclaimer />;
   if (error) return <div className="p-8 text-sm text-red-500">Failed to load groups.</div>;
-  if (!groups) return <div className="p-8 text-sm text-gray-400">Loading…</div>;
+  if (!groups) return (
+    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4 animate-pulse">
+      <div className="flex items-center justify-between bg-gray-50 px-5 py-3 rounded-md mb-5">
+        <div className="space-y-1.5">
+          <div className="h-5 bg-gray-200 rounded w-36" />
+          <div className="h-3 bg-gray-100 rounded w-64" />
+        </div>
+        <div className="h-8 bg-gray-200 rounded w-24" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+            <div className="h-5 bg-gray-200 rounded w-1/2" />
+            <div className="h-3 bg-gray-100 rounded w-3/4" />
+            <div className="h-3 bg-gray-100 rounded w-1/3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   const list: any[] = Array.isArray(groups?.data) ? groups.data : Array.isArray(groups) ? groups : [];
 
@@ -380,7 +420,7 @@ export default function PaymentsGroupsPage() {
     const res = await createPaymentsGroup(org.id, data, token);
     if (res.success) {
       toast.success('Group created');
-      mutate(swrKey);
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
       setIsCreateOpen(false);
     } else {
       toast.error(res.data?.detail || 'Failed to create group');
@@ -392,7 +432,7 @@ export default function PaymentsGroupsPage() {
     const res = await updatePaymentsGroup(org.id, editingGroup.id, data, token);
     if (res.success) {
       toast.success('Group updated');
-      mutate(swrKey);
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
       setEditingGroup(null);
     } else {
       toast.error(res.data?.detail || 'Failed to update group');
@@ -403,7 +443,7 @@ export default function PaymentsGroupsPage() {
     const res = await deletePaymentsGroup(org.id, groupId, token);
     if (res.success || res.status === 200) {
       toast.success('Group deleted');
-      mutate(swrKey);
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.groups(org.id) });
     } else {
       toast.error(res.data?.detail || 'Failed to delete group');
     }

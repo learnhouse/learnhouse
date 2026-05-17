@@ -154,7 +154,7 @@ async def update_documentpdf_activity(
     request: Request,
     activity_uuid: str,
     current_user: PublicUser | AnonymousUser,
-    db_session: Session,
+    db_session: AsyncSession,
     name: Optional[str] = None,
     pdf_file: UploadFile | None = None,
 ) -> ActivityRead:

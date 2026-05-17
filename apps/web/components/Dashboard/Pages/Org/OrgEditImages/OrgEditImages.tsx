@@ -16,6 +16,8 @@ import { Button } from "@components/ui/button"
 import { SiLoom, SiYoutube } from '@icons-pack/react-simple-icons'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
 
@@ -45,6 +47,7 @@ export default function OrgEditImages() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   const ADD_PREVIEW_OPTIONS = [
     {
@@ -120,6 +123,7 @@ export default function OrgEditImages() {
         await uploadOrganizationLogo(org.id, file, access_token)
         await new Promise((r) => setTimeout(r, 1500))
         toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
@@ -139,6 +143,7 @@ export default function OrgEditImages() {
         await uploadOrganizationThumbnail(org.id, file, access_token)
         await new Promise((r) => setTimeout(r, 1500))
         toast.success(t('dashboard.organization.images.toasts.thumbnail_success'), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.thumbnail_error'), { id: loadingToast })
@@ -208,6 +213,7 @@ export default function OrgEditImages() {
         toast.success(files.length === 1
           ? t('dashboard.organization.images.toasts.preview_added', { count: files.length })
           : t('dashboard.organization.images.toasts.preview_added_plural', { count: files.length }), { id: loadingToast })
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
         router.refresh()
       } catch (err) {
         toast.error(t('dashboard.organization.images.toasts.preview_error'), { id: loadingToast })
@@ -231,6 +237,7 @@ export default function OrgEditImages() {
 
       setPreviews(updatedPreviews)
       toast.success(t('dashboard.organization.images.toasts.preview_removed'), { id: loadingToast })
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       router.refresh()
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.preview_remove_error'), { id: loadingToast })
@@ -304,6 +311,7 @@ export default function OrgEditImages() {
       setVideoUrl('');
       setVideoDialogOpen(false);
       toast.success(t('dashboard.organization.images.toasts.video_preview_added'), { id: loadingToast });
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.video_preview_error'), { id: loadingToast });
@@ -348,6 +356,7 @@ export default function OrgEditImages() {
       }, access_token);
       
       toast.success(t('dashboard.organization.images.toasts.order_updated'), { id: loadingToast });
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) });
       router.refresh();
     } catch (err) {
       toast.error(t('dashboard.organization.images.toasts.order_update_error'), { id: loadingToast });

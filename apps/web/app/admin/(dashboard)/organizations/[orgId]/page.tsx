@@ -1,13 +1,14 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
-import useSWR, { mutate } from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
 import {
   getOrgLogoMediaDirectory,
   getUserAvatarMediaDirectory,
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import Link from 'next/link'
@@ -116,11 +117,12 @@ export default function OrgDetailPage() {
     updateParams({ tab }, ['page', 'search', 'days'])
   }
 
-  const { data: org, isLoading } = useSWR(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations/${orgId}` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: org, isLoading } = useQuery({
+    queryKey: queryKeys.org.detail(orgId),
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
   if (!org) {
@@ -258,11 +260,12 @@ function UsageBar({
 }
 
 function OverviewTab({ org, orgId, accessToken }: { org: any; orgId: string; accessToken: string }) {
-  const { data: usageData } = useSWR(
-    accessToken ? `${getAPIUrl()}ee/superadmin/organizations/${orgId}/usage` : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: usageData } = useQuery({
+    queryKey: queryKeys.org.usage(Number(orgId)),
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}/usage`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   const features = usageData?.features
 
@@ -388,13 +391,12 @@ function CoursesTab({
 
   const domain = getFrontendDomain()
 
-  const { data, isLoading } = useSWR(
-    accessToken
-      ? `${getAPIUrl()}ee/superadmin/organizations/${orgId}/courses?page=${page}&limit=20`
-      : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data, isLoading } = useQuery({
+    queryKey: [...queryKeys.courses.list(orgId), 'superadmin', page],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}/courses?page=${page}&limit=20`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
 
@@ -512,13 +514,12 @@ function UsersTab({ orgId, accessToken }: { orgId: string; accessToken: string }
 
   const setPage = (p: number) => updateParams({ tab: 'users', page: p, search })
 
-  const { data, isLoading } = useSWR(
-    accessToken
-      ? `${getAPIUrl()}ee/superadmin/organizations/${orgId}/users?page=${page}&limit=20&search=${encodeURIComponent(search)}`
-      : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data, isLoading } = useQuery({
+    queryKey: [...queryKeys.org.users(Number(orgId)), 'superadmin', page, search],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}/users?page=${page}&limit=20&search=${encodeURIComponent(search)}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -627,13 +628,12 @@ function AnalyticsTab({ orgId, accessToken }: { orgId: string; accessToken: stri
   const days = Number(searchParams.get('days')) || 30
   const setDays = (d: number) => updateParams({ tab: 'analytics', days: d })
 
-  const { data: analytics, isLoading } = useSWR(
-    accessToken
-      ? `${getAPIUrl()}ee/superadmin/organizations/${orgId}/analytics?days=${days}`
-      : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const { data: analytics, isLoading } = useQuery({
+    queryKey: [...queryKeys.superadmin.analytics(), 'org', orgId, days],
+    queryFn: () => apiFetch(`${getAPIUrl()}ee/superadmin/organizations/${orgId}/analytics?days=${days}`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   if (isLoading) return <PageLoading />
 
@@ -874,6 +874,7 @@ function PlanTab({
   currentPlan: string
   config: any
 }) {
+  const queryClient = useQueryClient()
   const [selectedPlan, setSelectedPlan] = useState(currentPlan)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -927,7 +928,7 @@ function PlanTab({
       }
       setSaved(true)
       // Refresh org data so currentPlan updates
-      mutate(`${getAPIUrl()}ee/superadmin/organizations/${orgId}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       setError('Network error')
@@ -1024,12 +1025,14 @@ function PlanTab({
 }
 
 function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: string }) {
-  const summaryUrl = `${getAPIUrl()}orgs/${orgId}/ai-credits`
-  const { data: summary, isLoading } = useSWR(
-    accessToken ? summaryUrl : null,
-    (url: string) => swrFetcher(url, accessToken),
-    { revalidateOnFocus: false }
-  )
+  const queryClient = useQueryClient()
+  const aiCreditsKey = ['superadmin', 'org', orgId, 'ai-credits'] as const
+  const { data: summary, isLoading } = useQuery({
+    queryKey: aiCreditsKey,
+    queryFn: () => apiFetch(`${getAPIUrl()}orgs/${orgId}/ai-credits`, accessToken),
+    enabled: !!accessToken,
+    staleTime: 60_000,
+  })
 
   const [amount, setAmount] = useState<string>('')
   const [saving, setSaving] = useState(false)
@@ -1069,7 +1072,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
         return
       }
       setSaved(`Purchased credits set to ${parsed.toLocaleString()}`)
-      mutate(summaryUrl)
+      queryClient.invalidateQueries({ queryKey: aiCreditsKey })
       setTimeout(() => setSaved(''), 2500)
     } catch {
       setError('Network error')
@@ -1094,7 +1097,7 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
         return
       }
       setSaved('Used credits reset to 0')
-      mutate(summaryUrl)
+      queryClient.invalidateQueries({ queryKey: aiCreditsKey })
       setTimeout(() => setSaved(''), 2500)
     } catch {
       setError('Network error')
@@ -1192,6 +1195,7 @@ function SettingsTab({
   accessToken: string
   org: any
 }) {
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({
     name: org.name || '',
     slug: org.slug || '',
@@ -1230,7 +1234,7 @@ function SettingsTab({
         return
       }
       setSaved(true)
-      mutate(`${getAPIUrl()}ee/superadmin/organizations/${orgId}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       setError('Network error')

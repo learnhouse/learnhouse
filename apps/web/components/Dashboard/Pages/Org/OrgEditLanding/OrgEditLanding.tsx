@@ -14,7 +14,8 @@ import { updateOrgLanding, uploadLandingContent } from '@services/organizations/
 import { getOrgLandingMediaDirectory } from '@services/media/media'
 import { getOrgCourses } from '@services/courses/courses'
 import toast from 'react-hot-toast'
-import useSWR from 'swr'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
 import { useTranslation } from 'react-i18next'
 
@@ -126,6 +127,7 @@ const OrgEditLanding = () => {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const queryClient = useQueryClient()
   const SECTION_TYPES = getSectionTypes(t)
   
   const getSectionDisplayName = (section: LandingSection) => {
@@ -266,6 +268,7 @@ const OrgEditLanding = () => {
 
       if (res.status === 200) {
         toast.success(t('dashboard.organization.landing.saved_success'))
+        queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       } else {
         toast.error(t('dashboard.organization.landing.save_error'))
       }
@@ -1543,11 +1546,12 @@ const FeaturedCoursesEditor: React.FC<{
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: courses } = useSWR(
-    org?.slug ? [org.slug, access_token] : null,
-    ([orgSlug, token]) => getOrgCourses(orgSlug, null, token),
-    { revalidateOnFocus: false }
-  )
+  const { data: courses } = useQuery({
+    queryKey: org?.slug ? queryKeys.courses.list(org.slug) : ['courses-disabled'],
+    queryFn: () => getOrgCourses(org.slug, null, access_token),
+    enabled: !!(org?.slug && access_token),
+    staleTime: 5 * 60_000,
+  })
 
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">

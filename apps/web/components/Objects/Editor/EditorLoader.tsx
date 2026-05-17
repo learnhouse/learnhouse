@@ -1,8 +1,9 @@
 'use client'
 import React from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { apiFetch } from '@services/utils/ts/requests'
 import { useAuth } from '@components/Contexts/AuthContext'
 import EditorSkeleton from './EditorSkeleton'
 import EditorWrapper from './EditorWrapper'
@@ -28,13 +29,12 @@ export default function EditorLoader({ courseid: _courseid, activityuuid }: Edit
   const { accessToken: access_token } = useAuth()
   const [editorReady, setEditorReady] = React.useState(false)
 
-  const { data: bootstrap, error: bootstrapError } = useSWR(
-    access_token
-      ? `${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`
-      : null,
-    (url) => swrFetcher(url, access_token ?? undefined),
-    { revalidateOnFocus: false }
-  )
+  const { data: bootstrap, error: bootstrapError } = useQuery({
+    queryKey: queryKeys.activity.detail(activityuuid),
+    queryFn: () => apiFetch(`${getAPIUrl()}activities/activity_${activityuuid}/editor-bootstrap`, access_token ?? undefined),
+    enabled: !!access_token && !!activityuuid,
+    staleTime: 60_000,
+  })
 
   const courseInfo = bootstrap?.course
   const activity = bootstrap?.activity

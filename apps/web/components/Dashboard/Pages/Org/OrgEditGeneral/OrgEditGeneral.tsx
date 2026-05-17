@@ -18,8 +18,8 @@ import { Textarea } from "@components/ui/textarea"
 import { Button } from "@components/ui/button"
 import { Label } from "@components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useTranslation } from 'react-i18next'
 
 const ORG_LABELS = [
@@ -80,6 +80,7 @@ const OrgEditGeneral: React.FC = () => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const queryClient = useQueryClient()
 
   // Footer text state
   const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.customization?.general?.footer_text || org?.config?.config?.general?.footer_text || '')
@@ -108,7 +109,7 @@ const OrgEditGeneral: React.FC = () => {
       // Save default language
       await updateOrgDefaultLanguageConfig(org.id, defaultLanguage, access_token)
       await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(org.slug) })
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })

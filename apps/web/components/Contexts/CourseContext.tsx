@@ -1,15 +1,10 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { getCourseMetadata } from '@services/courses/courses'
 import React, { createContext, useContext, useEffect, useReducer, useMemo, useCallback, useRef } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
-// Unified cache key generator - use this everywhere
-export const getCourseMetaCacheKey = (courseUuid: string, withUnpublishedActivities: boolean = false) =>
-  withUnpublishedActivities
-    ? `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=true`
-    : `${getAPIUrl()}courses/${courseUuid}/meta?with_unpublished_activities=false&slim=true`
 
 // Debounce manager for coordinating saves across components
 class DebounceManager {
@@ -107,34 +102,36 @@ export function CourseProvider({
 }: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const { mutate } = useSWRConfig()
   const lastServerDataRef = useRef<any>(null)
 
-  const swrKey = session?.status !== 'loading'
-    ? getCourseMetaCacheKey(courseuuid, withUnpublishedActivities)
-    : null
+  // Normalise the UUID: callers may pass either the clean form ("abc123") or
+  // the prefixed form ("course_abc123") depending on whether they read it from
+  // the URL param or from the API response object.  We always use the clean
+  // form for query keys so that CourseProvider, useCourseMeta, and any
+  // standalone useQuery share a single cache entry.
+  const cleanUuid = courseuuid.replace('course_', '')
 
-  const { data: courseStructureData, error, isValidating } = useSWR(
-    swrKey,
-    url => swrFetcher(url, access_token),
-    {
-      // Don't refetch on every tab refocus — course meta rarely changes during
-      // an editing session and refetches can stomp on in-flight saves. The
-      // CourseProvider's normal save path keeps the cache fresh.
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      dedupingInterval: 5000,
-      keepPreviousData: true,
-      revalidateIfStale: true,
-      // When the caller (e.g. the activity editor) already has minimal course
-      // data, hydrate SWR with it so children render on first paint instead of
-      // waiting for the meta fetch. Skip the mount fetch entirely — children
-      // never read the chapter tree from this context, so the slim header is
-      // sufficient and the heavy meta fetch is pure waste.
-      revalidateOnMount: !initialCourseStructure,
-      fallbackData: initialCourseStructure ?? undefined,
-    }
-  )
+  // For unpublished-activities variant there is no dedicated queryKeys entry,
+  // so we fall back to a raw key. The canonical (non-unpublished) variant uses
+  // queryKeys.courses.meta so invalidations from save actions land correctly.
+  const queryKey = withUnpublishedActivities
+    ? ['course', cleanUuid, 'meta', 'withUnpublished']
+    : queryKeys.courses.meta(cleanUuid)
+
+  const { data: courseStructureData, error } = useQuery({
+    queryKey,
+    queryFn: () => getCourseMetadata(
+      cleanUuid,
+      {},
+      access_token,
+      withUnpublishedActivities ? { withUnpublishedActivities: true } : { slim: true }
+    ),
+    enabled: session?.status !== 'loading',
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    placeholderData: initialCourseStructure ?? undefined,
+  })
 
   const effectiveData = courseStructureData
 

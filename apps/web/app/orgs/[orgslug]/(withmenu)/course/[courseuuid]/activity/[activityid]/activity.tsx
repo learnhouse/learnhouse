@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { BookOpenCheck, CheckCircle, ChevronLeft, ChevronRight, MessageSquare, UserRoundPen, Edit2, Maximize2, Minimize2, Trophy, Sparkles, XCircle, Lock, RotateCcw, Infinity as InfinityIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
@@ -16,9 +16,9 @@ import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentC
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import AssignmentSubmissionProvider, { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
-import { mutate } from 'swr'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query/keys'
+import { useTrail } from '@/hooks/queries/useTrail'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useMediaQuery, useWindowSize } from 'usehooks-ts'
@@ -222,12 +222,10 @@ function ActivityClient(props: ActivityClientProps) {
     }
   }, [activityid, activityUuidForTracking, courseUuidForTracking, activityTypeForTracking, track])
 
-  // Add SWR for trail data
-  const { data: trailData, error: error } = useSWR(
-    `${getAPIUrl()}trail/org/${org?.id}/trail`,
-    (url) => swrFetcher(url, access_token),
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  const queryClient = useQueryClient()
+
+  // Fetch trail data — shares cache key with course page trail query
+  const { data: trailData } = useTrail(org?.id)
 
   // Memoize activity position calculation
   const { allActivities, currentIndex } = useActivityPosition(course, activityid);
@@ -404,7 +402,7 @@ function ActivityClient(props: ActivityClientProps) {
 
   return (
     <>
-      <CourseProvider courseuuid={course?.course_uuid}>
+      <CourseProvider courseuuid={course?.course_uuid} initialCourseStructure={course}>
         <Suspense fallback={<LoadingFallback />}>
           <AIChatBotProvider>
             <Suspense fallback={null}>
@@ -921,6 +919,7 @@ export function MarkStatus(props: {
   const session = useLHSession() as any;
   const org = useOrg() as any;
   const { isUserPartOfTheOrg } = useOrgMembership();
+  const queryClient = useQueryClient();
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
@@ -1021,9 +1020,10 @@ export function MarkStatus(props: {
         session.data?.tokens?.access_token
       );
 
-      await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
 
       const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(cleanCourseUuid) });
       if (willCompleteAll || !nextActivity) {
         router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
       } else {
@@ -1049,7 +1049,8 @@ export function MarkStatus(props: {
         session.data?.tokens?.access_token
       );
 
-      await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.trail.org(org?.id) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses.meta(props.course.course_uuid.replace('course_', '')) });
     } catch (error) {
       toast.error(t('activities.failed_unmark_complete'));
     } finally {
@@ -1306,6 +1307,7 @@ function AssignmentTools(props: {
   const { t } = useTranslation();
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
+  const queryClient = useQueryClient();
   const [gradeData, setGradeData] = React.useState<any>(null);
   const [isGradeModalOpen, setIsGradeModalOpen] = React.useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -1321,7 +1323,8 @@ function AssignmentTools(props: {
       )
       if (res.success) {
         toast.success(t('assignments.assignment_submitted_success'))
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`,)
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) })
       }
       else {
         toast.error(t('assignments.failed_submit_assignment'))
@@ -1342,8 +1345,8 @@ function AssignmentTools(props: {
         toast.success(t('assignments.retry_assignment_success'));
         // Pull the fresh per-task batch + the user submission so the task
         // editors snap back to an empty state without a hard reload.
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`);
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/tasks/submissions/me`);
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.submission(props.assignment?.assignment_uuid) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.taskSubmission(props.assignment?.assignment_uuid) });
         setGradeData(null);
         setIsGradeModalOpen(false);
         // Re-arm the auto-open on this fresh attempt so the next graded
