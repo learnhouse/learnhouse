@@ -2,8 +2,6 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
 import CoursesHome from './client'
-import { getServerSession } from '@/lib/auth/server'
-import { getOrgCourses } from '@services/courses/courses'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>
@@ -12,13 +10,11 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 120,
     tags: ['organizations'],
   })
 
-  // SEO
   return {
     title: 'Courses — ' + org.name,
     description: org.description,
@@ -41,34 +37,9 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   }
 }
 
-async function CoursesPage(params: any) {
-  const orgslug = (await params.params).orgslug
-  const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 120,
-    tags: ['organizations'],
-  })
-  const session = await getServerSession()
-  const access_token = session?.tokens?.access_token
-
-  let courses: any[] = []
-  try {
-    courses = await getOrgCourses(
-      orgslug,
-      { revalidate: 120, tags: ['courses'] },
-      access_token ?? undefined,
-      true // include_unpublished for dashboard
-    )
-  } catch (error: any) {
-    // If feature is disabled (403), pass empty courses array
-    // The client component will show the feature disabled view
-    if (error?.status === 403) {
-      courses = []
-    } else {
-      throw error
-    }
-  }
-
-  return <CoursesHome org_id={org.id} orgslug={orgslug} courses={courses} />
+async function CoursesPage(props: { params: Promise<{ orgslug: string }> }) {
+  const { orgslug } = await props.params
+  return <CoursesHome orgslug={orgslug} />
 }
 
 export default CoursesPage

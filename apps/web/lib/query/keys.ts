@@ -20,6 +20,7 @@ export const queryKeys = {
   },
   activity: {
     detail: (uuid: string) => ['activity', uuid] as const,
+    editorBootstrap: (uuid: string) => ['activity', uuid, 'editor-bootstrap'] as const,
     versions: (uuid: string) => ['activity', uuid, 'versions'] as const,
     state: (uuid: string) => ['activity', uuid, 'state'] as const,
   },

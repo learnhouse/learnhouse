@@ -414,3 +414,97 @@ def test_reload_module_covers_production_branch(monkeypatch, caplog):
     monkeypatch.setattr(sa_event, "listens_for", lambda *args, **kwargs: (lambda fn: fn))
     restored = importlib.reload(database)
     assert restored.is_testing is True
+
+
+def _reload_with_url(monkeypatch, url: str, fake_create_async_engine=None):
+    """Helper: reload database module with a specific SQL URL."""
+    class _FakeDbConfig:
+        sql_connection_string = url
+
+    class _FakeConfig:
+        database_config = _FakeDbConfig()
+
+    class _FakeSyncEngine:
+        pass
+
+    class _FakeAsyncEngine:
+        def __init__(self):
+            self.sync_engine = _FakeSyncEngine()
+
+    if fake_create_async_engine is None:
+        captured = {}
+
+        def _engine(*args, **kwargs):
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            return _FakeAsyncEngine()
+
+        fake_create_async_engine = _engine
+
+    monkeypatch.setenv("TESTING", "false")
+    monkeypatch.setattr("config.config.get_learnhouse_config", lambda: _FakeConfig())
+    monkeypatch.setattr("sqlalchemy.ext.asyncio.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr(sa_event, "listens_for", lambda *a, **kw: (lambda fn: fn))
+    monkeypatch.setattr(sa_event, "listen", lambda *a, **kw: None)
+    return importlib.reload(database)
+
+
+def test_psycopg2_url_is_rewritten_to_asyncpg(monkeypatch):
+    """postgresql+psycopg2:// URLs must be rewritten to postgresql+asyncpg://."""
+    received_urls = []
+
+    def capture_engine(url, *args, **kwargs):
+        received_urls.append(url)
+
+        class _FakeSyncEngine:
+            pass
+
+        class _E:
+            sync_engine = _FakeSyncEngine()
+
+        return _E()
+
+    _reload_with_url(monkeypatch, "postgresql+psycopg2://user:pw@host/db", capture_engine)
+    assert received_urls[0].startswith("postgresql+asyncpg://"), received_urls[0]
+
+
+def test_postgres_shorthand_url_is_rewritten_to_asyncpg(monkeypatch):
+    """postgres:// (no 'ql') URLs must be rewritten to postgresql+asyncpg://."""
+    received_urls = []
+
+    def capture_engine(url, *args, **kwargs):
+        received_urls.append(url)
+
+        class _FakeSyncEngine:
+            pass
+
+        class _E:
+            sync_engine = _FakeSyncEngine()
+
+        return _E()
+
+    _reload_with_url(monkeypatch, "postgres://user:pw@host/db", capture_engine)
+    assert received_urls[0].startswith("postgresql+asyncpg://"), received_urls[0]
+
+
+def test_pooler_url_uses_small_pool_and_logs(monkeypatch, caplog):
+    """A Supavisor pooler URL should trigger the small pool path and log a message."""
+    received_kwargs = {}
+
+    def capture_engine(url, *args, **kwargs):
+        received_kwargs.update(kwargs)
+
+        class _FakeSyncEngine:
+            pass
+
+        class _E:
+            sync_engine = _FakeSyncEngine()
+
+        return _E()
+
+    # :6543/ is the Supavisor port; detected as a pooler
+    with caplog.at_level(logging.INFO):
+        _reload_with_url(monkeypatch, "postgresql://host:6543/db", capture_engine)
+
+    assert received_kwargs.get("pool_size") == 5
+    assert "connection pooler" in caplog.text

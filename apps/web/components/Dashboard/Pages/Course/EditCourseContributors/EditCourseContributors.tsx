@@ -96,7 +96,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
 
     const { data: contributors } = useQuery({
         queryKey: queryKeys.courses.contributors(courseStructure?.course_uuid ?? ''),
-        queryFn: () => getCourseContributors(courseStructure!.course_uuid, access_token) as unknown as Promise<Contributor[]>,
+        queryFn: () => getCourseContributors(courseStructure!.course_uuid, access_token).then(res => res.data as Contributor[]),
         enabled: !!courseStructure?.course_uuid && !!access_token,
         staleTime: 60_000,
     });
