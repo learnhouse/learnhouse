@@ -64,6 +64,29 @@ export function generateDockerCompose(config: SetupConfig, appImage?: string): s
       retries: 3
 `
 
+  // When the public HTTP port is not 80, Next.js SSR fetches inside the app
+  // container hit `localhost:${HTTP_PORT}` which has nothing listening — only
+  // the container's internal nginx on port 80 serves the same routes. We add
+  // a tiny socat sidecar that shares the app container's network namespace
+  // and forwards `localhost:${HTTP_PORT}` → `localhost:80`, making SSR work
+  // identically to a port-80 deployment without rebuilding the app image.
+  // Skipped when HTTP_PORT=80 (would clash with internal nginx) and when
+  // auto-SSL/HTTPS is in use (the public URL is HTTPS and goes through Caddy).
+  const needsSsrPortForward = !config.autoSsl && !config.useHttps && config.httpPort !== 80
+  const ssrForwardService = needsSsrPortForward
+    ? `
+  ssr-fwd:
+    image: alpine/socat:1.8.0.0
+    container_name: learnhouse-ssr-fwd-${id}
+    restart: unless-stopped
+    network_mode: "service:learnhouse-app"
+    command: TCP-LISTEN:${config.httpPort},fork,reuseaddr TCP:localhost:80
+    depends_on:
+      learnhouse-app:
+        condition: service_healthy
+`
+    : ''
+
   const dbImage = config.useAiDatabase ? POSTGRES_AI_IMAGE : POSTGRES_IMAGE
   const dbService = useLocalDb
     ? `
@@ -142,7 +165,7 @@ ${appDependsOn}
       timeout: 10s
       retries: 3
       start_period: 60s
-${proxyService}${dbService}${redisService}
+${proxyService}${ssrForwardService}${dbService}${redisService}
 networks:
   learnhouse-network-${id}:
     driver: bridge
