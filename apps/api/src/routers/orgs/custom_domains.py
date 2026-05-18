@@ -305,7 +305,7 @@ async def api_resolve_domain(
 async def api_check_domain(
     request: Request,
     domain: str,
-    db_session: Session = Depends(get_db_session),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """Lightweight allow/deny check on a custom domain by query parameter."""
     result = await resolve_org_by_domain(db_session, domain)
