@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -188,5 +188,186 @@ describe('config-store', () => {
     // since it lists only complete installs
     const list = listInstallations()
     expect(Array.isArray(list)).toBe(true)
+  })
+})
+
+// ─── Regression: --ci must generate a real DB password ──────
+//
+// In CI mode the setup command used to leave `config.dbPassword` undefined,
+// which the env template rendered as the literal string "undefined" — both
+// in the connection string and in POSTGRES_PASSWORD. The DB still worked
+// because both sides used the same wrong value, but the install shipped an
+// obviously-wrong credential. These tests pin the contract: when a password
+// is provided, it must land in both places verbatim; the template must
+// never emit "=undefined".
+
+describe('generateEnvFile — dbPassword handling', () => {
+  it('writes dbPassword into both connection string and POSTGRES_PASSWORD', () => {
+    const env = generateEnvFile({ ...baseConfig, dbPassword: 'Sup3rS3cret-Abc_123' })
+    expect(env).toContain('postgresql://learnhouse:Sup3rS3cret-Abc_123@db:5432/learnhouse')
+    expect(env).toContain('POSTGRES_PASSWORD=Sup3rS3cret-Abc_123')
+  })
+
+  it('never emits the literal string "undefined" as a value', () => {
+    const env = generateEnvFile({ ...baseConfig, dbPassword: 'a-real-pw' })
+    expect(env).not.toMatch(/=undefined(\s|$)/)
+  })
+
+  it('omits POSTGRES_PASSWORD when useExternalDb is true', () => {
+    const env = generateEnvFile({
+      ...baseConfig,
+      useExternalDb: true,
+      externalDbConnectionString: 'postgresql://ext:ext@remote:5432/db',
+    })
+    expect(env).not.toContain('POSTGRES_PASSWORD=')
+  })
+})
+
+// ─── Regression: SSR port-forward sidecar ───────────────────
+//
+// The published app image's Next.js SSR fetches the public URL (e.g.
+// http://localhost:8088/...) to render. That host:port isn't bound inside
+// the container, so SSR always fails on non-80 deployments. The CLI adds
+// an alpine/socat sidecar in `network_mode: service:learnhouse-app` that
+// listens on the public port inside the app container's net namespace and
+// forwards to localhost:80 (internal nginx). The sidecar is skipped when
+// it would conflict with the internal nginx (port 80) or when TLS is in
+// play (autoSsl/useHttps go through Caddy on 443).
+
+describe('generateDockerCompose — ssr-fwd sidecar', () => {
+  it('adds the socat sidecar when httpPort is not 80', () => {
+    const yml = generateDockerCompose({ ...baseConfig, httpPort: 8088 })
+    expect(yml).toContain('learnhouse-ssr-fwd-test1234')
+    expect(yml).toContain('alpine/socat')
+    expect(yml).toContain('network_mode: "service:learnhouse-app"')
+    expect(yml).toContain('TCP-LISTEN:8088,fork,reuseaddr TCP:localhost:80')
+  })
+
+  it('skips the socat sidecar when httpPort is 80', () => {
+    const yml = generateDockerCompose({ ...baseConfig, httpPort: 80 })
+    expect(yml).not.toContain('ssr-fwd')
+    expect(yml).not.toContain('alpine/socat')
+  })
+
+  it('skips the socat sidecar when autoSsl is true', () => {
+    const yml = generateDockerCompose({ ...baseConfig, httpPort: 443, autoSsl: true })
+    expect(yml).not.toContain('ssr-fwd')
+  })
+
+  it('skips the socat sidecar when useHttps is true', () => {
+    const yml = generateDockerCompose({ ...baseConfig, httpPort: 443, useHttps: true })
+    expect(yml).not.toContain('ssr-fwd')
+  })
+})
+
+// ─── Regression: nginx must preserve host port ──────────────
+//
+// nginx's $host variable strips the port. With Host: localhost (no port)
+// forwarded downstream, Next.js Server Actions reject POSTs because
+// `origin` (localhost:8088) doesn't match `x-forwarded-host` (localhost).
+// We switched to $http_host and added an explicit X-Forwarded-Host header.
+
+describe('generateNginxConf — Server Action headers', () => {
+  it('uses $http_host (not $host) for the Host header', () => {
+    const conf = generateNginxConf()
+    expect(conf).toMatch(/proxy_set_header\s+Host\s+\$http_host/)
+    expect(conf).not.toMatch(/proxy_set_header\s+Host\s+\$host\b/)
+  })
+
+  it('forwards X-Forwarded-Host with the full host:port', () => {
+    const conf = generateNginxConf()
+    expect(conf).toMatch(/proxy_set_header\s+X-Forwarded-Host\s+\$http_host/)
+  })
+})
+
+// ─── Regression: findInstallDir prefers running install ─────
+//
+// When multiple installs exist (e.g. stale `~/.learnhouse/default` from
+// an old setup plus a fresh `~/.learnhouse/qa`), every command used to
+// silently target `default` because of a hard-coded preference. That
+// broke stop/status/health/etc. The fix: prefer whichever install has
+// an actually-running app container, falling back to most recent.
+//
+// We stub `isContainerRunning` from the docker module so the test
+// doesn't depend on a real Docker daemon, and override the home dir
+// via a fresh `HOME` env so the lookup hits our temp tree.
+
+vi.mock('../src/services/docker.js', async () => {
+  const actual = await vi.importActual<typeof import('../src/services/docker.js')>(
+    '../src/services/docker.js',
+  )
+  return { ...actual, isContainerRunning: vi.fn(() => false) }
+})
+
+describe('findInstallDir — picks the running install over a stale one', () => {
+  const fakeHome = path.join(os.tmpdir(), 'lh-findinstall-' + Date.now())
+  const lhBase = path.join(fakeHome, '.learnhouse')
+  let origHome: string | undefined
+
+  function writeInstall(name: string, deploymentId: string, createdAt: string) {
+    const dir = path.join(lhBase, name)
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(
+      path.join(dir, 'learnhouse.config.json'),
+      JSON.stringify({
+        version: '0.0.0-test',
+        deploymentId,
+        createdAt,
+        installDir: dir,
+        domain: 'localhost',
+        httpPort: 8088,
+        useHttps: false,
+        autoSsl: false,
+        useExternalDb: false,
+        orgSlug: 'default',
+      }),
+    )
+    fs.writeFileSync(path.join(dir, '.env'), '# test')
+    return dir
+  }
+
+  beforeEach(() => {
+    fs.mkdirSync(lhBase, { recursive: true })
+    origHome = process.env.HOME
+    process.env.HOME = fakeHome
+  })
+
+  afterEach(() => {
+    fs.rmSync(fakeHome, { recursive: true, force: true })
+    if (origHome === undefined) delete process.env.HOME
+    else process.env.HOME = origHome
+    vi.clearAllMocks()
+  })
+
+  it('returns the install whose app container is running when multiple exist', async () => {
+    const stale = writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
+    const live = writeInstall('qa', 'bbbb2222', '2026-05-18T22:00:00Z')
+
+    const { isContainerRunning } = await import('../src/services/docker.js')
+    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockImplementation((name: string) =>
+      name === 'learnhouse-app-bbbb2222',
+    )
+
+    expect(findInstallDir()).toBe(live)
+    expect(findInstallDir()).not.toBe(stale)
+  })
+
+  it('falls back to the most recent install when none are running', async () => {
+    writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
+    const newer = writeInstall('qa', 'bbbb2222', '2026-05-18T22:00:00Z')
+
+    const { isContainerRunning } = await import('../src/services/docker.js')
+    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    expect(findInstallDir()).toBe(newer)
+  })
+
+  it('uses the only install when exactly one exists', async () => {
+    const only = writeInstall('default', 'aaaa1111', '2026-03-27T15:24:39Z')
+
+    const { isContainerRunning } = await import('../src/services/docker.js')
+    ;(isContainerRunning as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    expect(findInstallDir()).toBe(only)
   })
 })
