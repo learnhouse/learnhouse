@@ -1,0 +1,84 @@
+name: Publish @learnhouse/reader-react
+
+on:
+  push:
+    tags:
+      - 'reader-react-[0-9]*'
+
+permissions:
+  contents: write
+  id-token: write
+
+defaults:
+  run:
+    working-directory: apps/web/packages/reader-react
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    env:
+      # Capture the tag name into an env var rather than interpolating
+      # ${{ github.ref_name }} directly into shell commands.
+      REF_NAME: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install package dependencies
+        run: bun install
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Build
+        run: bun run build
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Strip the "reader-react-" prefix from the tag name to get the version.
+          VERSION="${REF_NAME#reader-react-}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify version matches package.json
+        env:
+          TAG_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: package.json=$PKG_VERSION tag=$TAG_VERSION"
+            exit 1
+          fi
+
+      - name: Determine npm dist-tag
+        id: distag
+        env:
+          TAG_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if echo "$TAG_VERSION" | grep -qE '-(alpha|beta|rc|next|canary)'; then
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DIST_TAG: ${{ steps.distag.outputs.tag }}
+        run: npm publish --provenance --access public --tag "$DIST_TAG" --no-git-checks
+
+      - name: Summary
+        env:
+          PUBLISHED_VERSION: ${{ steps.version.outputs.version }}
+          DIST_TAG: ${{ steps.distag.outputs.tag }}
+        run: |
+          echo "Published @learnhouse/reader-react@$PUBLISHED_VERSION (npm dist-tag: $DIST_TAG)" >> "$GITHUB_STEP_SUMMARY"

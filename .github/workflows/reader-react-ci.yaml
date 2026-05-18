@@ -1,0 +1,69 @@
+name: Reader React CI
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/web/packages/reader-react/**"
+      - ".github/workflows/reader-react-ci.yaml"
+  pull_request:
+    paths:
+      - "apps/web/packages/reader-react/**"
+      - ".github/workflows/reader-react-ci.yaml"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/web/packages/reader-react
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install package dependencies
+        run: bun install
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Build (ESM + CJS + types)
+        run: bun run build
+
+      - name: Verify dist artifacts
+        run: |
+          test -f dist/index.js
+          test -f dist/index.cjs
+          test -f dist/index.d.ts
+          echo "ESM size: $(wc -c < dist/index.js) bytes"
+          echo "CJS size: $(wc -c < dist/index.cjs) bytes"
+
+      - name: Pack tarball
+        run: npm pack --pack-destination=.
+
+      - name: Inspect publishable contents
+        run: |
+          TARBALL=$(ls learnhouse-reader-react-*.tgz | head -1)
+          echo "Tarball: $TARBALL"
+          tar -tzf "$TARBALL" | sort
+          SIZE=$(stat -c '%s' "$TARBALL")
+          echo "Tarball size: $SIZE bytes"
+          if [ "$SIZE" -gt 2000000 ]; then
+            echo "::warning::Tarball exceeds 2 MB ($SIZE bytes)"
+          fi
+
+      - name: Upload dist as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reader-react-dist
+          path: apps/web/packages/reader-react/dist
+          retention-days: 7

@@ -1,9 +1,18 @@
 'use client'
 import { getCourseMetadata } from '@services/courses/courses'
-import React, { createContext, useContext, useEffect, useReducer, useMemo, useCallback, useRef } from 'react'
+import React, { useContext, useEffect, useReducer, useMemo, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import {
+  CourseContext,
+  CourseDispatchContext,
+} from '@learnhouse/reader-react/contexts/CourseContext'
+
+// Re-export the React context objects so callers that import them from this
+// file (the historical location) keep working. The single source of truth
+// for the actual context instances lives in `@learnhouse/reader-react`.
+export { CourseContext, CourseDispatchContext }
 
 
 // Debounce manager for coordinating saves across components
@@ -90,9 +99,6 @@ export type CourseAction =
   | { type: 'commitChanges' } // New: commit pending changes to courseStructure
   | { type: 'rollbackChanges' } // New: discard pending changes
   | { type: 'syncFromServer'; payload: { data: any; timestamp: number } } // New: sync from server
-
-export const CourseContext = createContext<CourseState | null>(null)
-export const CourseDispatchContext = createContext<React.Dispatch<CourseAction> | null>(null)
 
 export function CourseProvider({
   children,
