@@ -143,6 +143,7 @@ export async function setupCommand(options: SetupOptions) {
 
     const deploymentId = crypto.randomBytes(4).toString('hex')
     const channel = (options.channel === 'dev' ? 'dev' : 'stable') as 'stable' | 'dev'
+    const dbPassword = crypto.randomBytes(24).toString('base64url')
 
     const config: SetupConfig = {
       deploymentId,
@@ -153,6 +154,7 @@ export async function setupCommand(options: SetupOptions) {
       httpPort: options.port || 80,
       autoSsl: false,
       useExternalDb: false,
+      dbPassword,
       useAiDatabase: false,
       useExternalRedis: false,
       orgName: 'Default',
