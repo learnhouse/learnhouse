@@ -134,10 +134,21 @@ export async function updateCommand(options: { version?: string; migrate?: boole
           p.log.warn('Could not find the app container to run migrations. Run them manually:')
           p.log.warn('  docker exec <container> sh -c "cd /app/api && uv run alembic upgrade head"')
         }
-      } catch {
-        s.stop('Migration warning')
-        p.log.warn('Database migrations encountered an issue. Your app is running but you may need to run migrations manually:')
-        p.log.warn('  docker exec <container> sh -c "cd /app/api && uv run alembic upgrade head"')
+      } catch (err: unknown) {
+        s.stop('Database migrations failed')
+        const stderr =
+          (err as { stderr?: Buffer | string })?.stderr?.toString?.() ?? ''
+        const stdout =
+          (err as { stdout?: Buffer | string })?.stdout?.toString?.() ?? ''
+        const output = (stderr || stdout).trim()
+        if (output) {
+          for (const line of output.split('\n')) p.log.error(`  ${line}`)
+        }
+        const container = getAppContainerName(config.installDir) ?? '<container>'
+        p.log.warn('Retry manually with:')
+        p.log.warn(
+          `  docker exec ${container} sh -c "cd /app/api && uv run alembic upgrade head"`,
+        )
       }
     } else {
       p.log.info('Skipped database migrations. You can run them later with:')
