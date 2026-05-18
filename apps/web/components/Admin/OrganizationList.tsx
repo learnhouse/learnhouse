@@ -2,13 +2,14 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import { getOrgLogoMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { apiFetch } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut } from '@phosphor-icons/react'
+import { Buildings, Globe, User, CaretLeft, CaretRight, BookOpen, MagnifyingGlass, ArrowSquareOut, Plus } from '@phosphor-icons/react'
+import CreateOrganizationModal from '@components/Admin/CreateOrganizationModal'
 
 /** Ensure a URL only uses http/https — returns '#' for anything else. */
 function safeHref(url: string): string {
@@ -78,7 +79,7 @@ function getFrontendDomain(): string {
   )
 }
 
-const PLANS = ['all', 'free', 'paid', 'standard', 'pro', 'enterprise'] as const
+const PLANS_SAAS = ['all', 'free', 'paid', 'standard', 'pro', 'enterprise'] as const
 const PAGE_SIZE = 20
 
 function Sparkline({ data, max }: { data: number[]; max: number }) {
@@ -319,6 +320,8 @@ export default function OrganizationList() {
   }
 
   const domain = getFrontendDomain()
+  const isSaaS = getDeploymentMode() === 'saas'
+  const [createOpen, setCreateOpen] = useState(false)
   const logoFallback = (
     <div className="h-8 w-8 rounded-lg bg-white/[0.08] flex items-center justify-center shrink-0">
       <Buildings size={16} weight="fill" className="text-white/30" />
@@ -340,27 +343,40 @@ export default function OrganizationList() {
               className="bg-white/[0.05] border border-white/[0.08] rounded-lg pl-8 pr-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-64"
             />
           </div>
-          <span className="text-xs text-white/30">
-            {totalCount} org{totalCount !== 1 ? 's' : ''}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-white/30">
+              {totalCount} org{totalCount !== 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors"
+            >
+              <Plus size={12} weight="bold" />
+              New organization
+            </button>
+          </div>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40 mr-1">Plan:</span>
-            {PLANS.map((p) => (
-              <button
-                key={p}
-                onClick={() => handleFilterChange(p)}
-                className={`text-xs px-2.5 py-1 rounded-md transition-colors capitalize ${
-                  planFilter === p
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/40 hover:text-white/60 hover:bg-white/[0.05]'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+          {isSaaS ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/40 mr-1">Plan:</span>
+              {PLANS_SAAS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => handleFilterChange(p)}
+                  className={`text-xs px-2.5 py-1 rounded-md transition-colors capitalize ${
+                    planFilter === p
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/40 hover:text-white/60 hover:bg-white/[0.05]'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div />
+          )}
           <div className="flex items-center gap-2">
             <span className="text-xs text-white/40 mr-1">Sort:</span>
             {([
@@ -562,6 +578,8 @@ export default function OrganizationList() {
           </>
         )}
       </div>
+
+      <CreateOrganizationModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   )
 }
