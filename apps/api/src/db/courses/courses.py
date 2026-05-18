@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import Column, ForeignKey, Index, Integer
+from sqlalchemy import Column, Enum as SAEnum, ForeignKey, Index, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 from enum import Enum
@@ -65,6 +65,10 @@ class Course(CourseBase, table=True):
         {"extend_existing": True},
     )
     id: Optional[int] = Field(default=None, primary_key=True)
+    thumbnail_type: Optional[ThumbnailType] = Field(
+        default=ThumbnailType.IMAGE,
+        sa_column=Column(SAEnum("IMAGE", "VIDEO", "BOTH", name="thumbnail_type"), nullable=True),
+    )
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)
     )
