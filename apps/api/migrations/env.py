@@ -17,6 +17,17 @@ lh_config = get_learnhouse_config()
 # access to the values within the .ini file in use.
 config = context.config
 
+# Alembic must target the same DB as the running app. The alembic.ini URL is
+# only a dev fallback (hardcoded localhost); inside Docker the real URL is in
+# LEARNHOUSE_SQL_CONNECTION_STRING (e.g. postgresql://...@db:5432/...).
+_runtime_db_url = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
+if _runtime_db_url:
+    # Alembic uses psycopg2 (sync); strip the async driver suffix if present.
+    _runtime_db_url = _runtime_db_url.replace(
+        "postgresql+asyncpg://", "postgresql://", 1
+    )
+    config.set_main_option("sqlalchemy.url", _runtime_db_url)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
