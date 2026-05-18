@@ -67,7 +67,7 @@ class Course(CourseBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     thumbnail_type: Optional[ThumbnailType] = Field(
         default=ThumbnailType.IMAGE,
-        sa_column=Column(SAEnum("IMAGE", "VIDEO", "BOTH", name="thumbnail_type"), nullable=True),
+        sa_column=Column(SAEnum(ThumbnailType, name="thumbnail_type"), nullable=True),
     )
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"), index=True)
