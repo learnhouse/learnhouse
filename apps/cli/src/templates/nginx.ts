@@ -23,7 +23,10 @@ server {
     # The app container has internal nginx routing between frontend, backend, and collab
     location / {
         proxy_pass http://learnhouse-app:80;
-        proxy_set_header Host $host;
+        # Use $http_host (not $host) so the port is preserved — Next.js Server
+        # Actions reject POSTs where origin and x-forwarded-host disagree.
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
