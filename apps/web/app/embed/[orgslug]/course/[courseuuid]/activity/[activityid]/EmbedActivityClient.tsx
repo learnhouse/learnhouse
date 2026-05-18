@@ -3,7 +3,7 @@
 import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'next/navigation'
-import { getUriWithOrg } from '@services/config/config'
+import { getLEARNHOUSE_DOMAIN_VAL, getLEARNHOUSE_HTTP_PROTOCOL_VAL } from '@services/config/config'
 import Image from 'next/image'
 import { CourseContext, CourseDispatchContext } from '@components/Contexts/CourseContext'
 import { useActivity } from '@/hooks/queries/useActivity'
@@ -103,11 +103,11 @@ function useContentReady(activityType: string, activitySubType?: string) {
 
     observer.observe(el, { childList: true, subtree: true })
 
-    // Safety timeout — always reveal after 4s regardless
+    // Safety timeout — always reveal after 1.5s regardless
     const timeout = setTimeout(() => {
       setReady(true)
       observer.disconnect()
-    }, 4000)
+    }, 1500)
 
     return () => {
       observer.disconnect()
@@ -135,7 +135,17 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
 
   const getActivityUrl = () => {
     const cleanCourseUuid = (course?.course_uuid ?? courseuuid).replace('course_', '')
-    return getUriWithOrg(orgslug, `/course/${cleanCourseUuid}/activity/${activityId}`)
+    const path = `/course/${cleanCourseUuid}/activity/${activityId}`
+    // Always build an absolute org URL — the embed may be served from the main app domain
+    // (e.g. app.learnhouse.io), so a relative path would resolve to the wrong host.
+    if (typeof window !== 'undefined' && orgslug) {
+      const domain = getLEARNHOUSE_DOMAIN_VAL()
+      const protocol = getLEARNHOUSE_HTTP_PROTOCOL_VAL()
+      if (domain && domain !== 'localhost') {
+        return `${protocol}${orgslug}.${domain}${path}`
+      }
+    }
+    return path
   }
 
   if (isLoading) {
@@ -189,7 +199,13 @@ function EmbedActivityClient({ activityId, courseuuid, orgslug, bgcolor }: Embed
 
   const customStyles: React.CSSProperties = {
     backgroundColor: bgcolor ?? defaultBg,
-    ...(textColor ? { color: `#${textColor}` } : {}),
+    // Prevent browser auto-dark-mode from inverting text inside the embed container
+    colorScheme: 'light',
+    ...(textColor
+      ? { color: `#${textColor}` }
+      : activity.activity_type === 'TYPE_DYNAMIC'
+        ? { color: '#000000' }
+        : {}),
   }
 
   const renderActivityContent = () => {

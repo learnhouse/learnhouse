@@ -16,6 +16,7 @@ import {
 } from '@services/ai/ai'
 import useGetAIFeatures from '../../../../Hooks/useGetAIFeatures'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { usePathname } from 'next/navigation'
 
 type AICanvaToolkitProps = {
   editor: Editor
@@ -23,7 +24,11 @@ type AICanvaToolkitProps = {
 }
 
 function AICanvaToolkit(props: AICanvaToolkitProps) {
+  const pathname = usePathname()
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
+
+  // Never show the AI bubble in embedded views
+  if (pathname?.startsWith('/embed/')) return null
   const [bubbleState, setBubbleState] = useState({
     visible: false,
     top: 0,
