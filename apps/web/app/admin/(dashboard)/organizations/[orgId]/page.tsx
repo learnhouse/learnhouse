@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query/keys'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getDeploymentMode } from '@services/config/config'
 import {
   getOrgLogoMediaDirectory,
   getUserAvatarMediaDirectory,
@@ -32,6 +32,7 @@ import {
   ArrowSquareOut,
   Robot,
   ArrowClockwise,
+  SlidersHorizontal,
 } from '@phosphor-icons/react'
 
 function getLogoUrl(orgUuid: string, logoImage: string): string {
@@ -49,16 +50,22 @@ function getCourseThumbnailUrl(orgUuid: string, courseUuid: string, file: string
   return getCourseThumbnailMediaDirectory(orgUuid, courseUuid, file)
 }
 
-const TABS = [
+const ALL_TABS = [
   { id: 'overview', label: 'Overview', icon: Buildings },
   { id: 'courses', label: 'Courses', icon: BookOpen },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'analytics', label: 'Analytics', icon: ChartBar },
   { id: 'plan', label: 'Plan', icon: CreditCard },
+  { id: 'features', label: 'Features', icon: SlidersHorizontal },
   { id: 'settings', label: 'Settings', icon: GearSix },
 ] as const
 
-type TabId = (typeof TABS)[number]['id']
+type TabId = (typeof ALL_TABS)[number]['id']
+
+function getTabsForMode(mode: string) {
+  // In non-SaaS modes (EE/OSS) plans don't apply — hide the Plan tab.
+  return mode === 'saas' ? ALL_TABS : ALL_TABS.filter((t) => t.id !== 'plan')
+}
 
 function useUrlParams() {
   const searchParams = useSearchParams()
@@ -111,7 +118,11 @@ export default function OrgDetailPage() {
   const accessToken = session?.data?.tokens?.access_token
   const { searchParams, updateParams } = useUrlParams()
 
-  const activeTab = (searchParams.get('tab') as TabId) || 'overview'
+  const mode = getDeploymentMode()
+  const tabs = useMemo(() => getTabsForMode(mode), [mode])
+  const requestedTab = (searchParams.get('tab') as TabId) || 'overview'
+  // Guard against URLs pointing at a tab that isn't available in this mode
+  const activeTab: TabId = tabs.some((t) => t.id === requestedTab) ? requestedTab : 'overview'
   const setActiveTab = (tab: TabId) => {
     // When switching tabs, clear sub-tab params (page, search, days)
     updateParams({ tab }, ['page', 'search', 'days'])
@@ -164,19 +175,21 @@ export default function OrgDetailPage() {
             <h1 className="text-2xl font-bold text-white">{org.name}</h1>
             <div className="flex items-center gap-3 mt-1">
               <span className="text-sm text-white/40 font-mono">{org.slug}</span>
-              <span
-                className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded ${
-                  org.plan === 'enterprise'
-                    ? 'bg-amber-400/10 text-amber-400'
-                    : org.plan === 'pro'
-                      ? 'bg-purple-400/10 text-purple-400'
-                      : org.plan === 'standard'
-                        ? 'bg-blue-400/10 text-blue-400'
-                        : 'bg-white/[0.06] text-white/40'
-                }`}
-              >
-                {org.plan}
-              </span>
+              {mode === 'saas' && (
+                <span
+                  className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded ${
+                    org.plan === 'enterprise'
+                      ? 'bg-amber-400/10 text-amber-400'
+                      : org.plan === 'pro'
+                        ? 'bg-purple-400/10 text-purple-400'
+                        : org.plan === 'standard'
+                          ? 'bg-blue-400/10 text-blue-400'
+                          : 'bg-white/[0.06] text-white/40'
+                  }`}
+                >
+                  {org.plan}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -184,7 +197,7 @@ export default function OrgDetailPage() {
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-white/[0.08] mb-6">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon
           return (
             <button
@@ -208,7 +221,8 @@ export default function OrgDetailPage() {
       {activeTab === 'courses' && <CoursesTab orgId={orgId} accessToken={accessToken} orgUuid={org.org_uuid} orgSlug={org.slug} />}
       {activeTab === 'users' && <UsersTab orgId={orgId} accessToken={accessToken} />}
       {activeTab === 'analytics' && <AnalyticsTab orgId={orgId} accessToken={accessToken} />}
-      {activeTab === 'plan' && <PlanTab orgId={orgId} accessToken={accessToken} currentPlan={org.plan} config={org.config} />}
+      {activeTab === 'plan' && mode === 'saas' && <PlanTab orgId={orgId} accessToken={accessToken} currentPlan={org.plan} config={org.config} />}
+      {activeTab === 'features' && <FeaturesTab orgId={orgId} accessToken={accessToken} config={org.config} mode={mode} />}
       {activeTab === 'settings' && <SettingsTab orgId={orgId} accessToken={accessToken} org={org} />}
     </div>
   )
@@ -1179,6 +1193,291 @@ function AICreditsSection({ orgId, accessToken }: { orgId: string; accessToken: 
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Features Tab — per-feature admin toggles (writes to config.admin_toggles)
+// ---------------------------------------------------------------------------
+
+type FeatureToggle = { disabled: boolean }
+type AIToggle = { disabled: boolean; copilot_enabled: boolean }
+type MembersToggle = { disabled: boolean; signup_mode: 'open' | 'inviteOnly' }
+
+type AdminToggles = {
+  ai: AIToggle
+  analytics: FeatureToggle
+  api: FeatureToggle
+  boards: FeatureToggle
+  collaboration: FeatureToggle
+  collections: FeatureToggle
+  communities: FeatureToggle
+  members: MembersToggle
+  payments: FeatureToggle
+  playgrounds: FeatureToggle
+  podcasts: FeatureToggle
+}
+
+const DEFAULT_ADMIN_TOGGLES: AdminToggles = {
+  ai: { disabled: false, copilot_enabled: true },
+  analytics: { disabled: false },
+  api: { disabled: false },
+  boards: { disabled: false },
+  collaboration: { disabled: false },
+  collections: { disabled: false },
+  communities: { disabled: false },
+  members: { disabled: false, signup_mode: 'open' },
+  payments: { disabled: false },
+  playgrounds: { disabled: false },
+  podcasts: { disabled: false },
+}
+
+const FEATURE_ORDER: { key: keyof AdminToggles; label: string; description: string }[] = [
+  { key: 'ai', label: 'AI', description: 'AI assistant, copilot, generation tools' },
+  { key: 'analytics', label: 'Analytics', description: 'Dashboards and engagement metrics' },
+  { key: 'api', label: 'API', description: 'API tokens and programmatic access' },
+  { key: 'boards', label: 'Boards', description: 'Kanban-style learning boards' },
+  { key: 'collaboration', label: 'Collaboration', description: 'Real-time co-editing' },
+  { key: 'collections', label: 'Collections', description: 'Group courses into collections' },
+  { key: 'communities', label: 'Communities', description: 'Public/private community spaces' },
+  { key: 'members', label: 'Members', description: 'Member directory and roles' },
+  { key: 'payments', label: 'Payments', description: 'Paid courses and checkout' },
+  { key: 'playgrounds', label: 'Playgrounds', description: 'Interactive code/exec environments' },
+  { key: 'podcasts', label: 'Podcasts', description: 'Audio episodes inside courses' },
+]
+
+function ToggleSwitch({
+  enabled,
+  onChange,
+  disabled,
+}: {
+  enabled: boolean
+  onChange: (v: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => !disabled && onChange(!enabled)}
+      disabled={disabled}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+        enabled ? 'bg-emerald-500/70' : 'bg-white/[0.12]'
+      }`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+          enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+        }`}
+      />
+    </button>
+  )
+}
+
+function FeaturesTab({
+  orgId,
+  accessToken,
+  config,
+  mode,
+}: {
+  orgId: string
+  accessToken: string
+  config: any
+  mode: string
+}) {
+  const queryClient = useQueryClient()
+  const version: string = config?.config_version || '1.0'
+  const isV2 = version.startsWith('2')
+
+  const initial: AdminToggles = useMemo(() => {
+    if (!isV2) return DEFAULT_ADMIN_TOGGLES
+    const incoming = config?.admin_toggles || {}
+    return {
+      ...DEFAULT_ADMIN_TOGGLES,
+      ...incoming,
+      ai: { ...DEFAULT_ADMIN_TOGGLES.ai, ...(incoming.ai || {}) },
+      members: { ...DEFAULT_ADMIN_TOGGLES.members, ...(incoming.members || {}) },
+    }
+  }, [config, isV2])
+
+  const [draft, setDraft] = useState<AdminToggles>(initial)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+
+  // Re-sync when the org refetches (e.g., after a save invalidation).
+  React.useEffect(() => {
+    setDraft(initial)
+  }, [initial])
+
+  const isDirty = JSON.stringify(draft) !== JSON.stringify(initial)
+  const resolvedFeatures = config?.resolved_features || config?.features || {}
+
+  const setFeatureEnabled = (key: keyof AdminToggles, enabled: boolean) => {
+    setDraft((d) => ({ ...d, [key]: { ...d[key], disabled: !enabled } }))
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    setSaved(false)
+    try {
+      const res = await fetch(
+        `${getAPIUrl()}ee/superadmin/organizations/${orgId}/admin_toggles`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ toggles: draft }),
+        },
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data?.detail || `Failed to save (${res.status})`)
+        return
+      }
+      setSaved(true)
+      queryClient.invalidateQueries({ queryKey: queryKeys.org.detail(orgId) })
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setError('Network error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!isV2) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-amber-400/[0.06] border border-amber-400/20 rounded-xl p-5">
+          <h3 className="text-sm font-medium text-amber-300">
+            Per-feature toggles unavailable
+          </h3>
+          <p className="text-xs text-white/50 mt-1.5 leading-relaxed">
+            This organization uses a legacy v1 config. Newly-created organizations use
+            v2 and support these toggles automatically. Migrate this org to v2 to manage
+            features here.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-medium text-white/60 mb-1">Feature toggles</h3>
+        <p className="text-xs text-white/40 mb-4">
+          {mode === 'saas'
+            ? 'Override the plan defaults for this organization. Disabled features are hidden from the org dashboard.'
+            : 'Enable or disable features for this organization.'}
+        </p>
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl divide-y divide-white/[0.06]">
+          {FEATURE_ORDER.map(({ key, label, description }) => {
+            const t = draft[key]
+            const enabled = !t.disabled
+            const limitInfo = resolvedFeatures[key]?.limit
+            return (
+              <div key={key} className="px-5 py-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm text-white/90 font-medium">{label}</p>
+                    <p className="text-xs text-white/40 mt-0.5">{description}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {mode === 'saas' && limitInfo !== undefined && limitInfo !== null && (
+                      <span className="text-[11px] text-white/40">
+                        Limit: {limitInfo === 0 ? '∞' : limitInfo}
+                      </span>
+                    )}
+                    <ToggleSwitch
+                      enabled={enabled}
+                      onChange={(v) => setFeatureEnabled(key, v)}
+                    />
+                  </div>
+                </div>
+
+                {/* Special sub-controls */}
+                {key === 'ai' && enabled && (
+                  <div className="mt-3 pl-3 border-l-2 border-white/[0.06] flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-white/70">AI Copilot</p>
+                      <p className="text-[11px] text-white/40">Inline writing/coding suggestions</p>
+                    </div>
+                    <ToggleSwitch
+                      enabled={(draft.ai as AIToggle).copilot_enabled}
+                      onChange={(v) =>
+                        setDraft((d) => ({
+                          ...d,
+                          ai: { ...d.ai, copilot_enabled: v },
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+                {key === 'members' && enabled && (
+                  <div className="mt-3 pl-3 border-l-2 border-white/[0.06] flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-white/70">Signup mode</p>
+                      <p className="text-[11px] text-white/40">
+                        How new users can join the organization
+                      </p>
+                    </div>
+                    <select
+                      value={(draft.members as MembersToggle).signup_mode}
+                      onChange={(e) =>
+                        setDraft((d) => ({
+                          ...d,
+                          members: {
+                            ...d.members,
+                            signup_mode: e.target.value as 'open' | 'inviteOnly',
+                          },
+                        }))
+                      }
+                      className="bg-white/[0.05] border border-white/[0.1] rounded-md px-2.5 py-1 text-xs text-white focus:outline-none focus:border-white/30"
+                    >
+                      <option value="open">Open</option>
+                      <option value="inviteOnly">Invite only</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {(isDirty || saved || error) && (
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving || !isDirty}
+              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+            {isDirty && (
+              <button
+                onClick={() => setDraft(initial)}
+                disabled={saving}
+                className="px-4 py-2 text-white/40 hover:text-white/60 text-sm transition-colors"
+              >
+                Discard
+              </button>
+            )}
+            {saved && <p className="text-sm text-emerald-400">Saved</p>}
+            {error && <p className="text-sm text-red-400">{error}</p>}
+          </div>
+        )}
+      </div>
+
+      {/* In EE/OSS, AI Credits has no other home (Plan tab is hidden). */}
+      {mode !== 'saas' && (
+        <AICreditsSection orgId={orgId} accessToken={accessToken} />
+      )}
     </div>
   )
 }
